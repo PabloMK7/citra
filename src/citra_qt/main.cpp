@@ -506,6 +506,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(game_list_placeholder, &GameListPlaceholder::AddDirectory, this,
             &GMainWindow::OnGameListAddDirectory);
     connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
+    connect(game_list, &GameList::PopulatingCompleted,
+            [this] { multiplayer_state->UpdateGameList(game_list->GetModel()); });
 
     connect(this, &GMainWindow::EmulationStarting, render_window,
             &GRenderWindow::OnEmulationStarting);
@@ -1335,7 +1337,8 @@ void GMainWindow::OnCheats() {
 }
 
 void GMainWindow::OnConfigure() {
-    ConfigureDialog configureDialog(this, hotkey_registry);
+    ConfigureDialog configureDialog(this, hotkey_registry,
+                                    !multiplayer_state->IsHostingPublicRoom());
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
@@ -1350,6 +1353,8 @@ void GMainWindow::OnConfigure() {
             UpdateUITheme();
         if (UISettings::values.enable_discord_presence != old_discord_presence)
             SetDiscordEnabled(UISettings::values.enable_discord_presence);
+        if (!multiplayer_state->IsHostingPublicRoom())
+            multiplayer_state->UpdateCredentials();
         emit UpdateThemedIcons();
         SyncMenuUISettings();
         game_list->RefreshGameDirectory();

@@ -118,3 +118,8 @@ void ConfigureWeb::OnLoginVerified() {
 void ConfigureWeb::retranslateUi() {
     ui->retranslateUi(this);
 }
+
+void ConfigureWeb::SetWebServiceConfigEnabled(bool enabled) {
+    ui->label_disable_info->setVisible(!enabled);
+    ui->groupBoxWebConfig->setEnabled(enabled);
+}

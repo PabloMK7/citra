@@ -29,7 +29,7 @@ public:
                    const AnnounceMultiplayerRoom::MacAddress& mac_address, const u64 game_id,
                    const std::string& game_name) override;
     Common::WebResult Update() override;
-    std::string Register() override;
+    Common::WebResult Register() override;
     void ClearPlayers() override;
     AnnounceMultiplayerRoom::RoomList GetRoomList() override;
     void Delete() override;

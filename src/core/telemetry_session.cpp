@@ -92,13 +92,6 @@ bool VerifyLogin(const std::string& username, const std::string& token) {
 }
 
 TelemetrySession::TelemetrySession() {
-#ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
-                                                          Settings::values.citra_username,
-                                                          Settings::values.citra_token);
-#else
-    backend = std::make_unique<Telemetry::NullVisitor>();
-#endif
     // Log one-time top-level information
     AddField(Telemetry::FieldType::None, "TelemetryId", GetTelemetryId());
 
@@ -192,9 +185,15 @@ TelemetrySession::~TelemetrySession() {
                                 .count()};
     AddField(Telemetry::FieldType::Session, "Shutdown_Time", shutdown_time);
 
+#ifdef ENABLE_WEB_SERVICE
+    auto backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
+                                                               Settings::values.citra_username,
+                                                               Settings::values.citra_token);
+#else
+    auto backend = std::make_unique<Telemetry::NullVisitor>();
+#endif
+
     // Complete the session, submitting to web service if necessary
-    // This is just a placeholder to wrap up the session once the core completes and this is
-    // destroyed. This will be moved elsewhere once we are actually doing real I/O with the service.
     field_collection.Accept(*backend);
     if (Settings::values.enable_telemetry)
         backend->Complete();
@@ -203,6 +202,9 @@ TelemetrySession::~TelemetrySession() {
 
 bool TelemetrySession::SubmitTestcase() {
 #ifdef ENABLE_WEB_SERVICE
+    auto backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
+                                                               Settings::values.citra_username,
+                                                               Settings::values.citra_token);
     field_collection.Accept(*backend);
     return backend->SubmitTestcase();
 #else

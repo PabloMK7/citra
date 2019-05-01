@@ -30,6 +30,11 @@ public:
                    std::shared_ptr<Core::AnnounceMultiplayerSession> session);
     ~Lobby() = default;
 
+    /**
+     * Updates the lobby with a new game list model.
+     * This model should be the original model of the game list.
+     */
+    void UpdateGameList(QStandardItemModel* list);
     void RetranslateUi();
 
 public slots:
@@ -76,9 +81,9 @@ private:
      */
     QString PasswordPrompt();
 
-    QStandardItemModel* model;
-    QStandardItemModel* game_list;
-    LobbyFilterProxyModel* proxy;
+    QStandardItemModel* model{};
+    QStandardItemModel* game_list{};
+    LobbyFilterProxyModel* proxy{};
 
     QFutureWatcher<AnnounceMultiplayerRoom::RoomList> room_list_watcher;
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
@@ -95,6 +100,13 @@ class LobbyFilterProxyModel : public QSortFilterProxyModel {
 
 public:
     explicit LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list);
+
+    /**
+     * Updates the filter with a new game list model.
+     * This model should be the processed one created by the Lobby.
+     */
+    void UpdateGameList(QStandardItemModel* list);
+
     bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
     void sort(int column, Qt::SortOrder order) override;
 

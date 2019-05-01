@@ -117,16 +117,16 @@ Common::WebResult RoomJson::Update() {
     return client.PostJson(fmt::format("/lobby/{}", room_id), json.dump(), false);
 }
 
-std::string RoomJson::Register() {
+Common::WebResult RoomJson::Register() {
     nlohmann::json json = room;
-    auto reply = client.PostJson("/lobby", json.dump(), false).returned_data;
-    if (reply.empty()) {
-        return "";
+    auto result = client.PostJson("/lobby", json.dump(), false);
+    if (result.result_code != Common::WebResult::Code::Success) {
+        return result;
     }
-    auto reply_json = nlohmann::json::parse(reply);
+    auto reply_json = nlohmann::json::parse(result.returned_data);
     room = reply_json.get<AnnounceMultiplayerRoom::Room>();
     room_id = reply_json.at("id").get<std::string>();
-    return room.verify_UID;
+    return Common::WebResult{Common::WebResult::Code::Success, "", room.verify_UID};
 }
 
 void RoomJson::ClearPlayers() {

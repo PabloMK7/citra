@@ -29,19 +29,23 @@ AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 #endif
 }
 
-void AnnounceMultiplayerSession::Register() {
+Common::WebResult AnnounceMultiplayerSession::Register() {
     std::shared_ptr<Network::Room> room = Network::GetRoom().lock();
     if (!room) {
-        return;
+        return Common::WebResult{Common::WebResult::Code::LibError, "Network is not initialized"};
     }
     if (room->GetState() != Network::Room::State::Open) {
-        return;
+        return Common::WebResult{Common::WebResult::Code::LibError, "Room is not open"};
     }
     UpdateBackendData(room);
-    std::string result = backend->Register();
+    Common::WebResult result = backend->Register();
+    if (result.result_code != Common::WebResult::Code::Success) {
+        return result;
+    }
     LOG_INFO(WebService, "Room has been registered");
-    room->SetVerifyUID(result);
+    room->SetVerifyUID(result.returned_data);
     registered = true;
+    return Common::WebResult{Common::WebResult::Code::Success};
 }
 
 void AnnounceMultiplayerSession::Start() {
@@ -95,9 +99,22 @@ void AnnounceMultiplayerSession::UpdateBackendData(std::shared_ptr<Network::Room
 }
 
 void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
+    // Invokes all current bound error callbacks.
+    const auto ErrorCallback = [this](Common::WebResult result) {
+        std::lock_guard<std::mutex> lock(callback_mutex);
+        for (auto callback : error_callbacks) {
+            (*callback)(result);
+        }
+    };
+
     if (!registered) {
-        Register();
+        Common::WebResult result = Register();
+        if (result.result_code != Common::WebResult::Code::Success) {
+            ErrorCallback(result);
+            return;
+        }
     }
+
     auto update_time = std::chrono::steady_clock::now();
     std::future<Common::WebResult> future;
     while (!shutdown_event.WaitUntil(update_time)) {
@@ -112,21 +129,35 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
         UpdateBackendData(room);
         Common::WebResult result = backend->Update();
         if (result.result_code != Common::WebResult::Code::Success) {
-            std::lock_guard lock(callback_mutex);
-            for (auto callback : error_callbacks) {
-                (*callback)(result);
-            }
+            ErrorCallback(result);
         }
         if (result.result_string == "404") {
             registered = false;
             // Needs to register the room again
-            Register();
+            Common::WebResult result = Register();
+            if (result.result_code != Common::WebResult::Code::Success) {
+                ErrorCallback(result);
+            }
         }
     }
 }
 
 AnnounceMultiplayerRoom::RoomList AnnounceMultiplayerSession::GetRoomList() {
     return backend->GetRoomList();
+}
+
+bool AnnounceMultiplayerSession::IsRunning() const {
+    return announce_multiplayer_thread != nullptr;
+}
+
+void AnnounceMultiplayerSession::UpdateCredentials() {
+    ASSERT_MSG(!IsRunning(), "Credentials can only be updated when session is not running");
+
+#ifdef ENABLE_WEB_SERVICE
+    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url,
+                                                     Settings::values.citra_username,
+                                                     Settings::values.citra_token);
+#endif
 }
 
 } // namespace Core

@@ -38,6 +38,11 @@ public:
                             std::shared_ptr<Core::AnnounceMultiplayerSession> session);
     ~HostRoomWindow();
 
+    /**
+     * Updates the dialog with a new game list model.
+     * This model should be the original model of the game list.
+     */
+    void UpdateGameList(QStandardItemModel* list);
     void RetranslateUi();
 
 private:

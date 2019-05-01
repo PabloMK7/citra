@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QList>
 #include <QLocale>
+#include <QMessageBox>
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
@@ -40,13 +41,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
 
     // Create a proxy to the game list to display the list of preferred games
     game_list = new QStandardItemModel;
-
-    for (int i = 0; i < list->rowCount(); i++) {
-        auto parent = list->item(i, 0);
-        for (int j = 0; j < parent->rowCount(); j++) {
-            game_list->appendRow(parent->child(j)->clone());
-        }
-    }
+    UpdateGameList(list);
 
     proxy = new ComboBoxProxyModel;
     proxy->setSourceModel(game_list);
@@ -78,6 +73,16 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
 
 HostRoomWindow::~HostRoomWindow() = default;
 
+void HostRoomWindow::UpdateGameList(QStandardItemModel* list) {
+    game_list->clear();
+    for (int i = 0; i < list->rowCount(); i++) {
+        auto parent = list->item(i, 0);
+        for (int j = 0; j < parent->rowCount(); j++) {
+            game_list->appendRow(parent->child(j)->clone());
+        }
+    }
+}
+
 void HostRoomWindow::RetranslateUi() {
     ui->retranslateUi(this);
 }
@@ -108,6 +113,10 @@ void HostRoomWindow::Host() {
     }
     if (!ui->port->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::PORT_NOT_VALID);
+        return;
+    }
+    if (ui->game_list->currentIndex() == -1) {
+        NetworkMessage::ShowError(NetworkMessage::GAME_NOT_SELECTED);
         return;
     }
     if (auto member = Network::GetRoomMember().lock()) {
@@ -148,7 +157,22 @@ void HostRoomWindow::Host() {
         if (is_public) {
             if (auto session = announce_multiplayer_session.lock()) {
                 // Register the room first to ensure verify_UID is present when we connect
-                session->Register();
+                Common::WebResult result = session->Register();
+                if (result.result_code != Common::WebResult::Code::Success) {
+                    QMessageBox::warning(
+                        this, tr("Error"),
+                        tr("Failed to announce the room to the public lobby. In order to host a "
+                           "room publicly, you must have a valid Citra account configured in "
+                           "Emulation -> Configure -> Web. If you do not want to publish a room in "
+                           "the public lobby, then select Unlisted instead.\nDebug Message: ") +
+                            QString::fromStdString(result.result_string),
+                        QMessageBox::Ok);
+                    ui->host->setEnabled(true);
+                    if (auto room = Network::GetRoom().lock()) {
+                        room->Destroy();
+                    }
+                    return;
+                }
                 session->Start();
             } else {
                 LOG_ERROR(Network, "Starting announce session failed");

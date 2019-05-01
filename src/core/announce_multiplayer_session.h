@@ -44,8 +44,11 @@ public:
      */
     void UnbindErrorCallback(CallbackHandle handle);
 
-    /// Registers a room to web services
-    void Register();
+    /**
+     * Registers a room to web services
+     * @return The result of the registration attempt.
+     */
+    Common::WebResult Register();
 
     /**
      * Starts the announce of a room to web services
@@ -63,6 +66,17 @@ public:
      * @return a list of rooms received from the web service
      */
     AnnounceMultiplayerRoom::RoomList GetRoomList();
+
+    /**
+     * Whether the announce session is still running
+     */
+    bool IsRunning() const;
+
+    /**
+     * Recreates the backend, updating the credentials.
+     * This can only be used when the announce session is not running.
+     */
+    void UpdateCredentials();
 
 private:
     Common::Event shutdown_event;

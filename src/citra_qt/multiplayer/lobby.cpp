@@ -35,13 +35,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 
     // Create a proxy to the game list to get the list of games owned
     game_list = new QStandardItemModel;
-
-    for (int i = 0; i < list->rowCount(); i++) {
-        auto parent = list->item(i, 0);
-        for (int j = 0; j < parent->rowCount(); j++) {
-            game_list->appendRow(parent->child(j)->clone());
-        }
-    }
+    UpdateGameList(list);
 
     proxy = new LobbyFilterProxyModel(this, game_list);
     proxy->setSourceModel(model);
@@ -86,6 +80,18 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     // part of the constructor, but offload the refresh until after the window shown. perhaps emit a
     // refreshroomlist signal from places that open the lobby
     RefreshLobby();
+}
+
+void Lobby::UpdateGameList(QStandardItemModel* list) {
+    game_list->clear();
+    for (int i = 0; i < list->rowCount(); i++) {
+        auto parent = list->item(i, 0);
+        for (int j = 0; j < parent->rowCount(); j++) {
+            game_list->appendRow(parent->child(j)->clone());
+        }
+    }
+    if (proxy)
+        proxy->UpdateGameList(game_list);
 }
 
 void Lobby::RetranslateUi() {
@@ -259,6 +265,10 @@ void Lobby::OnRefreshLobby() {
 
 LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list)
     : QSortFilterProxyModel(parent), game_list(list) {}
+
+void LobbyFilterProxyModel::UpdateGameList(QStandardItemModel* list) {
+    game_list = list;
+}
 
 bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
     // Prioritize filters by fastest to compute

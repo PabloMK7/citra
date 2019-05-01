@@ -174,14 +174,11 @@ void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
 
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
     announce_multiplayer_session->Stop();
-    QMessageBox::warning(
-        this, tr("Error"),
-        tr("Failed to announce the room to the public lobby. In order to host a room publicly, you "
-           "must have a valid Citra account configured in Emulation -> Configure -> Web. If you do "
-           "not want to publish a room in the public lobby, then select Unlisted instead.\n"
-           "Debug Message: ") +
-            QString::fromStdString(result.result_string),
-        QMessageBox::Ok);
+    QMessageBox::warning(this, tr("Error"),
+                         tr("Failed to update the room information. Please check your Internet "
+                            "connection and try hosting the room again.\nDebug Message: ") +
+                             QString::fromStdString(result.result_string),
+                         QMessageBox::Ok);
 }
 
 void MultiplayerState::UpdateThemedIcons() {
@@ -280,4 +277,22 @@ void MultiplayerState::OnDirectConnectToRoom() {
         direct_connect = new DirectConnectWindow(this);
     }
     BringWidgetToFront(direct_connect);
+}
+
+bool MultiplayerState::IsHostingPublicRoom() const {
+    return announce_multiplayer_session->IsRunning();
+}
+
+void MultiplayerState::UpdateCredentials() {
+    announce_multiplayer_session->UpdateCredentials();
+}
+
+void MultiplayerState::UpdateGameList(QStandardItemModel* game_list) {
+    game_list_model = game_list;
+    if (lobby) {
+        lobby->UpdateGameList(game_list);
+    }
+    if (host_room) {
+        host_room->UpdateGameList(game_list);
+    }
 }

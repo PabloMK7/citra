@@ -22,6 +22,7 @@ public:
     void applyConfiguration();
     void retranslateUi();
     void setConfiguration();
+    void SetWebServiceConfigEnabled(bool enabled);
 
 private:
     void RefreshTelemetryID();
