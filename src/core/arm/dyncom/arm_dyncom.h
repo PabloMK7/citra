@@ -22,7 +22,7 @@ class ARM_DynCom final : public ARM_Interface {
 public:
     explicit ARM_DynCom(Core::System* system, Memory::MemorySystem& memory,
                         PrivilegeMode initial_mode);
-    ~ARM_DynCom();
+    ~ARM_DynCom() override;
 
     void Run() override;
     void Step() override;

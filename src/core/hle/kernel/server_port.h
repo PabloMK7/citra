@@ -58,7 +58,7 @@ public:
     /// ServerSessions created from this port inherit a reference to this handler.
     std::shared_ptr<SessionRequestHandler> hle_handler;
 
-    bool ShouldWait(Thread* thread) const override;
+    bool ShouldWait(const Thread* thread) const override;
     void Acquire(Thread* thread) override;
 };
 

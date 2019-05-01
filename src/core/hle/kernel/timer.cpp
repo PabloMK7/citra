@@ -35,7 +35,7 @@ std::shared_ptr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::stri
     return timer;
 }
 
-bool Timer::ShouldWait(Thread* thread) const {
+bool Timer::ShouldWait(const Thread* thread) const {
     return !signaled;
 }
 

@@ -25,7 +25,7 @@ std::shared_ptr<Event> KernelSystem::CreateEvent(ResetType reset_type, std::stri
     return evt;
 }
 
-bool Event::ShouldWait(Thread* thread) const {
+bool Event::ShouldWait(const Thread* thread) const {
     return !signaled;
 }
 

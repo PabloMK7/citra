@@ -27,18 +27,6 @@ namespace Common {
 
 #ifdef _MSC_VER
 
-void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask) {
-    SetThreadAffinityMask(thread, mask);
-}
-
-void SetCurrentThreadAffinity(u32 mask) {
-    SetThreadAffinityMask(GetCurrentThread(), mask);
-}
-
-void SwitchCurrentThread() {
-    SwitchToThread();
-}
-
 // Sets the debugger-visible name of the current thread.
 // Uses undocumented (actually, it is now documented) trick.
 // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vsdebug/html/vxtsksettingthreadname.asp
@@ -69,31 +57,6 @@ void SetCurrentThreadName(const char* name) {
 }
 
 #else // !MSVC_VER, so must be POSIX threads
-
-void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask) {
-#ifdef __APPLE__
-    thread_policy_set(pthread_mach_thread_np(thread), THREAD_AFFINITY_POLICY, (integer_t*)&mask, 1);
-#elif (defined __linux__ || defined __FreeBSD__) && !(defined ANDROID)
-    cpu_set_t cpu_set;
-    CPU_ZERO(&cpu_set);
-
-    for (int i = 0; i != sizeof(mask) * 8; ++i)
-        if ((mask >> i) & 1)
-            CPU_SET(i, &cpu_set);
-
-    pthread_setaffinity_np(thread, sizeof(cpu_set), &cpu_set);
-#endif
-}
-
-void SetCurrentThreadAffinity(u32 mask) {
-    SetThreadAffinity(pthread_self(), mask);
-}
-
-#ifndef _WIN32
-void SwitchCurrentThread() {
-    usleep(1000 * 1);
-}
-#endif
 
 // MinGW with the POSIX threading model does not support pthread_setname_np
 #if !defined(_WIN32) || defined(_MSC_VER)

@@ -41,7 +41,7 @@ std::shared_ptr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::strin
     return mutex;
 }
 
-bool Mutex::ShouldWait(Thread* thread) const {
+bool Mutex::ShouldWait(const Thread* thread) const {
     return lock_count > 0 && thread != holding_thread.get();
 }
 

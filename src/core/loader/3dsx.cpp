@@ -231,7 +231,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     code_set->DataSegment().size = loadinfo.seg_sizes[2];
 
     code_set->entrypoint = code_set->CodeSegment().addr;
-    code_set->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
+    code_set->memory = std::move(program_image);
 
     LOG_DEBUG(Loader, "code size:   {:#X}", loadinfo.seg_sizes[0]);
     LOG_DEBUG(Loader, "rodata size: {:#X}", loadinfo.seg_sizes[1]);

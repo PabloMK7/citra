@@ -120,7 +120,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions,
                           MemoryState memory_state) {
         HeapAllocate(segment.addr, segment.size, permissions, memory_state, true);
-        kernel.memory.WriteBlock(*this, segment.addr, codeset->memory->data() + segment.offset,
+        kernel.memory.WriteBlock(*this, segment.addr, codeset->memory.data() + segment.offset,
                                  segment.size);
     };
 

@@ -85,7 +85,7 @@ std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type) {
     std::vector<std::unique_ptr<DevicePoller>> pollers;
 
 #ifdef HAVE_SDL2
-    sdl->GetPollers(type, pollers);
+    pollers = sdl->GetPollers(type);
 #endif
 
     return pollers;

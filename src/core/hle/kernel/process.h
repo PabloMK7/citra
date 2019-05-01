@@ -97,7 +97,7 @@ public:
         return segments[2];
     }
 
-    std::shared_ptr<std::vector<u8>> memory;
+    std::vector<u8> memory;
 
     std::array<Segment, 3> segments;
     VAddr entrypoint;

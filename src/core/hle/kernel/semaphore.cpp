@@ -31,7 +31,7 @@ ResultVal<std::shared_ptr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_
     return MakeResult<std::shared_ptr<Semaphore>>(std::move(semaphore));
 }
 
-bool Semaphore::ShouldWait(Thread* thread) const {
+bool Semaphore::ShouldWait(const Thread* thread) const {
     return available_count <= 0;
 }
 

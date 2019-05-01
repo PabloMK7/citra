@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <mutex>
 #include <thread>
-#include "common/common_types.h"
 
 namespace Common {
 
@@ -92,9 +91,6 @@ private:
     std::size_t generation = 0; // Incremented once each time the barrier is used
 };
 
-void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask);
-void SetCurrentThreadAffinity(u32 mask);
-void SwitchCurrentThread(); // On Linux, this is equal to sleep 1ms
 void SetCurrentThreadName(const char* name);
 
 } // namespace Common

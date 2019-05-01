@@ -101,7 +101,7 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
             bss_page_size;
 
         codeset->entrypoint = codeset->CodeSegment().addr;
-        codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
+        codeset->memory = std::move(code);
 
         process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
 

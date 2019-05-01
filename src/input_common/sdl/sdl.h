@@ -24,19 +24,19 @@ namespace InputCommon::SDL {
 
 class State {
 public:
-    /// Unresisters SDL device factories and shut them down.
+    using Pollers = std::vector<std::unique_ptr<Polling::DevicePoller>>;
+
+    /// Unregisters SDL device factories and shut them down.
     virtual ~State() = default;
 
-    virtual void GetPollers(
-        InputCommon::Polling::DeviceType type,
-        std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers) = 0;
+    virtual Pollers GetPollers(Polling::DeviceType type) = 0;
 };
 
 class NullState : public State {
 public:
-    void GetPollers(
-        InputCommon::Polling::DeviceType type,
-        std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers) override {}
+    Pollers GetPollers(Polling::DeviceType type) override {
+        return {};
+    }
 };
 
 std::unique_ptr<State> Init();

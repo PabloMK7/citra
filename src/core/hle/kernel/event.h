@@ -34,7 +34,7 @@ public:
         return reset_type;
     }
 
-    bool ShouldWait(Thread* thread) const override;
+    bool ShouldWait(const Thread* thread) const override;
     void Acquire(Thread* thread) override;
 
     void WakeupAllWaitingThreads() override;

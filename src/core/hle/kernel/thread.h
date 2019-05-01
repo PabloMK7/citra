@@ -165,7 +165,7 @@ public:
         return HANDLE_TYPE;
     }
 
-    bool ShouldWait(Thread* thread) const override;
+    bool ShouldWait(const Thread* thread) const override;
     void Acquire(Thread* thread) override;
 
     /**
@@ -234,7 +234,7 @@ public:
      * object in the list.
      * @param object Object to query the index of.
      */
-    s32 GetWaitObjectIndex(WaitObject* object) const;
+    s32 GetWaitObjectIndex(const WaitObject* object) const;
 
     /**
      * Stops a thread, invalidating it from further use
