@@ -129,7 +129,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
             f32 val_f32;
             for (std::size_t i = 0; i < output_buffer->size();) {
                 for (std::size_t channel = 0; channel < adts_header.channels; channel++) {
-                    val_f32 = output_buffer->at(i);
+                    val_f32 = std::clamp(output_buffer->at(i), -1.0f, 1.0f);
                     s16 val = static_cast<s16>(0x7FFF * val_f32);
                     out_streams[channel].push_back(val & 0xFF);
                     out_streams[channel].push_back(val >> 8);

@@ -218,6 +218,7 @@ std::optional<BinaryResponse> FFMPEGDecoder::Impl::Decode(const BinaryRequest& r
                     for (std::size_t channel(0); channel < decoded_frame->channels; channel++) {
                         std::memcpy(&val_float, decoded_frame->data[channel] + current_pos,
                                     sizeof(val_float));
+                        val_float = std::clamp(val_float, -1.0f, 1.0f);
                         s16 val = static_cast<s16>(0x7FFF * val_float);
                         out_streams[channel].push_back(val & 0xFF);
                         out_streams[channel].push_back(val >> 8);
