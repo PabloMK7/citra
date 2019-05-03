@@ -30,6 +30,16 @@ Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
     if (result != Loader::ResultStatus::Success)
         return result;
 
+    // Load Ticket
+    std::vector<u8> ticket_data(cia_header.tik_size);
+    read_result = backend.Read(GetTicketOffset(), cia_header.tik_size, ticket_data.data());
+    if (read_result.Failed() || *read_result != cia_header.tik_size)
+        return Loader::ResultStatus::Error;
+
+    result = LoadTicket(ticket_data);
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
     // Load Title Metadata
     std::vector<u8> tmd_data(cia_header.tmd_size);
     read_result = backend.Read(GetTitleMetadataOffset(), cia_header.tmd_size, tmd_data.data());
@@ -69,6 +79,16 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
     if (result != Loader::ResultStatus::Success)
         return result;
 
+    // Load Ticket
+    std::vector<u8> ticket_data(cia_header.tik_size);
+    file.Seek(GetTicketOffset(), SEEK_SET);
+    if (file.ReadBytes(ticket_data.data(), cia_header.tik_size) != cia_header.tik_size)
+        return Loader::ResultStatus::Error;
+
+    result = LoadTicket(ticket_data);
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
     // Load Title Metadata
     std::vector<u8> tmd_data(cia_header.tmd_size);
     file.Seek(GetTitleMetadataOffset(), SEEK_SET);
@@ -96,6 +116,11 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
 
 Loader::ResultStatus CIAContainer::Load(const std::vector<u8>& file_data) {
     Loader::ResultStatus result = LoadHeader(file_data);
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
+    // Load Ticket
+    result = LoadTicket(file_data, GetTicketOffset());
     if (result != Loader::ResultStatus::Success)
         return result;
 
