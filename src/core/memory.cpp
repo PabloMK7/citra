@@ -656,58 +656,11 @@ void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_ad
 
 void MemorySystem::CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
                              const std::size_t size) {
-    auto& page_table = process.vm_manager.page_table;
-    std::size_t remaining_size = size;
-    std::size_t page_index = src_addr >> PAGE_BITS;
-    std::size_t page_offset = src_addr & PAGE_MASK;
-
-    while (remaining_size > 0) {
-        const std::size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
-        const VAddr current_vaddr = static_cast<VAddr>((page_index << PAGE_BITS) + page_offset);
-
-        switch (page_table.attributes[page_index]) {
-        case PageType::Unmapped: {
-            LOG_ERROR(HW_Memory,
-                      "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                      current_vaddr, src_addr, size);
-            ZeroBlock(process, dest_addr, copy_amount);
-            break;
-        }
-        case PageType::Memory: {
-            DEBUG_ASSERT(page_table.pointers[page_index]);
-            const u8* src_ptr = page_table.pointers[page_index] + page_offset;
-            WriteBlock(process, dest_addr, src_ptr, copy_amount);
-            break;
-        }
-        case PageType::Special: {
-            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
-            DEBUG_ASSERT(handler);
-            std::vector<u8> buffer(copy_amount);
-            handler->ReadBlock(current_vaddr, buffer.data(), buffer.size());
-            WriteBlock(process, dest_addr, buffer.data(), buffer.size());
-            break;
-        }
-        case PageType::RasterizerCachedMemory: {
-            RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
-                                         FlushMode::Flush);
-            WriteBlock(process, dest_addr, GetPointerForRasterizerCache(current_vaddr),
-                       copy_amount);
-            break;
-        }
-        default:
-            UNREACHABLE();
-        }
-
-        page_index++;
-        page_offset = 0;
-        dest_addr += static_cast<VAddr>(copy_amount);
-        src_addr += static_cast<VAddr>(copy_amount);
-        remaining_size -= copy_amount;
-    }
+    CopyBlock(process, process, dest_addr, src_addr, size);
 }
 
-void MemorySystem::CopyBlock(const Kernel::Process& src_process,
-                             const Kernel::Process& dest_process, VAddr src_addr, VAddr dest_addr,
+void MemorySystem::CopyBlock(const Kernel::Process& dest_process,
+                             const Kernel::Process& src_process, VAddr dest_addr, VAddr src_addr,
                              std::size_t size) {
     auto& page_table = src_process.vm_manager.page_table;
     std::size_t remaining_size = size;
