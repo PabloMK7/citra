@@ -192,7 +192,7 @@ public:
             if (row_2_id != UISettings::GameListText::NoText) {
                 row2 = (row1.isEmpty() ? "" : "\n     ") + display_texts.at(row_2_id);
             }
-            return row1 + row2;
+            return QString(row1 + row2);
         } else {
             return GameListItem::data(role);
         }
