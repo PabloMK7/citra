@@ -24,6 +24,7 @@ if (MSVC)
     # /Zo                 - Enhanced debug info for optimized builds
     # /permissive-        - Enables stricter C++ standards conformance checks
     # /EHsc               - C++-only exception handling semantics
+    # /volatile:iso       - Use strict standards-compliant volatile semantics.
     # /Zc:externConstexpr - Allow extern constexpr variables to have external linkage, like the standard mandates
     # /Zc:inline          - Let codegen omit inline functions in object files
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
@@ -35,6 +36,7 @@ if (MSVC)
         /permissive-
         /EHsc
         /std:c++latest
+        /volatile:iso
         /Zc:externConstexpr
         /Zc:inline
         /Zc:throwingNew
