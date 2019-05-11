@@ -17,9 +17,13 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry, bool
     ui->webTab->SetWebServiceConfigEnabled(enable_web_config);
 
     this->PopulateSelectionList();
+
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
     connect(ui->uiTab, &ConfigureUi::languageChanged, this, &ConfigureDialog::onLanguageChanged);
     connect(ui->selectorList, &QListWidget::itemSelectionChanged, this,
             &ConfigureDialog::UpdateVisibleTabs);
+
     adjustSize();
     ui->selectorList->setCurrentRow(0);
 
