@@ -11,7 +11,7 @@
 #include "ui_configure.h"
 
 ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry, bool enable_web_config)
-    : QDialog(parent), registry(registry), ui(new Ui::ConfigureDialog) {
+    : QDialog(parent), ui(new Ui::ConfigureDialog), registry(registry) {
     ui->setupUi(this);
     ui->hotkeysTab->Populate(registry);
     ui->webTab->SetWebServiceConfigEnabled(enable_web_config);
