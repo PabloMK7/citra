@@ -317,7 +317,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         // Only unit 0 respects the texturing type
         switch (state.texture0_type) {
         case TexturingRegs::TextureConfig::Texture2D:
-            return "textureLod(tex0, texcoord0, getLod(texcoord0 * textureSize(tex0, 0)))";
+            return "textureLod(tex0, texcoord0, getLod(texcoord0 * vec2(textureSize(tex0, 0))))";
         case TexturingRegs::TextureConfig::Projection2D:
             // TODO (wwylele): find the exact LOD formula for projection texture
             return "textureProj(tex0, vec3(texcoord0, texcoord0_w))";
@@ -336,12 +336,12 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
             return "texture(tex0, texcoord0)";
         }
     case 1:
-        return "textureLod(tex1, texcoord1, getLod(texcoord1 * textureSize(tex1, 0)))";
+        return "textureLod(tex1, texcoord1, getLod(texcoord1 * vec2(textureSize(tex1, 0))))";
     case 2:
         if (state.texture2_use_coord1)
-            return "textureLod(tex2, texcoord1, getLod(texcoord1 * textureSize(tex2, 0)))";
+            return "textureLod(tex2, texcoord1, getLod(texcoord1 * vec2(textureSize(tex2, 0))))";
         else
-            return "textureLod(tex2, texcoord2, getLod(texcoord2 * textureSize(tex2, 0)))";
+            return "textureLod(tex2, texcoord2, getLod(texcoord2 * vec2(textureSize(tex2, 0))))";
     case 3:
         if (state.proctex.enable) {
             return "ProcTex()";
