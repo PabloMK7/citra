@@ -119,4 +119,7 @@ private:
     void NewProfile();
     void DeleteProfile();
     void RenameProfile();
+
+    bool IsProfileNameDuplicate(const QString& name) const;
+    void WarnProposedProfileNameIsDuplicate();
 };
