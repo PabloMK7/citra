@@ -87,8 +87,8 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     }
 
     if (IsUsedKey(key_sequence) && key_sequence != QKeySequence(previous_key.toString())) {
-        QMessageBox::warning(this, tr("Error in inputted key"),
-                             tr("You're using a key that's already bound."));
+        QMessageBox::warning(this, tr("Conflicting Key Sequence"),
+                             tr("The entered key sequence is already assigned to another hotkey."));
     } else {
         model->setData(index, key_sequence.toString(QKeySequence::NativeText));
         EmitHotkeysChanged();
