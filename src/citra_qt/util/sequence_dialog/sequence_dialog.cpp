@@ -12,8 +12,7 @@ SequenceDialog::SequenceDialog(QWidget* parent) : QDialog(parent) {
     auto* layout = new QVBoxLayout(this);
     key_sequence = new QKeySequenceEdit;
     layout->addWidget(key_sequence);
-    auto* buttons =
-        new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     buttons->setCenterButtons(true);
     layout->addWidget(buttons);
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
