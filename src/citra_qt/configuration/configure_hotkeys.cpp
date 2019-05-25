@@ -118,7 +118,6 @@ void ConfigureHotkeys::applyConfiguration(HotkeyRegistry& registry) {
     }
 
     registry.SaveHotkeys();
-    Settings::Apply();
 }
 
 void ConfigureHotkeys::retranslateUi() {
