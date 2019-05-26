@@ -99,7 +99,7 @@ bool ConfigureHotkeys::IsUsedKey(QKeySequence key_sequence) const {
     return input_keys_list.contains(key_sequence) || GetUsedKeyList().contains(key_sequence);
 }
 
-void ConfigureHotkeys::applyConfiguration(HotkeyRegistry& registry) {
+void ConfigureHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
     for (int key_id = 0; key_id < model->rowCount(); key_id++) {
         QStandardItem* parent = model->item(key_id, 0);
         for (int key_column_id = 0; key_column_id < parent->rowCount(); key_column_id++) {
@@ -120,6 +120,6 @@ void ConfigureHotkeys::applyConfiguration(HotkeyRegistry& registry) {
     registry.SaveHotkeys();
 }
 
-void ConfigureHotkeys::retranslateUi() {
+void ConfigureHotkeys::RetranslateUI() {
     ui->retranslateUi(this);
 }

@@ -21,17 +21,17 @@ public:
                              bool enable_web_config = true);
     ~ConfigureDialog() override;
 
-    void applyConfiguration();
+    void ApplyConfiguration();
 
 private slots:
-    void onLanguageChanged(const QString& locale);
+    void OnLanguageChanged(const QString& locale);
 
 signals:
-    void languageChanged(const QString& locale);
+    void LanguageChanged(const QString& locale);
 
 private:
-    void setConfiguration();
-    void retranslateUi();
+    void SetConfiguration();
+    void RetranslateUI();
     void UpdateVisibleTabs();
     void PopulateSelectionList();
 

@@ -18,15 +18,15 @@ public:
     explicit ConfigureUi(QWidget* parent = nullptr);
     ~ConfigureUi() override;
 
-    void applyConfiguration();
-    void retranslateUi();
-    void setConfiguration();
+    void ApplyConfiguration();
+    void RetranslateUI();
+    void SetConfiguration();
 
 private slots:
-    void onLanguageChanged(int index);
+    void OnLanguageChanged(int index);
 
 signals:
-    void languageChanged(const QString& locale);
+    void LanguageChanged(const QString& locale);
 
 private:
     std::unique_ptr<Ui::ConfigureUi> ui;

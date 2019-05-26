@@ -25,9 +25,9 @@ public:
     explicit ConfigureSystem(QWidget* parent = nullptr);
     ~ConfigureSystem() override;
 
-    void applyConfiguration();
-    void setConfiguration();
-    void retranslateUi();
+    void ApplyConfiguration();
+    void SetConfiguration();
+    void RetranslateUI();
 
 private:
     void ReadSystemSettings();

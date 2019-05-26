@@ -30,7 +30,7 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     ui->emulation_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 
     connect(ui->volume_slider, &QSlider::valueChanged, this,
-            &ConfigureAudio::setVolumeIndicatorText);
+            &ConfigureAudio::SetVolumeIndicatorText);
 
     ui->input_device_combo_box->clear();
     ui->input_device_combo_box->addItem(tr("Default"));
@@ -40,26 +40,26 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     }
 #endif
     connect(ui->input_type_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-            &ConfigureAudio::updateAudioInputDevices);
+            &ConfigureAudio::UpdateAudioInputDevices);
 
-    this->setConfiguration();
+    SetConfiguration();
     connect(ui->output_sink_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-            &ConfigureAudio::updateAudioOutputDevices);
+            &ConfigureAudio::UpdateAudioOutputDevices);
 }
 
 ConfigureAudio::~ConfigureAudio() {}
 
-void ConfigureAudio::setConfiguration() {
-    setOutputSinkFromSinkID();
+void ConfigureAudio::SetConfiguration() {
+    SetOutputSinkFromSinkID();
 
     // The device list cannot be pre-populated (nor listed) until the output sink is known.
-    updateAudioOutputDevices(ui->output_sink_combo_box->currentIndex());
+    UpdateAudioOutputDevices(ui->output_sink_combo_box->currentIndex());
 
-    setAudioDeviceFromDeviceID();
+    SetAudioDeviceFromDeviceID();
 
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
     ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
-    setVolumeIndicatorText(ui->volume_slider->sliderPosition());
+    SetVolumeIndicatorText(ui->volume_slider->sliderPosition());
 
     int selection;
     if (Settings::values.enable_dsp_lle) {
@@ -77,10 +77,10 @@ void ConfigureAudio::setConfiguration() {
     ui->input_type_combo_box->setCurrentIndex(index);
     ui->input_device_combo_box->setCurrentText(
         QString::fromStdString(Settings::values.mic_input_device));
-    updateAudioInputDevices(index);
+    UpdateAudioInputDevices(index);
 }
 
-void ConfigureAudio::setOutputSinkFromSinkID() {
+void ConfigureAudio::SetOutputSinkFromSinkID() {
     int new_sink_index = 0;
 
     const QString sink_id = QString::fromStdString(Settings::values.sink_id);
@@ -94,7 +94,7 @@ void ConfigureAudio::setOutputSinkFromSinkID() {
     ui->output_sink_combo_box->setCurrentIndex(new_sink_index);
 }
 
-void ConfigureAudio::setAudioDeviceFromDeviceID() {
+void ConfigureAudio::SetAudioDeviceFromDeviceID() {
     int new_device_index = -1;
 
     const QString device_id = QString::fromStdString(Settings::values.audio_device_id);
@@ -108,11 +108,11 @@ void ConfigureAudio::setAudioDeviceFromDeviceID() {
     ui->audio_device_combo_box->setCurrentIndex(new_device_index);
 }
 
-void ConfigureAudio::setVolumeIndicatorText(int percentage) {
+void ConfigureAudio::SetVolumeIndicatorText(int percentage) {
     ui->volume_indicator->setText(tr("%1%", "Volume percentage (e.g. 50%)").arg(percentage));
 }
 
-void ConfigureAudio::applyConfiguration() {
+void ConfigureAudio::ApplyConfiguration() {
     Settings::values.sink_id =
         ui->output_sink_combo_box->itemText(ui->output_sink_combo_box->currentIndex())
             .toStdString();
@@ -129,7 +129,7 @@ void ConfigureAudio::applyConfiguration() {
     Settings::values.mic_input_device = ui->input_device_combo_box->currentText().toStdString();
 }
 
-void ConfigureAudio::updateAudioOutputDevices(int sink_index) {
+void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
     ui->audio_device_combo_box->clear();
     ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
 
@@ -139,8 +139,8 @@ void ConfigureAudio::updateAudioOutputDevices(int sink_index) {
     }
 }
 
-void ConfigureAudio::updateAudioInputDevices(int index) {}
+void ConfigureAudio::UpdateAudioInputDevices(int index) {}
 
-void ConfigureAudio::retranslateUi() {
+void ConfigureAudio::RetranslateUI() {
     ui->retranslateUi(this);
 }

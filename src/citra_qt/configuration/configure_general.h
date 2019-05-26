@@ -21,9 +21,9 @@ public:
     ~ConfigureGeneral() override;
 
     void ResetDefaults();
-    void applyConfiguration();
-    void retranslateUi();
-    void setConfiguration();
+    void ApplyConfiguration();
+    void RetranslateUI();
+    void SetConfiguration();
 
 private:
     std::unique_ptr<Ui::ConfigureGeneral> ui;

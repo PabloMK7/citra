@@ -18,30 +18,30 @@ public:
     explicit ConfigureCamera(QWidget* parent = nullptr);
     ~ConfigureCamera() override;
 
-    void applyConfiguration();
-    void retranslateUi();
+    void ApplyConfiguration();
+    void RetranslateUI();
 
     void timerEvent(QTimerEvent*) override;
 
 public slots:
-    /// recordConfig() and updateUiDisplay()
-    void setConfiguration();
-    void onToolButtonClicked();
+    /// RecordConfig() and UpdateUiDisplay()
+    void SetConfiguration();
+    void OnToolButtonClicked();
 
 private:
     enum class CameraPosition { RearRight, Front, RearLeft, RearBoth, Null };
     static const std::array<std::string, 3> Implementations;
     /// Record the current configuration
-    void recordConfig();
+    void RecordConfig();
     /// Updates camera mode
-    void updateCameraMode();
+    void UpdateCameraMode();
     /// Updates image source
-    void updateImageSourceUI();
-    void startPreviewing();
-    void stopPreviewing();
-    void connectEvents();
-    CameraPosition getCameraSelection();
-    int getSelectedCameraIndex();
+    void UpdateImageSourceUI();
+    void StartPreviewing();
+    void StopPreviewing();
+    void ConnectEvents();
+    CameraPosition GetCameraSelection();
+    int GetSelectedCameraIndex();
 
 private:
     std::unique_ptr<Ui::ConfigureCamera> ui;
