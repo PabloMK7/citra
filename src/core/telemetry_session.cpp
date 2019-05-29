@@ -108,12 +108,11 @@ TelemetrySession::~TelemetrySession() {
     auto backend = std::make_unique<Telemetry::NullVisitor>();
 #endif
 
-    // Complete the session, submitting to web service if necessary
+    // Complete the session, submitting to the web service backend if necessary
     field_collection.Accept(*backend);
     if (Settings::values.enable_telemetry) {
         backend->Complete();
     }
-    backend = nullptr;
 }
 
 void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
