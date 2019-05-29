@@ -8,6 +8,10 @@
 #include <string>
 #include "common/telemetry.h"
 
+namespace Loader {
+class AppLoader;
+}
+
 namespace Core {
 
 /**
@@ -17,7 +21,7 @@ namespace Core {
  */
 class TelemetrySession {
 public:
-    TelemetrySession();
+    explicit TelemetrySession();
     ~TelemetrySession();
 
     TelemetrySession(const TelemetrySession&) = delete;
@@ -25,6 +29,22 @@ public:
 
     TelemetrySession(TelemetrySession&&) = delete;
     TelemetrySession& operator=(TelemetrySession&&) = delete;
+
+    /**
+     * Adds the initial telemetry info necessary when starting up a title.
+     *
+     * This includes information such as:
+     *   - Telemetry ID
+     *   - Initialization time
+     *   - Title ID
+     *   - Title name
+     *   - Title file format
+     *   - Miscellaneous settings values.
+     *
+     * @param app_loader The application loader to use to retrieve
+     *                   title-specific information.
+     */
+    void AddInitialInfo(Loader::AppLoader& app_loader);
 
     /**
      * Wrapper around the Telemetry::FieldCollection::AddField method.
