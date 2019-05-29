@@ -15,10 +15,16 @@ namespace Core {
  * session, logging any one-time fields. Interfaces with the telemetry backend used for submitting
  * data to the web service. Submits session data on close.
  */
-class TelemetrySession : NonCopyable {
+class TelemetrySession {
 public:
     TelemetrySession();
     ~TelemetrySession();
+
+    TelemetrySession(const TelemetrySession&) = delete;
+    TelemetrySession& operator=(const TelemetrySession&) = delete;
+
+    TelemetrySession(TelemetrySession&&) = delete;
+    TelemetrySession& operator=(TelemetrySession&&) = delete;
 
     /**
      * Wrapper around the Telemetry::FieldCollection::AddField method.
