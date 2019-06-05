@@ -143,9 +143,9 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickByGUID(const std::string& g
     std::lock_guard lock{joystick_map_mutex};
     const auto it = joystick_map.find(guid);
     if (it != joystick_map.end()) {
-        while (it->second.size() <= port) {
-            auto joystick = std::make_shared<SDLJoystick>(guid, it->second.size(), nullptr,
-                                                          [](SDL_Joystick*) {});
+        while (it->second.size() <= static_cast<std::size_t>(port)) {
+            auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(it->second.size()),
+                                                          nullptr, [](SDL_Joystick*) {});
             it->second.emplace_back(std::move(joystick));
         }
         return it->second[port];
