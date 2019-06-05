@@ -234,6 +234,9 @@ target_compile_definitions(citra-qt PRIVATE
 
     # Disable unsafe overloads of QProcess' start() function.
     -DQT_NO_PROCESS_COMBINED_ARGUMENT_START
+
+    # Disable implicit QString->QUrl conversions to enforce use of proper resolving functions.
+    -DQT_NO_URL_CAST_FROM_STRING
 )
 
 if (CITRA_ENABLE_COMPATIBILITY_REPORTING)
