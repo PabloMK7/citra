@@ -228,6 +228,9 @@ target_compile_definitions(citra-qt PRIVATE
     # Use QStringBuilder for string concatenation to reduce
     # the overall number of temporary strings created.
     -DQT_USE_QSTRINGBUILDER
+
+    # Disable implicit type narrowing in signal/slot connect() calls.
+    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT
 )
 
 if (CITRA_ENABLE_COMPATIBILITY_REPORTING)
