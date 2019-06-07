@@ -9,6 +9,7 @@
 #include <fstream>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -115,7 +116,7 @@ u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
 bool DeleteDirRecursively(const std::string& directory, unsigned int recursion = 256);
 
 // Returns the current directory
-std::string GetCurrentDir();
+std::optional<std::string> GetCurrentDir();
 
 // Create directory and copy contents (does not overwrite existing files)
 void CopyDir(const std::string& source_path, const std::string& dest_path);
@@ -141,8 +142,9 @@ const std::string& GetExeDirectory();
 std::string AppDataRoamingDirectory();
 #endif
 
-size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename);
-size_t ReadFileToString(bool text_file, const char* filename, std::string& str);
+std::size_t WriteStringToFile(bool text_file, const std::string& filename, std::string_view str);
+
+std::size_t ReadFileToString(bool text_file, const std::string& filename, std::string& str);
 
 /**
  * Splits the filename into 8.3 format
@@ -228,8 +230,8 @@ public:
         return WriteArray(&object, 1);
     }
 
-    std::size_t WriteString(const std::string& str) {
-        return WriteArray(str.c_str(), str.length());
+    std::size_t WriteString(std::string_view str) {
+        return WriteArray(str.data(), str.length());
     }
 
     bool IsOpen() const {
@@ -267,8 +269,8 @@ private:
 template <typename T>
 void OpenFStream(T& fstream, const std::string& filename, std::ios_base::openmode openmode) {
 #ifdef _MSC_VER
-    fstream.open(Common::UTF8ToUTF16W(filename).c_str(), openmode);
+    fstream.open(Common::UTF8ToUTF16W(filename), openmode);
 #else
-    fstream.open(filename.c_str(), openmode);
+    fstream.open(filename, openmode);
 #endif
 }
