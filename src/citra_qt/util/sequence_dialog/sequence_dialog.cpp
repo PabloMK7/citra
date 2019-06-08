@@ -9,16 +9,19 @@
 
 SequenceDialog::SequenceDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle(tr("Enter a hotkey"));
-    auto* layout = new QVBoxLayout(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
     key_sequence = new QKeySequenceEdit;
-    layout->addWidget(key_sequence);
-    auto* buttons =
-        new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
+
+    auto* const buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     buttons->setCenterButtons(true);
+
+    auto* const layout = new QVBoxLayout(this);
+    layout->addWidget(key_sequence);
     layout->addWidget(buttons);
+
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 }
 
 SequenceDialog::~SequenceDialog() = default;
