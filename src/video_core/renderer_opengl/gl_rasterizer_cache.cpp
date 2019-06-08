@@ -584,7 +584,7 @@ bool SurfaceParams::CanSubRect(const SurfaceParams& sub_surface) const {
            sub_surface.is_tiled == is_tiled &&
            (sub_surface.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
            (sub_surface.stride == stride || sub_surface.height <= (is_tiled ? 8u : 1u)) &&
-           GetSubRect(sub_surface).left + sub_surface.width <= stride;
+           GetSubRect(sub_surface).right <= stride;
 }
 
 bool SurfaceParams::CanExpand(const SurfaceParams& expanded_surface) const {
