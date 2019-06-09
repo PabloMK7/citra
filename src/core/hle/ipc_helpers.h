@@ -142,6 +142,20 @@ inline void RequestBuilder::Push(u64 value) {
 }
 
 template <>
+inline void RequestBuilder::Push(f32 value) {
+    u32 integral;
+    std::memcpy(&integral, &value, sizeof(u32));
+    Push(integral);
+}
+
+template <>
+inline void RequestBuilder::Push(f64 value) {
+    u64 integral;
+    std::memcpy(&integral, &value, sizeof(u64));
+    Push(integral);
+}
+
+template <>
 inline void RequestBuilder::Push(bool value) {
     Push(static_cast<u8>(value));
 }
@@ -339,6 +353,22 @@ template <>
 inline s32 RequestParser::Pop() {
     s32_le data = PopRaw<s32_le>();
     return data;
+}
+
+template <>
+inline f32 RequestParser::Pop() {
+    const u32 value = Pop<u32>();
+    float real;
+    std::memcpy(&real, &value, sizeof(real));
+    return real;
+}
+
+template <>
+inline f64 RequestParser::Pop() {
+    const u64 value = Pop<u64>();
+    f64 real;
+    std::memcpy(&real, &value, sizeof(real));
+    return real;
 }
 
 template <>

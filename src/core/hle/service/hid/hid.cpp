@@ -331,7 +331,7 @@ void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestCon
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.PushRaw<f32>(gyroscope_coef);
+    rb.Push(gyroscope_coef);
 }
 
 void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx) {
