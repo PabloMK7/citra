@@ -13,13 +13,10 @@
 
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGraphics) {
-
     ui->setupUi(this);
-    this->setConfiguration();
+    setConfiguration();
 
-    ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
-    connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit,
-            &QSpinBox::setEnabled);
+    connect(ui->toggle_frame_limit, &QCheckBox::toggled, ui->frame_limit, &QSpinBox::setEnabled);
 
     ui->layoutBox->setEnabled(!Settings::values.custom_layout);
 
@@ -43,8 +40,9 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
 #endif
     connect(ui->bg_button, &QPushButton::clicked, this, [this] {
         const QColor new_bg_color = QColorDialog::getColor(bg_color);
-        if (!new_bg_color.isValid())
+        if (!new_bg_color.isValid()) {
             return;
+        }
         bg_color = new_bg_color;
         QPixmap pixmap(ui->bg_button->size());
         pixmap.fill(bg_color);
@@ -63,6 +61,7 @@ void ConfigureGraphics::setConfiguration() {
     ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit);
     ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor);
     ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
+    ui->frame_limit->setEnabled(ui->toggle_frame_limit->isChecked());
     ui->frame_limit->setValue(Settings::values.frame_limit);
     ui->factor_3d->setValue(Settings::values.factor_3d);
     ui->toggle_3d->setChecked(Settings::values.toggle_3d);
