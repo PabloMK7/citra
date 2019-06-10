@@ -91,7 +91,31 @@ bool VerifyLogin(const std::string& username, const std::string& token) {
 #endif
 }
 
-TelemetrySession::TelemetrySession() {
+TelemetrySession::TelemetrySession() = default;
+
+TelemetrySession::~TelemetrySession() {
+    // Log one-time session end information
+    const s64 shutdown_time{std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::system_clock::now().time_since_epoch())
+                                .count()};
+    AddField(Telemetry::FieldType::Session, "Shutdown_Time", shutdown_time);
+
+#ifdef ENABLE_WEB_SERVICE
+    auto backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
+                                                               Settings::values.citra_username,
+                                                               Settings::values.citra_token);
+#else
+    auto backend = std::make_unique<Telemetry::NullVisitor>();
+#endif
+
+    // Complete the session, submitting to the web service backend if necessary
+    field_collection.Accept(*backend);
+    if (Settings::values.enable_telemetry) {
+        backend->Complete();
+    }
+}
+
+void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
     // Log one-time top-level information
     AddField(Telemetry::FieldType::None, "TelemetryId", GetTelemetryId());
 
@@ -101,7 +125,7 @@ TelemetrySession::TelemetrySession() {
                             .count()};
     AddField(Telemetry::FieldType::Session, "Init_Time", init_time);
     std::string program_name;
-    const Loader::ResultStatus res{System::GetInstance().GetAppLoader().ReadTitle(program_name)};
+    const Loader::ResultStatus res{app_loader.ReadTitle(program_name)};
     if (res == Loader::ResultStatus::Success) {
         AddField(Telemetry::FieldType::Session, "ProgramName", program_name);
     }
@@ -176,28 +200,6 @@ TelemetrySession::TelemetrySession() {
              Settings::values.factor_3d.load());
     AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds", Settings::values.is_new_3ds);
     AddField(Telemetry::FieldType::UserConfig, "System_RegionValue", Settings::values.region_value);
-}
-
-TelemetrySession::~TelemetrySession() {
-    // Log one-time session end information
-    const s64 shutdown_time{std::chrono::duration_cast<std::chrono::milliseconds>(
-                                std::chrono::system_clock::now().time_since_epoch())
-                                .count()};
-    AddField(Telemetry::FieldType::Session, "Shutdown_Time", shutdown_time);
-
-#ifdef ENABLE_WEB_SERVICE
-    auto backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
-                                                               Settings::values.citra_username,
-                                                               Settings::values.citra_token);
-#else
-    auto backend = std::make_unique<Telemetry::NullVisitor>();
-#endif
-
-    // Complete the session, submitting to web service if necessary
-    field_collection.Accept(*backend);
-    if (Settings::values.enable_telemetry)
-        backend->Complete();
-    backend = nullptr;
 }
 
 bool TelemetrySession::SubmitTestcase() {

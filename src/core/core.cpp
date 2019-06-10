@@ -94,7 +94,6 @@ System::ResultStatus System::SingleStep() {
 
 System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath) {
     app_loader = Loader::GetLoader(filepath);
-
     if (!app_loader) {
         LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
@@ -125,6 +124,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         return init_result;
     }
 
+    telemetry_session->AddInitialInfo(*app_loader);
     std::shared_ptr<Kernel::Process> process;
     const Loader::ResultStatus load_result{app_loader->Load(process)};
     kernel->SetCurrentProcess(process);
