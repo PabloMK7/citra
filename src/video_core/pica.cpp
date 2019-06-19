@@ -50,5 +50,11 @@ void State::Reset() {
     Zero(cmd_list);
     Zero(immediate);
     primitive_assembler.Reconfigure(PipelineRegs::TriangleTopology::List);
+    vs_float_regs_counter = 0;
+    Zero(vs_uniform_write_buffer);
+    gs_float_regs_counter = 0;
+    Zero(gs_uniform_write_buffer);
+    default_attr_counter = 0;
+    Zero(default_attr_write_buffer);
 }
 } // namespace Pica

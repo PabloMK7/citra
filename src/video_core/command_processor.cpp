@@ -30,15 +30,6 @@
 
 namespace Pica::CommandProcessor {
 
-static int vs_float_regs_counter = 0;
-static u32 vs_uniform_write_buffer[4];
-
-static int gs_float_regs_counter = 0;
-static u32 gs_uniform_write_buffer[4];
-
-static int default_attr_counter = 0;
-static u32 default_attr_write_buffer[3];
-
 // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
 static const u32 expand_bits_to_bytes[] = {
     0x00000000, 0x000000ff, 0x0000ff00, 0x0000ffff, 0x00ff0000, 0x00ff00ff, 0x00ffff00, 0x00ffffff,
@@ -161,7 +152,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX(pipeline.vs_default_attributes_setup.index):
         g_state.immediate.current_attribute = 0;
         g_state.immediate.reset_geometry_pipeline = true;
-        default_attr_counter = 0;
+        g_state.default_attr_counter = 0;
         break;
 
     // Load default vertex input attributes
@@ -170,14 +161,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[2], 0x235): {
         // TODO: Does actual hardware indeed keep an intermediate buffer or does
         //       it directly write the values?
-        default_attr_write_buffer[default_attr_counter++] = value;
+        g_state.default_attr_write_buffer[g_state.default_attr_counter++] = value;
 
         // Default attributes are written in a packed format such that four float24 values are
         // encoded in
         // three 32-bit numbers. We write to internal memory once a full such vector is
         // written.
-        if (default_attr_counter >= 3) {
-            default_attr_counter = 0;
+        if (g_state.default_attr_counter >= 3) {
+            g_state.default_attr_counter = 0;
 
             auto& setup = regs.pipeline.vs_default_attributes_setup;
 
@@ -189,12 +180,12 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             Common::Vec4<float24> attribute;
 
             // NOTE: The destination component order indeed is "backwards"
-            attribute.w = float24::FromRaw(default_attr_write_buffer[0] >> 8);
-            attribute.z = float24::FromRaw(((default_attr_write_buffer[0] & 0xFF) << 16) |
-                                           ((default_attr_write_buffer[1] >> 16) & 0xFFFF));
-            attribute.y = float24::FromRaw(((default_attr_write_buffer[1] & 0xFFFF) << 8) |
-                                           ((default_attr_write_buffer[2] >> 24) & 0xFF));
-            attribute.x = float24::FromRaw(default_attr_write_buffer[2] & 0xFFFFFF);
+            attribute.w = float24::FromRaw(g_state.default_attr_write_buffer[0] >> 8);
+            attribute.z = float24::FromRaw(((g_state.default_attr_write_buffer[0] & 0xFF) << 16) |
+                                           ((g_state.default_attr_write_buffer[1] >> 16) & 0xFFFF));
+            attribute.y = float24::FromRaw(((g_state.default_attr_write_buffer[1] & 0xFFFF) << 8) |
+                                           ((g_state.default_attr_write_buffer[2] >> 24) & 0xFF));
+            attribute.x = float24::FromRaw(g_state.default_attr_write_buffer[2] & 0xFFFFFF);
 
             LOG_TRACE(HW_GPU, "Set default VS attribute {:x} to ({} {} {} {})", (int)setup.index,
                       attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
@@ -459,8 +450,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[5], 0x296):
     case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[6], 0x297):
     case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[7], 0x298): {
-        WriteUniformFloatReg(g_state.regs.gs, g_state.gs, gs_float_regs_counter,
-                             gs_uniform_write_buffer, value);
+        WriteUniformFloatReg(g_state.regs.gs, g_state.gs, g_state.gs_float_regs_counter,
+                             g_state.gs_uniform_write_buffer, value);
         break;
     }
 
@@ -528,8 +519,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[6], 0x2c7):
     case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[7], 0x2c8): {
         // TODO (wwylele): does regs.pipeline.gs_unit_exclusive_configuration affect this?
-        WriteUniformFloatReg(g_state.regs.vs, g_state.vs, vs_float_regs_counter,
-                             vs_uniform_write_buffer, value);
+        WriteUniformFloatReg(g_state.regs.vs, g_state.vs, g_state.vs_float_regs_counter,
+                             g_state.vs_uniform_write_buffer, value);
         break;
     }
 

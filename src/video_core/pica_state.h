@@ -152,6 +152,15 @@ struct State {
 
     // This is constructed with a dummy triangle topology
     PrimitiveAssembler<Shader::OutputVertex> primitive_assembler;
+
+    int vs_float_regs_counter = 0;
+    u32 vs_uniform_write_buffer[4]{};
+
+    int gs_float_regs_counter = 0;
+    u32 gs_uniform_write_buffer[4]{};
+
+    int default_attr_counter = 0;
+    u32 default_attr_write_buffer[3]{};
 };
 
 extern State g_state; ///< Current Pica state
