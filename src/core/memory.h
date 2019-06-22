@@ -220,9 +220,6 @@ public:
     MemorySystem();
     ~MemorySystem();
 
-    /// Sets CPU to notify page table change
-    void SetCPU(ARM_Interface& cpu);
-
     /**
      * Maps an allocated buffer onto a region of the emulated process address space.
      *
