@@ -12,12 +12,6 @@ namespace Service::GSP {
 
 static std::weak_ptr<GSP_GPU> gsp_gpu;
 
-FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    auto gpu = gsp_gpu.lock();
-    ASSERT(gpu != nullptr);
-    return gpu->GetFrameBufferInfo(thread_id, screen_index);
-}
-
 void SignalInterrupt(InterruptId interrupt_id) {
     auto gpu = gsp_gpu.lock();
     ASSERT(gpu != nullptr);
