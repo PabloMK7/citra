@@ -183,9 +183,14 @@ struct CommandBuffer {
 };
 static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrect size");
 
+class GSP_GPU;
+
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
     SessionData();
+    SessionData(GSP_GPU* gsp);
     ~SessionData();
+
+    GSP_GPU* gsp;
 
     /// Event triggered when GSP interrupt has been signalled
     std::shared_ptr<Kernel::Event> interrupt_event;
@@ -404,6 +409,10 @@ private:
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 
+    u32 GetUnusedThreadId();
+
+    std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
+
     Core::System& system;
 
     /// GSP shared memory
@@ -413,6 +422,14 @@ private:
     int active_thread_id = -1;
 
     bool first_initialization = true;
+
+    /// Maximum number of threads that can be registered at the same time in the GSP module.
+    static constexpr u32 MaxGSPThreads = 4;
+
+    /// Thread ids currently in use by the sessions connected to the GSPGPU service.
+    std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
+
+    friend class SessionData;
 };
 
 ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);

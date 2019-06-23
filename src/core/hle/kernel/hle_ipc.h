@@ -72,7 +72,7 @@ public:
 
 protected:
     /// Creates the storage for the session data of the service.
-    virtual std::unique_ptr<SessionDataBase> MakeSessionData() const = 0;
+    virtual std::unique_ptr<SessionDataBase> MakeSessionData() = 0;
 
     /// Returns the session data associated with the server session.
     template <typename T>

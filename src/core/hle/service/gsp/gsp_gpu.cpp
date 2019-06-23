@@ -50,12 +50,6 @@ constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorM
                                            ErrorSummary::InvalidArgument,
                                            ErrorLevel::Usage); // 0xE0E02BEC
 
-/// Maximum number of threads that can be registered at the same time in the GSP module.
-constexpr u32 MaxGSPThreads = 4;
-
-/// Thread ids currently in use by the sessions connected to the GSPGPU service.
-static std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
-
 static PAddr VirtualToPhysicalAddress(VAddr addr) {
     if (addr == 0) {
         return 0;
@@ -79,7 +73,7 @@ static PAddr VirtualToPhysicalAddress(VAddr addr) {
     return addr | 0x80000000;
 }
 
-static u32 GetUnusedThreadId() {
+u32 GSP_GPU::GetUnusedThreadId() {
     for (u32 id = 0; id < MaxGSPThreads; ++id) {
         if (!used_thread_ids[id])
             return id;
@@ -821,17 +815,25 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 2), system
     first_initialization = true;
 };
 
+std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> GSP_GPU::MakeSessionData() {
+    return std::make_unique<SessionData>(this);
+}
+
 SessionData::SessionData() {
+    UNREACHABLE();
+}
+
+SessionData::SessionData(GSP_GPU* gsp) : gsp(gsp) {
     // Assign a new thread id to this session when it connects. Note: In the real GSP service this
     // is done through a real thread (svcCreateThread) but we have to simulate it since our HLE
     // services don't have threads.
-    thread_id = GetUnusedThreadId();
-    used_thread_ids[thread_id] = true;
+    thread_id = gsp->GetUnusedThreadId();
+    gsp->used_thread_ids[thread_id] = true;
 }
 
 SessionData::~SessionData() {
     // Free the thread id slot so that other sessions can use it.
-    used_thread_ids[thread_id] = false;
+    gsp->used_thread_ids[thread_id] = false;
 }
 
 } // namespace Service::GSP
