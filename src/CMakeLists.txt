@@ -18,16 +18,29 @@ if (MSVC)
     # Avoid windows.h from including some usually unused libs like winsocks.h, since this might cause some redefinition errors.
     add_definitions(-DWIN32_LEAN_AND_MEAN)
 
-    # /W3 - Level 3 warnings
-    # /MP - Multi-threaded compilation
-    # /Zi - Output debugging information
-    # /Zo - enhanced debug info for optimized builds
-    # /permissive- - enables stricter C++ standards conformance checks
-    # /EHsc - C++-only exception handling semantics
-    # /std:c++latest - Latest available C++ standard
-    # /Zc:throwingNew - let codegen assume `operator new` will never return null
-    # /Zc:inline - let codegen omit inline functions in object files
-    add_compile_options(/W3 /MP /Zi /Zo /permissive- /EHsc /std:c++latest /Zc:throwingNew,inline)
+    # /W3                 - Level 3 warnings
+    # /MP                 - Multi-threaded compilation
+    # /Zi                 - Output debugging information
+    # /Zo                 - Enhanced debug info for optimized builds
+    # /permissive-        - Enables stricter C++ standards conformance checks
+    # /EHsc               - C++-only exception handling semantics
+    # /volatile:iso       - Use strict standards-compliant volatile semantics.
+    # /Zc:externConstexpr - Allow extern constexpr variables to have external linkage, like the standard mandates
+    # /Zc:inline          - Let codegen omit inline functions in object files
+    # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
+    add_compile_options(
+        /W3
+        /MP
+        /Zi
+        /Zo
+        /permissive-
+        /EHsc
+        /std:c++latest
+        /volatile:iso
+        /Zc:externConstexpr
+        /Zc:inline
+        /Zc:throwingNew
+    )
 
     # /GS- - No stack buffer overflow checks
     add_compile_options("$<$<CONFIG:Release>:/GS->")
