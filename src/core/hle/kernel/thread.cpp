@@ -112,9 +112,6 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
 
         if (previous_process.get() != current_thread->owner_process) {
             kernel.SetCurrentProcess(SharedFrom(current_thread->owner_process));
-            kernel.memory.SetCurrentPageTable(
-                &current_thread->owner_process->vm_manager.page_table);
-            cpu->PageTableChanged(); // notify the CPU the page table in memory has changed
         }
 
         cpu->LoadContext(new_thread->context);

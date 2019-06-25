@@ -141,7 +141,6 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             return ResultStatus::ErrorLoader;
         }
     }
-    memory->SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
@@ -179,16 +178,16 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
-        cpu_core = std::make_unique<ARM_Dynarmic>(this, *memory, USER32MODE);
+        cpu_core = std::make_shared<ARM_Dynarmic>(this, *memory, USER32MODE);
 #else
-        cpu_core = std::make_unique<ARM_DynCom>(this, *memory, USER32MODE);
+        cpu_core = std::make_shared<ARM_DynCom>(this, *memory, USER32MODE);
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
     } else {
-        cpu_core = std::make_unique<ARM_DynCom>(this, *memory, USER32MODE);
+        cpu_core = std::make_shared<ARM_DynCom>(this, *memory, USER32MODE);
     }
 
-    kernel->GetThreadManager().SetCPU(*cpu_core);
+    kernel->SetCPU(cpu_core);
 
     if (Settings::values.enable_dsp_lle) {
         dsp_core = std::make_unique<AudioCore::DspLle>(*memory,
