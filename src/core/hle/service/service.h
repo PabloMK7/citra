@@ -156,7 +156,7 @@ protected:
         RegisterHandlersBase(functions, n);
     }
 
-    std::unique_ptr<SessionDataBase> MakeSessionData() const override {
+    std::unique_ptr<SessionDataBase> MakeSessionData() override {
         return std::make_unique<SessionData>();
     }
 
