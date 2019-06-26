@@ -53,7 +53,9 @@ void KernelSystem::SetCurrentProcess(std::shared_ptr<Process> process) {
 
 void KernelSystem::SetCurrentMemPageTable(Memory::PageTable* page_table) {
     memory.SetCurrentPageTable(page_table);
-    current_cpu->PageTableChanged(); // notify the CPU the page table in memory has changed
+    if (current_cpu != nullptr) {
+        current_cpu->PageTableChanged(); // notify the CPU the page table in memory has changed
+    }
 }
 
 void KernelSystem::SetCPU(std::shared_ptr<ARM_Interface> cpu) {
