@@ -559,7 +559,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     if (!strcmp(name, ".code"))
         override_name = "code.bin";
     else if (!strcmp(name, "icon"))
-        override_name = "code.bin";
+        override_name = "icon.bin";
     else if (!strcmp(name, "banner"))
         override_name = "banner.bnr";
     else if (!strcmp(name, "logo"))
