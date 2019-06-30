@@ -272,6 +272,13 @@ public:
     Loader::ResultStatus ReadExtdataId(u64& extdata_id);
 
     /**
+     * Apply an IPS patch for .code (if it exists).
+     * This should only be called after allocating .bss.
+     * @return bool true if a patch was applied, false otherwise
+     */
+    bool ApplyIPSPatch(std::vector<u8>& code) const;
+
+    /**
      * Checks whether the NCCH container contains an ExeFS
      * @return bool check result
      */
