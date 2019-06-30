@@ -40,9 +40,7 @@ VMManager::VMManager(Memory::MemorySystem& memory) : memory(memory) {
     Reset();
 }
 
-VMManager::~VMManager() {
-    Reset();
-}
+VMManager::~VMManager() = default;
 
 void VMManager::Reset() {
     vma_map.clear();
