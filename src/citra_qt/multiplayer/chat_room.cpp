@@ -425,7 +425,7 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
         QAction* view_profile_action = context_menu.addAction(tr("View Profile"));
         connect(view_profile_action, &QAction::triggered, [username] {
             QDesktopServices::openUrl(
-                QString("https://community.citra-emu.org/u/%1").arg(username));
+                QUrl(QString("https://community.citra-emu.org/u/%1").arg(username)));
         });
     }
 
