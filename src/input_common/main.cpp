@@ -9,10 +9,8 @@
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
-#include "input_common/udp/udp.h"
-#ifdef HAVE_SDL2
 #include "input_common/sdl/sdl.h"
-#endif
+#include "input_common/udp/udp.h"
 
 namespace InputCommon {
 
