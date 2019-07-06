@@ -64,9 +64,8 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
-    connect(ui->games_owned, &QCheckBox::stateChanged, proxy,
-            &LobbyFilterProxyModel::SetFilterOwned);
-    connect(ui->hide_full, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterFull);
+    connect(ui->games_owned, &QCheckBox::toggled, proxy, &LobbyFilterProxyModel::SetFilterOwned);
+    connect(ui->hide_full, &QCheckBox::toggled, proxy, &LobbyFilterProxyModel::SetFilterFull);
     connect(ui->search, &QLineEdit::textChanged, proxy, &LobbyFilterProxyModel::SetFilterSearch);
     connect(ui->room_list, &QTreeView::doubleClicked, this, &Lobby::OnJoinRoom);
     connect(ui->room_list, &QTreeView::clicked, this, &Lobby::OnExpandRoom);

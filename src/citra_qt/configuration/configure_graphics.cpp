@@ -21,11 +21,10 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     ui->layoutBox->setEnabled(!Settings::values.custom_layout);
 
     ui->hw_renderer_group->setEnabled(ui->toggle_hw_renderer->isChecked());
-    connect(ui->toggle_hw_renderer, &QCheckBox::stateChanged, ui->hw_renderer_group,
+    connect(ui->toggle_hw_renderer, &QCheckBox::toggled, ui->hw_renderer_group,
             &QWidget::setEnabled);
     ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());
-    connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, ui->hw_shader_group,
-            &QWidget::setEnabled);
+    connect(ui->toggle_hw_shader, &QCheckBox::toggled, ui->hw_shader_group, &QWidget::setEnabled);
 #ifdef __APPLE__
     connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, this, [this](int state) {
         if (state == Qt::Checked) {
