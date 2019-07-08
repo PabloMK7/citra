@@ -320,9 +320,17 @@ Loader::ResultStatus NCCHContainer::Load() {
 
         // System archives and DLC don't have an extended header but have RomFS
         if (ncch_header.extended_header_size) {
-            if (file.ReadBytes(&exheader_header, sizeof(ExHeader_Header)) !=
-                sizeof(ExHeader_Header))
+            auto read_exheader = [this](FileUtil::IOFile& file) {
+                const std::size_t size = sizeof(exheader_header);
+                return file && file.ReadBytes(&exheader_header, size) == size;
+            };
+
+            FileUtil::IOFile exheader_override_file{filepath + ".exheader", "rb"};
+            if (read_exheader(exheader_override_file)) {
+                is_tainted = true;
+            } else if (!read_exheader(file)) {
                 return Loader::ResultStatus::Error;
+            }
 
             if (is_encrypted) {
                 // This ID check is masked to low 32-bit as a toleration to ill-formed ROM created
