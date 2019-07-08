@@ -1339,7 +1339,7 @@ void GMainWindow::OnCheats() {
 void GMainWindow::OnConfigure() {
     ConfigureDialog configureDialog(this, hotkey_registry,
                                     !multiplayer_state->IsHostingPublicRoom());
-    connect(&configureDialog, &ConfigureDialog::languageChanged, this,
+    connect(&configureDialog, &ConfigureDialog::LanguageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
     const int old_input_profile_index = Settings::values.current_input_profile_index;
@@ -1347,7 +1347,7 @@ void GMainWindow::OnConfigure() {
     const bool old_discord_presence = UISettings::values.enable_discord_presence;
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
-        configureDialog.applyConfiguration();
+        configureDialog.ApplyConfiguration();
         InitializeHotkeys();
         if (UISettings::values.theme != old_theme)
             UpdateUITheme();

@@ -19,9 +19,9 @@ public:
     explicit ConfigureWeb(QWidget* parent = nullptr);
     ~ConfigureWeb() override;
 
-    void applyConfiguration();
-    void retranslateUi();
-    void setConfiguration();
+    void ApplyConfiguration();
+    void RetranslateUI();
+    void SetConfiguration();
     void SetWebServiceConfigEnabled(bool enabled);
 
 private:

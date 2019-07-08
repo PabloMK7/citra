@@ -18,9 +18,9 @@ public:
     explicit ConfigureDebug(QWidget* parent = nullptr);
     ~ConfigureDebug() override;
 
-    void applyConfiguration();
-    void retranslateUi();
-    void setConfiguration();
+    void ApplyConfiguration();
+    void RetranslateUI();
+    void SetConfiguration();
 
     std::unique_ptr<Ui::ConfigureDebug> ui;
 };

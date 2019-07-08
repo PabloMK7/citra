@@ -22,12 +22,12 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
 #ifndef USE_DISCORD_PRESENCE
     ui->discord_group->setVisible(false);
 #endif
-    this->setConfiguration();
+    SetConfiguration();
 }
 
 ConfigureWeb::~ConfigureWeb() = default;
 
-void ConfigureWeb::setConfiguration() {
+void ConfigureWeb::SetConfiguration() {
     ui->web_credentials_disclaimer->setWordWrap(true);
     ui->telemetry_learn_more->setOpenExternalLinks(true);
     ui->telemetry_learn_more->setText(tr("<a "
@@ -58,7 +58,7 @@ void ConfigureWeb::setConfiguration() {
     ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence);
 }
 
-void ConfigureWeb::applyConfiguration() {
+void ConfigureWeb::ApplyConfiguration() {
     Settings::values.enable_telemetry = ui->toggle_telemetry->isChecked();
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
     if (user_verified) {
@@ -115,7 +115,7 @@ void ConfigureWeb::OnLoginVerified() {
     }
 }
 
-void ConfigureWeb::retranslateUi() {
+void ConfigureWeb::RetranslateUI() {
     ui->retranslateUi(this);
 }
 

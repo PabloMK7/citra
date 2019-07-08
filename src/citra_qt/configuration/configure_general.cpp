@@ -13,7 +13,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGeneral) {
 
     ui->setupUi(this);
-    this->setConfiguration();
+    SetConfiguration();
 
     ui->updateBox->setVisible(UISettings::values.updater_found);
     connect(ui->button_reset_defaults, &QPushButton::clicked, this,
@@ -22,7 +22,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
 
 ConfigureGeneral::~ConfigureGeneral() = default;
 
-void ConfigureGeneral::setConfiguration() {
+void ConfigureGeneral::SetConfiguration() {
     ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing);
 
     ui->toggle_update_check->setChecked(UISettings::values.check_for_update_on_start);
@@ -45,7 +45,7 @@ void ConfigureGeneral::ResetDefaults() {
     std::exit(0);
 }
 
-void ConfigureGeneral::applyConfiguration() {
+void ConfigureGeneral::ApplyConfiguration() {
     UISettings::values.confirm_before_closing = ui->toggle_check_exit->isChecked();
 
     UISettings::values.check_for_update_on_start = ui->toggle_update_check->isChecked();
@@ -54,6 +54,6 @@ void ConfigureGeneral::applyConfiguration() {
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
 }
 
-void ConfigureGeneral::retranslateUi() {
+void ConfigureGeneral::RetranslateUI() {
     ui->retranslateUi(this);
 }

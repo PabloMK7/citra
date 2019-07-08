@@ -237,7 +237,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
 
 ConfigureSystem::~ConfigureSystem() = default;
 
-void ConfigureSystem::setConfiguration() {
+void ConfigureSystem::SetConfiguration() {
     enabled = !Core::System::GetInstance().IsPoweredOn();
 
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock));
@@ -297,9 +297,10 @@ void ConfigureSystem::ReadSystemSettings() {
     ui->spinBox_play_coins->setValue(play_coin);
 }
 
-void ConfigureSystem::applyConfiguration() {
-    if (!enabled)
+void ConfigureSystem::ApplyConfiguration() {
+    if (!enabled) {
         return;
+    }
 
     bool modified = false;
 
@@ -349,8 +350,9 @@ void ConfigureSystem::applyConfiguration() {
     }
 
     // update the config savegame if any item is modified.
-    if (modified)
+    if (modified) {
         cfg->UpdateConfigNANDSavegame();
+    }
 
     Settings::values.init_clock =
         static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
@@ -389,7 +391,7 @@ void ConfigureSystem::ConfigureTime() {
     dt.fromString("2000-01-01 00:00:01", "yyyy-MM-dd hh:mm:ss");
     ui->edit_init_time->setMinimumDateTime(dt);
 
-    this->setConfiguration();
+    SetConfiguration();
 
     UpdateInitTime(ui->combo_init_clock->currentIndex());
 }
@@ -409,8 +411,10 @@ void ConfigureSystem::RefreshConsoleID() {
                               "if you use an outdated config savegame. Continue?");
     reply = QMessageBox::critical(this, tr("Warning"), warning_text,
                                   QMessageBox::No | QMessageBox::Yes);
-    if (reply == QMessageBox::No)
+    if (reply == QMessageBox::No) {
         return;
+    }
+
     u32 random_number;
     u64 console_id;
     cfg->GenerateConsoleUniqueId(random_number, console_id);
@@ -420,6 +424,6 @@ void ConfigureSystem::RefreshConsoleID() {
         tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
 }
 
-void ConfigureSystem::retranslateUi() {
+void ConfigureSystem::RetranslateUI() {
     ui->retranslateUi(this);
 }

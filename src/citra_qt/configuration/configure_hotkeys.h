@@ -21,8 +21,8 @@ public:
     explicit ConfigureHotkeys(QWidget* parent = nullptr);
     ~ConfigureHotkeys();
 
-    void applyConfiguration(HotkeyRegistry& registry);
-    void retranslateUi();
+    void ApplyConfiguration(HotkeyRegistry& registry);
+    void RetranslateUI();
 
     void EmitHotkeysChanged();
 
