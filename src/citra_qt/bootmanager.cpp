@@ -19,6 +19,8 @@
 
 EmuThread::EmuThread(GRenderWindow* render_window) : render_window(render_window) {}
 
+EmuThread::~EmuThread() = default;
+
 void EmuThread::run() {
     render_window->MakeCurrent();
 
@@ -160,14 +162,14 @@ void GRenderWindow::PollEvents() {}
 void GRenderWindow::OnFramebufferSizeChanged() {
     // Screen changes potentially incur a change in screen DPI, hence we should update the
     // framebuffer size
-    qreal pixelRatio = windowPixelRatio();
-    unsigned width = child->QPaintDevice::width() * pixelRatio;
-    unsigned height = child->QPaintDevice::height() * pixelRatio;
+    const qreal pixel_ratio = windowPixelRatio();
+    const u32 width = child->QPaintDevice::width() * pixel_ratio;
+    const u32 height = child->QPaintDevice::height() * pixel_ratio;
     UpdateCurrentFramebufferLayout(width, height);
 }
 
 void GRenderWindow::BackupGeometry() {
-    geometry = ((QGLWidget*)this)->saveGeometry();
+    geometry = QWidget::saveGeometry();
 }
 
 void GRenderWindow::RestoreGeometry() {
@@ -184,10 +186,11 @@ void GRenderWindow::restoreGeometry(const QByteArray& geometry) {
 QByteArray GRenderWindow::saveGeometry() {
     // If we are a top-level widget, store the current geometry
     // otherwise, store the last backup
-    if (parent() == nullptr)
-        return ((QGLWidget*)this)->saveGeometry();
-    else
-        return geometry;
+    if (parent() == nullptr) {
+        return QWidget::saveGeometry();
+    }
+
+    return geometry;
 }
 
 qreal GRenderWindow::windowPixelRatio() const {
@@ -195,10 +198,10 @@ qreal GRenderWindow::windowPixelRatio() const {
     return windowHandle() ? windowHandle()->screen()->devicePixelRatio() : 1.0f;
 }
 
-std::pair<unsigned, unsigned> GRenderWindow::ScaleTouch(const QPointF pos) const {
+std::pair<u32, u32> GRenderWindow::ScaleTouch(const QPointF pos) const {
     const qreal pixel_ratio = windowPixelRatio();
-    return {static_cast<unsigned>(std::max(std::round(pos.x() * pixel_ratio), qreal{0.0})),
-            static_cast<unsigned>(std::max(std::round(pos.y() * pixel_ratio), qreal{0.0}))};
+    return {static_cast<u32>(std::max(std::round(pos.x() * pixel_ratio), qreal{0.0})),
+            static_cast<u32>(std::max(std::round(pos.y() * pixel_ratio), qreal{0.0}))};
 }
 
 void GRenderWindow::closeEvent(QCloseEvent* event) {
@@ -295,7 +298,7 @@ void GRenderWindow::focusOutEvent(QFocusEvent* event) {
     InputCommon::GetKeyboard()->ReleaseAllKeys();
 }
 
-void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height) {
+void GRenderWindow::OnClientAreaResized(u32 width, u32 height) {
     NotifyClientAreaSizeChanged(std::make_pair(width, height));
 }
 
@@ -334,21 +337,25 @@ void GRenderWindow::InitRenderTarget() {
     BackupGeometry();
 }
 
-void GRenderWindow::CaptureScreenshot(u16 res_scale, const QString& screenshot_path) {
-    if (!res_scale)
+void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
+    if (res_scale == 0)
         res_scale = VideoCore::GetResolutionScaleFactor();
     const Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(res_scale)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
-    VideoCore::RequestScreenshot(screenshot_image.bits(),
-                                 [=] {
-                                     screenshot_image.mirrored(false, true).save(screenshot_path);
-                                     LOG_INFO(Frontend, "The screenshot is saved.");
-                                 },
-                                 layout);
+    VideoCore::RequestScreenshot(
+        screenshot_image.bits(),
+        [=] {
+            const std::string std_screenshot_path = screenshot_path.toStdString();
+            if (screenshot_image.mirrored(false, true).save(screenshot_path)) {
+                LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
+            } else {
+                LOG_ERROR(Frontend, "Failed to save screenshot to \"{}\"", std_screenshot_path);
+            }
+        },
+        layout);
 }
 
-void GRenderWindow::OnMinimalClientAreaChangeRequest(
-    const std::pair<unsigned, unsigned>& minimal_size) {
+void GRenderWindow::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) {
     setMinimumSize(minimal_size.first, minimal_size.second);
 }
 

@@ -252,8 +252,6 @@ void EmuWindow_SDL2::DoneCurrent() {
     SDL_GL_MakeCurrent(render_window, nullptr);
 }
 
-void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(
-    const std::pair<unsigned, unsigned>& minimal_size) {
-
+void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) {
     SDL_SetWindowMinimumSize(render_window, minimal_size.first, minimal_size.second);
 }

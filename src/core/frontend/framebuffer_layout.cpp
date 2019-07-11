@@ -16,8 +16,8 @@ static const float TOP_SCREEN_ASPECT_RATIO =
 static const float BOT_SCREEN_ASPECT_RATIO =
     static_cast<float>(Core::kScreenBottomHeight) / Core::kScreenBottomWidth;
 
-u16 FramebufferLayout::GetScalingRatio() const {
-    return static_cast<u16>(((top_screen.GetWidth() - 1) / Core::kScreenTopWidth) + 1);
+u32 FramebufferLayout::GetScalingRatio() const {
+    return static_cast<u32>(((top_screen.GetWidth() - 1) / Core::kScreenTopWidth) + 1);
 }
 
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio
@@ -30,17 +30,15 @@ static Common::Rectangle<T> maxRectangle(Common::Rectangle<T> window_area,
                                 static_cast<T>(std::round(scale * screen_aspect_ratio))};
 }
 
-FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool swapped) {
+FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool swapped) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
     FramebufferLayout res{width, height, true, true, {}, {}};
     // Default layout gives equal screen sizes to the top and bottom screen
-    Common::Rectangle<unsigned> screen_window_area{0, 0, width, height / 2};
-    Common::Rectangle<unsigned> top_screen =
-        maxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
-    Common::Rectangle<unsigned> bot_screen =
-        maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height / 2};
+    Common::Rectangle<u32> top_screen = maxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> bot_screen = maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
 
     float window_aspect_ratio = static_cast<float>(height) / width;
     // both screens height are taken into account by multiplying by 2
@@ -70,18 +68,16 @@ FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool swapp
     return res;
 }
 
-FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool swapped) {
+FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped) {
     ASSERT(width > 0);
     ASSERT(height > 0);
     // The drawing code needs at least somewhat valid values for both screens
     // so just calculate them both even if the other isn't showing.
     FramebufferLayout res{width, height, !swapped, swapped, {}, {}};
 
-    Common::Rectangle<unsigned> screen_window_area{0, 0, width, height};
-    Common::Rectangle<unsigned> top_screen =
-        maxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
-    Common::Rectangle<unsigned> bot_screen =
-        maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
+    Common::Rectangle<u32> top_screen = maxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> bot_screen = maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
 
     float window_aspect_ratio = static_cast<float>(height) / width;
     float emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
@@ -100,7 +96,7 @@ FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool swappe
     return res;
 }
 
-FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool swapped) {
+FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
@@ -116,13 +112,11 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool swapped
     float large_screen_aspect_ratio = swapped ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
     float small_screen_aspect_ratio = swapped ? TOP_SCREEN_ASPECT_RATIO : BOT_SCREEN_ASPECT_RATIO;
 
-    Common::Rectangle<unsigned> screen_window_area{0, 0, width, height};
-    Common::Rectangle<unsigned> total_rect =
-        maxRectangle(screen_window_area, emulation_aspect_ratio);
-    Common::Rectangle<unsigned> large_screen = maxRectangle(total_rect, large_screen_aspect_ratio);
-    Common::Rectangle<unsigned> fourth_size_rect = total_rect.Scale(.25f);
-    Common::Rectangle<unsigned> small_screen =
-        maxRectangle(fourth_size_rect, small_screen_aspect_ratio);
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
+    Common::Rectangle<u32> total_rect = maxRectangle(screen_window_area, emulation_aspect_ratio);
+    Common::Rectangle<u32> large_screen = maxRectangle(total_rect, large_screen_aspect_ratio);
+    Common::Rectangle<u32> fourth_size_rect = total_rect.Scale(.25f);
+    Common::Rectangle<u32> small_screen = maxRectangle(fourth_size_rect, small_screen_aspect_ratio);
 
     if (window_aspect_ratio < emulation_aspect_ratio) {
         large_screen =
@@ -139,7 +133,7 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool swapped
     return res;
 }
 
-FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool swapped) {
+FramebufferLayout SideFrameLayout(u32 width, u32 height, bool swapped) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
@@ -148,13 +142,12 @@ FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool swapped)
     const float emulation_aspect_ratio = static_cast<float>(Core::kScreenTopHeight) /
                                          (Core::kScreenTopWidth + Core::kScreenBottomWidth);
     float window_aspect_ratio = static_cast<float>(height) / width;
-    Common::Rectangle<unsigned> screen_window_area{0, 0, width, height};
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     // Find largest Rectangle that can fit in the window size with the given aspect ratio
-    Common::Rectangle<unsigned> screen_rect =
-        maxRectangle(screen_window_area, emulation_aspect_ratio);
+    Common::Rectangle<u32> screen_rect = maxRectangle(screen_window_area, emulation_aspect_ratio);
     // Find sizes of top and bottom screen
-    Common::Rectangle<unsigned> top_screen = maxRectangle(screen_rect, TOP_SCREEN_ASPECT_RATIO);
-    Common::Rectangle<unsigned> bot_screen = maxRectangle(screen_rect, BOT_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> top_screen = maxRectangle(screen_rect, TOP_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> bot_screen = maxRectangle(screen_rect, BOT_SCREEN_ASPECT_RATIO);
 
     if (window_aspect_ratio < emulation_aspect_ratio) {
         // Apply borders to the left and right sides of the window.
@@ -173,16 +166,16 @@ FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool swapped)
     return res;
 }
 
-FramebufferLayout CustomFrameLayout(unsigned width, unsigned height) {
+FramebufferLayout CustomFrameLayout(u32 width, u32 height) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
     FramebufferLayout res{width, height, true, true, {}, {}};
 
-    Common::Rectangle<unsigned> top_screen{
+    Common::Rectangle<u32> top_screen{
         Settings::values.custom_top_left, Settings::values.custom_top_top,
         Settings::values.custom_top_right, Settings::values.custom_top_bottom};
-    Common::Rectangle<unsigned> bot_screen{
+    Common::Rectangle<u32> bot_screen{
         Settings::values.custom_bottom_left, Settings::values.custom_bottom_top,
         Settings::values.custom_bottom_right, Settings::values.custom_bottom_bottom};
 
@@ -191,7 +184,7 @@ FramebufferLayout CustomFrameLayout(unsigned width, unsigned height) {
     return res;
 }
 
-FramebufferLayout FrameLayoutFromResolutionScale(u16 res_scale) {
+FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale) {
     FramebufferLayout layout;
     if (Settings::values.custom_layout == true) {
         layout = CustomFrameLayout(

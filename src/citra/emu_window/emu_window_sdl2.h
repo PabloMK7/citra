@@ -59,8 +59,7 @@ private:
     void Fullscreen();
 
     /// Called when a configuration change affects the minimal size of the window
-    void OnMinimalClientAreaChangeRequest(
-        const std::pair<unsigned, unsigned>& minimal_size) override;
+    void OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) override;
 
     /// Is the window still open?
     bool is_open = true;

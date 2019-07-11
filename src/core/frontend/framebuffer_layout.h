@@ -10,18 +10,18 @@ namespace Layout {
 
 /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
 struct FramebufferLayout {
-    unsigned width;
-    unsigned height;
+    u32 width;
+    u32 height;
     bool top_screen_enabled;
     bool bottom_screen_enabled;
-    Common::Rectangle<unsigned> top_screen;
-    Common::Rectangle<unsigned> bottom_screen;
+    Common::Rectangle<u32> top_screen;
+    Common::Rectangle<u32> bottom_screen;
 
     /**
      * Returns the ration of pixel size of the top screen, compared to the native size of the 3DS
      * screen.
      */
-    u16 GetScalingRatio() const;
+    u32 GetScalingRatio() const;
 };
 
 /**
@@ -31,7 +31,7 @@ struct FramebufferLayout {
  * @param is_swapped if true, the bottom screen will be displayed above the top screen
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool is_swapped);
+FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool is_swapped);
 
 /**
  * Factory method for constructing a FramebufferLayout with only the top or bottom screen
@@ -40,7 +40,7 @@ FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool is_sw
  * @param is_swapped if true, the bottom screen will be displayed (and the top won't be displayed)
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swapped);
+FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_swapped);
 
 /**
  * Factory method for constructing a Frame with the a 4x size Top screen with a 1x size bottom
@@ -51,7 +51,7 @@ FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swa
  * @param is_swapped if true, the bottom screen will be the large display
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool is_swapped);
+FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped);
 
 /**
  * Factory method for constructing a Frame with the Top screen and bottom
@@ -62,7 +62,7 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool is_swap
  * @param is_swapped if true, the bottom screen will be the left display
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool is_swapped);
+FramebufferLayout SideFrameLayout(u32 width, u32 height, bool is_swapped);
 
 /**
  * Factory method for constructing a custom FramebufferLayout
@@ -70,13 +70,13 @@ FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool is_swapp
  * @param height Window framebuffer height in pixels
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout CustomFrameLayout(unsigned width, unsigned height);
+FramebufferLayout CustomFrameLayout(u32 width, u32 height);
 
 /**
  * Convenience method to get frame layout by resolution scale
  * Read from the current settings to determine which layout to use.
  * @param res_scale resolution scale factor
  */
-FramebufferLayout FrameLayoutFromResolutionScale(u16 res_scale);
+FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale);
 
 } // namespace Layout
