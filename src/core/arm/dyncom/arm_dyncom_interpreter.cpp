@@ -3586,7 +3586,7 @@ STM_INST : {
                 cpu->WriteMemory32(addr, cpu->Reg[15] + 8);
             }
         } else {
-            for (int i = 0; i < 15; i++) {
+            for (unsigned int i = 0; i < 15; i++) {
                 if (BIT(inst_cream->inst, i)) {
                     if (i == Rn)
                         cpu->WriteMemory32(addr, old_RN);
