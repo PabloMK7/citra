@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
 #include <QMessageBox>
 #include "citra_qt/configuration/configure_system.h"
 #include "citra_qt/ui_settings.h"
@@ -227,7 +228,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
     for (u8 i = 0; i < country_names.size(); i++) {
-        if (country_names.at(i) != "") {
+        if (std::strcmp(country_names.at(i), "") != 0) {
             ui->combo_country->addItem(tr(country_names.at(i)), i);
         }
     }
