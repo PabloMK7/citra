@@ -406,8 +406,9 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
 }
 
 void ChatRoom::OnChatTextChanged() {
-    if (ui->chat_message->text().length() > Network::MaxMessageSize)
-        ui->chat_message->setText(ui->chat_message->text().left(Network::MaxMessageSize));
+    if (ui->chat_message->text().length() > static_cast<int>(Network::MaxMessageSize))
+        ui->chat_message->setText(
+            ui->chat_message->text().left(static_cast<int>(Network::MaxMessageSize)));
 }
 
 void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
