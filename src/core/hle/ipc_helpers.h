@@ -19,7 +19,7 @@ class RequestHelperBase {
 protected:
     Kernel::HLERequestContext* context;
     u32* cmdbuf;
-    ptrdiff_t index = 1;
+    std::size_t index = 1;
     Header header;
 
 public:
