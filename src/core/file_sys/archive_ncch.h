@@ -82,8 +82,6 @@ public:
 
 private:
     std::vector<u8> file_buffer;
-    u64 data_offset;
-    u64 data_size;
 };
 
 /// File system interface to the NCCH archive

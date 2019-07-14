@@ -576,9 +576,6 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
         std::size_t write_offset = 0;
         // Get info for each content index requested
         for (std::size_t i = 0; i < content_count; i++) {
-            std::shared_ptr<FileUtil::IOFile> romfs_file;
-            u64 romfs_offset = 0;
-
             if (content_requested[i] >= tmd.GetContentCount()) {
                 LOG_ERROR(Service_AM,
                           "Attempted to get info for non-existent content index {:04x}.",
@@ -644,9 +641,6 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
             std::min(start_index + content_count, static_cast<u32>(tmd.GetContentCount()));
         std::size_t write_offset = 0;
         for (u32 i = start_index; i < end_index; i++) {
-            std::shared_ptr<FileUtil::IOFile> romfs_file;
-            u64 romfs_offset = 0;
-
             ContentInfo content_info = {};
             content_info.index = static_cast<u16>(i);
             content_info.type = tmd.GetContentTypeByIndex(i);

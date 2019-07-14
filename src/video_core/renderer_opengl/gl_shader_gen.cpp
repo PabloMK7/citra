@@ -358,7 +358,6 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
 /// Writes the specified TEV stage source component(s)
 static void AppendSource(std::string& out, const PicaFSConfig& config,
                          TevStageConfig::Source source, const std::string& index_name) {
-    const auto& state = config.state;
     using Source = TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:

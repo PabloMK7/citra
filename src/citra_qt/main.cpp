@@ -1650,7 +1650,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     message_box.setWindowTitle(title);
     message_box.setText(message);
     message_box.setIcon(QMessageBox::Icon::Critical);
-    QPushButton* continue_button = message_box.addButton(tr("Continue"), QMessageBox::RejectRole);
+    message_box.addButton(tr("Continue"), QMessageBox::RejectRole);
     QPushButton* abort_button = message_box.addButton(tr("Abort"), QMessageBox::AcceptRole);
     if (result != Core::System::ResultStatus::ShutdownRequested)
         message_box.exec();
