@@ -11,11 +11,6 @@
 // This needs to be included before getopt.h because the latter #defines symbols used by it
 #include "common/microprofile.h"
 
-#include <getopt.h>
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
-
 #ifdef _WIN32
 // windows.h needs to be included before shellapi.h
 #include <windows.h>
@@ -44,6 +39,12 @@
 #include "core/movie.h"
 #include "core/settings.h"
 #include "network/network.h"
+
+#undef _UNICODE
+#include <getopt.h>
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
 
 #ifdef _WIN32
 extern "C" {

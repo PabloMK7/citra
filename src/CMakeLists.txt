@@ -18,6 +18,9 @@ if (MSVC)
     # Avoid windows.h from including some usually unused libs like winsocks.h, since this might cause some redefinition errors.
     add_definitions(-DWIN32_LEAN_AND_MEAN)
 
+    # Ensure that projects build with Unicode support.
+    add_definitions(-DUNICODE -D_UNICODE)
+
     # /W3                 - Level 3 warnings
     # /MP                 - Multi-threaded compilation
     # /Zi                 - Output debugging information
