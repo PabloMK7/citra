@@ -182,13 +182,16 @@ void ARMul_State::ResetMPCoreCP15Registers() {
     CP15[CP15_MAIN_TLB_LOCKDOWN_ATTRIBUTE] = 0x00000000;
     CP15[CP15_TLB_DEBUG_CONTROL] = 0x00000000;
 }
-
+#ifdef ANDROID
+static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type) {}
+#else
 static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type) {
     if (GDBStub::IsServerEnabled() && GDBStub::CheckBreakpoint(address, type)) {
         LOG_DEBUG(Debug, "Found memory breakpoint @ {:08x}", address);
         GDBStub::Break(true);
     }
 }
+#endif
 
 u8 ARMul_State::ReadMemory8(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);

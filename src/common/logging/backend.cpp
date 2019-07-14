@@ -26,6 +26,10 @@
 
 namespace Log {
 
+Filter filter;
+void SetGlobalFilter(const Filter& f) {
+    filter = f;
+}
 /**
  * Static state as a singleton.
  */
@@ -56,14 +60,6 @@ public:
             std::remove_if(backends.begin(), backends.end(),
                            [&backend_name](const auto& i) { return backend_name == i->GetName(); });
         backends.erase(it, backends.end());
-    }
-
-    const Filter& GetGlobalFilter() const {
-        return filter;
-    }
-
-    void SetGlobalFilter(const Filter& f) {
-        filter = f;
     }
 
     Backend* GetBackend(std::string_view backend_name) {
@@ -283,10 +279,6 @@ const char* GetLevelName(Level log_level) {
     return "Invalid";
 }
 
-void SetGlobalFilter(const Filter& filter) {
-    Impl::Instance().SetGlobalFilter(filter);
-}
-
 void AddBackend(std::unique_ptr<Backend> backend) {
     Impl::Instance().AddBackend(std::move(backend));
 }
@@ -303,10 +295,6 @@ void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
                        unsigned int line_num, const char* function, const char* format,
                        const fmt::format_args& args) {
     auto& instance = Impl::Instance();
-    const auto& filter = instance.GetGlobalFilter();
-    if (!filter.CheckMessage(log_class, log_level))
-        return;
-
     instance.PushEntry(log_class, log_level, filename, line_num, function,
                        fmt::vformat(format, args));
 }

@@ -14,8 +14,6 @@
 
 namespace Log {
 
-class Filter;
-
 /**
  * A log entry. Log entries are store in a structured format to permit more varied output
  * formatting on different frontends, as well as facilitating filtering and aggregation.
@@ -136,10 +134,4 @@ const char* GetLogClassName(Class log_class);
  */
 const char* GetLevelName(Level log_level);
 
-/**
- * The global filter will prevent any messages from even being processed if they are filtered. Each
- * backend can have a filter, but if the level is lower than the global filter, the backend will
- * never get the message
- */
-void SetGlobalFilter(const Filter& filter);
 } // namespace Log
