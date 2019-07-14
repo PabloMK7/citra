@@ -47,7 +47,20 @@ std::shared_ptr<Process> KernelSystem::GetCurrentProcess() const {
 }
 
 void KernelSystem::SetCurrentProcess(std::shared_ptr<Process> process) {
-    current_process = std::move(process);
+    current_process = process;
+    SetCurrentMemoryPageTable(&process->vm_manager.page_table);
+}
+
+void KernelSystem::SetCurrentMemoryPageTable(Memory::PageTable* page_table) {
+    memory.SetCurrentPageTable(page_table);
+    if (current_cpu != nullptr) {
+        current_cpu->PageTableChanged(); // notify the CPU the page table in memory has changed
+    }
+}
+
+void KernelSystem::SetCPU(std::shared_ptr<ARM_Interface> cpu) {
+    current_cpu = cpu;
+    thread_manager->SetCPU(*cpu);
 }
 
 ThreadManager& KernelSystem::GetThreadManager() {

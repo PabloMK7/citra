@@ -14,6 +14,7 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
+#include "core/memory.h"
 
 namespace ConfigMem {
 class Handler;
@@ -206,6 +207,10 @@ public:
     std::shared_ptr<Process> GetCurrentProcess() const;
     void SetCurrentProcess(std::shared_ptr<Process> process);
 
+    void SetCurrentMemoryPageTable(Memory::PageTable* page_table);
+
+    void SetCPU(std::shared_ptr<ARM_Interface> cpu);
+
     ThreadManager& GetThreadManager();
     const ThreadManager& GetThreadManager() const;
 
@@ -232,6 +237,8 @@ public:
 
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, std::shared_ptr<ClientPort>> named_ports;
+
+    std::shared_ptr<ARM_Interface> current_cpu;
 
     Memory::MemorySystem& memory;
 

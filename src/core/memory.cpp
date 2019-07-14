@@ -66,22 +66,14 @@ public:
     RasterizerCacheMarker cache_marker;
     std::vector<PageTable*> page_table_list;
 
-    ARM_Interface* cpu = nullptr;
     AudioCore::DspInterface* dsp = nullptr;
 };
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;
 
-void MemorySystem::SetCPU(ARM_Interface& cpu) {
-    impl->cpu = &cpu;
-}
-
 void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
     impl->current_page_table = page_table;
-    if (impl->cpu != nullptr) {
-        impl->cpu->PageTableChanged();
-    }
 }
 
 PageTable* MemorySystem::GetCurrentPageTable() const {
