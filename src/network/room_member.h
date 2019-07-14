@@ -263,7 +263,7 @@ private:
     std::unique_ptr<RoomMemberImpl> room_member_impl;
 };
 
-static const char* GetStateStr(const RoomMember::State& s) {
+inline const char* GetStateStr(const RoomMember::State& s) {
     switch (s) {
     case RoomMember::State::Idle:
         return "Idle";
@@ -277,7 +277,7 @@ static const char* GetStateStr(const RoomMember::State& s) {
     return "Unknown";
 }
 
-static const char* GetErrorStr(const RoomMember::Error& e) {
+inline const char* GetErrorStr(const RoomMember::Error& e) {
     switch (e) {
     case RoomMember::Error::LostConnection:
         return "LostConnection";
