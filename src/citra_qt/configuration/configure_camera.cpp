@@ -241,7 +241,7 @@ void ConfigureCamera::timerEvent(QTimerEvent* event) {
 
 void ConfigureCamera::SetConfiguration() {
     int index = GetSelectedCameraIndex();
-    for (int i = 0; i < Implementations.size(); i++) {
+    for (std::size_t i = 0; i < Implementations.size(); i++) {
         if (Implementations[i] == camera_name[index]) {
             ui->image_source->setCurrentIndex(i);
         }

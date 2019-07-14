@@ -131,7 +131,7 @@ std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler
     if (loaded.count(camera_name)) {
         return loaded.at(camera_name);
     }
-    for (int i = 0; i < handlers.size(); i++) {
+    for (std::size_t i = 0; i < handlers.size(); i++) {
         if (!status[i]) {
             LOG_INFO(Service_CAM, "Successfully got handler {}", i);
             status[i] = true;
@@ -145,7 +145,7 @@ std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler
 
 void QtMultimediaCameraHandler::ReleaseHandler(
     const std::shared_ptr<Camera::QtMultimediaCameraHandler>& handler) {
-    for (int i = 0; i < handlers.size(); i++) {
+    for (std::size_t i = 0; i < handlers.size(); i++) {
         if (handlers[i] == handler) {
             LOG_INFO(Service_CAM, "Successfully released handler {}", i);
             status[i] = false;
@@ -217,7 +217,7 @@ void QtMultimediaCameraHandler::ResumeCameras() {
 void QtMultimediaCameraHandler::ReleaseHandlers() {
     StopCameras();
     LOG_INFO(Service_CAM, "Releasing all handlers");
-    for (int i = 0; i < handlers.size(); i++) {
+    for (std::size_t i = 0; i < handlers.size(); i++) {
         status[i] = false;
         handlers[i]->started = false;
     }
