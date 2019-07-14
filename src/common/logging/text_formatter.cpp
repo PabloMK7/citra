@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#elif defined(ANDROID)
+#include <android/log.h>
 #endif
 
 #include "common/assert.h"
@@ -32,7 +34,13 @@ std::string FormatLogMessage(const Entry& entry) {
 
 void PrintMessage(const Entry& entry) {
     const auto str = FormatLogMessage(entry).append(1, '\n');
+#ifdef ANDROID
+    // Android's log level enum are offset by '2'
+    const int android_log_level = static_cast<int>(entry.log_level) + 2;
+    __android_log_print(android_log_level, "CitraNative", "%s", str.c_str());
+#else
     fputs(str.c_str(), stderr);
+#endif
 }
 
 void PrintColoredMessage(const Entry& entry) {
@@ -70,7 +78,7 @@ void PrintColoredMessage(const Entry& entry) {
     }
 
     SetConsoleTextAttribute(console_handle, color);
-#else
+#elif !defined(ANDROID)
 #define ESC "\x1b"
     const char* color = "";
     switch (entry.log_level) {
@@ -103,7 +111,7 @@ void PrintColoredMessage(const Entry& entry) {
 
 #ifdef _WIN32
     SetConsoleTextAttribute(console_handle, original_info.wAttributes);
-#else
+#elif !defined(ANDROID)
     fputs(ESC "[0m", stderr);
 #undef ESC
 #endif
