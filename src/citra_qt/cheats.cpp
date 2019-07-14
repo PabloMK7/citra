@@ -148,7 +148,7 @@ void CheatDialog::OnRowSelected(int row, int column) {
         ui->tableCheats->setCurrentCell(last_row, last_col);
         return;
     }
-    if (row < cheats.size()) {
+    if (static_cast<std::size_t>(row) < cheats.size()) {
         if (newly_created) {
             // Remove the newly created dummy item
             newly_created = false;
