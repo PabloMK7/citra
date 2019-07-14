@@ -49,10 +49,10 @@ private:
     void Host();
     std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) const;
 
+    std::unique_ptr<Ui::HostRoom> ui;
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     QStandardItemModel* game_list;
     ComboBoxProxyModel* proxy;
-    std::unique_ptr<Ui::HostRoom> ui;
     Validation validation;
 };
 

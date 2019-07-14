@@ -81,13 +81,14 @@ private:
      */
     QString PasswordPrompt();
 
+    std::unique_ptr<Ui::Lobby> ui;
+
     QStandardItemModel* model{};
     QStandardItemModel* game_list{};
     LobbyFilterProxyModel* proxy{};
 
     QFutureWatcher<AnnounceMultiplayerRoom::RoomList> room_list_watcher;
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
-    std::unique_ptr<Ui::Lobby> ui;
     QFutureWatcher<void>* watcher;
     Validation validation;
 };
