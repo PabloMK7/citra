@@ -119,7 +119,7 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
     samples.reserve(num_frames * impl->sample_size_in_bytes);
     if (impl->sample_size_in_bytes == 1) {
         // If the sample format is 8bit, then resample back to 8bit before passing back to core
-        for (std::size_t i; i < num_frames; i++) {
+        for (std::size_t i = 0; i < static_cast<std::size_t>(num_frames); i++) {
             s16 data;
             std::memcpy(&data, static_cast<const u8*>(input_buffer) + i * 2, 2);
             samples.push_back(resample_s16_s8(data));
