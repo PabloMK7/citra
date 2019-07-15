@@ -402,7 +402,7 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
 }
 
 Kernel::Process::Process(KernelSystem& kernel)
-    : Object(kernel), handle_table(kernel), kernel(kernel), vm_manager(kernel.memory) {
+    : Object(kernel), handle_table(kernel), vm_manager(kernel.memory), kernel(kernel) {
 
     kernel.memory.RegisterPageTable(&vm_manager.page_table);
 }
