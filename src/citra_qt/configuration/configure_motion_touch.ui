@@ -278,7 +278,7 @@
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>ConfigureMotionTouch</receiver>
-   <slot>applyConfiguration()</slot>
+   <slot>ApplyConfiguration()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>220</x>
