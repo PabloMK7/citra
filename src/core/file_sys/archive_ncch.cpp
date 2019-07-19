@@ -240,8 +240,6 @@ NCCHFile::NCCHFile(std::vector<u8> buffer, std::unique_ptr<DelayGenerator> delay
 ResultVal<std::size_t> NCCHFile::Read(const u64 offset, const std::size_t length,
                                       u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
-    std::size_t length_left = static_cast<std::size_t>(data_size - offset);
-    std::size_t read_length = static_cast<std::size_t>(std::min(length, length_left));
 
     std::size_t available_size = static_cast<std::size_t>(file_buffer.size() - offset);
     std::size_t copy_size = std::min(length, available_size);
