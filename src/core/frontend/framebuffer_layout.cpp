@@ -117,6 +117,82 @@ FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool swapped, bool u
     return res;
 }
 
+FramebufferLayout MobilePortraitFrameLayout(u32 width, u32 height, bool swapped) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+
+    FramebufferLayout res{width, height, true, true, {}, {}};
+    // Default layout gives equal screen sizes to the top and bottom screen
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height / 2};
+    Common::Rectangle<u32> top_screen = maxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> bot_screen = maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
+
+    float window_aspect_ratio = static_cast<float>(height) / width;
+    // both screens height are taken into account by multiplying by 2
+    float emulation_aspect_ratio = TOP_SCREEN_ASPECT_RATIO * 2;
+
+    if (window_aspect_ratio < emulation_aspect_ratio) {
+        // Apply borders to the left and right sides of the window.
+        top_screen =
+            top_screen.TranslateX((screen_window_area.GetWidth() - top_screen.GetWidth()) / 2);
+        bot_screen =
+            bot_screen.TranslateX((screen_window_area.GetWidth() - bot_screen.GetWidth()) / 2);
+    } else {
+        // Window is narrower than the emulation content
+        // Recalculate the bottom screen to account for the width difference between top and bottom
+
+        bot_screen = bot_screen.TranslateX((top_screen.GetWidth() - bot_screen.GetWidth()) / 2);
+    }
+
+    // Move the top screen to the bottom if we are swapped.
+    res.top_screen = swapped ? top_screen.TranslateY(bot_screen.GetHeight()) : top_screen;
+    res.bottom_screen = swapped ? bot_screen : bot_screen.TranslateY(top_screen.GetHeight());
+
+    return res;
+}
+
+FramebufferLayout MobileLandscapeFrameLayout(u32 width, u32 height, bool swapped,
+                                             float scale_factor, bool center_vertical) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+
+    FramebufferLayout res{width, height, true, true, {}, {}};
+    // Split the window into two parts. Give 4x width to the main screen and 1x width to the small
+    // To do that, find the total emulation box and maximize that based on window size
+    float window_aspect_ratio = static_cast<float>(height) / width;
+    float emulation_aspect_ratio =
+        swapped ? Core::kScreenBottomHeight * scale_factor /
+                      (Core::kScreenBottomWidth * scale_factor + Core::kScreenTopWidth)
+                : Core::kScreenTopHeight * scale_factor /
+                      (Core::kScreenTopWidth * scale_factor + Core::kScreenBottomWidth);
+    float large_screen_aspect_ratio = swapped ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
+    float small_screen_aspect_ratio = swapped ? TOP_SCREEN_ASPECT_RATIO : BOT_SCREEN_ASPECT_RATIO;
+
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
+    Common::Rectangle<u32> total_rect = maxRectangle(screen_window_area, emulation_aspect_ratio);
+    Common::Rectangle<u32> large_screen = maxRectangle(total_rect, large_screen_aspect_ratio);
+    Common::Rectangle<u32> fourth_size_rect = total_rect.Scale(1.f / scale_factor);
+    Common::Rectangle<u32> small_screen = maxRectangle(fourth_size_rect, small_screen_aspect_ratio);
+
+    if (window_aspect_ratio < emulation_aspect_ratio) {
+        large_screen =
+            large_screen.TranslateX((screen_window_area.GetWidth() - total_rect.GetWidth()) / 2);
+    } else if (center_vertical) {
+        large_screen = large_screen.TranslateY((height - total_rect.GetHeight()) / 2);
+    }
+
+    // Shift the small screen to the bottom right corner
+    small_screen = small_screen.TranslateX(large_screen.right);
+    if (center_vertical) {
+        small_screen.TranslateY(large_screen.GetHeight() + large_screen.top -
+                                small_screen.GetHeight());
+    }
+
+    res.top_screen = swapped ? small_screen : large_screen;
+    res.bottom_screen = swapped ? large_screen : small_screen;
+    return res;
+}
+
 FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
     ASSERT(width > 0);
     ASSERT(height > 0);
@@ -345,6 +421,22 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale) {
             }
             layout = SideFrameLayout(width, height, Settings::values.swap_screen,
                                      Settings::values.upright_screen);
+            break;
+        case Settings::LayoutOption::MobilePortrait:
+            width = Core::kScreenTopWidth * res_scale;
+            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            layout = MobilePortraitFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::MobileLandscape:
+            if (Settings::values.swap_screen) {
+                width = (Core::kScreenBottomWidth + Core::kScreenTopWidth / 2.25f) * res_scale;
+                height = Core::kScreenBottomHeight * res_scale;
+            } else {
+                width = (Core::kScreenTopWidth + Core::kScreenBottomWidth / 2.25f) * res_scale;
+                height = Core::kScreenTopHeight * res_scale;
+            }
+            layout = MobileLandscapeFrameLayout(width, height, Settings::values.swap_screen, 2.25f,
+                                                false);
             break;
         case Settings::LayoutOption::Default:
         default:

@@ -36,6 +36,29 @@ struct FramebufferLayout {
 FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
 
 /**
+ * Factory method for constructing a mobile portrait FramebufferLayout
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be displayed above the top screen
+ * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
+ */
+FramebufferLayout MobilePortraitFrameLayout(u32 width, u32 height, bool is_swapped);
+
+/**
+ * Factory method for constructing a Frame with the a 4x size Top screen with a 1x size bottom
+ * screen on the right
+ * This is useful in particular because it matches well with a 1920x1080 resolution monitor
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be the large display
+ * @param scale_factor Scale factor to use for bottom screen with respect to top screen
+ * @param center_vertical When true, centers the top and bottom screens vertically
+ * @return Newly created FramebufferLayout object with default screen regions initialized
+ */
+FramebufferLayout MobileLandscapeFrameLayout(u32 width, u32 height, bool is_swapped,
+                                             float scale_factor, bool center_vertical);
+
+/**
  * Factory method for constructing a FramebufferLayout with only the top or bottom screen
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels

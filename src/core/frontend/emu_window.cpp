@@ -169,6 +169,13 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
             layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen,
                                              Settings::values.upright_screen);
             break;
+        case Settings::LayoutOption::MobilePortrait:
+            layout = Layout::MobilePortraitFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::MobileLandscape:
+            layout = Layout::MobileLandscapeFrameLayout(width, height, Settings::values.swap_screen,
+                                                        2.25f, false);
+            break;
         case Settings::LayoutOption::Default:
         default:
             layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen,
