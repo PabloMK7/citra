@@ -54,7 +54,7 @@ SMDH::GameRegion SMDH::GetRegion() const {
     }
 
     constexpr u32 taiwan_and_china =
-        (1 << static_cast<u32>(GameRegion::Taiwan)) & (1 << static_cast<u32>(GameRegion::China));
+        (1 << static_cast<u32>(GameRegion::Taiwan)) | (1 << static_cast<u32>(GameRegion::China));
     if (region_lockout == taiwan_and_china) {
         return GameRegion::Taiwan;
     } // hack to fix TWN games that support CHN consoles
