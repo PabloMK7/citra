@@ -40,7 +40,7 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
         // TODO (jroweboy) network was not initialized?
     }
 
-    connect(ui->disconnect, &QPushButton::pressed, [this] { Disconnect(); });
+    connect(ui->disconnect, &QPushButton::clicked, this, &ClientRoomWindow::Disconnect);
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
     connect(ui->moderation, &QPushButton::clicked, [this] {

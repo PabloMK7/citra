@@ -63,7 +63,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     }
 
     // UI Buttons
-    connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
+    connect(ui->refresh_list, &QPushButton::clicked, this, &Lobby::RefreshLobby);
     connect(ui->games_owned, &QCheckBox::toggled, proxy, &LobbyFilterProxyModel::SetFilterOwned);
     connect(ui->hide_full, &QCheckBox::toggled, proxy, &LobbyFilterProxyModel::SetFilterFull);
     connect(ui->search, &QLineEdit::textChanged, proxy, &LobbyFilterProxyModel::SetFilterSearch);

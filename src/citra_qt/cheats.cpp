@@ -30,16 +30,16 @@ CheatDialog::CheatDialog(QWidget* parent)
         "{:016X}", Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
     ui->labelTitle->setText(tr("Title ID: %1").arg(QString::fromStdString(game_id)));
 
-    connect(ui->buttonClose, &QPushButton::released, this, &CheatDialog::OnCancel);
-    connect(ui->buttonAddCheat, &QPushButton::released, this, &CheatDialog::OnAddCheat);
+    connect(ui->buttonClose, &QPushButton::clicked, this, &CheatDialog::OnCancel);
+    connect(ui->buttonAddCheat, &QPushButton::clicked, this, &CheatDialog::OnAddCheat);
     connect(ui->tableCheats, &QTableWidget::cellClicked, this, &CheatDialog::OnRowSelected);
     connect(ui->lineName, &QLineEdit::textEdited, this, &CheatDialog::OnTextEdited);
     connect(ui->textNotes, &QPlainTextEdit::textChanged, this, &CheatDialog::OnTextEdited);
     connect(ui->textCode, &QPlainTextEdit::textChanged, this, &CheatDialog::OnTextEdited);
 
-    connect(ui->buttonSave, &QPushButton::released,
+    connect(ui->buttonSave, &QPushButton::clicked,
             [this] { SaveCheat(ui->tableCheats->currentRow()); });
-    connect(ui->buttonDelete, &QPushButton::released, this, &CheatDialog::OnDeleteCheat);
+    connect(ui->buttonDelete, &QPushButton::clicked, this, &CheatDialog::OnDeleteCheat);
 
     LoadCheats();
 }
