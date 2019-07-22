@@ -8,6 +8,7 @@
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/ipc.h"
+#include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -16,7 +17,8 @@
 
 namespace Kernel {
 
-ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, std::shared_ptr<Thread> src_thread,
+ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySystem& memory,
+                                  std::shared_ptr<Thread> src_thread,
                                   std::shared_ptr<Thread> dst_thread, VAddr src_address,
                                   VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,
@@ -36,6 +38,13 @@ ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, std::shared_ptr<
 
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     memory.ReadBlock(*src_process, src_address, cmd_buf.data(), command_size * sizeof(u32));
+
+    const bool should_record = kernel.GetIPCRecorder().IsEnabled();
+
+    std::vector<u32> untranslated_cmdbuf;
+    if (should_record) {
+        untranslated_cmdbuf = std::vector<u32>{cmd_buf.begin(), cmd_buf.begin() + command_size};
+    }
 
     std::size_t i = untranslated_size;
     while (i < command_size) {
@@ -215,6 +224,17 @@ ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, std::shared_ptr<
         }
         default:
             UNIMPLEMENTED_MSG("Unsupported handle translation: {:#010X}", descriptor);
+        }
+    }
+
+    if (should_record) {
+        std::vector<u32> translated_cmdbuf{cmd_buf.begin(), cmd_buf.begin() + command_size};
+        if (reply) {
+            kernel.GetIPCRecorder().SetReplyInfo(dst_thread, std::move(untranslated_cmdbuf),
+                                                 std::move(translated_cmdbuf));
+        } else {
+            kernel.GetIPCRecorder().SetRequestInfo(src_thread, std::move(untranslated_cmdbuf),
+                                                   std::move(translated_cmdbuf), dst_thread);
         }
     }
 
