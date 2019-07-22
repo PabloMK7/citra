@@ -36,6 +36,7 @@
 #include "citra_qt/debugger/graphics/graphics_surface.h"
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
+#include "citra_qt/debugger/ipc/recorder.h"
 #include "citra_qt/debugger/lle_service_modules.h"
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/debugger/registers.h"
@@ -328,6 +329,13 @@ void GMainWindow::InitializeDebugWidgets() {
             [this] { lleServiceModulesWidget->setDisabled(true); });
     connect(this, &GMainWindow::EmulationStopping, waitTreeWidget,
             [this] { lleServiceModulesWidget->setDisabled(false); });
+
+    ipcRecorderWidget = new IPCRecorderWidget(this);
+    addDockWidget(Qt::RightDockWidgetArea, ipcRecorderWidget);
+    ipcRecorderWidget->hide();
+    debug_menu->addAction(ipcRecorderWidget->toggleViewAction());
+    connect(this, &GMainWindow::EmulationStarting, ipcRecorderWidget,
+            &IPCRecorderWidget::OnEmulationStarting);
 }
 
 void GMainWindow::InitializeRecentFileMenuActions() {

@@ -30,6 +30,7 @@ class GraphicsBreakPointsWidget;
 class GraphicsTracingWidget;
 class GraphicsVertexShaderWidget;
 class GRenderWindow;
+class IPCRecorderWidget;
 class LLEServiceModulesWidget;
 class MicroProfileDialog;
 class MultiplayerState;
@@ -247,6 +248,7 @@ private:
     GraphicsBreakPointsWidget* graphicsBreakpointsWidget;
     GraphicsVertexShaderWidget* graphicsVertexShaderWidget;
     GraphicsTracingWidget* graphicsTracingWidget;
+    IPCRecorderWidget* ipcRecorderWidget;
     LLEServiceModulesWidget* lleServiceModulesWidget;
     WaitTreeWidget* waitTreeWidget;
     Updater* updater;
