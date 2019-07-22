@@ -387,7 +387,13 @@ ResultCode SVC::SendSyncRequest(Handle handle) {
 
     system.PrepareReschedule();
 
-    return session->SendSyncRequest(SharedFrom(kernel.GetThreadManager().GetCurrentThread()));
+    auto thread = SharedFrom(kernel.GetThreadManager().GetCurrentThread());
+
+    if (kernel.GetIPCRecorder().IsEnabled()) {
+        kernel.GetIPCRecorder().RegisterRequest(session, thread);
+    }
+
+    return session->SendSyncRequest(thread);
 }
 
 /// Close a handle
