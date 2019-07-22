@@ -134,6 +134,8 @@ add_library(core STATIC
     hle/kernel/hle_ipc.h
     hle/kernel/ipc.cpp
     hle/kernel/ipc.h
+    hle/kernel/ipc_debugger/recorder.cpp
+    hle/kernel/ipc_debugger/recorder.h
     hle/kernel/kernel.cpp
     hle/kernel/kernel.h
     hle/kernel/memory.cpp
