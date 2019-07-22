@@ -33,9 +33,11 @@ void Apply() {
     VideoCore::g_hw_shader_accurate_mul = values.shaders_accurate_mul;
     VideoCore::g_use_disk_shader_cache = values.use_disk_shader_cache;
 
+#ifndef ANDROID
     if (VideoCore::g_renderer) {
         VideoCore::g_renderer->UpdateCurrentFramebufferLayout();
     }
+#endif
 
     VideoCore::g_renderer_bg_color_update_requested = true;
     VideoCore::g_renderer_sampler_update_requested = true;

@@ -11,9 +11,9 @@
 
 RendererBase::RendererBase(Frontend::EmuWindow& window) : render_window{window} {}
 RendererBase::~RendererBase() = default;
-void RendererBase::UpdateCurrentFramebufferLayout() {
+void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
-    render_window.UpdateCurrentFramebufferLayout(layout.width, layout.height);
+    render_window.UpdateCurrentFramebufferLayout(layout.width, layout.height, is_portrait_mode);
 }
 
 void RendererBase::RefreshRasterizerSetting() {
