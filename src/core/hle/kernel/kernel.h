@@ -32,6 +32,10 @@ namespace Core {
 class Timing;
 }
 
+namespace IPCDebugger {
+class Recorder;
+}
+
 namespace Kernel {
 
 class AddressArbiter;
@@ -222,6 +226,9 @@ public:
     SharedPage::Handler& GetSharedPageHandler();
     const SharedPage::Handler& GetSharedPageHandler() const;
 
+    IPCDebugger::Recorder& GetIPCRecorder();
+    const IPCDebugger::Recorder& GetIPCRecorder() const;
+
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
     void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
@@ -274,6 +281,8 @@ private:
 
     std::unique_ptr<ConfigMem::Handler> config_mem_handler;
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
+
+    std::unique_ptr<IPCDebugger::Recorder> ipc_recorder;
 };
 
 } // namespace Kernel

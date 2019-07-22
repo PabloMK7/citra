@@ -5,6 +5,7 @@
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
+#include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -25,6 +26,7 @@ KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     thread_manager = std::make_unique<ThreadManager>(*this);
     timer_manager = std::make_unique<TimerManager>(timing);
+    ipc_recorder = std::make_unique<IPCDebugger::Recorder>();
 }
 
 /// Shutdown the kernel
@@ -85,6 +87,14 @@ SharedPage::Handler& KernelSystem::GetSharedPageHandler() {
 
 const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
+}
+
+IPCDebugger::Recorder& KernelSystem::GetIPCRecorder() {
+    return *ipc_recorder;
+}
+
+const IPCDebugger::Recorder& KernelSystem::GetIPCRecorder() const {
+    return *ipc_recorder;
 }
 
 void KernelSystem::AddNamedPort(std::string name, std::shared_ptr<ClientPort> port) {
