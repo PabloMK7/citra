@@ -179,6 +179,14 @@ void ServiceFrameworkBase::HandleSyncRequest(Kernel::HLERequestContext& context)
     handler_invoker(this, info->handler_callback, context);
 }
 
+std::string ServiceFrameworkBase::GetFunctionName(u32 header) const {
+    if (!handlers.count(header)) {
+        return "";
+    }
+
+    return handlers.at(header).name;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Module interface
 
