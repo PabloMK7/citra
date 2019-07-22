@@ -171,6 +171,7 @@ void ServiceFrameworkBase::HandleSyncRequest(Kernel::HLERequestContext& context)
     auto itr = handlers.find(header_code);
     const FunctionInfoBase* info = itr == handlers.end() ? nullptr : &itr->second;
     if (info == nullptr || info->handler_callback == nullptr) {
+        context.ReportUnimplemented();
         return ReportUnimplementedFunction(context.CommandBuffer(), info);
     }
 
