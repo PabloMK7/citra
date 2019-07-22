@@ -49,7 +49,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     ui->game_list->setModel(proxy);
 
     // Connect all the widgets to the appropriate events
-    connect(ui->host, &QPushButton::pressed, this, &HostRoomWindow::Host);
+    connect(ui->host, &QPushButton::clicked, this, &HostRoomWindow::Host);
 
     // Restore the settings:
     ui->username->setText(UISettings::values.room_nickname);

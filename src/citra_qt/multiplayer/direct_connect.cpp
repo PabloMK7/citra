@@ -45,7 +45,7 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
 
     // TODO(jroweboy): Show or hide the connection options based on the current value of the combo
     // box. Add this back in when the traversal server support is added.
-    connect(ui->connect, &QPushButton::pressed, this, &DirectConnectWindow::Connect);
+    connect(ui->connect, &QPushButton::clicked, this, &DirectConnectWindow::Connect);
 }
 
 DirectConnectWindow::~DirectConnectWindow() = default;

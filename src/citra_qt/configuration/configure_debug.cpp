@@ -19,7 +19,7 @@ ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::Co
     ui->setupUi(this);
     SetConfiguration();
 
-    connect(ui->open_log_button, &QPushButton::pressed, []() {
+    connect(ui->open_log_button, &QPushButton::clicked, []() {
         QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });

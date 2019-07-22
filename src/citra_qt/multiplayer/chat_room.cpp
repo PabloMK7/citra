@@ -189,9 +189,9 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
     // Connect all the widgets to the appropriate events
     connect(ui->player_view, &QTreeView::customContextMenuRequested, this,
             &ChatRoom::PopupContextMenu);
-    connect(ui->chat_message, &QLineEdit::returnPressed, ui->send_message, &QPushButton::pressed);
-    connect(ui->chat_message, &QLineEdit::textChanged, this, &::ChatRoom::OnChatTextChanged);
-    connect(ui->send_message, &QPushButton::pressed, this, &ChatRoom::OnSendChat);
+    connect(ui->chat_message, &QLineEdit::returnPressed, this, &ChatRoom::OnSendChat);
+    connect(ui->chat_message, &QLineEdit::textChanged, this, &ChatRoom::OnChatTextChanged);
+    connect(ui->send_message, &QPushButton::clicked, this, &ChatRoom::OnSendChat);
 }
 
 ChatRoom::~ChatRoom() = default;

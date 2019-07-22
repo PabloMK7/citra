@@ -136,7 +136,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         if (!button_map[button_id])
             continue;
         button_map[button_id]->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(button_map[button_id], &QPushButton::released, [=]() {
+        connect(button_map[button_id], &QPushButton::clicked, [=]() {
             HandleClick(button_map[button_id],
                         [=](const Common::ParamPackage& params) {
                             buttons_param[button_id] = params;
@@ -173,7 +173,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                 continue;
             analog_map_buttons[analog_id][sub_button_id]->setContextMenuPolicy(
                 Qt::CustomContextMenu);
-            connect(analog_map_buttons[analog_id][sub_button_id], &QPushButton::released, [=]() {
+            connect(analog_map_buttons[analog_id][sub_button_id], &QPushButton::clicked, [=]() {
                 HandleClick(analog_map_buttons[analog_id][sub_button_id],
                             [=](const Common::ParamPackage& params) {
                                 SetAnalogButton(params, analogs_param[analog_id],
@@ -206,7 +206,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                             menu_location));
                     });
         }
-        connect(analog_map_stick[analog_id], &QPushButton::released, [=]() {
+        connect(analog_map_stick[analog_id], &QPushButton::clicked, [=]() {
             QMessageBox::information(this, tr("Information"),
                                      tr("After pressing OK, first move your joystick horizontally, "
                                         "and then vertically."));
@@ -220,18 +220,19 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         });
     }
 
-    connect(ui->buttonMotionTouch, &QPushButton::released, [this] {
+    connect(ui->buttonMotionTouch, &QPushButton::clicked, [this] {
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
         return motion_touch_dialog->exec();
     });
 
     ui->buttonDelete->setEnabled(ui->profile->count() > 1);
 
-    connect(ui->buttonClearAll, &QPushButton::released, [this] { ClearAll(); });
-    connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { RestoreDefaults(); });
-    connect(ui->buttonNew, &QPushButton::released, [this] { NewProfile(); });
-    connect(ui->buttonDelete, &QPushButton::released, [this] { DeleteProfile(); });
-    connect(ui->buttonRename, &QPushButton::released, [this] { RenameProfile(); });
+    connect(ui->buttonClearAll, &QPushButton::clicked, this, &ConfigureInput::ClearAll);
+    connect(ui->buttonRestoreDefaults, &QPushButton::clicked, this,
+            &ConfigureInput::RestoreDefaults);
+    connect(ui->buttonNew, &QPushButton::clicked, this, &ConfigureInput::NewProfile);
+    connect(ui->buttonDelete, &QPushButton::clicked, this, &ConfigureInput::DeleteProfile);
+    connect(ui->buttonRename, &QPushButton::clicked, this, &ConfigureInput::RenameProfile);
 
     connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [this](int i) {
