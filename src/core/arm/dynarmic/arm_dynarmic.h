@@ -17,7 +17,7 @@ class MemorySystem;
 } // namespace Memory
 
 namespace Core {
-struct System;
+class System;
 }
 
 class DynarmicUserCallbacks;
