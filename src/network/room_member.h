@@ -150,8 +150,8 @@ public:
      * This may fail if the username or console ID is already taken.
      */
     void Join(const std::string& nickname, const std::string& console_id_hash,
-              const char* server_addr = "127.0.0.1", const u16 server_port = DefaultRoomPort,
-              const u16 client_port = 0, const MacAddress& preferred_mac = NoPreferredMac,
+              const char* server_addr = "127.0.0.1", u16 server_port = DefaultRoomPort,
+              u16 client_port = 0, const MacAddress& preferred_mac = NoPreferredMac,
               const std::string& password = "", const std::string& token = "");
 
     /**
@@ -305,8 +305,9 @@ inline const char* GetErrorStr(const RoomMember::Error& e) {
         return "PermissionDenied";
     case RoomMember::Error::NoSuchUser:
         return "NoSuchUser";
+    default:
+        return "Unknown";
     }
-    return "Unknown";
 }
 
 } // namespace Network
