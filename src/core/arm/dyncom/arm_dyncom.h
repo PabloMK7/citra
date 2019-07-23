@@ -11,7 +11,7 @@
 #include "core/arm/skyeye_common/armstate.h"
 
 namespace Core {
-struct System;
+class System;
 }
 
 namespace Memory {
