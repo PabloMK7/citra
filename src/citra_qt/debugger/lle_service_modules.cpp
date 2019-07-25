@@ -11,7 +11,7 @@
 
 LLEServiceModulesWidget::LLEServiceModulesWidget(QWidget* parent)
     : QDockWidget(tr("Toggle LLE Service Modules"), parent) {
-    setObjectName("LLEServiceModulesWidget");
+    setObjectName(QStringLiteral("LLEServiceModulesWidget"));
     QScrollArea* scroll_area = new QScrollArea;
     QLayout* scroll_layout = new QVBoxLayout;
     for (const auto& service_module : Settings::values.lle_modules) {

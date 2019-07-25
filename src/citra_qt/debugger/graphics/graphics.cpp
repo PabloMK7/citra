@@ -34,8 +34,8 @@ QVariant GPUCommandStreamItemModel::data(const QModelIndex& index, int role) con
             {Service::GSP::CommandId::CACHE_FLUSH, "CACHE_FLUSH"},
         };
         const u32* command_data = reinterpret_cast<const u32*>(&command);
-        QString str = QString("%1 %2 %3 %4 %5 %6 %7 %8 %9")
-                          .arg(command_names[command.id])
+        QString str = QStringLiteral("%1 %2 %3 %4 %5 %6 %7 %8 %9")
+                          .arg(QString::fromUtf8(command_names[command.id]))
                           .arg(command_data[0], 8, 16, QLatin1Char('0'))
                           .arg(command_data[1], 8, 16, QLatin1Char('0'))
                           .arg(command_data[2], 8, 16, QLatin1Char('0'))
@@ -65,7 +65,7 @@ void GPUCommandStreamItemModel::OnGXCommandFinishedInternal(int total_command_co
 
 GPUCommandStreamWidget::GPUCommandStreamWidget(QWidget* parent)
     : QDockWidget(tr("Graphics Debugger"), parent) {
-    setObjectName("GraphicsDebugger");
+    setObjectName(QStringLiteral("GraphicsDebugger"));
 
     GPUCommandStreamItemModel* command_model = new GPUCommandStreamItemModel(this);
     g_debugger.RegisterObserver(command_model);

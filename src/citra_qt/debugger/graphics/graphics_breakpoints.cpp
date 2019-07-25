@@ -141,7 +141,7 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(
     std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent)
     : QDockWidget(tr("Pica Breakpoints"), parent), Pica::DebugContext::BreakPointObserver(
                                                        debug_context) {
-    setObjectName("PicaBreakPointsWidget");
+    setObjectName(QStringLiteral("PicaBreakPointsWidget"));
 
     status_text = new QLabel(tr("Emulation running"));
     resume_button = new QPushButton(tr("Resume"));
