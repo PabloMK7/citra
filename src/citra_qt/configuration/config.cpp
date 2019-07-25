@@ -8,6 +8,7 @@
 #include <QKeySequence>
 #include <QSettings>
 #include "citra_qt/configuration/config.h"
+#include "citra_qt/ui_settings.h"
 #include "common/file_util.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
@@ -51,29 +52,31 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 }};
 
 // This shouldn't have anything except static initializers (no functions). So
-// QKeySequnce(...).toString() is NOT ALLOWED HERE.
+// QKeySequence(...).toString() is NOT ALLOWED HERE.
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
-const std::array<UISettings::Shortcut, 19> Config::default_hotkeys{
-    {{"Advance Frame", "Main Window", {"\\", Qt::ApplicationShortcut}},
-     {"Capture Screenshot", "Main Window", {"Ctrl+P", Qt::ApplicationShortcut}},
-     {"Continue/Pause Emulation", "Main Window", {"F4", Qt::WindowShortcut}},
-     {"Decrease Speed Limit", "Main Window", {"-", Qt::ApplicationShortcut}},
-     {"Exit Citra", "Main Window", {"Ctrl+Q", Qt::WindowShortcut}},
-     {"Exit Fullscreen", "Main Window", {"Esc", Qt::WindowShortcut}},
-     {"Fullscreen", "Main Window", {"F11", Qt::WindowShortcut}},
-     {"Increase Speed Limit", "Main Window", {"+", Qt::ApplicationShortcut}},
-     {"Load Amiibo", "Main Window", {"F2", Qt::ApplicationShortcut}},
-     {"Load File", "Main Window", {"Ctrl+O", Qt::WindowShortcut}},
-     {"Remove Amiibo", "Main Window", {"F3", Qt::ApplicationShortcut}},
-     {"Restart Emulation", "Main Window", {"F6", Qt::WindowShortcut}},
-     {"Stop Emulation", "Main Window", {"F5", Qt::WindowShortcut}},
-     {"Swap Screens", "Main Window", {"F9", Qt::WindowShortcut}},
-     {"Toggle Filter Bar", "Main Window", {"Ctrl+F", Qt::WindowShortcut}},
-     {"Toggle Frame Advancing", "Main Window", {"Ctrl+A", Qt::ApplicationShortcut}},
-     {"Toggle Screen Layout", "Main Window", {"F10", Qt::WindowShortcut}},
-     {"Toggle Speed Limit", "Main Window", {"Ctrl+Z", Qt::ApplicationShortcut}},
-     {"Toggle Status Bar", "Main Window", {"Ctrl+S", Qt::WindowShortcut}}}};
+// clang-format off
+const std::array<UISettings::Shortcut, 19> default_hotkeys{
+    {{QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral("\\"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"), Qt::WindowShortcut}},
+     {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Exit Citra"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Q"), Qt::WindowShortcut}},
+     {QStringLiteral("Exit Fullscreen"),          QStringLiteral("Main Window"), {QStringLiteral("Esc"), Qt::WindowShortcut}},
+     {QStringLiteral("Fullscreen"),               QStringLiteral("Main Window"), {QStringLiteral("F11"), Qt::WindowShortcut}},
+     {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), Qt::WindowShortcut}},
+     {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"), Qt::WindowShortcut}},
+     {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"), Qt::WindowShortcut}},
+     {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"), Qt::WindowShortcut}},
+     {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), Qt::WindowShortcut}},
+     {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"), Qt::WindowShortcut}},
+     {QStringLiteral("Toggle Speed Limit"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}}}};
+// clang-format on
 
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
