@@ -84,7 +84,7 @@ void ConfigureCamera::ConnectEvents() {
         ui->camera_file->setDisabled(state == Qt::Checked);
         ui->toolButton->setDisabled(state == Qt::Checked);
         if (state == Qt::Checked) {
-            ui->camera_file->setText("");
+            ui->camera_file->setText(QString{});
         }
     });
     connect(ui->camera_file, &QLineEdit::textChanged, this, [=] { StopPreviewing(); });
@@ -120,7 +120,7 @@ void ConfigureCamera::UpdateImageSourceUI() {
         ui->prompt_before_load->setChecked(false);
         ui->camera_file_label->setHidden(true);
         ui->camera_file->setHidden(true);
-        ui->camera_file->setText("");
+        ui->camera_file->setText(QString{});
         ui->toolButton->setHidden(true);
         break;
     case 1: /* still image */
@@ -132,7 +132,7 @@ void ConfigureCamera::UpdateImageSourceUI() {
             ui->prompt_before_load->setChecked(true);
             ui->camera_file->setDisabled(true);
             ui->toolButton->setDisabled(true);
-            ui->camera_file->setText("");
+            ui->camera_file->setText(QString{});
         } else {
             ui->camera_file->setDisabled(false);
             ui->toolButton->setDisabled(false);
@@ -250,7 +250,7 @@ void ConfigureCamera::SetConfiguration() {
         ui->camera_file->setDisabled(camera_config[index].empty());
         ui->toolButton->setDisabled(camera_config[index].empty());
         if (camera_config[index].empty()) {
-            ui->camera_file->setText("");
+            ui->camera_file->setText(QString{});
         }
     }
     if (camera_name[index] == "qt") {
@@ -270,10 +270,10 @@ void ConfigureCamera::OnToolButtonClicked() {
     QList<QByteArray> types = QImageReader::supportedImageFormats();
     QList<QString> temp_filters;
     for (const QByteArray& type : types) {
-        temp_filters << QString("*." + QString(type));
+        temp_filters << QString("*." + QString::fromUtf8(type));
     }
-    QString filter = tr("Supported image files (%1)").arg(temp_filters.join(" "));
-    QString path = QFileDialog::getOpenFileName(this, tr("Open File"), ".", filter);
+    QString filter = tr("Supported image files (%1)").arg(temp_filters.join(QStringLiteral(" ")));
+    QString path = QFileDialog::getOpenFileName(this, tr("Open File"), QStringLiteral("."), filter);
     if (!path.isEmpty()) {
         ui->camera_file->setText(path);
     }

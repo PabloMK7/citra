@@ -19,9 +19,9 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     ui->setupUi(this);
 
     ui->output_sink_combo_box->clear();
-    ui->output_sink_combo_box->addItem("auto");
+    ui->output_sink_combo_box->addItem(QString::fromUtf8(AudioCore::auto_device_name));
     for (const char* id : AudioCore::GetSinkIDs()) {
-        ui->output_sink_combo_box->addItem(id);
+        ui->output_sink_combo_box->addItem(QString::fromUtf8(id));
     }
 
     ui->emulation_combo_box->addItem(tr("HLE (fast)"));
@@ -131,7 +131,7 @@ void ConfigureAudio::ApplyConfiguration() {
 
 void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
     ui->audio_device_combo_box->clear();
-    ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
+    ui->audio_device_combo_box->addItem(QString::fromUtf8(AudioCore::auto_device_name));
 
     const std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
     for (const auto& device : AudioCore::GetDeviceListForSink(sink_id)) {

@@ -32,7 +32,7 @@ static QString GetKeyName(int key_code) {
     case Qt::Key_Alt:
         return QObject::tr("Alt");
     case Qt::Key_Meta:
-        return "";
+        return QString{};
     default:
         return QKeySequence(key_code).toString();
     }
@@ -52,46 +52,70 @@ static void SetAnalogButton(const Common::ParamPackage& input_param,
 static QString ButtonToText(const Common::ParamPackage& param) {
     if (!param.Has("engine")) {
         return QObject::tr("[not set]");
-    } else if (param.Get("engine", "") == "keyboard") {
-        return GetKeyName(param.Get("code", 0));
-    } else if (param.Get("engine", "") == "sdl") {
-        if (param.Has("hat")) {
-            return QString(QObject::tr("Hat %1 %2"))
-                .arg(param.Get("hat", "").c_str(), param.Get("direction", "").c_str());
-        }
-        if (param.Has("axis")) {
-            return QString(QObject::tr("Axis %1%2"))
-                .arg(param.Get("axis", "").c_str(), param.Get("direction", "").c_str());
-        }
-        if (param.Has("button")) {
-            return QString(QObject::tr("Button %1")).arg(param.Get("button", "").c_str());
-        }
-        return QString();
-    } else {
-        return QObject::tr("[unknown]");
     }
-};
+
+    if (param.Get("engine", "") == "keyboard") {
+        return GetKeyName(param.Get("code", 0));
+    }
+
+    if (param.Get("engine", "") == "sdl") {
+        if (param.Has("hat")) {
+            const QString hat_str = QString::fromStdString(param.Get("hat", ""));
+            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
+
+            return QObject::tr("Hat %1 %2").arg(hat_str, direction_str);
+        }
+
+        if (param.Has("axis")) {
+            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
+            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
+
+            return QObject::tr("Axis %1%2").arg(axis_str, direction_str);
+        }
+
+        if (param.Has("button")) {
+            const QString button_str = QString::fromStdString(param.Get("button", ""));
+
+            return QObject::tr("Button %1").arg(button_str);
+        }
+
+        return {};
+    }
+
+    return QObject::tr("[unknown]");
+}
 
 static QString AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
     if (!param.Has("engine")) {
         return QObject::tr("[not set]");
-    } else if (param.Get("engine", "") == "analog_from_button") {
+    }
+
+    if (param.Get("engine", "") == "analog_from_button") {
         return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
-    } else if (param.Get("engine", "") == "sdl") {
+    }
+
+    if (param.Get("engine", "") == "sdl") {
         if (dir == "modifier") {
-            return QString(QObject::tr("[unused]"));
+            return QObject::tr("[unused]");
         }
 
         if (dir == "left" || dir == "right") {
-            return QString(QObject::tr("Axis %1")).arg(param.Get("axis_x", "").c_str());
-        } else if (dir == "up" || dir == "down") {
-            return QString(QObject::tr("Axis %1")).arg(param.Get("axis_y", "").c_str());
+            const QString axis_x_str = QString::fromStdString(param.Get("axis_x", ""));
+
+            return QObject::tr("Axis %1").arg(axis_x_str);
         }
-        return QString();
-    } else {
-        return QObject::tr("[unknown]");
+
+        if (dir == "up" || dir == "down") {
+            const QString axis_y_str = QString::fromStdString(param.Get("axis_y", ""));
+
+            return QObject::tr("Axis %1").arg(axis_y_str);
+        }
+
+        return {};
     }
-};
+
+    return QObject::tr("[unknown]");
+}
 
 ConfigureInput::ConfigureInput(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),

@@ -389,7 +389,7 @@ void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {
 void ConfigureSystem::ConfigureTime() {
     ui->edit_init_time->setCalendarPopup(true);
     QDateTime dt;
-    dt.fromString("2000-01-01 00:00:01", "yyyy-MM-dd hh:mm:ss");
+    dt.fromString(QStringLiteral("2000-01-01 00:00:01"), QStringLiteral("yyyy-MM-dd hh:mm:ss"));
     ui->edit_init_time->setMinimumDateTime(dt);
 
     SetConfiguration();
