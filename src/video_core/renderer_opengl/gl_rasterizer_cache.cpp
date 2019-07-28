@@ -960,8 +960,8 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
 
         glActiveTexture(GL_TEXTURE0);
         if (GLES) {
-            GetTexImageOES(GL_TEXTURE_2D, 0, tuple.format, tuple.type, height, width, 0,
-                           &gl_buffer[buffer_offset]);
+            GetTexImageOES(GL_TEXTURE_2D, 0, tuple.format, tuple.type, rect.GetHeight(),
+                           rect.GetWidth(), 0, &gl_buffer[buffer_offset]);
         } else {
             glGetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, &gl_buffer[buffer_offset]);
         }
