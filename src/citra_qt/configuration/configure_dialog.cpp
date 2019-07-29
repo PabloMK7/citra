@@ -72,10 +72,11 @@ void ConfigureDialog::PopulateSelectionList() {
     ui->selectorList->clear();
 
     const std::array<std::pair<QString, QStringList>, 4> items{
-        {{tr("General"), {tr("General"), tr("Web"), tr("Debug"), tr("UI")}},
-         {tr("System"), {tr("System"), tr("Audio"), tr("Camera")}},
-         {tr("Graphics"), {tr("Graphics")}},
-         {tr("Controls"), {tr("Input"), tr("Hotkeys")}}}};
+        {{tr("General"),
+          {QT_TR_NOOP("General"), QT_TR_NOOP("Web"), QT_TR_NOOP("Debug"), QT_TR_NOOP("UI")}},
+         {tr("System"), {QT_TR_NOOP("System"), QT_TR_NOOP("Audio"), QT_TR_NOOP("Camera")}},
+         {tr("Graphics"), {QT_TR_NOOP("Graphics")}},
+         {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
 
     for (const auto& entry : items) {
         auto* const item = new QListWidgetItem(entry.first);
