@@ -9,13 +9,13 @@
 
 ConfigureUi::ConfigureUi(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureUi) {
     ui->setupUi(this);
-    ui->language_combobox->addItem(tr("<System>"), QString(""));
-    ui->language_combobox->addItem(tr("English"), QString("en"));
-    QDirIterator it(":/languages", QDirIterator::NoIteratorFlags);
+    ui->language_combobox->addItem(tr("<System>"), QString{});
+    ui->language_combobox->addItem(tr("English"), QStringLiteral("en"));
+    QDirIterator it(QStringLiteral(":/languages"), QDirIterator::NoIteratorFlags);
     while (it.hasNext()) {
         QString locale = it.next();
-        locale.truncate(locale.lastIndexOf('.'));
-        locale.remove(0, locale.lastIndexOf('/') + 1);
+        locale.truncate(locale.lastIndexOf(QLatin1Char{'.'}));
+        locale.remove(0, locale.lastIndexOf(QLatin1Char{'/'}) + 1);
         QString lang = QLocale::languageToString(QLocale(locale).language());
         ui->language_combobox->addItem(lang, locale);
     }
@@ -28,7 +28,8 @@ ConfigureUi::ConfigureUi(QWidget* parent) : QWidget(parent), ui(new Ui::Configur
             &ConfigureUi::OnLanguageChanged);
 
     for (const auto& theme : UISettings::themes) {
-        ui->theme_combobox->addItem(theme.first, theme.second);
+        ui->theme_combobox->addItem(QString::fromUtf8(theme.first),
+                                    QString::fromUtf8(theme.second));
     }
 
     SetConfiguration();

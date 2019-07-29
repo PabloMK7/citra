@@ -80,12 +80,16 @@ void ConfigureWeb::RefreshTelemetryID() {
 void ConfigureWeb::OnLoginChanged() {
     if (ui->edit_username->text().isEmpty() && ui->edit_token->text().isEmpty()) {
         user_verified = true;
-        ui->label_username_verified->setPixmap(QIcon::fromTheme("checked").pixmap(16));
-        ui->label_token_verified->setPixmap(QIcon::fromTheme("checked").pixmap(16));
+
+        const QPixmap pixmap = QIcon::fromTheme(QStringLiteral("checked")).pixmap(16);
+        ui->label_username_verified->setPixmap(pixmap);
+        ui->label_token_verified->setPixmap(pixmap);
     } else {
         user_verified = false;
-        ui->label_username_verified->setPixmap(QIcon::fromTheme("failed").pixmap(16));
-        ui->label_token_verified->setPixmap(QIcon::fromTheme("failed").pixmap(16));
+
+        const QPixmap pixmap = QIcon::fromTheme(QStringLiteral("failed")).pixmap(16);
+        ui->label_username_verified->setPixmap(pixmap);
+        ui->label_token_verified->setPixmap(pixmap);
     }
 }
 
@@ -103,11 +107,14 @@ void ConfigureWeb::OnLoginVerified() {
     ui->button_verify_login->setText(tr("Verify"));
     if (verify_watcher.result()) {
         user_verified = true;
-        ui->label_username_verified->setPixmap(QIcon::fromTheme("checked").pixmap(16));
-        ui->label_token_verified->setPixmap(QIcon::fromTheme("checked").pixmap(16));
+
+        const QPixmap pixmap = QIcon::fromTheme(QStringLiteral("checked")).pixmap(16);
+        ui->label_username_verified->setPixmap(pixmap);
+        ui->label_token_verified->setPixmap(pixmap);
     } else {
-        ui->label_username_verified->setPixmap(QIcon::fromTheme("failed").pixmap(16));
-        ui->label_token_verified->setPixmap(QIcon::fromTheme("failed").pixmap(16));
+        const QPixmap pixmap = QIcon::fromTheme(QStringLiteral("failed")).pixmap(16);
+        ui->label_username_verified->setPixmap(pixmap);
+        ui->label_token_verified->setPixmap(pixmap);
         QMessageBox::critical(
             this, tr("Verification failed"),
             tr("Verification failed. Check that you have entered your username and token "

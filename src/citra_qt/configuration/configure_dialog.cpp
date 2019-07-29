@@ -72,11 +72,10 @@ void ConfigureDialog::PopulateSelectionList() {
     ui->selectorList->clear();
 
     const std::array<std::pair<QString, QStringList>, 4> items{
-        {{tr("General"),
-          {QT_TR_NOOP("General"), QT_TR_NOOP("Web"), QT_TR_NOOP("Debug"), QT_TR_NOOP("UI")}},
-         {tr("System"), {QT_TR_NOOP("System"), QT_TR_NOOP("Audio"), QT_TR_NOOP("Camera")}},
-         {tr("Graphics"), {QT_TR_NOOP("Graphics")}},
-         {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
+        {{tr("General"), {tr("General"), tr("Web"), tr("Debug"), tr("UI")}},
+         {tr("System"), {tr("System"), tr("Audio"), tr("Camera")}},
+         {tr("Graphics"), {tr("Graphics")}},
+         {tr("Controls"), {tr("Input"), tr("Hotkeys")}}}};
 
     for (const auto& entry : items) {
         auto* const item = new QListWidgetItem(entry.first);
@@ -121,11 +120,11 @@ void ConfigureDialog::UpdateVisibleTabs() {
         return;
 
     const std::map<QString, QWidget*> widgets = {
-        {"General", ui->generalTab},   {"System", ui->systemTab},
-        {"Input", ui->inputTab},       {"Hotkeys", ui->hotkeysTab},
-        {"Graphics", ui->graphicsTab}, {"Audio", ui->audioTab},
-        {"Camera", ui->cameraTab},     {"Debug", ui->debugTab},
-        {"Web", ui->webTab},           {"UI", ui->uiTab}};
+        {QStringLiteral("General"), ui->generalTab},   {QStringLiteral("System"), ui->systemTab},
+        {QStringLiteral("Input"), ui->inputTab},       {QStringLiteral("Hotkeys"), ui->hotkeysTab},
+        {QStringLiteral("Graphics"), ui->graphicsTab}, {QStringLiteral("Audio"), ui->audioTab},
+        {QStringLiteral("Camera"), ui->cameraTab},     {QStringLiteral("Debug"), ui->debugTab},
+        {QStringLiteral("Web"), ui->webTab},           {QStringLiteral("UI"), ui->uiTab}};
 
     ui->tabWidget->clear();
 

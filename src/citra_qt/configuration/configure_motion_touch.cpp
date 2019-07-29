@@ -81,10 +81,10 @@ ConfigureMotionTouch::ConfigureMotionTouch(QWidget* parent)
     : QDialog(parent), ui(std::make_unique<Ui::ConfigureMotionTouch>()) {
     ui->setupUi(this);
     for (auto [provider, name] : MotionProviders) {
-        ui->motion_provider->addItem(tr(name), provider);
+        ui->motion_provider->addItem(tr(name), QString::fromUtf8(provider));
     }
     for (auto [provider, name] : TouchProviders) {
-        ui->touch_provider->addItem(tr(name), provider);
+        ui->touch_provider->addItem(tr(name), QString::fromUtf8(provider));
     }
 
     ui->udp_learn_more->setOpenExternalLinks(true);
@@ -140,7 +140,7 @@ void ConfigureMotionTouch::UpdateUiDisplay() {
         ui->touch_calibration->setVisible(true);
         ui->touch_calibration_config->setVisible(true);
         ui->touch_calibration_label->setVisible(true);
-        ui->touch_calibration->setText(QString("(%1, %2) - (%3, %4)")
+        ui->touch_calibration->setText(QStringLiteral("(%1, %2) - (%3, %4)")
                                            .arg(QString::number(min_x), QString::number(min_y),
                                                 QString::number(max_x), QString::number(max_y)));
     } else {
