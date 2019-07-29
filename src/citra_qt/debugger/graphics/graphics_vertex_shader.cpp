@@ -86,10 +86,11 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             if (par->info.HasLabel(index.row()))
                 return QString::fromStdString(par->info.GetLabel(index.row()));
 
-            return QString("%1").arg(4 * index.row(), 4, 16, QLatin1Char('0'));
+            return QStringLiteral("%1").arg(4 * index.row(), 4, 16, QLatin1Char('0'));
 
         case 1:
-            return QString("%1").arg(par->info.code[index.row()].hex, 8, 16, QLatin1Char('0'));
+            return QStringLiteral("%1").arg(par->info.code[index.row()].hex, 8, 16,
+                                            QLatin1Char('0'));
 
         case 2: {
             std::ostringstream output;
@@ -341,8 +342,9 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 }
 
 void GraphicsVertexShaderWidget::DumpShader() {
-    QString filename = QFileDialog::getSaveFileName(
-        this, tr("Save Shader Dump"), "shader_dump.shbin", tr("Shader Binary (*.shbin)"));
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save Shader Dump"),
+                                                    QStringLiteral("shader_dump.shbin"),
+                                                    tr("Shader Binary (*.shbin)"));
 
     if (filename.isEmpty()) {
         // If the user canceled the dialog, don't dump anything.
@@ -358,8 +360,8 @@ void GraphicsVertexShaderWidget::DumpShader() {
 
 GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
     std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent)
-    : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
-    setObjectName("PicaVertexShader");
+    : BreakPointObserverDock(debug_context, tr("Pica Vertex Shader"), parent) {
+    setObjectName(QStringLiteral("PicaVertexShader"));
 
     // Clear input vertex data so that it contains valid float values in case a debug shader
     // execution happens before the first Vertex Loaded breakpoint.
@@ -387,7 +389,8 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
     binary_list->setRootIsDecorated(false);
     binary_list->setAlternatingRowColors(true);
 
-    auto dump_shader = new QPushButton(QIcon::fromTheme("document-save"), tr("Dump"));
+    auto dump_shader =
+        new QPushButton(QIcon::fromTheme(QStringLiteral("document-save")), tr("Dump"));
 
     instruction_description = new QLabel;
 
@@ -487,14 +490,14 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
             for (unsigned attr = 0; attr < 16; ++attr) {
                 for (unsigned comp = 0; comp < 4; ++comp) {
                     input_data[4 * attr + comp]->setText(
-                        QString("%1").arg(input_vertex.attr[attr][comp].ToFloat32()));
+                        QStringLiteral("%1").arg(input_vertex.attr[attr][comp].ToFloat32()));
                 }
             }
             breakpoint_warning->hide();
         } else {
             for (unsigned attr = 0; attr < 16; ++attr) {
                 for (unsigned comp = 0; comp < 4; ++comp) {
-                    input_data[4 * attr + comp]->setText(QString("???"));
+                    input_data[4 * attr + comp]->setText(QStringLiteral("???"));
                 }
             }
             breakpoint_warning->show();
@@ -524,7 +527,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     // Reload widget state
     for (int attr = 0; attr < num_attributes; ++attr) {
         unsigned source_attr = shader_config.GetRegisterForAttribute(attr);
-        input_data_mapping[attr]->setText(QString("-> v%1").arg(source_attr));
+        input_data_mapping[attr]->setText(QStringLiteral("-> v%1").arg(source_attr));
         input_data_container[attr]->setVisible(true);
     }
     // Only show input attributes which are used as input to the shader
@@ -552,6 +555,8 @@ void GraphicsVertexShaderWidget::OnInputAttributeChanged(int index) {
 
 void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
     QString text;
+    const QString true_string = QStringLiteral("true");
+    const QString false_string = QStringLiteral("false");
 
     auto& record = debug_data.records[index];
     if (record.mask & Pica::Shader::DebugDataRecord::SRC1)
@@ -591,15 +596,15 @@ void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
                     .arg(record.address_registers[1]);
     if (record.mask & Pica::Shader::DebugDataRecord::CMP_RESULT)
         text += tr("Compare Result: %1, %2\n")
-                    .arg(record.conditional_code[0] ? "true" : "false")
-                    .arg(record.conditional_code[1] ? "true" : "false");
+                    .arg(record.conditional_code[0] ? true_string : false_string)
+                    .arg(record.conditional_code[1] ? true_string : false_string);
 
     if (record.mask & Pica::Shader::DebugDataRecord::COND_BOOL_IN)
-        text += tr("Static Condition: %1\n").arg(record.cond_bool ? "true" : "false");
+        text += tr("Static Condition: %1\n").arg(record.cond_bool ? true_string : false_string);
     if (record.mask & Pica::Shader::DebugDataRecord::COND_CMP_IN)
         text += tr("Dynamic Conditions: %1, %2\n")
-                    .arg(record.cond_cmp[0] ? "true" : "false")
-                    .arg(record.cond_cmp[1] ? "true" : "false");
+                    .arg(record.cond_cmp[0] ? true_string : false_string)
+                    .arg(record.cond_cmp[1] ? true_string : false_string);
     if (record.mask & Pica::Shader::DebugDataRecord::LOOP_INT_IN)
         text += tr("Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4\n")
                     .arg(record.loop_int.x)

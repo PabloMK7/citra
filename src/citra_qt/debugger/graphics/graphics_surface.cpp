@@ -51,7 +51,7 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
                                              QWidget* parent)
     : BreakPointObserverDock(debug_context, tr("Pica Surface Viewer"), parent),
       surface_source(Source::ColorBuffer) {
-    setObjectName("PicaSurface");
+    setObjectName(QStringLiteral("PicaSurface"));
 
     surface_source_list = new QComboBox;
     surface_source_list->addItem(tr("Color Buffer"));
@@ -66,7 +66,7 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
     surface_address_control = new CSpinBox;
     surface_address_control->SetBase(16);
     surface_address_control->SetRange(0, 0xFFFFFFFF);
-    surface_address_control->SetPrefix("0x");
+    surface_address_control->SetPrefix(QStringLiteral("0x"));
 
     unsigned max_dimension = 16384; // TODO: Find actual maximum
 
@@ -121,7 +121,7 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
     scroll_area->setWidgetResizable(false);
     scroll_area->setWidget(surface_picture_label);
 
-    save_surface = new QPushButton(QIcon::fromTheme("document-save"), tr("Save"));
+    save_surface = new QPushButton(QIcon::fromTheme(QStringLiteral("document-save")), tr("Save"));
 
     // Connections
     connect(this, &GraphicsSurfaceWidget::Update, this, &GraphicsSurfaceWidget::OnUpdate);
@@ -313,7 +313,7 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         switch (format) {
         case Format::RGBA8: {
             auto value = Color::DecodeRGBA8(pixel) / 255.0f;
-            return QString("Red: %1, Green: %2, Blue: %3, Alpha: %4")
+            return QStringLiteral("Red: %1, Green: %2, Blue: %3, Alpha: %4")
                 .arg(QString::number(value.r(), 'f', 2))
                 .arg(QString::number(value.g(), 'f', 2))
                 .arg(QString::number(value.b(), 'f', 2))
@@ -321,14 +321,14 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         }
         case Format::RGB8: {
             auto value = Color::DecodeRGB8(pixel) / 255.0f;
-            return QString("Red: %1, Green: %2, Blue: %3")
+            return QStringLiteral("Red: %1, Green: %2, Blue: %3")
                 .arg(QString::number(value.r(), 'f', 2))
                 .arg(QString::number(value.g(), 'f', 2))
                 .arg(QString::number(value.b(), 'f', 2));
         }
         case Format::RGB5A1: {
             auto value = Color::DecodeRGB5A1(pixel) / 255.0f;
-            return QString("Red: %1, Green: %2, Blue: %3, Alpha: %4")
+            return QStringLiteral("Red: %1, Green: %2, Blue: %3, Alpha: %4")
                 .arg(QString::number(value.r(), 'f', 2))
                 .arg(QString::number(value.g(), 'f', 2))
                 .arg(QString::number(value.b(), 'f', 2))
@@ -336,69 +336,72 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         }
         case Format::RGB565: {
             auto value = Color::DecodeRGB565(pixel) / 255.0f;
-            return QString("Red: %1, Green: %2, Blue: %3")
+            return QStringLiteral("Red: %1, Green: %2, Blue: %3")
                 .arg(QString::number(value.r(), 'f', 2))
                 .arg(QString::number(value.g(), 'f', 2))
                 .arg(QString::number(value.b(), 'f', 2));
         }
         case Format::RGBA4: {
             auto value = Color::DecodeRGBA4(pixel) / 255.0f;
-            return QString("Red: %1, Green: %2, Blue: %3, Alpha: %4")
+            return QStringLiteral("Red: %1, Green: %2, Blue: %3, Alpha: %4")
                 .arg(QString::number(value.r(), 'f', 2))
                 .arg(QString::number(value.g(), 'f', 2))
                 .arg(QString::number(value.b(), 'f', 2))
                 .arg(QString::number(value.a(), 'f', 2));
         }
         case Format::IA8:
-            return QString("Index: %1, Alpha: %2").arg(pixel[0]).arg(pixel[1]);
+            return QStringLiteral("Index: %1, Alpha: %2").arg(pixel[0]).arg(pixel[1]);
         case Format::RG8: {
             auto value = Color::DecodeRG8(pixel) / 255.0f;
-            return QString("Red: %1, Green: %2")
+            return QStringLiteral("Red: %1, Green: %2")
                 .arg(QString::number(value.r(), 'f', 2))
                 .arg(QString::number(value.g(), 'f', 2));
         }
         case Format::I8:
-            return QString("Index: %1").arg(*pixel);
+            return QStringLiteral("Index: %1").arg(*pixel);
         case Format::A8:
-            return QString("Alpha: %1").arg(QString::number(*pixel / 255.0f, 'f', 2));
+            return QStringLiteral("Alpha: %1").arg(QString::number(*pixel / 255.0f, 'f', 2));
         case Format::IA4:
-            return QString("Index: %1, Alpha: %2").arg(*pixel & 0xF).arg((*pixel & 0xF0) >> 4);
+            return QStringLiteral("Index: %1, Alpha: %2")
+                .arg(*pixel & 0xF)
+                .arg((*pixel & 0xF0) >> 4);
         case Format::I4: {
             u8 i = (*pixel >> ((offset % 2) ? 4 : 0)) & 0xF;
-            return QString("Index: %1").arg(i);
+            return QStringLiteral("Index: %1").arg(i);
         }
         case Format::A4: {
             u8 a = (*pixel >> ((offset % 2) ? 4 : 0)) & 0xF;
-            return QString("Alpha: %1").arg(QString::number(a / 15.0f, 'f', 2));
+            return QStringLiteral("Alpha: %1").arg(QString::number(a / 15.0f, 'f', 2));
         }
         case Format::ETC1:
         case Format::ETC1A4:
             // TODO: Display block information or channel values?
-            return QString("Compressed data");
+            return QStringLiteral("Compressed data");
         case Format::D16: {
             auto value = Color::DecodeD16(pixel);
-            return QString("Depth: %1").arg(QString::number(value / (float)0xFFFF, 'f', 4));
+            return QStringLiteral("Depth: %1").arg(QString::number(value / (float)0xFFFF, 'f', 4));
         }
         case Format::D24: {
             auto value = Color::DecodeD24(pixel);
-            return QString("Depth: %1").arg(QString::number(value / (float)0xFFFFFF, 'f', 4));
+            return QStringLiteral("Depth: %1")
+                .arg(QString::number(value / (float)0xFFFFFF, 'f', 4));
         }
         case Format::D24X8:
         case Format::X24S8: {
             auto values = Color::DecodeD24S8(pixel);
-            return QString("Depth: %1, Stencil: %2")
+            return QStringLiteral("Depth: %1, Stencil: %2")
                 .arg(QString::number(values[0] / (float)0xFFFFFF, 'f', 4))
                 .arg(values[1]);
         }
         case Format::Unknown:
-            return QString("Unknown format");
+            return QStringLiteral("Unknown format");
         default:
-            return QString("Unhandled format");
+            return QStringLiteral("Unhandled format");
         }
-        return QString("");
+        return QString{};
     };
 
-    QString nibbles = "";
+    QString nibbles;
     for (unsigned i = 0; i < nibbles_per_pixel; i++) {
         unsigned nibble_index = i;
         if (nibble_mode) {
@@ -410,7 +413,7 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
     }
 
     surface_info_label->setText(
-        QString("Raw: 0x%3\n(%4)").arg(nibbles).arg(GetText(surface_format, pixel)));
+        QStringLiteral("Raw: 0x%3\n(%4)").arg(nibbles).arg(GetText(surface_format, pixel)));
     surface_info_label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 }
 

@@ -24,11 +24,11 @@ GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext>
                                              QWidget* parent)
     : BreakPointObserverDock(debug_context, tr("CiTrace Recorder"), parent) {
 
-    setObjectName("CiTracing");
+    setObjectName(QStringLiteral("CiTracing"));
 
     QPushButton* start_recording = new QPushButton(tr("Start Recording"));
     QPushButton* stop_recording =
-        new QPushButton(QIcon::fromTheme("document-save"), tr("Stop and Save"));
+        new QPushButton(QIcon::fromTheme(QStringLiteral("document-save")), tr("Stop and Save"));
     QPushButton* abort_recording = new QPushButton(tr("Abort Recording"));
 
     connect(this, &GraphicsTracingWidget::SetStartTracingButtonEnabled, start_recording,
@@ -109,8 +109,8 @@ void GraphicsTracingWidget::StopRecording() {
     if (!context)
         return;
 
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save CiTrace"), "citrace.ctf",
-                                                    tr("CiTrace File (*.ctf)"));
+    QString filename = QFileDialog::getSaveFileName(
+        this, tr("Save CiTrace"), QStringLiteral("citrace.ctf"), tr("CiTrace File (*.ctf)"));
 
     if (filename.isEmpty()) {
         // If the user canceled the dialog, keep recording
