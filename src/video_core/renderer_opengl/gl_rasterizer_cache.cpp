@@ -854,6 +854,25 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     }
 }
 
+// TODO: move this function to a better place
+void FlipRGBA8Texture(std::vector<u8>& tex, u64 width, u64 height) {
+    assert(tex.size() = width * height * 4);
+    const u64 line_size = width * 4;
+    // Thanks MSVC for not being able to make variable length arrays
+    u8* temp_row = new u8[line_size];
+    u32 offset_1;
+    u32 offset_2;
+    for (u64 line = 0; line < height / 2; line++) {
+        offset_1 = line * line_size;
+        offset_2 = (height - line - 1) * line_size;
+        // Swap lines
+        std::memcpy(temp_row, &tex[offset_1], line_size);
+        std::memcpy(&tex[offset_1], &tex[offset_2], line_size);
+        std::memcpy(&tex[offset_2], temp_row, line_size);
+    }
+    delete[] temp_row;
+}
+
 MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 192, 64));
 void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
                                     GLuint draw_fb_handle) {
@@ -865,8 +884,13 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     ASSERT(gl_buffer_size == width * height * GetGLBytesPerPixel(pixel_format));
 
     // Decode and dump texture if texture dumping is enabled
+    // or read texture and replace
     bool should_dump = false;
+    bool should_use_custom_tex = false;
     std::string dump_path;
+    std::vector<u8> decoded_png;
+    u32 png_width;
+    u32 png_height;
     if (Settings::values.dump_textures) {
         dump_path = fmt::format("{}/textures", FileUtil::GetUserPath(FileUtil::UserPath::DumpDir));
         if (!FileUtil::IsDirectory(dump_path))
@@ -880,8 +904,17 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
         const u64 tex_hash = Common::ComputeHash64(gl_buffer.get(), gl_buffer_size);
         dump_path += fmt::format("/tex1_{}x{}_{:016X}_{}.png", width, height, tex_hash,
                                  static_cast<u32>(pixel_format));
-        if (!FileUtil::Exists(dump_path)) {
+        if (!FileUtil::Exists(dump_path))
             should_dump = true;
+        else {
+            u32 lodepng_ret = lodepng::decode(decoded_png, png_width, png_height, dump_path);
+            if (lodepng_ret)
+                LOG_CRITICAL(Render_OpenGL, "Failed to load custom texture: {}",
+                             lodepng_error_text(lodepng_ret));
+            else {
+                FlipRGBA8Texture(decoded_png, png_width, png_height);
+                should_use_custom_tex = true;
+            }
         }
     }
 
@@ -896,7 +929,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     // If not 1x scale, create 1x texture that we will blit from to replace texture subrect in
     // surface
     OGLTexture unscaled_tex;
-    if (res_scale != 1) {
+    if (res_scale != 1 && !should_use_custom_tex) {
         x0 = 0;
         y0 = 0;
 
@@ -913,39 +946,37 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
 
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT
     ASSERT(stride * GetGLBytesPerPixel(pixel_format) % 4 == 0);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(stride));
+    if (!should_use_custom_tex) {
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(stride));
 
-    glActiveTexture(GL_TEXTURE0);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x0, y0, static_cast<GLsizei>(rect.GetWidth()),
-                    static_cast<GLsizei>(rect.GetHeight()), tuple.format, tuple.type,
-                    &gl_buffer[buffer_offset]);
+        glActiveTexture(GL_TEXTURE0);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, x0, y0, static_cast<GLsizei>(rect.GetWidth()),
+                        static_cast<GLsizei>(rect.GetHeight()), tuple.format, tuple.type,
+                        &gl_buffer[buffer_offset]);
+    } else {
+        AllocateSurfaceTexture(texture.handle, GetFormatTuple(PixelFormat::RGBA8), png_width,
+                               png_height);
+        cur_state.texture_units[0].texture_2d = texture.handle;
+        cur_state.Apply();
+        // always going to be using rgba8
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(png_width));
+
+        glActiveTexture(GL_TEXTURE0);
+        // todo: properly handle offsets
+        glTexSubImage2D(GL_TEXTURE_2D, 0, x0, y0, png_width, png_height, GL_RGBA, GL_UNSIGNED_BYTE,
+                        decoded_png.data());
+    }
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     if (should_dump) {
         // Dump texture to RGBA8 and encode as PNG
         LOG_INFO(Render_OpenGL, "Dumping texture to {}", dump_path);
         std::vector<u8> decoded_texture;
-        std::vector<u8> png;
-        decoded_texture.resize(width * height * 4);
+        decoded_texture.resize(rect.GetWidth() * rect.GetHeight() * 4);
         glBindTexture(GL_TEXTURE_2D, target_tex);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
         glBindTexture(GL_TEXTURE_2D, 0);
-        // Flip the RGBA8 texture
-        assert(rgba8_tex.size() = width * height * 4);
-        const u64 line_size = width * 4;
-        // Thanks MSVC for not being able to make variable length arrays
-        u8* temp_row = new u8[line_size];
-        u32 offset_1;
-        u32 offset_2;
-        for (u64 line = 0; line < height / 2; line++) {
-            offset_1 = line * line_size;
-            offset_2 = (height - line - 1) * line_size;
-            // Swap lines
-            std::memcpy(temp_row, &decoded_texture[offset_1], line_size);
-            std::memcpy(&decoded_texture[offset_1], &decoded_texture[offset_2], line_size);
-            std::memcpy(&decoded_texture[offset_2], temp_row, line_size);
-        }
-        delete temp_row;
+        FlipRGBA8Texture(decoded_texture, width, height);
         u32 png_error = lodepng::encode(dump_path, decoded_texture, width, height);
         if (png_error) {
             LOG_CRITICAL(Render_OpenGL, "Failed to save decoded texture! {}",
@@ -956,7 +987,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     cur_state.texture_units[0].texture_2d = old_tex;
     cur_state.Apply();
 
-    if (res_scale != 1) {
+    if (res_scale != 1 && !should_use_custom_tex) {
         auto scaled_rect = rect;
         scaled_rect.left *= res_scale;
         scaled_rect.top *= res_scale;
