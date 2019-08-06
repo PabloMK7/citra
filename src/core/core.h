@@ -223,6 +223,8 @@ public:
     /// Gets a const reference to the custom texture cache system
     const Core::CustomTexCache& CustomTexCache() const;
 
+    /// Handles loading all custom textures from disk into cache.
+    void PreloadCustomTextures();
     FrameLimiter frame_limiter;
 
     void SetStatus(ResultStatus new_status, const char* details = nullptr) {

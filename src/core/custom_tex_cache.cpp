@@ -1,10 +1,18 @@
+// Copyright 2019 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include <stdexcept>
 #include <vector>
 #include "common/common_types.h"
 #include "custom_tex_cache.h"
 
 namespace Core {
-const bool CustomTexCache::IsTextureDumped(const u64 hash) {
+CustomTexCache::CustomTexCache() {}
+
+CustomTexCache::~CustomTexCache() {}
+
+bool CustomTexCache::IsTextureDumped(u64 hash) const {
     return dumped_textures.find(hash) != dumped_textures.end();
 }
 
@@ -12,7 +20,7 @@ void CustomTexCache::SetTextureDumped(const u64 hash) {
     dumped_textures[hash] = true;
 }
 
-const bool CustomTexCache::IsTextureCached(const u64 hash) {
+bool CustomTexCache::IsTextureCached(u64 hash) const {
     return custom_textures.find(hash) != custom_textures.end();
 }
 

@@ -23,8 +23,7 @@ static std::shared_ptr<Object> MakeObject(Kernel::KernelSystem& kernel) {
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
     Core::Timing timing;
     Memory::MemorySystem memory;
-    Kernel::KernelSystem kernel(
-        memory, timing, [] {}, 0);
+    Kernel::KernelSystem kernel(memory, timing, [] {}, 0);
     auto [server, client] = kernel.CreateSessionPair();
     HLERequestContext context(kernel, std::move(server), nullptr);
 
@@ -236,8 +235,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     Core::Timing timing;
     Memory::MemorySystem memory;
-    Kernel::KernelSystem kernel(
-        memory, timing, [] {}, 0);
+    Kernel::KernelSystem kernel(memory, timing, [] {}, 0);
     auto [server, client] = kernel.CreateSessionPair();
     HLERequestContext context(kernel, std::move(server), nullptr);
 

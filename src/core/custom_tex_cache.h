@@ -1,3 +1,7 @@
+// Copyright 2019 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #pragma once
 
 #include <unordered_map>
@@ -14,12 +18,15 @@ struct CustomTexInfo {
 // TODO: think of a better name for this class...
 class CustomTexCache {
 public:
-    const bool IsTextureDumped(const u64 hash);
-    void SetTextureDumped(const u64 hash);
+    CustomTexCache();
+    ~CustomTexCache();
 
-    const bool IsTextureCached(const u64 hash);
+    bool IsTextureDumped(u64 hash) const;
+    void SetTextureDumped(u64 hash);
+
+    bool IsTextureCached(u64 hash) const;
     const CustomTexInfo& LookupTexture(const u64 hash);
-    void CacheTexture(const u64 hash, const std::vector<u8>& tex, u32 width, u32 height);
+    void CacheTexture(u64 hash, const std::vector<u8>& tex, u32 width, u32 height);
 
 private:
     std::unordered_map<u64, bool> dumped_textures;

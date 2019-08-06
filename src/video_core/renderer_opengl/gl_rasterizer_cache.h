@@ -25,6 +25,7 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
+#include "core/custom_tex_cache.h"
 #include "core/hw/gpu.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_texturing.h"
@@ -376,6 +377,12 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     // Read/Write data in 3DS memory to/from gl_buffer
     void LoadGLBuffer(PAddr load_start, PAddr load_end);
     void FlushGLBuffer(PAddr flush_start, PAddr flush_end);
+
+    // Custom texture loading and dumping
+    bool LoadCustomTextures(u64 tex_hash, Core::CustomTexInfo& tex_info,
+                            Common::Rectangle<u32>& custom_rect);
+    bool GetDumpPath(u64 tex_hash, std::string& path);
+    void DumpTexture(GLuint target_tex, const std::string& dump_path);
 
     // Upload/Download data in gl_buffer in/to this surface's texture
     void UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,

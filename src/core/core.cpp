@@ -18,14 +18,11 @@
 #include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-<<<<<<< HEAD
 #include "core/dumping/backend.h"
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 #include "core/dumping/ffmpeg_backend.h"
 #endif
-=======
 #include "core/custom_tex_cache.h"
->>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
@@ -102,6 +99,48 @@ System::ResultStatus System::SingleStep() {
     return RunLoop(false);
 }
 
+void System::PreloadCustomTextures() {
+    // Custom textures are currently stored as
+    // load/textures/[TitleID]/tex1_[width]x[height]_[64-bit hash]_[format].png
+    const std::string load_path =
+        fmt::format("{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                    Kernel().GetCurrentProcess()->codeset->program_id);
+
+    if (FileUtil::Exists(load_path)) {
+        FileUtil::FSTEntry texture_files;
+        FileUtil::ScanDirectoryTree(load_path, texture_files);
+        for (const auto& file : texture_files.children) {
+            if (file.isDirectory)
+                continue;
+            if (file.virtualName.substr(0, 5) != "tex1_")
+                continue;
+
+            u32 width;
+            u32 height;
+            u64 hash;
+            u32 format; // unused
+            // TODO: more modern way of doing this
+            if (std::sscanf(file.virtualName.c_str(), "tex1_%ux%u_%llX_%u.png", &width, &height,
+                            &hash, &format) == 4) {
+                u32 png_width;
+                u32 png_height;
+                std::vector<u8> decoded_png;
+
+                u32 lodepng_ret =
+                    lodepng::decode(decoded_png, png_width, png_height, file.physicalName);
+                if (lodepng_ret) {
+                    LOG_CRITICAL(Render_OpenGL, "Failed to preload custom texture: {}",
+                                 lodepng_error_text(lodepng_ret));
+                } else {
+                    LOG_INFO(Render_OpenGL, "Preloaded custom texture from {}", file.physicalName);
+                    Common::FlipRGBA8Texture(decoded_png, png_width, png_height);
+                    custom_tex_cache->CacheTexture(hash, decoded_png, png_width, png_height);
+                }
+            }
+        }
+    }
+}
+
 System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath) {
     app_loader = Loader::GetLoader(filepath);
     if (!app_loader) {
@@ -152,18 +191,13 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         }
     }
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
-<<<<<<< HEAD
     u64 title_id{0};
     if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to find title id for ROM (Error {})",
                   static_cast<u32>(load_result));
     }
     perf_stats = std::make_unique<PerfStats>(title_id);
-=======
     custom_tex_cache = std::make_unique<Core::CustomTexCache>();
-<<<<<<< HEAD
->>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
-=======
     if (Settings::values.preload_textures) {
         // Custom textures are currently stored as
         // load/textures/[TitleID]/tex1_[width]x[height]_[64-bit hash]_[format].png
@@ -206,7 +240,8 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             }
         }
     }
->>>>>>> 015582b2... implement custom texture preload
+    if (Settings::values.preload_textures)
+        PreloadCustomTextures();
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
@@ -242,8 +277,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(
-        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
+                                                    [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -345,21 +380,20 @@ const Cheats::CheatEngine& System::CheatEngine() const {
     return *cheat_engine;
 }
 
-<<<<<<< HEAD
 VideoDumper::Backend& System::VideoDumper() {
     return *video_dumper;
 }
 
 const VideoDumper::Backend& System::VideoDumper() const {
     return *video_dumper;
-=======
+}
+
 Core::CustomTexCache& System::CustomTexCache() {
     return *custom_tex_cache;
 }
 
 const Core::CustomTexCache& System::CustomTexCache() const {
     return *custom_tex_cache;
->>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
 }
 
 void System::RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector) {

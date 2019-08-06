@@ -856,6 +856,81 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     }
 }
 
+bool CachedSurface::LoadCustomTextures(u64 tex_hash, Core::CustomTexInfo& tex_info,
+                                       Common::Rectangle<u32>& custom_rect) {
+    bool result = false;
+    auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
+    const std::string load_path =
+        fmt::format("{}textures/{:016X}/tex1_{}x{}_{:016X}_{}.png",
+                    FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                    Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id,
+                    width, height, tex_hash, static_cast<u32>(pixel_format));
+
+    if (!custom_tex_cache.IsTextureCached(tex_hash)) {
+        if (FileUtil::Exists(load_path)) {
+            u32 lodepng_ret =
+                lodepng::decode(tex_info.tex, tex_info.width, tex_info.height, load_path);
+            if (lodepng_ret) {
+                LOG_CRITICAL(Render_OpenGL, "Failed to load custom texture: {}",
+                             lodepng_error_text(lodepng_ret));
+            } else {
+                LOG_INFO(Render_OpenGL, "Loaded custom texture from {}", load_path);
+                Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
+                custom_tex_cache.CacheTexture(tex_hash, tex_info.tex, tex_info.width,
+                                              tex_info.height);
+                result = true;
+            }
+        }
+    } else {
+        tex_info = custom_tex_cache.LookupTexture(tex_hash);
+        result = true;
+    }
+
+    if (result) {
+        custom_rect.left = (custom_rect.left / width) * tex_info.width;
+        custom_rect.top = (custom_rect.top / height) * tex_info.height;
+        custom_rect.right = (custom_rect.right / width) * tex_info.width;
+        custom_rect.bottom = (custom_rect.bottom / height) * tex_info.height;
+    }
+
+    return result;
+}
+
+bool CachedSurface::GetDumpPath(u64 tex_hash, std::string& path) {
+    auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
+    path =
+        fmt::format("{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
+                    Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
+    if (!FileUtil::CreateFullPath(path)) {
+        LOG_ERROR(Render, "Unable to create {}", path);
+        return false;
+    }
+
+    path += fmt::format("tex1_{}x{}_{:016X}_{}.png", width, height, tex_hash,
+                        static_cast<u32>(pixel_format));
+    if (!custom_tex_cache.IsTextureDumped(tex_hash) && !FileUtil::Exists(path)) {
+        custom_tex_cache.SetTextureDumped(tex_hash);
+        return true;
+    }
+    return false;
+}
+
+void CachedSurface::DumpTexture(GLuint target_tex, const std::string& dump_path) {
+    // Dump texture to RGBA8 and encode as PNG
+    LOG_INFO(Render_OpenGL, "Dumping texture to {}", dump_path);
+    std::vector<u8> decoded_texture;
+    decoded_texture.resize(width * height * 4);
+    glBindTexture(GL_TEXTURE_2D, target_tex);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    Common::FlipRGBA8Texture(decoded_texture, width, height);
+    u32 png_error = lodepng::encode(dump_path, decoded_texture, width, height);
+    if (png_error) {
+        LOG_CRITICAL(Render_OpenGL, "Failed to save decoded texture! {}",
+                     lodepng_error_text(png_error));
+    }
+}
+
 MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 192, 64));
 void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
                                     GLuint draw_fb_handle) {
@@ -871,9 +946,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     bool dump_tex = false;
     bool use_custom_tex = false;
     std::string dump_path; // Has to be declared here for logging later
-    std::vector<u8> decoded_png;
-    u32 png_width = 0;
-    u32 png_height = 0;
+    Core::CustomTexInfo custom_tex_info;
     u64 tex_hash = 0;
     Common::Rectangle custom_rect =
         rect; // Required for rect to function properly with custom textures
@@ -881,56 +954,11 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     if (Settings::values.dump_textures || Settings::values.custom_textures)
         tex_hash = Common::ComputeHash64(gl_buffer.get(), gl_buffer_size);
 
-    if (Settings::values.custom_textures) {
-        const std::string load_path = fmt::format(
-            "{}textures/{:016X}/tex1_{}x{}_{:016X}_{}.png",
-            FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-            Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id, width,
-            height, tex_hash, static_cast<u32>(pixel_format));
+    if (Settings::values.custom_textures)
+        use_custom_tex = LoadCustomTextures(tex_hash, custom_tex_info, custom_rect);
 
-        if (!custom_tex_cache.IsTextureCached(tex_hash)) {
-            if (FileUtil::Exists(load_path)) {
-                u32 lodepng_ret = lodepng::decode(decoded_png, png_width, png_height, load_path);
-                if (lodepng_ret)
-                    LOG_CRITICAL(Render_OpenGL, "Failed to load custom texture: {}",
-                                 lodepng_error_text(lodepng_ret));
-                else {
-                    LOG_INFO(Render_OpenGL, "Loaded custom texture from {}", load_path);
-                    Common::FlipRGBA8Texture(decoded_png, png_width, png_height);
-                    custom_tex_cache.CacheTexture(tex_hash, decoded_png, png_width, png_height);
-                    use_custom_tex = true;
-                }
-            }
-        } else {
-            const auto custom_tex_info = custom_tex_cache.LookupTexture(tex_hash);
-            decoded_png = custom_tex_info.tex;
-            png_width = custom_tex_info.width;
-            png_height = custom_tex_info.height;
-            use_custom_tex = true;
-        }
-
-        if (png_width && png_height) {
-            custom_rect.left = (custom_rect.left / width) * png_width;
-            custom_rect.top = (custom_rect.top / height) * png_height;
-            custom_rect.right = (custom_rect.right / width) * png_width;
-            custom_rect.bottom = (custom_rect.bottom / height) * png_height;
-        }
-    }
-
-    if (Settings::values.dump_textures && !use_custom_tex) {
-        dump_path = fmt::format(
-            "{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
-            Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
-        if (!FileUtil::CreateFullPath(dump_path))
-            LOG_ERROR(Render, "Unable to create {}", dump_path);
-
-        dump_path += fmt::format("tex1_{}x{}_{:016X}_{}.png", width, height, tex_hash,
-                                 static_cast<u32>(pixel_format));
-        if (!custom_tex_cache.IsTextureDumped(tex_hash) && !FileUtil::Exists(dump_path)) {
-            custom_tex_cache.SetTextureDumped(tex_hash);
-            dump_tex = true;
-        }
-    }
+    if (Settings::values.dump_textures && !use_custom_tex)
+        dump_tex = GetDumpPath(tex_hash, dump_path);
 
     // Load data from memory to the surface
     GLint x0 = static_cast<GLint>(custom_rect.left);
@@ -950,7 +978,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
         unscaled_tex.Create();
         if (use_custom_tex) {
             AllocateSurfaceTexture(unscaled_tex.handle, GetFormatTuple(PixelFormat::RGBA8),
-                                   png_width, png_height);
+                                   custom_tex_info.width, custom_tex_info.height);
         } else {
             AllocateSurfaceTexture(unscaled_tex.handle, tuple, custom_rect.GetWidth(),
                                    custom_rect.GetHeight());
@@ -975,36 +1003,22 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
                         &gl_buffer[buffer_offset]);
     } else {
         if (res_scale == 1) {
-            AllocateSurfaceTexture(texture.handle, GetFormatTuple(PixelFormat::RGBA8), png_width,
-                                   png_height);
+            AllocateSurfaceTexture(texture.handle, GetFormatTuple(PixelFormat::RGBA8),
+                                   custom_tex_info.width, custom_tex_info.height);
             cur_state.texture_units[0].texture_2d = texture.handle;
             cur_state.Apply();
         }
         // always going to be using rgba8
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(png_width));
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(custom_tex_info.width));
 
         glActiveTexture(GL_TEXTURE0);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, x0, y0, png_width, png_height, GL_RGBA, GL_UNSIGNED_BYTE,
-                        decoded_png.data());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, x0, y0, custom_tex_info.width, custom_tex_info.height,
+                        GL_RGBA, GL_UNSIGNED_BYTE, custom_tex_info.tex.data());
     }
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    if (dump_tex) {
-        // Dump texture to RGBA8 and encode as PNG
-        LOG_INFO(Render_OpenGL, "Dumping texture to {}", dump_path);
-        std::vector<u8> decoded_texture;
-        decoded_texture.resize(width * height * 4);
-        glBindTexture(GL_TEXTURE_2D, target_tex);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        Common::FlipRGBA8Texture(decoded_texture, width, height);
-        u32 png_error = lodepng::encode(dump_path, decoded_texture, width, height);
-        if (png_error) {
-            LOG_CRITICAL(Render_OpenGL, "Failed to save decoded texture! {}",
-                         lodepng_error_text(png_error));
-        }
-        custom_tex_cache.SetTextureDumped(tex_hash);
-    }
+    if (dump_tex)
+        DumpTexture(target_tex, dump_path);
 
     cur_state.texture_units[0].texture_2d = old_tex;
     cur_state.Apply();
