@@ -27,6 +27,7 @@ enum class UserPath {
     ConfigDir,
     DLLDir,
     DumpDir,
+    LoadDir,
     LogDir,
     NANDDir,
     RootDir,

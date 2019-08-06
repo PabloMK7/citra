@@ -88,6 +88,7 @@ void ConfigureGraphics::ApplyConfiguration() {
         static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();
     Settings::values.dump_textures = ui->toggle_dump_textures->isChecked();
+    Settings::values.custom_textures = ui->toggle_custom_textures->isChecked();
     Settings::values.bg_red = static_cast<float>(bg_color.redF());
     Settings::values.bg_green = static_cast<float>(bg_color.greenF());
     Settings::values.bg_blue = static_cast<float>(bg_color.blueF());

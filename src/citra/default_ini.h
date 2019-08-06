@@ -182,6 +182,10 @@ swap_screen =
 # 0 (default): Off, 1: On
 dump_textures =
 
+# Reads PNG files from load/textures/[Title ID]/ and replaces textures.
+# 0 (default): Off, 1: On
+custom_textures =
+
 [Audio]
 # Whether or not to enable DSP LLE
 # 0 (default): No, 1: Yes

@@ -231,9 +231,11 @@ void Config::ReadControlValues() {
 }
 
 void Config::ReadUtilityValues() {
-
     qt_config->beginGroup("Utility");
+
     Settings::values.dump_textures = ReadSetting("dump_textures", false).toBool();
+    Settings::values.custom_textures = ReadSetting("custom_textures", false).toBool();
+
     qt_config->endGroup();
 }
 
@@ -704,6 +706,7 @@ void Config::SaveUtilityValues() {
     qt_config->beginGroup("Utility");
 
     WriteSetting("dump_textures", Settings::values.dump_textures, false);
+    WriteSetting("custom_textures", Settings::values.custom_textures, false);
 
     qt_config->endGroup();
 }

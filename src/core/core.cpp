@@ -16,10 +16,14 @@
 #include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+<<<<<<< HEAD
 #include "core/dumping/backend.h"
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 #include "core/dumping/ffmpeg_backend.h"
 #endif
+=======
+#include "core/custom_tex_cache.h"
+>>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
@@ -146,12 +150,16 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         }
     }
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
+<<<<<<< HEAD
     u64 title_id{0};
     if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to find title id for ROM (Error {})",
                   static_cast<u32>(load_result));
     }
     perf_stats = std::make_unique<PerfStats>(title_id);
+=======
+    custom_tex_cache = std::make_unique<Core::CustomTexCache>();
+>>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
@@ -290,12 +298,21 @@ const Cheats::CheatEngine& System::CheatEngine() const {
     return *cheat_engine;
 }
 
+<<<<<<< HEAD
 VideoDumper::Backend& System::VideoDumper() {
     return *video_dumper;
 }
 
 const VideoDumper::Backend& System::VideoDumper() const {
     return *video_dumper;
+=======
+Core::CustomTexCache& System::CustomTexCache() {
+    return *custom_tex_cache;
+}
+
+const Core::CustomTexCache& System::CustomTexCache() const {
+    return *custom_tex_cache;
+>>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
 }
 
 void System::RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector) {

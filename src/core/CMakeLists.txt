@@ -36,6 +36,8 @@ add_library(core STATIC
     core.h
     core_timing.cpp
     core_timing.h
+    custom_tex_cache.cpp
+    custom_tex_cache.h
     dumping/backend.cpp
     dumping/backend.h
     file_sys/archive_backend.cpp

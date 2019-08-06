@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include "common/common_types.h"
+#include "core/custom_tex_cache.h"
 #include "core/frontend/applets/mii_selector.h"
 #include "core/frontend/applets/swkbd.h"
 #include "core/loader/loader.h"
@@ -216,7 +217,12 @@ public:
     /// Gets a const reference to the video dumper backend
     const VideoDumper::Backend& VideoDumper() const;
 
-    std::unique_ptr<PerfStats> perf_stats;
+    /// Gets a reference to the custom texture cache system
+    Core::CustomTexCache& CustomTexCache();
+
+    /// Gets a const reference to the custom texture cache system
+    const Core::CustomTexCache& CustomTexCache() const;
+
     FrameLimiter frame_limiter;
 
     void SetStatus(ResultStatus new_status, const char* details = nullptr) {
@@ -288,6 +294,9 @@ private:
 
     /// Video dumper backend
     std::unique_ptr<VideoDumper::Backend> video_dumper;
+
+    /// Custom texture cache system
+    std::unique_ptr<Core::CustomTexCache> custom_tex_cache;
 
     /// RPC Server for scripting support
     std::unique_ptr<RPC::RPCServer> rpc_server;

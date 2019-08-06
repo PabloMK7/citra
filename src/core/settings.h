@@ -171,6 +171,7 @@ struct Values {
     std::string pp_shader_name;
 
     bool dump_textures;
+    bool custom_textures;
 
     // Audio
     bool enable_dsp_lle;
