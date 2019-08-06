@@ -34,8 +34,7 @@ void DetachedTasks::AddTask(std::function<void()> task) {
         std::unique_lock lock{instance->mutex};
         --instance->count;
         std::notify_all_at_thread_exit(instance->cv, std::move(lock));
-    })
-        .detach();
+    }).detach();
 }
 
 } // namespace Common

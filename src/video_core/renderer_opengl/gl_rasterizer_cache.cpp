@@ -22,6 +22,7 @@
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
+#include "common/texture.h"
 #include "common/vector_math.h"
 #include "core/core.h"
 #include "core/custom_tex_cache.h"
@@ -855,25 +856,6 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     }
 }
 
-// TODO: move this function to a better place
-void FlipRGBA8Texture(std::vector<u8>& tex, u64 width, u64 height) {
-    ASSERT(tex.size() == width * height * 4);
-    const u64 line_size = width * 4;
-    // Thanks MSVC for not being able to make variable length arrays
-    u8* temp_row = new u8[line_size];
-    u32 offset_1;
-    u32 offset_2;
-    for (u64 line = 0; line < height / 2; line++) {
-        offset_1 = line * line_size;
-        offset_2 = (height - line - 1) * line_size;
-        // Swap lines
-        std::memcpy(temp_row, &tex[offset_1], line_size);
-        std::memcpy(&tex[offset_1], &tex[offset_2], line_size);
-        std::memcpy(&tex[offset_2], temp_row, line_size);
-    }
-    delete[] temp_row;
-}
-
 MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 192, 64));
 void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
                                     GLuint draw_fb_handle) {
@@ -893,7 +875,8 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     u32 png_width = 0;
     u32 png_height = 0;
     u64 tex_hash = 0;
-    Common::Rectangle custom_rect = rect; // Required for rect to function properly with custom textures
+    Common::Rectangle custom_rect =
+        rect; // Required for rect to function properly with custom textures
 
     if (Settings::values.dump_textures || Settings::values.custom_textures)
         tex_hash = Common::ComputeHash64(gl_buffer.get(), gl_buffer_size);
@@ -913,7 +896,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
                                  lodepng_error_text(lodepng_ret));
                 else {
                     LOG_INFO(Render_OpenGL, "Loaded custom texture from {}", load_path);
-                    FlipRGBA8Texture(decoded_png, png_width, png_height);
+                    Common::FlipRGBA8Texture(decoded_png, png_width, png_height);
                     custom_tex_cache.CacheTexture(tex_hash, decoded_png, png_width, png_height);
                     use_custom_tex = true;
                 }
@@ -1014,7 +997,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
         glBindTexture(GL_TEXTURE_2D, target_tex);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
         glBindTexture(GL_TEXTURE_2D, 0);
-        FlipRGBA8Texture(decoded_texture, width, height);
+        Common::FlipRGBA8Texture(decoded_texture, width, height);
         u32 png_error = lodepng::encode(dump_path, decoded_texture, width, height);
         if (png_error) {
             LOG_CRITICAL(Render_OpenGL, "Failed to save decoded texture! {}",
@@ -1034,8 +1017,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
         scaled_rect.bottom *= res_scale;
 
         BlitTextures(unscaled_tex.handle, {0, custom_rect.GetHeight(), custom_rect.GetWidth(), 0},
-                     texture.handle,
-                     scaled_rect, type, read_fb_handle, draw_fb_handle);
+                     texture.handle, scaled_rect, type, read_fb_handle, draw_fb_handle);
     }
 
     InvalidateAllWatcher();

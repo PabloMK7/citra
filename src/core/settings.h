@@ -172,6 +172,7 @@ struct Values {
 
     bool dump_textures;
     bool custom_textures;
+    bool preload_textures;
 
     // Audio
     bool enable_dsp_lle;

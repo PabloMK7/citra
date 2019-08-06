@@ -165,6 +165,8 @@ void Config::ReadValues() {
     // Utility
     Settings::values.dump_textures = sdl2_config->GetBoolean("Utility", "dump_textures", false);
     Settings::values.custom_textures = sdl2_config->GetBoolean("Utility", "custom_textures", false);
+    Settings::values.preload_textures =
+        sdl2_config->GetBoolean("Utility", "preload_textures", false);
 
     // Audio
     Settings::values.enable_dsp_lle = sdl2_config->GetBoolean("Audio", "enable_dsp_lle", false);

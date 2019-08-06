@@ -186,6 +186,10 @@ dump_textures =
 # 0 (default): Off, 1: On
 custom_textures =
 
+# Loads all custom textures into memory before booting.
+# 0 (default): Off, 1: On
+preload_textures =
+
 [Audio]
 # Whether or not to enable DSP LLE
 # 0 (default): No, 1: Yes

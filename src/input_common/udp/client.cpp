@@ -217,8 +217,7 @@ void TestCommunication(const std::string& host, u16 port, u8 pad_index, u32 clie
             success_callback();
         else
             failure_callback();
-    })
-        .detach();
+    }).detach();
 }
 
 CalibrationConfigurationJob::CalibrationConfigurationJob(
@@ -269,8 +268,7 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
         complete_event.Wait();
         socket.Stop();
         worker_thread.join();
-    })
-        .detach();
+    }).detach();
 }
 
 CalibrationConfigurationJob::~CalibrationConfigurationJob() {

@@ -4,10 +4,12 @@
 
 #include <memory>
 #include <utility>
+#include <lodepng.h>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
 #include "common/logging/log.h"
+#include "common/texture.h"
 #include "core/arm/arm_interface.h"
 #ifdef ARCHITECTURE_x86_64
 #include "core/arm/dynarmic/arm_dynarmic.h"
@@ -159,7 +161,52 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     perf_stats = std::make_unique<PerfStats>(title_id);
 =======
     custom_tex_cache = std::make_unique<Core::CustomTexCache>();
+<<<<<<< HEAD
 >>>>>>> 387a49d7... fix crashes, add custom texture cache, load textures from load directory
+=======
+    if (Settings::values.preload_textures) {
+        // Custom textures are currently stored as
+        // load/textures/[TitleID]/tex1_[width]x[height]_[64-bit hash]_[format].png
+        const std::string load_path =
+            fmt::format("{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                        process->codeset->program_id);
+
+        if (FileUtil::Exists(load_path)) {
+            FileUtil::FSTEntry texture_files;
+            FileUtil::ScanDirectoryTree(load_path, texture_files);
+            for (const auto& file : texture_files.children) {
+                if (file.isDirectory)
+                    continue;
+                if (file.virtualName.substr(0, 5) != "tex1_")
+                    continue;
+
+                u32 width;
+                u32 height;
+                u64 hash;
+                u32 format; // unused
+                // TODO: more modern way of doing this
+                if (std::sscanf(file.virtualName.c_str(), "tex1_%ux%u_%llX_%u.png", &width, &height,
+                                &hash, &format) == 4) {
+                    u32 png_width;
+                    u32 png_height;
+                    std::vector<u8> decoded_png;
+
+                    u32 lodepng_ret =
+                        lodepng::decode(decoded_png, png_width, png_height, file.physicalName);
+                    if (lodepng_ret)
+                        LOG_CRITICAL(Render_OpenGL, "Failed to preload custom texture: {}",
+                                     lodepng_error_text(lodepng_ret));
+                    else {
+                        LOG_INFO(Render_OpenGL, "Preloaded custom texture from {}",
+                                 file.physicalName);
+                        Common::FlipRGBA8Texture(decoded_png, png_width, png_height);
+                        custom_tex_cache->CacheTexture(hash, decoded_png, png_width, png_height);
+                    }
+                }
+            }
+        }
+    }
+>>>>>>> 015582b2... implement custom texture preload
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
@@ -195,8 +242,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
-                                                    [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(
+        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64

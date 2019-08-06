@@ -84,6 +84,8 @@ add_library(common STATIC
     swap.h
     telemetry.cpp
     telemetry.h
+    texture.cpp
+    texture.h
     thread.cpp
     thread.h
     thread_queue_list.h
