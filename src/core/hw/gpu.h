@@ -10,6 +10,7 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/pod.h"
 
 namespace Memory {
 class MemorySystem;
@@ -296,6 +297,8 @@ private:
     static inline u32 DecodeAddressRegister(u32 register_value) {
         return register_value * 8;
     }
+
+    SERIALIZE_AS_POD
 };
 static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
 

@@ -10,6 +10,7 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/pod.h"
 
 // All the constants in this file come from http://3dbrew.org/wiki/Error_codes
 
@@ -225,6 +226,8 @@ union ResultCode {
     constexpr bool IsError() const {
         return is_error.ExtractValue(raw) == 1;
     }
+
+    SERIALIZE_AS_POD
 };
 
 constexpr bool operator==(const ResultCode& a, const ResultCode& b) {

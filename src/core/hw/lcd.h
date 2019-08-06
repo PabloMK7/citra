@@ -9,6 +9,7 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/pod.h"
 
 #define LCD_REG_INDEX(field_name) (offsetof(LCD::Regs, field_name) / sizeof(u32))
 
@@ -50,6 +51,8 @@ struct Regs {
         u32* content = reinterpret_cast<u32*>(this);
         return content[index];
     }
+
+    SERIALIZE_AS_POD
 };
 static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
 

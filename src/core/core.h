@@ -15,6 +15,7 @@
 #include "core/memory.h"
 #include "core/perf_stats.h"
 #include "core/telemetry_session.h"
+class boost::serialization::access;
 
 class ARM_Interface;
 
@@ -338,6 +339,14 @@ private:
 
     std::atomic<bool> reset_requested;
     std::atomic<bool> shutdown_requested;
+
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    {
+        ar & GPU::g_regs;
+        ar & LCD::g_regs;
+    }
 };
 
 inline ARM_Interface& CPU() {

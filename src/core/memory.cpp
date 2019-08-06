@@ -4,7 +4,8 @@
 
 #include <array>
 #include <cstring>
-#include "boost/serialization/split_member.hpp"
+#include "boost/serialization/array.hpp"
+#include "boost/serialization/nvp.hpp"
 #include "audio_core/dsp_interface.h"
 #include "common/archives.h"
 #include "common/assert.h"
@@ -54,6 +55,16 @@ private:
     std::array<bool, VRAM_SIZE / PAGE_SIZE> vram{};
     std::array<bool, LINEAR_HEAP_SIZE / PAGE_SIZE> linear_heap{};
     std::array<bool, NEW_LINEAR_HEAP_SIZE / PAGE_SIZE> new_linear_heap{};
+
+    static_assert(sizeof(bool) == 1); // TODO: Maybe this isn't true?
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    {
+        ar & vram;
+        ar & linear_heap;
+        ar & new_linear_heap;
+    }
 };
 
 class MemorySystem::Impl {
@@ -71,31 +82,29 @@ public:
     AudioCore::DspInterface* dsp = nullptr;
 
 private:
+
+    template<class Archive>
+    void add_blob(Archive & ar, std::unique_ptr<u8[]> & var, const char *name, std::size_t size)
+    {
+        ar & boost::serialization::make_nvp(
+            name,
+            *static_cast<u8 (*)[Memory::FCRAM_N3DS_SIZE]>(static_cast<void *>(var.get()))
+        );
+    }
+
     friend class boost::serialization::access;
     template<class Archive>
-    void save(Archive & ar, const unsigned int file_version) const
+    void serialize(Archive & ar, const unsigned int file_version)
     {
         // TODO: Skip n3ds ram when not used?
-        ar.save_binary(fcram.get(), Memory::FCRAM_N3DS_SIZE);
-        ar.save_binary(vram.get(), Memory::VRAM_SIZE);
-        ar.save_binary(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
-        // ar & cache_marker;
+        add_blob(ar, fcram, "fcram", Memory::FCRAM_N3DS_SIZE);
+        add_blob(ar, vram, "vram", Memory::VRAM_SIZE);
+        add_blob(ar, n3ds_extra_ram, "n3ds_extra_ram", Memory::N3DS_EXTRA_RAM_SIZE);
+        ar & cache_marker;
+        // TODO: How the hell to do page tables..
         // ar & page_table_list;
         // ar & current_page_table;
     }
-
-    template<class Archive>
-    void load(Archive & ar, const unsigned int file_version)
-    {
-        ar.load_binary(fcram.get(), Memory::FCRAM_N3DS_SIZE);
-        ar.load_binary(vram.get(), Memory::VRAM_SIZE);
-        ar.load_binary(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
-        // ar & cache_marker;
-        // ar & page_table_list;
-        // ar & current_page_table;
-    }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 SERIALIZE_IMPL(MemorySystem::Impl)
