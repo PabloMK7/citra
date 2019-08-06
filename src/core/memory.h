@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "boost/serialization/split_member.hpp"
 #include "common/common_types.h"
 #include "core/mmio.h"
 
@@ -52,6 +53,14 @@ struct SpecialRegion {
     VAddr base;
     u32 size;
     MMIORegionPointer handler;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    {
+        ar & base;
+        ar & size;
+        ar & handler;
+    }
 };
 
 /**

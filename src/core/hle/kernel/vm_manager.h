@@ -8,6 +8,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include "boost/serialization/split_member.hpp"
 #include "common/common_types.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -193,6 +194,31 @@ public:
     Memory::PageTable page_table;
 
 private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void save(Archive & ar, const unsigned int file_version)
+    {
+        for (int i = 0; i < page_table.pointers.size(); i++) {
+            ar << memory.GetFCRAMOffset(page_table.pointers[i]);
+        }
+        ar & page_table.special_regions;
+        ar & page_table.attributes;
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int file_version)
+    {
+        for (int i = 0; i < page_table.pointers.size(); i++) {
+            u32 offset{};
+            ar >> offset;
+            page_table.pointers[i] = memory.GetFCRAMPointer(offset);
+        }
+        ar & page_table.special_regions;
+        ar & page_table.attributes;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     using VMAIter = decltype(vma_map)::iterator;
 
     /// Converts a VMAHandle to a mutable VMAIter.

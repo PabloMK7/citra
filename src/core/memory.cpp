@@ -4,7 +4,9 @@
 
 #include <array>
 #include <cstring>
+#include "boost/serialization/split_member.hpp"
 #include "audio_core/dsp_interface.h"
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -67,7 +69,36 @@ public:
     std::vector<PageTable*> page_table_list;
 
     AudioCore::DspInterface* dsp = nullptr;
+
+private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void save(Archive & ar, const unsigned int file_version) const
+    {
+        // TODO: Skip n3ds ram when not used?
+        ar.save_binary(fcram.get(), Memory::FCRAM_N3DS_SIZE);
+        ar.save_binary(vram.get(), Memory::VRAM_SIZE);
+        ar.save_binary(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
+        // ar & cache_marker;
+        // ar & page_table_list;
+        // ar & current_page_table;
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int file_version)
+    {
+        ar.load_binary(fcram.get(), Memory::FCRAM_N3DS_SIZE);
+        ar.load_binary(vram.get(), Memory::VRAM_SIZE);
+        ar.load_binary(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
+        // ar & cache_marker;
+        // ar & page_table_list;
+        // ar & current_page_table;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
+
+SERIALIZE_IMPL(MemorySystem::Impl)
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;

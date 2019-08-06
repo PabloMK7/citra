@@ -124,6 +124,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 # System imported libraries
 # ======================
 
+add_library(boost_libs INTERFACE)
+
 find_package(Boost 1.66.0 QUIET)
 if (NOT Boost_FOUND)
     message(STATUS "Boost 1.66.0 or newer not found, falling back to externals")
@@ -131,7 +133,14 @@ if (NOT Boost_FOUND)
     set(BOOST_ROOT "${PROJECT_SOURCE_DIR}/externals/boost")
     set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
     set(Boost_NO_SYSTEM_PATHS OFF)
+    add_definitions( -DBOOST_ALL_NO_LIB )
     find_package(Boost QUIET REQUIRED)
+
+    # Boost external libraries
+    file(GLOB boost_serialization_SRC "externals/boost/libs/serialization/src/*.cpp")
+    add_library(boost_serialization STATIC ${boost_serialization_SRC})
+    target_link_libraries(boost_serialization PUBLIC Boost::boost)
+    target_link_libraries(boost_libs INTERFACE boost_serialization)
 endif()
 
 # Prefer the -pthread flag on Linux.
