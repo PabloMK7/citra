@@ -23,7 +23,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         ui->hw_renderer_group->setEnabled(checked);
         ui->toggle_custom_textures->setEnabled(checked);
         ui->toggle_dump_textures->setEnabled(checked);
-        ui->toggle_preload_textures->setEnabled(checked);
+        ui->toggle_preload_textures->setEnabled(false);
         if (!checked) {
             ui->toggle_custom_textures->setChecked(false);
             ui->toggle_dump_textures->setChecked(false);

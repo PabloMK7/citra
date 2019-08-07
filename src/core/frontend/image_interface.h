@@ -13,19 +13,13 @@ namespace Frontend {
 
 class ImageInterface {
 public:
-    ImageInterface() = default;
-    ~ImageInterface() = default;
+    virtual ~ImageInterface() = default;
 
     // Error logging should be handled by the frontend
-    virtual bool DecodePNG(std::vector<u8>& dst, u32& width, u32& height, const std::string& path) {
-        LOG_CRITICAL(Frontend, "Attempted to decode PNG without an image interface!");
-        return false;
-    };
+    virtual bool DecodePNG(std::vector<u8>& dst, u32& width, u32& height,
+                           const std::string& path) = 0;
     virtual bool EncodePNG(const std::string& path, const std::vector<u8>& src, u32 width,
-                           u32 height) {
-        LOG_CRITICAL(Frontend, "Attempted to encode PNG without an image interface!");
-        return false;
-    };
+                           u32 height) = 0;
 };
 
 } // namespace Frontend

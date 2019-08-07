@@ -28,8 +28,7 @@ const CustomTexInfo& CustomTexCache::LookupTexture(u64 hash) {
     return custom_textures.at(hash);
 }
 
-void CustomTexCache::CacheTexture(u64 hash, const std::vector<u8>& tex, u32 width,
-                                  u32 height) {
+void CustomTexCache::CacheTexture(u64 hash, const std::vector<u8>& tex, u32 width, u32 height) {
     custom_textures[hash] = {width, height, tex};
 }
 } // namespace Core
