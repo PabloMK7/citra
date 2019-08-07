@@ -10,6 +10,7 @@
 #include "core/custom_tex_cache.h"
 #include "core/frontend/applets/mii_selector.h"
 #include "core/frontend/applets/swkbd.h"
+#include "core/frontend/image_interface.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
@@ -256,6 +257,14 @@ public:
         return registered_swkbd;
     }
 
+    /// Image interface
+
+    void RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> image_interface);
+
+    std::shared_ptr<Frontend::ImageInterface> GetImageInterface() const {
+        return registered_image_interface;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -299,6 +308,9 @@ private:
 
     /// Custom texture cache system
     std::unique_ptr<Core::CustomTexCache> custom_tex_cache;
+
+    /// Image interface
+    std::shared_ptr<Frontend::ImageInterface> registered_image_interface;
 
     /// RPC Server for scripting support
     std::unique_ptr<RPC::RPCServer> rpc_server;

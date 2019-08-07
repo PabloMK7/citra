@@ -40,6 +40,7 @@
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/settings.h"
+#include "generic_image_interface.h"
 #include "network/network.h"
 #include "video_core/video_core.h"
 
@@ -341,6 +342,9 @@ int main(int argc, char** argv) {
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
+
+    // Register generic image interface
+    Core::System::GetInstance().RegisterImageInterface(std::make_shared<GenericImageInterface>());
 
     std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>(fullscreen)};
 

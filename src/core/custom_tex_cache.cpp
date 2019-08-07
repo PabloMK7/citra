@@ -8,9 +8,9 @@
 #include "custom_tex_cache.h"
 
 namespace Core {
-CustomTexCache::CustomTexCache() {}
+CustomTexCache::CustomTexCache() = default;
 
-CustomTexCache::~CustomTexCache() {}
+CustomTexCache::~CustomTexCache() = default;
 
 bool CustomTexCache::IsTextureDumped(u64 hash) const {
     return dumped_textures.find(hash) != dumped_textures.end();

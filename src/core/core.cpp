@@ -4,7 +4,6 @@
 
 #include <memory>
 #include <utility>
-#include <lodepng.h>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
@@ -126,15 +125,14 @@ void System::PreloadCustomTextures() {
                 u32 png_height;
                 std::vector<u8> decoded_png;
 
-                u32 lodepng_ret =
-                    lodepng::decode(decoded_png, png_width, png_height, file.physicalName);
-                if (lodepng_ret) {
-                    LOG_CRITICAL(Render_OpenGL, "Failed to preload custom texture: {}",
-                                 lodepng_error_text(lodepng_ret));
-                } else {
+                if (registered_image_interface->DecodePNG(decoded_png, png_width, png_height,
+                                                          file.physicalName)) {
                     LOG_INFO(Render_OpenGL, "Preloaded custom texture from {}", file.physicalName);
                     Common::FlipRGBA8Texture(decoded_png, png_width, png_height);
                     custom_tex_cache->CacheTexture(hash, decoded_png, png_width, png_height);
+                } else {
+                    // Error should be reported by frontend
+                    LOG_CRITICAL(Render_OpenGL, "Failed to preload custom texture");
                 }
             }
         }
@@ -402,6 +400,10 @@ void System::RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_sele
 
 void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {
     registered_swkbd = std::move(swkbd);
+}
+
+void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> image_interface) {
+    registered_image_interface = std::move(image_interface);
 }
 
 void System::Shutdown() {
