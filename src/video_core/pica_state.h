@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include "boost/serialization/split_member.hpp"
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
@@ -12,6 +13,18 @@
 #include "video_core/primitive_assembly.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
+
+// NB, by defining this we can't use the built-in std::array serializer in this file
+namespace boost::serialization {
+
+template<class Archive, typename Value, size_t Size>
+void serialize(Archive & ar, std::array<Value, Size> &array, const unsigned int version)
+{
+    static_assert(sizeof(Value) == sizeof(u32));
+    ar & *static_cast<u32 (*)[Size]>(static_cast<void *>(array.data()));
+}
+
+}
 
 namespace Pica {
 
@@ -79,6 +92,18 @@ struct State {
         std::array<ValueEntry, 128> alpha_map_table;
         std::array<ColorEntry, 256> color_table;
         std::array<ColorDifferenceEntry, 256> color_diff_table;
+
+    private:
+        friend class boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int file_version)
+        {
+            ar & noise_table;
+            ar & color_map_table;
+            ar & alpha_map_table;
+            ar & color_table;
+            ar & color_diff_table;
+        }
     } proctex;
 
     struct Lighting {
@@ -100,6 +125,12 @@ struct State {
             float DiffToFloat() const {
                 float diff = static_cast<float>(difference) / 2047.f;
                 return neg_difference ? -diff : diff;
+            }
+
+            template<class Archive>
+            void serialize(Archive & ar, const unsigned int file_version)
+            {
+                ar & raw;
             }
         };
 
@@ -126,8 +157,11 @@ struct State {
         std::array<LutEntry, 128> lut;
     } fog;
 
+#undef SERIALIZE_RAW
+
     /// Current Pica command list
     struct {
+        PAddr addr; // This exists only for serialization
         const u32* head_ptr;
         const u32* current_ptr;
         u32 length;
@@ -141,6 +175,17 @@ struct State {
         u32 current_attribute = 0;
         // Indicates the immediate mode just started and the geometry pipeline needs to reconfigure
         bool reset_geometry_pipeline = true;
+
+    private:
+        friend class boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int file_version)
+        {
+            // ar & input_vertex;
+            ar & current_attribute;
+            ar & reset_geometry_pipeline;
+        }
+
     } immediate;
 
     // the geometry shader needs to be kept in the global state because some shaders relie on
@@ -161,6 +206,51 @@ struct State {
 
     int default_attr_counter = 0;
     u32 default_attr_write_buffer[3]{};
+
+private:
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    {
+        ar & regs.reg_array;
+        // ar & vs;
+        // ar & gs;
+        // ar & input_default_attributes;
+        ar & proctex;
+        for (auto i = 0; i < lighting.luts.size(); i++) {
+            ar & lighting.luts[i];
+        }
+        ar & fog.lut;
+        ar & cmd_list.addr;
+        ar & cmd_list.length;
+        ar & immediate;
+        // ar & gs_unit;
+        // ar & geometry_pipeline;
+        // ar & primitive_assembler;
+        ar & vs_float_regs_counter;
+        ar & vs_uniform_write_buffer;
+        ar & gs_float_regs_counter;
+        ar & gs_uniform_write_buffer;
+        ar & default_attr_counter;
+        ar & default_attr_write_buffer;
+        boost::serialization::split_member(ar, *this, file_version);
+    }
+
+    template<class Archive>
+    void save(Archive & ar, const unsigned int file_version) const
+    {
+        ar << static_cast<u32>(cmd_list.current_ptr - cmd_list.head_ptr);
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int file_version)
+    {
+        u32 offset{};
+        ar >> offset;
+        cmd_list.head_ptr = (u32*)VideoCore::g_memory->GetPhysicalPointer(cmd_list.addr);
+        cmd_list.current_ptr = cmd_list.head_ptr + offset;
+    }
 };
 
 extern State g_state; ///< Current Pica state

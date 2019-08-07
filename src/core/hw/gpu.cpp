@@ -472,14 +472,7 @@ inline void Write(u32 addr, const T data) {
         if (config.trigger & 1) {
             MICROPROFILE_SCOPE(GPU_CmdlistProcessing);
 
-            u32* buffer = (u32*)g_memory->GetPhysicalPointer(config.GetPhysicalAddress());
-
-            if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
-                Pica::g_debug_context->recorder->MemoryAccessed((u8*)buffer, config.size,
-                                                                config.GetPhysicalAddress());
-            }
-
-            Pica::CommandProcessor::ProcessCommandList(buffer, config.size);
+            Pica::CommandProcessor::ProcessCommandList(config.GetPhysicalAddress(), config.size);
 
             g_regs.command_processor_config.trigger = 0;
         }

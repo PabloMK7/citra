@@ -1,11 +1,14 @@
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"
 
-#define SERIALIZE_IMPL(A) template void A::serialize<boost::archive::binary_iarchive>( \
-    boost::archive::binary_iarchive & ar, \
+using iarchive = boost::archive::binary_iarchive;
+using oarchive = boost::archive::binary_oarchive;
+
+#define SERIALIZE_IMPL(A) template void A::serialize<iarchive>( \
+    iarchive & ar, \
     const unsigned int file_version \
 ); \
-template void A::serialize<boost::archive::binary_oarchive>( \
-    boost::archive::binary_oarchive & ar, \
+template void A::serialize<oarchive>( \
+    oarchive & ar, \
     const unsigned int file_version \
 );

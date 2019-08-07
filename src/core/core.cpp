@@ -397,22 +397,28 @@ void System::Reset() {
 template<class Archive>
 void System::serialize(Archive & ar, const unsigned int file_version)
 {
-    ar & memory;
     ar & GPU::g_regs;
     ar & LCD::g_regs;
     ar & dsp_core->GetDspMemory();
+    ar & memory;
 }
 
 void System::Save(std::ostream &stream) const
 {
-    boost::archive::binary_oarchive oa{stream};
-    oa & *this;
+    {
+        oarchive oa{stream};
+        oa & *this;
+    }
+    VideoCore::Save(stream);
 }
 
 void System::Load(std::istream &stream)
 {
-    boost::archive::binary_iarchive ia{stream};
-    ia & *this;
+    {
+        iarchive ia{stream};
+        ia & *this;
+    }
+    VideoCore::Load(stream);
 }
 
 } // namespace Core

@@ -32,6 +32,6 @@ static_assert(std::is_standard_layout<CommandHeader>::value == true,
               "CommandHeader does not use standard layout");
 static_assert(sizeof(CommandHeader) == sizeof(u32), "CommandHeader has incorrect size!");
 
-void ProcessCommandList(const u32* list, u32 size);
+void ProcessCommandList(PAddr list, u32 size);
 
 } // namespace Pica::CommandProcessor

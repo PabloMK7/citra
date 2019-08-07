@@ -3,9 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/settings.h"
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
@@ -83,6 +85,20 @@ u16 GetResolutionScaleFactor() {
         // Software renderer always render at native resolution
         return 1;
     }
+}
+
+void Save(std::ostream &stream)
+{
+    oarchive oa{stream};
+    oa & Pica::g_state;
+}
+
+void Load(std::istream &stream)
+{
+    iarchive ia{stream};
+    ia & Pica::g_state;
+    // TODO: Flush/reset things
+
 }
 
 } // namespace VideoCore
