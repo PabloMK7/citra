@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "boost/serialization/split_member.hpp"
+#include "boost/serialization/access.hpp"
 #include "common/common_types.h"
 #include "core/mmio.h"
 
@@ -324,6 +324,10 @@ private:
     class Impl;
 
     std::unique_ptr<Impl> impl;
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int file_version);
 };
 
 /// Determines if the given VAddr is valid for the specified process.

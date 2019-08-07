@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include "boost/serialization/array.hpp"
 #include "audio_core/audio_types.h"
 #include "audio_core/time_stretch.h"
 #include "common/common_types.h"

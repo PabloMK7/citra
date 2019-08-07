@@ -4,9 +4,12 @@
 
 #include <memory>
 #include <utility>
+#include "boost/serialization/array.hpp"
+#include "boost/serialization/unique_ptr.hpp"
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/texture.h"
 #include "core/arm/arm_interface.h"
@@ -30,7 +33,9 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
+#include "core/hw/gpu.h"
 #include "core/hw/hw.h"
+#include "core/hw/lcd.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/rpc/rpc_server.h"
@@ -387,6 +392,27 @@ void System::Reset() {
     Shutdown();
     // Reload the system with the same setting
     Load(*m_emu_window, m_filepath);
+}
+
+template<class Archive>
+void System::serialize(Archive & ar, const unsigned int file_version)
+{
+    ar & memory;
+    ar & GPU::g_regs;
+    ar & LCD::g_regs;
+    ar & dsp_core->GetDspMemory();
+}
+
+void System::Save(std::ostream &stream) const
+{
+    boost::archive::binary_oarchive oa{stream};
+    oa & *this;
+}
+
+void System::Load(std::istream &stream)
+{
+    boost::archive::binary_iarchive ia{stream};
+    ia & *this;
 }
 
 } // namespace Core

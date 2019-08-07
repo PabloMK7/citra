@@ -6,6 +6,7 @@
 #include <cstring>
 #include "boost/serialization/array.hpp"
 #include "boost/serialization/nvp.hpp"
+#include "boost/serialization/unique_ptr.hpp"
 #include "audio_core/dsp_interface.h"
 #include "common/archives.h"
 #include "common/assert.h"
@@ -107,10 +108,16 @@ private:
     }
 };
 
-SERIALIZE_IMPL(MemorySystem::Impl)
-
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;
+
+template<class Archive>
+void MemorySystem::serialize(Archive & ar, const unsigned int file_version)
+{
+    ar & impl;
+}
+
+SERIALIZE_IMPL(MemorySystem)
 
 void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
     impl->current_page_table = page_table;

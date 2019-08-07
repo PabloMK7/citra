@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include "boost/serialization/access.hpp"
 #include "common/common_types.h"
 #include "core/custom_tex_cache.h"
 #include "core/frontend/applets/mii_selector.h"
@@ -15,7 +16,6 @@
 #include "core/memory.h"
 #include "core/perf_stats.h"
 #include "core/telemetry_session.h"
-class boost::serialization::access;
 
 class ARM_Interface;
 
@@ -272,6 +272,10 @@ public:
         return registered_image_interface;
     }
 
+    void Save(std::ostream &stream) const;
+
+    void Load(std::istream &stream);
+
 private:
     /**
      * Initialize the emulated system.
@@ -342,11 +346,7 @@ private:
 
     friend class boost::serialization::access;
     template<typename Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
-        ar & GPU::g_regs;
-        ar & LCD::g_regs;
-    }
+    void serialize(Archive & ar, const unsigned int file_version);
 };
 
 inline ARM_Interface& CPU() {
