@@ -955,11 +955,13 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     if (Settings::values.custom_textures)
         use_custom_tex = LoadCustomTexture(tex_hash, custom_tex_info, custom_rect);
 
-    if (Settings::values.dump_textures && !use_custom_tex)
-        if (auto temp_dump_path = GetDumpPath(tex_hash)) {
-            dump_path = temp_dump_path.value();
+    if (Settings::values.dump_textures && !use_custom_tex) {
+        auto temp_dump_path = GetDumpPath(tex_hash);
+        if (temp_dump_path.has_value()) {
+            dump_path = *temp_dump_path;
             dump_tex = true;
         }
+    }
 
     // Load data from memory to the surface
     GLint x0 = static_cast<GLint>(custom_rect.left);

@@ -13,6 +13,9 @@ namespace Frontend {
 
 class ImageInterface {
 public:
+    ImageInterface() = default;
+    ~ImageInterface() = default;
+
     // Error logging should be handled by the frontend
     virtual bool DecodePNG(std::vector<u8>& dst, u32& width, u32& height, const std::string& path) {
         LOG_CRITICAL(Frontend, "Attempted to decode PNG without an image interface!");

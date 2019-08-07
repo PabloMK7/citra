@@ -18,8 +18,19 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     SetConfiguration();
 
     ui->hw_renderer_group->setEnabled(ui->toggle_hw_renderer->isChecked());
-    connect(ui->toggle_hw_renderer, &QCheckBox::toggled, ui->hw_renderer_group,
-            &QWidget::setEnabled);
+    connect(ui->toggle_hw_renderer, &QCheckBox::toggled, this, [this] {
+        auto checked = ui->toggle_hw_renderer->isChecked();
+        ui->hw_renderer_group->setEnabled(checked);
+        ui->toggle_custom_textures->setEnabled(checked);
+        ui->toggle_dump_textures->setEnabled(checked);
+        ui->toggle_preload_textures->setEnabled(checked);
+        if (!checked) {
+            ui->toggle_custom_textures->setChecked(false);
+            ui->toggle_dump_textures->setChecked(false);
+            ui->toggle_preload_textures->setChecked(false);
+        }
+    });
+
     ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());
     connect(ui->toggle_hw_shader, &QCheckBox::toggled, ui->hw_shader_group, &QWidget::setEnabled);
 #ifdef __APPLE__

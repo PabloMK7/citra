@@ -24,11 +24,11 @@ bool CustomTexCache::IsTextureCached(u64 hash) const {
     return custom_textures.find(hash) != custom_textures.end();
 }
 
-const CustomTexInfo& CustomTexCache::LookupTexture(const u64 hash) {
+const CustomTexInfo& CustomTexCache::LookupTexture(u64 hash) {
     return custom_textures.at(hash);
 }
 
-void CustomTexCache::CacheTexture(const u64 hash, const std::vector<u8>& tex, u32 width,
+void CustomTexCache::CacheTexture(u64 hash, const std::vector<u8>& tex, u32 width,
                                   u32 height) {
     custom_textures[hash] = {width, height, tex};
 }

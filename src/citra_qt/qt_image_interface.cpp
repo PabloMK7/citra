@@ -21,9 +21,9 @@ bool QtImageInterface::DecodePNG(std::vector<u8>& dst, u32& width, u32& height,
     height = image.height();
 
     // Write RGBA8 to vector
-    for (u32 y = 1; y < image.height() + 1; y++) {
-        for (u32 x = 1; x < image.width() + 1; x++) {
-            const QColor pixel(image.pixel(y, x));
+    for (int y = 0; y < image.height(); y++) {
+        for (int x = 0; x < image.width(); x++) {
+            const QColor pixel(image.pixelColor(x, y));
             dst.push_back(pixel.red());
             dst.push_back(pixel.green());
             dst.push_back(pixel.blue());
@@ -38,7 +38,7 @@ bool QtImageInterface::EncodePNG(const std::string& path, const std::vector<u8>&
                                  u32 height) {
     QImage image(src.data(), width, height, QImage::Format_RGBA8888);
 
-    if (!image.save(QString::fromStdString(path))) {
+    if (!image.save(QString::fromStdString(path), "PNG")) {
         LOG_ERROR(Frontend, "Failed to save {}", path);
         return false;
     }
