@@ -922,7 +922,11 @@ void CachedSurface::DumpTexture(GLuint target_tex, const std::string& dump_path)
     std::vector<u8> decoded_texture;
     decoded_texture.resize(width * height * 4);
     glBindTexture(GL_TEXTURE_2D, target_tex);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
+    if (GLES)
+        GetTexImageOES(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, height, width, 0,
+                       &decoded_texture[0]);
+    else
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
     glBindTexture(GL_TEXTURE_2D, 0);
     Common::FlipRGBA8Texture(decoded_texture, width, height);
     if (!image_interface->EncodePNG(dump_path, decoded_texture, width, height))

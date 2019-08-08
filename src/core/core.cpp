@@ -196,48 +196,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     }
     perf_stats = std::make_unique<PerfStats>(title_id);
     custom_tex_cache = std::make_unique<Core::CustomTexCache>();
-    if (Settings::values.preload_textures) {
-        // Custom textures are currently stored as
-        // load/textures/[TitleID]/tex1_[width]x[height]_[64-bit hash]_[format].png
-        const std::string load_path =
-            fmt::format("{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                        process->codeset->program_id);
-
-        if (FileUtil::Exists(load_path)) {
-            FileUtil::FSTEntry texture_files;
-            FileUtil::ScanDirectoryTree(load_path, texture_files);
-            for (const auto& file : texture_files.children) {
-                if (file.isDirectory)
-                    continue;
-                if (file.virtualName.substr(0, 5) != "tex1_")
-                    continue;
-
-                u32 width;
-                u32 height;
-                u64 hash;
-                u32 format; // unused
-                // TODO: more modern way of doing this
-                if (std::sscanf(file.virtualName.c_str(), "tex1_%ux%u_%llX_%u.png", &width, &height,
-                                &hash, &format) == 4) {
-                    u32 png_width;
-                    u32 png_height;
-                    std::vector<u8> decoded_png;
-
-                    u32 lodepng_ret =
-                        lodepng::decode(decoded_png, png_width, png_height, file.physicalName);
-                    if (lodepng_ret)
-                        LOG_CRITICAL(Render_OpenGL, "Failed to preload custom texture: {}",
-                                     lodepng_error_text(lodepng_ret));
-                    else {
-                        LOG_INFO(Render_OpenGL, "Preloaded custom texture from {}",
-                                 file.physicalName);
-                        Common::FlipRGBA8Texture(decoded_png, png_width, png_height);
-                        custom_tex_cache->CacheTexture(hash, decoded_png, png_width, png_height);
-                    }
-                }
-            }
-        }
-    }
+    if (Settings::values.custom_textures)
+        FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
+                                             FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                                             Kernel().GetCurrentProcess()->codeset->program_id));
     if (Settings::values.preload_textures)
         PreloadCustomTextures();
     status = ResultStatus::Success;
