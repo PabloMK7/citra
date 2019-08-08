@@ -9,6 +9,7 @@
 #include <functional>
 #include <type_traits>
 #include <nihstro/shader_bytecode.h>
+#include <boost/serialization/array.hpp>
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -193,6 +194,16 @@ struct Uniforms {
     static std::size_t GetIntUniformOffset(unsigned index) {
         return offsetof(Uniforms, i) + index * sizeof(Common::Vec4<u8>);
     }
+
+private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    {
+        ar & f;
+        ar & b;
+        ar & i;
+    }
 };
 
 struct ShaderSetup {
@@ -237,6 +248,19 @@ private:
     bool swizzle_data_hash_dirty = true;
     u64 program_code_hash = 0xDEADC0DE;
     u64 swizzle_data_hash = 0xDEADC0DE;
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    {
+        ar & uniforms;
+        ar & program_code;
+        ar & swizzle_data;
+        ar & program_code_hash_dirty;
+        ar & swizzle_data_hash_dirty;
+        ar & program_code_hash;
+        ar & swizzle_data_hash;
+    }
 };
 
 class ShaderEngine {

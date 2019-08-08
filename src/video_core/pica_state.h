@@ -14,11 +14,15 @@
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
 
-// NB, by defining this we can't use the built-in std::array serializer in this file
+// Boost::serialization doesn't like union types for some reason,
+// so we need to mark arrays of union values with a special serialization method
+template<typename Value, size_t Size>
+struct UnionArray : public std::array<Value, Size> { };
+
 namespace boost::serialization {
 
 template<class Archive, typename Value, size_t Size>
-void serialize(Archive & ar, std::array<Value, Size> &array, const unsigned int version)
+void serialize(Archive& ar, UnionArray<Value, Size>& array, const unsigned int version)
 {
     static_assert(sizeof(Value) == sizeof(u32));
     ar & *static_cast<u32 (*)[Size]>(static_cast<void *>(array.data()));
@@ -87,11 +91,11 @@ struct State {
             }
         };
 
-        std::array<ValueEntry, 128> noise_table;
-        std::array<ValueEntry, 128> color_map_table;
-        std::array<ValueEntry, 128> alpha_map_table;
-        std::array<ColorEntry, 256> color_table;
-        std::array<ColorDifferenceEntry, 256> color_diff_table;
+        UnionArray<ValueEntry, 128> noise_table;
+        UnionArray<ValueEntry, 128> color_map_table;
+        UnionArray<ValueEntry, 128> alpha_map_table;
+        UnionArray<ColorEntry, 256> color_table;
+        UnionArray<ColorDifferenceEntry, 256> color_diff_table;
 
     private:
         friend class boost::serialization::access;
@@ -134,7 +138,7 @@ struct State {
             }
         };
 
-        std::array<std::array<LutEntry, 256>, 24> luts;
+        std::array<UnionArray<LutEntry, 256>, 24> luts;
     } lighting;
 
     struct {
@@ -154,7 +158,7 @@ struct State {
             }
         };
 
-        std::array<LutEntry, 128> lut;
+        UnionArray<LutEntry, 128> lut;
     } fog;
 
 #undef SERIALIZE_RAW
@@ -214,13 +218,11 @@ private:
     void serialize(Archive & ar, const unsigned int file_version)
     {
         ar & regs.reg_array;
-        // ar & vs;
-        // ar & gs;
+        ar & vs;
+        ar & gs;
         // ar & input_default_attributes;
         ar & proctex;
-        for (auto i = 0; i < lighting.luts.size(); i++) {
-            ar & lighting.luts[i];
-        }
+        ar & lighting.luts;
         ar & fog.lut;
         ar & cmd_list.addr;
         ar & cmd_list.length;
