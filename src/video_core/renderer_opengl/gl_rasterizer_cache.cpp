@@ -925,7 +925,7 @@ void CachedSurface::DumpTexture(GLuint target_tex, const std::string& dump_path)
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &decoded_texture[0]);
     glBindTexture(GL_TEXTURE_2D, 0);
     Common::FlipRGBA8Texture(decoded_texture, width, height);
-    if (image_interface->EncodePNG(dump_path, decoded_texture, width, height))
+    if (!image_interface->EncodePNG(dump_path, decoded_texture, width, height))
         LOG_CRITICAL(Render_OpenGL, "Failed to save decoded texture");
 }
 
