@@ -992,17 +992,17 @@ void AppendProcTexShiftOffset(std::string& out, const std::string& v, ProcTexShi
     std::string offset = (clamp_mode == ProcTexClamp::MirroredRepeat) ? "1.0" : "0.5";
     switch (mode) {
     case ProcTexShift::None:
-        out += "0";
+        out += "0.0";
         break;
     case ProcTexShift::Odd:
-        out += offset + " * ((int(" + v + ") / 2) % 2)";
+        out += offset + " * float((int(" + v + ") / 2) % 2)";
         break;
     case ProcTexShift::Even:
-        out += offset + " * (((int(" + v + ") + 1) / 2) % 2)";
+        out += offset + " * float(((int(" + v + ") + 1) / 2) % 2)";
         break;
     default:
         LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", static_cast<u32>(mode));
-        out += "0";
+        out += "0.0";
         break;
     }
 }
@@ -1082,7 +1082,7 @@ void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
     // value entries and difference entries.
     out += R"(
 float ProcTexLookupLUT(int offset, float coord) {
-    coord *= 128;
+    coord *= 128.0;
     float index_i = clamp(floor(coord), 0.0, 127.0);
     float index_f = coord - index_i; // fract() cannot be used here because 128.0 needs to be
                                      // extracted as index_i = 127.0 and index_f = 1.0
@@ -1142,7 +1142,7 @@ float ProcTexNoiseCoef(vec2 x) {
            offset3 + ", 0xF0, 0xF8, 0xFC, 0xFE);\n";
     out += "int lut_offset = lut_offsets[level];\n";
     // For the color lut, coord=0.0 is lut[offset] and coord=1.0 is lut[offset+width-1]
-    out += "lut_coord *= lut_width - 1;\n";
+    out += "lut_coord *= float(lut_width - 1);\n";
 
     switch (config.state.proctex.lut_filter) {
     case ProcTexFilter::Linear:
@@ -1158,7 +1158,7 @@ float ProcTexNoiseCoef(vec2 x) {
     case ProcTexFilter::Nearest:
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::NearestMipmapNearest:
-        out += "lut_coord += lut_offset;\n";
+        out += "lut_coord += float(lut_offset);\n";
         out += "return texelFetch(texture_buffer_lut_rgba, int(round(lut_coord)) + "
                "proctex_lut_offset);\n";
         break;
@@ -1180,8 +1180,8 @@ float ProcTexNoiseCoef(vec2 x) {
     // Note: this is different from the one normal 2D textures use.
     out += "vec2 duv = max(abs(dFdx(uv)), abs(dFdy(uv)));\n";
     // unlike normal texture, the bias is inside the log2
-    out += "float lod = log2(abs(" + std::to_string(config.state.proctex.lut_width) +
-           " * proctex_bias) * (duv.x + duv.y));\n";
+    out += "float lod = log2(abs(float(" + std::to_string(config.state.proctex.lut_width) +
+           ") * proctex_bias) * (duv.x + duv.y));\n";
     out += "if (proctex_bias == 0.0) lod = 0.0;\n";
     out += "lod = clamp(lod, " +
            std::to_string(std::max<float>(0.0f, config.state.proctex.lod_min)) + ", " +
@@ -1373,7 +1373,7 @@ vec4 shadowTexture(vec2 uv, float w) {
     if (!config.state.shadow_texture_orthographic) {
         out += "uv /= w;";
     }
-    out += "uint z = uint(max(0, int(min(abs(w), 1.0) * 0xFFFFFF) - shadow_texture_bias));";
+    out += "uint z = uint(max(0, int(min(abs(w), 1.0) * float(0xFFFFFF)) - shadow_texture_bias));";
     out += R"(
     vec2 coord = vec2(imageSize(shadow_texture_px)) * uv - vec2(0.5);
     vec2 coord_floor = floor(coord);
@@ -1405,7 +1405,7 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         if (c.z > 0.0) uv.x = -uv.x;
     }
 )";
-    out += "uint z = uint(max(0, int(min(w, 1.0) * 0xFFFFFF) - shadow_texture_bias));";
+    out += "uint z = uint(max(0, int(min(w, 1.0) * float(0xFFFFFF)) - shadow_texture_bias));";
     out += R"(
     vec2 coord = vec2(size) * (uv / w * vec2(0.5) + vec2(0.5)) - vec2(0.5);
     vec2 coord_floor = floor(coord);

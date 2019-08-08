@@ -22,6 +22,7 @@
 #include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/video_core.h"
@@ -1622,7 +1623,7 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
         glSamplerParameterf(s, GL_TEXTURE_MAX_LOD, lod_max);
     }
 
-    if (lod_bias != config.lod.bias) {
+    if (!GLES && lod_bias != config.lod.bias) {
         lod_bias = config.lod.bias;
         glSamplerParameterf(s, GL_TEXTURE_LOD_BIAS, lod_bias / 256.0f);
     }
