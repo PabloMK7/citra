@@ -948,7 +948,6 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     bool dump_tex = false;
     bool use_custom_tex = false;
     std::string dump_path; // Has to be declared here for logging later
-    Core::CustomTexInfo custom_tex_info;
     u64 tex_hash = 0;
     Common::Rectangle custom_rect =
         rect; // Required for rect to function properly with custom textures
@@ -957,7 +956,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
         tex_hash = Common::ComputeHash64(gl_buffer.get(), gl_buffer_size);
 
     if (Settings::values.custom_textures)
-        use_custom_tex = LoadCustomTexture(tex_hash, custom_tex_info, custom_rect);
+        is_custom = use_custom_tex = LoadCustomTexture(tex_hash, custom_tex_info, custom_rect);
 
     if (Settings::values.dump_textures && !use_custom_tex) {
         auto temp_dump_path = GetDumpPath(tex_hash);
@@ -1541,11 +1540,22 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
             state.Apply();
             glActiveTexture(GL_TEXTURE0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
-            u32 width = surface->width * surface->res_scale;
-            u32 height = surface->height * surface->res_scale;
+            u32 width;
+            u32 height;
+            if (surface->is_custom) {
+                width = surface->custom_tex_info.width;
+                height = surface->custom_tex_info.height;
+            } else {
+                width = surface->width * surface->res_scale;
+                height = surface->height * surface->res_scale;
+            }
             for (u32 level = surface->max_level + 1; level <= max_level; ++level) {
                 glTexImage2D(GL_TEXTURE_2D, level, format_tuple.internal_format, width >> level,
                              height >> level, 0, format_tuple.format, format_tuple.type, nullptr);
+            }
+            if (surface->is_custom) {
+                // TODO: proper mipmap support for custom textures
+                glGenerateMipmap(GL_TEXTURE_2D);
             }
             surface->max_level = max_level;
         }
@@ -1579,21 +1589,23 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
                 }
                 state.ResetTexture(level_surface->texture.handle);
                 state.Apply();
-                glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                                       level_surface->texture.handle, 0);
-                glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                       GL_TEXTURE_2D, 0, 0);
+                if (!surface->is_custom) {
+                    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                           level_surface->texture.handle, 0);
+                    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                           GL_TEXTURE_2D, 0, 0);
 
-                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                                       surface->texture.handle, level);
-                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                       GL_TEXTURE_2D, 0, 0);
+                    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                           surface->texture.handle, level);
+                    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                           GL_TEXTURE_2D, 0, 0);
 
-                auto src_rect = level_surface->GetScaledRect();
-                auto dst_rect = params.GetScaledRect();
-                glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top,
-                                  dst_rect.left, dst_rect.bottom, dst_rect.right, dst_rect.top,
-                                  GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                    auto src_rect = level_surface->GetScaledRect();
+                    auto dst_rect = params.GetScaledRect();
+                    glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top,
+                                      dst_rect.left, dst_rect.bottom, dst_rect.right, dst_rect.top,
+                                      GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                }
                 watcher->Validate();
             }
         }

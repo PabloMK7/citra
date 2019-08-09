@@ -362,6 +362,9 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     /// level_watchers[i] watches the (i+1)-th level mipmap source surface
     std::array<std::shared_ptr<SurfaceWatcher>, 7> level_watchers;
 
+    bool is_custom = false;
+    Core::CustomTexInfo custom_tex_info;
+
     static constexpr unsigned int GetGLBytesPerPixel(PixelFormat format) {
         // OpenGL needs 4 bpp alignment for D24 since using GL_UNSIGNED_INT as type
         return format == PixelFormat::Invalid
