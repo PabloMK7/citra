@@ -22,6 +22,7 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_vars.h"
+#include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/video_core.h"
 
@@ -52,10 +53,44 @@ static const char fragment_shader[] = R"(
 in vec2 frag_tex_coord;
 out vec4 color;
 
+uniform vec4 i_resolution;
+uniform vec4 o_resolution;
+uniform int layer;
+
 uniform sampler2D color_texture;
 
 void main() {
     color = texture(color_texture, frag_tex_coord);
+}
+)";
+
+static const char fragment_shader_anaglyph[] = R"(
+
+// Anaglyph Red-Cyan shader based on Dubois algorithm
+// Constants taken from the paper:
+// "Conversion of a Stereo Pair to Anaglyph with
+// the Least-Squares Projection Method"
+// Eric Dubois, March 2009
+const mat3 l = mat3( 0.437, 0.449, 0.164,
+              -0.062,-0.062,-0.024,
+              -0.048,-0.050,-0.017);
+const mat3 r = mat3(-0.011,-0.032,-0.007,
+               0.377, 0.761, 0.009,
+              -0.026,-0.093, 1.234);
+
+in vec2 frag_tex_coord;
+out vec4 color;
+
+uniform vec4 resolution;
+uniform int layer;
+
+uniform sampler2D color_texture;
+uniform sampler2D color_texture_r;
+
+void main() {
+    vec4 color_tex_l = texture(color_texture, frag_tex_coord);
+    vec4 color_tex_r = texture(color_texture_r, frag_tex_coord);
+    color = vec4(color_tex_l.rgb*l+color_tex_r.rgb*r, color_tex_l.a);
 }
 )";
 
@@ -275,20 +310,10 @@ void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
                  0.0f);
 
-    // Link shaders and get variable locations
-    if (GLES) {
-        std::string frag_source(fragment_shader_precision_OES);
-        frag_source += fragment_shader;
-        shader.Create(vertex_shader, frag_source.data());
-    } else {
-        shader.Create(vertex_shader, fragment_shader);
-    }
-    state.draw.shader_program = shader.handle;
-    state.Apply();
-    uniform_modelview_matrix = glGetUniformLocation(shader.handle, "modelview_matrix");
-    uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
-    attrib_position = glGetAttribLocation(shader.handle, "vert_position");
-    attrib_tex_coord = glGetAttribLocation(shader.handle, "vert_tex_coord");
+    filter_sampler.Create();
+    ReloadSampler();
+
+    ReloadShader();
 
     // Generate VBO handle for drawing
     vertex_buffer.Create();
@@ -332,6 +357,63 @@ void RendererOpenGL::InitOpenGLObjects() {
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
+}
+
+void RendererOpenGL::ReloadSampler() {
+    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_MIN_FILTER,
+                        Settings::values.filter_mode ? GL_LINEAR : GL_NEAREST);
+    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_MAG_FILTER,
+                        Settings::values.filter_mode ? GL_LINEAR : GL_NEAREST);
+    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+void RendererOpenGL::ReloadShader() {
+    // Link shaders and get variable locations
+    std::string shader_data;
+    if (GLES) {
+        shader_data += fragment_shader_precision_OES;
+    }
+    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) {
+        if (Settings::values.pp_shader_name == "dubois (builtin)") {
+            shader_data += fragment_shader_anaglyph;
+        } else {
+            std::string shader_text =
+                OpenGL::GetPostProcessingShaderCode(true, Settings::values.pp_shader_name);
+            if (shader_text.empty()) {
+                // Should probably provide some information that the shader couldn't load
+                shader_data += fragment_shader_anaglyph;
+            } else {
+                shader_data += shader_text;
+            }
+        }
+    } else {
+        if (Settings::values.pp_shader_name == "none (builtin)") {
+            shader_data += fragment_shader;
+        } else {
+            std::string shader_text =
+                OpenGL::GetPostProcessingShaderCode(false, Settings::values.pp_shader_name);
+            if (shader_text.empty()) {
+                // Should probably provide some information that the shader couldn't load
+                shader_data += fragment_shader;
+            } else {
+                shader_data += shader_text;
+            }
+        }
+    }
+    shader.Create(vertex_shader, shader_data.c_str());
+    state.draw.shader_program = shader.handle;
+    state.Apply();
+    uniform_modelview_matrix = glGetUniformLocation(shader.handle, "modelview_matrix");
+    uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
+    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) {
+        uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
+    }
+    uniform_i_resolution = glGetUniformLocation(shader.handle, "i_resolution");
+    uniform_o_resolution = glGetUniformLocation(shader.handle, "o_resolution");
+    uniform_layer = glGetUniformLocation(shader.handle, "layer");
+    attrib_position = glGetAttribLocation(shader.handle, "vert_position");
+    attrib_tex_coord = glGetAttribLocation(shader.handle, "vert_tex_coord");
 }
 
 void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
@@ -401,22 +483,71 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
  */
 void RendererOpenGL::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y,
                                              float w, float h) {
-    auto& texcoords = screen_info.display_texcoords;
+    const auto& texcoords = screen_info.display_texcoords;
 
-    std::array<ScreenRectVertex, 4> vertices = {{
+    const std::array<ScreenRectVertex, 4> vertices = {{
         ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
         ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
         ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
     }};
 
+    // As this is the "DrawSingleScreenRotated" function, the output resolution dimensions have been
+    // swapped. If a non-rotated draw-screen function were to be added for book-mode games, those
+    // should probably be set to the standard (w, h, 1.0 / w, 1.0 / h) ordering.
+    u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    glUniform4f(uniform_i_resolution, screen_info.texture.width * scale_factor,
+                screen_info.texture.height * scale_factor,
+                1.0 / (screen_info.texture.width * scale_factor),
+                1.0 / (screen_info.texture.height * scale_factor));
+    glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
     state.texture_units[0].texture_2d = screen_info.display_texture;
+    state.texture_units[0].sampler = filter_sampler.handle;
     state.Apply();
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     state.texture_units[0].texture_2d = 0;
+    state.texture_units[0].sampler = 0;
+    state.Apply();
+}
+
+/**
+ * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
+ * rotation.
+ */
+void RendererOpenGL::DrawSingleScreenAnaglyphRotated(const ScreenInfo& screen_info_l,
+                                                     const ScreenInfo& screen_info_r, float x,
+                                                     float y, float w, float h) {
+    const auto& texcoords = screen_info_l.display_texcoords;
+
+    const std::array<ScreenRectVertex, 4> vertices = {{
+        ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
+        ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
+        ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
+        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+    }};
+
+    u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    glUniform4f(uniform_i_resolution, screen_info_l.texture.width * scale_factor,
+                screen_info_l.texture.height * scale_factor,
+                1.0 / (screen_info_l.texture.width * scale_factor),
+                1.0 / (screen_info_l.texture.height * scale_factor));
+    glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
+    state.texture_units[0].texture_2d = screen_info_l.display_texture;
+    state.texture_units[1].texture_2d = screen_info_r.display_texture;
+    state.texture_units[0].sampler = filter_sampler.handle;
+    state.texture_units[1].sampler = filter_sampler.handle;
+    state.Apply();
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    state.texture_units[0].texture_2d = 0;
+    state.texture_units[1].texture_2d = 0;
+    state.texture_units[0].sampler = 0;
+    state.texture_units[1].sampler = 0;
     state.Apply();
 }
 
@@ -428,6 +559,18 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
                      0.0f);
+    }
+
+    if (VideoCore::g_renderer_sampler_update_requested.exchange(false)) {
+        // Set the new filtering mode for the sampler
+        ReloadSampler();
+    }
+
+    if (VideoCore::g_renderer_shader_update_requested.exchange(false)) {
+        // Update fragment shader before drawing
+        shader.Release();
+        // Link shaders and get variable locations
+        ReloadShader();
     }
 
     const auto& top_screen = layout.top_screen;
@@ -442,36 +585,53 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout) {
     glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
 
     // Bind texture in Texture Unit 0
-    glActiveTexture(GL_TEXTURE0);
     glUniform1i(uniform_color_texture, 0);
 
+    // Bind a second texture for the right eye if in Anaglyph mode
+    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) {
+        glUniform1i(uniform_color_texture_r, 1);
+    }
+
+    glUniform1i(uniform_layer, 0);
     if (layout.top_screen_enabled) {
-        if (!Settings::values.toggle_3d) {
+        if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
             DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
                                     (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
-        } else {
+        } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
             DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
                                     (float)top_screen.top, (float)top_screen.GetWidth() / 2,
                                     (float)top_screen.GetHeight());
+            glUniform1i(uniform_layer, 1);
             DrawSingleScreenRotated(screen_infos[1],
                                     ((float)top_screen.left / 2) + ((float)layout.width / 2),
                                     (float)top_screen.top, (float)top_screen.GetWidth() / 2,
                                     (float)top_screen.GetHeight());
+        } else if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) {
+            DrawSingleScreenAnaglyphRotated(
+                screen_infos[0], screen_infos[1], (float)top_screen.left, (float)top_screen.top,
+                (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
         }
     }
+    glUniform1i(uniform_layer, 0);
     if (layout.bottom_screen_enabled) {
-        if (!Settings::values.toggle_3d) {
+        if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
             DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
                                     (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
                                     (float)bottom_screen.GetHeight());
-        } else {
+        } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
             DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left / 2,
                                     (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
                                     (float)bottom_screen.GetHeight());
+            glUniform1i(uniform_layer, 1);
             DrawSingleScreenRotated(screen_infos[2],
                                     ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
                                     (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
                                     (float)bottom_screen.GetHeight());
+        } else if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) {
+            DrawSingleScreenAnaglyphRotated(screen_infos[2], screen_infos[2],
+                                            (float)bottom_screen.left, (float)bottom_screen.top,
+                                            (float)bottom_screen.GetWidth(),
+                                            (float)bottom_screen.GetHeight());
         }
     }
 

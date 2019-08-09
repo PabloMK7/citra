@@ -175,8 +175,17 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Layout");
-    Settings::values.toggle_3d = ReadSetting("toggle_3d", false).toBool();
+    Settings::values.render_3d =
+        static_cast<Settings::StereoRenderOption>(ReadSetting("render_3d", 0).toInt());
     Settings::values.factor_3d = ReadSetting("factor_3d", 0).toInt();
+    Settings::values.pp_shader_name =
+        ReadSetting("pp_shader_name",
+                    (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
+                        ? "dubois (builtin)"
+                        : "none (builtin)")
+            .toString()
+            .toStdString();
+    Settings::values.filter_mode = ReadSetting("filter_mode", true).toBool();
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(ReadSetting("layout_option").toInt());
     Settings::values.swap_screen = ReadSetting("swap_screen", false).toBool();
@@ -465,8 +474,13 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Layout");
-    WriteSetting("toggle_3d", Settings::values.toggle_3d, false);
+    WriteSetting("render_3d", static_cast<int>(Settings::values.render_3d), 0);
     WriteSetting("factor_3d", Settings::values.factor_3d.load(), 0);
+    WriteSetting("pp_shader_name", QString::fromStdString(Settings::values.pp_shader_name),
+                 (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
+                     ? "dubois (builtin)"
+                     : "none (builtin)");
+    WriteSetting("filter_mode", Settings::values.filter_mode, true);
     WriteSetting("layout_option", static_cast<int>(Settings::values.layout_option));
     WriteSetting("swap_screen", Settings::values.swap_screen, false);
     WriteSetting("custom_layout", Settings::values.custom_layout, false);

@@ -711,6 +711,7 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::LogDir, user_path + LOG_DIR DIR_SEP);
     g_paths.emplace(UserPath::CheatsDir, user_path + CHEATS_DIR DIR_SEP);
     g_paths.emplace(UserPath::DLLDir, user_path + DLL_DIR DIR_SEP);
+    g_paths.emplace(UserPath::ShaderDir, user_path + SHADER_DIR DIR_SEP);
 }
 
 const std::string& GetUserPath(UserPath path) {

@@ -44,6 +44,8 @@ add_library(video_core STATIC
     renderer_opengl/gl_vars.cpp
     renderer_opengl/gl_vars.h
     renderer_opengl/pica_to_gl.h
+    renderer_opengl/post_processing_opengl.cpp
+    renderer_opengl/post_processing_opengl.h
     renderer_opengl/renderer_opengl.cpp
     renderer_opengl/renderer_opengl.h
     shader/debug_data.h

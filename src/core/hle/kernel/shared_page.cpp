@@ -58,9 +58,8 @@ Handler::Handler(Core::Timing& timing) : timing(timing) {
                                              std::bind(&Handler::UpdateTimeCallback, this, _1, _2));
     timing.ScheduleEvent(0, update_time_event);
 
-    float slidestate =
-        Settings::values.toggle_3d ? (float_le)Settings::values.factor_3d / 100 : 0.0f;
-    shared_page.sliderstate_3d = slidestate;
+    float slidestate = Settings::values.factor_3d / 100.0f;
+    shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
 }
 
 /// Gets system time in 3DS format. The epoch is Jan 1900, and the unit is millisecond.

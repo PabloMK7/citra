@@ -6,6 +6,7 @@
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_user.h"
@@ -34,6 +35,8 @@ void Apply() {
     }
 
     VideoCore::g_renderer_bg_color_update_requested = true;
+    VideoCore::g_renderer_sampler_update_requested = true;
+    VideoCore::g_renderer_shader_update_requested = true;
 
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
@@ -80,8 +83,10 @@ void LogSettings() {
     LogSetting("Renderer_VsyncEnabled", Settings::values.vsync_enabled);
     LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
-    LogSetting("Layout_Toggle3d", Settings::values.toggle_3d);
-    LogSetting("Layout_Factor3d", Settings::values.factor_3d);
+    LogSetting("Renderer_PostProcessingShader", Settings::values.pp_shader_name);
+    LogSetting("Renderer_FilterMode", Settings::values.filter_mode);
+    LogSetting("Stereoscopy_Render3d", static_cast<int>(Settings::values.render_3d));
+    LogSetting("Stereoscopy_Factor3d", Settings::values.factor_3d);
     LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
     LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
     LogSetting("Audio_EnableDspLle", Settings::values.enable_dsp_lle);

@@ -32,6 +32,8 @@ enum class MicInputType {
     Static,
 };
 
+enum class StereoRenderOption { Off, SideBySide, Anaglyph };
+
 namespace NativeButton {
 enum Values {
     A,
@@ -163,8 +165,11 @@ struct Values {
     float bg_green;
     float bg_blue;
 
-    bool toggle_3d;
+    StereoRenderOption render_3d;
     std::atomic<u8> factor_3d;
+
+    bool filter_mode;
+    std::string pp_shader_name;
 
     // Audio
     bool enable_dsp_lle;

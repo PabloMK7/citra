@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>427</height>
+    <height>603</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -212,21 +212,72 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="toggle_linear_filter">
+        <property name="text">
+         <string>Enable Linear Filtering</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_11">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Post-Processing Shader</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="shader_combobox"/>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="layoutBox">
+    <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Layout</string>
+      <string>Stereoscopy</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
+     <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QCheckBox" name="toggle_3d">
+         <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>Enable Stereoscopic 3D</string>
+           <string>Stereoscopic 3D Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="render_3d_combobox">
+          <item>
+           <property name="text">
+            <string>Off</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Side by Side</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Anaglyph</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Depth</string>
           </property>
          </widget>
         </item>
@@ -248,6 +299,15 @@
         </item>
        </layout>
       </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="layoutBox">
+     <property name="title">
+      <string>Layout</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>

@@ -52,10 +52,15 @@ public:
 
 private:
     void InitOpenGLObjects();
+    void ReloadSampler();
+    void ReloadShader();
     void ConfigureFramebufferTexture(TextureInfo& texture,
                                      const GPU::Regs::FramebufferConfig& framebuffer);
     void DrawScreens(const Layout::FramebufferLayout& layout);
     void DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w, float h);
+    void DrawSingleScreenAnaglyphRotated(const ScreenInfo& screen_info_l,
+                                         const ScreenInfo& screen_info_r, float x, float y, float w,
+                                         float h);
     void UpdateFramerate();
 
     // Loads framebuffer from emulated memory into the display information structure
@@ -71,6 +76,7 @@ private:
     OGLBuffer vertex_buffer;
     OGLProgram shader;
     OGLFramebuffer screenshot_framebuffer;
+    OGLSampler filter_sampler;
 
     /// Display information for top and bottom screens respectively
     std::array<ScreenInfo, 3> screen_infos;
@@ -78,6 +84,12 @@ private:
     // Shader uniform location indices
     GLuint uniform_modelview_matrix;
     GLuint uniform_color_texture;
+    GLuint uniform_color_texture_r;
+
+    // Shader uniform for Dolphin compatibility
+    GLuint uniform_i_resolution;
+    GLuint uniform_o_resolution;
+    GLuint uniform_layer;
 
     // Shader attribute input indices
     GLuint attrib_position;
