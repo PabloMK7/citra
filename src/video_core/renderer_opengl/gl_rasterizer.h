@@ -261,6 +261,7 @@ private:
     bool is_amd;
 
     OpenGLState state;
+    GLuint default_texture;
 
     RasterizerCacheOpenGL res_cache;
 

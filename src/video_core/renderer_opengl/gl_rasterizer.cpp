@@ -66,6 +66,14 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& window)
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
 
+    // Create a 1x1 clear texture to use in the NULL case,
+    // instead of OpenGL's default of solid black
+    glGenTextures(1, &default_texture);
+    glBindTexture(GL_TEXTURE_2D, default_texture);
+    // For some reason alpha 0 wraps around to 1.0, so use 1/255 instead
+    u8 framebuffer_data[4] = {0, 0, 0, 1};
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, framebuffer_data);
+
     // Create sampler objects
     for (std::size_t i = 0; i < texture_samplers.size(); ++i) {
         texture_samplers[i].Create();
@@ -756,10 +764,16 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                                  surface->texture.handle);
             } else {
                 // Can occur when texture addr is null or its memory is unmapped/invalid
-                state.texture_units[texture_index].texture_2d = 0;
+                // HACK: In this case, the correct behaviour for the PICA is to use the last
+                // rendered colour. But because this would be impractical to implement, the
+                // next best alternative is to use a clear texture, essentially skipping
+                // the geometry in question.
+                // For example: a bug in Pokemon X/Y causes NULL-texture squares to be drawn
+                // on the male character's face, which in the OpenGL default appear black.
+                state.texture_units[texture_index].texture_2d = default_texture;
             }
         } else {
-            state.texture_units[texture_index].texture_2d = 0;
+            state.texture_units[texture_index].texture_2d = default_texture;
         }
     }
 
