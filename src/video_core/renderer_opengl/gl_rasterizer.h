@@ -286,7 +286,7 @@ private:
     std::unique_ptr<ShaderProgramManager> shader_program_manager;
 
     // They shall be big enough for about one frame.
-    static constexpr std::size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
+    static constexpr std::size_t VERTEX_BUFFER_SIZE = 16 * 1024 * 1024;
     static constexpr std::size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
     static constexpr std::size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
     static constexpr std::size_t TEXTURE_BUFFER_SIZE = 1 * 1024 * 1024;
