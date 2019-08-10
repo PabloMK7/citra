@@ -15,42 +15,6 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="generalBox">
-     <property name="title">
-      <string>General</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QCheckBox" name="toggle_frame_limit">
-          <property name="text">
-           <string>Limit Speed Percent</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="frame_limit">
-          <property name="suffix">
-           <string>%</string>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>9999</number>
-          </property>
-          <property name="value">
-           <number>100</number>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="rendererBox">
      <property name="title">
       <string>Renderer</string>

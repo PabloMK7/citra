@@ -17,8 +17,6 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     ui->setupUi(this);
     SetConfiguration();
 
-    connect(ui->toggle_frame_limit, &QCheckBox::toggled, ui->frame_limit, &QSpinBox::setEnabled);
-
     ui->layoutBox->setEnabled(!Settings::values.custom_layout);
 
     ui->hw_renderer_group->setEnabled(ui->toggle_hw_renderer->isChecked());
@@ -68,9 +66,6 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
     ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit);
     ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor);
-    ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
-    ui->frame_limit->setEnabled(ui->toggle_frame_limit->isChecked());
-    ui->frame_limit->setValue(Settings::values.frame_limit);
     ui->render_3d_combobox->setCurrentIndex(static_cast<int>(Settings::values.render_3d));
     ui->factor_3d->setValue(Settings::values.factor_3d);
     updateShaders(Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph);
@@ -93,8 +88,6 @@ void ConfigureGraphics::ApplyConfiguration() {
     Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
     Settings::values.resolution_factor =
         static_cast<u16>(ui->resolution_factor_combobox->currentIndex());
-    Settings::values.use_frame_limit = ui->toggle_frame_limit->isChecked();
-    Settings::values.frame_limit = ui->frame_limit->value();
     Settings::values.render_3d =
         static_cast<Settings::StereoRenderOption>(ui->render_3d_combobox->currentIndex());
     Settings::values.factor_3d = ui->factor_3d->value();
