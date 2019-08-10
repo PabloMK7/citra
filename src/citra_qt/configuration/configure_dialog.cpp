@@ -45,6 +45,7 @@ void ConfigureDialog::SetConfiguration() {
     ui->systemTab->SetConfiguration();
     ui->inputTab->LoadConfiguration();
     ui->graphicsTab->SetConfiguration();
+    ui->enhancementsTab->SetConfiguration();
     ui->audioTab->SetConfiguration();
     ui->cameraTab->SetConfiguration();
     ui->debugTab->SetConfiguration();
@@ -59,6 +60,7 @@ void ConfigureDialog::ApplyConfiguration() {
     ui->inputTab->ApplyProfile();
     ui->hotkeysTab->ApplyConfiguration(registry);
     ui->graphicsTab->ApplyConfiguration();
+    ui->enhancementsTab->ApplyConfiguration();
     ui->audioTab->ApplyConfiguration();
     ui->cameraTab->ApplyConfiguration();
     ui->debugTab->ApplyConfiguration();
@@ -73,11 +75,20 @@ Q_DECLARE_METATYPE(QList<QWidget*>);
 void ConfigureDialog::PopulateSelectionList() {
     ui->selectorList->clear();
 
+<<<<<<< HEAD
     const std::array<std::pair<QString, QList<QWidget*>>, 4> items{
         {{tr("General"), {ui->generalTab, ui->webTab, ui->debugTab, ui->uiTab}},
          {tr("System"), {ui->systemTab, ui->audioTab, ui->cameraTab}},
          {tr("Graphics"), {ui->graphicsTab}},
          {tr("Controls"), {ui->inputTab, ui->hotkeysTab}}}};
+=======
+    const std::array<std::pair<QString, QStringList>, 4> items{
+        {{tr("General"),
+          {QT_TR_NOOP("General"), QT_TR_NOOP("Web"), QT_TR_NOOP("Debug"), QT_TR_NOOP("UI")}},
+         {tr("System"), {QT_TR_NOOP("System"), QT_TR_NOOP("Audio"), QT_TR_NOOP("Camera")}},
+         {tr("Graphics"), {QT_TR_NOOP("Enhancements"), QT_TR_NOOP("Advanced")}},
+         {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
+>>>>>>> 76ca777b... reorder graphics tab, move speed to general
 
     for (const auto& entry : items) {
         auto* const item = new QListWidgetItem(entry.first);
@@ -109,6 +120,7 @@ void ConfigureDialog::RetranslateUI() {
     ui->inputTab->RetranslateUI();
     ui->hotkeysTab->RetranslateUI();
     ui->graphicsTab->RetranslateUI();
+    ui->enhancementsTab->RetranslateUI();
     ui->audioTab->RetranslateUI();
     ui->cameraTab->RetranslateUI();
     ui->debugTab->RetranslateUI();

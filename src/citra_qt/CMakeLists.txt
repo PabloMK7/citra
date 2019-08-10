@@ -46,7 +46,12 @@ add_executable(citra-qt
     configuration/configure_camera.ui
     configuration/configure_debug.cpp
     configuration/configure_debug.h
+<<<<<<< HEAD
     configuration/configure_debug.ui
+=======
+    configuration/configure_enhancements.cpp
+    configuration/configure_enhancements.h
+>>>>>>> 76ca777b... reorder graphics tab, move speed to general
     configuration/configure_dialog.cpp
     configuration/configure_dialog.h
     configuration/configure_general.cpp
@@ -155,6 +160,38 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
+<<<<<<< HEAD
+=======
+    compatdb.cpp
+    compatdb.h
+)
+
+set(UIS
+    configuration/configure.ui
+    configuration/configure_audio.ui
+    configuration/configure_camera.ui
+    configuration/configure_debug.ui
+    configuration/configure_enhancements.ui
+    configuration/configure_general.ui
+    configuration/configure_graphics.ui
+    configuration/configure_hotkeys.ui
+    configuration/configure_input.ui
+    configuration/configure_motion_touch.ui
+    configuration/configure_system.ui
+    configuration/configure_ui.ui
+    configuration/configure_web.ui
+    debugger/registers.ui
+    multiplayer/direct_connect.ui
+    multiplayer/lobby.ui
+    multiplayer/chat_room.ui
+    multiplayer/client_room.ui
+    multiplayer/host_room.ui
+    multiplayer/moderation_dialog.ui
+    aboutdialog.ui
+    cheats.ui
+    main.ui
+    compatdb.ui
+>>>>>>> 76ca777b... reorder graphics tab, move speed to general
 )
 
 file(GLOB COMPAT_LIST

@@ -21,14 +21,6 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     connect(ui->toggle_hw_renderer, &QCheckBox::toggled, this, [this] {
         auto checked = ui->toggle_hw_renderer->isChecked();
         ui->hw_renderer_group->setEnabled(checked);
-        ui->toggle_custom_textures->setEnabled(checked);
-        ui->toggle_dump_textures->setEnabled(checked);
-        ui->toggle_preload_textures->setEnabled(false);
-        if (!checked) {
-            ui->toggle_custom_textures->setChecked(false);
-            ui->toggle_dump_textures->setChecked(false);
-            ui->toggle_preload_textures->setChecked(false);
-        }
     });
 
     ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());

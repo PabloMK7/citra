@@ -26,7 +26,4 @@ public:
 
     std::unique_ptr<Ui::ConfigureGraphics> ui;
     QColor bg_color;
-
-private:
-    void updateShaders(bool anaglyph);
 };
