@@ -197,7 +197,7 @@ private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
     void LoadTranslation();
-    void SetupUIStrings();
+    void UpdateWindowTitle();
     void RetranslateStatusBar();
     void InstallCIA(QStringList filepaths);
 

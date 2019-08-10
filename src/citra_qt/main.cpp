@@ -158,9 +158,9 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     ConnectMenuEvents();
     ConnectWidgetEvents();
 
-    SetupUIStrings();
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
+    UpdateWindowTitle();
 
     show();
 
@@ -797,7 +797,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     std::string title;
     system.GetAppLoader().ReadTitle(title);
     game_title = QString::fromStdString(title);
-    SetupUIStrings();
+    UpdateWindowTitle();
 
     game_path = filename;
 
@@ -927,7 +927,7 @@ void GMainWindow::ShutdownGame() {
     }
 
     game_title.clear();
-    SetupUIStrings();
+    UpdateWindowTitle();
 
     game_path.clear();
 }
@@ -1813,7 +1813,7 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
     LoadTranslation();
     ui.retranslateUi(this);
     RetranslateStatusBar();
-    SetupUIStrings();
+    UpdateWindowTitle();
 
     if (emulation_running)
         ui.action_Start->setText(tr("Continue"));
@@ -1826,11 +1826,13 @@ void GMainWindow::OnMoviePlaybackCompleted() {
     ui.action_Stop_Recording_Playback->setEnabled(false);
 }
 
-void GMainWindow::SetupUIStrings() {
+void GMainWindow::UpdateWindowTitle() {
+    const QString full_name = QString::fromUtf8(Common::g_build_fullname);
+
     if (game_title.isEmpty()) {
-        setWindowTitle(tr("Citra %1").arg(Common::g_build_fullname));
+        setWindowTitle(tr("Citra %1").arg(full_name));
     } else {
-        setWindowTitle(tr("Citra %1| %2").arg(Common::g_build_fullname, game_title));
+        setWindowTitle(tr("Citra %1| %2").arg(full_name, game_title));
     }
 }
 
