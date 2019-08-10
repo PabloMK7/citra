@@ -68,19 +68,20 @@ void ConfigureDialog::ApplyConfiguration() {
     Settings::LogSettings();
 }
 
+Q_DECLARE_METATYPE(QList<QWidget*>);
+
 void ConfigureDialog::PopulateSelectionList() {
     ui->selectorList->clear();
 
-    const std::array<std::pair<QString, QStringList>, 4> items{
-        {{tr("General"),
-          {QT_TR_NOOP("General"), QT_TR_NOOP("Web"), QT_TR_NOOP("Debug"), QT_TR_NOOP("UI")}},
-         {tr("System"), {QT_TR_NOOP("System"), QT_TR_NOOP("Audio"), QT_TR_NOOP("Camera")}},
-         {tr("Graphics"), {QT_TR_NOOP("Graphics")}},
-         {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
+    const std::array<std::pair<QString, QList<QWidget*>>, 4> items{
+        {{tr("General"), {ui->generalTab, ui->webTab, ui->debugTab, ui->uiTab}},
+         {tr("System"), {ui->systemTab, ui->audioTab, ui->cameraTab}},
+         {tr("Graphics"), {ui->graphicsTab}},
+         {tr("Controls"), {ui->inputTab, ui->hotkeysTab}}}};
 
     for (const auto& entry : items) {
         auto* const item = new QListWidgetItem(entry.first);
-        item->setData(Qt::UserRole, entry.second);
+        item->setData(Qt::UserRole, QVariant::fromValue(entry.second));
 
         ui->selectorList->addItem(item);
     }
@@ -120,17 +121,17 @@ void ConfigureDialog::UpdateVisibleTabs() {
     if (items.isEmpty())
         return;
 
-    const std::map<QString, QWidget*> widgets = {
-        {QStringLiteral("General"), ui->generalTab},   {QStringLiteral("System"), ui->systemTab},
-        {QStringLiteral("Input"), ui->inputTab},       {QStringLiteral("Hotkeys"), ui->hotkeysTab},
-        {QStringLiteral("Graphics"), ui->graphicsTab}, {QStringLiteral("Audio"), ui->audioTab},
-        {QStringLiteral("Camera"), ui->cameraTab},     {QStringLiteral("Debug"), ui->debugTab},
-        {QStringLiteral("Web"), ui->webTab},           {QStringLiteral("UI"), ui->uiTab}};
+    const std::map<QWidget*, QString> widgets = {
+        {ui->generalTab, tr("General")},   {ui->systemTab, tr("System")},
+        {ui->inputTab, tr("Input")},       {ui->hotkeysTab, tr("Hotkeys")},
+        {ui->graphicsTab, tr("Graphics")}, {ui->audioTab, tr("Audio")},
+        {ui->cameraTab, tr("Camera")},     {ui->debugTab, tr("Debug")},
+        {ui->webTab, tr("Web")},           {ui->uiTab, tr("UI")}};
 
     ui->tabWidget->clear();
 
-    const QStringList tabs = items[0]->data(Qt::UserRole).toStringList();
+    const QList<QWidget*> tabs = qvariant_cast<QList<QWidget*>>(items[0]->data(Qt::UserRole));
 
-    for (const auto& tab : tabs)
-        ui->tabWidget->addTab(widgets.at(tab), tr(qPrintable(tab)));
+    for (const auto tab : tabs)
+        ui->tabWidget->addTab(tab, widgets.at(tab));
 }
