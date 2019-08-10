@@ -14,6 +14,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
+#undef exception_info
 
 namespace Service::ERR {
 

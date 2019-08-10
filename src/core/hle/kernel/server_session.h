@@ -38,7 +38,7 @@ class Thread;
 class ServerSession final : public WaitObject {
 public:
     ~ServerSession() override;
-    explicit ServerSession(KernelSystem& kernel);
+    explicit ServerSession();
 
     std::string GetName() const override {
         return name;

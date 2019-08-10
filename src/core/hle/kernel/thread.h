@@ -149,7 +149,7 @@ private:
 
 class Thread final : public WaitObject {
 public:
-    explicit Thread(KernelSystem&);
+    explicit Thread();
     ~Thread() override;
 
     std::string GetName() const override {

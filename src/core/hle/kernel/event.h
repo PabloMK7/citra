@@ -49,6 +49,16 @@ private:
     std::string name; ///< Name of event (optional)
 
     friend class KernelSystem;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<WaitObject>(*this);
+        ar & reset_type;
+        ar & signaled;
+        ar & name;
+    }
 };
 
 } // namespace Kernel

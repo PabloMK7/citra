@@ -20,8 +20,6 @@ class SessionRequestHandler;
 
 class ServerPort final : public WaitObject {
 public:
-    explicit ServerPort(KernelSystem& kernel);
-    ~ServerPort() override;
 
     std::string GetTypeName() const override {
         return "ServerPort";

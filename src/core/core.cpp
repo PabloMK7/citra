@@ -5,7 +5,6 @@
 #include <memory>
 #include <utility>
 #include "boost/serialization/array.hpp"
-#include "boost/serialization/unique_ptr.hpp"
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
@@ -205,6 +204,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
                                                     [this] { PrepareReschedule(); }, system_mode);
+    Kernel::g_kernel = kernel.get();
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -368,6 +368,7 @@ void System::Shutdown() {
     service_manager.reset();
     dsp_core.reset();
     cpu_core.reset();
+    Kernel::g_kernel = nullptr;
     kernel.reset();
     timing.reset();
     app_loader.reset();
@@ -400,7 +401,8 @@ void System::serialize(Archive & ar, const unsigned int file_version)
     ar & GPU::g_regs;
     ar & LCD::g_regs;
     ar & dsp_core->GetDspMemory();
-    ar & memory;
+    ar & *memory.get();
+    ar & *kernel.get();
 }
 
 void System::Save(std::ostream &stream) const

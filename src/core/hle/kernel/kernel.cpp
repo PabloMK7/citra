@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
+#include "common/serialization/atomic.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
@@ -15,6 +17,8 @@
 #include "core/hle/kernel/timer.h"
 
 namespace Kernel {
+
+KernelSystem* g_kernel;
 
 /// Initialize the kernel
 KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
@@ -100,5 +104,24 @@ const IPCDebugger::Recorder& KernelSystem::GetIPCRecorder() const {
 void KernelSystem::AddNamedPort(std::string name, std::shared_ptr<ClientPort> port) {
     named_ports.emplace(std::move(name), std::move(port));
 }
+
+template <class Archive>
+void KernelSystem::serialize(Archive& ar, const unsigned int file_version)
+{
+    ar & named_ports;
+    // TODO: CPU
+    // NB: subsystem references and prepare_reschedule_callback are constant
+    ar & *resource_limits.get();
+    ar & next_object_id;
+    //ar & *timer_manager.get();
+    ar & next_process_id;
+    ar & process_list;
+    ar & current_process;
+    // ar & *thread_manager.get();
+    //ar & *config_mem_handler.get();
+    //ar & *shared_page_handler.get();
+}
+
+SERIALIZE_IMPL(KernelSystem)
 
 } // namespace Kernel

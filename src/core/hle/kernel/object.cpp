@@ -8,7 +8,17 @@
 
 namespace Kernel {
 
-Object::Object(KernelSystem& kernel) : object_id{kernel.GenerateObjectID()} {}
+// TODO: Remove this
+Object::Object(KernelSystem& kernel)
+{
+}
+
+Object::Object() = default;
+
+void Object::Init(KernelSystem& kernel)
+{
+    object_id = kernel.GenerateObjectID();
+}
 
 Object::~Object() = default;
 

@@ -60,6 +60,17 @@ struct MemoryRegionInfo {
      * @param size the size of the region to free.
      */
     void Free(u32 offset, u32 size);
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & base;
+        ar & size;
+        ar & used;
+        // TODO: boost icl / free_blocks
+    }
 };
 
 } // namespace Kernel

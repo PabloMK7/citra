@@ -8,7 +8,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "boost/serialization/split_member.hpp"
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -81,6 +82,21 @@ struct VirtualMemoryArea {
 
     /// Tests if this area can be merged to the right with `next`.
     bool CanBeMergedWith(const VirtualMemoryArea& next) const;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & base;
+        ar & size;
+        ar & type;
+        ar & permissions;
+        ar & meminfo_state;
+        // TODO: backing memory ref
+        ar & paddr;
+        ar & mmio_handler;
+    }
 };
 
 /**
@@ -195,9 +211,10 @@ public:
 
 private:
     friend class boost::serialization::access;
-    template<class Archive>
-    void save(Archive & ar, const unsigned int file_version)
+    template <class Archive>
+    void save(Archive& ar, const unsigned int file_version) const
     {
+        ar & vma_map;
         for (int i = 0; i < page_table.pointers.size(); i++) {
             ar << memory.GetFCRAMOffset(page_table.pointers[i]);
         }
@@ -205,9 +222,10 @@ private:
         ar & page_table.attributes;
     }
 
-    template<class Archive>
-    void load(Archive & ar, const unsigned int file_version)
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version)
     {
+        ar & vma_map;
         for (int i = 0; i < page_table.pointers.size(); i++) {
             u32 offset{};
             ar >> offset;

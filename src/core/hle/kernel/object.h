@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <boost/serialization/access.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 
@@ -41,7 +42,10 @@ enum {
 class Object : NonCopyable, public std::enable_shared_from_this<Object> {
 public:
     explicit Object(KernelSystem& kernel);
+    Object();
     virtual ~Object();
+
+    virtual void Init(KernelSystem& kernel);
 
     /// Returns a unique identifier for the object. For debugging purposes only.
     u32 GetObjectId() const {
@@ -64,6 +68,13 @@ public:
 
 private:
     std::atomic<u32> object_id;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & object_id;
+    }
 };
 
 template <typename T>

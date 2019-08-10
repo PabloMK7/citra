@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <nihstro/shader_bytecode.h>
 #include <boost/serialization/array.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -32,6 +33,14 @@ using SwizzleData = std::array<u32, MAX_SWIZZLE_DATA_LENGTH>;
 
 struct AttributeBuffer {
     alignas(16) Common::Vec4<float24> attr[16];
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & attr;
+    }
 };
 
 /// Handler type for receiving vertex outputs from vertex shader or geometry shader
@@ -91,6 +100,19 @@ struct GSEmitter {
     GSEmitter();
     ~GSEmitter();
     void Emit(Common::Vec4<float24> (&output_regs)[16]);
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & buffer;
+        ar & vertex_id;
+        ar & prim_emit;
+        ar & winding;
+        ar & output_mask;
+        // Handlers are ignored because they're constant
+    }
 };
 static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter is not standard layout type");
 
@@ -108,6 +130,16 @@ struct UnitState {
         alignas(16) Common::Vec4<float24> input[16];
         alignas(16) Common::Vec4<float24> temporary[16];
         alignas(16) Common::Vec4<float24> output[16];
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version)
+        {
+            ar & input;
+            ar & temporary;
+            ar & output;
+        }
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
 
@@ -160,6 +192,17 @@ struct UnitState {
     void LoadInput(const ShaderRegs& config, const AttributeBuffer& input);
 
     void WriteOutput(const ShaderRegs& config, AttributeBuffer& output);
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & registers;
+        ar & conditional_code;
+        ar & address_registers;
+        // TODO: emitter_ptr
+    }
 };
 
 /**
@@ -173,6 +216,15 @@ struct GSUnitState : public UnitState {
     void ConfigOutput(const ShaderRegs& config);
 
     GSEmitter emitter;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<UnitState>(*this);
+        ar & emitter;
+    }
 };
 
 struct Uniforms {

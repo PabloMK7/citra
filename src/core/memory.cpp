@@ -5,8 +5,7 @@
 #include <array>
 #include <cstring>
 #include "boost/serialization/array.hpp"
-#include "boost/serialization/nvp.hpp"
-#include "boost/serialization/unique_ptr.hpp"
+#include "boost/serialization/binary_object.hpp"
 #include "audio_core/dsp_interface.h"
 #include "common/archives.h"
 #include "common/assert.h"
@@ -84,23 +83,17 @@ public:
 
 private:
 
-    template<class Archive>
-    void add_blob(Archive & ar, std::unique_ptr<u8[]> & var, const char *name, std::size_t size)
-    {
-        ar & boost::serialization::make_nvp(
-            name,
-            *static_cast<u8 (*)[Memory::FCRAM_N3DS_SIZE]>(static_cast<void *>(var.get()))
-        );
-    }
-
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int file_version)
     {
         // TODO: Skip n3ds ram when not used?
-        add_blob(ar, fcram, "fcram", Memory::FCRAM_N3DS_SIZE);
-        add_blob(ar, vram, "vram", Memory::VRAM_SIZE);
-        add_blob(ar, n3ds_extra_ram, "n3ds_extra_ram", Memory::N3DS_EXTRA_RAM_SIZE);
+        auto s_fcram = boost::serialization::binary_object(fcram.get(), Memory::FCRAM_N3DS_SIZE);
+        auto s_vram = boost::serialization::binary_object(vram.get(), Memory::VRAM_SIZE);
+        auto s_extra = boost::serialization::binary_object(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
+        ar & s_fcram;
+        ar & s_vram;
+        ar & s_extra;
         ar & cache_marker;
         // TODO: How the hell to do page tables..
         // ar & page_table_list;
@@ -114,7 +107,7 @@ MemorySystem::~MemorySystem() = default;
 template<class Archive>
 void MemorySystem::serialize(Archive & ar, const unsigned int file_version)
 {
-    ar & impl;
+    ar & *impl.get();
 }
 
 SERIALIZE_IMPL(MemorySystem)

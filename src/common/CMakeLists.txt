@@ -90,6 +90,8 @@ add_library(common STATIC
     scm_rev.cpp
     scm_rev.h
     scope_exit.h
+    serialization/atomic.h
+    serialization/boost_vector.hpp
     string_util.cpp
     string_util.h
     swap.h

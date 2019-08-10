@@ -11,8 +11,13 @@
 #include <string>
 #include <vector>
 #include <boost/container/static_vector.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/bitset.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "common/serialization/boost_vector.hpp"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/vm_manager.h"
@@ -25,6 +30,17 @@ struct AddressMapping {
     u32 size;
     bool read_only;
     bool unk_flag;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & address;
+        ar & size;
+        ar & read_only;
+        ar & unk_flag;
+    }
 };
 
 union ProcessFlags {
@@ -52,13 +68,20 @@ struct MemoryRegionInfo;
 
 class CodeSet final : public Object {
 public:
-    explicit CodeSet(KernelSystem& kernel);
-    ~CodeSet() override;
-
     struct Segment {
         std::size_t offset = 0;
         VAddr addr = 0;
         u32 size = 0;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version)
+        {
+            ar & offset;
+            ar & addr;
+            ar & size;
+        }
     };
 
     std::string GetTypeName() const override {
@@ -106,11 +129,24 @@ public:
     std::string name;
     /// Title ID corresponding to the process
     u64 program_id;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<Object>(*this);
+        // TODO: memory reference
+        ar & segments;
+        ar & entrypoint;
+        ar & name;
+        ar & program_id;
+    }
 };
 
 class Process final : public Object {
 public:
-    explicit Process(Kernel::KernelSystem& kernel);
+    explicit Process();
     ~Process() override;
 
     std::string GetTypeName() const override {
@@ -195,5 +231,26 @@ public:
 
 private:
     KernelSystem& kernel;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<Object>(*this);
+        ar & handle_table;
+        ar & codeset;
+        ar & resource_limit;
+        ar & svc_access_mask;
+        ar & handle_table_size;
+        ar & (boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<AddressMapping, 8> >&)address_mappings;
+        ar & flags.raw;
+        ar & kernel_version;
+        ar & ideal_processor;
+        ar & process_id;
+        ar & vm_manager;
+        ar & memory_used;
+        ar & memory_region;
+        ar & tls_slots;
+    }
 };
 } // namespace Kernel

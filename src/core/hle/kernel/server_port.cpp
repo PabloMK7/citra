@@ -13,9 +13,6 @@
 
 namespace Kernel {
 
-ServerPort::ServerPort(KernelSystem& kernel) : WaitObject(kernel) {}
-ServerPort::~ServerPort() {}
-
 ResultVal<std::shared_ptr<ServerSession>> ServerPort::Accept() {
     if (pending_sessions.empty()) {
         return ERR_NO_PENDING_SESSIONS;
@@ -36,8 +33,10 @@ void ServerPort::Acquire(Thread* thread) {
 }
 
 KernelSystem::PortPair KernelSystem::CreatePortPair(u32 max_sessions, std::string name) {
-    auto server_port{std::make_shared<ServerPort>(*this)};
-    auto client_port{std::make_shared<ClientPort>(*this)};
+    auto server_port{std::make_shared<ServerPort>()};
+    server_port->Init(*this);
+    auto client_port{std::make_shared<ClientPort>()};
+    client_port->Init(*this);
 
     server_port->name = name + "_Server";
     client_port->name = name + "_Client";

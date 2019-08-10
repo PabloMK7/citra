@@ -43,6 +43,17 @@ public:
      * @return The number of free slots the semaphore had before this call
      */
     ResultVal<s32> Release(s32 release_count);
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<WaitObject>(*this);
+        ar & max_count;
+        ar & available_count;
+        ar & name;
+    }
 };
 
 } // namespace Kernel

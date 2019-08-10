@@ -161,8 +161,6 @@ struct State {
         UnionArray<LutEntry, 128> lut;
     } fog;
 
-#undef SERIALIZE_RAW
-
     /// Current Pica command list
     struct {
         PAddr addr; // This exists only for serialization
@@ -185,7 +183,7 @@ struct State {
         template<class Archive>
         void serialize(Archive & ar, const unsigned int file_version)
         {
-            // ar & input_vertex;
+            ar & input_vertex;
             ar & current_attribute;
             ar & reset_geometry_pipeline;
         }
@@ -220,7 +218,7 @@ private:
         ar & regs.reg_array;
         ar & vs;
         ar & gs;
-        // ar & input_default_attributes;
+        ar & input_default_attributes;
         ar & proctex;
         ar & lighting.luts;
         ar & fog.lut;

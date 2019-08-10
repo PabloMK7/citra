@@ -11,6 +11,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
@@ -283,6 +286,12 @@ private:
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
 
     std::unique_ptr<IPCDebugger::Recorder> ipc_recorder;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version);
 };
+
+extern KernelSystem* g_kernel;
 
 } // namespace Kernel

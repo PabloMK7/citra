@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
+ServerSession::ServerSession() : kernel(*g_kernel) {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.
@@ -30,7 +30,8 @@ ServerSession::~ServerSession() {
 
 ResultVal<std::shared_ptr<ServerSession>> ServerSession::Create(KernelSystem& kernel,
                                                                 std::string name) {
-    auto server_session{std::make_shared<ServerSession>(kernel)};
+    auto server_session{std::make_shared<ServerSession>()};
+    server_session->Init(kernel);
 
     server_session->name = std::move(name);
     server_session->parent = nullptr;
