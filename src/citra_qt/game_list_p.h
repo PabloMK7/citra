@@ -80,11 +80,10 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
         {GameRegion::Japan, QObject::tr("Japan")},
         {GameRegion::NorthAmerica, QObject::tr("North America")},
         {GameRegion::Europe, QObject::tr("Europe")},
-        {GameRegion::Australia,QObject::tr("Australia")},
+        {GameRegion::Australia, QObject::tr("Australia")},
         {GameRegion::China, QObject::tr("China")},
         {GameRegion::Korea, QObject::tr("Korea")},
-        {GameRegion::Taiwan, QObject::tr("Taiwan")}
-    };
+        {GameRegion::Taiwan, QObject::tr("Taiwan")}};
 
     std::vector<GameRegion> regions = smdh.GetRegions();
 
