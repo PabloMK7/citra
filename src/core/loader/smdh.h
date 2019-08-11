@@ -63,7 +63,6 @@ struct SMDH {
     };
 
     enum class GameRegion {
-        Invalid = -1,
         Japan = 0,
         NorthAmerica = 1,
         Europe = 2,
@@ -88,7 +87,7 @@ struct SMDH {
      */
     std::array<u16, 0x40> GetShortTitle(Loader::SMDH::TitleLanguage language) const;
 
-    GameRegion GetRegion() const;
+    std::vector<GameRegion> GetRegions() const;
 };
 static_assert(sizeof(SMDH) == 0x36C0, "SMDH structure size is wrong");
 

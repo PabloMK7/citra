@@ -75,30 +75,32 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
  * @return QString region
  */
 static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
-    const Loader::SMDH::GameRegion region = smdh.GetRegion();
+    using GameRegion = Loader::SMDH::GameRegion;
+    static const std::map<GameRegion, QString> regions_map = {
+        {GameRegion::Japan, QObject::tr("Japan")},
+        {GameRegion::NorthAmerica, QObject::tr("North America")},
+        {GameRegion::Europe, QObject::tr("Europe")},
+        {GameRegion::Australia,QObject::tr("Australia")},
+        {GameRegion::China, QObject::tr("China")},
+        {GameRegion::Korea, QObject::tr("Korea")},
+        {GameRegion::Taiwan, QObject::tr("Taiwan")}
+    };
 
-    switch (region) {
-    case Loader::SMDH::GameRegion::Invalid:
+    std::vector<GameRegion> regions = smdh.GetRegions();
+
+    if (regions.empty()) {
         return QObject::tr("Invalid region");
-    case Loader::SMDH::GameRegion::Japan:
-        return QObject::tr("Japan");
-    case Loader::SMDH::GameRegion::NorthAmerica:
-        return QObject::tr("North America");
-    case Loader::SMDH::GameRegion::Europe:
-        return QObject::tr("Europe");
-    case Loader::SMDH::GameRegion::Australia:
-        return QObject::tr("Australia");
-    case Loader::SMDH::GameRegion::China:
-        return QObject::tr("China");
-    case Loader::SMDH::GameRegion::Korea:
-        return QObject::tr("Korea");
-    case Loader::SMDH::GameRegion::Taiwan:
-        return QObject::tr("Taiwan");
-    case Loader::SMDH::GameRegion::RegionFree:
-        return QObject::tr("Region free");
-    default:
-        return QObject::tr("Invalid Region");
     }
+
+    if (std::find(regions.begin(), regions.end(), GameRegion::RegionFree) != regions.end()) {
+        return QObject::tr("Region free");
+    }
+
+    QString result = regions_map.at(regions.front());
+    for (auto region = ++regions.begin(); region != regions.end(); ++region) {
+        result += "\n" + regions_map.at(*region);
+    }
+    return result;
 }
 
 class GameListItem : public QStandardItem {
