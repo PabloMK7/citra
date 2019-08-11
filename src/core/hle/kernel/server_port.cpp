@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/errors.h"
@@ -10,6 +11,8 @@
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/thread.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::ServerPort)
 
 namespace Kernel {
 

@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/assert.h"
-
+#include "common/archives.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -11,9 +11,11 @@
 #include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::ClientSession)
+
 namespace Kernel {
 
-ClientSession::ClientSession(KernelSystem& kernel) : Object(kernel) {}
+ClientSession::ClientSession() = default;
 ClientSession::~ClientSession() {
     // This destructor will be called automatically when the last ClientSession handle is closed by
     // the emulated application.

@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
@@ -72,3 +73,5 @@ private:
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::ClientPort)

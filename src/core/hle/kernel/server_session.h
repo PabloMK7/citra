@@ -6,10 +6,14 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/ipc.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -103,6 +107,21 @@ private:
 
     friend class KernelSystem;
     KernelSystem& kernel;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<Object>(*this);
+        ar & name;
+        ar & parent;
+        //ar & hle_handler;
+        ar & pending_requesting_threads;
+        ar & currently_handling;
+        //ar & mapped_buffer_context;
+    }
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::ServerSession)
