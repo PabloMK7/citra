@@ -12,3 +12,8 @@ template void A::serialize<oarchive>( \
     oarchive & ar, \
     const unsigned int file_version \
 );
+
+#define SERIALIZE_EXPORT_IMPL(A) \
+BOOST_SERIALIZATION_REGISTER_ARCHIVE(iarchive) \
+BOOST_SERIALIZATION_REGISTER_ARCHIVE(oarchive) \
+BOOST_CLASS_EXPORT_IMPLEMENT(A)

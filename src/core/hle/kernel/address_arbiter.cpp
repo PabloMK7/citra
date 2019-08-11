@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/address_arbiter.h"
@@ -13,6 +14,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
+
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
 
 namespace Kernel {
 
@@ -65,11 +68,12 @@ std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr addres
     return thread;
 }
 
-AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+AddressArbiter::AddressArbiter() : kernel(*g_kernel) {}
 AddressArbiter::~AddressArbiter() {}
 
 std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
-    auto address_arbiter{std::make_shared<AddressArbiter>(*this)};
+    auto address_arbiter{std::make_shared<AddressArbiter>()};
+    address_arbiter->Init(*this);
 
     address_arbiter->name = std::move(name);
 

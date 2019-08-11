@@ -6,6 +6,10 @@
 
 #include <memory>
 #include <vector>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/result.h"
@@ -32,7 +36,7 @@ enum class ArbitrationType : u32 {
 
 class AddressArbiter final : public Object {
 public:
-    explicit AddressArbiter(KernelSystem& kernel);
+    explicit AddressArbiter();
     ~AddressArbiter() override;
 
     std::string GetTypeName() const override {
@@ -67,6 +71,17 @@ private:
 
     /// Threads waiting for the address arbiter to be signaled.
     std::vector<std::shared_ptr<Thread>> waiting_threads;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & boost::serialization::base_object<Object>(*this);
+        ar & name;
+        ar & waiting_threads;
+    }
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::AddressArbiter)

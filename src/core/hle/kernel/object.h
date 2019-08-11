@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <boost/serialization/access.hpp>
+#include "common/serialization/atomic.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 
