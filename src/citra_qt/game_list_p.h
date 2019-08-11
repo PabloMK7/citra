@@ -76,7 +76,7 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
  */
 static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
     using GameRegion = Loader::SMDH::GameRegion;
-    static const std::map<GameRegion, QString> regions_map = {
+    static const std::map<GameRegion, const char*> regions_map = {
         {GameRegion::Japan, QT_TR_NOOP("Japan")},
         {GameRegion::NorthAmerica, QT_TR_NOOP("North America")},
         {GameRegion::Europe, QT_TR_NOOP("Europe")},
@@ -95,9 +95,9 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
         return QObject::tr("Region free");
     }
 
-    QString result = regions_map.at(regions.front());
+    QString result = QObject::tr(regions_map.at(regions.front()));
     for (auto region = ++regions.begin(); region != regions.end(); ++region) {
-        result += "\n" + regions_map.at(*region);
+        result += QStringLiteral("\n") + QObject::tr(regions_map.at(*region));
     }
     return result;
 }
