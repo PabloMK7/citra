@@ -27,7 +27,6 @@ void Apply() {
     VideoCore::g_hw_renderer_enabled = values.use_hw_renderer;
     VideoCore::g_shader_jit_enabled = values.use_shader_jit;
     VideoCore::g_hw_shader_enabled = values.use_hw_shader;
-    VideoCore::g_hw_shader_accurate_gs = values.shaders_accurate_gs;
     VideoCore::g_hw_shader_accurate_mul = values.shaders_accurate_mul;
 
     if (VideoCore::g_renderer) {
@@ -76,7 +75,6 @@ void LogSettings() {
     LogSetting("Renderer_UseGLES", Settings::values.use_gles);
     LogSetting("Renderer_UseHwRenderer", Settings::values.use_hw_renderer);
     LogSetting("Renderer_UseHwShader", Settings::values.use_hw_shader);
-    LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
     LogSetting("Renderer_UseShaderJit", Settings::values.use_shader_jit);
     LogSetting("Renderer_UseResolutionFactor", Settings::values.resolution_factor);

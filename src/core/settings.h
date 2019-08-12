@@ -141,7 +141,6 @@ struct Values {
     bool use_gles;
     bool use_hw_renderer;
     bool use_hw_shader;
-    bool shaders_accurate_gs;
     bool shaders_accurate_mul;
     bool use_shader_jit;
     u16 resolution_factor;

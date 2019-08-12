@@ -293,9 +293,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             // this, so this is left unimplemented for now. Revisit this when an issue is found in
             // games.
         } else {
-            if (VideoCore::g_hw_shader_accurate_gs) {
-                accelerate_draw = false;
-            }
+            accelerate_draw = false;
         }
 
         bool is_indexed = (id == PICA_REG_INDEX(pipeline.trigger_draw_indexed));
