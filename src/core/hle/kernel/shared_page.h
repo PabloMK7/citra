@@ -13,6 +13,7 @@
 #include <chrono>
 #include <ctime>
 #include <memory>
+#include <boost/serialization/binary_object.hpp>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -104,6 +105,14 @@ private:
     std::chrono::seconds init_time;
 
     SharedPageDef shared_page;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        auto o_shared_page = boost::serialization::binary_object(&shared_page, sizeof(shared_page));
+        ar & o_shared_page;
+    }
 };
 
 } // namespace SharedPage

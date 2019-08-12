@@ -11,13 +11,10 @@
 #include <string>
 #include <vector>
 #include <boost/container/static_vector.hpp>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/bitset.hpp>
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
-#include "common/serialization/boost_vector.hpp"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/vm_manager.h"
@@ -234,23 +231,6 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<Object>(*this);
-        ar & handle_table;
-        ar & codeset;
-        ar & resource_limit;
-        ar & svc_access_mask;
-        ar & handle_table_size;
-        ar & (boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<AddressMapping, 8> >&)address_mappings;
-        ar & flags.raw;
-        ar & kernel_version;
-        ar & ideal_processor;
-        ar & process_id;
-        ar & vm_manager;
-        ar & memory_used;
-        ar & memory_region;
-        ar & tls_slots;
-    }
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 } // namespace Kernel

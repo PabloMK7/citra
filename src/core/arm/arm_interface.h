@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
@@ -16,6 +17,48 @@ public:
     virtual ~ARM_Interface() {}
 
     class ThreadContext {
+        friend class boost::serialization::access;
+
+        template <class Archive>
+        void save(Archive& ar, const unsigned int file_version) const
+        {
+            for (auto i = 0; i < 16; i++) {
+                auto r = GetCpuRegister(i);
+                ar << r;
+            }
+            for (auto i = 0; i < 16; i++) {
+                auto r = GetFpuRegister(i);
+                ar << r;
+            }
+            auto r1 = GetCpsr();
+            ar << r1;
+            auto r2 = GetFpscr();
+            ar << r2;
+            auto r3 = GetFpexc();
+            ar << r3;
+        }
+
+        template <class Archive>
+        void load(Archive& ar, const unsigned int file_version)
+        {
+            u32 r;
+            for (auto i = 0; i < 16; i++) {
+                ar >> r;
+                SetCpuRegister(i, r);
+            }
+            for (auto i = 0; i < 16; i++) {
+                ar >> r;
+                SetFpuRegister(i, r);
+            }
+            ar >> r;
+            SetCpsr(r);
+            ar >> r;
+            SetFpscr(r);
+            ar >> r;
+            SetFpexc(r);
+        }
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
     public:
         virtual ~ThreadContext() = default;
 
@@ -143,7 +186,7 @@ public:
      * @param reg The CP15 register to retrieve the value from.
      * @return the value stored in the given CP15 register.
      */
-    virtual u32 GetCP15Register(CP15Register reg) = 0;
+    virtual u32 GetCP15Register(CP15Register reg) const = 0;
 
     /**
      * Stores the given value into the indicated CP15 register.
@@ -172,4 +215,61 @@ public:
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;
+
+private:
+    friend class boost::serialization::access;
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int file_version) const
+    {
+        for (auto i = 0; i < 15; i++) {
+            auto r = GetReg(i);
+            ar << r;
+        }
+        auto pc = GetPC();
+        ar << pc;
+        auto cpsr = GetCPSR();
+        ar << cpsr;
+        for (auto i = 0; i < 32; i++) {
+            auto r = GetVFPReg(i);
+            ar << r;
+        }
+        for (auto i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
+            auto r = GetVFPSystemReg(static_cast<VFPSystemRegister>(i));
+            ar << r;
+        }
+        for (auto i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
+            auto r = GetCP15Register(static_cast<CP15Register>(i));
+            ar << r;
+        }
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version)
+    {
+        u32 r;
+        for (auto i = 0; i < 15; i++) {
+            ar >> r;
+            SetReg(i, r);
+        }
+        ar >> r;
+        SetPC(r);
+        ar >> r;
+        SetCPSR(r);
+        for (auto i = 0; i < 32; i++) {
+            ar >> r;
+            SetVFPReg(i, r);
+        }
+        for (auto i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
+            ar >> r;
+            SetVFPSystemReg(static_cast<VFPSystemRegister>(i), r);
+        }
+        for (auto i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
+            ar >> r;
+            SetCP15Register(static_cast<CP15Register>(i), r);
+        }
+        // TODO: Clear caches etc?
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };

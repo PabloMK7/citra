@@ -9,6 +9,7 @@
 // bootrom. Because we're not emulating this, and essentially just "stubbing" the functionality, I'm
 // putting this as a subset of HLE for now.
 
+#include <boost/serialization/binary_object.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -56,6 +57,14 @@ public:
 
 private:
     ConfigMemDef config_mem;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        auto o_config_mem = boost::serialization::binary_object(&config_mem, sizeof(config_mem));
+        ar & o_config_mem;
+    }
 };
 
 } // namespace ConfigMem

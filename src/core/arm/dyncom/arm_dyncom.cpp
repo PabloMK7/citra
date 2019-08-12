@@ -138,7 +138,7 @@ void ARM_DynCom::SetCPSR(u32 cpsr) {
     state->Cpsr = cpsr;
 }
 
-u32 ARM_DynCom::GetCP15Register(CP15Register reg) {
+u32 ARM_DynCom::GetCP15Register(CP15Register reg) const {
     return state->CP15[reg];
 }
 

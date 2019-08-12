@@ -235,7 +235,7 @@ void ARM_Dynarmic::SetCPSR(u32 cpsr) {
     jit->SetCpsr(cpsr);
 }
 
-u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) {
+u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) const {
     return interpreter_state->CP15[reg];
 }
 

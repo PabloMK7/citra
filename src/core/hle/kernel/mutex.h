@@ -17,7 +17,7 @@ class Thread;
 
 class Mutex final : public WaitObject {
 public:
-    explicit Mutex(KernelSystem& kernel);
+    explicit Mutex();
     ~Mutex() override;
 
     std::string GetTypeName() const override {
@@ -68,7 +68,6 @@ private:
         ar & priority;
         ar & name;
         ar & holding_thread;
-        ar & kernel; // TODO: Check that this works!
     }
 };
 

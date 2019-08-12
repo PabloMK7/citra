@@ -109,17 +109,17 @@ template <class Archive>
 void KernelSystem::serialize(Archive& ar, const unsigned int file_version)
 {
     ar & named_ports;
-    // TODO: CPU
+    ar & *current_cpu.get();
     // NB: subsystem references and prepare_reschedule_callback are constant
     ar & *resource_limits.get();
     ar & next_object_id;
-    //ar & *timer_manager.get();
+    ar & *timer_manager.get();
     ar & next_process_id;
     ar & process_list;
     ar & current_process;
-    // ar & *thread_manager.get();
-    //ar & *config_mem_handler.get();
-    //ar & *shared_page_handler.get();
+    ar & *thread_manager.get();
+    ar & *config_mem_handler.get();
+    ar & *shared_page_handler.get();
 }
 
 SERIALIZE_IMPL(KernelSystem)

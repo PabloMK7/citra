@@ -6,10 +6,12 @@
 #include <list>
 #include <unordered_map>
 #include <vector>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
+#include "common/serialization/boost_flat_set.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
@@ -24,6 +26,30 @@
 #include "core/memory.h"
 
 namespace Kernel {
+
+template <class Archive>
+void Thread::serialize(Archive& ar, const unsigned int file_version)
+{
+    ar & *context.get();
+    ar & thread_id;
+    ar & status;
+    ar & entry_point;
+    ar & stack_top;
+    ar & nominal_priority;
+    ar & current_priority;
+    ar & last_running_ticks;
+    ar & processor_id;
+    ar & tls_address;
+    ar & held_mutexes;
+    ar & pending_mutexes;
+    ar & owner_process;
+    ar & wait_objects;
+    ar & wait_address;
+    ar & name;
+    // TODO: How the hell to do wakeup_callback
+}
+
+SERIALIZE_IMPL(Thread)
 
 bool Thread::ShouldWait(const Thread* thread) const {
     return status != ThreadStatus::Dead;

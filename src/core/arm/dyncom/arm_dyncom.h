@@ -41,7 +41,7 @@ public:
     void SetVFPSystemReg(VFPSystemRegister reg, u32 value) override;
     u32 GetCPSR() const override;
     void SetCPSR(u32 cpsr) override;
-    u32 GetCP15Register(CP15Register reg) override;
+    u32 GetCP15Register(CP15Register reg) const override;
     void SetCP15Register(CP15Register reg, u32 value) override;
 
     std::unique_ptr<ThreadContext> NewContext() const override;

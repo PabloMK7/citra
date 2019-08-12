@@ -6,6 +6,9 @@
 
 #include <array>
 #include <deque>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/split_member.hpp>
+#include "common/common_types.h"
 
 namespace Common {
 
@@ -156,6 +159,34 @@ private:
     Queue* first;
     // The priority level queues of thread ids.
     std::array<Queue, NUM_QUEUES> queues;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void save(Archive& ar, const unsigned int file_version) const
+    {
+        s32 idx = first == UnlinkedTag() ? -1 : static_cast<s32>(first - &queues[0]);
+        ar << idx;
+        for (auto i = 0; i < NUM_QUEUES; i++) {
+            s32 idx1 = first == UnlinkedTag() ? -1 : static_cast<s32>(queues[i].next_nonempty - &queues[0]);
+            ar << idx1;
+            ar << queues[i].data;
+        }
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version)
+    {
+        s32 idx;
+        ar >> idx;
+        first = idx < 0 ? UnlinkedTag() : &queues[idx];
+        for (auto i = 0; i < NUM_QUEUES; i++) {
+            ar >> idx;
+            queues[i].next_nonempty = idx < 0 ? UnlinkedTag() : &queues[idx];
+            ar >> queues[i].data;
+        }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 } // namespace Common

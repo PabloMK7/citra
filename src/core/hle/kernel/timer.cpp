@@ -14,15 +14,15 @@
 
 namespace Kernel {
 
-Timer::Timer(KernelSystem& kernel)
-    : WaitObject(kernel), kernel(kernel), timer_manager(kernel.GetTimerManager()) {}
+Timer::Timer() : kernel(*g_kernel), timer_manager(g_kernel->GetTimerManager()) {}
 Timer::~Timer() {
     Cancel();
     timer_manager.timer_callback_table.erase(callback_id);
 }
 
 std::shared_ptr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
-    auto timer{std::make_shared<Timer>(*this)};
+    auto timer{std::make_shared<Timer>()};
+    timer->Init(*this);
 
     timer->reset_type = reset_type;
     timer->signaled = false;

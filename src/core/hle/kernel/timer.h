@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <boost/serialization/unordered_map.hpp>
 #include "common/common_types.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
@@ -33,11 +34,19 @@ private:
 
     friend class Timer;
     friend class KernelSystem;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & next_timer_callback_id;
+        ar & timer_callback_table;
+    }
 };
 
 class Timer final : public WaitObject {
 public:
-    explicit Timer(KernelSystem& kernel);
+    explicit Timer();
     ~Timer() override;
 
     std::string GetTypeName() const override {
@@ -103,6 +112,18 @@ private:
     TimerManager& timer_manager;
 
     friend class KernelSystem;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & reset_type;
+        ar & initial_delay;
+        ar & interval_delay;
+        ar & signaled;
+        ar & name;
+        ar & callback_id;
+    }
 };
 
 } // namespace Kernel
