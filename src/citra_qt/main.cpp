@@ -15,6 +15,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <fmt/format.h>
+#include <unistd.h>
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/applets/mii_selector.h"
 #include "citra_qt/applets/swkbd.h"
@@ -1888,6 +1889,11 @@ int main(int argc, char* argv[]) {
     // Init settings params
     QCoreApplication::setOrganizationName("Citra team");
     QCoreApplication::setApplicationName("Citra");
+
+#ifdef __APPLE__
+    std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
+    chdir(bin_path.c_str());
+#endif
 
     QApplication app(argc, argv);
 
