@@ -187,6 +187,7 @@ struct Values {
     std::array<int, Service::CAM::NumCameras> camera_flip;
 
     // Debugging
+    bool record_frame_times;
     bool use_gdbstub;
     u16 gdbstub_port;
     std::string log_filter;

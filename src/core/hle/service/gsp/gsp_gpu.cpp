@@ -307,7 +307,7 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
 
     if (screen_id == 0) {
         MicroProfileFlip();
-        Core::System::GetInstance().perf_stats.EndGameFrame();
+        Core::System::GetInstance().perf_stats->EndGameFrame();
     }
 
     return RESULT_SUCCESS;

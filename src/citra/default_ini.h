@@ -261,6 +261,8 @@ camera_inner_flip =
 log_filter = *:Info
 
 [Debugging]
+# Record frame time data, can be found in the log directory
+record_frame_times =
 # Port for listening to GDB connections.
 use_gdbstub=false
 gdbstub_port=24689
