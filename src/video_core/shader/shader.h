@@ -201,7 +201,7 @@ private:
         ar & registers;
         ar & conditional_code;
         ar & address_registers;
-        // TODO: emitter_ptr
+        // emitter_ptr is only set by GSUnitState and is serialized there
     }
 };
 

@@ -225,7 +225,7 @@ private:
         ar & cmd_list.addr;
         ar & cmd_list.length;
         ar & immediate;
-        // ar & gs_unit;
+        ar & gs_unit;
         // ar & geometry_pipeline;
         // ar & primitive_assembler;
         ar & vs_float_regs_counter;

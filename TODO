@@ -1,0 +1,80 @@
+☐ Save/load UI
+✔ CPU @done(19-08-13 15:41)
+✔ Memory @done(19-08-13 15:41)
+✔ DSP @done(19-08-13 15:41)
+☐ MMIO
+☐ Movie
+☐ Perf stats
+☐ Settings
+☐ Telemetry session
+✔ HW @done(19-08-13 15:41)
+    ✔ GPU regs @done(19-08-13 15:41)
+    ✔ LCD regs @done(19-08-13 15:41)
+☐ Video core @started(19-08-13 16:43)
+    ☐ Geometry pipeline
+    ✔ PICA state @done(19-08-13 15:41)
+    ☐ Primitive assembly
+    ✔ Shader @done(19-08-13 16:03)
+☐ HLE @started(19-08-13 16:43)
+    ☐ Kernel @started(19-08-13 16:43)
+        ✔ Address arbiter @done(19-08-13 16:40)
+        ✔ Client port @done(19-08-13 16:40)
+        ✔ Client session @done(19-08-13 16:40)
+        ✔ Config mem @done(19-08-13 16:40)
+        ☐ Event
+        ✔ Handle table @done(19-08-13 16:42)
+        ☐ HLE IPC
+        ☐ IPC
+        ☐ Memory @started(19-08-13 16:43)
+        ☐ Mutex @started(19-08-13 16:43)
+        ✔ Object @done(19-08-13 15:41)
+        ☐ Process @started(19-08-13 16:43)
+        ✔ Resource limit @done(19-08-13 16:43)
+        ☐ Semaphore @started(19-08-13 16:44)
+        ✔ Server port @done(19-08-13 16:44)
+        ✔ Server session @done(19-08-13 16:44)
+        ✔ Session @done(19-08-13 16:44)
+        ☐ Shared memory
+        ☐ Shared page @started(19-08-13 16:44)
+        ☐ SVC
+        ☐ Thread @started(19-08-13 16:45)
+        ✔ Timer @done(19-08-13 16:45)
+        ☐ VM Manager @started(19-08-13 16:46)
+        ✔ Wait object @done(19-08-13 16:46)
+    ☐ Service
+        ☐ AC
+        ☐ ACT
+        ☐ AM
+        ☐ APT
+        ☐ BOSS
+        ☐ CAM
+        ☐ CECD
+        ☐ CGF
+        ☐ CSND
+        ☐ DLP
+        ☐ DSP
+        ☐ ERR
+        ☐ FRD
+        ☐ FS
+        ☐ GSP
+        ☐ HID
+        ☐ HTTP
+        ☐ IR
+        ☐ LDR_RO
+        ☐ MIC
+        ☐ MVD
+        ☐ NDM
+        ☐ NEWS
+        ☐ NFC
+        ☐ NIM
+        ☐ NS
+        ☐ NWM
+        ☐ PM
+        ☐ PS
+        ☐ PTM
+        ☐ PXI
+        ☐ QTM
+        ☐ SM
+        ☐ SOC
+        ☐ SSL
+        ☐ Y2R
