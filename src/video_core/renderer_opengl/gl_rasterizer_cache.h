@@ -385,7 +385,7 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     bool LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_info,
                            Common::Rectangle<u32>& custom_rect);
     std::optional<std::string> GetDumpPath(u64 tex_hash);
-    void DumpTexture(GLuint target_tex, const std::string& dump_path);
+    void DumpTexture(GLuint target_tex, u64 tex_hash);
 
     // Upload/Download data in gl_buffer in/to this surface's texture
     void UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,

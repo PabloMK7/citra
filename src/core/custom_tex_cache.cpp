@@ -2,10 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <stdexcept>
-#include <vector>
-#include "common/common_types.h"
-#include "custom_tex_cache.h"
+#include "core/custom_tex_cache.h"
 
 namespace Core {
 CustomTexCache::CustomTexCache() = default;
@@ -13,18 +10,18 @@ CustomTexCache::CustomTexCache() = default;
 CustomTexCache::~CustomTexCache() = default;
 
 bool CustomTexCache::IsTextureDumped(u64 hash) const {
-    return dumped_textures.find(hash) != dumped_textures.end();
+    return dumped_textures.count(hash);
 }
 
 void CustomTexCache::SetTextureDumped(const u64 hash) {
-    dumped_textures[hash] = true;
+    dumped_textures.insert(hash);
 }
 
 bool CustomTexCache::IsTextureCached(u64 hash) const {
-    return custom_textures.find(hash) != custom_textures.end();
+    return custom_textures.count(hash);
 }
 
-const CustomTexInfo& CustomTexCache::LookupTexture(u64 hash) {
+const CustomTexInfo& CustomTexCache::LookupTexture(u64 hash) const {
     return custom_textures.at(hash);
 }
 

@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 #include "common/common_types.h"
-#include "common/logging/log.h"
 
 namespace Frontend {
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "common/common_types.h"
 
@@ -25,11 +26,11 @@ public:
     void SetTextureDumped(u64 hash);
 
     bool IsTextureCached(u64 hash) const;
-    const CustomTexInfo& LookupTexture(const u64 hash);
+    const CustomTexInfo& LookupTexture(u64 hash) const;
     void CacheTexture(u64 hash, const std::vector<u8>& tex, u32 width, u32 height);
 
 private:
-    std::unordered_map<u64, bool> dumped_textures;
+    std::unordered_set<u64> dumped_textures;
     std::unordered_map<u64, CustomTexInfo> custom_textures;
 };
 } // namespace Core

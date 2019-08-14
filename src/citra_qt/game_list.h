@@ -29,7 +29,14 @@ class QTreeView;
 class QToolButton;
 class QVBoxLayout;
 
-enum class GameListOpenTarget { SAVE_DATA = 0, EXT_DATA = 1, APPLICATION = 2, UPDATE_DATA = 3 };
+enum class GameListOpenTarget {
+    SAVE_DATA = 0,
+    EXT_DATA = 1,
+    APPLICATION = 2,
+    UPDATE_DATA = 3,
+    TEXTURE_DUMP = 4,
+    TEXTURE_LOAD = 5
+};
 
 class GameList : public QWidget {
     Q_OBJECT

@@ -866,7 +866,10 @@ bool CachedSurface::LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_inf
                     Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id,
                     width, height, tex_hash, static_cast<u32>(pixel_format));
 
-    if (!custom_tex_cache.IsTextureCached(tex_hash)) {
+    if (custom_tex_cache.IsTextureCached(tex_hash)) {
+        tex_info = custom_tex_cache.LookupTexture(tex_hash);
+        result = true;
+    } else {
         if (FileUtil::Exists(load_path)) {
             if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
                                            load_path)) {
@@ -879,9 +882,6 @@ bool CachedSurface::LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_inf
                 LOG_CRITICAL(Render_OpenGL, "Failed to load custom texture");
             }
         }
-    } else {
-        tex_info = custom_tex_cache.LookupTexture(tex_hash);
-        result = true;
     }
 
     if (result) {
@@ -915,9 +915,23 @@ std::optional<std::string> CachedSurface::GetDumpPath(u64 tex_hash) {
     return {};
 }
 
-void CachedSurface::DumpTexture(GLuint target_tex, const std::string& dump_path) {
+void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
     // Dump texture to RGBA8 and encode as PNG
     const auto& image_interface = Core::System::GetInstance().GetImageInterface();
+    auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
+    std::string dump_path =
+        fmt::format("{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
+                    Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
+    if (!FileUtil::CreateFullPath(dump_path)) {
+        LOG_ERROR(Render, "Unable to create {}", dump_path);
+        return;
+    }
+
+    dump_path += fmt::format("tex1_{}x{}_{:016X}_{}.png", width, height, tex_hash,
+                             static_cast<u32>(pixel_format));
+    if (!custom_tex_cache.IsTextureDumped(tex_hash) && !FileUtil::Exists(dump_path))
+        custom_tex_cache.SetTextureDumped(tex_hash);
+
     LOG_INFO(Render_OpenGL, "Dumping texture to {}", dump_path);
     std::vector<u8> decoded_texture;
     decoded_texture.resize(width * height * 4);
@@ -930,7 +944,7 @@ void CachedSurface::DumpTexture(GLuint target_tex, const std::string& dump_path)
     glBindTexture(GL_TEXTURE_2D, 0);
     Common::FlipRGBA8Texture(decoded_texture, width, height);
     if (!image_interface->EncodePNG(dump_path, decoded_texture, width, height))
-        LOG_CRITICAL(Render_OpenGL, "Failed to save decoded texture");
+        LOG_ERROR(Render_OpenGL, "Failed to save decoded texture");
 }
 
 MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 192, 64));
@@ -945,26 +959,17 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
 
     // Read custom texture
     auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
-    bool dump_tex = false;
     bool use_custom_tex = false;
     std::string dump_path; // Has to be declared here for logging later
     u64 tex_hash = 0;
-    Common::Rectangle custom_rect =
-        rect; // Required for rect to function properly with custom textures
+    // Required for rect to function properly with custom textures
+    Common::Rectangle custom_rect = rect;
 
     if (Settings::values.dump_textures || Settings::values.custom_textures)
         tex_hash = Common::ComputeHash64(gl_buffer.get(), gl_buffer_size);
 
     if (Settings::values.custom_textures)
         is_custom = use_custom_tex = LoadCustomTexture(tex_hash, custom_tex_info, custom_rect);
-
-    if (Settings::values.dump_textures && !use_custom_tex) {
-        auto temp_dump_path = GetDumpPath(tex_hash);
-        if (temp_dump_path.has_value()) {
-            dump_path = *temp_dump_path;
-            dump_tex = true;
-        }
-    }
 
     // Load data from memory to the surface
     GLint x0 = static_cast<GLint>(custom_rect.left);
@@ -982,7 +987,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
         y0 = 0;
 
         unscaled_tex.Create();
-        if (use_custom_tex) {
+        if (is_custom) {
             AllocateSurfaceTexture(unscaled_tex.handle, GetFormatTuple(PixelFormat::RGBA8),
                                    custom_tex_info.width, custom_tex_info.height);
         } else {
@@ -1000,7 +1005,7 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
 
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT
     ASSERT(stride * GetGLBytesPerPixel(pixel_format) % 4 == 0);
-    if (use_custom_tex) {
+    if (is_custom) {
         if (res_scale == 1) {
             AllocateSurfaceTexture(texture.handle, GetFormatTuple(PixelFormat::RGBA8),
                                    custom_tex_info.width, custom_tex_info.height);
@@ -1023,8 +1028,8 @@ void CachedSurface::UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint r
     }
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    if (dump_tex)
-        DumpTexture(target_tex, dump_path);
+    if (Settings::values.dump_textures)
+        DumpTexture(target_tex, tex_hash);
 
     cur_state.texture_units[0].texture_2d = old_tex;
     cur_state.Apply();

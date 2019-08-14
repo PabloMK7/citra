@@ -4,9 +4,9 @@
 
 #include <lodepng.h>
 #include "common/logging/log.h"
-#include "generic_image_interface.h"
+#include "lodepng_image_interface.h"
 
-bool GenericImageInterface::DecodePNG(std::vector<u8>& dst, u32& width, u32& height,
+bool LodePNGImageInterface::DecodePNG(std::vector<u8>& dst, u32& width, u32& height,
                                       const std::string& path) {
     u32 lodepng_ret = lodepng::decode(dst, width, height, path);
     if (lodepng_ret) {
@@ -17,7 +17,7 @@ bool GenericImageInterface::DecodePNG(std::vector<u8>& dst, u32& width, u32& hei
     return true;
 }
 
-bool GenericImageInterface::EncodePNG(const std::string& path, const std::vector<u8>& src,
+bool LodePNGImageInterface::EncodePNG(const std::string& path, const std::vector<u8>& src,
                                       u32 width, u32 height) {
     u32 lodepng_ret = lodepng::encode(path, src, width, height);
     if (lodepng_ret) {

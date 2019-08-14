@@ -140,7 +140,7 @@
    <header>configuration/configure_graphics.h</header>
    <container>1</container>
   </customwidget>
-    <customwidget>
+  <customwidget>
    <class>ConfigureEnhancements</class>
    <extends>QWidget</extends>
    <header>configuration/configure_enhancements.h</header>

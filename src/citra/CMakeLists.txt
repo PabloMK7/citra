@@ -8,8 +8,8 @@ add_executable(citra
     default_ini.h
     emu_window/emu_window_sdl2.cpp
     emu_window/emu_window_sdl2.h
-    generic_image_interface.cpp
-    generic_image_interface.h
+    lodepng_image_interface.cpp
+    lodepng_image_interface.h
     resource.h
 )
 
