@@ -326,13 +326,19 @@ Loader::ResultStatus NCCHContainer::Load() {
             };
 
             FileUtil::IOFile exheader_override_file{filepath + ".exheader", "rb"};
-            if (read_exheader(exheader_override_file)) {
+            const bool has_exheader_override = read_exheader(exheader_override_file);
+            if (has_exheader_override) {
+                if (exheader_header.system_info.jump_id !=
+                    exheader_header.arm11_system_local_caps.program_id) {
+                    LOG_WARNING(Service_FS, "Jump ID and Program ID don't match. "
+                                            "The override exheader might not be decrypted.");
+                }
                 is_tainted = true;
             } else if (!read_exheader(file)) {
                 return Loader::ResultStatus::Error;
             }
 
-            if (is_encrypted) {
+            if (!has_exheader_override && is_encrypted) {
                 // This ID check is masked to low 32-bit as a toleration to ill-formed ROM created
                 // by merging games and its updates.
                 if ((exheader_header.system_info.jump_id & 0xFFFFFFFF) ==
