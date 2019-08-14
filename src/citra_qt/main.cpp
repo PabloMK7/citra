@@ -59,6 +59,7 @@
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "core/core.h"
+#include "core/dumping/backend.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
@@ -69,6 +70,8 @@
 #include "core/movie.h"
 #include "core/settings.h"
 #include "game_list_p.h"
+#include "video_core/renderer_base.h"
+#include "video_core/video_core.h"
 
 #ifdef USE_DISCORD_PRESENCE
 #include "citra_qt/discord_impl.h"
@@ -603,6 +606,17 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Capture_Screenshot, &QAction::triggered, this,
             &GMainWindow::OnCaptureScreenshot);
 
+#ifndef ENABLE_FFMPEG
+    ui.action_Dump_Video->setEnabled(false);
+#endif
+    connect(ui.action_Dump_Video, &QAction::triggered, [this] {
+        if (ui.action_Dump_Video->isChecked()) {
+            OnStartVideoDumping();
+        } else {
+            OnStopVideoDumping();
+        }
+    });
+
     // Help
     connect(ui.action_Open_Citra_Folder, &QAction::triggered, this,
             &GMainWindow::OnOpenCitraFolder);
@@ -864,10 +878,25 @@ void GMainWindow::BootGame(const QString& filename) {
     if (ui.action_Fullscreen->isChecked()) {
         ShowFullscreen();
     }
+
+    if (video_dumping_on_start) {
+        Layout::FramebufferLayout layout{
+            Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
+        Core::System::GetInstance().VideoDumper().StartDumping(video_dumping_path.toStdString(),
+                                                               "webm", layout);
+        video_dumping_on_start = false;
+        video_dumping_path.clear();
+    }
     OnStartGame();
 }
 
 void GMainWindow::ShutdownGame() {
+    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
+        game_shutdown_delayed = true;
+        OnStopVideoDumping();
+        return;
+    }
+
     discord_rpc->Pause();
     OnStopRecordingPlayback();
     emu_thread->RequestStop();
@@ -1595,6 +1624,51 @@ void GMainWindow::OnCaptureScreenshot() {
         }
     }
     OnStartGame();
+}
+
+void GMainWindow::OnStartVideoDumping() {
+    const QString path = QFileDialog::getSaveFileName(
+        this, tr("Save Video"), UISettings::values.video_dumping_path, tr("WebM Videos (*.webm)"));
+    if (path.isEmpty()) {
+        ui.action_Dump_Video->setChecked(false);
+        return;
+    }
+    UISettings::values.video_dumping_path = QFileInfo(path).path();
+    if (emulation_running) {
+        Layout::FramebufferLayout layout{
+            Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
+        Core::System::GetInstance().VideoDumper().StartDumping(path.toStdString(), "webm", layout);
+    } else {
+        video_dumping_on_start = true;
+        video_dumping_path = path;
+    }
+}
+
+void GMainWindow::OnStopVideoDumping() {
+    ui.action_Dump_Video->setChecked(false);
+
+    if (video_dumping_on_start) {
+        video_dumping_on_start = false;
+        video_dumping_path.clear();
+    } else {
+        const bool was_dumping = Core::System::GetInstance().VideoDumper().IsDumping();
+        if (!was_dumping)
+            return;
+        OnPauseGame();
+
+        auto future =
+            QtConcurrent::run([] { Core::System::GetInstance().VideoDumper().StopDumping(); });
+        auto* future_watcher = new QFutureWatcher<void>(this);
+        connect(future_watcher, &QFutureWatcher<void>::finished, this, [this] {
+            if (game_shutdown_delayed) {
+                game_shutdown_delayed = false;
+                ShutdownGame();
+            } else {
+                OnStartGame();
+            }
+        });
+        future_watcher->setFuture(future);
+    }
 }
 
 void GMainWindow::UpdateStatusBar() {

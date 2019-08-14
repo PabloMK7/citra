@@ -158,6 +158,7 @@
     <addaction name="menu_Frame_Advance"/>
     <addaction name="separator"/>
     <addaction name="action_Capture_Screenshot"/>
+    <addaction name="action_Dump_Video"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -334,6 +335,14 @@
    </property>
    <property name="text">
     <string>Capture Screenshot</string>
+   </property>
+  </action>
+  <action name="action_Dump_Video">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dump Video</string>
    </property>
   </action>
   <action name="action_View_Lobby">

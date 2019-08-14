@@ -38,7 +38,7 @@ matrix:
       after_success: "./.travis/macos/upload.sh"
       cache: ccache
     - os: linux
-      env: NAME="linux build (frozen versions of dependencies)"
+      env: NAME="linux build (debug, frozen versions of dependencies, no additional CMake flags)"
       sudo: required
       dist: trusty
       services: docker
