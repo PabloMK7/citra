@@ -19,7 +19,7 @@ struct CustomTexInfo {
 // TODO: think of a better name for this class...
 class CustomTexCache {
 public:
-    CustomTexCache();
+    explicit CustomTexCache();
     ~CustomTexCache();
 
     bool IsTextureDumped(u64 hash) const;

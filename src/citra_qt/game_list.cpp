@@ -508,14 +508,16 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
     connect(open_texture_dump_location, &QAction::triggered, [this, program_id] {
         if (FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
                                                  FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
-                                                 program_id)))
+                                                 program_id))) {
             emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_DUMP);
+        }
     });
     connect(open_texture_load_location, &QAction::triggered, [this, program_id] {
         if (FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
                                                  FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                                                 program_id)))
+                                                 program_id))) {
             emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_LOAD);
+        }
     });
     connect(navigate_to_gamedb_entry, &QAction::triggered, [this, program_id]() {
         emit NavigateToGamedbEntryRequested(program_id, compatibility_list);
