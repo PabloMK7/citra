@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/configuration/configure_web.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "core/settings.h"
 #include "core/telemetry_session.h"
 #include "ui_configure_web.h"

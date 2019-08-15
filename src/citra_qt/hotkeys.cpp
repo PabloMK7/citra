@@ -6,7 +6,7 @@
 #include <QShortcut>
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 
 HotkeyRegistry::HotkeyRegistry() = default;
 HotkeyRegistry::~HotkeyRegistry() = default;

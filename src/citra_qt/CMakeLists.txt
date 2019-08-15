@@ -1,5 +1,6 @@
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 if (POLICY CMP0071)
@@ -10,6 +11,7 @@ add_executable(citra-qt
     Info.plist
     aboutdialog.cpp
     aboutdialog.h
+    aboutdialog.ui
     applets/mii_selector.cpp
     applets/mii_selector.h
     applets/swkbd.cpp
@@ -28,33 +30,49 @@ add_executable(citra-qt
     camera/qt_multimedia_camera.h
     cheats.cpp
     cheats.h
+    cheats.ui
     citra-qt.rc
+    compatdb.cpp
+    compatdb.h
+    compatdb.ui
     configuration/config.cpp
     configuration/config.h
+    configuration/configure.ui
     configuration/configure_audio.cpp
     configuration/configure_audio.h
+    configuration/configure_audio.ui
     configuration/configure_camera.cpp
     configuration/configure_camera.h
+    configuration/configure_camera.ui
     configuration/configure_debug.cpp
     configuration/configure_debug.h
+    configuration/configure_debug.ui
     configuration/configure_dialog.cpp
     configuration/configure_dialog.h
     configuration/configure_general.cpp
     configuration/configure_general.h
+    configuration/configure_general.ui
     configuration/configure_graphics.cpp
     configuration/configure_graphics.h
+    configuration/configure_graphics.ui
     configuration/configure_hotkeys.cpp
     configuration/configure_hotkeys.h
+    configuration/configure_hotkeys.ui
     configuration/configure_input.cpp
     configuration/configure_input.h
+    configuration/configure_input.ui
     configuration/configure_motion_touch.cpp
     configuration/configure_motion_touch.h
+    configuration/configure_motion_touch.ui
     configuration/configure_system.cpp
     configuration/configure_system.h
+    configuration/configure_system.ui
     configuration/configure_ui.cpp
     configuration/configure_ui.h
+    configuration/configure_ui.ui
     configuration/configure_web.cpp
     configuration/configure_web.h
+    configuration/configure_web.ui
     debugger/console.h
     debugger/console.cpp
     debugger/graphics/graphics.cpp
@@ -78,6 +96,7 @@ add_executable(citra-qt
     debugger/profiler.h
     debugger/registers.cpp
     debugger/registers.h
+    debugger/registers.ui
     debugger/wait_tree.cpp
     debugger/wait_tree.h
     discord.h
@@ -90,26 +109,33 @@ add_executable(citra-qt
     hotkeys.h
     main.cpp
     main.h
-    multiplayer/chat_room.h
+    main.ui
     multiplayer/chat_room.cpp
+    multiplayer/chat_room.h
+    multiplayer/chat_room.ui
     multiplayer/client_room.h
     multiplayer/client_room.cpp
-    multiplayer/direct_connect.h
+    multiplayer/client_room.ui
     multiplayer/direct_connect.cpp
-    multiplayer/host_room.h
+    multiplayer/direct_connect.h
+    multiplayer/direct_connect.ui
     multiplayer/host_room.cpp
-    multiplayer/lobby.h
-    multiplayer/lobby_p.h
+    multiplayer/host_room.h
+    multiplayer/host_room.ui
     multiplayer/lobby.cpp
-    multiplayer/message.h
+    multiplayer/lobby.h
+    multiplayer/lobby.ui
+    multiplayer/lobby_p.h
     multiplayer/message.cpp
+    multiplayer/message.h
     multiplayer/moderation_dialog.cpp
     multiplayer/moderation_dialog.h
+    multiplayer/moderation_dialog.ui
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
-    ui_settings.cpp
-    ui_settings.h
+    uisettings.cpp
+    uisettings.h
     updater/updater.cpp
     updater/updater.h
     updater/updater_p.h
@@ -121,34 +147,6 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
-    compatdb.cpp
-    compatdb.h
-)
-
-set(UIS
-    configuration/configure.ui
-    configuration/configure_audio.ui
-    configuration/configure_camera.ui
-    configuration/configure_debug.ui
-    configuration/configure_general.ui
-    configuration/configure_graphics.ui
-    configuration/configure_hotkeys.ui
-    configuration/configure_input.ui
-    configuration/configure_motion_touch.ui
-    configuration/configure_system.ui
-    configuration/configure_ui.ui
-    configuration/configure_web.ui
-    debugger/registers.ui
-    multiplayer/direct_connect.ui
-    multiplayer/lobby.ui
-    multiplayer/chat_room.ui
-    multiplayer/client_room.ui
-    multiplayer/host_room.ui
-    multiplayer/moderation_dialog.ui
-    aboutdialog.ui
-    cheats.ui
-    main.ui
-    compatdb.ui
 )
 
 file(GLOB COMPAT_LIST
@@ -156,8 +154,6 @@ file(GLOB COMPAT_LIST
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.json)
 file(GLOB_RECURSE ICONS ${PROJECT_SOURCE_DIR}/dist/icons/*)
 file(GLOB_RECURSE THEMES ${PROJECT_SOURCE_DIR}/dist/qt_themes/*)
-
-qt5_wrap_ui(UI_HDRS ${UIS})
 
 if (ENABLE_QT_TRANSLATION)
     set(CITRA_QT_LANGUAGES "${PROJECT_SOURCE_DIR}/dist/languages" CACHE PATH "Path to the translation bundle for the Qt frontend")
@@ -197,8 +193,6 @@ target_sources(citra-qt
         ${COMPAT_LIST}
         ${ICONS}
         ${THEMES}
-        ${UI_HDRS}
-        ${UIS}
         ${LANGUAGES}
 )
 

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <QMessageBox>
 #include "citra_qt/configuration/configure_system.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/ptm/ptm.h"

@@ -11,7 +11,7 @@
 #include <QFileInfo>
 #include <QTimer>
 #include <QXmlStreamReader>
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/updater/updater_p.h"
 #include "common/logging/log.h"
