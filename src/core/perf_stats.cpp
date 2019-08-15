@@ -21,22 +21,23 @@ using std::chrono::microseconds;
 
 // Purposefully ignore the first five frames, as there's a significant amount of overhead in
 // booting that we shouldn't account for
-constexpr size_t IGNORE_FRAMES = 5;
+constexpr std::size_t IgnoreFrames = 5;
 
 namespace Core {
 
 PerfStats::PerfStats(u64 title_id) : title_id(title_id) {}
 
 PerfStats::~PerfStats() {
-    if (Settings::values.record_frame_times && title_id != 0) {
-        std::ostringstream stream;
-        std::copy(perf_history.begin() + IGNORE_FRAMES, perf_history.begin() + current_index,
-                  std::ostream_iterator<double>(stream, "\n"));
-        std::string path = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
-        std::string filename = fmt::format("{}/{:X}.csv", path, title_id);
-        FileUtil::IOFile file(filename, "w");
-        file.WriteString(stream.str());
+    if (!Settings::values.record_frame_times || title_id == 0) {
+        return;
     }
+    std::ostringstream stream;
+    std::copy(perf_history.begin() + IgnoreFrames, perf_history.begin() + current_index,
+              std::ostream_iterator<double>(stream, "\n"));
+    std::string path = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
+    std::string filename = fmt::format("{}/{:X}.csv", path, title_id);
+    FileUtil::IOFile file(filename, "w");
+    file.WriteString(stream.str());
 }
 
 void PerfStats::BeginSystemFrame() {
@@ -68,12 +69,12 @@ void PerfStats::EndGameFrame() {
 }
 
 double PerfStats::GetMeanFrametime() {
-    if (current_index < 2) {
+    if (current_index <= IgnoreFrames) {
         return 0;
     }
-    double sum = std::accumulate(perf_history.begin() + IGNORE_FRAMES,
+    double sum = std::accumulate(perf_history.begin() + IgnoreFrames,
                                  perf_history.begin() + current_index, 0);
-    return sum / (current_index - 1 - IGNORE_FRAMES);
+    return sum / (current_index - IgnoreFrames);
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {

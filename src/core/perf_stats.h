@@ -59,7 +59,7 @@ private:
     /// Title ID for the game that is running. 0 if there is no game running yet
     u64 title_id{0};
     /// Current index for writing to the perf_history array
-    size_t current_index{0};
+    std::size_t current_index{0};
     /// Stores an hour of historical frametime data useful for processing and tracking performance
     /// regressions with code changes.
     std::array<double, 216000> perf_history = {};
