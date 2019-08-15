@@ -12,7 +12,6 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/romfs.h"
-#include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_a.h"

@@ -10,7 +10,7 @@
 
 namespace Service::NS {
 
-Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id) {
+std::shared_ptr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id) {
     std::string path = AM::GetTitleContentPath(media_type, title_id);
     auto loader = Loader::GetLoader(path);
 
@@ -19,7 +19,7 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 tit
         return nullptr;
     }
 
-    Kernel::SharedPtr<Kernel::Process> process;
+    std::shared_ptr<Kernel::Process> process;
     Loader::ResultStatus result = loader->Load(process);
 
     if (result != Loader::ResultStatus::Success) {
