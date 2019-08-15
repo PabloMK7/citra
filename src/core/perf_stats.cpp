@@ -9,6 +9,7 @@
 #include <numeric>
 #include <thread>
 #include <fmt/format.h>
+#include <fmt/time.h>
 #include "common/file_util.h"
 #include "core/hw/gpu.h"
 #include "core/perf_stats.h"
@@ -31,11 +32,15 @@ PerfStats::~PerfStats() {
     if (!Settings::values.record_frame_times || title_id == 0) {
         return;
     }
+
+    std::time_t t = std::time(nullptr);
     std::ostringstream stream;
     std::copy(perf_history.begin() + IgnoreFrames, perf_history.begin() + current_index,
               std::ostream_iterator<double>(stream, "\n"));
     std::string path = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
-    std::string filename = fmt::format("{}/{:X}.csv", path, title_id);
+    // %F Date format expanded is "%Y-%m-%d"
+    std::string filename =
+        fmt::format("{}/{:%F-%H-%M}_{:016X}.csv", path, *std::localtime(&t), title_id);
     FileUtil::IOFile file(filename, "w");
     file.WriteString(stream.str());
 }
