@@ -99,7 +99,7 @@ TelemetrySession::~TelemetrySession() {
                                 std::chrono::system_clock::now().time_since_epoch())
                                 .count()};
     AddField(Telemetry::FieldType::Session, "Shutdown_Time", shutdown_time);
-    AddField(Telemetry::FieldType::Session, "Mean_Frametime_MS",
+    AddField(Telemetry::FieldType::Performance, "Mean_Frametime_MS",
              Core::System::GetInstance().perf_stats->GetMeanFrametime());
 
 #ifdef ENABLE_WEB_SERVICE
