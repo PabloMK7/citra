@@ -99,9 +99,6 @@ void ConfigureEnhancements::ApplyConfiguration() {
     Settings::values.swap_screen = ui->swap_screen->isChecked();
     Settings::values.dump_textures = ui->toggle_dump_textures->isChecked();
     Settings::values.custom_textures = ui->toggle_custom_textures->isChecked();
-    auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
-    if (Settings::values.custom_textures && custom_tex_cache.IsTexturePathMapEmpty())
-        custom_tex_cache.FindCustomTextures();
     Settings::values.preload_textures = ui->toggle_preload_textures->isChecked();
     Settings::values.bg_red = static_cast<float>(bg_color.redF());
     Settings::values.bg_green = static_cast<float>(bg_color.greenF());

@@ -34,7 +34,7 @@ void CustomTexCache::CacheTexture(u64 hash, const std::vector<u8>& tex, u32 widt
 }
 
 void CustomTexCache::AddTexturePath(u64 hash, const std::string& path) {
-    if (custom_textures.count(hash))
+    if (custom_texture_paths.count(hash))
         LOG_ERROR(Core, "Textures {} and {} conflict!", custom_texture_paths[hash].path, path);
     else
         custom_texture_paths[hash] = {path, hash};
@@ -79,7 +79,8 @@ void CustomTexCache::PreloadTextures() {
         const auto& image_interface = Core::System::GetInstance().GetImageInterface();
         const auto& path_info = path.second;
         Core::CustomTexInfo tex_info;
-        if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height, path_info.path)) {
+        if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
+                                       path_info.path)) {
             // Make sure the texture size is a power of 2
             if ((ceil(log2(tex_info.width)) == floor(log2(tex_info.width))) &&
                 (ceil(log2(tex_info.height)) == floor(log2(tex_info.height)))) {
