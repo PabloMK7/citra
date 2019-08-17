@@ -216,7 +216,7 @@ public:
     /// Gets a const reference to the video dumper backend
     const VideoDumper::Backend& VideoDumper() const;
 
-    std::unique_ptr<PerfStats> perf_stats = std::make_unique<PerfStats>(0);
+    std::unique_ptr<PerfStats> perf_stats;
     FrameLimiter frame_limiter;
 
     void SetStatus(ResultStatus new_status, const char* details = nullptr) {
