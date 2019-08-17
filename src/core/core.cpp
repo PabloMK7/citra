@@ -155,6 +155,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
+
+    // Reset counters and set time origin to current frame
+    GetAndResetPerfStats();
+    perf_stats->BeginSystemFrame();
     return status;
 }
 
@@ -235,10 +239,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     LOG_DEBUG(Core, "Initialized OK");
 
-    // Reset counters and set time origin to current frame
-    GetAndResetPerfStats();
-    perf_stats->BeginSystemFrame();
-
     return ResultStatus::Success;
 }
 
@@ -315,6 +315,8 @@ void System::Shutdown() {
                                 perf_results.game_fps);
     telemetry_session->AddField(Telemetry::FieldType::Performance, "Shutdown_Frametime",
                                 perf_results.frametime * 1000.0);
+    telemetry_session->AddField(Telemetry::FieldType::Performance, "Mean_Frametime_MS",
+                                perf_stats->GetMeanFrametime());
 
     // Shutdown emulation session
     GDBStub::Shutdown();
