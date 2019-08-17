@@ -40,7 +40,6 @@
 #include "core/hle/service/news/news.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nim/nim.h"
-#include "core/hle/service/ns/ns.h"
 #include "core/hle/service/nwm/nwm.h"
 #include "core/hle/service/pm/pm.h"
 #include "core/hle/service/ps/ps_ps.h"
@@ -86,11 +85,7 @@ const std::array<ServiceModuleInfo, 40> service_module_map{
      {"NEWS", 0x00040130'00003502, NEWS::InstallInterfaces},
      {"NFC", 0x00040130'00004002, NFC::InstallInterfaces},
      {"NIM", 0x00040130'00002C02, NIM::InstallInterfaces},
-     {"NS", 0x00040130'00008002,
-      [](Core::System& system) {
-          NS::InstallInterfaces(system);
-          APT::InstallInterfaces(system);
-      }},
+     {"NS", 0x00040130'00008002, APT::InstallInterfaces},
      {"NWM", 0x00040130'00002D02, NWM::InstallInterfaces},
      {"PTM", 0x00040130'00002202, PTM::InstallInterfaces},
      {"QTM", 0x00040130'00004202, QTM::InstallInterfaces},

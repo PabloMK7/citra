@@ -5,8 +5,7 @@
 #include <cinttypes>
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
-#include "core/hle/service/ns/ns.h"
-#include "core/hle/service/ns/ns_s.h"
+#include "core/hle/service/apt/ns.h"
 #include "core/loader/loader.h"
 
 namespace Service::NS {
@@ -29,11 +28,6 @@ std::shared_ptr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title
     }
 
     return process;
-}
-
-void InstallInterfaces(Core::System& system) {
-    auto& service_manager = system.ServiceManager();
-    std::make_shared<NS_S>()->InstallAsService(service_manager);
 }
 
 } // namespace Service::NS

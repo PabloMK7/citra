@@ -18,6 +18,7 @@
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
+#include "core/hle/service/apt/ns_s.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -27,7 +28,12 @@
 
 namespace Service::APT {
 
-void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
+Module::NSInterface::NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
+    : ServiceFramework(name, max_session), apt(std::move(apt)) {}
+
+Module::NSInterface::~NSInterface() = default;
+
+void Module::APTInterface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x2, 2, 0); // 0x20080
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 attributes = rp.Pop<u32>();
@@ -179,7 +185,7 @@ bool Module::LoadLegacySharedFont() {
     return false;
 }
 
-void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetSharedFont(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x44, 0, 0); // 0x00440000
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
@@ -231,7 +237,7 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
     rb.PushCopyObjects(apt->shared_font_mem);
 }
 
-void Module::Interface::NotifyToWait(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::NotifyToWait(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x43, 1, 0); // 0x430040
     u32 app_id = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -239,7 +245,7 @@ void Module::Interface::NotifyToWait(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) app_id={}", app_id);
 }
 
-void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 1, 0); // 0x10040
 
     // Bits [0:2] are the applet type (System, Library, etc)
@@ -260,7 +266,7 @@ void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called applet_attributes={:#010X}", applet_attributes);
 }
 
-void Module::Interface::Enable(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::Enable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x3, 1, 0); // 0x30040
     u32 attributes = rp.Pop<u32>();
 
@@ -270,7 +276,7 @@ void Module::Interface::Enable(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->Enable(attributes));
 }
 
-void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x5, 1, 0); // 0x50040
     u32 unk = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
@@ -283,7 +289,7 @@ void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called unk={:#010X}", unk);
 }
 
-void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::IsRegistered(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x9, 1, 0); // 0x90040
     AppletId app_id = rp.PopEnum<AppletId>();
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -293,7 +299,7 @@ void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called app_id={:#010X}", static_cast<u32>(app_id));
 }
 
-void Module::Interface::InquireNotification(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::InquireNotification(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xB, 1, 0); // 0xB0040
     u32 app_id = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -302,7 +308,7 @@ void Module::Interface::InquireNotification(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called app_id={:#010X}", app_id);
 }
 
-void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::SendParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xC, 4, 4); // 0xC0104
     AppletId src_app_id = rp.PopEnum<AppletId>();
     AppletId dst_app_id = rp.PopEnum<AppletId>();
@@ -329,7 +335,7 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->SendParameter(param));
 }
 
-void Module::Interface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xD, 2, 0); // 0xD0080
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
@@ -357,7 +363,7 @@ void Module::Interface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(next_parameter->buffer, 0);
 }
 
-void Module::Interface::GlanceParameter(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xE, 2, 0); // 0xE0080
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
@@ -384,7 +390,7 @@ void Module::Interface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(next_parameter->buffer, 0);
 }
 
-void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::CancelParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xF, 4, 0); // 0xF0100
 
     bool check_sender = rp.Pop<bool>();
@@ -405,7 +411,7 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
               static_cast<u32>(receiver_appid));
 }
 
-void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x31, 4, 0); // 0x00310100
     auto flags = rp.PopEnum<ApplicationJumpFlags>();
     u64 title_id = rp.Pop<u64>();
@@ -421,7 +427,7 @@ void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ct
     rb.Push(result);
 }
 
-void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x32, 2, 4); // 0x00320084
     u32 param_size = rp.Pop<u32>();
     u32 hmac_size = rp.Pop<u32>();
@@ -438,7 +444,7 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->DoApplicationJump());
 }
 
-void Module::Interface::GetProgramIdOnApplicationJump(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetProgramIdOnApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x33, 0, 0); // 0x00330000
 
     LOG_DEBUG(Service_APT, "called");
@@ -453,7 +459,7 @@ void Module::Interface::GetProgramIdOnApplicationJump(Kernel::HLERequestContext&
     rb.Push(static_cast<u8>(parameters.next_media_type));
 }
 
-void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::PrepareToStartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x15, 5, 0); // 0x00150140
     u32 title_info1 = rp.Pop<u32>();
     u32 title_info2 = rp.Pop<u32>();
@@ -474,7 +480,7 @@ void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx
                 title_info1, title_info2, title_info3, title_info4, flags);
 }
 
-void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::StartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1B, 3, 4); // 0x001B00C4
     u32 buffer1_size = rp.Pop<u32>();
     u32 buffer2_size = rp.Pop<u32>();
@@ -490,7 +496,7 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
                 buffer1_size, buffer2_size, flag);
 }
 
-void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::AppletUtility(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x4B, 3, 2); // 0x004B00C2
 
     // These are from 3dbrew - I'm not really sure what they're used for.
@@ -507,7 +513,7 @@ void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
                 utility_command, input_size, output_size);
 }
 
-void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x4F, 2, 0); // 0x4F0080
     u32 value = rp.Pop<u32>();
     apt->cpu_percent = rp.Pop<u32>();
@@ -522,7 +528,7 @@ void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent, value);
 }
 
-void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x50, 1, 0); // 0x500040
     u32 value = rp.Pop<u32>();
 
@@ -537,7 +543,7 @@ void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called, value={}", value);
 }
 
-void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x18, 1, 0); // 0x180040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
@@ -547,7 +553,7 @@ void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& c
     rb.Push(apt->applet_manager->PrepareToStartLibraryApplet(applet_id));
 }
 
-void Module::Interface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1A, 0, 0); // 0x1A0000
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -561,7 +567,7 @@ void Module::Interface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& 
     LOG_DEBUG(Service_APT, "called");
 }
 
-void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x16, 1, 0); // 0x160040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
@@ -571,7 +577,7 @@ void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->PreloadLibraryApplet(applet_id));
 }
 
-void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x17, 1, 0); // 0x00170040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
@@ -581,7 +587,7 @@ void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext&
     LOG_WARNING(Service_APT, "(STUBBED) called, applet_id={:#05X}", static_cast<u32>(applet_id));
 }
 
-void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1E, 2, 4); // 0x1E0084
     AppletId applet_id = rp.PopEnum<AppletId>();
 
@@ -595,7 +601,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, object, buffer));
 }
 
-void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::CloseApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x27, 1, 4);
     u32 parameters_size = rp.Pop<u32>();
     std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
@@ -609,7 +615,7 @@ void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
-void Module::Interface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x3B, 1, 0); // 0x003B0040
     bool exiting = rp.Pop<bool>();
 
@@ -619,7 +625,7 @@ void Module::Interface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called exiting={}", exiting);
 }
 
-void Module::Interface::PrepareToCloseLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::PrepareToCloseLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x25, 3, 0); // 0x002500C0
     bool not_pause = rp.Pop<bool>();
     bool exiting = rp.Pop<bool>();
@@ -632,7 +638,7 @@ void Module::Interface::PrepareToCloseLibraryApplet(Kernel::HLERequestContext& c
     rb.Push(apt->applet_manager->PrepareToCloseLibraryApplet(not_pause, exiting, jump_to_home));
 }
 
-void Module::Interface::CloseLibraryApplet(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::CloseLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x28, 1, 4); // 0x00280044
     u32 parameter_size = rp.Pop<u32>();
     auto object = rp.PopGenericObject();
@@ -644,7 +650,7 @@ void Module::Interface::CloseLibraryApplet(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->CloseLibraryApplet(std::move(object), std::move(buffer)));
 }
 
-void Module::Interface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x40, 1, 2); // 0x00400042
     u32 size = rp.Pop<u32>();
     ASSERT(size == 0x20);
@@ -654,7 +660,7 @@ void Module::Interface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
-void Module::Interface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x41, 1, 0); // 0x00410040
     u32 size = rp.Pop<u32>();
     ASSERT(size == 0x20);
@@ -665,7 +671,7 @@ void Module::Interface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx)
     rb.PushStaticBuffer(std::move(apt->screen_capture_buffer), 0);
 }
 
-void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::SetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x55, 1, 0); // 0x00550040
 
     apt->screen_capture_post_permission = static_cast<ScreencapPostPermission>(rp.Pop<u32>() & 0xF);
@@ -676,7 +682,7 @@ void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ct
                 static_cast<u32>(apt->screen_capture_post_permission));
 }
 
-void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x56, 0, 0); // 0x00560000
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -686,7 +692,7 @@ void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ct
                 static_cast<u32>(apt->screen_capture_post_permission));
 }
 
-void Module::Interface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x6, 1, 0); // 0x60040
     auto app_id = rp.PopEnum<AppletId>();
 
@@ -707,7 +713,7 @@ void Module::Interface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
     }
 }
 
-void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x51, 2, 0); // 0x00510080
     u32 parameter_size = rp.Pop<u32>();
     StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
@@ -733,7 +739,7 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(parameter, 0);
 }
 
-void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::Wrap(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x46, 4, 4);
     const u32 output_size = rp.Pop<u32>();
     const u32 input_size = rp.Pop<u32>();
@@ -778,7 +784,7 @@ void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(output);
 }
 
-void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::Unwrap(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x47, 4, 4);
     const u32 output_size = rp.Pop<u32>();
     const u32 input_size = rp.Pop<u32>();
@@ -829,7 +835,7 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(output);
 }
 
-void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x101, 0, 0); // 0x01010000
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -843,7 +849,7 @@ void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
-void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x102, 0, 0); // 0x01020000
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
@@ -852,10 +858,10 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
-Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
+Module::APTInterface::APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), apt(std::move(apt)) {}
 
-Module::Interface::~Interface() = default;
+Module::APTInterface::~APTInterface() = default;
 
 Module::Module(Core::System& system) : system(system) {
     applet_manager = std::make_shared<AppletManager>(system);
@@ -878,6 +884,7 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<APT_U>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_S>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_A>(apt)->InstallAsService(service_manager);
+    std::make_shared<Service::NS::NS_S>(apt)->InstallAsService(service_manager);
 }
 
 } // namespace Service::APT

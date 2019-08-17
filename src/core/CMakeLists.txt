@@ -205,6 +205,10 @@ add_library(core STATIC
     hle/service/apt/apt_s.h
     hle/service/apt/apt_u.cpp
     hle/service/apt/apt_u.h
+    hle/service/apt/ns.cpp
+    hle/service/apt/ns.h
+    hle/service/apt/ns_s.cpp
+    hle/service/apt/ns_s.h
     hle/service/apt/bcfnt/bcfnt.cpp
     hle/service/apt/bcfnt/bcfnt.h
     hle/service/apt/errors.h
@@ -326,10 +330,6 @@ add_library(core STATIC
     hle/service/nim/nim_s.h
     hle/service/nim/nim_u.cpp
     hle/service/nim/nim_u.h
-    hle/service/ns/ns.cpp
-    hle/service/ns/ns.h
-    hle/service/ns/ns_s.cpp
-    hle/service/ns/ns_s.h
     hle/service/nwm/nwm.cpp
     hle/service/nwm/nwm.h
     hle/service/nwm/nwm_cec.cpp

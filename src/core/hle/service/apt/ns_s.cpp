@@ -2,11 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ns/ns_s.h"
+#include "core/hle/service/apt/ns_s.h"
 
 namespace Service::NS {
 
-NS_S::NS_S() : ServiceFramework("ns:s", 2) {
+NS_S::NS_S(std::shared_ptr<Service::APT::Module> apt)
+    : Service::APT::Module::NSInterface(std::move(apt), "ns:s", 2) {
     static const FunctionInfo functions[] = {
         {0x000100C0, nullptr, "LaunchFIRM"},
         {0x000200C0, nullptr, "LaunchTitle"},
@@ -26,7 +27,5 @@ NS_S::NS_S() : ServiceFramework("ns:s", 2) {
     };
     RegisterHandlers(functions);
 }
-
-NS_S::~NS_S() = default;
 
 } // namespace Service::NS

@@ -8,7 +8,7 @@
 
 namespace Service::APT {
 
-class APT_A final : public Module::Interface {
+class APT_A final : public Module::APTInterface {
 public:
     explicit APT_A(std::shared_ptr<Module> apt);
 };

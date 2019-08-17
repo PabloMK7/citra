@@ -15,7 +15,7 @@ namespace Service::APT {
 // svcBreak when the command isn't accessible). See http://3dbrew.org/wiki/NS#APT_Services.
 
 /// Interface to "APT:U" service
-class APT_U final : public Module::Interface {
+class APT_U final : public Module::APTInterface {
 public:
     explicit APT_U(std::shared_ptr<Module> apt);
 };

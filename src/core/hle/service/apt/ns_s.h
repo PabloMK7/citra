@@ -4,15 +4,16 @@
 
 #pragma once
 
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/service/apt/apt.h"
 #include "core/hle/service/service.h"
 
 namespace Service::NS {
 
 /// Interface to "ns:s" service
-class NS_S final : public ServiceFramework<NS_S> {
+class NS_S final : public Service::APT::Module::NSInterface {
 public:
-    NS_S();
-    ~NS_S();
+    explicit NS_S(std::shared_ptr<Service::APT::Module> apt);
 };
 
 } // namespace Service::NS
