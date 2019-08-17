@@ -239,7 +239,7 @@ void RendererOpenGL::SwapBuffers() {
     DrawScreens(render_window.GetFramebufferLayout());
     m_current_frame++;
 
-    Core::System::GetInstance().perf_stats.EndSystemFrame();
+    Core::System::GetInstance().perf_stats->EndSystemFrame();
 
     // Swap buffers
     render_window.PollEvents();
@@ -247,7 +247,7 @@ void RendererOpenGL::SwapBuffers() {
 
     Core::System::GetInstance().frame_limiter.DoFrameLimiting(
         Core::System::GetInstance().CoreTiming().GetGlobalTimeUs());
-    Core::System::GetInstance().perf_stats.BeginSystemFrame();
+    Core::System::GetInstance().perf_stats->BeginSystemFrame();
 
     prev_state.Apply();
     RefreshRasterizerSetting();

@@ -234,6 +234,8 @@ void Config::ReadValues() {
     Settings::values.log_filter = sdl2_config->GetString("Miscellaneous", "log_filter", "*:Info");
 
     // Debugging
+    Settings::values.record_frame_times =
+        sdl2_config->GetBoolean("Debugging", "record_frame_times", false);
     Settings::values.use_gdbstub = sdl2_config->GetBoolean("Debugging", "use_gdbstub", false);
     Settings::values.gdbstub_port =
         static_cast<u16>(sdl2_config->GetInteger("Debugging", "gdbstub_port", 24689));

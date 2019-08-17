@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <mutex>
@@ -18,6 +19,10 @@ namespace Core {
  */
 class PerfStats {
 public:
+    explicit PerfStats(u64 title_id);
+
+    ~PerfStats();
+
     using Clock = std::chrono::high_resolution_clock;
 
     struct Results {
@@ -38,13 +43,26 @@ public:
     Results GetAndResetStats(std::chrono::microseconds current_system_time_us);
 
     /**
+     * Returns the Arthimetic Mean of all frametime values stored in the performance history.
+     */
+    double GetMeanFrametime();
+
+    /**
      * Gets the ratio between walltime and the emulated time of the previous system frame. This is
      * useful for scaling inputs or outputs moving between the two time domains.
      */
     double GetLastFrameTimeScale();
 
 private:
-    std::mutex object_mutex;
+    std::mutex object_mutex{};
+
+    /// Title ID for the game that is running. 0 if there is no game running yet
+    u64 title_id{0};
+    /// Current index for writing to the perf_history array
+    std::size_t current_index{0};
+    /// Stores an hour of historical frametime data useful for processing and tracking performance
+    /// regressions with code changes.
+    std::array<double, 216000> perf_history = {};
 
     /// Point when the cumulative counters were reset
     Clock::time_point reset_point = Clock::now();

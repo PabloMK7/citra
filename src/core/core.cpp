@@ -146,6 +146,12 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         }
     }
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
+    u64 title_id{0};
+    if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
+        LOG_ERROR(Core, "Failed to find title id for ROM (Error {})",
+                  static_cast<u32>(load_result));
+    }
+    perf_stats = std::make_unique<PerfStats>(title_id);
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
@@ -158,7 +164,7 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    return perf_stats.GetAndResetStats(timing->GetGlobalTimeUs());
+    return perf_stats->GetAndResetStats(timing->GetGlobalTimeUs());
 }
 
 void System::Reschedule() {
@@ -231,7 +237,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     // Reset counters and set time origin to current frame
     GetAndResetPerfStats();
-    perf_stats.BeginSystemFrame();
+    perf_stats->BeginSystemFrame();
 
     return ResultStatus::Success;
 }
@@ -315,6 +321,7 @@ void System::Shutdown() {
     VideoCore::Shutdown();
     HW::Shutdown();
     telemetry_session.reset();
+    perf_stats.reset();
     rpc_server.reset();
     cheat_engine.reset();
     service_manager.reset();
