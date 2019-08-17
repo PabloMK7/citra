@@ -428,8 +428,11 @@ void GMainWindow::InitializeHotkeys() {
                 Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
                 UpdateStatusBar();
             });
-    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
-    // variable hold a garbage value after this function exits
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Texture Dumping", this),
+            &QShortcut::activated, this,
+            [&] { Settings::values.dump_textures = !Settings::values.dump_textures; });
+    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes
+    // the variable hold a garbage value after this function exits
     static constexpr u16 SPEED_LIMIT_STEP = 5;
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
             &QShortcut::activated, this, [&] {

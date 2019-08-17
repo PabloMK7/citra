@@ -46,6 +46,7 @@
 #define SHADER_DIR "shaders"
 #define DUMP_DIR "dump"
 #define LOAD_DIR "load"
+#define SHADER_DIR "shaders"
 
 // Filenames
 // Files in the directory returned by GetUserPath(UserPath::LogDir)
