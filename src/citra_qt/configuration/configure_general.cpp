@@ -4,7 +4,7 @@
 
 #include <QMessageBox>
 #include "citra_qt/configuration/configure_general.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "core/core.h"
 #include "core/settings.h"
 #include "ui_configure_general.h"

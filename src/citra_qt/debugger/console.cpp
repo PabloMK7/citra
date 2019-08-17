@@ -9,7 +9,7 @@
 #endif
 
 #include "citra_qt/debugger/console.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "common/logging/backend.h"
 
 namespace Debugger {

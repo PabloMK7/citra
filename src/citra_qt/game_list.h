@@ -9,7 +9,7 @@
 #include <QWidget>
 #include "citra_qt/compatibility_list.h"
 #include "common/common_types.h"
-#include "ui_settings.h"
+#include "uisettings.h"
 
 class GameListWorker;
 class GameListDir;

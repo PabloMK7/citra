@@ -6,7 +6,7 @@
 #include <string>
 #include <discord_rpc.h>
 #include "citra_qt/discord_impl.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "common/common_types.h"
 #include "core/core.h"
 

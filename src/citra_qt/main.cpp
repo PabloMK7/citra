@@ -45,7 +45,7 @@
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
 #include "citra_qt/multiplayer/state.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
 #include "common/common_paths.h"

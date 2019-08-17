@@ -17,7 +17,7 @@
 #include "citra_qt/multiplayer/message.h"
 #include "citra_qt/multiplayer/state.h"
 #include "citra_qt/multiplayer/validation.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/hle/service/cfg/cfg.h"

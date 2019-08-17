@@ -6,7 +6,7 @@
 #include <QUrl>
 #include "citra_qt/configuration/configure_debug.h"
 #include "citra_qt/debugger/console.h"
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"

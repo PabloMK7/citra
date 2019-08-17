@@ -15,7 +15,7 @@
 #include <QStandardItem>
 #include <QString>
 #include <QWidget>
-#include "citra_qt/ui_settings.h"
+#include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
