@@ -226,6 +226,13 @@ public:
 
     /// Handles loading all custom textures from disk into cache.
     void PreloadCustomTextures();
+
+    /// Gets a reference to the video dumper backend
+    VideoDumper::Backend& VideoDumper();
+
+    /// Gets a const reference to the video dumper backend
+    const VideoDumper::Backend& VideoDumper() const;
+
     FrameLimiter frame_limiter;
 
     void SetStatus(ResultStatus new_status, const char* details = nullptr) {

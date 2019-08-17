@@ -860,26 +860,28 @@ bool CachedSurface::LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_inf
     bool result = false;
     auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
     const auto& image_interface = Core::System::GetInstance().GetImageInterface();
-    const std::string load_path =
-        fmt::format("{}textures/{:016X}/tex1_{}x{}_{:016X}_{}.png",
-                    FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id,
-                    width, height, tex_hash, static_cast<u32>(pixel_format));
 
     if (custom_tex_cache.IsTextureCached(tex_hash)) {
         tex_info = custom_tex_cache.LookupTexture(tex_hash);
         result = true;
     } else {
-        if (FileUtil::Exists(load_path)) {
+        if (custom_tex_cache.CustomTextureExists(tex_hash)) {
+            const auto& path_info = custom_tex_cache.LookupTexturePathInfo(tex_hash);
             if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
-                                           load_path)) {
-                LOG_INFO(Render_OpenGL, "Loaded custom texture from {}", load_path);
-                Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
-                custom_tex_cache.CacheTexture(tex_hash, tex_info.tex, tex_info.width,
-                                              tex_info.height);
-                result = true;
+                                           path_info.path)) {
+                // Make sure the texture size is a power of 2
+                if ((ceil(log2(tex_info.width)) == floor(log2(tex_info.width))) &&
+                    (ceil(log2(tex_info.height)) == floor(log2(tex_info.height)))) {
+                    LOG_DEBUG(Render_OpenGL, "Loaded custom texture from {}", path_info.path);
+                    Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
+                    custom_tex_cache.CacheTexture(tex_hash, tex_info.tex, tex_info.width,
+                                                  tex_info.height);
+                    result = true;
+                } else {
+                    LOG_ERROR(Render_OpenGL, "Texture {} size is not a power of 2", path_info.path);
+                }
             } else {
-                LOG_CRITICAL(Render_OpenGL, "Failed to load custom texture");
+                LOG_ERROR(Render_OpenGL, "Failed to load custom texture {}", path_info.path);
             }
         }
     }

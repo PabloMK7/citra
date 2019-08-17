@@ -469,6 +469,17 @@ u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
     return ForeachDirectoryEntry(&num_entries, directory, callback) ? num_entries : 0;
 }
 
+void GetAllFilesFromNestedEntries(FSTEntry& directory, std::vector<FSTEntry>& output) {
+    std::vector<FSTEntry> files;
+    for (auto& entry : directory.children) {
+        if (entry.isDirectory) {
+            GetAllFilesFromNestedEntries(entry, output);
+        } else {
+            output.push_back(entry);
+        }
+    }
+}
+
 bool DeleteDirRecursively(const std::string& directory, unsigned int recursion) {
     const auto callback = [recursion](u64* num_entries_out, const std::string& directory,
                                       const std::string& virtual_name) -> bool {
