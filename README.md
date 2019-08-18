@@ -14,6 +14,8 @@ Citra is licensed under the GPLv2 (or any later version). Refer to the license.t
 
 Check out our [website](https://citra-emu.org/)!
 
+Need help? Check out our [asking for help](https://citra-emu.org/help/reference/asking/) guide.
+
 For development discussion, please join us at #citra-dev on freenode.
 
 ### Development
