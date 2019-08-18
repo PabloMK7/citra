@@ -231,12 +231,16 @@ public:
     };
 
 private:
+    // Sync nfc_tag_state with amiibo_in_range and signal events on state change.
+    void SyncTagState();
+
     std::shared_ptr<Kernel::Event> tag_in_range_event;
     std::shared_ptr<Kernel::Event> tag_out_of_range_event;
-    std::atomic<TagState> nfc_tag_state = TagState::NotInitialized;
+    TagState nfc_tag_state = TagState::NotInitialized;
     CommunicationStatus nfc_status = CommunicationStatus::NfcInitialized;
 
     AmiiboData amiibo_data{};
+    bool amiibo_in_range = false;
 };
 
 void InstallInterfaces(Core::System& system);
