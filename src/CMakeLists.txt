@@ -71,7 +71,9 @@ else()
 
     if (MINGW)
         add_definitions(-DMINGW_HAS_SECURE_API)
-        add_compile_options("-gdwarf")
+        if (COMPILE_WITH_DWARF)
+            add_compile_options("-gdwarf")
+        endif()
 
         if (MINGW_STATIC_BUILD)
             add_definitions(-DQT_STATICPLUGIN)
