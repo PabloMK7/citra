@@ -150,16 +150,6 @@
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QCheckBox" name="toggle_accurate_gs">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Force to fall back to software shader emulation when geometry shaders are used. &lt;/p&gt;&lt;p&gt;Some games require this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this might reduce performance in some games&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string>Accurate Geometry Shader</string>
-              </property>
-             </widget>
-            </item>
            </layout>
           </widget>
          </item>

@@ -188,8 +188,6 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
              Settings::values.use_hw_renderer);
     AddField(Telemetry::FieldType::UserConfig, "Renderer_UseHwShader",
              Settings::values.use_hw_shader);
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_ShadersAccurateGs",
-             Settings::values.shaders_accurate_gs);
     AddField(Telemetry::FieldType::UserConfig, "Renderer_ShadersAccurateMul",
              Settings::values.shaders_accurate_mul);
     AddField(Telemetry::FieldType::UserConfig, "Renderer_UseShaderJit",
