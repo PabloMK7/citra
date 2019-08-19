@@ -104,8 +104,6 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& window)
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniform_buffer_alignment);
     uniform_size_aligned_vs =
         Common::AlignUp<std::size_t>(sizeof(VSUniformData), uniform_buffer_alignment);
-    uniform_size_aligned_gs =
-        Common::AlignUp<std::size_t>(sizeof(GSUniformData), uniform_buffer_alignment);
     uniform_size_aligned_fs =
         Common::AlignUp<std::size_t>(sizeof(UniformData), uniform_buffer_alignment);
 
@@ -392,8 +390,7 @@ bool RasterizerOpenGL::SetupGeometryShader() {
         shader_program_manager->UseFixedGeometryShader(gs_config);
         return true;
     } else {
-        PicaGSConfig gs_config(regs, Pica::g_state.gs);
-        return shader_program_manager->UseProgrammableGeometryShader(gs_config, Pica::g_state.gs);
+        LOG_ERROR(Render_OpenGL, "Accelerate draw doesn't support geometry shader");
     }
 }
 
@@ -417,42 +414,24 @@ bool RasterizerOpenGL::AccelerateDrawBatch(bool is_indexed) {
     return Draw(true, is_indexed);
 }
 
-static GLenum GetCurrentPrimitiveMode(bool use_gs) {
+static GLenum GetCurrentPrimitiveMode() {
     const auto& regs = Pica::g_state.regs;
-    if (use_gs) {
-        switch ((regs.gs.max_input_attribute_index + 1) /
-                (regs.pipeline.vs_outmap_total_minus_1_a + 1)) {
-        case 1:
-            return GL_POINTS;
-        case 2:
-            return GL_LINES;
-        case 4:
-            return GL_LINES_ADJACENCY;
-        case 3:
-            return GL_TRIANGLES;
-        case 6:
-            return GL_TRIANGLES_ADJACENCY;
-        default:
-            UNREACHABLE();
-        }
-    } else {
-        switch (regs.pipeline.triangle_topology) {
-        case Pica::PipelineRegs::TriangleTopology::Shader:
-        case Pica::PipelineRegs::TriangleTopology::List:
-            return GL_TRIANGLES;
-        case Pica::PipelineRegs::TriangleTopology::Fan:
-            return GL_TRIANGLE_FAN;
-        case Pica::PipelineRegs::TriangleTopology::Strip:
-            return GL_TRIANGLE_STRIP;
-        default:
-            UNREACHABLE();
-        }
+    switch (regs.pipeline.triangle_topology) {
+    case Pica::PipelineRegs::TriangleTopology::Shader:
+    case Pica::PipelineRegs::TriangleTopology::List:
+        return GL_TRIANGLES;
+    case Pica::PipelineRegs::TriangleTopology::Fan:
+        return GL_TRIANGLE_FAN;
+    case Pica::PipelineRegs::TriangleTopology::Strip:
+        return GL_TRIANGLE_STRIP;
+    default:
+        UNREACHABLE();
     }
 }
 
-bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs) {
+bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
     const auto& regs = Pica::g_state.regs;
-    GLenum primitive_mode = GetCurrentPrimitiveMode(use_gs);
+    GLenum primitive_mode = GetCurrentPrimitiveMode();
 
     auto [vs_input_index_min, vs_input_index_max, vs_input_size] = AnalyzeVertexArray(is_indexed);
 
@@ -787,8 +766,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     SyncAndUploadLUTs();
 
     // Sync the uniform data
-    const bool use_gs = regs.pipeline.use_gs == Pica::PipelineRegs::UseGS::Yes;
-    UploadUniforms(accelerate, use_gs);
+    UploadUniforms(accelerate);
 
     // Viewport can have negative offsets or larger
     // dimensions than our framebuffer sub-rect.
@@ -804,7 +782,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     // Draw the vertex batch
     bool succeeded = true;
     if (accelerate) {
-        succeeded = AccelerateDrawBatchInternal(is_indexed, use_gs);
+        succeeded = AccelerateDrawBatchInternal(is_indexed);
     } else {
         state.draw.vertex_array = sw_vao.handle;
         state.draw.vertex_buffer = vertex_buffer.GetHandle();
@@ -2119,21 +2097,19 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     texture_buffer.Unmap(bytes_used);
 }
 
-void RasterizerOpenGL::UploadUniforms(bool accelerate_draw, bool use_gs) {
+void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
     // glBindBufferRange below also changes the generic buffer binding point, so we sync the state
     // first
     state.draw.uniform_buffer = uniform_buffer.GetHandle();
     state.Apply();
 
     bool sync_vs = accelerate_draw;
-    bool sync_gs = accelerate_draw && use_gs;
     bool sync_fs = uniform_block_data.dirty;
 
-    if (!sync_vs && !sync_gs && !sync_fs)
+    if (!sync_vs && !sync_fs)
         return;
 
-    std::size_t uniform_size =
-        uniform_size_aligned_vs + uniform_size_aligned_gs + uniform_size_aligned_fs;
+    std::size_t uniform_size = uniform_size_aligned_vs + uniform_size_aligned_fs;
     std::size_t used_bytes = 0;
     u8* uniforms;
     GLintptr offset;
@@ -2148,15 +2124,6 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw, bool use_gs) {
         glBindBufferRange(GL_UNIFORM_BUFFER, static_cast<GLuint>(UniformBindings::VS),
                           uniform_buffer.GetHandle(), offset + used_bytes, sizeof(VSUniformData));
         used_bytes += uniform_size_aligned_vs;
-    }
-
-    if (sync_gs) {
-        GSUniformData gs_uniforms;
-        gs_uniforms.uniforms.SetFromRegs(Pica::g_state.regs.gs, Pica::g_state.gs);
-        std::memcpy(uniforms + used_bytes, &gs_uniforms, sizeof(gs_uniforms));
-        glBindBufferRange(GL_UNIFORM_BUFFER, static_cast<GLuint>(UniformBindings::GS),
-                          uniform_buffer.GetHandle(), offset + used_bytes, sizeof(GSUniformData));
-        used_bytes += uniform_size_aligned_gs;
     }
 
     if (sync_fs || invalidate) {

@@ -283,22 +283,6 @@ void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
     }
 }
 
-void PicaGSConfigRaw::Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup) {
-    PicaShaderConfigCommon::Init(regs.gs, setup);
-    PicaGSConfigCommonRaw::Init(regs);
-
-    num_inputs = regs.gs.max_input_attribute_index + 1;
-    input_map.fill(16);
-
-    for (u32 attr = 0; attr < num_inputs; ++attr) {
-        input_map[regs.gs.GetRegisterForAttribute(attr)] = attr;
-    }
-
-    attributes_per_vertex = regs.pipeline.vs_outmap_total_minus_1_a + 1;
-
-    gs_output_attributes = num_outputs;
-}
-
 /// Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
 static bool IsPassThroughTevStage(const TevStageConfig& stage) {
     return (stage.color_op == TevStageConfig::Operation::Replace &&
@@ -1675,7 +1659,7 @@ std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup&
 
     auto program_source_opt = ShaderDecompiler::DecompileProgram(
         setup.program_code, setup.swizzle_data, config.state.main_offset, get_input_reg,
-        get_output_reg, config.state.sanitize_mul, false);
+        get_output_reg, config.state.sanitize_mul);
 
     if (!program_source_opt)
         return {};
@@ -1727,11 +1711,6 @@ static std::string GetGSCommonSource(const PicaGSConfigCommonRaw& config, bool s
     }
 
     out += R"(
-#define uniforms gs_uniforms
-layout (std140) uniform gs_config {
-    pica_uniforms uniforms;
-};
-
 struct Vertex {
 )";
     out += "    vec4 attributes[" + std::to_string(config.gs_output_attributes) + "];\n";
@@ -1838,116 +1817,4 @@ void main() {
 
     return out;
 }
-
-std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
-                                                  const PicaGSConfig& config,
-                                                  bool separable_shader) {
-    std::string out = "";
-    if (separable_shader) {
-        out += "#extension GL_ARB_separate_shader_objects : enable\n";
-    }
-
-    if (config.state.num_inputs % config.state.attributes_per_vertex != 0)
-        return {};
-
-    switch (config.state.num_inputs / config.state.attributes_per_vertex) {
-    case 1:
-        out += "layout(points) in;\n";
-        break;
-    case 2:
-        out += "layout(lines) in;\n";
-        break;
-    case 4:
-        out += "layout(lines_adjacency) in;\n";
-        break;
-    case 3:
-        out += "layout(triangles) in;\n";
-        break;
-    case 6:
-        out += "layout(triangles_adjacency) in;\n";
-        break;
-    default:
-        return {};
-    }
-    out += "layout(triangle_strip, max_vertices = 30) out;\n\n";
-
-    out += GetGSCommonSource(config.state, separable_shader);
-
-    auto get_input_reg = [&](u32 reg) -> std::string {
-        ASSERT(reg < 16);
-        u32 attr = config.state.input_map[reg];
-        if (attr < config.state.num_inputs) {
-            return "vs_out_attr" + std::to_string(attr % config.state.attributes_per_vertex) + "[" +
-                   std::to_string(attr / config.state.attributes_per_vertex) + "]";
-        }
-        return "vec4(0.0, 0.0, 0.0, 1.0)";
-    };
-
-    auto get_output_reg = [&](u32 reg) -> std::string {
-        ASSERT(reg < 16);
-        if (config.state.output_map[reg] < config.state.num_outputs) {
-            return "output_buffer.attributes[" + std::to_string(config.state.output_map[reg]) + "]";
-        }
-        return "";
-    };
-
-    auto program_source_opt = ShaderDecompiler::DecompileProgram(
-        setup.program_code, setup.swizzle_data, config.state.main_offset, get_input_reg,
-        get_output_reg, config.state.sanitize_mul, true);
-
-    if (!program_source_opt)
-        return {};
-
-    std::string& program_source = *program_source_opt;
-
-    out += R"(
-Vertex output_buffer;
-Vertex prim_buffer[3];
-uint vertex_id = 0u;
-bool prim_emit = false;
-bool winding = false;
-
-void setemit(uint vertex_id_, bool prim_emit_, bool winding_);
-void emit();
-
-void main() {
-)";
-    for (u32 i = 0; i < config.state.num_outputs; ++i) {
-        out +=
-            "    output_buffer.attributes[" + std::to_string(i) + "] = vec4(0.0, 0.0, 0.0, 1.0);\n";
-    }
-
-    // execute shader
-    out += "\n    exec_shader();\n\n";
-
-    out += "}\n\n";
-
-    // Put the definition of setemit and emit after main to avoid spurious warning about
-    // uninitialized output_buffer in some drivers
-    out += R"(
-void setemit(uint vertex_id_, bool prim_emit_, bool winding_) {
-    vertex_id = vertex_id_;
-    prim_emit = prim_emit_;
-    winding = winding_;
-}
-
-void emit() {
-    prim_buffer[vertex_id] = output_buffer;
-
-    if (prim_emit) {
-        if (winding) {
-            EmitPrim(prim_buffer[1], prim_buffer[0], prim_buffer[2]);
-            winding = false;
-        } else {
-            EmitPrim(prim_buffer[0], prim_buffer[1], prim_buffer[2]);
-        }
-    }
-}
-)";
-
-    out += program_source;
-
-    return out;
-}
-
 } // namespace OpenGL

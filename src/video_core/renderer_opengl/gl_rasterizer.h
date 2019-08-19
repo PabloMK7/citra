@@ -231,13 +231,13 @@ private:
     void SyncAndUploadLUTs();
 
     /// Upload the uniform blocks to the uniform buffer object
-    void UploadUniforms(bool accelerate_draw, bool use_gs);
+    void UploadUniforms(bool accelerate_draw);
 
     /// Generic draw function for DrawTriangles and AccelerateDrawBatch
     bool Draw(bool accelerate, bool is_indexed);
 
     /// Internal implementation for AccelerateDrawBatch
-    bool AccelerateDrawBatchInternal(bool is_indexed, bool use_gs);
+    bool AccelerateDrawBatchInternal(bool is_indexed);
 
     struct VertexArrayInfo {
         u32 vs_input_index_min;
@@ -304,7 +304,6 @@ private:
     OGLFramebuffer framebuffer;
     GLint uniform_buffer_alignment;
     std::size_t uniform_size_aligned_vs;
-    std::size_t uniform_size_aligned_gs;
     std::size_t uniform_size_aligned_fs;
 
     SamplerInfo texture_cube_sampler;

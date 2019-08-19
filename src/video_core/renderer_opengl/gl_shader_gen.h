@@ -195,26 +195,6 @@ struct PicaFixedGSConfig : Common::HashableStruct<PicaGSConfigCommonRaw> {
     }
 };
 
-struct PicaGSConfigRaw : PicaShaderConfigCommon, PicaGSConfigCommonRaw {
-    void Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup);
-
-    u32 num_inputs;
-    u32 attributes_per_vertex;
-
-    // input_map[input register index] -> input attribute index
-    std::array<u32, 16> input_map;
-};
-
-/**
- * This struct contains information to identify a GL geometry shader generated from PICA geometry
- * shader.
- */
-struct PicaGSConfig : Common::HashableStruct<PicaGSConfigRaw> {
-    explicit PicaGSConfig(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setups) {
-        state.Init(regs, setups);
-    }
-};
-
 /**
  * Generates the GLSL vertex shader program source code that accepts vertices from software shader
  * and directly passes them to the fragment shader.
@@ -235,15 +215,6 @@ std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup&
  * @returns String of the shader source code
  */
 std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool separable_shader);
-
-/**
- * Generates the GLSL geometry shader program source code for the given GS program and its
- * configuration
- * @returns String of the shader source code; boost::none on failure
- */
-std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
-                                                  const PicaGSConfig& config,
-                                                  bool separable_shader);
 
 /**
  * Generates the GLSL fragment shader program source code for the current Pica state
@@ -274,13 +245,6 @@ struct hash<OpenGL::PicaVSConfig> {
 template <>
 struct hash<OpenGL::PicaFixedGSConfig> {
     std::size_t operator()(const OpenGL::PicaFixedGSConfig& k) const {
-        return k.Hash();
-    }
-};
-
-template <>
-struct hash<OpenGL::PicaGSConfig> {
-    std::size_t operator()(const OpenGL::PicaGSConfig& k) const {
         return k.Hash();
     }
 };

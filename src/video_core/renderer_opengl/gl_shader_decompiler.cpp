@@ -249,10 +249,10 @@ public:
     GLSLGenerator(const std::set<Subroutine>& subroutines, const ProgramCode& program_code,
                   const SwizzleData& swizzle_data, u32 main_offset,
                   const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
-                  bool sanitize_mul, bool is_gs)
+                  bool sanitize_mul)
         : subroutines(subroutines), program_code(program_code), swizzle_data(swizzle_data),
           main_offset(main_offset), inputreg_getter(inputreg_getter),
-          outputreg_getter(outputreg_getter), sanitize_mul(sanitize_mul), is_gs(is_gs) {
+          outputreg_getter(outputreg_getter), sanitize_mul(sanitize_mul) {
 
         Generate();
     }
@@ -342,13 +342,6 @@ private:
 
     /// Generates code representing a bool uniform
     std::string GetUniformBool(u32 index) const {
-        if (is_gs && index == 15) {
-            // In PICA geometry shader, b15 is set to true after every geometry shader invocation.
-            // Accessing b15 usually indicates that the program relies on register value
-            // preservation across invocation (and therefore it uses b15 to determine whether to
-            // initialize the registers), which cannot be implemented in GL shaders.
-            throw DecompileFail("b15 access in geometry shader");
-        }
         return "uniforms.b[" + std::to_string(index) + "]";
     }
 
@@ -751,22 +744,10 @@ private:
                 break;
             }
 
-            case OpCode::Id::EMIT: {
-                if (is_gs) {
-                    shader.AddLine("emit();");
-                }
+            case OpCode::Id::EMIT:
+            case OpCode::Id::SETEMIT:
+                LOG_ERROR(HW_GPU, "Geometry shader operation detected in vertex shader");
                 break;
-            }
-
-            case OpCode::Id::SETEMIT: {
-                if (is_gs) {
-                    ASSERT(instr.setemit.vertex_id < 3);
-                    shader.AddLine("setemit(" + std::to_string(instr.setemit.vertex_id) + "u, " +
-                                   ((instr.setemit.prim_emit != 0) ? "true" : "false") + ", " +
-                                   ((instr.setemit.winding != 0) ? "true" : "false") + ");");
-                }
-                break;
-            }
 
             default: {
                 LOG_ERROR(HW_GPU, "Unhandled instruction: 0x{:02x} ({}): 0x{:08x}",
@@ -890,7 +871,6 @@ private:
     const RegGetter& inputreg_getter;
     const RegGetter& outputreg_getter;
     const bool sanitize_mul;
-    const bool is_gs;
 
     ShaderWriter shader;
 };
@@ -911,13 +891,12 @@ bool exec_shader();
 std::optional<std::string> DecompileProgram(const ProgramCode& program_code,
                                             const SwizzleData& swizzle_data, u32 main_offset,
                                             const RegGetter& inputreg_getter,
-                                            const RegGetter& outputreg_getter, bool sanitize_mul,
-                                            bool is_gs) {
+                                            const RegGetter& outputreg_getter, bool sanitize_mul) {
 
     try {
         auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();
         GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
-                                inputreg_getter, outputreg_getter, sanitize_mul, is_gs);
+                                inputreg_getter, outputreg_getter, sanitize_mul);
         return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {
         LOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());

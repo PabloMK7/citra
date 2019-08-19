@@ -91,15 +91,6 @@ static_assert(
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");
 
-struct GSUniformData {
-    PicaUniformsData uniforms;
-};
-static_assert(
-    sizeof(GSUniformData) == 1856,
-    "The size of the GSUniformData structure has changed, update the structure in the shader");
-static_assert(sizeof(GSUniformData) < 16384,
-              "GSUniformData structure must be less than 16kb as per the OpenGL spec");
-
 /// A class that manage different shader stages and configures them with given config data.
 class ShaderProgramManager {
 public:
@@ -110,9 +101,6 @@ public:
                                      const Pica::Shader::ShaderSetup setup);
 
     void UseTrivialVertexShader();
-
-    bool UseProgrammableGeometryShader(const PicaGSConfig& config,
-                                       const Pica::Shader::ShaderSetup setup);
 
     void UseFixedGeometryShader(const PicaFixedGSConfig& config);
 
