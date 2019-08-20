@@ -47,7 +47,7 @@ if(ENABLE_MF)
     )
     target_link_libraries(audio_core PRIVATE mf.lib mfplat.lib mfuuid.lib)
     target_compile_definitions(audio_core PUBLIC HAVE_MF)
-elseif(ENABLE_FFMPEG)
+elseif(ENABLE_FFMPEG_AUDIO_DECODER)
     target_sources(audio_core PRIVATE
         hle/ffmpeg_decoder.cpp
         hle/ffmpeg_decoder.h
