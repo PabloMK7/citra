@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <unordered_map>
 #include <utility>
@@ -93,6 +94,14 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
 
     if (std::find(regions.begin(), regions.end(), GameRegion::RegionFree) != regions.end()) {
         return QObject::tr("Region free");
+    }
+
+    const bool all_regions =
+        std::all_of(regions_map.begin(), regions_map.end(), [&regions](const auto& it) {
+            return std::find(regions.begin(), regions.end(), it.first) != regions.end();
+        });
+    if (all_regions) {
+        return QObject::tr("All regions");
     }
 
     QString result = QObject::tr(regions_map.at(regions.front()));
