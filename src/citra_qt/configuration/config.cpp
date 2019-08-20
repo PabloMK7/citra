@@ -319,6 +319,7 @@ void Config::ReadValues() {
     UISettings::values.game_list_row_2 = UISettings::GameListText{row_2};
 
     UISettings::values.game_list_hide_no_icon = ReadSetting("hideNoIcon", false).toBool();
+    UISettings::values.game_list_single_line_mode = ReadSetting("singleLineMode", false).toBool();
     qt_config->endGroup();
 
     qt_config->beginGroup("Paths");
@@ -589,6 +590,7 @@ void Config::SaveValues() {
     WriteSetting("row1", static_cast<int>(UISettings::values.game_list_row_1), 2);
     WriteSetting("row2", static_cast<int>(UISettings::values.game_list_row_2), 0);
     WriteSetting("hideNoIcon", UISettings::values.game_list_hide_no_icon, false);
+    WriteSetting("singleLineMode", UISettings::values.game_list_single_line_mode, false);
     qt_config->endGroup();
 
     qt_config->beginGroup("Paths");

@@ -85,6 +85,7 @@ struct Values {
     GameListText game_list_row_1;
     GameListText game_list_row_2;
     bool game_list_hide_no_icon;
+    bool game_list_single_line_mode;
 
     u16 screenshot_resolution_factor;
 
