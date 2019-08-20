@@ -285,7 +285,6 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     tree_view->setHorizontalScrollMode(QHeaderView::ScrollPerPixel);
     tree_view->setSortingEnabled(true);
     tree_view->setEditTriggers(QHeaderView::NoEditTriggers);
-    tree_view->setUniformRowHeights(true);
     tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
     tree_view->setStyleSheet("QTreeView{ border: none; }");
 
