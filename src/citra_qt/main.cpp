@@ -606,7 +606,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Capture_Screenshot, &QAction::triggered, this,
             &GMainWindow::OnCaptureScreenshot);
 
-#ifndef ENABLE_FFMPEG
+#ifndef ENABLE_FFMPEG_VIDEO_DUMPER
     ui.action_Dump_Video->setEnabled(false);
 #endif
     connect(ui.action_Dump_Video, &QAction::triggered, [this] {
