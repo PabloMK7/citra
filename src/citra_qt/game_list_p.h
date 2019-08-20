@@ -92,16 +92,12 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
         return QObject::tr("Invalid region");
     }
 
-    if (std::find(regions.begin(), regions.end(), GameRegion::RegionFree) != regions.end()) {
-        return QObject::tr("Region free");
-    }
-
-    const bool all_regions =
+    const bool region_free =
         std::all_of(regions_map.begin(), regions_map.end(), [&regions](const auto& it) {
             return std::find(regions.begin(), regions.end(), it.first) != regions.end();
         });
-    if (all_regions) {
-        return QObject::tr("All regions");
+    if (region_free) {
+        return QObject::tr("Region free");
     }
 
     const QString separator =
