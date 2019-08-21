@@ -265,6 +265,8 @@ private:
 
 inline const char* GetStateStr(const RoomMember::State& s) {
     switch (s) {
+    case RoomMember::State::Uninitialized:
+        return "Uninitialized";
     case RoomMember::State::Idle:
         return "Idle";
     case RoomMember::State::Joining:
