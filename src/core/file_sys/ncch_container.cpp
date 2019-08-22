@@ -325,20 +325,11 @@ Loader::ResultStatus NCCHContainer::Load() {
                 return file && file.ReadBytes(&exheader_header, size) == size;
             };
 
-            FileUtil::IOFile exheader_override_file{filepath + ".exheader", "rb"};
-            const bool has_exheader_override = read_exheader(exheader_override_file);
-            if (has_exheader_override) {
-                if (exheader_header.system_info.jump_id !=
-                    exheader_header.arm11_system_local_caps.program_id) {
-                    LOG_WARNING(Service_FS, "Jump ID and Program ID don't match. "
-                                            "The override exheader might not be decrypted.");
-                }
-                is_tainted = true;
-            } else if (!read_exheader(file)) {
+            if (!read_exheader(file)) {
                 return Loader::ResultStatus::Error;
             }
 
-            if (!has_exheader_override && is_encrypted) {
+            if (is_encrypted) {
                 // This ID check is masked to low 32-bit as a toleration to ill-formed ROM created
                 // by merging games and its updates.
                 if ((exheader_header.system_info.jump_id & 0xFFFFFFFF) ==
@@ -356,6 +347,17 @@ Loader::ResultStatus NCCHContainer::Load() {
                         primary_key.data(), primary_key.size(), exheader_ctr.data())
                         .ProcessData(data, data, sizeof(exheader_header));
                 }
+            }
+
+            FileUtil::IOFile exheader_override_file{filepath + ".exheader", "rb"};
+            const bool has_exheader_override = read_exheader(exheader_override_file);
+            if (has_exheader_override) {
+                if (exheader_header.system_info.jump_id !=
+                    exheader_header.arm11_system_local_caps.program_id) {
+                    LOG_WARNING(Service_FS, "Jump ID and Program ID don't match. "
+                                            "The override exheader might not be decrypted.");
+                }
+                is_tainted = true;
             }
 
             is_compressed = (exheader_header.codeset_info.flags.flag & 1) == 1;
