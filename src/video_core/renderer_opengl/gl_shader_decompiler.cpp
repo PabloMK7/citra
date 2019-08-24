@@ -514,11 +514,21 @@ private:
             }
 
             case OpCode::Id::RCP: {
+                if (!sanitize_mul) {
+                    // When accurate multiplication is OFF, NaN are not really handled. This is a
+                    // workaround to cheaply avoid NaN. Fixes graphical issues in Ocarina of Time.
+                    shader.AddLine("if ({}.x != 0.0)", src1);
+                }
                 SetDest(swizzle, dest_reg, fmt::format("(1.0 / {}.x)", src1), 4, 1);
                 break;
             }
 
             case OpCode::Id::RSQ: {
+                if (!sanitize_mul) {
+                    // When accurate multiplication is OFF, NaN are not really handled. This is a
+                    // workaround to cheaply avoid NaN. Fixes graphical issues in Ocarina of Time.
+                    shader.AddLine("if ({}.x > 0.0)", src1);
+                }
                 SetDest(swizzle, dest_reg, fmt::format("inversesqrt({}.x)", src1), 4, 1);
                 break;
             }
@@ -807,6 +817,13 @@ private:
 
     void Generate() {
         if (sanitize_mul) {
+#ifdef ANDROID
+            // Use a cheaper sanitize_mul on Android, as mobile GPUs struggle here
+            // This seems to be sufficient at least for Ocarina of Time and Attack on Titan accurate
+            // multiplication bugs
+            shader.AddLine(
+                "#define sanitize_mul(lhs, rhs) mix(lhs * rhs, vec4(0.0), isnan(lhs * rhs))");
+#else
             shader.AddLine("vec4 sanitize_mul(vec4 lhs, vec4 rhs) {{");
             ++shader.scope;
             shader.AddLine("vec4 product = lhs * rhs;");
@@ -814,6 +831,7 @@ private:
                            "isnan(lhs)), isnan(product));");
             --shader.scope;
             shader.AddLine("}}\n");
+#endif
         }
 
         // Add declarations for registers
