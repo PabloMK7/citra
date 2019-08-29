@@ -1103,7 +1103,10 @@ RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
 }
 
 RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
+#ifndef ANDROID
+    // This is for switching renderers, which is unsupported on Android, and costly on shutdown
     ClearAll(false);
+#endif
 }
 
 MICROPROFILE_DEFINE(OpenGL_BlitSurface, "OpenGL", "BlitSurface", MP_RGB(128, 192, 64));
