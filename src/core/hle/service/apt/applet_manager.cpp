@@ -324,9 +324,6 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
-    // There are some problems with LLE applets. The rasterizer cache gets out of sync
-    // when the applet is closed. To avoid breaking applications because of the issue,
-    // we are going to disable loading LLE applets before further fixes are done.
     auto cfg = Service::CFG::GetModule(system);
     u32 region_value = cfg->GetRegionValue();
     auto process =
@@ -354,9 +351,6 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
-    // There are some problems with LLE applets. The rasterizer cache gets out of sync
-    // when the applet is closed. To avoid breaking applications because of the issue,
-    // we are going to disable loading LLE applets before further fixes are done.
     auto cfg = Service::CFG::GetModule(system);
     u32 region_value = cfg->GetRegionValue();
     auto process =
