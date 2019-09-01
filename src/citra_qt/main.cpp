@@ -353,18 +353,6 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 void GMainWindow::InitializeHotkeys() {
     hotkey_registry.LoadHotkeys();
 
-    ui.action_Load_File->setShortcut(hotkey_registry.GetKeySequence("Main Window", "Load File"));
-    ui.action_Load_File->setShortcutContext(
-        hotkey_registry.GetShortcutContext("Main Window", "Load File"));
-
-    ui.action_Exit->setShortcut(hotkey_registry.GetKeySequence("Main Window", "Exit Citra"));
-    ui.action_Exit->setShortcutContext(
-        hotkey_registry.GetShortcutContext("Main Window", "Exit Citra"));
-
-    ui.action_Stop->setShortcut(hotkey_registry.GetKeySequence("Main Window", "Stop Emulation"));
-    ui.action_Stop->setShortcutContext(
-        hotkey_registry.GetShortcutContext("Main Window", "Stop Emulation"));
-
     ui.action_Show_Filter_Bar->setShortcut(
         hotkey_registry.GetKeySequence("Main Window", "Toggle Filter Bar"));
     ui.action_Show_Filter_Bar->setShortcutContext(
@@ -376,7 +364,13 @@ void GMainWindow::InitializeHotkeys() {
         hotkey_registry.GetShortcutContext("Main Window", "Toggle Status Bar"));
 
     connect(hotkey_registry.GetHotkey("Main Window", "Load File", this), &QShortcut::activated,
-            this, &GMainWindow::OnMenuLoadFile);
+            ui.action_Load_File, &QAction::trigger);
+
+    connect(hotkey_registry.GetHotkey("Main Window", "Stop Emulation", this), &QShortcut::activated,
+            ui.action_Stop, &QAction::trigger);
+
+    connect(hotkey_registry.GetHotkey("Main Window", "Exit Citra", this), &QShortcut::activated,
+            ui.action_Exit, &QAction::trigger);
 
     connect(hotkey_registry.GetHotkey("Main Window", "Continue/Pause Emulation", this),
             &QShortcut::activated, this, [&] {
@@ -891,6 +885,14 @@ void GMainWindow::BootGame(const QString& filename) {
 }
 
 void GMainWindow::ShutdownGame() {
+    if (!emulation_running) {
+        return;
+    }
+
+    if (ui.action_Fullscreen->isChecked()) {
+        HideFullscreen();
+    }
+
     if (Core::System::GetInstance().VideoDumper().IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
