@@ -231,16 +231,19 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                     });
         }
         connect(analog_map_stick[analog_id], &QPushButton::clicked, [=]() {
-            QMessageBox::information(this, tr("Information"),
-                                     tr("After pressing OK, first move your joystick horizontally, "
-                                        "and then vertically."));
-            HandleClick(analog_map_stick[analog_id],
-                        [=](const Common::ParamPackage& params) {
-                            analogs_param[analog_id] = params;
-                            ApplyConfiguration();
-                            Settings::SaveProfile(ui->profile->currentIndex());
-                        },
-                        InputCommon::Polling::DeviceType::Analog);
+            if (QMessageBox::information(
+                    this, tr("Information"),
+                    tr("After pressing OK, first move your joystick horizontally, "
+                       "and then vertically."),
+                    QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok) {
+                HandleClick(analog_map_stick[analog_id],
+                            [=](const Common::ParamPackage& params) {
+                                analogs_param[analog_id] = params;
+                                ApplyConfiguration();
+                                Settings::SaveProfile(ui->profile->currentIndex());
+                            },
+                            InputCommon::Polling::DeviceType::Analog);
+            }
         });
     }
 
