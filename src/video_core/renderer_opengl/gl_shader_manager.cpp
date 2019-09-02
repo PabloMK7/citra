@@ -27,7 +27,6 @@ static void SetShaderUniformBlockBindings(GLuint shader) {
     SetShaderUniformBlockBinding(shader, "shader_data", UniformBindings::Common,
                                  sizeof(UniformData));
     SetShaderUniformBlockBinding(shader, "vs_config", UniformBindings::VS, sizeof(VSUniformData));
-    SetShaderUniformBlockBinding(shader, "gs_config", UniformBindings::GS, sizeof(GSUniformData));
 }
 
 static void SetShaderSamplerBinding(GLuint shader, const char* name,
@@ -205,9 +204,6 @@ private:
 using ProgrammableVertexShaders =
     ShaderDoubleCache<PicaVSConfig, &GenerateVertexShader, GL_VERTEX_SHADER>;
 
-using ProgrammableGeometryShaders =
-    ShaderDoubleCache<PicaGSConfig, &GenerateGeometryShader, GL_GEOMETRY_SHADER>;
-
 using FixedGeometryShaders =
     ShaderCache<PicaFixedGSConfig, &GenerateFixedGeometryShader, GL_GEOMETRY_SHADER>;
 
@@ -217,8 +213,8 @@ class ShaderProgramManager::Impl {
 public:
     explicit Impl(bool separable, bool is_amd)
         : is_amd(is_amd), separable(separable), programmable_vertex_shaders(separable),
-          trivial_vertex_shader(separable), programmable_geometry_shaders(separable),
-          fixed_geometry_shaders(separable), fragment_shaders(separable) {
+          trivial_vertex_shader(separable), fixed_geometry_shaders(separable),
+          fragment_shaders(separable) {
         if (separable)
             pipeline.Create();
     }
@@ -254,7 +250,6 @@ public:
     ProgrammableVertexShaders programmable_vertex_shaders;
     TrivialVertexShader trivial_vertex_shader;
 
-    ProgrammableGeometryShaders programmable_geometry_shaders;
     FixedGeometryShaders fixed_geometry_shaders;
 
     FragmentShaders fragment_shaders;
@@ -280,15 +275,6 @@ bool ShaderProgramManager::UseProgrammableVertexShader(const PicaVSConfig& confi
 
 void ShaderProgramManager::UseTrivialVertexShader() {
     impl->current.vs = impl->trivial_vertex_shader.Get();
-}
-
-bool ShaderProgramManager::UseProgrammableGeometryShader(const PicaGSConfig& config,
-                                                         const Pica::Shader::ShaderSetup setup) {
-    GLuint handle = impl->programmable_geometry_shaders.Get(config, setup);
-    if (handle == 0)
-        return false;
-    impl->current.gs = handle;
-    return true;
 }
 
 void ShaderProgramManager::UseFixedGeometryShader(const PicaFixedGSConfig& config) {

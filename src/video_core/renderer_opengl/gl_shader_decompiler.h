@@ -20,7 +20,6 @@ std::string GetCommonDeclarations();
 std::optional<std::string> DecompileProgram(const ProgramCode& program_code,
                                             const SwizzleData& swizzle_data, u32 main_offset,
                                             const RegGetter& inputreg_getter,
-                                            const RegGetter& outputreg_getter, bool sanitize_mul,
-                                            bool is_gs);
+                                            const RegGetter& outputreg_getter, bool sanitize_mul);
 
 } // namespace OpenGL::ShaderDecompiler
