@@ -188,7 +188,7 @@ static GameCoin ReadGameCoinData() {
         LOG_ERROR(Service_PTM, "Could not open the game coin data file!");
         return default_game_coin;
     }
-    u16 result;
+
     auto gamecoin = std::move(gamecoin_result).Unwrap();
     GameCoin gamecoin_data;
     gamecoin->Read(0, sizeof(GameCoin), reinterpret_cast<u8*>(&gamecoin_data));
