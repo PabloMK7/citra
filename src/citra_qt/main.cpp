@@ -712,6 +712,18 @@ void GMainWindow::OnOpenUpdater() {
     updater->LaunchUI();
 }
 
+void GMainWindow::PreventOSSleep() {
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+#endif
+}
+
+void GMainWindow::AllowOSSleep() {
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS);
+#endif
+}
+
 bool GMainWindow::LoadROM(const QString& filename) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
@@ -902,9 +914,7 @@ void GMainWindow::ShutdownGame() {
         return;
     }
 
-#ifdef _WIN32
-    SetThreadExecutionState(ES_CONTINUOUS);
-#endif
+    AllowOSSleep();
 
     discord_rpc->Pause();
     OnStopRecordingPlayback();
@@ -1223,9 +1233,7 @@ void GMainWindow::OnStartGame() {
         movie_record_path.clear();
     }
 
-#ifdef _WIN32
-    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-#endif
+    PreventOSSleep();
 
     emu_thread->SetRunning(true);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
@@ -1255,9 +1263,7 @@ void GMainWindow::OnPauseGame() {
     ui.action_Stop->setEnabled(true);
     ui.action_Capture_Screenshot->setEnabled(false);
 
-#ifdef _WIN32
-    SetThreadExecutionState(ES_CONTINUOUS);
-#endif
+    AllowOSSleep();
 }
 
 void GMainWindow::OnStopGame() {
