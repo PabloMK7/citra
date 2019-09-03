@@ -18,6 +18,9 @@
 #ifdef __APPLE__
 #include <unistd.h> // for chdir
 #endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/applets/mii_selector.h"
 #include "citra_qt/applets/swkbd.h"
@@ -709,6 +712,18 @@ void GMainWindow::OnOpenUpdater() {
     updater->LaunchUI();
 }
 
+void GMainWindow::PreventOSSleep() {
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+#endif
+}
+
+void GMainWindow::AllowOSSleep() {
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS);
+#endif
+}
+
 bool GMainWindow::LoadROM(const QString& filename) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
@@ -898,6 +913,8 @@ void GMainWindow::ShutdownGame() {
         OnStopVideoDumping();
         return;
     }
+
+    AllowOSSleep();
 
     discord_rpc->Pause();
     OnStopRecordingPlayback();
@@ -1216,6 +1233,8 @@ void GMainWindow::OnStartGame() {
         movie_record_path.clear();
     }
 
+    PreventOSSleep();
+
     emu_thread->SetRunning(true);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<std::string>("std::string");
@@ -1243,6 +1262,8 @@ void GMainWindow::OnPauseGame() {
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(true);
     ui.action_Capture_Screenshot->setEnabled(false);
+
+    AllowOSSleep();
 }
 
 void GMainWindow::OnStopGame() {

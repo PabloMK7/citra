@@ -104,6 +104,9 @@ private:
     void ConnectWidgetEvents();
     void ConnectMenuEvents();
 
+    void PreventOSSleep();
+    void AllowOSSleep();
+
     bool LoadROM(const QString& filename);
     void BootGame(const QString& filename);
     void ShutdownGame();
