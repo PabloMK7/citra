@@ -50,6 +50,7 @@ enum class GameListText {
     FileName,    ///< Display the file name of the entry
     FullPath,    ///< Display the full path of the entry
     TitleName,   ///< Display the name of the title
+    LongTitleName,   ///< Display the long name of the title
     TitleID,     ///< Display the title ID
 };
 

@@ -71,6 +71,17 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
 }
 
 /**
+ * Gets the long game title from SMDH data.
+ * @param smdh SMDH data
+ * @param language title language
+ * @return QString long title
+ */
+static QString GetQStringLongTitleFromSMDH(const Loader::SMDH& smdh,
+                                            Loader::SMDH::TitleLanguage language) {
+    return QString::fromUtf16(smdh.GetLongTitle(language).data());
+}
+
+/**
  * Gets the game region from SMDH data.
  * @param smdh SMDH data
  * @return QString region
@@ -139,6 +150,7 @@ public:
     static const int FullPathRole = SortRole + 1;
     static const int ProgramIdRole = SortRole + 2;
     static const int ExtdataIdRole = SortRole + 3;
+    static const int LongTitleRole = SortRole + 4;
 
     GameListItemPath() = default;
     GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id,
@@ -173,6 +185,10 @@ public:
         // Get title from SMDH
         setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English),
                 TitleRole);
+
+        // Get long title from SMDH
+        setData(GetQStringLongTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English),
+                LongTitleRole);
     }
 
     int type() const override {
@@ -189,11 +205,12 @@ public:
                 {UISettings::GameListText::FileName, QString::fromStdString(filename + extension)},
                 {UISettings::GameListText::FullPath, data(FullPathRole).toString()},
                 {UISettings::GameListText::TitleName, data(TitleRole).toString()},
+                {UISettings::GameListText::LongTitleName, data(LongTitleRole).toString()},
                 {UISettings::GameListText::TitleID,
                  QString::fromStdString(fmt::format("{:016X}", data(ProgramIdRole).toULongLong()))},
             };
 
-            const QString& row1 = display_texts.at(UISettings::values.game_list_row_1);
+            const QString& row1 = display_texts.at(UISettings::values.game_list_row_1).simplified();
 
             QString row2;
             auto row_2_id = UISettings::values.game_list_row_2;

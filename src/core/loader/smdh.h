@@ -86,6 +86,13 @@ struct SMDH {
      */
     std::array<u16, 0x40> GetShortTitle(Loader::SMDH::TitleLanguage language) const;
 
+    /**
+     * Gets the long game title from SMDH
+     * @param language title language
+     * @return UTF-16 array of the long title
+     */
+    std::array<u16, 0x80> GetLongTitle(Loader::SMDH::TitleLanguage language) const;
+
     std::vector<GameRegion> GetRegions() const;
 };
 static_assert(sizeof(SMDH) == 0x36C0, "SMDH structure size is wrong");
