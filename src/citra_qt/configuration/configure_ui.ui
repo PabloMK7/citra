@@ -131,12 +131,12 @@
             </item>
             <item>
              <property name="text">
-              <string>Title Name (long)</string>
+              <string>Title ID</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Title ID</string>
+              <string>Title Name (long)</string>
              </property>
             </item>
            </widget>
@@ -176,12 +176,12 @@
             </item>
             <item>
              <property name="text">
-              <string>Title Name (long)</string>
+              <string>Title ID</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Title ID</string>
+              <string>Title Name (long)</string>
              </property>
             </item>
            </widget>

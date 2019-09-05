@@ -50,9 +50,11 @@ enum class GameListText {
     FileName,    ///< Display the file name of the entry
     FullPath,    ///< Display the full path of the entry
     TitleName,   ///< Display the name of the title
-    LongTitleName,   ///< Display the long name of the title
     TitleID,     ///< Display the title ID
+    LongTitleName, ///< Display the long name of the title
 };
+// The length of the GameListText, excluding NoText
+constexpr int GAME_LIST_TEXT_LENGTH = 5;
 
 struct Values {
     QByteArray geometry;
