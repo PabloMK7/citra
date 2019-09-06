@@ -77,7 +77,7 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
  * @return QString long title
  */
 static QString GetQStringLongTitleFromSMDH(const Loader::SMDH& smdh,
-                                            Loader::SMDH::TitleLanguage language) {
+                                           Loader::SMDH::TitleLanguage language) {
     return QString::fromUtf16(smdh.GetLongTitle(language).data());
 }
 
