@@ -1738,7 +1738,6 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Y) + ", " +
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
-    semantic(VSOutputAttributes::POSITION_W) + ");\n";
     out += "    gl_Position = vtx_pos;\n";
     out += "#if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)\n";
     out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0

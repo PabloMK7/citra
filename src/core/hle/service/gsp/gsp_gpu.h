@@ -185,7 +185,8 @@ static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrec
 
 class GSP_GPU;
 
-struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+class SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+public:
     SessionData();
     SessionData(GSP_GPU* gsp);
     ~SessionData();
