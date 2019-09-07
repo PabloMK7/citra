@@ -11,6 +11,7 @@
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/service/gsp/gsp.h"
 #include "core/hw/gpu.h"

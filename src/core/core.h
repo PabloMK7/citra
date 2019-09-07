@@ -55,6 +55,8 @@ namespace VideoDumper {
 class Backend;
 }
 
+class RendererBase;
+
 namespace Core {
 
 class Timing;
@@ -169,6 +171,8 @@ public:
     AudioCore::DspInterface& DSP() {
         return *dsp_core;
     }
+
+    RendererBase& Renderer();
 
     /**
      * Gets a reference to the service manager.
