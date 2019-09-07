@@ -49,6 +49,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             if (!loader)
                 return true;
 
+            bool executable = false;
+            loader->IsExecutable(executable);
+            if (!executable)
+                return true;
+
             u64 program_id = 0;
             loader->ReadProgramId(program_id);
 

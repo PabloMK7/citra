@@ -41,6 +41,8 @@ public:
      */
     std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() override;
 
+    ResultStatus IsExecutable(bool& out_executable) override;
+
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
 
     ResultStatus ReadIcon(std::vector<u8>& buffer) override;
