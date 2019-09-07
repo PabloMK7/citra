@@ -11,6 +11,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 #include "common/common_types.h"
@@ -165,6 +166,41 @@ std::size_t ReadFileToString(bool text_file, const std::string& filename, std::s
  */
 void SplitFilename83(const std::string& filename, std::array<char, 9>& short_name,
                      std::array<char, 4>& extension);
+
+// Splits the path on '/' or '\' and put the components into a vector
+// i.e. "C:\Users\Yuzu\Documents\save.bin" becomes {"C:", "Users", "Yuzu", "Documents", "save.bin" }
+std::vector<std::string> SplitPathComponents(std::string_view filename);
+
+// Gets all of the text up to the last '/' or '\' in the path.
+std::string_view GetParentPath(std::string_view path);
+
+// Gets all of the text after the first '/' or '\' in the path.
+std::string_view GetPathWithoutTop(std::string_view path);
+
+// Gets the filename of the path
+std::string_view GetFilename(std::string_view path);
+
+// Gets the extension of the filename
+std::string_view GetExtensionFromFilename(std::string_view name);
+
+// Removes the final '/' or '\' if one exists
+std::string_view RemoveTrailingSlash(std::string_view path);
+
+// Creates a new vector containing indices [first, last) from the original.
+template <typename T>
+std::vector<T> SliceVector(const std::vector<T>& vector, std::size_t first, std::size_t last) {
+    if (first >= last)
+        return {};
+    last = std::min<std::size_t>(last, vector.size());
+    return std::vector<T>(vector.begin() + first, vector.begin() + first + last);
+}
+
+enum class DirectorySeparator { ForwardSlash, BackwardSlash, PlatformDefault };
+
+// Removes trailing slash, makes all '\\' into '/', and removes duplicate '/'. Makes '/' into '\\'
+// depending if directory_separator is BackwardSlash or PlatformDefault and running on windows
+std::string SanitizePath(std::string_view path,
+                         DirectorySeparator directory_separator = DirectorySeparator::ForwardSlash);
 
 // simple wrapper for cstdlib file functions to
 // hopefully will make error checking easier
