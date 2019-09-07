@@ -52,9 +52,8 @@ enum class GameListText {
     TitleName,     ///< Display the name of the title
     TitleID,       ///< Display the title ID
     LongTitleName, ///< Display the long name of the title
+    ListEnd,       ///< Keep this at the end of the enum.
 };
-// The length of the GameListText, excluding NoText
-constexpr int GAME_LIST_TEXT_LENGTH = 5;
 
 struct Values {
     QByteArray geometry;

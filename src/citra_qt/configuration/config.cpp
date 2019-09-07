@@ -306,17 +306,19 @@ void Config::ReadValues() {
     }
     UISettings::values.game_list_icon_size = UISettings::GameListIconSize{icon_size};
 
-    int row_1 = ReadSetting("row1", 2).toInt();
-    if (row_1 < 0 || row_1 >= UISettings::GAME_LIST_TEXT_LENGTH) {
-        row_1 = 2;
+    UISettings::GameListText row_1 = UISettings::GameListText{
+        ReadSetting("row1", static_cast<int>(UISettings::GameListText::TitleName)).toInt()};
+    if (row_1 <= UISettings::GameListText::NoText || row_1 >= UISettings::GameListText::ListEnd) {
+        row_1 = UISettings::GameListText::TitleName;
     }
-    UISettings::values.game_list_row_1 = UISettings::GameListText{row_1};
+    UISettings::values.game_list_row_1 = row_1;
 
-    int row_2 = ReadSetting("row2", 0).toInt();
-    if (row_2 < -1 || row_2 >= UISettings::GAME_LIST_TEXT_LENGTH) {
-        row_2 = 0;
+    UISettings::GameListText row_2 = UISettings::GameListText{
+        ReadSetting("row2", static_cast<int>(UISettings::GameListText::FileName)).toInt()};
+    if (row_2 < UISettings::GameListText::NoText || row_2 >= UISettings::GameListText::ListEnd) {
+        row_2 = UISettings::GameListText::FileName;
     }
-    UISettings::values.game_list_row_2 = UISettings::GameListText{row_2};
+    UISettings::values.game_list_row_2 = row_2;
 
     UISettings::values.game_list_hide_no_icon = ReadSetting("hideNoIcon", false).toBool();
     UISettings::values.game_list_single_line_mode = ReadSetting("singleLineMode", false).toBool();
