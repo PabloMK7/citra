@@ -16,6 +16,8 @@
 
 namespace OpenGL {
 
+enum class ProgramType : u32 { VS, GS, FS };
+
 enum Attributes {
     ATTRIBUTE_POSITION,
     ATTRIBUTE_COLOR,
@@ -161,8 +163,11 @@ struct PicaShaderConfigCommon {
  * shader.
  */
 struct PicaVSConfig : Common::HashableStruct<PicaShaderConfigCommon> {
-    explicit PicaVSConfig(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup) {
-        state.Init(regs.vs, setup);
+    explicit PicaVSConfig(const Pica::ShaderRegs& regs, Pica::Shader::ShaderSetup& setup) {
+        state.Init(regs, setup);
+    }
+    explicit PicaVSConfig(PicaShaderConfigCommon& conf) {
+        state = conf;
     }
 };
 

@@ -42,6 +42,9 @@ public:
     explicit RasterizerOpenGL(Frontend::EmuWindow& renderer);
     ~RasterizerOpenGL() override;
 
+    void LoadDiskResources(const std::atomic_bool& stop_loading,
+                           const VideoCore::DiskResourceLoadCallback& callback) override;
+
     void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
                      const Pica::Shader::OutputVertex& v2) override;
     void DrawTriangles() override;
