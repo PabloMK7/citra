@@ -11,6 +11,7 @@
 #define BUILD_DATE   "@BUILD_DATE@"
 #define BUILD_VERSION "@BUILD_VERSION@"
 #define BUILD_FULLNAME "@BUILD_FULLNAME@"
+#define SHADER_CACHE_VERSION "@SHADER_CACHE_VERSION@"
 
 namespace Common {
 
@@ -21,6 +22,7 @@ const char g_build_name[]   = BUILD_NAME;
 const char g_build_date[]   = BUILD_DATE;
 const char g_build_fullname[] = BUILD_FULLNAME;
 const char g_build_version[]  = BUILD_VERSION;
+const char g_shader_cache_version[] = SHADER_CACHE_VERSION;
 
 } // namespace
 
