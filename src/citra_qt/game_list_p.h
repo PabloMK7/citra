@@ -220,7 +220,7 @@ public:
                                ? QStringLiteral("     ")
                                : QStringLiteral("\n     ");
                 }
-                row2 += display_texts.at(row_2_id);
+                row2 += display_texts.at(row_2_id).simplified();
             }
             return QString(row1 + row2);
         } else {
