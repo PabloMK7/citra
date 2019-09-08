@@ -300,11 +300,13 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("GameList");
-    int icon_size = ReadSetting("iconSize", 2).toInt();
-    if (icon_size < 0 || icon_size > 2) {
-        icon_size = 2;
+    UISettings::GameListIconSize icon_size = UISettings::GameListIconSize{
+        ReadSetting("iconSize", static_cast<int>(UISettings::GameListIconSize::LargeIcon)).toInt()};
+    if (icon_size < UISettings::GameListIconSize::NoIcon ||
+        icon_size > UISettings::GameListIconSize::LargeIcon) {
+        icon_size = UISettings::GameListIconSize::LargeIcon;
     }
-    UISettings::values.game_list_icon_size = UISettings::GameListIconSize{icon_size};
+    UISettings::values.game_list_icon_size = icon_size;
 
     int row_1 = ReadSetting("row1", 2).toInt();
     if (row_1 < 0 || row_1 > 3) {
