@@ -8,8 +8,8 @@
 #include <mutex>
 #include <numeric>
 #include <thread>
+#include <fmt/chrono.h>
 #include <fmt/format.h>
-#include <fmt/time.h>
 #include "common/file_util.h"
 #include "core/hw/gpu.h"
 #include "core/perf_stats.h"
