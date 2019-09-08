@@ -127,6 +127,17 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
 
     state.texture2_use_coord1 = regs.texturing.main_config.texture2_use_coord1 != 0;
 
+    if (GLES) {
+        // With GLES, we need this in the fragment shader to emulate logic operations
+        state.alphablend_enable =
+            Pica::g_state.regs.framebuffer.output_merger.alphablend_enable == 1;
+        state.logic_op = regs.framebuffer.output_merger.logic_op;
+    } else {
+        // We don't need these otherwise, reset them to avoid unnecessary shader generation
+        state.alphablend_enable = {};
+        state.logic_op = {};
+    }
+
     // Copy relevant tev stages fields.
     // We don't sync const_color here because of the high variance, it is a
     // shader uniform instead.
@@ -1566,6 +1577,32 @@ do {
         out += "gl_FragDepth = depth;\n";
         // Round the final fragment color to maintain the PICA's 8 bits of precision
         out += "color = byteround(last_tex_env_out);\n";
+    }
+
+    if (GLES) {
+        if (!state.alphablend_enable) {
+            switch (state.logic_op) {
+            case FramebufferRegs::LogicOp::Clear:
+                out += "color = vec4(0);\n";
+                break;
+            case FramebufferRegs::LogicOp::Set:
+                out += "color = vec4(1);\n";
+                break;
+            case FramebufferRegs::LogicOp::Copy:
+                // Take the color output as-is
+                break;
+            case FramebufferRegs::LogicOp::CopyInverted:
+                out += "color = ~color;\n";
+                break;
+            case FramebufferRegs::LogicOp::NoOp:
+                // We need to discard the color, but not necessarily the depth. This is not possible
+                // with fragment shader alone, so we emulate this behavior on GLES with glColorMask.
+                break;
+            default:
+                LOG_CRITICAL(HW_GPU, "Unhandled logic_op {:x}", static_cast<int>(state.logic_op));
+                UNIMPLEMENTED();
+            }
+        }
     }
 
     out += '}';

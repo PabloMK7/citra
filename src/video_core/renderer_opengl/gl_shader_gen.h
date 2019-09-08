@@ -61,6 +61,8 @@ struct PicaFSConfigState {
     Pica::RasterizerRegs::DepthBuffering depthmap_enable;
     Pica::TexturingRegs::FogMode fog_mode;
     bool fog_flip;
+    bool alphablend_enable;
+    Pica::FramebufferRegs::LogicOp logic_op;
 
     struct {
         struct {

@@ -948,6 +948,10 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     // Blending
     case PICA_REG_INDEX(framebuffer.output_merger.alphablend_enable):
+        if (GLES) {
+            // With GLES, we need this in the fragment shader to emulate logic operations
+            shader_dirty = true;
+        }
         SyncBlendEnabled();
         break;
     case PICA_REG_INDEX(framebuffer.output_merger.alpha_blending):
@@ -1068,6 +1072,10 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     // Logic op
     case PICA_REG_INDEX(framebuffer.output_merger.logic_op):
+        if (GLES) {
+            // With GLES, we need this in the fragment shader to emulate logic operations
+            shader_dirty = true;
+        }
         SyncLogicOp();
         break;
 
@@ -1822,11 +1830,31 @@ void RasterizerOpenGL::SyncAlphaTest() {
 }
 
 void RasterizerOpenGL::SyncLogicOp() {
-    state.logic_op = PicaToGL::LogicOp(Pica::g_state.regs.framebuffer.output_merger.logic_op);
+    const auto& regs = Pica::g_state.regs;
+    state.logic_op = PicaToGL::LogicOp(regs.framebuffer.output_merger.logic_op);
+
+    if (GLES) {
+        if (!regs.framebuffer.output_merger.alphablend_enable) {
+            if (regs.framebuffer.output_merger.logic_op == Pica::FramebufferRegs::LogicOp::NoOp) {
+                // Color output is disabled by logic operation. We use color write mask to skip
+                // color but allow depth write.
+                state.color_mask = {};
+            }
+        }
+    }
 }
 
 void RasterizerOpenGL::SyncColorWriteMask() {
     const auto& regs = Pica::g_state.regs;
+    if (GLES) {
+        if (!regs.framebuffer.output_merger.alphablend_enable) {
+            if (regs.framebuffer.output_merger.logic_op == Pica::FramebufferRegs::LogicOp::NoOp) {
+                // Color output is disabled by logic operation. We use color write mask to skip
+                // color but allow depth write. Return early to avoid overwriting this.
+                return;
+            }
+        }
+    }
 
     auto IsColorWriteEnabled = [&](u32 value) {
         return (regs.framebuffer.framebuffer.allow_color_write != 0 && value != 0) ? GL_TRUE
