@@ -300,7 +300,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("GameList");
-    UISettings::GameListIconSize icon_size = UISettings::GameListIconSize{
+    auto icon_size = UISettings::GameListIconSize{
         ReadSetting("iconSize", static_cast<int>(UISettings::GameListIconSize::LargeIcon)).toInt()};
     if (icon_size < UISettings::GameListIconSize::NoIcon ||
         icon_size > UISettings::GameListIconSize::LargeIcon) {
