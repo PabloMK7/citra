@@ -203,22 +203,22 @@ ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file) {
     file.ReadBytes(compressed.data(), compressed.size());
     const std::vector<u8> decompressed = Common::Compression::DecompressDataZSTD(compressed);
     SaveArrayToPrecompiled(decompressed.data(), decompressed.size());
-    precompiled_cache_virtual_file_offset = 0;
+    decompressed_precompiled_cache_offset = 0;
 
     ShaderCacheVersionHash file_hash{};
     if (!LoadArrayFromPrecompiled(file_hash.data(), file_hash.size())) {
-        precompiled_cache_virtual_file_offset = 0;
+        decompressed_precompiled_cache_offset = 0;
         return {};
     }
     if (GetShaderCacheVersionHash() != file_hash) {
         LOG_INFO(Render_OpenGL, "Precompiled cache is from another version of the emulator");
-        precompiled_cache_virtual_file_offset = 0;
+        decompressed_precompiled_cache_offset = 0;
         return {};
     }
 
     std::unordered_map<u64, ShaderDiskCacheDecompiled> decompiled;
     ShaderDumpsMap dumps;
-    while (precompiled_cache_virtual_file_offset < precompiled_cache_virtual_file.GetSize()) {
+    while (decompressed_precompiled_cache_offset < decompressed_precompiled_cache.size()) {
         PrecompiledEntryKind kind{};
         if (!LoadObjectFromPrecompiled(kind)) {
             return {};
@@ -308,7 +308,7 @@ void ShaderDiskCache::InvalidateTransferable() {
 
 void ShaderDiskCache::InvalidatePrecompiled() {
     // Clear virtaul precompiled cache file
-    precompiled_cache_virtual_file.Resize(0);
+    decompressed_precompiled_cache.resize(0);
 
     if (!FileUtil::Delete(GetPrecompiledPath())) {
         LOG_ERROR(Render_OpenGL, "Failed to invalidate precompiled file={}", GetPrecompiledPath());
@@ -342,7 +342,7 @@ void ShaderDiskCache::SaveDecompiled(u64 unique_identifier,
     if (!IsUsable())
         return;
 
-    if (precompiled_cache_virtual_file.GetSize() == 0) {
+    if (decompressed_precompiled_cache.size() == 0) {
         SavePrecompiledHeaderToVirtualPrecompiledCache();
     }
 
@@ -413,10 +413,9 @@ void ShaderDiskCache::SavePrecompiledHeaderToVirtualPrecompiledCache() {
 }
 
 void ShaderDiskCache::SaveVirtualPrecompiledFile() {
-    precompiled_cache_virtual_file_offset = 0;
-    const std::vector<u8>& uncompressed = precompiled_cache_virtual_file.ReadAllBytes();
-    const std::vector<u8>& compressed =
-        Common::Compression::CompressDataZSTDDefault(uncompressed.data(), uncompressed.size());
+    decompressed_precompiled_cache_offset = 0;
+    const std::vector<u8>& compressed = Common::Compression::CompressDataZSTDDefault(
+        decompressed_precompiled_cache.data(), decompressed_precompiled_cache.size());
 
     const auto precompiled_path{GetPrecompiledPath()};
     FileUtil::IOFile file(precompiled_path, "wb");

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <optional>
@@ -18,7 +19,6 @@
 
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "common/vfs/vfs_vector.h"
 #include "video_core/regs.h"
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
@@ -163,18 +163,20 @@ private:
 
     template <typename T>
     bool SaveArrayToPrecompiled(const T* data, std::size_t length) {
-        const std::size_t write_length = precompiled_cache_virtual_file.WriteArray(
-            data, length, precompiled_cache_virtual_file_offset);
-        precompiled_cache_virtual_file_offset += write_length;
-        return write_length == sizeof(T) * length;
+        const u8* data_view = reinterpret_cast<const u8*>(data);
+        decompressed_precompiled_cache.insert(decompressed_precompiled_cache.end(), &data_view[0],
+                                              &data_view[length * sizeof(T)]);
+        decompressed_precompiled_cache_offset += length * sizeof(T);
+        return true;
     }
 
     template <typename T>
     bool LoadArrayFromPrecompiled(T* data, std::size_t length) {
-        const std::size_t read_length = precompiled_cache_virtual_file.ReadArray(
-            data, length, precompiled_cache_virtual_file_offset);
-        precompiled_cache_virtual_file_offset += read_length;
-        return read_length == sizeof(T) * length;
+        u8* data_view = reinterpret_cast<u8*>(data);
+        std::copy_n(decompressed_precompiled_cache.data() + decompressed_precompiled_cache_offset,
+                    length * sizeof(T), data_view);
+        decompressed_precompiled_cache_offset += length * sizeof(T);
+        return true;
     }
 
     template <typename T>
@@ -194,9 +196,9 @@ private:
 
     // Stores whole precompiled cache which will be read from or saved to the precompiled chache
     // file
-    Common::VectorVfsFile precompiled_cache_virtual_file;
+    std::vector<u8> decompressed_precompiled_cache;
     // Stores the current offset of the precompiled cache file for IO purposes
-    std::size_t precompiled_cache_virtual_file_offset = 0;
+    std::size_t decompressed_precompiled_cache_offset = 0;
 
     // Stored transferable shaders
     std::unordered_map<u64, ShaderDiskCacheRaw> transferable;
