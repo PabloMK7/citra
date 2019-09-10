@@ -435,6 +435,8 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
 void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                                          const VideoCore::DiskResourceLoadCallback& callback) {
     if (!impl->separable) {
+        LOG_ERROR(Render_OpenGL,
+                  "Cannot load disk cache as separate shader programs are unsupported!");
         return;
     }
     auto& disk_cache = impl->disk_cache;
