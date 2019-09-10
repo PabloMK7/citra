@@ -188,6 +188,8 @@ public:
     }
 
     void Inject(OGLProgram&& program) {
+        SetShaderUniformBlockBindings(program.handle);
+        SetShaderSamplerBindings(program.handle);
         shader_or_program = std::move(program);
     }
 
