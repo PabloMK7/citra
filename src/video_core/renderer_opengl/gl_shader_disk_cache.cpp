@@ -133,7 +133,7 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
     if (version < NativeVersion) {
         LOG_INFO(Render_OpenGL, "Transferable shader cache is old - removing");
         file.Close();
-        InvalidateTransferable();
+        InvalidateAll();
         return {};
     }
     if (version > NativeVersion) {
@@ -298,7 +298,7 @@ bool ShaderDiskCache::SaveDecompiledFile(u64 unique_identifier,
     return true;
 }
 
-void ShaderDiskCache::InvalidateTransferable() {
+void ShaderDiskCache::InvalidateAll() {
     if (!FileUtil::Delete(GetTransferablePath())) {
         LOG_ERROR(Render_OpenGL, "Failed to invalidate transferable file={}",
                   GetTransferablePath());
@@ -331,7 +331,7 @@ void ShaderDiskCache::SaveRaw(const ShaderDiskCacheRaw& entry) {
     if (file.WriteObject(TransferableEntryKind::Raw) != 1 || !entry.Save(file)) {
         LOG_ERROR(Render_OpenGL, "Failed to save raw transferable cache entry - removing");
         file.Close();
-        InvalidateTransferable();
+        InvalidateAll();
         return;
     }
     transferable.insert({id, entry});

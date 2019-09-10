@@ -481,8 +481,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                               "Invalid hash in entry={:016x} (obtained hash={:016x}) - removing "
                               "shader cache",
                               raw.GetUniqueIdentifier(), calculated_hash);
-                    disk_cache.InvalidateTransferable();
-                    disk_cache.InvalidatePrecompiled();
+                    disk_cache.InvalidateAll();
                     return;
                 }
 
@@ -600,7 +599,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     LoadTransferable(0, raws.size(), raws);
 
     if (compilation_failed) {
-        disk_cache.InvalidateTransferable();
+        disk_cache.InvalidateAll();
     }
 
     if (precompiled_cache_altered) {

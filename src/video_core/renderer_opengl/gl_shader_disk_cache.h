@@ -99,7 +99,7 @@ public:
     std::pair<ShaderDecompiledMap, ShaderDumpsMap> LoadPrecompiled();
 
     /// Removes the transferable (and precompiled) cache file.
-    void InvalidateTransferable();
+    void InvalidateAll();
 
     /// Removes the precompiled cache file and clears virtual precompiled cache file.
     void InvalidatePrecompiled();
