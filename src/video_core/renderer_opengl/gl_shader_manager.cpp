@@ -573,20 +573,23 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 result = r;
             } else {
                 // Unsupported shader type got stored somehow so nuke the cache
-                LOG_CRITICAL(Frontend, "failed to load raw programtype {}",
-                             static_cast<u32>(raw.GetProgramType()));
+                LOG_ERROR(Frontend, "failed to load raw programtype {}",
+                          static_cast<u32>(raw.GetProgramType()));
                 compilation_failed = true;
                 return;
             }
             if (handle == 0) {
-                LOG_CRITICAL(Frontend, "compilation from raw failed {:x} {:x}",
-                             raw.GetProgramCode().at(0), raw.GetProgramCode().at(1));
+                LOG_ERROR(Frontend, "compilation from raw failed {:x} {:x}",
+                          raw.GetProgramCode().at(0), raw.GetProgramCode().at(1));
                 compilation_failed = true;
                 return;
             }
-            disk_cache.SaveDecompiled(unique_identifier, *result);
-            disk_cache.SaveDump(unique_identifier, handle);
-            precompiled_cache_altered = true;
+            // If this is a new shader, add it the precompiled cache
+            if (result) {
+                disk_cache.SaveDecompiled(unique_identifier, *result);
+                disk_cache.SaveDump(unique_identifier, handle);
+                precompiled_cache_altered = true;
+            }
 
             if (callback) {
                 callback(VideoCore::LoadCallbackStage::Build, i, raws.size());
