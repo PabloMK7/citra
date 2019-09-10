@@ -185,6 +185,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="toggle_single_line_mode">
+          <property name="text">
+           <string>Single Line Mode</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <unordered_map>
 #include <utility>
@@ -91,13 +92,19 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
         return QObject::tr("Invalid region");
     }
 
-    if (std::find(regions.begin(), regions.end(), GameRegion::RegionFree) != regions.end()) {
+    const bool region_free =
+        std::all_of(regions_map.begin(), regions_map.end(), [&regions](const auto& it) {
+            return std::find(regions.begin(), regions.end(), it.first) != regions.end();
+        });
+    if (region_free) {
         return QObject::tr("Region free");
     }
 
+    const QString separator =
+        UISettings::values.game_list_single_line_mode ? QStringLiteral(", ") : QStringLiteral("\n");
     QString result = QObject::tr(regions_map.at(regions.front()));
     for (auto region = ++regions.begin(); region != regions.end(); ++region) {
-        result += QStringLiteral("\n") + QObject::tr(regions_map.at(*region));
+        result += separator + QObject::tr(regions_map.at(*region));
     }
     return result;
 }
@@ -191,7 +198,12 @@ public:
             QString row2;
             auto row_2_id = UISettings::values.game_list_row_2;
             if (row_2_id != UISettings::GameListText::NoText) {
-                row2 = (row1.isEmpty() ? "" : "\n     ") + display_texts.at(row_2_id);
+                if (!row1.isEmpty()) {
+                    row2 = UISettings::values.game_list_single_line_mode
+                               ? QStringLiteral("     ")
+                               : QStringLiteral("\n     ");
+                }
+                row2 += display_texts.at(row_2_id);
             }
             return QString(row1 + row2);
         } else {

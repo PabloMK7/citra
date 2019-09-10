@@ -49,10 +49,6 @@ std::array<u16, 0x40> SMDH::GetShortTitle(Loader::SMDH::TitleLanguage language) 
 }
 
 std::vector<SMDH::GameRegion> SMDH::GetRegions() const {
-    if (region_lockout == 0x7fffffff) {
-        return std::vector<GameRegion>{GameRegion::RegionFree};
-    }
-
     constexpr u32 REGION_COUNT = 7;
     std::vector<GameRegion> result;
     for (u32 region = 0; region < REGION_COUNT; ++region) {

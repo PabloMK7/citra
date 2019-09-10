@@ -47,6 +47,7 @@ void ConfigureUi::SetConfiguration() {
     ui->row_2_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.game_list_row_2) +
                                              1);
     ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon);
+    ui->toggle_single_line_mode->setChecked(UISettings::values.game_list_single_line_mode);
 }
 
 void ConfigureUi::ApplyConfiguration() {
@@ -59,6 +60,7 @@ void ConfigureUi::ApplyConfiguration() {
     UISettings::values.game_list_row_2 =
         static_cast<UISettings::GameListText>(ui->row_2_text_combobox->currentIndex() - 1);
     UISettings::values.game_list_hide_no_icon = ui->toggle_hide_no_icon->isChecked();
+    UISettings::values.game_list_single_line_mode = ui->toggle_single_line_mode->isChecked();
 }
 
 void ConfigureUi::OnLanguageChanged(int index) {

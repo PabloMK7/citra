@@ -70,7 +70,6 @@ struct SMDH {
         China = 4,
         Korea = 5,
         Taiwan = 6,
-        RegionFree = 7,
     };
 
     /**
