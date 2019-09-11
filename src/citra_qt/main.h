@@ -68,6 +68,8 @@ public:
     GameList* game_list;
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 
+public slots:
+    void OnLoseFocus(Qt::ApplicationState state);
 signals:
 
     /**

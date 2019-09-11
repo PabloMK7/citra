@@ -499,6 +499,17 @@ void GMainWindow::RestoreUIState() {
     statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
 }
 
+void GMainWindow::OnLoseFocus(Qt::ApplicationState state) {
+    if (ui.action_Pause->isEnabled() &&
+        (state == Qt::ApplicationSuspended ||
+         state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
+        OnPauseGame();
+    }
+    if (ui.action_Start->isEnabled() && state == Qt::ApplicationActive) {
+        OnStartGame();
+    }
+}
+
 void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::GameChosen, this, &GMainWindow::OnGameListLoadFile);
     connect(game_list, &GameList::OpenDirectory, this, &GMainWindow::OnGameListOpenDirectory);
@@ -2013,6 +2024,10 @@ int main(int argc, char* argv[]) {
     Core::System::GetInstance().RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 
     main_window.show();
+
+    QObject::connect(&app, &QGuiApplication::applicationStateChanged, &main_window,
+                     &GMainWindow::OnLoseFocus);
+
     int result = app.exec();
     detached_tasks.WaitForAllTasks();
     return result;
