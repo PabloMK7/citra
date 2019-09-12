@@ -503,9 +503,11 @@ void GMainWindow::OnLoseFocus(Qt::ApplicationState state) {
     if (ui.action_Pause->isEnabled() &&
         (state == Qt::ApplicationSuspended ||
          state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
+        auto_paused = true;
         OnPauseGame();
     }
-    if (ui.action_Start->isEnabled() && state == Qt::ApplicationActive) {
+    if (ui.action_Start->isEnabled() && auto_paused && state == Qt::ApplicationActive) {
+        auto_paused = false;
         OnStartGame();
     }
 }

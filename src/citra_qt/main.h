@@ -233,6 +233,8 @@ private:
     // The path to the game currently running
     QString game_path;
 
+    bool auto_paused = false;
+
     // Movie
     bool movie_record_on_start = false;
     QString movie_record_path;
