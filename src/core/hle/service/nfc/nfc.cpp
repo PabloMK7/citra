@@ -53,7 +53,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (nfc->nfc_tag_state != TagState::NotInitialized) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
@@ -99,13 +99,14 @@ void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (nfc->nfc_tag_state != TagState::NotScanning &&
         nfc->nfc_tag_state != TagState::TagOutOfRange) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
     }
 
     nfc->nfc_tag_state = TagState::Scanning;
+    nfc->SyncTagState();
 
     rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called, in_val={:04x}", in_val);
@@ -116,7 +117,7 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
 
     if (nfc->nfc_tag_state != TagState::TagInRange &&
         nfc->nfc_tag_state != TagState::TagDataLoaded && nfc->nfc_tag_state != TagState::Unknown6) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
@@ -163,7 +164,7 @@ void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (nfc->nfc_tag_state == TagState::NotInitialized ||
         nfc->nfc_tag_state == TagState::NotScanning) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
@@ -192,13 +193,14 @@ void Module::Interface::ResetTagScanState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (nfc->nfc_tag_state != TagState::TagDataLoaded && nfc->nfc_tag_state != TagState::Unknown6) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
     }
 
     nfc->nfc_tag_state = TagState::TagInRange;
+    nfc->SyncTagState();
 
     rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NFC, "called");
@@ -208,7 +210,7 @@ void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0B, 0, 0);
 
     if (nfc->nfc_tag_state != TagState::NotScanning) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
@@ -225,7 +227,7 @@ void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0C, 0, 0);
 
     if (nfc->nfc_tag_state != TagState::NotScanning) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
@@ -243,7 +245,7 @@ void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.PushEnum(nfc->nfc_tag_state.load());
+    rb.PushEnum(nfc->nfc_tag_state);
     LOG_DEBUG(Service_NFC, "called");
 }
 
@@ -261,7 +263,7 @@ void Module::Interface::Unknown0x1A(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (nfc->nfc_tag_state != TagState::TagInRange) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
@@ -277,7 +279,7 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1B, 0, 0);
 
     if (nfc->nfc_tag_state != TagState::TagDataLoaded && nfc->nfc_tag_state != TagState::Unknown6) {
-        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state.load()));
+        LOG_ERROR(Service_NFC, "Invalid TagState {}", static_cast<int>(nfc->nfc_tag_state));
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
@@ -304,15 +306,29 @@ std::shared_ptr<Module> Module::Interface::GetModule() const {
 void Module::Interface::LoadAmiibo(const AmiiboData& amiibo_data) {
     std::lock_guard lock(HLE::g_hle_lock);
     nfc->amiibo_data = amiibo_data;
-    nfc->nfc_tag_state = Service::NFC::TagState::TagInRange;
-    nfc->tag_in_range_event->Signal();
+    nfc->amiibo_in_range = true;
+    nfc->SyncTagState();
 }
 
 void Module::Interface::RemoveAmiibo() {
     std::lock_guard lock(HLE::g_hle_lock);
-    nfc->nfc_tag_state = Service::NFC::TagState::TagOutOfRange;
-    nfc->tag_out_of_range_event->Signal();
-    nfc->amiibo_data = {};
+    nfc->amiibo_in_range = false;
+    nfc->SyncTagState();
+}
+
+void Module::SyncTagState() {
+    if (amiibo_in_range &&
+        (nfc_tag_state == TagState::TagOutOfRange || nfc_tag_state == TagState::Scanning)) {
+        // TODO (wwylele): Should TagOutOfRange->TagInRange transition only happen on the same tag
+        // detected on Scanning->TagInRange?
+        nfc_tag_state = TagState::TagInRange;
+        tag_in_range_event->Signal();
+    } else if (!amiibo_in_range && nfc_tag_state == TagState::TagInRange) {
+        nfc_tag_state = TagState::TagOutOfRange;
+        // TODO (wwylele): If a tag is removed during TagDataLoaded/Unknown6, should this event
+        // signals early?
+        tag_out_of_range_event->Signal();
+    }
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name, u32 max_session)
