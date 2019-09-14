@@ -72,7 +72,7 @@ struct Values {
 
     bool confirm_before_closing;
     bool first_start;
-    bool pause_when_on_background;
+    bool pause_when_in_background;
 
     bool updater_found;
     bool update_on_close;

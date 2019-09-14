@@ -499,8 +499,8 @@ void GMainWindow::RestoreUIState() {
     statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
 }
 
-void GMainWindow::OnLoseFocus(Qt::ApplicationState state) {
-    if (UISettings::values.pause_when_on_background) {
+void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
+    if (UISettings::values.pause_when_in_background) {
         if (ui.action_Pause->isEnabled() &&
             (state == Qt::ApplicationSuspended ||
              state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
@@ -2030,7 +2030,7 @@ int main(int argc, char* argv[]) {
     main_window.show();
 
     QObject::connect(&app, &QGuiApplication::applicationStateChanged, &main_window,
-                     &GMainWindow::OnLoseFocus);
+                     &GMainWindow::OnAppFocusStateChanged);
 
     int result = app.exec();
     detached_tasks.WaitForAllTasks();

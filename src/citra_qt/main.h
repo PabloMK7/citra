@@ -69,7 +69,7 @@ public:
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 
 public slots:
-    void OnLoseFocus(Qt::ApplicationState state);
+    void OnAppFocusStateChanged(Qt::ApplicationState state);
 signals:
 
     /**
