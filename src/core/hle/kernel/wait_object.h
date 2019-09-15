@@ -7,7 +7,6 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 
