@@ -156,9 +156,9 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
 
     // Load default vertex input attributes
-    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[0], 0x233):
-    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[1], 0x234):
-    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[2], 0x235): {
+    case PICA_REG_INDEX(pipeline.vs_default_attributes_setup.set_value[0]):
+    case PICA_REG_INDEX(pipeline.vs_default_attributes_setup.set_value[1]):
+    case PICA_REG_INDEX(pipeline.vs_default_attributes_setup.set_value[2]): {
         // TODO: Does actual hardware indeed keep an intermediate buffer or does
         //       it directly write the values?
         g_state.default_attr_write_buffer[g_state.default_attr_counter++] = value;
@@ -254,8 +254,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         // This register likely just enables vertex processing and doesn't need any special handling
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(pipeline.command_buffer.trigger[0], 0x23c):
-    case PICA_REG_INDEX_WORKAROUND(pipeline.command_buffer.trigger[1], 0x23d): {
+    case PICA_REG_INDEX(pipeline.command_buffer.trigger[0]):
+    case PICA_REG_INDEX(pipeline.command_buffer.trigger[1]): {
         unsigned index =
             static_cast<unsigned>(id - PICA_REG_INDEX(pipeline.command_buffer.trigger[0]));
         u32* head_ptr = (u32*)VideoCore::g_memory->GetPhysicalPointer(
@@ -429,38 +429,38 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         WriteUniformBoolReg(g_state.gs, g_state.regs.gs.bool_uniforms.Value());
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[0], 0x281):
-    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[1], 0x282):
-    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[2], 0x283):
-    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[3], 0x284): {
-        unsigned index = (id - PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[0], 0x281));
+    case PICA_REG_INDEX(gs.int_uniforms[0]):
+    case PICA_REG_INDEX(gs.int_uniforms[1]):
+    case PICA_REG_INDEX(gs.int_uniforms[2]):
+    case PICA_REG_INDEX(gs.int_uniforms[3]): {
+        unsigned index = (id - PICA_REG_INDEX(gs.int_uniforms[0]));
         auto values = regs.gs.int_uniforms[index];
         WriteUniformIntReg(g_state.gs, index,
                            Common::Vec4<u8>(values.x, values.y, values.z, values.w));
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[0], 0x291):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[1], 0x292):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[2], 0x293):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[3], 0x294):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[4], 0x295):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[5], 0x296):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[6], 0x297):
-    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[7], 0x298): {
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[0]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[1]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[2]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[3]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[4]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[5]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[6]):
+    case PICA_REG_INDEX(gs.uniform_setup.set_value[7]): {
         WriteUniformFloatReg(g_state.regs.gs, g_state.gs, g_state.gs_float_regs_counter,
                              g_state.gs_uniform_write_buffer, value);
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[0], 0x29c):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[1], 0x29d):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[2], 0x29e):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[3], 0x29f):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[4], 0x2a0):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[5], 0x2a1):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[6], 0x2a2):
-    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[7], 0x2a3): {
+    case PICA_REG_INDEX(gs.program.set_word[0]):
+    case PICA_REG_INDEX(gs.program.set_word[1]):
+    case PICA_REG_INDEX(gs.program.set_word[2]):
+    case PICA_REG_INDEX(gs.program.set_word[3]):
+    case PICA_REG_INDEX(gs.program.set_word[4]):
+    case PICA_REG_INDEX(gs.program.set_word[5]):
+    case PICA_REG_INDEX(gs.program.set_word[6]):
+    case PICA_REG_INDEX(gs.program.set_word[7]): {
         u32& offset = g_state.regs.gs.program.offset;
         if (offset >= 4096) {
             LOG_ERROR(HW_GPU, "Invalid GS program offset {}", offset);
@@ -472,14 +472,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[0], 0x2a6):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[1], 0x2a7):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[2], 0x2a8):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[3], 0x2a9):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[4], 0x2aa):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[5], 0x2ab):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[6], 0x2ac):
-    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[7], 0x2ad): {
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[0]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[1]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[2]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[3]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[4]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[5]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[6]):
+    case PICA_REG_INDEX(gs.swizzle_patterns.set_word[7]): {
         u32& offset = g_state.regs.gs.swizzle_patterns.offset;
         if (offset >= g_state.gs.swizzle_data.size()) {
             LOG_ERROR(HW_GPU, "Invalid GS swizzle pattern offset {}", offset);
@@ -496,40 +496,40 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         WriteUniformBoolReg(g_state.vs, g_state.regs.vs.bool_uniforms.Value());
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1):
-    case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[1], 0x2b2):
-    case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[2], 0x2b3):
-    case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[3], 0x2b4): {
+    case PICA_REG_INDEX(vs.int_uniforms[0]):
+    case PICA_REG_INDEX(vs.int_uniforms[1]):
+    case PICA_REG_INDEX(vs.int_uniforms[2]):
+    case PICA_REG_INDEX(vs.int_uniforms[3]): {
         // TODO (wwylele): does regs.pipeline.gs_unit_exclusive_configuration affect this?
-        unsigned index = (id - PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1));
+        unsigned index = (id - PICA_REG_INDEX(vs.int_uniforms[0]));
         auto values = regs.vs.int_uniforms[index];
         WriteUniformIntReg(g_state.vs, index,
                            Common::Vec4<u8>(values.x, values.y, values.z, values.w));
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[0], 0x2c1):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[1], 0x2c2):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[2], 0x2c3):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[3], 0x2c4):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[4], 0x2c5):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[5], 0x2c6):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[6], 0x2c7):
-    case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[7], 0x2c8): {
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[0]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[1]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[2]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[3]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[4]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[5]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[6]):
+    case PICA_REG_INDEX(vs.uniform_setup.set_value[7]): {
         // TODO (wwylele): does regs.pipeline.gs_unit_exclusive_configuration affect this?
         WriteUniformFloatReg(g_state.regs.vs, g_state.vs, g_state.vs_float_regs_counter,
                              g_state.vs_uniform_write_buffer, value);
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[0], 0x2cc):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[1], 0x2cd):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[2], 0x2ce):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[3], 0x2cf):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[4], 0x2d0):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[5], 0x2d1):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[6], 0x2d2):
-    case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[7], 0x2d3): {
+    case PICA_REG_INDEX(vs.program.set_word[0]):
+    case PICA_REG_INDEX(vs.program.set_word[1]):
+    case PICA_REG_INDEX(vs.program.set_word[2]):
+    case PICA_REG_INDEX(vs.program.set_word[3]):
+    case PICA_REG_INDEX(vs.program.set_word[4]):
+    case PICA_REG_INDEX(vs.program.set_word[5]):
+    case PICA_REG_INDEX(vs.program.set_word[6]):
+    case PICA_REG_INDEX(vs.program.set_word[7]): {
         u32& offset = g_state.regs.vs.program.offset;
         if (offset >= 512) {
             LOG_ERROR(HW_GPU, "Invalid VS program offset {}", offset);
@@ -545,14 +545,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[0], 0x2d6):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[1], 0x2d7):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[2], 0x2d8):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[3], 0x2d9):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[4], 0x2da):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[5], 0x2db):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[6], 0x2dc):
-    case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[7], 0x2dd): {
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[0]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[1]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[2]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[3]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[4]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[5]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[6]):
+    case PICA_REG_INDEX(vs.swizzle_patterns.set_word[7]): {
         u32& offset = g_state.regs.vs.swizzle_patterns.offset;
         if (offset >= g_state.vs.swizzle_data.size()) {
             LOG_ERROR(HW_GPU, "Invalid VS swizzle pattern offset {}", offset);
@@ -568,14 +568,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[0], 0x1c8):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[1], 0x1c9):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[2], 0x1ca):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[3], 0x1cb):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[4], 0x1cc):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[5], 0x1cd):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
+    case PICA_REG_INDEX(lighting.lut_data[0]):
+    case PICA_REG_INDEX(lighting.lut_data[1]):
+    case PICA_REG_INDEX(lighting.lut_data[2]):
+    case PICA_REG_INDEX(lighting.lut_data[3]):
+    case PICA_REG_INDEX(lighting.lut_data[4]):
+    case PICA_REG_INDEX(lighting.lut_data[5]):
+    case PICA_REG_INDEX(lighting.lut_data[6]):
+    case PICA_REG_INDEX(lighting.lut_data[7]): {
         auto& lut_config = regs.lighting.lut_config;
 
         ASSERT_MSG(lut_config.index < 256, "lut_config.index exceeded maximum value of 255!");
@@ -585,27 +585,27 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[0], 0xe8):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[1], 0xe9):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[2], 0xea):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[3], 0xeb):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[4], 0xec):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[5], 0xed):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[6], 0xee):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[7], 0xef): {
+    case PICA_REG_INDEX(texturing.fog_lut_data[0]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[1]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[2]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[3]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[4]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[5]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[6]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[7]): {
         g_state.fog.lut[regs.texturing.fog_lut_offset % 128].raw = value;
         regs.texturing.fog_lut_offset.Assign(regs.texturing.fog_lut_offset + 1);
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[0], 0xb0):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[1], 0xb1):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[2], 0xb2):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[3], 0xb3):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[4], 0xb4):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[5], 0xb5):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[6], 0xb6):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[7], 0xb7): {
+    case PICA_REG_INDEX(texturing.proctex_lut_data[0]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[1]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[2]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[3]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[4]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[5]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[6]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[7]): {
         auto& index = regs.texturing.proctex_lut_config.index;
         auto& pt = g_state.proctex;
 

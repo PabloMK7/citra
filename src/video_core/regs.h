@@ -7,9 +7,6 @@
 #include <array>
 #include <cstddef>
 #include <string>
-#ifndef _MSC_VER
-#include <type_traits> // for std::enable_if
-#endif
 
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -22,27 +19,7 @@
 
 namespace Pica {
 
-// Returns index corresponding to the Regs member labeled by field_name
-// TODO: Due to Visual studio bug 209229, offsetof does not return constant expressions
-//       when used with array elements (e.g. PICA_REG_INDEX(vs_uniform_setup.set_value[1])).
-//       For details cf.
-//       https://connect.microsoft.com/VisualStudio/feedback/details/209229/offsetof-does-not-produce-a-constant-expression-for-array-members
-//       Hopefully, this will be fixed sometime in the future.
-//       For lack of better alternatives, we currently hardcode the offsets when constant
-//       expressions are needed via PICA_REG_INDEX_WORKAROUND (on sane compilers, static_asserts
-//       will then make sure the offsets indeed match the automatically calculated ones).
 #define PICA_REG_INDEX(field_name) (offsetof(Pica::Regs, field_name) / sizeof(u32))
-#if defined(_MSC_VER)
-#define PICA_REG_INDEX_WORKAROUND(field_name, backup_workaround_index) (backup_workaround_index)
-#else
-// NOTE: Yeah, hacking in a static_assert here just to workaround the lacking MSVC compiler
-//       really is this annoying. This macro just forwards its first argument to PICA_REG_INDEX
-//       and then performs a (no-op) cast to std::size_t iff the second argument matches the
-//       expected field offset. Otherwise, the compiler will fail to compile this code.
-#define PICA_REG_INDEX_WORKAROUND(field_name, backup_workaround_index)                             \
-    ((typename std::enable_if<backup_workaround_index == PICA_REG_INDEX(field_name),               \
-                              std::size_t>::type) PICA_REG_INDEX(field_name))
-#endif // _MSC_VER
 
 struct Regs {
     static constexpr std::size_t NUM_REGS = 0x300;
@@ -70,10 +47,6 @@ struct Regs {
 
 static_assert(sizeof(Regs) == Regs::NUM_REGS * sizeof(u32), "Regs struct has wrong size");
 
-// TODO: MSVC does not support using offsetof() on non-static data members even though this
-//       is technically allowed since C++11. This macro should be enabled once MSVC adds
-//       support for that.
-#ifndef _MSC_VER
 #define ASSERT_REG_POSITION(field_name, position)                                                  \
     static_assert(offsetof(Regs, field_name) == position * 4,                                      \
                   "Field " #field_name " has invalid position")
@@ -144,6 +117,4 @@ ASSERT_REG_POSITION(gs, 0x280);
 ASSERT_REG_POSITION(vs, 0x2b0);
 
 #undef ASSERT_REG_POSITION
-#endif // !defined(_MSC_VER)
-
 } // namespace Pica
