@@ -866,10 +866,10 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncClipEnabled();
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[0], 0x48):
-    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[1], 0x49):
-    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[2], 0x4a):
-    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[3], 0x4b):
+    case PICA_REG_INDEX(rasterizer.clip_coef[0]):
+    case PICA_REG_INDEX(rasterizer.clip_coef[1]):
+    case PICA_REG_INDEX(rasterizer.clip_coef[2]):
+    case PICA_REG_INDEX(rasterizer.clip_coef[3]):
         SyncClipCoef();
         break;
 
@@ -906,14 +906,14 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(texturing.fog_color):
         SyncFogColor();
         break;
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[0], 0xe8):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[1], 0xe9):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[2], 0xea):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[3], 0xeb):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[4], 0xec):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[5], 0xed):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[6], 0xee):
-    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[7], 0xef):
+    case PICA_REG_INDEX(texturing.fog_lut_data[0]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[1]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[2]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[3]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[4]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[5]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[6]):
+    case PICA_REG_INDEX(texturing.fog_lut_data[7]):
         uniform_block_data.fog_lut_dirty = true;
         break;
 
@@ -931,14 +931,14 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncProcTexNoise();
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[0], 0xb0):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[1], 0xb1):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[2], 0xb2):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[3], 0xb3):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[4], 0xb4):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[5], 0xb5):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[6], 0xb6):
-    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[7], 0xb7):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[0]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[1]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[2]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[3]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[4]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[5]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[6]):
+    case PICA_REG_INDEX(texturing.proctex_lut_data[7]):
         using Pica::TexturingRegs;
         switch (regs.texturing.proctex_lut_config.ref_table.Value()) {
         case TexturingRegs::ProcTexLutTable::Noise:
@@ -1085,255 +1085,255 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         break;
 
     // Fragment lighting specular 0 color
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_0, 0x140 + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].specular_0):
         SyncLightSpecular0(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].specular_0, 0x140 + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].specular_0):
         SyncLightSpecular0(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].specular_0, 0x140 + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].specular_0):
         SyncLightSpecular0(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].specular_0, 0x140 + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].specular_0):
         SyncLightSpecular0(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].specular_0, 0x140 + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].specular_0):
         SyncLightSpecular0(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].specular_0, 0x140 + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].specular_0):
         SyncLightSpecular0(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].specular_0, 0x140 + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].specular_0):
         SyncLightSpecular0(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].specular_0, 0x140 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].specular_0):
         SyncLightSpecular0(7);
         break;
 
     // Fragment lighting specular 1 color
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_1, 0x141 + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].specular_1):
         SyncLightSpecular1(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].specular_1, 0x141 + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].specular_1):
         SyncLightSpecular1(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].specular_1, 0x141 + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].specular_1):
         SyncLightSpecular1(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].specular_1, 0x141 + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].specular_1):
         SyncLightSpecular1(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].specular_1, 0x141 + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].specular_1):
         SyncLightSpecular1(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].specular_1, 0x141 + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].specular_1):
         SyncLightSpecular1(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].specular_1, 0x141 + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].specular_1):
         SyncLightSpecular1(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].specular_1, 0x141 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].specular_1):
         SyncLightSpecular1(7);
         break;
 
     // Fragment lighting diffuse color
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].diffuse, 0x142 + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].diffuse):
         SyncLightDiffuse(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].diffuse, 0x142 + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].diffuse):
         SyncLightDiffuse(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].diffuse, 0x142 + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].diffuse):
         SyncLightDiffuse(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].diffuse, 0x142 + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].diffuse):
         SyncLightDiffuse(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].diffuse, 0x142 + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].diffuse):
         SyncLightDiffuse(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].diffuse, 0x142 + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].diffuse):
         SyncLightDiffuse(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].diffuse, 0x142 + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].diffuse):
         SyncLightDiffuse(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].diffuse, 0x142 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].diffuse):
         SyncLightDiffuse(7);
         break;
 
     // Fragment lighting ambient color
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].ambient, 0x143 + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].ambient):
         SyncLightAmbient(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].ambient, 0x143 + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].ambient):
         SyncLightAmbient(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].ambient, 0x143 + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].ambient):
         SyncLightAmbient(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].ambient, 0x143 + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].ambient):
         SyncLightAmbient(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].ambient, 0x143 + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].ambient):
         SyncLightAmbient(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].ambient, 0x143 + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].ambient):
         SyncLightAmbient(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].ambient, 0x143 + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].ambient):
         SyncLightAmbient(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].ambient, 0x143 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].ambient):
         SyncLightAmbient(7);
         break;
 
     // Fragment lighting position
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].x, 0x144 + 0 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].z, 0x145 + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].x):
+    case PICA_REG_INDEX(lighting.light[0].z):
         SyncLightPosition(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].x, 0x144 + 1 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].z, 0x145 + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].x):
+    case PICA_REG_INDEX(lighting.light[1].z):
         SyncLightPosition(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].x, 0x144 + 2 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].z, 0x145 + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].x):
+    case PICA_REG_INDEX(lighting.light[2].z):
         SyncLightPosition(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].x, 0x144 + 3 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].z, 0x145 + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].x):
+    case PICA_REG_INDEX(lighting.light[3].z):
         SyncLightPosition(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].x, 0x144 + 4 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].z, 0x145 + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].x):
+    case PICA_REG_INDEX(lighting.light[4].z):
         SyncLightPosition(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].x, 0x144 + 5 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].z, 0x145 + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].x):
+    case PICA_REG_INDEX(lighting.light[5].z):
         SyncLightPosition(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].x, 0x144 + 6 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].z, 0x145 + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].x):
+    case PICA_REG_INDEX(lighting.light[6].z):
         SyncLightPosition(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].x, 0x144 + 7 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].z, 0x145 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].x):
+    case PICA_REG_INDEX(lighting.light[7].z):
         SyncLightPosition(7);
         break;
 
     // Fragment spot lighting direction
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].spot_x, 0x146 + 0 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].spot_z, 0x147 + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].spot_x):
+    case PICA_REG_INDEX(lighting.light[0].spot_z):
         SyncLightSpotDirection(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].spot_x, 0x146 + 1 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].spot_z, 0x147 + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].spot_x):
+    case PICA_REG_INDEX(lighting.light[1].spot_z):
         SyncLightSpotDirection(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].spot_x, 0x146 + 2 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].spot_z, 0x147 + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].spot_x):
+    case PICA_REG_INDEX(lighting.light[2].spot_z):
         SyncLightSpotDirection(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].spot_x, 0x146 + 3 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].spot_z, 0x147 + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].spot_x):
+    case PICA_REG_INDEX(lighting.light[3].spot_z):
         SyncLightSpotDirection(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].spot_x, 0x146 + 4 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].spot_z, 0x147 + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].spot_x):
+    case PICA_REG_INDEX(lighting.light[4].spot_z):
         SyncLightSpotDirection(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].spot_x, 0x146 + 5 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].spot_z, 0x147 + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].spot_x):
+    case PICA_REG_INDEX(lighting.light[5].spot_z):
         SyncLightSpotDirection(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].spot_x, 0x146 + 6 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].spot_z, 0x147 + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].spot_x):
+    case PICA_REG_INDEX(lighting.light[6].spot_z):
         SyncLightSpotDirection(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].spot_x, 0x146 + 7 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].spot_z, 0x147 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].spot_x):
+    case PICA_REG_INDEX(lighting.light[7].spot_z):
         SyncLightSpotDirection(7);
         break;
 
     // Fragment lighting light source config
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].config, 0x149 + 0 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].config, 0x149 + 1 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].config, 0x149 + 2 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].config, 0x149 + 3 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].config, 0x149 + 4 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].config, 0x149 + 5 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].config, 0x149 + 6 * 0x10):
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].config, 0x149 + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].config):
+    case PICA_REG_INDEX(lighting.light[1].config):
+    case PICA_REG_INDEX(lighting.light[2].config):
+    case PICA_REG_INDEX(lighting.light[3].config):
+    case PICA_REG_INDEX(lighting.light[4].config):
+    case PICA_REG_INDEX(lighting.light[5].config):
+    case PICA_REG_INDEX(lighting.light[6].config):
+    case PICA_REG_INDEX(lighting.light[7].config):
         shader_dirty = true;
         break;
 
     // Fragment lighting distance attenuation bias
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].dist_atten_bias, 0x014A + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].dist_atten_bias):
         SyncLightDistanceAttenuationBias(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].dist_atten_bias, 0x014A + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].dist_atten_bias):
         SyncLightDistanceAttenuationBias(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].dist_atten_bias, 0x014A + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].dist_atten_bias):
         SyncLightDistanceAttenuationBias(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].dist_atten_bias, 0x014A + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].dist_atten_bias):
         SyncLightDistanceAttenuationBias(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].dist_atten_bias, 0x014A + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].dist_atten_bias):
         SyncLightDistanceAttenuationBias(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].dist_atten_bias, 0x014A + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].dist_atten_bias):
         SyncLightDistanceAttenuationBias(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].dist_atten_bias, 0x014A + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].dist_atten_bias):
         SyncLightDistanceAttenuationBias(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].dist_atten_bias, 0x014A + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].dist_atten_bias):
         SyncLightDistanceAttenuationBias(7);
         break;
 
     // Fragment lighting distance attenuation scale
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].dist_atten_scale, 0x014B + 0 * 0x10):
+    case PICA_REG_INDEX(lighting.light[0].dist_atten_scale):
         SyncLightDistanceAttenuationScale(0);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].dist_atten_scale, 0x014B + 1 * 0x10):
+    case PICA_REG_INDEX(lighting.light[1].dist_atten_scale):
         SyncLightDistanceAttenuationScale(1);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].dist_atten_scale, 0x014B + 2 * 0x10):
+    case PICA_REG_INDEX(lighting.light[2].dist_atten_scale):
         SyncLightDistanceAttenuationScale(2);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].dist_atten_scale, 0x014B + 3 * 0x10):
+    case PICA_REG_INDEX(lighting.light[3].dist_atten_scale):
         SyncLightDistanceAttenuationScale(3);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].dist_atten_scale, 0x014B + 4 * 0x10):
+    case PICA_REG_INDEX(lighting.light[4].dist_atten_scale):
         SyncLightDistanceAttenuationScale(4);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].dist_atten_scale, 0x014B + 5 * 0x10):
+    case PICA_REG_INDEX(lighting.light[5].dist_atten_scale):
         SyncLightDistanceAttenuationScale(5);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].dist_atten_scale, 0x014B + 6 * 0x10):
+    case PICA_REG_INDEX(lighting.light[6].dist_atten_scale):
         SyncLightDistanceAttenuationScale(6);
         break;
-    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].dist_atten_scale, 0x014B + 7 * 0x10):
+    case PICA_REG_INDEX(lighting.light[7].dist_atten_scale):
         SyncLightDistanceAttenuationScale(7);
         break;
 
     // Fragment lighting global ambient color (emission + ambient * ambient)
-    case PICA_REG_INDEX_WORKAROUND(lighting.global_ambient, 0x1c0):
+    case PICA_REG_INDEX(lighting.global_ambient):
         SyncGlobalAmbient();
         break;
 
     // Fragment lighting lookup tables
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[0], 0x1c8):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[1], 0x1c9):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[2], 0x1ca):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[3], 0x1cb):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[4], 0x1cc):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[5], 0x1cd):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
+    case PICA_REG_INDEX(lighting.lut_data[0]):
+    case PICA_REG_INDEX(lighting.lut_data[1]):
+    case PICA_REG_INDEX(lighting.lut_data[2]):
+    case PICA_REG_INDEX(lighting.lut_data[3]):
+    case PICA_REG_INDEX(lighting.lut_data[4]):
+    case PICA_REG_INDEX(lighting.lut_data[5]):
+    case PICA_REG_INDEX(lighting.lut_data[6]):
+    case PICA_REG_INDEX(lighting.lut_data[7]): {
         auto& lut_config = regs.lighting.lut_config;
         uniform_block_data.lighting_lut_dirty[lut_config.type] = true;
         uniform_block_data.lighting_lut_dirty_any = true;
