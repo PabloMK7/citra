@@ -1,7 +1,11 @@
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
-#include <QOffScreenSurface>
+#include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QScreen>
