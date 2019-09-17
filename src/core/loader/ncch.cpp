@@ -198,6 +198,15 @@ ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
     return ResultStatus::Success;
 }
 
+ResultStatus AppLoader_NCCH::IsExecutable(bool& out_executable) {
+    Loader::ResultStatus result = overlay_ncch->Load();
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
+    out_executable = overlay_ncch->ncch_header.is_executable != 0;
+    return ResultStatus::Success;
+}
+
 ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) {
     return overlay_ncch->LoadSectionExeFS(".code", buffer);
 }

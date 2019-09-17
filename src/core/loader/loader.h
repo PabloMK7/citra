@@ -113,6 +113,16 @@ public:
     }
 
     /**
+     * Get whether this application is executable.
+     * @param out_executable Reference to store the executable flag into.
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus IsExecutable(bool& out_executable) {
+        out_executable = true;
+        return ResultStatus::Success;
+    }
+
+    /**
      * Get the code (typically .code section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
