@@ -5,12 +5,11 @@
 #include <clocale>
 #include <memory>
 #include <thread>
-#include <glad/glad.h>
-#define QT_NO_OPENGL
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QMessageBox>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
@@ -72,6 +71,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
+#include "core/frontend/scope_acquire_context.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
@@ -768,13 +768,14 @@ bool GMainWindow::LoadROM(const QString& filename) {
         ShutdownGame();
 
     render_window->InitRenderTarget();
-    render_window->MakeCurrent();
+
+    Frontend::ScopeAcquireContext scope(*render_window);
 
     const QString below_gl33_title = tr("OpenGL 3.3 Unsupported");
     const QString below_gl33_message = tr("Your GPU may not support OpenGL 3.3, or you do not "
                                           "have the latest graphics driver.");
 
-    if (!gladLoadGL()) {
+    if (!QOpenGLContext::globalShareContext()->versionFunctions<QOpenGLFunctions_3_3_Core>()) {
         QMessageBox::critical(this, below_gl33_title, below_gl33_message);
         return false;
     }
@@ -893,9 +894,8 @@ void GMainWindow::BootGame(const QString& filename) {
         return;
 
     // Create and start the emulation thread
-    emu_thread = std::make_unique<EmuThread>(render_window);
+    emu_thread = std::make_unique<EmuThread>(*render_window);
     emit EmulationStarting(emu_thread.get());
-    render_window->moveContext();
     emu_thread->start();
 
     connect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
@@ -2050,11 +2050,20 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setOrganizationName("Citra team");
     QCoreApplication::setApplicationName("Citra");
 
+    QSurfaceFormat format;
+    format.setVersion(3, 3);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSwapInterval(1);
+    // TODO: expose a setting for buffer value (ie default/single/double/triple)
+    format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
+    QSurfaceFormat::setDefaultFormat(format);
+
 #ifdef __APPLE__
     std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
     chdir(bin_path.c_str());
 #endif
-
+    QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication app(argc, argv);
 
     // Qt changes the locale and causes issues in float conversion using std::to_string() when

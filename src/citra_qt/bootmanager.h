@@ -7,8 +7,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-#include <QGLWidget>
-#include <QImage>
+#include <QOpenGLWidget>
 #include <QThread>
 #include "common/thread.h"
 #include "core/core.h"
@@ -17,16 +16,30 @@
 class QKeyEvent;
 class QScreen;
 class QTouchEvent;
+class QOffscreenSurface;
+class QOpenGLContext;
 
-class GGLWidgetInternal;
 class GMainWindow;
 class GRenderWindow;
+
+class GGLContext : public Frontend::GraphicsContext {
+public:
+    explicit GGLContext(QOpenGLContext* shared_context);
+
+    void MakeCurrent() override;
+
+    void DoneCurrent() override;
+
+private:
+    QOpenGLContext* context;
+    QOffscreenSurface* surface;
+};
 
 class EmuThread final : public QThread {
     Q_OBJECT
 
 public:
-    explicit EmuThread(GRenderWindow* render_window);
+    explicit EmuThread(Frontend::GraphicsContext& context);
     ~EmuThread() override;
 
     /**
@@ -80,7 +93,7 @@ private:
     std::mutex running_mutex;
     std::condition_variable running_cv;
 
-    GRenderWindow* render_window;
+    Frontend::GraphicsContext& core_context;
 
 signals:
     /**
@@ -104,18 +117,20 @@ signals:
     void ErrorThrown(Core::System::ResultStatus, std::string);
 };
 
-class GRenderWindow : public QWidget, public Frontend::EmuWindow {
+class GRenderWindow : public QOpenGLWidget, public Frontend::EmuWindow {
     Q_OBJECT
 
 public:
     GRenderWindow(QWidget* parent, EmuThread* emu_thread);
     ~GRenderWindow() override;
 
-    // EmuWindow implementation
-    void SwapBuffers() override;
+    // EmuWindow implementation.
     void MakeCurrent() override;
     void DoneCurrent() override;
     void PollEvents() override;
+    std::unique_ptr<Frontend::GraphicsContext> CreateSharedContext() const override;
+
+    void paintGL() override;
 
     void BackupGeometry();
     void RestoreGeometry();
@@ -125,6 +140,8 @@ public:
     qreal windowPixelRatio() const;
 
     void closeEvent(QCloseEvent* event) override;
+
+    void resizeEvent(QResizeEvent* event) override;
 
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
@@ -137,14 +154,11 @@ public:
 
     void focusOutEvent(QFocusEvent* event) override;
 
-    void OnClientAreaResized(u32 width, u32 height);
-
     void InitRenderTarget();
 
     void CaptureScreenshot(u32 res_scale, const QString& screenshot_path);
 
 public slots:
-    void moveContext(); // overridden
 
     void OnEmulationStarting(EmuThread* emu_thread);
     void OnEmulationStopping();
@@ -162,7 +176,7 @@ private:
 
     void OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) override;
 
-    GGLWidgetInternal* child;
+    std::unique_ptr<GraphicsContext> core_context;
 
     QByteArray geometry;
 
