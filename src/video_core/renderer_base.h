@@ -19,20 +19,20 @@ class Backend;
 
 class RendererBase : NonCopyable {
 public:
-    /// Used to reference a framebuffer
-    enum kFramebuffer { kFramebuffer_VirtualXFB = 0, kFramebuffer_EFB, kFramebuffer_Texture };
-
     explicit RendererBase(Frontend::EmuWindow& window);
     virtual ~RendererBase();
-
-    /// Swap buffers (render frame)
-    virtual void SwapBuffers() = 0;
 
     /// Initialize the renderer
     virtual Core::System::ResultStatus Init() = 0;
 
     /// Shutdown the renderer
     virtual void ShutDown() = 0;
+
+    /// Finalize rendering the guest frame and draw into the presentation texture
+    virtual void SwapBuffers() = 0;
+
+    /// Draws the latest frame to the window (Renderer specific implementation)
+    virtual void Present() = 0;
 
     /// Prepares for video dumping (e.g. create necessary buffers, etc)
     virtual void PrepareVideoDumping() = 0;

@@ -36,19 +36,29 @@ struct ScreenInfo {
     TextureInfo texture;
 };
 
+struct PresentationTexture {
+    u32 width = 0;
+    u32 height = 0;
+    OGLTexture texture;
+};
+
 class RendererOpenGL : public RendererBase {
 public:
     explicit RendererOpenGL(Frontend::EmuWindow& window);
     ~RendererOpenGL() override;
-
-    /// Swap buffers (render frame)
-    void SwapBuffers() override;
 
     /// Initialize the renderer
     Core::System::ResultStatus Init() override;
 
     /// Shutdown the renderer
     void ShutDown() override;
+
+    /// Finalizes rendering the guest frame
+    void SwapBuffers() override;
+
+    /// Draws the latest frame from texture mailbox to the currently bound draw framebuffer in this
+    /// context
+    void Present() override;
 
     /// Prepares for video dumping (e.g. create necessary buffers, etc)
     void PrepareVideoDumping() override;
@@ -117,6 +127,11 @@ private:
     std::array<OGLBuffer, 2> frame_dumping_pbos;
     GLuint current_pbo = 1;
     GLuint next_pbo = 0;
+
+    // Textures used for presentation
+    OGLFramebuffer draw_framebuffer;
+    OGLFramebuffer presentation_framebuffer;
+    std::array<PresentationTexture, 3> presentation_textures{};
 };
 
 } // namespace OpenGL
