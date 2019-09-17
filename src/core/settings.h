@@ -144,7 +144,6 @@ struct Values {
     bool shaders_accurate_mul;
     bool use_shader_jit;
     u16 resolution_factor;
-    bool vsync_enabled;
     bool use_frame_limit;
     u16 frame_limit;
 

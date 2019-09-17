@@ -78,7 +78,6 @@ void LogSettings() {
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
     LogSetting("Renderer_UseShaderJit", Settings::values.use_shader_jit);
     LogSetting("Renderer_UseResolutionFactor", Settings::values.resolution_factor);
-    LogSetting("Renderer_VsyncEnabled", Settings::values.vsync_enabled);
     LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
     LogSetting("Renderer_PostProcessingShader", Settings::values.pp_shader_name);

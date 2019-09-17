@@ -430,7 +430,6 @@ void Config::ReadRendererValues() {
     Settings::values.use_shader_jit = ReadSetting(QStringLiteral("use_shader_jit"), true).toBool();
     Settings::values.resolution_factor =
         static_cast<u16>(ReadSetting(QStringLiteral("resolution_factor"), 1).toInt());
-    Settings::values.vsync_enabled = ReadSetting(QStringLiteral("vsync_enabled"), false).toBool();
     Settings::values.use_frame_limit =
         ReadSetting(QStringLiteral("use_frame_limit"), true).toBool();
     Settings::values.frame_limit = ReadSetting(QStringLiteral("frame_limit"), 100).toInt();
@@ -857,7 +856,6 @@ void Config::SaveRendererValues() {
                  false);
     WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit, true);
     WriteSetting(QStringLiteral("resolution_factor"), Settings::values.resolution_factor, 1);
-    WriteSetting(QStringLiteral("vsync_enabled"), Settings::values.vsync_enabled, false);
     WriteSetting(QStringLiteral("use_frame_limit"), Settings::values.use_frame_limit, true);
     WriteSetting(QStringLiteral("frame_limit"), Settings::values.frame_limit, 100);
 
