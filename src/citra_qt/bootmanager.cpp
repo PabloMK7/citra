@@ -310,9 +310,10 @@ std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() 
 
 GGLContext::GGLContext(QOpenGLContext* shared_context)
     : context(new QOpenGLContext(shared_context->parent())),
-      surface(new QOffscreenSurface(nullptr, shared_context->parent())) {
+      surface(new QOffscreenSurface(nullptr)) {
     context->setShareContext(shared_context);
     context->create();
+    surface->setParent(shared_context->parent());
     surface->setFormat(shared_context->format());
     surface->create();
 }
