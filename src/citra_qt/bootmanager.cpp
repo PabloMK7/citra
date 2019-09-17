@@ -305,10 +305,10 @@ void GRenderWindow::showEvent(QShowEvent* event) {
 }
 
 std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() const {
-    return std::make_unique<GGLContext>(QOpenGLContext::globalShareContext());
+    return std::make_unique<GLContext>(QOpenGLContext::globalShareContext());
 }
 
-GGLContext::GGLContext(QOpenGLContext* shared_context)
+GLContext::GLContext(QOpenGLContext* shared_context)
     : context(new QOpenGLContext(shared_context->parent())),
       surface(new QOffscreenSurface(nullptr)) {
     context->setShareContext(shared_context);
@@ -318,10 +318,10 @@ GGLContext::GGLContext(QOpenGLContext* shared_context)
     surface->create();
 }
 
-void GGLContext::MakeCurrent() {
+void GLContext::MakeCurrent() {
     context->makeCurrent(surface);
 }
 
-void GGLContext::DoneCurrent() {
+void GLContext::DoneCurrent() {
     context->doneCurrent();
 }

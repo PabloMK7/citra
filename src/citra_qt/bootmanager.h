@@ -22,9 +22,9 @@ class QOpenGLContext;
 class GMainWindow;
 class GRenderWindow;
 
-class GGLContext : public Frontend::GraphicsContext {
+class GLContext : public Frontend::GraphicsContext {
 public:
-    explicit GGLContext(QOpenGLContext* shared_context);
+    explicit GLContext(QOpenGLContext* shared_context);
 
     void MakeCurrent() override;
 
