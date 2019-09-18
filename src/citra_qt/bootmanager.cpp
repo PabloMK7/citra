@@ -144,8 +144,8 @@ QByteArray GRenderWindow::saveGeometry() {
 }
 
 qreal GRenderWindow::windowPixelRatio() const {
-    // windowHandle() might not be accessible until the window is displayed to screen.
-    return windowHandle() ? windowHandle()->screen()->devicePixelRatio() : 1.0f;
+    // QOpenGLWidget isn't backed by a native window, so we need to use the top level window instead
+    return QApplication::activeWindow()->devicePixelRatio();
 }
 
 std::pair<u32, u32> GRenderWindow::ScaleTouch(const QPointF pos) const {
