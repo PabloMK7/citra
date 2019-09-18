@@ -794,6 +794,9 @@ void RendererOpenGL::Present() {
     /* insert fence for the main thread to block on */
     frame.present_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     glFlush();
+}
+
+void RendererOpenGL::PresentComplete() {
     render_window.mailbox->PresentationComplete();
 }
 

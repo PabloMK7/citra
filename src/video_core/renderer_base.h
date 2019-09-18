@@ -34,6 +34,9 @@ public:
     /// Draws the latest frame to the window (Renderer specific implementation)
     virtual void Present() = 0;
 
+    /// Marks the presentation buffer as complete and swaps it back into the pool
+    virtual void PresentComplete() = 0;
+
     /// Prepares for video dumping (e.g. create necessary buffers, etc)
     virtual void PrepareVideoDumping() = 0;
 
