@@ -8,7 +8,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
