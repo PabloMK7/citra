@@ -185,15 +185,6 @@ protected:
         framebuffer_layout = layout;
     }
 
-    /**
-     * Update internal client area size with the given parameter.
-     * @note EmuWindow implementations will usually use this in window resize event handlers.
-     */
-    void NotifyClientAreaSizeChanged(const std::pair<unsigned, unsigned>& size) {
-        client_area_width = size.first;
-        client_area_height = size.second;
-    }
-
 private:
     /**
      * Handler called when the minimal client area was requested to be changed via SetConfig.
@@ -205,9 +196,6 @@ private:
     }
 
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
-
-    unsigned client_area_width;  ///< Current client width, should be set by window impl.
-    unsigned client_area_height; ///< Current client height, should be set by window impl.
 
     WindowConfig config;        ///< Internal configuration (changes pending for being applied in
                                 /// ProcessConfigurationChanges)
