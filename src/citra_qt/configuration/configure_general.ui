@@ -29,7 +29,7 @@
           </property>
          </widget>
         </item>
-       <item>
+        <item>
          <widget class="QCheckBox" name="toggle_background_pause">
           <property name="text">
            <string>Pause emulation when in background</string>
