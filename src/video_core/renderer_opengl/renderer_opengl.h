@@ -58,7 +58,7 @@ public:
 
     /// Draws the latest frame from texture mailbox to the currently bound draw framebuffer in this
     /// context
-    void Present() override;
+    void TryPresent(int timeout_ms) override;
 
     /// Finializes the presentation and sets up the presentation frame to go back into the mailbox
     void PresentComplete() override;
@@ -130,11 +130,6 @@ private:
     std::array<OGLBuffer, 2> frame_dumping_pbos;
     GLuint current_pbo = 1;
     GLuint next_pbo = 0;
-
-    // Textures used for presentation
-    OGLFramebuffer draw_framebuffer;
-    OGLFramebuffer presentation_framebuffer;
-    std::array<PresentationTexture, 3> presentation_textures{};
 };
 
 } // namespace OpenGL

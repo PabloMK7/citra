@@ -31,8 +31,9 @@ public:
     /// Finalize rendering the guest frame and draw into the presentation texture
     virtual void SwapBuffers() = 0;
 
-    /// Draws the latest frame to the window (Renderer specific implementation)
-    virtual void Present() = 0;
+    /// Draws the latest frame to the window waiting timeout_ms for a frame to arrive (Renderer
+    /// specific implementation)
+    virtual void TryPresent(int timeout_ms) = 0;
 
     /// Marks the presentation buffer as complete and swaps it back into the pool
     virtual void PresentComplete() = 0;

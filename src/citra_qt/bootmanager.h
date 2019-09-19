@@ -130,6 +130,7 @@ public:
     void PollEvents() override;
     std::unique_ptr<Frontend::GraphicsContext> CreateSharedContext() const override;
 
+    void initializeGL() override;
     void paintGL() override;
 
     void BackupGeometry();

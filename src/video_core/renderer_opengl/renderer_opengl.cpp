@@ -3,9 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdlib>
+#include <deque>
 #include <memory>
+#include <mutex>
 #include <glad/glad.h>
 #include "common/assert.h"
 #include "common/bit_field.h"
@@ -31,44 +35,127 @@
 namespace Frontend {
 
 struct Frame {
-    GLuint index;
-    GLsync render_sync;
-    GLsync present_sync;
+    u32 width{};                      /// Width of the frame (to detect resize)
+    u32 height{};                     /// Height of the frame
+    bool color_reloaded = false;      /// Texture attachment was recreated (ie: resized)
+    OpenGL::OGLTexture color{};       /// Texture shared between the render/present FBO
+    OpenGL::OGLFramebuffer render{};  /// FBO created on the render thread
+    OpenGL::OGLFramebuffer present{}; /// FBO created on the present thread
+    GLsync render_fence{};            /// Fence created on the render thread
+    GLsync present_fence{};           /// Fence created on the presentation thread
 };
 } // namespace Frontend
 
 namespace OpenGL {
 
+constexpr std::size_t SWAP_CHAIN_SIZE = 5;
+
 class OGLTextureMailbox : public Frontend::TextureMailbox {
 public:
-    Frontend::Frame render_tex = {0, 0, 0}, present_tex = {1, 0, 0}, off_tex = {2, 0, 0};
-    bool swapped = false;
-    std::mutex swap_mutex{};
+    std::mutex swap_chain_lock;
+    std::condition_variable free_cv;
+    std::condition_variable present_cv;
+    std::array<Frontend::Frame, SWAP_CHAIN_SIZE> swap_chain{};
+    std::deque<Frontend::Frame*> free_queue{};
+    std::deque<Frontend::Frame*> present_queue{};
 
-    OGLTextureMailbox() = default;
-
-    ~OGLTextureMailbox() = default;
-
-    Frontend::Frame& GetRenderFrame() {
-        return render_tex;
-    }
-
-    void RenderComplete() {
-        std::scoped_lock lock(swap_mutex);
-        swapped = true;
-        std::swap(render_tex, off_tex);
-    }
-
-    Frontend::Frame& GetPresentationFrame() {
-        return present_tex;
-    }
-
-    void PresentationComplete() {
-        std::scoped_lock lock(swap_mutex);
-        if (swapped) {
-            swapped = false;
-            std::swap(present_tex, off_tex);
+    OGLTextureMailbox() {
+        for (auto& frame : swap_chain) {
+            free_queue.push_back(&frame);
         }
+    }
+
+    ~OGLTextureMailbox() override = default;
+
+    void ReloadPresentFrame(Frontend::Frame* frame, u32 height, u32 width) override {
+        frame->present.Release();
+        frame->present.Create();
+        GLint previous_draw_fbo{};
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previous_draw_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, frame->present.handle);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               frame->color.handle, 0);
+        if (!glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+            LOG_CRITICAL(Render_OpenGL, "Failed to recreate present FBO!");
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, previous_draw_fbo);
+        frame->color_reloaded = false;
+    }
+
+    void ReloadRenderFrame(Frontend::Frame* frame, u32 width, u32 height) override {
+        OpenGLState prev_state = OpenGLState::GetCurState();
+        OpenGLState state = OpenGLState::GetCurState();
+
+        // Recreate the color texture attachment
+        frame->color.Release();
+        frame->color.Create();
+        state.texture_units[0].texture_2d = frame->color.handle;
+        state.Apply();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+        // Recreate the FBO for the render target
+        frame->render.Release();
+        frame->render.Create();
+        state.draw.read_framebuffer = frame->render.handle;
+        state.draw.draw_framebuffer = frame->render.handle;
+        state.Apply();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               frame->color.handle, 0);
+        if (!glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+            LOG_CRITICAL(Render_OpenGL, "Failed to recreate render FBO!");
+        }
+        prev_state.Apply();
+        frame->width = width;
+        frame->height = height;
+        frame->color_reloaded = true;
+    }
+
+    Frontend::Frame* GetRenderFrame() override {
+        std::unique_lock<std::mutex> lock(swap_chain_lock);
+        // wait for new entries in the free_queue
+        free_cv.wait(lock, [&] { return !free_queue.empty(); });
+
+        Frontend::Frame* frame = free_queue.front();
+        free_queue.pop_front();
+        return frame;
+    }
+
+    void ReleaseRenderFrame(Frontend::Frame* frame) override {
+        std::unique_lock<std::mutex> lock(swap_chain_lock);
+        present_queue.push_front(frame);
+        present_cv.notify_one();
+    }
+
+    Frontend::Frame* TryGetPresentFrame(int timeout_ms) override {
+        std::unique_lock<std::mutex> lock(swap_chain_lock);
+        // wait for new entries in the present_queue
+        present_cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
+                            [&] { return !present_queue.empty(); });
+        if (present_queue.empty()) {
+            // timed out waiting for a frame to draw so return nullptr
+            return nullptr;
+        }
+        // the newest entries are pushed to the front of the queue
+        Frontend::Frame* frame = present_queue.front();
+        present_queue.pop_front();
+        // remove all old entries from the present queue and move them back to the free_queue
+        for (auto f : present_queue) {
+            free_queue.push_back(f);
+            free_cv.notify_one();
+        }
+        present_queue.clear();
+        return frame;
+    }
+
+    void ReleasePresentFrame(Frontend::Frame* frame) override {
+        std::unique_lock<std::mutex> lock(swap_chain_lock);
+        free_queue.push_back(frame);
+        free_cv.notify_one();
     }
 };
 
@@ -280,56 +367,43 @@ void RendererOpenGL::SwapBuffers() {
     }
 
     const auto& layout = render_window.GetFramebufferLayout();
-    auto& frame = render_window.mailbox->GetRenderFrame();
-    auto& presentation = presentation_textures[frame.index];
+    auto frame = render_window.mailbox->GetRenderFrame();
 
     // Clean up sync objects before drawing
 
     // INTEL driver workaround. We can't delete the previous render sync object until we are sure
     // that the presentation is done
-    if (frame.present_sync) {
-        glClientWaitSync(frame.present_sync, 0, GL_TIMEOUT_IGNORED);
+    if (frame->present_fence) {
+        glClientWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
     }
 
     // delete the draw fence if the frame wasn't presented
-    if (frame.render_sync) {
-        glDeleteSync(frame.render_sync);
-        frame.render_sync = 0;
+    if (frame->render_fence) {
+        glDeleteSync(frame->render_fence);
+        frame->render_fence = 0;
     }
 
     // wait for the presentation to be done
-    if (frame.present_sync) {
-        glWaitSync(frame.present_sync, 0, GL_TIMEOUT_IGNORED);
-        glDeleteSync(frame.present_sync);
-        frame.present_sync = 0;
+    if (frame->present_fence) {
+        glWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
+        glDeleteSync(frame->present_fence);
+        frame->present_fence = 0;
     }
 
-    // Recreate the presentation texture if the size of the window has changed
-    if (layout.width != presentation.width || layout.height != presentation.height) {
-        presentation.width = layout.width;
-        presentation.height = layout.height;
-        presentation.texture.Release();
-        presentation.texture.Create();
-        state.texture_units[0].texture_2d = presentation.texture.handle;
-        state.Apply();
-        glActiveTexture(GL_TEXTURE0);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, layout.width, layout.height, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, 0);
-        state.texture_units[0].texture_2d = 0;
-        state.Apply();
+    // Recreate the frame if the size of the window has changed
+    if (layout.width != frame->width || layout.height != frame->height) {
+        LOG_CRITICAL(Render_OpenGL, "Reloading render frame");
+        render_window.mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
     }
 
-    GLuint render_texture = presentation.texture.handle;
-    state.draw.draw_framebuffer = draw_framebuffer.handle;
+    GLuint render_texture = frame->color.handle;
+    state.draw.draw_framebuffer = frame->render.handle;
     state.Apply();
-    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, render_texture, 0);
-    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
     DrawScreens(layout);
     // Create a fence for the frontend to wait on and swap this frame to OffTex
-    frame.render_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     glFlush();
-    render_window.mailbox->RenderComplete();
+    render_window.mailbox->ReleaseRenderFrame(frame);
     m_current_frame++;
 
     Core::System::GetInstance().perf_stats->EndSystemFrame();
@@ -479,11 +553,6 @@ void RendererOpenGL::InitOpenGLObjects() {
         screen_info.display_texture = screen_info.texture.resource.handle;
     }
 
-    draw_framebuffer.Create();
-    presentation_framebuffer.Create();
-    presentation_textures[0].texture.Create();
-    presentation_textures[1].texture.Create();
-    presentation_textures[2].texture.Create();
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
@@ -765,39 +834,37 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout) {
     }
 }
 
-void RendererOpenGL::Present() {
+void RendererOpenGL::TryPresent(int timeout_ms) {
     const auto& layout = render_window.GetFramebufferLayout();
-    auto& frame = render_window.mailbox->GetPresentationFrame();
-    const auto& presentation = presentation_textures[frame.index];
-    const GLuint texture_handle = presentation.texture.handle;
-
-    glWaitSync(frame.render_sync, 0, GL_TIMEOUT_IGNORED);
+    auto frame = render_window.mailbox->TryGetPresentFrame(timeout_ms);
+    if (!frame) {
+        LOG_CRITICAL(Render_OpenGL, "Try returned no frame to present");
+        return;
+    }
+    // Recreate the presentation FBO if the color attachment was changed
+    if (frame->color_reloaded) {
+        LOG_CRITICAL(Render_OpenGL, "Reloading present frame");
+        render_window.mailbox->ReloadPresentFrame(frame, layout.width, layout.height);
+    }
+    glWaitSync(frame->render_fence, 0, GL_TIMEOUT_IGNORED);
     // INTEL workaround.
     // Normally we could just delete the draw fence here, but due to driver bugs, we can just delete
     // it on the emulation thread without too much penalty
     // glDeleteSync(frame.render_sync);
     // frame.render_sync = 0;
 
-    glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
-                 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, presentation_framebuffer.handle);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture_handle);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_handle,
-                           0);
-    glBlitFramebuffer(0, 0, presentation.width, presentation.height, 0, 0, layout.width,
-                      layout.height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, frame->present.handle);
+    glBlitFramebuffer(0, 0, frame->width, frame->height, 0, 0, layout.width, layout.height,
+                      GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
     /* insert fence for the main thread to block on */
-    frame.present_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    frame->present_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     glFlush();
+    render_window.mailbox->ReleasePresentFrame(frame);
 }
 
 void RendererOpenGL::PresentComplete() {
-    render_window.mailbox->PresentationComplete();
+    //    render_window.mailbox->PresentationComplete();
 }
 
 /// Updates the framerate

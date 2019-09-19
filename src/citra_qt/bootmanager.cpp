@@ -260,7 +260,12 @@ void GRenderWindow::InitRenderTarget() {
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
     // WA_DontShowOnScreen, WA_DeleteOnClose
     core_context = CreateSharedContext();
+    resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     BackupGeometry();
+}
+
+void GRenderWindow::initializeGL() {
+    context()->format().setSwapInterval(1);
 }
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
@@ -294,7 +299,7 @@ void GRenderWindow::OnEmulationStopping() {
 }
 
 void GRenderWindow::paintGL() {
-    VideoCore::g_renderer->Present();
+    VideoCore::g_renderer->TryPresent(100);
     update();
 }
 

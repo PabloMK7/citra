@@ -24,24 +24,35 @@ public:
     virtual ~TextureMailbox() = default;
 
     /**
-     * Retrieve a frame that is ready to be rendered into
+     * Recreate the render objects attached to this frame with the new specified width/height
      */
-    virtual Frame& GetRenderFrame() = 0;
+    virtual void ReloadRenderFrame(Frontend::Frame* frame, u32 width, u32 height) = 0;
 
     /**
-     * Mark this frame as ready to present
+     * Recreate the presentation objects attached to this frame with the new specified width/height
      */
-    virtual void RenderComplete() = 0;
+    virtual void ReloadPresentFrame(Frontend::Frame* frame, u32 height, u32 width) = 0;
 
     /**
-     * Retrieve the latest frame to present in the frontend
+     * Render thread calls this to get an available frame to present
      */
-    virtual Frame& GetPresentationFrame() = 0;
+    virtual Frontend::Frame* GetRenderFrame() = 0;
 
     /**
-     * Mark the presentation frame as complete and set it for reuse
+     * Render thread calls this after draw commands are done to add to the presentation mailbox
      */
-    virtual void PresentationComplete() = 0;
+    virtual void ReleaseRenderFrame(Frame* frame) = 0;
+
+    /**
+     * Presentation thread calls this to get the latest frame available to present. If there is no
+     * frame available after timeout, returns nullptr
+     */
+    virtual Frontend::Frame* TryGetPresentFrame(int timeout_ms) = 0;
+
+    /**
+     * Presentation thread calls this after swap to release the frame and add it back to the queue
+     */
+    virtual void ReleasePresentFrame(Frame* frame) = 0;
 };
 
 /**
