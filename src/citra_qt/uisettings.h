@@ -46,11 +46,13 @@ enum class GameListIconSize {
 };
 
 enum class GameListText {
-    NoText = -1, ///< No text
-    FileName,    ///< Display the file name of the entry
-    FullPath,    ///< Display the full path of the entry
-    TitleName,   ///< Display the name of the title
-    TitleID,     ///< Display the title ID
+    NoText = -1,   ///< No text
+    FileName,      ///< Display the file name of the entry
+    FullPath,      ///< Display the full path of the entry
+    TitleName,     ///< Display the name of the title
+    TitleID,       ///< Display the title ID
+    LongTitleName, ///< Display the long name of the title
+    ListEnd,       ///< Keep this at the end of the enum.
 };
 
 struct Values {

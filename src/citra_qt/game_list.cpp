@@ -215,7 +215,7 @@ void GameList::onTextChanged(const QString& newText) {
                     child->data(GameListItemPath::FullPathRole).toString().toLower();
                 QString file_name = file_path.mid(file_path.lastIndexOf("/") + 1);
                 const QString file_title =
-                    child->data(GameListItemPath::TitleRole).toString().toLower();
+                    child->data(GameListItemPath::LongTitleRole).toString().toLower();
                 const QString file_programmid =
                     child->data(GameListItemPath::ProgramIdRole).toString().toLower();
 

@@ -48,6 +48,10 @@ std::array<u16, 0x40> SMDH::GetShortTitle(Loader::SMDH::TitleLanguage language) 
     return titles[static_cast<int>(language)].short_title;
 }
 
+std::array<u16, 0x80> SMDH::GetLongTitle(Loader::SMDH::TitleLanguage language) const {
+    return titles[static_cast<int>(language)].long_title;
+}
+
 std::vector<SMDH::GameRegion> SMDH::GetRegions() const {
     constexpr u32 REGION_COUNT = 7;
     std::vector<GameRegion> result;
