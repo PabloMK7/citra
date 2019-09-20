@@ -68,6 +68,8 @@ public:
     GameList* game_list;
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 
+public slots:
+    void OnAppFocusStateChanged(Qt::ApplicationState state);
 signals:
 
     /**
@@ -230,6 +232,8 @@ private:
     QString game_title;
     // The path to the game currently running
     QString game_path;
+
+    bool auto_paused = false;
 
     // Movie
     bool movie_record_on_start = false;
