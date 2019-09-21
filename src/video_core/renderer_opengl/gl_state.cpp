@@ -89,6 +89,8 @@ OpenGLState::OpenGLState() {
     viewport.height = 0;
 
     clip_distance = {};
+
+    renderbuffer = 0;
 }
 
 void OpenGLState::Apply() const {
@@ -335,6 +337,10 @@ void OpenGLState::Apply() const {
                 }
             }
         }
+    }
+
+    if (renderbuffer != cur_state.renderbuffer) {
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
     }
 
     cur_state = *this;

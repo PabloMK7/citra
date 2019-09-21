@@ -45,14 +45,10 @@ public:
 
     /**
      * Presentation thread calls this to get the latest frame available to present. If there is no
-     * frame available after timeout, returns nullptr
+     * frame available after timeout, returns the previous frame. If there is no previous frame it
+     * returns nullptr
      */
     virtual Frontend::Frame* TryGetPresentFrame(int timeout_ms) = 0;
-
-    /**
-     * Presentation thread calls this after swap to release the frame and add it back to the queue
-     */
-    virtual void ReleasePresentFrame(Frame* frame) = 0;
 };
 
 /**
