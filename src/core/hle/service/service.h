@@ -64,6 +64,9 @@ public:
 
     void HandleSyncRequest(Kernel::HLERequestContext& context) override;
 
+    /// Retrieves name of a function based on the header code. For IPC Recorder.
+    std::string GetFunctionName(u32 header) const;
+
 protected:
     /// Member-function pointer type of SyncRequest handlers.
     template <typename Self>

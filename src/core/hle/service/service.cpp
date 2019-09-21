@@ -171,12 +171,21 @@ void ServiceFrameworkBase::HandleSyncRequest(Kernel::HLERequestContext& context)
     auto itr = handlers.find(header_code);
     const FunctionInfoBase* info = itr == handlers.end() ? nullptr : &itr->second;
     if (info == nullptr || info->handler_callback == nullptr) {
+        context.ReportUnimplemented();
         return ReportUnimplementedFunction(context.CommandBuffer(), info);
     }
 
     LOG_TRACE(Service, "{}",
               MakeFunctionString(info->name, GetServiceName(), context.CommandBuffer()));
     handler_invoker(this, info->handler_callback, context);
+}
+
+std::string ServiceFrameworkBase::GetFunctionName(u32 header) const {
+    if (!handlers.count(header)) {
+        return "";
+    }
+
+    return handlers.at(header).name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

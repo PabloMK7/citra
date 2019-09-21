@@ -51,6 +51,8 @@ public:
                                                                    unsigned int max_sessions);
     ResultVal<std::shared_ptr<Kernel::ClientPort>> GetServicePort(const std::string& name);
     ResultVal<std::shared_ptr<Kernel::ClientSession>> ConnectToService(const std::string& name);
+    // For IPC Recorder
+    std::string GetServiceNameByPortId(u32 port) const;
 
     template <typename T>
     std::shared_ptr<T> GetService(const std::string& service_name) const {
@@ -74,6 +76,10 @@ private:
 
     /// Map of registered services, retrieved using GetServicePort or ConnectToService.
     std::unordered_map<std::string, std::shared_ptr<Kernel::ClientPort>> registered_services;
+
+    // For IPC Recorder
+    /// client port Object id -> service name
+    std::unordered_map<u32, std::string> registered_services_inverse;
 };
 
 } // namespace Service::SM

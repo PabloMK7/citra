@@ -90,6 +90,12 @@ add_executable(citra-qt
     debugger/graphics/graphics_tracing.h
     debugger/graphics/graphics_vertex_shader.cpp
     debugger/graphics/graphics_vertex_shader.h
+    debugger/ipc/record_dialog.cpp
+    debugger/ipc/record_dialog.h
+    debugger/ipc/record_dialog.ui
+    debugger/ipc/recorder.cpp
+    debugger/ipc/recorder.h
+    debugger/ipc/recorder.ui
     debugger/lle_service_modules.cpp
     debugger/lle_service_modules.h
     debugger/profiler.cpp

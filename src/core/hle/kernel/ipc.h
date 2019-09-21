@@ -16,6 +16,8 @@ class MemorySystem;
 
 namespace Kernel {
 
+class KernelSystem;
+
 struct MappedBufferContext {
     IPC::MappedBufferPermissions permissions;
     u32 size;
@@ -27,7 +29,8 @@ struct MappedBufferContext {
 };
 
 /// Performs IPC command buffer translation from one process to another.
-ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, std::shared_ptr<Thread> src_thread,
+ResultCode TranslateCommandBuffer(KernelSystem& system, Memory::MemorySystem& memory,
+                                  std::shared_ptr<Thread> src_thread,
                                   std::shared_ptr<Thread> dst_thread, VAddr src_address,
                                   VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,

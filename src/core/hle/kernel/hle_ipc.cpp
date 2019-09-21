@@ -10,6 +10,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
+#include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 
@@ -107,6 +108,13 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
 
     std::copy_n(src_cmdbuf, untranslated_size, cmd_buf.begin());
 
+    const bool should_record = kernel.GetIPCRecorder().IsEnabled();
+
+    std::vector<u32> untranslated_cmdbuf;
+    if (should_record) {
+        untranslated_cmdbuf = std::vector<u32>{src_cmdbuf, src_cmdbuf + command_size};
+    }
+
     std::size_t i = untranslated_size;
     while (i < command_size) {
         u32 descriptor = cmd_buf[i] = src_cmdbuf[i];
@@ -160,6 +168,12 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
         }
     }
 
+    if (should_record) {
+        std::vector<u32> translated_cmdbuf{cmd_buf.begin(), cmd_buf.begin() + command_size};
+        kernel.GetIPCRecorder().SetRequestInfo(SharedFrom(thread), std::move(untranslated_cmdbuf),
+                                               std::move(translated_cmdbuf));
+    }
+
     return RESULT_SUCCESS;
 }
 
@@ -172,6 +186,13 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH);
 
     std::copy_n(cmd_buf.begin(), untranslated_size, dst_cmdbuf);
+
+    const bool should_record = kernel.GetIPCRecorder().IsEnabled();
+
+    std::vector<u32> untranslated_cmdbuf;
+    if (should_record) {
+        untranslated_cmdbuf = std::vector<u32>{cmd_buf.begin(), cmd_buf.begin() + command_size};
+    }
 
     std::size_t i = untranslated_size;
     while (i < command_size) {
@@ -225,12 +246,24 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
         }
     }
 
+    if (should_record) {
+        std::vector<u32> translated_cmdbuf{dst_cmdbuf, dst_cmdbuf + command_size};
+        kernel.GetIPCRecorder().SetReplyInfo(SharedFrom(thread), std::move(untranslated_cmdbuf),
+                                             std::move(translated_cmdbuf));
+    }
+
     return RESULT_SUCCESS;
 }
 
 MappedBuffer& HLERequestContext::GetMappedBuffer(u32 id_from_cmdbuf) {
     ASSERT_MSG(id_from_cmdbuf < request_mapped_buffers.size(), "Mapped Buffer ID out of range!");
     return request_mapped_buffers[id_from_cmdbuf];
+}
+
+void HLERequestContext::ReportUnimplemented() const {
+    if (kernel.GetIPCRecorder().IsEnabled()) {
+        kernel.GetIPCRecorder().SetHLEUnimplemented(SharedFrom(thread));
+    }
 }
 
 MappedBuffer::MappedBuffer(Memory::MemorySystem& memory, const Process& process, u32 descriptor,

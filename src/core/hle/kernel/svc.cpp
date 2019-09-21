@@ -19,6 +19,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/ipc.h"
+#include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
@@ -387,7 +388,13 @@ ResultCode SVC::SendSyncRequest(Handle handle) {
 
     system.PrepareReschedule();
 
-    return session->SendSyncRequest(SharedFrom(kernel.GetThreadManager().GetCurrentThread()));
+    auto thread = SharedFrom(kernel.GetThreadManager().GetCurrentThread());
+
+    if (kernel.GetIPCRecorder().IsEnabled()) {
+        kernel.GetIPCRecorder().RegisterRequest(session, thread);
+    }
+
+    return session->SendSyncRequest(thread);
 }
 
 /// Close a handle
@@ -593,7 +600,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
     }
 }
 
-static ResultCode ReceiveIPCRequest(Memory::MemorySystem& memory,
+static ResultCode ReceiveIPCRequest(Kernel::KernelSystem& kernel, Memory::MemorySystem& memory,
                                     std::shared_ptr<ServerSession> server_session,
                                     std::shared_ptr<Thread> thread) {
     if (server_session->parent->client == nullptr) {
@@ -603,9 +610,9 @@ static ResultCode ReceiveIPCRequest(Memory::MemorySystem& memory,
     VAddr target_address = thread->GetCommandBufferAddress();
     VAddr source_address = server_session->currently_handling->GetCommandBufferAddress();
 
-    ResultCode translation_result =
-        TranslateCommandBuffer(memory, server_session->currently_handling, thread, source_address,
-                               target_address, server_session->mapped_buffer_context, false);
+    ResultCode translation_result = TranslateCommandBuffer(
+        kernel, memory, server_session->currently_handling, thread, source_address, target_address,
+        server_session->mapped_buffer_context, false);
 
     // If a translation error occurred, immediately resume the client thread.
     if (translation_result.IsError()) {
@@ -670,9 +677,9 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
         VAddr source_address = thread->GetCommandBufferAddress();
         VAddr target_address = request_thread->GetCommandBufferAddress();
 
-        ResultCode translation_result =
-            TranslateCommandBuffer(memory, SharedFrom(thread), request_thread, source_address,
-                                   target_address, session->mapped_buffer_context, true);
+        ResultCode translation_result = TranslateCommandBuffer(
+            kernel, memory, SharedFrom(thread), request_thread, source_address, target_address,
+            session->mapped_buffer_context, true);
 
         // Note: The real kernel seems to always panic if the Server->Client buffer translation
         // fails for whatever reason.
@@ -707,7 +714,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
             return RESULT_SUCCESS;
 
         auto server_session = static_cast<ServerSession*>(object);
-        return ReceiveIPCRequest(memory, SharedFrom(server_session), SharedFrom(thread));
+        return ReceiveIPCRequest(kernel, memory, SharedFrom(server_session), SharedFrom(thread));
     }
 
     // No objects were ready to be acquired, prepare to suspend the thread.
@@ -723,9 +730,9 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
 
     thread->wait_objects = std::move(objects);
 
-    thread->wakeup_callback = [& memory = this->memory](ThreadWakeupReason reason,
-                                                        std::shared_ptr<Thread> thread,
-                                                        std::shared_ptr<WaitObject> object) {
+    thread->wakeup_callback = [& kernel = this->kernel, &memory = this->memory](
+                                  ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                                  std::shared_ptr<WaitObject> object) {
         ASSERT(thread->status == ThreadStatus::WaitSynchAny);
         ASSERT(reason == ThreadWakeupReason::Signal);
 
@@ -733,7 +740,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
 
         if (object->GetHandleType() == HandleType::ServerSession) {
             auto server_session = DynamicObjectCast<ServerSession>(object);
-            result = ReceiveIPCRequest(memory, server_session, thread);
+            result = ReceiveIPCRequest(kernel, memory, server_session, thread);
         }
 
         thread->SetWaitSynchronizationResult(result);

@@ -234,6 +234,9 @@ public:
     /// Writes data from this context back to the requesting process/thread.
     ResultCode WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process) const;
 
+    /// Reports an unimplemented function.
+    void ReportUnimplemented() const;
+
 private:
     KernelSystem& kernel;
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
