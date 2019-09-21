@@ -164,7 +164,6 @@ public slots:
     void OnEmulationStarting(EmuThread* emu_thread);
     void OnEmulationStopping();
     void OnFramebufferSizeChanged();
-    void OnFrameSwapped();
 
 signals:
     /// Emitted when the window is closed

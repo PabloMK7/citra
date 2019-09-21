@@ -227,7 +227,6 @@ void EmuWindow_SDL2::Present() {
     while (IsOpen()) {
         VideoCore::g_renderer->TryPresent(100);
         SDL_GL_SwapWindow(render_window);
-        VideoCore::g_renderer->PresentComplete();
     }
     SDL_GL_MakeCurrent(render_window, nullptr);
 }

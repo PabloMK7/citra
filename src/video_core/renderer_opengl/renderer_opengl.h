@@ -60,9 +60,6 @@ public:
     /// context
     void TryPresent(int timeout_ms) override;
 
-    /// Finializes the presentation and sets up the presentation frame to go back into the mailbox
-    void PresentComplete() override;
-
     /// Prepares for video dumping (e.g. create necessary buffers, etc)
     void PrepareVideoDumping() override;
 

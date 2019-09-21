@@ -50,8 +50,8 @@ namespace OpenGL {
 
 // If the size of this is too small, it ends up creating a soft cap on FPS as the renderer will have
 // to wait on available presentation frames. There doesn't seem to be much of a downside to a larger
-// number but 8 seems to be a good trade off for now
-constexpr std::size_t SWAP_CHAIN_SIZE = 8;
+// number but 9 swap textures at 60FPS presentation allows for 800% speed so thats probably fine
+constexpr std::size_t SWAP_CHAIN_SIZE = 9;
 
 class OGLTextureMailbox : public Frontend::TextureMailbox {
 public:
@@ -72,6 +72,11 @@ public:
     ~OGLTextureMailbox() override {
         // lock the mutex and clear out the present and free_queues and notify any people who are
         // blocked to prevent deadlock on shutdown
+        std::scoped_lock lock(swap_chain_lock);
+        free_queue.clear();
+        present_queue.clear();
+        free_cv.notify_all();
+        present_cv.notify_all();
     }
 
     void ReloadPresentFrame(Frontend::Frame* frame, u32 height, u32 width) override {
@@ -120,7 +125,16 @@ public:
     Frontend::Frame* GetRenderFrame() override {
         std::unique_lock<std::mutex> lock(swap_chain_lock);
         // wait for new entries in the free_queue
-        free_cv.wait(lock, [&] { return !free_queue.empty(); });
+        // we want to break at some point to prevent a softlock on close if the presentation thread
+        // stops consuming buffers
+        free_cv.wait_for(lock, std::chrono::milliseconds(100), [&] { return !free_queue.empty(); });
+
+        // If theres no free frames, we will reuse the oldest render frame
+        if (free_queue.empty()) {
+            auto frame = present_queue.back();
+            present_queue.pop_back();
+            return frame;
+        }
 
         Frontend::Frame* frame = free_queue.front();
         free_queue.pop_front();
@@ -396,7 +410,7 @@ void RendererOpenGL::SwapBuffers() {
 
     // Recreate the frame if the size of the window has changed
     if (layout.width != frame->width || layout.height != frame->height) {
-        LOG_CRITICAL(Render_OpenGL, "Reloading render frame");
+        LOG_DEBUG(Render_OpenGL, "Reloading render frame");
         render_window.mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
     }
 
@@ -846,6 +860,8 @@ void RendererOpenGL::TryPresent(int timeout_ms) {
         return;
     }
 
+    // Clearing before a full overwrite of a fbo can signal to drivers that they can avoid a
+    // readback since we won't be doing any blending
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Recreate the presentation FBO if the color attachment was changed
@@ -867,10 +883,8 @@ void RendererOpenGL::TryPresent(int timeout_ms) {
     /* insert fence for the main thread to block on */
     frame->present_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     glFlush();
-}
 
-void RendererOpenGL::PresentComplete() {
-    //    render_window.mailbox->PresentationComplete();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 /// Updates the framerate

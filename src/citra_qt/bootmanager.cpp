@@ -86,7 +86,6 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
                        .arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
     setAttribute(Qt::WA_AcceptTouchEvents);
-    connect(this, &QOpenGLWidget::frameSwapped, this, &GRenderWindow::OnFrameSwapped);
     InputCommon::Init();
 }
 
@@ -103,10 +102,6 @@ void GRenderWindow::DoneCurrent() {
 }
 
 void GRenderWindow::PollEvents() {}
-
-void OnFrameSwapped() {
-    VideoCore::g_renderer->PresentComplete();
-}
 
 // On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).
 //
@@ -301,10 +296,6 @@ void GRenderWindow::OnEmulationStopping() {
 void GRenderWindow::paintGL() {
     VideoCore::g_renderer->TryPresent(100);
     update();
-}
-
-void GRenderWindow::OnFrameSwapped() {
-    VideoCore::g_renderer->PresentComplete();
 }
 
 void GRenderWindow::showEvent(QShowEvent* event) {
