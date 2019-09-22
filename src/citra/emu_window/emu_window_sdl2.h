@@ -70,4 +70,7 @@ private:
     using SDL_GLContext = void*;
     /// The OpenGL context associated with the window
     SDL_GLContext gl_context;
+
+    /// Keeps track of how often to update the title bar during gameplay
+    u32 last_time = 0;
 };

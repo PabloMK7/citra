@@ -346,8 +346,6 @@ int main(int argc, char** argv) {
 
     Core::System& system{Core::System::GetInstance()};
 
-    SCOPE_EXIT({ system.Shutdown(); });
-
     const Core::System::ResultStatus load_result{system.Load(*emu_window, filepath)};
 
     switch (load_result) {
@@ -417,6 +415,8 @@ int main(int argc, char** argv) {
     if (system.VideoDumper().IsDumping()) {
         system.VideoDumper().StopDumping();
     }
+
+    system.Shutdown();
 
     detached_tasks.WaitForAllTasks();
     return 0;
