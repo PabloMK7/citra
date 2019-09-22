@@ -13,6 +13,7 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "core/3ds.h"
+#include "core/core.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
@@ -241,6 +242,16 @@ void EmuWindow_SDL2::PollEvents() {
         default:
             break;
         }
+    }
+
+    const u32 current_time = SDL_GetTicks();
+    if (current_time > last_time + 2000) {
+        const auto results = Core::System::GetInstance().GetAndResetPerfStats();
+        const auto title = fmt::format(
+            "Citra {} | {}-{} | FPS: {:.0f} ({:.0%})", Common::g_build_fullname,
+            Common::g_scm_branch, Common::g_scm_desc, results.game_fps, results.emulation_speed);
+        SDL_SetWindowTitle(render_window, title.c_str());
+        last_time = current_time;
     }
 }
 
