@@ -31,7 +31,7 @@ public:
     /**
      * Recreate the presentation objects attached to this frame with the new specified width/height
      */
-    virtual void ReloadPresentFrame(Frontend::Frame* frame, u32 height, u32 width) = 0;
+    virtual void ReloadPresentFrame(Frontend::Frame* frame, u32 width, u32 height) = 0;
 
     /**
      * Render thread calls this to get an available frame to present

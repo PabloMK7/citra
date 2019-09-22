@@ -7,8 +7,9 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-#include <QOpenGLWidget>
 #include <QThread>
+#include <QWidget>
+#include <QWindow>
 #include "common/thread.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
@@ -117,7 +118,25 @@ signals:
     void ErrorThrown(Core::System::ResultStatus, std::string);
 };
 
-class GRenderWindow : public QOpenGLWidget, public Frontend::EmuWindow {
+class OpenGLWindow : public QWindow {
+    Q_OBJECT
+public:
+    explicit OpenGLWindow(QWindow* parent, QOpenGLContext* shared_context);
+
+    ~OpenGLWindow();
+
+    void Present();
+
+protected:
+    bool event(QEvent* event) override;
+
+    void exposeEvent(QExposeEvent* event) override;
+
+private:
+    QOpenGLContext* context;
+};
+
+class GRenderWindow : public QWidget, public Frontend::EmuWindow {
     Q_OBJECT
 
 public:
@@ -129,9 +148,6 @@ public:
     void DoneCurrent() override;
     void PollEvents() override;
     std::unique_ptr<Frontend::GraphicsContext> CreateSharedContext() const override;
-
-    void initializeGL() override;
-    void paintGL() override;
 
     void BackupGeometry();
     void RestoreGeometry();
@@ -180,6 +196,14 @@ private:
     std::unique_ptr<GraphicsContext> core_context;
 
     QByteArray geometry;
+
+    /// Native window handle that backs this presentation widget
+    QWindow* child_window = nullptr;
+
+    /// In order to embed the window into GRenderWindow, you need to use createWindowContainer to
+    /// put the child_window into a widget then add it to the layout. This child_widget can be
+    /// parented to GRenderWindow and use Qt's lifetime system
+    QWidget* child_widget = nullptr;
 
     EmuThread* emu_thread;
 

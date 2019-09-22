@@ -8,6 +8,7 @@
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QOpenGLWindow>
 #include <QScreen>
 #include <QWindow>
 #include <fmt/format.h>
@@ -79,13 +80,61 @@ void EmuThread::run() {
     MicroProfileOnThreadExit();
 #endif
 }
+OpenGLWindow::OpenGLWindow(QWindow* parent, QOpenGLContext* shared_context)
+    : QWindow(parent), context(new QOpenGLContext(shared_context->parent())) {
+    context->setShareContext(shared_context);
+    context->setScreen(this->screen());
+    context->setFormat(shared_context->format());
+    context->create();
+
+    setSurfaceType(QWindow::OpenGLSurface);
+
+    // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
+    // WA_DontShowOnScreen, WA_DeleteOnClose
+
+    // We set the WindowTransparnentForInput flag to let qt pass the processing through this QWindow
+    // through the event stack up to the parent QWidget and then up to the GRenderWindow grandparent
+    // that handles the event
+    setFlags(Qt::WindowTransparentForInput);
+}
+
+OpenGLWindow::~OpenGLWindow() {
+    context->doneCurrent();
+}
+
+void OpenGLWindow::Present() {
+    if (!isExposed())
+        return;
+    context->makeCurrent(this);
+    VideoCore::g_renderer->TryPresent(100);
+    context->swapBuffers(this);
+    QWindow::requestUpdate();
+}
+
+bool OpenGLWindow::event(QEvent* event) {
+    switch (event->type()) {
+    case QEvent::UpdateRequest:
+        Present();
+        return true;
+    default:
+        return QWindow::event(event);
+    }
+}
+
+void OpenGLWindow::exposeEvent(QExposeEvent* event) {
+    QWindow::requestUpdate();
+    QWindow::exposeEvent(event);
+}
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QOpenGLWidget(parent), emu_thread(emu_thread) {
+    : QWidget(parent), emu_thread(emu_thread) {
 
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
                        .arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
     setAttribute(Qt::WA_AcceptTouchEvents);
+    auto layout = new QHBoxLayout(this);
+    layout->setMargin(0);
+    setLayout(layout);
     InputCommon::Init();
 }
 
@@ -247,21 +296,29 @@ void GRenderWindow::focusOutEvent(QFocusEvent* event) {
 }
 
 void GRenderWindow::resizeEvent(QResizeEvent* event) {
-    QOpenGLWidget::resizeEvent(event);
+    child_widget->resize(event->size());
+    QWidget::resizeEvent(event);
     OnFramebufferSizeChanged();
 }
 
 void GRenderWindow::InitRenderTarget() {
-    // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
-    // WA_DontShowOnScreen, WA_DeleteOnClose
+    // Destroy the previous run's child_widget which should also destroy the child_window
+    if (child_widget) {
+        layout()->removeWidget(child_widget);
+        delete child_widget;
+    }
+
+    child_window =
+        new OpenGLWindow(QWidget::window()->windowHandle(), QOpenGLContext::globalShareContext());
+    child_window->create();
+    child_widget = createWindowContainer(child_window, this);
+    child_widget->resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
+    layout()->addWidget(child_widget);
+
     core_context = CreateSharedContext();
     resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
     BackupGeometry();
-}
-
-void GRenderWindow::initializeGL() {
-    context()->format().setSwapInterval(1);
 }
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
@@ -292,11 +349,6 @@ void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
 
 void GRenderWindow::OnEmulationStopping() {
     emu_thread = nullptr;
-}
-
-void GRenderWindow::paintGL() {
-    VideoCore::g_renderer->TryPresent(100);
-    update();
 }
 
 void GRenderWindow::showEvent(QShowEvent* event) {

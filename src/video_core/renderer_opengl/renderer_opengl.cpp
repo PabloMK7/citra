@@ -11,6 +11,7 @@
 #include <memory>
 #include <mutex>
 #include <glad/glad.h>
+#include <queue>
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
@@ -59,13 +60,13 @@ public:
     std::condition_variable free_cv;
     std::condition_variable present_cv;
     std::array<Frontend::Frame, SWAP_CHAIN_SIZE> swap_chain{};
-    std::deque<Frontend::Frame*> free_queue{};
+    std::queue<Frontend::Frame*> free_queue{};
     std::deque<Frontend::Frame*> present_queue{};
     Frontend::Frame* previous_frame = nullptr;
 
     OGLTextureMailbox() {
         for (auto& frame : swap_chain) {
-            free_queue.push_back(&frame);
+            free_queue.push(&frame);
         }
     }
 
@@ -73,7 +74,7 @@ public:
         // lock the mutex and clear out the present and free_queues and notify any people who are
         // blocked to prevent deadlock on shutdown
         std::scoped_lock lock(swap_chain_lock);
-        free_queue.clear();
+        std::queue<Frontend::Frame*>().swap(free_queue);
         present_queue.clear();
         free_cv.notify_all();
         present_cv.notify_all();
@@ -137,7 +138,7 @@ public:
         }
 
         Frontend::Frame* frame = free_queue.front();
-        free_queue.pop_front();
+        free_queue.pop();
         return frame;
     }
 
@@ -153,13 +154,13 @@ public:
         present_cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
                             [&] { return !present_queue.empty(); });
         if (present_queue.empty()) {
-            // timed out waiting for a frame to draw so return nullptr
+            // timed out waiting for a frame to draw so return the previous frame
             return previous_frame;
         }
 
         // free the previous frame and add it back to the free queue
         if (previous_frame) {
-            free_queue.push_back(previous_frame);
+            free_queue.push(previous_frame);
             free_cv.notify_one();
         }
 
@@ -168,9 +169,9 @@ public:
         present_queue.pop_front();
         // remove all old entries from the present queue and move them back to the free_queue
         for (auto f : present_queue) {
-            free_queue.push_back(f);
-            free_cv.notify_one();
+            free_queue.push(f);
         }
+        free_cv.notify_one();
         present_queue.clear();
         previous_frame = frame;
         return frame;

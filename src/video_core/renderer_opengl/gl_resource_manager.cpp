@@ -29,6 +29,7 @@ void OGLRenderbuffer::Release() {
 
     MICROPROFILE_SCOPE(OpenGL_ResourceDeletion);
     glDeleteRenderbuffers(1, &handle);
+    OpenGLState::GetCurState().ResetRenderbuffer(handle).Apply();
     handle = 0;
 }
 
