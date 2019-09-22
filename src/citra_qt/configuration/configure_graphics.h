@@ -22,6 +22,8 @@ public:
     void RetranslateUI();
     void SetConfiguration();
 
+    void UpdateBackgroundColorButton(QColor color);
+
     std::unique_ptr<Ui::ConfigureGraphics> ui;
     QColor bg_color;
 
