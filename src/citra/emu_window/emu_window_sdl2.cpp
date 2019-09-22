@@ -211,6 +211,7 @@ EmuWindow_SDL2::EmuWindow_SDL2(bool fullscreen) {
 }
 
 EmuWindow_SDL2::~EmuWindow_SDL2() {
+    core_context.reset();
     Network::Shutdown();
     InputCommon::Shutdown();
     SDL_GL_DeleteContext(window_context);
