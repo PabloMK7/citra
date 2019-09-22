@@ -609,7 +609,7 @@ void Config::SaveValues() {
     qt_config->beginWriteArray("gamedirs");
     for (int i = 0; i < UISettings::values.game_dirs.size(); ++i) {
         qt_config->setArrayIndex(i);
-        const auto& game_dir = UISettings::values.game_dirs.at(i);
+        const auto& game_dir = UISettings::values.game_dirs[i];
         WriteSetting("path", game_dir.path);
         WriteSetting("deep_scan", game_dir.deep_scan, false);
         WriteSetting("expanded", game_dir.expanded, true);

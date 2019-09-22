@@ -12,6 +12,7 @@
 #include <QMetaType>
 #include <QString>
 #include <QStringList>
+#include <QVector>
 #include "common/common_types.h"
 
 namespace UISettings {
@@ -100,7 +101,7 @@ struct Values {
     QString video_dumping_path;
     QString game_dir_deprecated;
     bool game_dir_deprecated_deepscan;
-    QList<UISettings::GameDir> game_dirs;
+    QVector<UISettings::GameDir> game_dirs;
     QStringList recent_files;
     QString language;
 
