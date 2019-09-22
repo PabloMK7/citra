@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <QList>
 #include <QMenu>
 #include <QString>
 #include <QVector>
@@ -21,6 +20,8 @@ class QFileSystemWatcher;
 class QHBoxLayout;
 class QLabel;
 class QLineEdit;
+template <typename>
+class QList;
 class QModelIndex;
 class QStandardItem;
 class QStandardItemModel;
