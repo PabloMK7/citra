@@ -8,6 +8,7 @@
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLWindow>
 #include <QScreen>
 #include <QWindow>
@@ -104,6 +105,8 @@ void OpenGLWindow::Present() {
     context->makeCurrent(this);
     VideoCore::g_renderer->TryPresent(100);
     context->swapBuffers(this);
+    auto f = context->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    f->glFinish();
     QWindow::requestUpdate();
 }
 
@@ -116,6 +119,8 @@ bool OpenGLWindow::event(QEvent* event) {
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
     case QEvent::FocusIn:
     case QEvent::FocusOut:
     case QEvent::FocusAboutToChange:
