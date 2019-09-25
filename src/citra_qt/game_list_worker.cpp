@@ -26,7 +26,7 @@ bool HasSupportedFileExtension(const std::string& file_name) {
 }
 } // Anonymous namespace
 
-GameListWorker::GameListWorker(QList<UISettings::GameDir>& game_dirs,
+GameListWorker::GameListWorker(QVector<UISettings::GameDir>& game_dirs,
                                const CompatibilityList& compatibility_list)
     : game_dirs(game_dirs), compatibility_list(compatibility_list) {}
 
@@ -134,7 +134,7 @@ void GameListWorker::run() {
                 "00040002";
             watch_list.append(games_path);
             watch_list.append(demos_path);
-            GameListDir* game_list_dir = new GameListDir(game_dir, GameListItemType::InstalledDir);
+            auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::InstalledDir);
             emit DirEntryReady({game_list_dir});
             AddFstEntriesToGameList(games_path.toStdString(), 2, game_list_dir);
             AddFstEntriesToGameList(demos_path.toStdString(), 2, game_list_dir);
@@ -143,12 +143,12 @@ void GameListWorker::run() {
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
                 "00000000000000000000000000000000/title/00040010";
             watch_list.append(path);
-            GameListDir* game_list_dir = new GameListDir(game_dir, GameListItemType::SystemDir);
+            auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::SystemDir);
             emit DirEntryReady({game_list_dir});
             AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
         } else {
             watch_list.append(game_dir.path);
-            GameListDir* game_list_dir = new GameListDir(game_dir);
+            auto* const game_list_dir = new GameListDir(game_dir);
             emit DirEntryReady({game_list_dir});
             AddFstEntriesToGameList(game_dir.path.toStdString(), game_dir.deep_scan ? 256 : 0,
                                     game_list_dir);

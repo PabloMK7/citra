@@ -49,11 +49,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         if (!new_bg_color.isValid()) {
             return;
         }
-        bg_color = new_bg_color;
-        QPixmap pixmap(ui->bg_button->size());
-        pixmap.fill(bg_color);
-        const QIcon color_icon(pixmap);
-        ui->bg_button->setIcon(color_icon);
+        UpdateBackgroundColorButton(new_bg_color);
     });
 }
 
@@ -71,12 +67,8 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_linear_filter->setChecked(Settings::values.filter_mode);
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
     ui->swap_screen->setChecked(Settings::values.swap_screen);
-    bg_color = QColor::fromRgbF(Settings::values.bg_red, Settings::values.bg_green,
-                                Settings::values.bg_blue);
-    QPixmap pixmap(ui->bg_button->size());
-    pixmap.fill(bg_color);
-    const QIcon color_icon(pixmap);
-    ui->bg_button->setIcon(color_icon);
+    UpdateBackgroundColorButton(QColor::fromRgbF(Settings::values.bg_red, Settings::values.bg_green,
+                                                 Settings::values.bg_blue));
 }
 
 void ConfigureGraphics::ApplyConfiguration() {
@@ -115,6 +107,16 @@ void ConfigureGraphics::updateShaders(bool anaglyph) {
         if (Settings::values.pp_shader_name == shader)
             ui->shader_combobox->setCurrentIndex(ui->shader_combobox->count() - 1);
     }
+}
+
+void ConfigureGraphics::UpdateBackgroundColorButton(const QColor& color) {
+    bg_color = color;
+
+    QPixmap pixmap(ui->bg_button->size());
+    pixmap.fill(bg_color);
+
+    const QIcon color_icon(pixmap);
+    ui->bg_button->setIcon(color_icon);
 }
 
 void ConfigureGraphics::RetranslateUI() {

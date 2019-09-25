@@ -350,18 +350,20 @@ public:
         UISettings::GameDir* game_dir = &directory;
         setData(QVariant::fromValue(game_dir), GameDirRole);
 
-        int icon_size = IconSizes.at(UISettings::values.game_list_icon_size);
+        const int icon_size = IconSizes.at(UISettings::values.game_list_icon_size);
         switch (dir_type) {
         case GameListItemType::InstalledDir:
-            setData(QIcon::fromTheme("sd_card").pixmap(icon_size), Qt::DecorationRole);
-            setData("Installed Titles", Qt::DisplayRole);
+            setData(QIcon::fromTheme(QStringLiteral("sd_card")).pixmap(icon_size),
+                    Qt::DecorationRole);
+            setData(QObject::tr("Installed Titles"), Qt::DisplayRole);
             break;
         case GameListItemType::SystemDir:
-            setData(QIcon::fromTheme("chip").pixmap(icon_size), Qt::DecorationRole);
-            setData("System Titles", Qt::DisplayRole);
+            setData(QIcon::fromTheme(QStringLiteral("chip")).pixmap(icon_size), Qt::DecorationRole);
+            setData(QObject::tr("System Titles"), Qt::DisplayRole);
             break;
         case GameListItemType::CustomDir:
-            QString icon_name = QFileInfo::exists(game_dir->path) ? "folder" : "bad_folder";
+            QString icon_name = QFileInfo::exists(game_dir->path) ? QStringLiteral("folder")
+                                                                  : QStringLiteral("bad_folder");
             setData(QIcon::fromTheme(icon_name).pixmap(icon_size), Qt::DecorationRole);
             setData(game_dir->path, Qt::DisplayRole);
             break;
@@ -382,8 +384,8 @@ public:
         setData(type(), TypeRole);
 
         int icon_size = IconSizes.at(UISettings::values.game_list_icon_size);
-        setData(QIcon::fromTheme("plus").pixmap(icon_size), Qt::DecorationRole);
-        setData("Add New Game Directory", Qt::DisplayRole);
+        setData(QIcon::fromTheme(QStringLiteral("plus")).pixmap(icon_size), Qt::DecorationRole);
+        setData(QObject::tr("Add New Game Directory"), Qt::DisplayRole);
     }
 
     int type() const override {
@@ -409,9 +411,6 @@ public:
     void clear();
     void setFocus();
 
-    int visible;
-    int total;
-
 private:
     class KeyReleaseEater : public QObject {
     public:
@@ -425,6 +424,9 @@ private:
         // EventFilter in order to process systemkeys while editing the searchfield
         bool eventFilter(QObject* obj, QEvent* event) override;
     };
+    int visible;
+    int total;
+
     QHBoxLayout* layout_filter = nullptr;
     QTreeView* tree_view = nullptr;
     QLabel* label_filter = nullptr;

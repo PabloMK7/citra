@@ -99,16 +99,16 @@ void GameListSearchField::setFilterResult(int visible, int total) {
         QString("%1 %2 %3 %4").arg(visible).arg(result_of_text).arg(total).arg(result_text));
 }
 
-QString GameList::getLastFilterResultItem() {
+QString GameList::getLastFilterResultItem() const {
     QStandardItem* folder;
     QStandardItem* child;
     QString file_path;
-    int folderCount = item_model->rowCount();
+    const int folderCount = item_model->rowCount();
     for (int i = 0; i < folderCount; ++i) {
         folder = item_model->item(i, 0);
-        QModelIndex folder_index = folder->index();
-        int childrenCount = folder->rowCount();
-        for (int j = 0; j < childrenCount; ++j) {
+        const QModelIndex folder_index = folder->index();
+        const int children_count = folder->rowCount();
+        for (int j = 0; j < children_count; ++j) {
             if (!tree_view->isRowHidden(j, folder_index)) {
                 child = folder->child(j, 0);
                 file_path = child->data(GameListItemPath::FullPathRole).toString();
@@ -175,7 +175,7 @@ static bool ContainsAllWords(const QString& haystack, const QString& userinput) 
 
 // Syncs the expanded state of Game Directories with settings to persist across sessions
 void GameList::onItemExpanded(const QModelIndex& item) {
-    GameListItemType type = item.data(GameListItem::TypeRole).value<GameListItemType>();
+    const auto type = item.data(GameListItem::TypeRole).value<GameListItemType>();
     if (type == GameListItemType::CustomDir || type == GameListItemType::InstalledDir ||
         type == GameListItemType::SystemDir)
         item.data(GameListDir::GameDirRole).value<UISettings::GameDir*>()->expanded =
@@ -184,32 +184,32 @@ void GameList::onItemExpanded(const QModelIndex& item) {
 
 // Event in order to filter the gamelist after editing the searchfield
 void GameList::onTextChanged(const QString& newText) {
-    int folderCount = tree_view->model()->rowCount();
+    const int folderCount = tree_view->model()->rowCount();
     QString edit_filter_text = newText.toLower();
     QStandardItem* folder;
-    int childrenTotal = 0;
+    int children_total = 0;
 
     // If the searchfield is empty every item is visible
     // Otherwise the filter gets applied
     if (edit_filter_text.isEmpty()) {
         for (int i = 0; i < folderCount; ++i) {
             folder = item_model->item(i, 0);
-            QModelIndex folder_index = folder->index();
-            int childrenCount = folder->rowCount();
-            for (int j = 0; j < childrenCount; ++j) {
-                ++childrenTotal;
+            const QModelIndex folder_index = folder->index();
+            const int children_count = folder->rowCount();
+            for (int j = 0; j < children_count; ++j) {
+                ++children_total;
                 tree_view->setRowHidden(j, folder_index, false);
             }
         }
-        search_field->setFilterResult(childrenTotal, childrenTotal);
+        search_field->setFilterResult(children_total, children_total);
     } else {
         int result_count = 0;
         for (int i = 0; i < folderCount; ++i) {
             folder = item_model->item(i, 0);
-            QModelIndex folder_index = folder->index();
-            int childrenCount = folder->rowCount();
-            for (int j = 0; j < childrenCount; ++j) {
-                ++childrenTotal;
+            const QModelIndex folder_index = folder->index();
+            const int children_count = folder->rowCount();
+            for (int j = 0; j < children_count; ++j) {
+                ++children_total;
                 const QStandardItem* child = folder->child(j, 0);
                 const QString file_path =
                     child->data(GameListItemPath::FullPathRole).toString().toLower();
@@ -231,7 +231,7 @@ void GameList::onTextChanged(const QString& newText) {
                 } else {
                     tree_view->setRowHidden(j, folder_index, true);
                 }
-                search_field->setFilterResult(result_count, childrenTotal);
+                search_field->setFilterResult(result_count, children_total);
             }
         }
     }
@@ -251,7 +251,7 @@ void GameList::onUpdateThemedIcons() {
         case GameListItemType::CustomDir: {
             const UISettings::GameDir* game_dir =
                 child->data(GameListDir::GameDirRole).value<UISettings::GameDir*>();
-            QString icon_name = QFileInfo::exists(game_dir->path) ? "folder" : "bad_folder";
+            const QString icon_name = QFileInfo::exists(game_dir->path) ? "folder" : "bad_folder";
             child->setData(QIcon::fromTheme(icon_name).pixmap(48), Qt::DecorationRole);
             break;
         }
@@ -353,14 +353,14 @@ void GameList::AddEntry(const QList<QStandardItem*>& entry_items, GameListDir* p
 }
 
 void GameList::ValidateEntry(const QModelIndex& item) {
-    auto selected = item.sibling(item.row(), 0);
+    const auto selected = item.sibling(item.row(), 0);
 
     switch (selected.data(GameListItem::TypeRole).value<GameListItemType>()) {
     case GameListItemType::Game: {
-        QString file_path = selected.data(GameListItemPath::FullPathRole).toString();
+        const QString file_path = selected.data(GameListItemPath::FullPathRole).toString();
         if (file_path.isEmpty())
             return;
-        QFileInfo file_info(file_path);
+        const QFileInfo file_info(file_path);
         if (!file_info.exists() || file_info.isDir())
             return;
         // Users usually want to run a different game after closing one
@@ -374,10 +374,10 @@ void GameList::ValidateEntry(const QModelIndex& item) {
     }
 }
 
-bool GameList::isEmpty() {
+bool GameList::isEmpty() const {
     for (int i = 0; i < item_model->rowCount(); i++) {
         const QStandardItem* child = item_model->invisibleRootItem()->child(i);
-        GameListItemType type = static_cast<GameListItemType>(child->type());
+        const auto type = static_cast<GameListItemType>(child->type());
         if (!child->hasChildren() &&
             (type == GameListItemType::InstalledDir || type == GameListItemType::SystemDir)) {
             item_model->invisibleRootItem()->removeRow(child->row());
@@ -408,16 +408,13 @@ void GameList::DonePopulating(QStringList watch_list) {
         QCoreApplication::processEvents();
     }
     tree_view->setEnabled(true);
-    int folderCount = tree_view->model()->rowCount();
-    int childrenTotal = 0;
+    const int folderCount = tree_view->model()->rowCount();
+    int children_total = 0;
     for (int i = 0; i < folderCount; ++i) {
-        int childrenCount = item_model->item(i, 0)->rowCount();
-        for (int j = 0; j < childrenCount; ++j) {
-            ++childrenTotal;
-        }
+        children_total += item_model->item(i, 0)->rowCount();
     }
-    search_field->setFilterResult(childrenTotal, childrenTotal);
-    if (childrenTotal > 0) {
+    search_field->setFilterResult(children_total, children_total);
+    if (children_total > 0) {
         search_field->setFocus();
     }
 
@@ -429,7 +426,7 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     if (!item.isValid())
         return;
 
-    auto selected = item.sibling(item.row(), 0);
+    const auto selected = item.sibling(item.row(), 0);
     QMenu context_menu;
     switch (selected.data(GameListItem::TypeRole).value<GameListItemType>()) {
     case GameListItemType::Game:
@@ -528,18 +525,18 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
     QAction* move_down = context_menu.addAction(tr(u8"\U000025bc Move Down "));
     QAction* open_directory_location = context_menu.addAction(tr("Open Directory Location"));
 
-    int row = selected.row();
+    const int row = selected.row();
 
     move_up->setEnabled(row > 0);
     move_down->setEnabled(row < item_model->rowCount() - 2);
 
     connect(move_up, &QAction::triggered, [this, selected, row, &game_dir] {
         // find the indices of the items in settings and swap them
-        UISettings::values.game_dirs.swap(
-            UISettings::values.game_dirs.indexOf(game_dir),
-            UISettings::values.game_dirs.indexOf(*selected.sibling(selected.row() - 1, 0)
-                                                      .data(GameListDir::GameDirRole)
-                                                      .value<UISettings::GameDir*>()));
+        std::swap(UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(game_dir)],
+                  UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(
+                      *selected.sibling(row - 1, 0)
+                           .data(GameListDir::GameDirRole)
+                           .value<UISettings::GameDir*>())]);
         // move the treeview items
         QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row - 1, item);
@@ -548,13 +545,13 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
 
     connect(move_down, &QAction::triggered, [this, selected, row, &game_dir] {
         // find the indices of the items in settings and swap them
-        UISettings::values.game_dirs.swap(
-            UISettings::values.game_dirs.indexOf(game_dir),
-            UISettings::values.game_dirs.indexOf(*selected.sibling(selected.row() + 1, 0)
-                                                      .data(GameListDir::GameDirRole)
-                                                      .value<UISettings::GameDir*>()));
+        std::swap(UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(game_dir)],
+                  UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(
+                      *selected.sibling(row + 1, 0)
+                           .data(GameListDir::GameDirRole)
+                           .value<UISettings::GameDir*>())]);
         // move the treeview items
-        QList<QStandardItem*> item = item_model->takeRow(row);
+        const QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row + 1, item);
         tree_view->setExpanded(selected, game_dir.expanded);
     });
@@ -609,7 +606,7 @@ QStandardItemModel* GameList::GetModel() const {
     return item_model;
 }
 
-void GameList::PopulateAsync(QList<UISettings::GameDir>& game_dirs) {
+void GameList::PopulateAsync(QVector<UISettings::GameDir>& game_dirs) {
     tree_view->setEnabled(false);
     // Delete any rows that might already exist if we're repopulating
     item_model->removeRows(0, item_model->rowCount());
@@ -677,9 +674,7 @@ QString GameList::FindGameByProgramID(QStandardItem* current_item, u64 program_i
 }
 
 GameListPlaceholder::GameListPlaceholder(GMainWindow* parent) : QWidget{parent} {
-    this->main_window = parent;
-
-    connect(main_window, &GMainWindow::UpdateThemedIcons, this,
+    connect(parent, &GMainWindow::UpdateThemedIcons, this,
             &GameListPlaceholder::onUpdateThemedIcons);
 
     layout = new QVBoxLayout;
@@ -688,7 +683,7 @@ GameListPlaceholder::GameListPlaceholder(GMainWindow* parent) : QWidget{parent} 
     layout->setAlignment(Qt::AlignCenter);
     image->setPixmap(QIcon::fromTheme("plus_folder").pixmap(200));
 
-    text->setText(tr("Double-click to add a new folder to the game list "));
+    text->setText(tr("Double-click to add a new folder to the game list"));
     QFont font = text->font();
     font.setPointSize(20);
     text->setFont(font);

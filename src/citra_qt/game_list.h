@@ -6,6 +6,7 @@
 
 #include <QMenu>
 #include <QString>
+#include <QVector>
 #include <QWidget>
 #include "citra_qt/compatibility_list.h"
 #include "common/common_types.h"
@@ -46,15 +47,15 @@ public:
     explicit GameList(GMainWindow* parent = nullptr);
     ~GameList() override;
 
-    QString getLastFilterResultItem();
+    QString getLastFilterResultItem() const;
     void clearFilter();
     void setFilterFocus();
     void setFilterVisible(bool visibility);
     void setDirectoryWatcherEnabled(bool enabled);
-    bool isEmpty();
+    bool isEmpty() const;
 
     void LoadCompatibilityList();
-    void PopulateAsync(QList<UISettings::GameDir>& game_dirs);
+    void PopulateAsync(QVector<UISettings::GameDir>& game_dirs);
 
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
@@ -73,7 +74,7 @@ signals:
     void OpenFolderRequested(u64 program_id, GameListOpenTarget target);
     void NavigateToGamedbEntryRequested(u64 program_id,
                                         const CompatibilityList& compatibility_list);
-    void OpenDirectory(QString directory);
+    void OpenDirectory(const QString& directory);
     void AddDirectory();
     void ShowList(bool show);
     void PopulatingCompleted();
@@ -127,7 +128,6 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 private:
-    GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;
     QLabel* image = nullptr;
     QLabel* text = nullptr;

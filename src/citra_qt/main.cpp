@@ -1111,18 +1111,16 @@ void GMainWindow::OnGameListNavigateToGamedbEntry(u64 program_id,
     QDesktopServices::openUrl(QUrl("https://citra-emu.org/game/" + directory));
 }
 
-void GMainWindow::OnGameListOpenDirectory(QString directory) {
+void GMainWindow::OnGameListOpenDirectory(const QString& directory) {
     QString path;
     if (directory == "INSTALLED") {
-        path =
-            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir).c_str() +
-                                   std::string("Nintendo "
-                                               "3DS/00000000000000000000000000000000/"
-                                               "00000000000000000000000000000000/title/00040000"));
+        path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
+                                      "Nintendo "
+                                      "3DS/00000000000000000000000000000000/"
+                                      "00000000000000000000000000000000/title/00040000");
     } else if (directory == "SYSTEM") {
-        path =
-            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir).c_str() +
-                                   std::string("00000000000000000000000000000000/title/00040010"));
+        path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) +
+                                      "00000000000000000000000000000000/title/00040010");
     } else {
         path = directory;
     }
@@ -1134,7 +1132,7 @@ void GMainWindow::OnGameListOpenDirectory(QString directory) {
 }
 
 void GMainWindow::OnGameListAddDirectory() {
-    QString dir_path = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
+    const QString dir_path = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
     if (dir_path.isEmpty())
         return;
     UISettings::GameDir game_dir{dir_path, false, true};
