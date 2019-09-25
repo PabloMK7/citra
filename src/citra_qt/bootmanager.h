@@ -121,7 +121,7 @@ signals:
 class OpenGLWindow : public QWindow {
     Q_OBJECT
 public:
-    explicit OpenGLWindow(QWindow* parent, QOpenGLContext* shared_context);
+    explicit OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context);
 
     ~OpenGLWindow();
 
@@ -134,6 +134,7 @@ protected:
 
 private:
     QOpenGLContext* context;
+    QWidget* event_handler;
 };
 
 class GRenderWindow : public QWidget, public Frontend::EmuWindow {

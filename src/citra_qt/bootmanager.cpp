@@ -80,8 +80,9 @@ void EmuThread::run() {
     MicroProfileOnThreadExit();
 #endif
 }
-OpenGLWindow::OpenGLWindow(QWindow* parent, QOpenGLContext* shared_context)
-    : QWindow(parent), context(new QOpenGLContext(shared_context->parent())) {
+OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context)
+    : QWindow(parent), event_handler(event_handler),
+      context(new QOpenGLContext(shared_context->parent())) {
     context->setShareContext(shared_context);
     context->setScreen(this->screen());
     context->setFormat(shared_context->format());
@@ -91,11 +92,6 @@ OpenGLWindow::OpenGLWindow(QWindow* parent, QOpenGLContext* shared_context)
 
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
     // WA_DontShowOnScreen, WA_DeleteOnClose
-
-    // We set the WindowTransparnentForInput flag to let qt pass the processing through this QWindow
-    // through the event stack up to the parent QWidget and then up to the GRenderWindow grandparent
-    // that handles the event
-    setFlags(Qt::WindowTransparentForInput);
 }
 
 OpenGLWindow::~OpenGLWindow() {
@@ -116,6 +112,27 @@ bool OpenGLWindow::event(QEvent* event) {
     case QEvent::UpdateRequest:
         Present();
         return true;
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+    case QEvent::MouseMove:
+    case QEvent::FocusIn:
+    case QEvent::FocusOut:
+    case QEvent::FocusAboutToChange:
+    case QEvent::Enter:
+    case QEvent::Leave:
+    case QEvent::Wheel:
+    case QEvent::TabletMove:
+    case QEvent::TabletPress:
+    case QEvent::TabletRelease:
+    case QEvent::TabletEnterProximity:
+    case QEvent::TabletLeaveProximity:
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::InputMethodQuery:
+    case QEvent::TouchCancel:
+        return QCoreApplication::sendEvent(event_handler, event);
     default:
         return QWindow::event(event);
     }
@@ -308,8 +325,8 @@ void GRenderWindow::InitRenderTarget() {
         delete child_widget;
     }
 
-    child_window =
-        new OpenGLWindow(QWidget::window()->windowHandle(), QOpenGLContext::globalShareContext());
+    child_window = new OpenGLWindow(QWidget::window()->windowHandle(), this,
+                                    QOpenGLContext::globalShareContext());
     child_window->create();
     child_widget = createWindowContainer(child_window, this);
     child_widget->resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
