@@ -294,7 +294,7 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     item_model->setHeaderData(COLUMN_REGION, Qt::Horizontal, tr("Region"));
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, tr("File type"));
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, tr("Size"));
-    item_model->setSortRole(GameListItemPath::TitleRole);
+    item_model->setSortRole(GameListItemPath::SortRole);
 
     connect(main_window, &GMainWindow::UpdateThemedIcons, this, &GameList::onUpdateThemedIcons);
     connect(tree_view, &QTreeView::activated, this, &GameList::ValidateEntry);
