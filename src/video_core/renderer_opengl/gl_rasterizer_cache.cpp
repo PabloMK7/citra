@@ -1832,6 +1832,8 @@ void RasterizerCacheOpenGL::ClearAll(bool flush) {
 }
 
 void RasterizerCacheOpenGL::FlushRegion(PAddr addr, u32 size, Surface flush_surface) {
+    std::lock_guard lock{mutex};
+
     if (size == 0)
         return;
 
@@ -1868,6 +1870,8 @@ void RasterizerCacheOpenGL::FlushAll() {
 }
 
 void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface& region_owner) {
+    std::lock_guard lock{mutex};
+
     if (size == 0)
         return;
 
@@ -1943,6 +1947,8 @@ Surface RasterizerCacheOpenGL::CreateSurface(const SurfaceParams& params) {
 }
 
 void RasterizerCacheOpenGL::RegisterSurface(const Surface& surface) {
+    std::lock_guard lock{mutex};
+
     if (surface->registered) {
         return;
     }
@@ -1952,6 +1958,8 @@ void RasterizerCacheOpenGL::RegisterSurface(const Surface& surface) {
 }
 
 void RasterizerCacheOpenGL::UnregisterSurface(const Surface& surface) {
+    std::lock_guard lock{mutex};
+
     if (!surface->registered) {
         return;
     }
