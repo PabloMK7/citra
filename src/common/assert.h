@@ -42,7 +42,8 @@ __declspec(noinline, noreturn)
     while (0)
 
 #define UNREACHABLE() assert_noinline_call([] { LOG_CRITICAL(Debug, "Unreachable code!"); })
-#define UNREACHABLE_MSG(...) assert_noinline_call([] { LOG_CRITICAL(Debug, "Unreachable code!\n" __VA_ARGS__); })
+#define UNREACHABLE_MSG(...)                                                                       \
+    assert_noinline_call([&] { LOG_CRITICAL(Debug, "Unreachable code!\n" __VA_ARGS__); })
 
 #ifdef _DEBUG
 #define DEBUG_ASSERT(_a_) ASSERT(_a_)
