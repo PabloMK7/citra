@@ -120,6 +120,7 @@ private:
     void ShowNoUpdatePrompt();
     void CheckForUpdates();
     void SetDiscordEnabled(bool state);
+    void LoadAmiibo(const QString& filename);
 
     /**
      * Stores the filename in the recently loaded files list.
