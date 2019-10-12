@@ -212,12 +212,6 @@ public:
     /// Gets a const reference to the cheat engine
     const Cheats::CheatEngine& CheatEngine() const;
 
-    /// Gets a reference to the video dumper backend
-    VideoDumper::Backend& VideoDumper();
-
-    /// Gets a const reference to the video dumper backend
-    const VideoDumper::Backend& VideoDumper() const;
-
     /// Gets a reference to the custom texture cache system
     Core::CustomTexCache& CustomTexCache();
 
@@ -233,6 +227,7 @@ public:
     /// Gets a const reference to the video dumper backend
     const VideoDumper::Backend& VideoDumper() const;
 
+    std::unique_ptr<PerfStats> perf_stats;
     FrameLimiter frame_limiter;
 
     void SetStatus(ResultStatus new_status, const char* details = nullptr) {

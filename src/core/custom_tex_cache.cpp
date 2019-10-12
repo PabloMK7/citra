@@ -82,8 +82,9 @@ void CustomTexCache::PreloadTextures() {
         if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
                                        path_info.path)) {
             // Make sure the texture size is a power of 2
-            if ((ceil(log2(tex_info.width)) == floor(log2(tex_info.width))) &&
-                (ceil(log2(tex_info.height)) == floor(log2(tex_info.height)))) {
+            std::bitset<32> width_bits(tex_info.width);
+            std::bitset<32> height_bits(tex_info.height);
+            if (width_bits.count() == 1 && height_bits.count() == 1) {
                 LOG_DEBUG(Render_OpenGL, "Loaded custom texture from {}", path_info.path);
                 Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
                 CacheTexture(path_info.hash, tex_info.tex, tex_info.width, tex_info.height);

@@ -75,20 +75,11 @@ Q_DECLARE_METATYPE(QList<QWidget*>);
 void ConfigureDialog::PopulateSelectionList() {
     ui->selectorList->clear();
 
-<<<<<<< HEAD
     const std::array<std::pair<QString, QList<QWidget*>>, 4> items{
         {{tr("General"), {ui->generalTab, ui->webTab, ui->debugTab, ui->uiTab}},
          {tr("System"), {ui->systemTab, ui->audioTab, ui->cameraTab}},
-         {tr("Graphics"), {ui->graphicsTab}},
+         {tr("Graphics"), {ui->enhancementsTab, ui->graphicsTab}},
          {tr("Controls"), {ui->inputTab, ui->hotkeysTab}}}};
-=======
-    const std::array<std::pair<QString, QStringList>, 4> items{
-        {{tr("General"),
-          {QT_TR_NOOP("General"), QT_TR_NOOP("Web"), QT_TR_NOOP("Debug"), QT_TR_NOOP("UI")}},
-         {tr("System"), {QT_TR_NOOP("System"), QT_TR_NOOP("Audio"), QT_TR_NOOP("Camera")}},
-         {tr("Graphics"), {QT_TR_NOOP("Enhancements"), QT_TR_NOOP("Advanced")}},
-         {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
->>>>>>> 76ca777b... reorder graphics tab, move speed to general
 
     for (const auto& entry : items) {
         auto* const item = new QListWidgetItem(entry.first);
@@ -133,12 +124,17 @@ void ConfigureDialog::UpdateVisibleTabs() {
     if (items.isEmpty())
         return;
 
-    const std::map<QWidget*, QString> widgets = {
-        {ui->generalTab, tr("General")},   {ui->systemTab, tr("System")},
-        {ui->inputTab, tr("Input")},       {ui->hotkeysTab, tr("Hotkeys")},
-        {ui->graphicsTab, tr("Graphics")}, {ui->audioTab, tr("Audio")},
-        {ui->cameraTab, tr("Camera")},     {ui->debugTab, tr("Debug")},
-        {ui->webTab, tr("Web")},           {ui->uiTab, tr("UI")}};
+    const std::map<QWidget*, QString> widgets = {{ui->generalTab, tr("General")},
+                                                 {ui->systemTab, tr("System")},
+                                                 {ui->inputTab, tr("Input")},
+                                                 {ui->hotkeysTab, tr("Hotkeys")},
+                                                 {ui->enhancementsTab, tr("Enhancements")},
+                                                 {ui->graphicsTab, tr("Advanced")},
+                                                 {ui->audioTab, tr("Audio")},
+                                                 {ui->cameraTab, tr("Camera")},
+                                                 {ui->debugTab, tr("Debug")},
+                                                 {ui->webTab, tr("Web")},
+                                                 {ui->uiTab, tr("UI")}};
 
     ui->tabWidget->clear();
 

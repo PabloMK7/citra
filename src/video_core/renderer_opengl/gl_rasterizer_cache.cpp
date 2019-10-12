@@ -98,9 +98,12 @@ static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
  * Originally from https://github.com/apitrace/apitrace/blob/master/retrace/glstate_images.cpp
  */
 static inline void GetTexImageOES(GLenum target, GLint level, GLenum format, GLenum type,
-                                  GLint height, GLint width, GLint depth, GLubyte* pixels) {
+                                  GLint height, GLint width, GLint depth, GLubyte* pixels,
+                                  GLuint size) {
+    memset(pixels, 0x80, size);
 
-    memset(pixels, 0x80, height * width * 4);
+    OpenGLState cur_state = OpenGLState::GetCurState();
+    OpenGLState state;
 
     GLenum texture_binding = GL_NONE;
     switch (target) {
@@ -127,11 +130,10 @@ static inline void GetTexImageOES(GLenum target, GLint level, GLenum format, GLe
         return;
     }
 
-    GLint prev_fbo = 0;
-    GLuint fbo = 0;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    OGLFramebuffer fbo;
+    fbo.Create();
+    state.draw.read_framebuffer = fbo.handle;
+    state.Apply();
 
     switch (target) {
     case GL_TEXTURE_2D:
@@ -141,8 +143,9 @@ static inline void GetTexImageOES(GLenum target, GLint level, GLenum format, GLe
     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
     case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z: {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture,
+                               level);
+        GLenum status = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             LOG_DEBUG(Render_OpenGL, "Framebuffer is incomplete, status: {:X}", status);
         }
@@ -151,16 +154,16 @@ static inline void GetTexImageOES(GLenum target, GLint level, GLenum format, GLe
     }
     case GL_TEXTURE_3D_OES:
         for (int i = 0; i < depth; i++) {
-            glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, texture,
-                                   level, i);
+            glFramebufferTexture3D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D,
+                                   texture, level, i);
             glReadPixels(0, 0, width, height, format, type, pixels + 4 * i * width * height);
         }
         break;
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
+    cur_state.Apply();
 
-    glDeleteFramebuffers(1, &fbo);
+    fbo.Release();
 }
 
 template <typename Map, typename Interval>
@@ -869,9 +872,9 @@ bool CachedSurface::LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_inf
             const auto& path_info = custom_tex_cache.LookupTexturePathInfo(tex_hash);
             if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
                                            path_info.path)) {
-                // Make sure the texture size is a power of 2
-                if ((ceil(log2(tex_info.width)) == floor(log2(tex_info.width))) &&
-                    (ceil(log2(tex_info.height)) == floor(log2(tex_info.height)))) {
+                std::bitset<32> width_bits(tex_info.width);
+                std::bitset<32> height_bits(tex_info.height);
+                if (width_bits.count() == 1 && height_bits.count() == 1) {
                     LOG_DEBUG(Render_OpenGL, "Loaded custom texture from {}", path_info.path);
                     Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
                     custom_tex_cache.CacheTexture(tex_hash, tex_info.tex, tex_info.width,
@@ -931,7 +934,7 @@ void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
            desktop and ES.
         */
         GetTexImageOES(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, height, width, 0,
-                       &decoded_texture[0]);
+                       &decoded_texture[0], decoded_texture.size());
         glBindTexture(GL_TEXTURE_2D, 0);
         Common::FlipRGBA8Texture(decoded_texture, width, height);
         if (!image_interface->EncodePNG(dump_path, decoded_texture, width, height))
@@ -1086,7 +1089,8 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
         glActiveTexture(GL_TEXTURE0);
         if (GLES) {
             GetTexImageOES(GL_TEXTURE_2D, 0, tuple.format, tuple.type, rect.GetHeight(),
-                           rect.GetWidth(), 0, &gl_buffer[buffer_offset]);
+                           rect.GetWidth(), 0, &gl_buffer[buffer_offset],
+                           gl_buffer_size - buffer_offset);
         } else {
             glGetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, &gl_buffer[buffer_offset]);
         }
