@@ -14,7 +14,7 @@
 namespace OpenGL {
 
 GLuint LoadShader(const char* source, GLenum type) {
-    const std::string version = GLES ? R"(#version 310 es
+    const std::string version = GLES ? R"(#version 320 es
 
 #define CITRA_GLES
 
