@@ -55,8 +55,8 @@ RasterizerOpenGL::RasterizerOpenGL()
       texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false),
       texture_lf_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false) {
 
-    allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
-                   GLAD_GL_ARB_framebuffer_no_attachments;
+    allow_shadow = GLES || (GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
+                            GLAD_GL_ARB_framebuffer_no_attachments);
     if (!allow_shadow) {
         LOG_WARNING(Render_OpenGL,
                     "Shadow might not be able to render because of unsupported OpenGL extensions.");
