@@ -177,7 +177,10 @@ public:
             OGLProgram& program = boost::get<OGLProgram>(shader_or_program);
             program.Create(true, {shader.handle});
             SetShaderUniformBlockBindings(program.handle);
-            SetShaderSamplerBindings(program.handle);
+
+            if (type == GL_FRAGMENT_SHADER) {
+                SetShaderSamplerBindings(program.handle);
+            }
         }
     }
 
