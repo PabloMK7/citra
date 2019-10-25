@@ -212,6 +212,9 @@ public:
 
             const QString& row1 = display_texts.at(UISettings::values.game_list_row_1).simplified();
 
+            if (role == SortRole)
+                return row1.toLower();
+
             QString row2;
             auto row_2_id = UISettings::values.game_list_row_2;
             if (row_2_id != UISettings::GameListText::NoText) {
