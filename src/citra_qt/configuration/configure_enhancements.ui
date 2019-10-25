@@ -240,6 +240,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="upright_screen">
+        <property name="text">
+         <string>Rotate Screens Upright</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
          <widget class="QLabel" name="bg_label">
