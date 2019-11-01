@@ -10,6 +10,7 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/uisettings.h"
 #include "common/file_util.h"
+#include "core/frontend/mic.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
@@ -114,7 +115,7 @@ void Config::ReadAudioValues() {
     Settings::values.mic_input_type = static_cast<Settings::MicInputType>(
         ReadSetting(QStringLiteral("mic_input_type"), 0).toInt());
     Settings::values.mic_input_device =
-        ReadSetting(QStringLiteral("mic_input_device"), QStringLiteral("Default"))
+        ReadSetting(QStringLiteral("mic_input_device"), Frontend::Mic::default_device_name)
             .toString()
             .toStdString();
 
@@ -628,7 +629,7 @@ void Config::SaveAudioValues() {
     WriteSetting(QStringLiteral("volume"), Settings::values.volume, 1.0f);
     WriteSetting(QStringLiteral("mic_input_device"),
                  QString::fromStdString(Settings::values.mic_input_device),
-                 QStringLiteral("Default"));
+                 Frontend::Mic::default_device_name);
     WriteSetting(QStringLiteral("mic_input_type"),
                  static_cast<int>(Settings::values.mic_input_type), 0);
 

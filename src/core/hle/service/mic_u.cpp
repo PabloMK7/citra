@@ -326,7 +326,7 @@ struct MIC_U::Impl {
             break;
         case Settings::MicInputType::Real:
 #if HAVE_CUBEB
-            new_mic = std::make_unique<AudioCore::CubebInput>();
+            new_mic = std::make_unique<AudioCore::CubebInput>(Settings::values.mic_input_device);
 #else
             new_mic = std::make_unique<Frontend::Mic::NullMic>();
 #endif

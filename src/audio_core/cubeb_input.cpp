@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <utility>
 #include <vector>
 #include <cubeb/cubeb.h>
 #include "audio_core/cubeb_input.h"
@@ -23,7 +24,8 @@ struct CubebInput::Impl {
     static void StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state);
 };
 
-CubebInput::CubebInput() : impl(std::make_unique<Impl>()) {
+CubebInput::CubebInput(std::string device_id)
+    : impl(std::make_unique<Impl>()), device_id(std::move(device_id)) {
     if (cubeb_init(&impl->ctx, "Citra Input", nullptr) != CUBEB_OK) {
         LOG_ERROR(Audio, "cubeb_init failed! Mic will not work properly");
         return;
@@ -56,6 +58,23 @@ void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
     is_sampling = true;
 
     cubeb_devid input_device = nullptr;
+    if (device_id != Frontend::Mic::default_device_name && !device_id.empty()) {
+        cubeb_device_collection collection;
+        if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) != CUBEB_OK) {
+            LOG_WARNING(Audio, "Audio input device enumeration not supported");
+        } else {
+            const auto collection_end = collection.device + collection.count;
+            const auto device = std::find_if(
+                collection.device, collection_end, [this](const cubeb_device_info& info) {
+                    return info.friendly_name != nullptr && device_id == info.friendly_name;
+                });
+            if (device != collection_end) {
+                input_device = device->devid;
+            }
+            cubeb_device_collection_destroy(impl->ctx, &collection);
+        }
+    }
+
     cubeb_stream_params input_params;
     input_params.channels = 1;
     input_params.layout = CUBEB_LAYOUT_UNDEFINED;
