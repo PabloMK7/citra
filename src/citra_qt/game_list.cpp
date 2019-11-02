@@ -258,6 +258,8 @@ void GameList::onUpdateThemedIcons() {
         case GameListItemType::AddDir:
             child->setData(QIcon::fromTheme("plus").pixmap(48), Qt::DecorationRole);
             break;
+        default:
+            break;
         }
     }
 }
@@ -371,6 +373,8 @@ void GameList::ValidateEntry(const QModelIndex& item) {
     case GameListItemType::AddDir:
         emit AddDirectory();
         break;
+    default:
+        break;
     }
 }
 
@@ -441,6 +445,8 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     case GameListItemType::InstalledDir:
     case GameListItemType::SystemDir:
         AddPermDirPopup(context_menu, selected);
+        break;
+    default:
         break;
     }
     context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
