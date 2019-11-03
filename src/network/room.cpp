@@ -778,6 +778,27 @@ void Room::RoomImpl::SendStatusMessage(StatusMessageTypes type, const std::strin
         }
     }
     enet_host_flush(server);
+
+    const std::string display_name =
+        username.empty() ? nickname : fmt::format("{} ({})", nickname, username);
+
+    switch (type) {
+    case IdMemberJoin:
+        LOG_INFO(Network, "{} has joined.", display_name);
+        break;
+    case IdMemberLeave:
+        LOG_INFO(Network, "{} has left.", display_name);
+        break;
+    case IdMemberKicked:
+        LOG_INFO(Network, "{} has been kicked.", display_name);
+        break;
+    case IdMemberBanned:
+        LOG_INFO(Network, "{} has been banned.", display_name);
+        break;
+    case IdAddressUnbanned:
+        LOG_INFO(Network, "{} has been unbanned.", display_name);
+        break;
+    }
 }
 
 void Room::RoomImpl::BroadcastRoomInformation() {
@@ -911,6 +932,13 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     }
 
     enet_host_flush(server);
+
+    if (sending_member->user_data.username.empty()) {
+        LOG_INFO(Network, "{}: {}", sending_member->nickname, message);
+    } else {
+        LOG_INFO(Network, "{} ({}): {}", sending_member->nickname,
+                 sending_member->user_data.username, message);
+    }
 }
 
 void Room::RoomImpl::HandleGameNamePacket(const ENetEvent* event) {
@@ -930,6 +958,17 @@ void Room::RoomImpl::HandleGameNamePacket(const ENetEvent* event) {
             });
         if (member != members.end()) {
             member->game_info = game_info;
+
+            const std::string display_name =
+                member->user_data.username.empty()
+                    ? member->nickname
+                    : fmt::format("{} ({})", member->nickname, member->user_data.username);
+
+            if (game_info.name.empty()) {
+                LOG_INFO(Network, "{} is not playing", display_name);
+            } else {
+                LOG_INFO(Network, "{} is playing {}", display_name, game_info.name);
+            }
         }
     }
     BroadcastRoomInformation();

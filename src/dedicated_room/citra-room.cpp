@@ -18,8 +18,12 @@
 #include <shellapi.h>
 #endif
 
+#include "common/common_paths.h"
 #include "common/common_types.h"
 #include "common/detached_tasks.h"
+#include "common/file_util.h"
+#include "common/logging/backend.h"
+#include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
 #include "core/announce_multiplayer_session.h"
@@ -53,6 +57,7 @@ static void PrintHelp(const char* argv0) {
                  "--token             The token used for announce\n"
                  "--web-api-url       Citra Web API url\n"
                  "--ban-list-file     The file for storing the room ban list\n"
+                 "--log-file          The file for storing the room log\n"
                  "--enable-citra-mods Allow Citra Community Moderators to moderate on your room\n"
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
@@ -128,6 +133,18 @@ static void SaveBanList(const Network::Room::BanList& ban_list, const std::strin
     file.flush();
 }
 
+static void InitializeLogging(const std::string& log_file) {
+    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
+
+    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
+    FileUtil::CreateFullPath(log_dir);
+    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + log_file));
+
+#ifdef _WIN32
+    Log::AddBackend(std::make_unique<Log::DebuggerBackend>());
+#endif
+}
+
 /// Application entry point
 int main(int argc, char** argv) {
     Common::DetachedTasks detached_tasks;
@@ -145,6 +162,7 @@ int main(int argc, char** argv) {
     std::string token;
     std::string web_api_url;
     std::string ban_list_file;
+    std::string log_file = "citra-room.log";
     u64 preferred_game_id = 0;
     u32 port = Network::DefaultRoomPort;
     u32 max_members = 16;
@@ -162,6 +180,7 @@ int main(int argc, char** argv) {
         {"token", required_argument, 0, 't'},
         {"web-api-url", required_argument, 0, 'a'},
         {"ban-list-file", required_argument, 0, 'b'},
+        {"log-file", required_argument, 0, 'l'},
         {"enable-citra-mods", no_argument, 0, 'e'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
@@ -169,7 +188,7 @@ int main(int argc, char** argv) {
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "n:d:p:m:w:g:u:t:a:i:hv", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "n:d:p:m:w:g:u:t:a:i:l:hv", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
             case 'n':
@@ -204,6 +223,9 @@ int main(int argc, char** argv) {
                 break;
             case 'b':
                 ban_list_file.assign(optarg);
+                break;
+            case 'l':
+                log_file.assign(optarg);
                 break;
             case 'e':
                 enable_citra_mods = true;
@@ -270,6 +292,8 @@ int main(int argc, char** argv) {
         enable_citra_mods = false;
         std::cout << "Can not enable Citra Moderators for private rooms\n\n";
     }
+
+    InitializeLogging(log_file);
 
     // Load the ban list
     Network::Room::BanList ban_list;
