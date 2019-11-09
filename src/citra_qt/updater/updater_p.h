@@ -59,8 +59,8 @@ private:
 
     bool launch_ui_on_exit = false;
 
-    QStringList run_arguments{"--updater"};
-    QStringList silent_arguments{"--silentUpdate"};
+    QStringList run_arguments{QStringLiteral("--updater")};
+    QStringList silent_arguments{QStringLiteral("--silentUpdate")};
 
     friend class Updater;
 };
