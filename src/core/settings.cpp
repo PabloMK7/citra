@@ -137,8 +137,7 @@ void DeleteProfile(int index) {
 }
 
 void RenameCurrentProfile(std::string new_name) {
-    Settings::values.input_profiles[Settings::values.current_input_profile_index].name =
-        std::move(new_name);
+    Settings::values.current_input_profile.name = std::move(new_name);
 }
 
 } // namespace Settings
