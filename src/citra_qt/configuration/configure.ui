@@ -48,6 +48,11 @@
          <string>Graphics</string>
         </attribute>
        </widget>
+       <widget class="ConfigureEnhancements" name="enhancementsTab">
+         <attribute name="title">
+           <string>Enhancements</string>
+         </attribute>
+       </widget>
        <widget class="ConfigureAudio" name="audioTab">
         <attribute name="title">
          <string>Audio</string>
@@ -133,6 +138,12 @@
    <class>ConfigureGraphics</class>
    <extends>QWidget</extends>
    <header>configuration/configure_graphics.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureEnhancements</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_enhancements.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

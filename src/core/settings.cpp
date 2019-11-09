@@ -87,6 +87,8 @@ void LogSettings() {
     LogSetting("Stereoscopy_Factor3d", Settings::values.factor_3d);
     LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
     LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
+    LogSetting("Utility_DumpTextures", Settings::values.dump_textures);
+    LogSetting("Utility_CustomTextures", Settings::values.custom_textures);
     LogSetting("Audio_EnableDspLle", Settings::values.enable_dsp_lle);
     LogSetting("Audio_EnableDspLleMultithread", Settings::values.enable_dsp_lle_multithread);
     LogSetting("Audio_OutputEngine", Settings::values.sink_id);

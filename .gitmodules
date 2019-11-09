@@ -43,3 +43,6 @@
 [submodule "teakra"]
     path = externals/teakra
     url = https://github.com/wwylele/teakra.git
+[submodule "lodepng"]
+    path = externals/lodepng/lodepng
+    url = https://github.com/lvandeve/lodepng.git

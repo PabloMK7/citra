@@ -56,7 +56,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 19> default_hotkeys{
+const std::array<UISettings::Shortcut, 20> default_hotkeys{
     {{QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral("\\"), Qt::ApplicationShortcut}},
      {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::ApplicationShortcut}},
      {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"), Qt::WindowShortcut}},
@@ -75,7 +75,8 @@ const std::array<UISettings::Shortcut, 19> default_hotkeys{
      {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"), Qt::WindowShortcut}},
      {QStringLiteral("Toggle Speed Limit"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}}}};
+     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}},
+     {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+D"), Qt::ApplicationShortcut}}}};
 // clang-format on
 
 void Config::ReadValues() {
@@ -226,6 +227,16 @@ void Config::ReadControlValues() {
         std::clamp(Settings::values.current_input_profile_index, 0, num_input_profiles - 1);
 
     Settings::LoadProfile(Settings::values.current_input_profile_index);
+
+    qt_config->endGroup();
+}
+
+void Config::ReadUtilityValues() {
+    qt_config->beginGroup("Utility");
+
+    Settings::values.dump_textures = ReadSetting("dump_textures", false).toBool();
+    Settings::values.custom_textures = ReadSetting("custom_textures", false).toBool();
+    Settings::values.preload_textures = ReadSetting("preload_textures", false).toBool();
 
     qt_config->endGroup();
 }
@@ -689,6 +700,16 @@ void Config::SaveControlValues() {
         WriteSetting(QStringLiteral("udp_pad_index"), profile.udp_pad_index, 0);
     }
     qt_config->endArray();
+
+    qt_config->endGroup();
+}
+
+void Config::SaveUtilityValues() {
+    qt_config->beginGroup("Utility");
+
+    WriteSetting("dump_textures", Settings::values.dump_textures, false);
+    WriteSetting("custom_textures", Settings::values.custom_textures, false);
+    WriteSetting("preload_textures", Settings::values.preload_textures, false);
 
     qt_config->endGroup();
 }

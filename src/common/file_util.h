@@ -26,6 +26,8 @@ enum class UserPath {
     CheatsDir,
     ConfigDir,
     DLLDir,
+    DumpDir,
+    LoadDir,
     LogDir,
     NANDDir,
     RootDir,
@@ -112,6 +114,13 @@ bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
  */
 u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
                       unsigned int recursion = 0);
+
+/**
+ * Recursively searches through a FSTEntry for files, and stores them.
+ * @param directory The FSTEntry to start scanning from
+ * @param parent_entry FSTEntry vector where the results will be stored.
+ */
+void GetAllFilesFromNestedEntries(FSTEntry& directory, std::vector<FSTEntry>& output);
 
 // deletes the given directory and anything under it. Returns true on success.
 bool DeleteDirRecursively(const std::string& directory, unsigned int recursion = 256);

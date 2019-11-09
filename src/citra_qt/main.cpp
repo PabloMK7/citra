@@ -50,6 +50,7 @@
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
 #include "citra_qt/multiplayer/state.h"
+#include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
@@ -427,8 +428,11 @@ void GMainWindow::InitializeHotkeys() {
                 Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
                 UpdateStatusBar();
             });
-    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
-    // variable hold a garbage value after this function exits
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Texture Dumping", this),
+            &QShortcut::activated, this,
+            [&] { Settings::values.dump_textures = !Settings::values.dump_textures; });
+    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes
+    // the variable hold a garbage value after this function exits
     static constexpr u16 SPEED_LIMIT_STEP = 5;
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
             &QShortcut::activated, this, [&] {
@@ -1079,6 +1083,16 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
         open_target = "Update Data";
         path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, data_id + 0xe00000000) +
                "content/";
+        break;
+    case GameListOpenTarget::TEXTURE_DUMP:
+        open_target = "Dumped Textures";
+        path = fmt::format("{}textures/{:016X}/",
+                           FileUtil::GetUserPath(FileUtil::UserPath::DumpDir), data_id);
+        break;
+    case GameListOpenTarget::TEXTURE_LOAD:
+        open_target = "Custom Textures";
+        path = fmt::format("{}textures/{:016X}/",
+                           FileUtil::GetUserPath(FileUtil::UserPath::LoadDir), data_id);
         break;
     default:
         LOG_ERROR(Frontend, "Unexpected target {}", static_cast<int>(target));
@@ -2058,6 +2072,9 @@ int main(int argc, char* argv[]) {
     Frontend::RegisterDefaultApplets();
     Core::System::GetInstance().RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
     Core::System::GetInstance().RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
+
+    // Register Qt image interface
+    Core::System::GetInstance().RegisterImageInterface(std::make_shared<QtImageInterface>());
 
     main_window.show();
 

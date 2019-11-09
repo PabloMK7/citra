@@ -25,6 +25,7 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
+#include "core/custom_tex_cache.h"
 #include "core/hw/gpu.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_texturing.h"
@@ -361,6 +362,9 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     /// level_watchers[i] watches the (i+1)-th level mipmap source surface
     std::array<std::shared_ptr<SurfaceWatcher>, 7> level_watchers;
 
+    bool is_custom = false;
+    Core::CustomTexInfo custom_tex_info;
+
     static constexpr unsigned int GetGLBytesPerPixel(PixelFormat format) {
         // OpenGL needs 4 bpp alignment for D24 since using GL_UNSIGNED_INT as type
         return format == PixelFormat::Invalid
@@ -376,6 +380,11 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     // Read/Write data in 3DS memory to/from gl_buffer
     void LoadGLBuffer(PAddr load_start, PAddr load_end);
     void FlushGLBuffer(PAddr flush_start, PAddr flush_end);
+
+    // Custom texture loading and dumping
+    bool LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_info,
+                           Common::Rectangle<u32>& custom_rect);
+    void DumpTexture(GLuint target_tex, u64 tex_hash);
 
     // Upload/Download data in gl_buffer in/to this surface's texture
     void UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,

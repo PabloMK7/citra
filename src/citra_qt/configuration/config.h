@@ -42,6 +42,7 @@ private:
     void ReadUIGameListValues();
     void ReadUILayoutValues();
     void ReadUpdaterValues();
+    void ReadUtilityValues();
     void ReadWebServiceValues();
 
     void SaveValues();
@@ -62,6 +63,7 @@ private:
     void SaveUIGameListValues();
     void SaveUILayoutValues();
     void SaveUpdaterValues();
+    void SaveUtilityValues();
     void SaveWebServiceValues();
 
     QVariant ReadSetting(const QString& name) const;

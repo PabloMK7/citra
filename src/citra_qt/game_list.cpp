@@ -458,6 +458,9 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
     QAction* open_extdata_location = context_menu.addAction(tr("Open Extra Data Location"));
     QAction* open_application_location = context_menu.addAction(tr("Open Application Location"));
     QAction* open_update_location = context_menu.addAction(tr("Open Update Data Location"));
+    QAction* open_texture_dump_location = context_menu.addAction(tr("Open Texture Dump Location"));
+    QAction* open_texture_load_location =
+        context_menu.addAction(tr("Open Custom Texture Location"));
     QAction* navigate_to_gamedb_entry = context_menu.addAction(tr("Navigate to GameDB entry"));
 
     const bool is_application =
@@ -484,6 +487,10 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
                                                                      program_id + 0xe00000000) +
                                            "content/"));
     auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
+
+    open_texture_dump_location->setVisible(is_application);
+    open_texture_load_location->setVisible(is_application);
+
     navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
     connect(open_save_location, &QAction::triggered, [this, program_id] {
@@ -497,6 +504,20 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
     });
     connect(open_update_location, &QAction::triggered, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::UPDATE_DATA);
+    });
+    connect(open_texture_dump_location, &QAction::triggered, [this, program_id] {
+        if (FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
+                                                 FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
+                                                 program_id))) {
+            emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_DUMP);
+        }
+    });
+    connect(open_texture_load_location, &QAction::triggered, [this, program_id] {
+        if (FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
+                                                 FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                                                 program_id))) {
+            emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_LOAD);
+        }
     });
     connect(navigate_to_gamedb_entry, &QAction::triggered, [this, program_id]() {
         emit NavigateToGamedbEntryRequested(program_id, compatibility_list);

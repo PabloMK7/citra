@@ -45,6 +45,7 @@ void ConfigureDialog::SetConfiguration() {
     ui->systemTab->SetConfiguration();
     ui->inputTab->LoadConfiguration();
     ui->graphicsTab->SetConfiguration();
+    ui->enhancementsTab->SetConfiguration();
     ui->audioTab->SetConfiguration();
     ui->cameraTab->SetConfiguration();
     ui->debugTab->SetConfiguration();
@@ -59,6 +60,7 @@ void ConfigureDialog::ApplyConfiguration() {
     ui->inputTab->ApplyProfile();
     ui->hotkeysTab->ApplyConfiguration(registry);
     ui->graphicsTab->ApplyConfiguration();
+    ui->enhancementsTab->ApplyConfiguration();
     ui->audioTab->ApplyConfiguration();
     ui->cameraTab->ApplyConfiguration();
     ui->debugTab->ApplyConfiguration();
@@ -76,7 +78,7 @@ void ConfigureDialog::PopulateSelectionList() {
     const std::array<std::pair<QString, QList<QWidget*>>, 4> items{
         {{tr("General"), {ui->generalTab, ui->webTab, ui->debugTab, ui->uiTab}},
          {tr("System"), {ui->systemTab, ui->audioTab, ui->cameraTab}},
-         {tr("Graphics"), {ui->graphicsTab}},
+         {tr("Graphics"), {ui->enhancementsTab, ui->graphicsTab}},
          {tr("Controls"), {ui->inputTab, ui->hotkeysTab}}}};
 
     for (const auto& entry : items) {
@@ -109,6 +111,7 @@ void ConfigureDialog::RetranslateUI() {
     ui->inputTab->RetranslateUI();
     ui->hotkeysTab->RetranslateUI();
     ui->graphicsTab->RetranslateUI();
+    ui->enhancementsTab->RetranslateUI();
     ui->audioTab->RetranslateUI();
     ui->cameraTab->RetranslateUI();
     ui->debugTab->RetranslateUI();
@@ -121,12 +124,17 @@ void ConfigureDialog::UpdateVisibleTabs() {
     if (items.isEmpty())
         return;
 
-    const std::map<QWidget*, QString> widgets = {
-        {ui->generalTab, tr("General")},   {ui->systemTab, tr("System")},
-        {ui->inputTab, tr("Input")},       {ui->hotkeysTab, tr("Hotkeys")},
-        {ui->graphicsTab, tr("Graphics")}, {ui->audioTab, tr("Audio")},
-        {ui->cameraTab, tr("Camera")},     {ui->debugTab, tr("Debug")},
-        {ui->webTab, tr("Web")},           {ui->uiTab, tr("UI")}};
+    const std::map<QWidget*, QString> widgets = {{ui->generalTab, tr("General")},
+                                                 {ui->systemTab, tr("System")},
+                                                 {ui->inputTab, tr("Input")},
+                                                 {ui->hotkeysTab, tr("Hotkeys")},
+                                                 {ui->enhancementsTab, tr("Enhancements")},
+                                                 {ui->graphicsTab, tr("Advanced")},
+                                                 {ui->audioTab, tr("Audio")},
+                                                 {ui->cameraTab, tr("Camera")},
+                                                 {ui->debugTab, tr("Debug")},
+                                                 {ui->webTab, tr("Web")},
+                                                 {ui->uiTab, tr("UI")}};
 
     ui->tabWidget->clear();
 

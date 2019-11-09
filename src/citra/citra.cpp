@@ -20,6 +20,7 @@
 
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_sdl2.h"
+#include "citra/lodepng_image_interface.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -341,6 +342,9 @@ int main(int argc, char** argv) {
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
+
+    // Register generic image interface
+    Core::System::GetInstance().RegisterImageInterface(std::make_shared<LodePNGImageInterface>());
 
     std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>(fullscreen)};
 
