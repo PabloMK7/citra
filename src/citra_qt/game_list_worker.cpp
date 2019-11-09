@@ -135,7 +135,7 @@ void GameListWorker::run() {
             watch_list.append(games_path);
             watch_list.append(demos_path);
             auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::InstalledDir);
-            emit DirEntryReady({game_list_dir});
+            emit DirEntryReady(game_list_dir);
             AddFstEntriesToGameList(games_path.toStdString(), 2, game_list_dir);
             AddFstEntriesToGameList(demos_path.toStdString(), 2, game_list_dir);
         } else if (game_dir.path == "SYSTEM") {
@@ -144,12 +144,12 @@ void GameListWorker::run() {
                 "00000000000000000000000000000000/title/00040010";
             watch_list.append(path);
             auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::SystemDir);
-            emit DirEntryReady({game_list_dir});
+            emit DirEntryReady(game_list_dir);
             AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
         } else {
             watch_list.append(game_dir.path);
             auto* const game_list_dir = new GameListDir(game_dir);
-            emit DirEntryReady({game_list_dir});
+            emit DirEntryReady(game_list_dir);
             AddFstEntriesToGameList(game_dir.path.toStdString(), game_dir.deep_scan ? 256 : 0,
                                     game_list_dir);
         }

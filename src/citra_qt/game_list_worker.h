@@ -56,8 +56,9 @@ private:
     void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
                                  GameListDir* parent_dir);
 
-    QStringList watch_list;
-    const CompatibilityList& compatibility_list;
     QVector<UISettings::GameDir>& game_dirs;
+    const CompatibilityList& compatibility_list;
+
+    QStringList watch_list;
     std::atomic_bool stop_processing;
 };
