@@ -13,7 +13,7 @@ if (ENABLE_WEB_SERVICE)
     target_link_libraries(citra-room PRIVATE web_service)
 endif()
 
-target_link_libraries(citra-room PRIVATE glad)
+target_link_libraries(citra-room PRIVATE cryptopp glad)
 if (MSVC)
     target_link_libraries(citra-room PRIVATE getopt)
 endif()
