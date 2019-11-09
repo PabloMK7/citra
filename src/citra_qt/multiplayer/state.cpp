@@ -46,7 +46,7 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
     status_icon = new ClickableLabel(this);
     status_text->setToolTip(tr("Current connection status"));
     status_text->setText(tr("Not Connected. Click here to find a room!"));
-    status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
+    status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("disconnected")).pixmap(16));
 
     connect(status_text, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
     connect(status_icon, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
@@ -113,12 +113,12 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
         state == Network::RoomMember::State::Moderator) {
 
         OnOpenNetworkRoom();
-        status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+        status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("connected")).pixmap(16));
         status_text->setText(tr("Connected"));
         leave_room->setEnabled(true);
         show_room->setEnabled(true);
     } else {
-        status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
+        status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("disconnected")).pixmap(16));
         status_text->setText(tr("Not Connected"));
         leave_room->setEnabled(false);
         show_room->setEnabled(false);
@@ -183,13 +183,14 @@ void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
 
 void MultiplayerState::UpdateThemedIcons() {
     if (show_notification) {
-        status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
+        status_icon->setPixmap(
+            QIcon::fromTheme(QStringLiteral("connected_notification")).pixmap(16));
     } else if (current_state == Network::RoomMember::State::Joined ||
                current_state == Network::RoomMember::State::Moderator) {
 
-        status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+        status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("connected")).pixmap(16));
     } else {
-        status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
+        status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("disconnected")).pixmap(16));
     }
     if (client_room)
         client_room->UpdateIconDisplay();
@@ -245,13 +246,13 @@ void MultiplayerState::ShowNotification() {
         return; // Do not show notification if the chat window currently has focus
     show_notification = true;
     QApplication::alert(nullptr);
-    status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
+    status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("connected_notification")).pixmap(16));
     status_text->setText(tr("New Messages Received"));
 }
 
 void MultiplayerState::HideNotification() {
     show_notification = false;
-    status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+    status_icon->setPixmap(QIcon::fromTheme(QStringLiteral("connected")).pixmap(16));
     status_text->setText(tr("Connected"));
 }
 

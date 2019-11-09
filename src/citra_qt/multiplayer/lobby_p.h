@@ -42,7 +42,7 @@ public:
     QVariant data(int role) const override {
         if (role == Qt::DecorationRole) {
             bool has_password = data(PasswordRole).toBool();
-            return has_password ? QIcon::fromTheme("lock").pixmap(16) : QIcon();
+            return has_password ? QIcon::fromTheme(QStringLiteral("lock")).pixmap(16) : QIcon();
         }
         if (role != Qt::DisplayRole) {
             return LobbyItem::data(role);
@@ -69,7 +69,7 @@ public:
             return LobbyItem::data(role);
         }
         auto description = data(DescriptionRole).toString();
-        description.prepend("Description: ");
+        description.prepend(QStringLiteral("Description: "));
         return description;
     }
 
@@ -157,7 +157,7 @@ public:
         if (username.isEmpty() || username == nickname) {
             return nickname;
         } else {
-            return QString("%1 (%2)").arg(nickname, username);
+            return QStringLiteral("%1 (%2)").arg(nickname, username);
         }
     }
     u64 GetTitleId() const {
@@ -192,8 +192,8 @@ public:
             return LobbyItem::data(role);
         }
         auto members = data(MemberListRole).toList();
-        return QString("%1 / %2").arg(QString::number(members.size()),
-                                      data(MaxPlayerRole).toString());
+        return QStringLiteral("%1 / %2").arg(QString::number(members.size()),
+                                             data(MaxPlayerRole).toString());
     }
 
     bool operator<(const QStandardItem& other) const override {
@@ -225,7 +225,7 @@ public:
         bool first = true;
         for (const auto& member : members) {
             if (!first)
-                out += '\n';
+                out.append(QStringLiteral("\n"));
             const auto& m = member.value<LobbyMember>();
             if (m.GetGameName().isEmpty()) {
                 out += QString(QObject::tr("%1 is not playing a game")).arg(m.GetName());
