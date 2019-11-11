@@ -505,6 +505,7 @@ void ConfigureInput::RenameProfile() {
 
     ui->profile->setItemText(ui->profile->currentIndex(), new_name);
     Settings::RenameCurrentProfile(new_name.toStdString());
+    Settings::SaveProfile(ui->profile->currentIndex());
 }
 
 bool ConfigureInput::IsProfileNameDuplicate(const QString& name) const {
