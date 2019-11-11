@@ -353,17 +353,7 @@ int main(int argc, char** argv) {
             std::string in;
             std::cin >> in;
             if (in.size() > 0) {
-                if (announce) {
-                    announce_session->Stop();
-                }
-                announce_session.reset();
-                // Save the ban list
-                if (!ban_list_file.empty()) {
-                    SaveBanList(room->GetBanList(), ban_list_file);
-                }
-                room->Destroy();
-                Network::Shutdown();
-                return 0;
+                break;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
