@@ -92,6 +92,7 @@ void Config::ReadValues() {
     ReadDebuggingValues();
     ReadWebServiceValues();
     ReadUIValues();
+    ReadUtilityValues();
 }
 
 void Config::ReadAudioValues() {
@@ -609,6 +610,7 @@ void Config::SaveValues() {
     SaveDebuggingValues();
     SaveWebServiceValues();
     SaveUIValues();
+    SaveUtilityValues();
 }
 
 void Config::SaveAudioValues() {
