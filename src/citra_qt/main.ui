@@ -187,11 +187,6 @@
     <string>Install CIA...</string>
    </property>
   </action>
-  <action name="action_Load_Symbol_Map">
-   <property name="text">
-    <string>Load Symbol Map...</string>
-   </property>
-  </action>
   <action name="action_Exit">
    <property name="text">
     <string>E&amp;xit</string>
@@ -271,14 +266,6 @@
    </property>
    <property name="text">
     <string>Show Status Bar</string>
-   </property>
-  </action>
-  <action name="action_Select_Game_List_Root">
-   <property name="text">
-    <string>Select Game Directory...</string>
-   </property>
-   <property name="toolTip">
-    <string>Selects a folder to display in the game list</string>
    </property>
   </action>
   <action name="action_Create_Pica_Surface_Viewer">
