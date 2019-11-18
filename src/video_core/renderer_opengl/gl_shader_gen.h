@@ -27,11 +27,7 @@ enum Attributes {
     ATTRIBUTE_VIEW,
 };
 
-// NOTE: MSVC15 (Update 2) doesn't think `delete`'d constructors and operators are TC.
-//       This makes BitField not TC when used in a union or struct so we have to resort
-//       to this ugly hack.
-//       Once that bug is fixed we can use Pica::Regs::TevStageConfig here.
-//       Doesn't include const_color because we don't sync it, see comment in BuildFromRegs()
+// Doesn't include const_color because we don't sync it, see comment in BuildFromRegs()
 struct TevStageConfigRaw {
     u32 sources_raw;
     u32 modifiers_raw;
