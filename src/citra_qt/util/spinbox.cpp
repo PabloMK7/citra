@@ -128,25 +128,25 @@ static QString StringToInputMask(const QString& input) {
     QString mask = input;
 
     // ... replace any special characters by their escaped counterparts ...
-    mask.replace("\\", "\\\\");
-    mask.replace("A", "\\A");
-    mask.replace("a", "\\a");
-    mask.replace("N", "\\N");
-    mask.replace("n", "\\n");
-    mask.replace("X", "\\X");
-    mask.replace("x", "\\x");
-    mask.replace("9", "\\9");
-    mask.replace("0", "\\0");
-    mask.replace("D", "\\D");
-    mask.replace("d", "\\d");
-    mask.replace("#", "\\#");
-    mask.replace("H", "\\H");
-    mask.replace("h", "\\h");
-    mask.replace("B", "\\B");
-    mask.replace("b", "\\b");
-    mask.replace(">", "\\>");
-    mask.replace("<", "\\<");
-    mask.replace("!", "\\!");
+    mask.replace(QStringLiteral("\\"), QStringLiteral("\\\\"));
+    mask.replace(QLatin1Char{'A'}, QStringLiteral("\\A"));
+    mask.replace(QLatin1Char{'a'}, QStringLiteral("\\a"));
+    mask.replace(QLatin1Char{'N'}, QStringLiteral("\\N"));
+    mask.replace(QLatin1Char{'n'}, QStringLiteral("\\n"));
+    mask.replace(QLatin1Char{'X'}, QStringLiteral("\\X"));
+    mask.replace(QLatin1Char{'x'}, QStringLiteral("\\x"));
+    mask.replace(QLatin1Char{'9'}, QStringLiteral("\\9"));
+    mask.replace(QLatin1Char{'0'}, QStringLiteral("\\0"));
+    mask.replace(QLatin1Char{'D'}, QStringLiteral("\\D"));
+    mask.replace(QLatin1Char{'d'}, QStringLiteral("\\d"));
+    mask.replace(QLatin1Char{'#'}, QStringLiteral("\\#"));
+    mask.replace(QLatin1Char{'H'}, QStringLiteral("\\H"));
+    mask.replace(QLatin1Char{'h'}, QStringLiteral("\\h"));
+    mask.replace(QLatin1Char{'B'}, QStringLiteral("\\B"));
+    mask.replace(QLatin1Char{'b'}, QStringLiteral("\\b"));
+    mask.replace(QLatin1Char{'>'}, QStringLiteral("\\>"));
+    mask.replace(QLatin1Char{'<'}, QStringLiteral("\\<"));
+    mask.replace(QLatin1Char{'!'}, QStringLiteral("\\!"));
 
     return mask;
 }
@@ -160,19 +160,19 @@ void CSpinBox::UpdateText() {
 
         // For base 10 and negative range, demand a single sign character
         if (HasSign())
-            mask += "X"; // identified as "-" or "+" in the validator
+            mask.append(QLatin1Char{'X'}); // identified as "-" or "+" in the validator
 
         // Uppercase digits greater than 9.
-        mask += ">";
+        mask.append(QLatin1Char{'>'});
 
         // Match num_digits digits
         // Digits irrelevant to the chosen number base are filtered in the validator
-        mask += QString("H").repeated(std::max(num_digits, 1));
+        mask.append(QStringLiteral("H").repeated(std::max(num_digits, 1)));
 
         // Switch off case conversion
-        mask += "!";
+        mask.append(QLatin1Char{'!'});
 
-        mask += StringToInputMask(suffix);
+        mask.append(StringToInputMask(suffix));
     }
     lineEdit()->setInputMask(mask);
 
@@ -185,8 +185,9 @@ void CSpinBox::UpdateText() {
 }
 
 QString CSpinBox::TextFromValue() {
-    return prefix + QString(HasSign() ? ((value < 0) ? "-" : "+") : "") +
-           QString("%1").arg(std::abs(value), num_digits, base, QLatin1Char('0')).toUpper() +
+    return prefix +
+           (HasSign() ? ((value < 0) ? QStringLiteral("-") : QStringLiteral("+")) : QString{}) +
+           QStringLiteral("%1").arg(std::abs(value), num_digits, base, QLatin1Char('0')).toUpper() +
            suffix;
 }
 
@@ -224,20 +225,20 @@ QValidator::State CSpinBox::validate(QString& input, int& pos) const {
 
     // Demand sign character for negative ranges
     if (HasSign())
-        regexp += "[+\\-]";
+        regexp.append(QStringLiteral("[+\\-]"));
 
     // Match digits corresponding to the chosen number base.
-    regexp += QString("[0-%1").arg(std::min(base, 9));
+    regexp.append(QStringLiteral("[0-%1").arg(std::min(base, 9)));
     if (base == 16) {
-        regexp += "a-fA-F";
+        regexp.append(QStringLiteral("a-fA-F"));
     }
-    regexp += "]";
+    regexp.append(QLatin1Char(']'));
 
     // Specify number of digits
     if (num_digits > 0) {
-        regexp += QString("{%1}").arg(num_digits);
+        regexp.append(QStringLiteral("{%1}").arg(num_digits));
     } else {
-        regexp += "+";
+        regexp.append(QLatin1Char{'+'});
     }
 
     // Match string
