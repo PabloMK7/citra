@@ -301,7 +301,7 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     item_model->setHeaderData(COLUMN_REGION, Qt::Horizontal, tr("Region"));
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, tr("File type"));
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, tr("Size"));
-    item_model->setSortRole(GameListItemPath::TitleRole);
+    item_model->setSortRole(GameListItemPath::SortRole);
 
     connect(main_window, &GMainWindow::UpdateThemedIcons, this, &GameList::onUpdateThemedIcons);
     connect(tree_view, &QTreeView::activated, this, &GameList::ValidateEntry);
@@ -426,6 +426,8 @@ void GameList::DonePopulating(QStringList watch_list) {
     if (children_total > 0) {
         search_field->setFocus();
     }
+    item_model->sort(tree_view->header()->sortIndicatorSection(),
+                     tree_view->header()->sortIndicatorOrder());
 
     emit PopulatingCompleted();
 }
@@ -675,8 +677,6 @@ void GameList::LoadInterfaceLayout() {
         // so make it as large as possible as default.
         header->resizeSection(COLUMN_NAME, header->width());
     }
-
-    item_model->sort(header->sortIndicatorSection(), header->sortIndicatorOrder());
 }
 
 const QStringList GameList::supported_file_extensions = {

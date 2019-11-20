@@ -146,11 +146,11 @@ static const std::unordered_map<UISettings::GameListIconSize, int> IconSizes{
  */
 class GameListItemPath : public GameListItem {
 public:
-    static const int TitleRole = SortRole;
-    static const int FullPathRole = SortRole + 1;
-    static const int ProgramIdRole = SortRole + 2;
-    static const int ExtdataIdRole = SortRole + 3;
-    static const int LongTitleRole = SortRole + 4;
+    static const int TitleRole = SortRole + 1;
+    static const int FullPathRole = SortRole + 2;
+    static const int ProgramIdRole = SortRole + 3;
+    static const int ExtdataIdRole = SortRole + 4;
+    static const int LongTitleRole = SortRole + 5;
 
     GameListItemPath() = default;
     GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id,
@@ -196,7 +196,7 @@ public:
     }
 
     QVariant data(int role) const override {
-        if (role == Qt::DisplayRole) {
+        if (role == Qt::DisplayRole || role == SortRole) {
             std::string path, filename, extension;
             Common::SplitPath(data(FullPathRole).toString().toStdString(), &path, &filename,
                               &extension);
@@ -211,6 +211,9 @@ public:
             };
 
             const QString& row1 = display_texts.at(UISettings::values.game_list_row_1).simplified();
+
+            if (role == SortRole)
+                return row1.toLower();
 
             QString row2;
             auto row_2_id = UISettings::values.game_list_row_2;
@@ -377,6 +380,13 @@ public:
         return static_cast<int>(dir_type);
     }
 
+    /**
+     * Override to prevent automatic sorting.
+     */
+    bool operator<(const QStandardItem& other) const override {
+        return false;
+    }
+
 private:
     GameListItemType dir_type;
 };
@@ -393,6 +403,10 @@ public:
 
     int type() const override {
         return static_cast<int>(GameListItemType::AddDir);
+    }
+
+    bool operator<(const QStandardItem& other) const override {
+        return false;
     }
 };
 
