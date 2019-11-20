@@ -88,7 +88,7 @@ signals:
 
 private slots:
     void onItemExpanded(const QModelIndex& item);
-    void onTextChanged(const QString& newText);
+    void onTextChanged(const QString& new_text);
     void onFilterCloseClicked();
     void onUpdateThemedIcons();
 

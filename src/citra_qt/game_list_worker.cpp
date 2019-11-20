@@ -91,7 +91,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
 
             // The game list uses this as compatibility number for untested games
-            QString compatibility("99");
+            QString compatibility(QStringLiteral("99"));
             if (it != compatibility_list.end())
                 compatibility = it->second.first;
 
@@ -121,7 +121,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
 void GameListWorker::run() {
     stop_processing = false;
     for (UISettings::GameDir& game_dir : game_dirs) {
-        if (game_dir.path == "INSTALLED") {
+        if (game_dir.path == QStringLiteral("INSTALLED")) {
             QString games_path =
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)) +
                 "Nintendo "
@@ -138,7 +138,7 @@ void GameListWorker::run() {
             emit DirEntryReady(game_list_dir);
             AddFstEntriesToGameList(games_path.toStdString(), 2, game_list_dir);
             AddFstEntriesToGameList(demos_path.toStdString(), 2, game_list_dir);
-        } else if (game_dir.path == "SYSTEM") {
+        } else if (game_dir.path == QStringLiteral("SYSTEM")) {
             QString path =
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
                 "00000000000000000000000000000000/title/00040010";
