@@ -302,6 +302,7 @@ int main(int argc, char** argv) {
             std::cout << "Hosting a public room\n\n";
             Settings::values.web_api_url = web_api_url;
             Settings::values.citra_username = UsernameFromDisplayToken(token);
+            username = Settings::values.citra_username;
             Settings::values.citra_token = TokenFromDisplayToken(token);
         } else {
             std::cout << "Hosting a public room\n\n";
