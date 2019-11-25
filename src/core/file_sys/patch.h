@@ -12,4 +12,6 @@ namespace FileSys::Patch {
 
 bool ApplyIpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer);
 
+bool ApplyBpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer);
+
 } // namespace FileSys::Patch

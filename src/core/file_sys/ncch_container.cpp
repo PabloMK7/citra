@@ -508,21 +508,31 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 }
 
 Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const {
-    const std::string override_ips = filepath + ".exefsdir/code.ips";
+    struct PatchLocation {
+        std::string path;
+        bool (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
+    };
+    const std::array<PatchLocation, 2> patch_paths{{
+        {filepath + ".exefsdir/code.ips", Patch::ApplyIpsPatch},
+        {filepath + ".exefsdir/code.bps", Patch::ApplyBpsPatch},
+    }};
 
-    FileUtil::IOFile ips_file{override_ips, "rb"};
-    if (!ips_file)
-        return Loader::ResultStatus::ErrorNotUsed;
+    for (const PatchLocation& info : patch_paths) {
+        FileUtil::IOFile file{info.path, "rb"};
+        if (!file)
+            continue;
 
-    std::vector<u8> ips(ips_file.GetSize());
-    if (ips_file.ReadBytes(ips.data(), ips.size()) != ips.size())
-        return Loader::ResultStatus::Error;
+        std::vector<u8> patch(file.GetSize());
+        if (file.ReadBytes(patch.data(), patch.size()) != patch.size())
+            return Loader::ResultStatus::Error;
 
-    LOG_INFO(Service_FS, "File {} patching code.bin", override_ips);
-    if (!Patch::ApplyIpsPatch(ips, code))
-        return Loader::ResultStatus::Error;
+        LOG_INFO(Service_FS, "File {} patching code.bin", info.path);
+        if (!info.patch_fn(patch, code))
+            return Loader::ResultStatus::Error;
 
-    return Loader::ResultStatus::Success;
+        return Loader::ResultStatus::Success;
+    }
+    return Loader::ResultStatus::ErrorNotUsed;
 }
 
 Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
