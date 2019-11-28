@@ -1869,14 +1869,33 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     QWidget::closeEvent(event);
 }
 
-static bool IsSingleFileDropEvent(QDropEvent* event) {
-    const QMimeData* mimeData = event->mimeData();
-    return mimeData->hasUrls() && mimeData->urls().length() == 1;
+static bool IsSingleFileDropEvent(const QMimeData* mime) {
+    return mime->hasUrls() && mime->urls().length() == 1;
 }
 
-void GMainWindow::dropEvent(QDropEvent* event) {
-    if (!IsSingleFileDropEvent(event)) {
-        return;
+static const std::array<std::string, 8> AcceptedExtensions = {"cci",  "3ds", "cxi", "bin",
+                                                              "3dsx", "app", "elf", "axf"};
+
+static bool IsCorrectFileExtension(const QMimeData* mime) {
+    const QString& filename = mime->urls().at(0).toLocalFile();
+    return std::find(AcceptedExtensions.begin(), AcceptedExtensions.end(),
+                     QFileInfo(filename).suffix().toStdString()) != AcceptedExtensions.end();
+}
+
+static bool IsAcceptableDropEvent(QDropEvent* event) {
+    return IsSingleFileDropEvent(event->mimeData()) && IsCorrectFileExtension(event->mimeData());
+}
+
+void GMainWindow::AcceptDropEvent(QDropEvent* event) {
+    if (IsAcceptableDropEvent(event)) {
+        event->setDropAction(Qt::DropAction::LinkAction);
+        event->accept();
+    }
+}
+
+bool GMainWindow::DropAction(QDropEvent* event) {
+    if (!IsAcceptableDropEvent(event)) {
+        return false;
     }
 
     const QMimeData* mime_data = event->mimeData();
@@ -1891,16 +1910,19 @@ void GMainWindow::dropEvent(QDropEvent* event) {
             BootGame(filename);
         }
     }
+    return true;
+}
+
+void GMainWindow::dropEvent(QDropEvent* event) {
+    DropAction(event);
 }
 
 void GMainWindow::dragEnterEvent(QDragEnterEvent* event) {
-    if (IsSingleFileDropEvent(event)) {
-        event->acceptProposedAction();
-    }
+    AcceptDropEvent(event);
 }
 
 void GMainWindow::dragMoveEvent(QDragMoveEvent* event) {
-    event->acceptProposedAction();
+    AcceptDropEvent(event);
 }
 
 bool GMainWindow::ConfirmChangeGame() {

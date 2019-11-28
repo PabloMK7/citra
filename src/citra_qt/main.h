@@ -41,6 +41,7 @@ class QProgressBar;
 class RegistersWidget;
 class Updater;
 class WaitTreeWidget;
+
 namespace DiscordRPC {
 class DiscordInterface;
 }
@@ -69,8 +70,12 @@ public:
     GameList* game_list;
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 
+    bool DropAction(QDropEvent* event);
+    void AcceptDropEvent(QDropEvent* event);
+
 public slots:
     void OnAppFocusStateChanged(Qt::ApplicationState state);
+
 signals:
 
     /**
@@ -78,8 +83,8 @@ signals:
      * about to start. At this time, the core system emulation has been initialized, and all
      * emulation handles and memory should be valid.
      *
-     * @param emu_thread Pointer to the newly created EmuThread (to be used by widgets that need to
-     *      access/change emulation state).
+     * @param emu_thread Pointer to the newly created EmuThread (to be used by widgets that need
+     * to access/change emulation state).
      */
     void EmulationStarting(EmuThread* emu_thread);
 

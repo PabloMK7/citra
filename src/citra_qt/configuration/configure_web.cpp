@@ -127,11 +127,10 @@ void ConfigureWeb::OnLoginChanged() {
 void ConfigureWeb::VerifyLogin() {
     ui->button_verify_login->setDisabled(true);
     ui->button_verify_login->setText(tr("Verifying..."));
-    verify_watcher.setFuture(QtConcurrent::run(
-        [username = UsernameFromDisplayToken(ui->edit_token->text().toStdString()),
-         token = TokenFromDisplayToken(ui->edit_token->text().toStdString())] {
-            return Core::VerifyLogin(username, token);
-        }));
+    verify_watcher.setFuture(QtConcurrent::run([
+        username = UsernameFromDisplayToken(ui->edit_token->text().toStdString()),
+        token = TokenFromDisplayToken(ui->edit_token->text().toStdString())
+    ] { return Core::VerifyLogin(username, token); }));
 }
 
 void ConfigureWeb::OnLoginVerified() {
