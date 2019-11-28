@@ -129,7 +129,6 @@ public:
 
 protected:
     bool event(QEvent* event) override;
-
     void exposeEvent(QExposeEvent* event) override;
 
 private:
