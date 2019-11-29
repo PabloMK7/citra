@@ -354,8 +354,9 @@ void GRenderWindow::InitRenderTarget() {
         delete child_widget;
     }
 
-    child_window = new OpenGLWindow(QWidget::window()->windowHandle(), this,
-                                    QOpenGLContext::globalShareContext());
+    GMainWindow* parent = GetMainWindow();
+    QWindow* parent_win_handle = parent ? parent->windowHandle() : nullptr;
+    child_window = new OpenGLWindow(parent_win_handle, this, QOpenGLContext::globalShareContext());
     child_window->create();
     child_widget = createWindowContainer(child_window, this);
     child_widget->resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
