@@ -13,6 +13,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "core/frontend/mic.h"
 #include "core/hle/service/service.h"
 #include "core/settings.h"
 #include "input_common/main.h"
@@ -178,7 +179,7 @@ void Config::ReadValues() {
     Settings::values.audio_device_id = sdl2_config->GetString("Audio", "output_device", "auto");
     Settings::values.volume = static_cast<float>(sdl2_config->GetReal("Audio", "volume", 1));
     Settings::values.mic_input_device =
-        sdl2_config->GetString("Audio", "mic_input_device", "Default");
+        sdl2_config->GetString("Audio", "mic_input_device", Frontend::Mic::default_device_name);
     Settings::values.mic_input_type =
         static_cast<Settings::MicInputType>(sdl2_config->GetInteger("Audio", "mic_input_type", 0));
 

@@ -11,8 +11,11 @@
 #include "audio_core/sink_details.h"
 #include "citra_qt/configuration/configure_audio.h"
 #include "core/core.h"
+#include "core/frontend/mic.h"
 #include "core/settings.h"
 #include "ui_configure_audio.h"
+
+constexpr int DEFAULT_INPUT_DEVICE_INDEX = 0;
 
 ConfigureAudio::ConfigureAudio(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureAudio>()) {
@@ -75,8 +78,7 @@ void ConfigureAudio::SetConfiguration() {
 
     int index = static_cast<int>(Settings::values.mic_input_type);
     ui->input_type_combo_box->setCurrentIndex(index);
-    ui->input_device_combo_box->setCurrentText(
-        QString::fromStdString(Settings::values.mic_input_device));
+
     UpdateAudioInputDevices(index);
 }
 
@@ -126,7 +128,12 @@ void ConfigureAudio::ApplyConfiguration() {
     Settings::values.enable_dsp_lle_multithread = ui->emulation_combo_box->currentIndex() == 2;
     Settings::values.mic_input_type =
         static_cast<Settings::MicInputType>(ui->input_type_combo_box->currentIndex());
-    Settings::values.mic_input_device = ui->input_device_combo_box->currentText().toStdString();
+
+    if (ui->input_device_combo_box->currentIndex() == DEFAULT_INPUT_DEVICE_INDEX) {
+        Settings::values.mic_input_device = Frontend::Mic::default_device_name;
+    } else {
+        Settings::values.mic_input_device = ui->input_device_combo_box->currentText().toStdString();
+    }
 }
 
 void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
@@ -139,7 +146,12 @@ void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
     }
 }
 
-void ConfigureAudio::UpdateAudioInputDevices(int index) {}
+void ConfigureAudio::UpdateAudioInputDevices(int index) {
+    if (Settings::values.mic_input_device != Frontend::Mic::default_device_name) {
+        ui->input_device_combo_box->setCurrentText(
+            QString::fromStdString(Settings::values.mic_input_device));
+    }
+}
 
 void ConfigureAudio::RetranslateUI() {
     ui->retranslateUi(this);
