@@ -105,10 +105,10 @@ void ConfigureHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
         for (int key_column_id = 0; key_column_id < parent->rowCount(); key_column_id++) {
             QStandardItem* action = parent->child(key_column_id, 0);
             QStandardItem* keyseq = parent->child(key_column_id, 1);
-            for (auto & [group, sub_actions] : registry.hotkey_groups) {
+            for (auto& [group, sub_actions] : registry.hotkey_groups) {
                 if (group != parent->text())
                     continue;
-                for (auto & [action_name, hotkey] : sub_actions) {
+                for (auto& [action_name, hotkey] : sub_actions) {
                     if (action_name != action->text())
                         continue;
                     hotkey.keyseq = QKeySequence(keyseq->text());
