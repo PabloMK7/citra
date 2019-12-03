@@ -15,6 +15,7 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
+#include "common/microprofile.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/dumping/backend.h"
@@ -284,12 +285,121 @@ RendererOpenGL::RendererOpenGL(Frontend::EmuWindow& window) : RendererBase{windo
 
 RendererOpenGL::~RendererOpenGL() = default;
 
+MICROPROFILE_DEFINE(OpenGL_RenderFrame, "OpenGL", "Render Frame", MP_RGB(128, 128, 64));
+MICROPROFILE_DEFINE(OpenGL_WaitPresent, "OpenGL", "Wait For Present", MP_RGB(128, 128, 128));
+
 /// Swap buffers (render frame)
 void RendererOpenGL::SwapBuffers() {
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
 
+    PrepareRendertarget();
+
+    RenderScreenshot();
+
+    RenderVideoDumping();
+
+    const auto& layout = render_window.GetFramebufferLayout();
+
+    Frontend::Frame* frame;
+    {
+        MICROPROFILE_SCOPE(OpenGL_WaitPresent);
+
+        frame = render_window.mailbox->GetRenderFrame();
+
+        // Clean up sync objects before drawing
+
+        // INTEL driver workaround. We can't delete the previous render sync object until we are
+        // sure that the presentation is done
+        if (frame->present_fence) {
+            glClientWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
+        }
+
+        // delete the draw fence if the frame wasn't presented
+        if (frame->render_fence) {
+            glDeleteSync(frame->render_fence);
+            frame->render_fence = 0;
+        }
+
+        // wait for the presentation to be done
+        if (frame->present_fence) {
+            glWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
+            glDeleteSync(frame->present_fence);
+            frame->present_fence = 0;
+        }
+    }
+
+    {
+        MICROPROFILE_SCOPE(OpenGL_RenderFrame);
+        // Recreate the frame if the size of the window has changed
+        if (layout.width != frame->width || layout.height != frame->height) {
+            LOG_DEBUG(Render_OpenGL, "Reloading render frame");
+            render_window.mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
+        }
+
+        GLuint render_texture = frame->color.handle;
+        state.draw.draw_framebuffer = frame->render.handle;
+        state.Apply();
+        DrawScreens(layout);
+        // Create a fence for the frontend to wait on and swap this frame to OffTex
+        frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        glFlush();
+        render_window.mailbox->ReleaseRenderFrame(frame);
+        m_current_frame++;
+    }
+
+    Core::System::GetInstance().perf_stats->EndSystemFrame();
+
+    render_window.PollEvents();
+
+    Core::System::GetInstance().frame_limiter.DoFrameLimiting(
+        Core::System::GetInstance().CoreTiming().GetGlobalTimeUs());
+    Core::System::GetInstance().perf_stats->BeginSystemFrame();
+
+    prev_state.Apply();
+    RefreshRasterizerSetting();
+
+    if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
+        Pica::g_debug_context->recorder->FrameFinished();
+    }
+}
+
+void RendererOpenGL::RenderScreenshot() {
+    if (VideoCore::g_renderer_screenshot_requested) {
+        // Draw this frame to the screenshot framebuffer
+        screenshot_framebuffer.Create();
+        GLuint old_read_fb = state.draw.read_framebuffer;
+        GLuint old_draw_fb = state.draw.draw_framebuffer;
+        state.draw.read_framebuffer = state.draw.draw_framebuffer = screenshot_framebuffer.handle;
+        state.Apply();
+
+        Layout::FramebufferLayout layout{VideoCore::g_screenshot_framebuffer_layout};
+
+        GLuint renderbuffer;
+        glGenRenderbuffers(1, &renderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB8, layout.width, layout.height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
+                                  renderbuffer);
+
+        DrawScreens(layout);
+
+        glReadPixels(0, 0, layout.width, layout.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+                     VideoCore::g_screenshot_bits);
+
+        screenshot_framebuffer.Release();
+        state.draw.read_framebuffer = old_read_fb;
+        state.draw.draw_framebuffer = old_draw_fb;
+        state.Apply();
+        glDeleteRenderbuffers(1, &renderbuffer);
+
+        VideoCore::g_screenshot_complete_callback();
+        VideoCore::g_renderer_screenshot_requested = false;
+    }
+}
+
+void RendererOpenGL::PrepareRendertarget() {
     for (int i : {0, 1, 2}) {
         int fb_id = i == 2 ? 1 : 0;
         const auto& framebuffer = GPU::g_regs.framebuffer_config[fb_id];
@@ -324,39 +434,9 @@ void RendererOpenGL::SwapBuffers() {
             screen_infos[i].texture.height = framebuffer.height;
         }
     }
+}
 
-    if (VideoCore::g_renderer_screenshot_requested) {
-        // Draw this frame to the screenshot framebuffer
-        screenshot_framebuffer.Create();
-        GLuint old_read_fb = state.draw.read_framebuffer;
-        GLuint old_draw_fb = state.draw.draw_framebuffer;
-        state.draw.read_framebuffer = state.draw.draw_framebuffer = screenshot_framebuffer.handle;
-        state.Apply();
-
-        Layout::FramebufferLayout layout{VideoCore::g_screenshot_framebuffer_layout};
-
-        GLuint renderbuffer;
-        glGenRenderbuffers(1, &renderbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB8, layout.width, layout.height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
-                                  renderbuffer);
-
-        DrawScreens(layout);
-
-        glReadPixels(0, 0, layout.width, layout.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                     VideoCore::g_screenshot_bits);
-
-        screenshot_framebuffer.Release();
-        state.draw.read_framebuffer = old_read_fb;
-        state.draw.draw_framebuffer = old_draw_fb;
-        state.Apply();
-        glDeleteRenderbuffers(1, &renderbuffer);
-
-        VideoCore::g_screenshot_complete_callback();
-        VideoCore::g_renderer_screenshot_requested = false;
-    }
-
+void RendererOpenGL::RenderVideoDumping() {
     if (cleanup_video_dumping.exchange(false)) {
         ReleaseVideoDumpingGLObjects();
     }
@@ -383,61 +463,6 @@ void RendererOpenGL::SwapBuffers() {
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         current_pbo = (current_pbo + 1) % 2;
         next_pbo = (current_pbo + 1) % 2;
-    }
-
-    const auto& layout = render_window.GetFramebufferLayout();
-    auto frame = render_window.mailbox->GetRenderFrame();
-
-    // Clean up sync objects before drawing
-
-    // INTEL driver workaround. We can't delete the previous render sync object until we are sure
-    // that the presentation is done
-    if (frame->present_fence) {
-        glClientWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
-    }
-
-    // delete the draw fence if the frame wasn't presented
-    if (frame->render_fence) {
-        glDeleteSync(frame->render_fence);
-        frame->render_fence = 0;
-    }
-
-    // wait for the presentation to be done
-    if (frame->present_fence) {
-        glWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
-        glDeleteSync(frame->present_fence);
-        frame->present_fence = 0;
-    }
-
-    // Recreate the frame if the size of the window has changed
-    if (layout.width != frame->width || layout.height != frame->height) {
-        LOG_DEBUG(Render_OpenGL, "Reloading render frame");
-        render_window.mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
-    }
-
-    GLuint render_texture = frame->color.handle;
-    state.draw.draw_framebuffer = frame->render.handle;
-    state.Apply();
-    DrawScreens(layout);
-    // Create a fence for the frontend to wait on and swap this frame to OffTex
-    frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    glFlush();
-    render_window.mailbox->ReleaseRenderFrame(frame);
-    m_current_frame++;
-
-    Core::System::GetInstance().perf_stats->EndSystemFrame();
-
-    render_window.PollEvents();
-
-    Core::System::GetInstance().frame_limiter.DoFrameLimiting(
-        Core::System::GetInstance().CoreTiming().GetGlobalTimeUs());
-    Core::System::GetInstance().perf_stats->BeginSystemFrame();
-
-    prev_state.Apply();
-    RefreshRasterizerSetting();
-
-    if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
-        Pica::g_debug_context->recorder->FrameFinished();
     }
 }
 

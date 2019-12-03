@@ -70,6 +70,9 @@ private:
     void InitOpenGLObjects();
     void ReloadSampler();
     void ReloadShader();
+    void PrepareRendertarget();
+    void RenderScreenshot();
+    void RenderVideoDumping();
     void ConfigureFramebufferTexture(TextureInfo& texture,
                                      const GPU::Regs::FramebufferConfig& framebuffer);
     void DrawScreens(const Layout::FramebufferLayout& layout);
