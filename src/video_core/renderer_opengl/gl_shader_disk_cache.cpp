@@ -169,6 +169,7 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
         }
     }
 
+    LOG_INFO(Render_OpenGL, "Found a transferable disk cache with {} entries", raws.size());
     return {raws};
 }
 
@@ -266,6 +267,10 @@ ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file) {
             return {};
         }
     }
+
+    LOG_INFO(Render_OpenGL,
+             "Found a precompiled disk cache with {} decompiled entries and {} binary entries",
+             decompiled.size(), dumps.size());
     return {{decompiled, dumps}};
 }
 
