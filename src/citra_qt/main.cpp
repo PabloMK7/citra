@@ -2084,7 +2084,6 @@ int main(int argc, char* argv[]) {
     std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
     chdir(bin_path.c_str());
 #endif
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication app(argc, argv);
