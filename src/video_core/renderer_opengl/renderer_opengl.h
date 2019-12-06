@@ -77,9 +77,9 @@ private:
                                      const GPU::Regs::FramebufferConfig& framebuffer);
     void DrawScreens(const Layout::FramebufferLayout& layout);
     void DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w, float h);
-    void DrawSingleScreenAnaglyphRotated(const ScreenInfo& screen_info_l,
-                                         const ScreenInfo& screen_info_r, float x, float y, float w,
-                                         float h);
+    void DrawSingleScreenStereoRotated(const ScreenInfo& screen_info_l,
+                                       const ScreenInfo& screen_info_r, float x, float y, float w,
+                                       float h);
     void UpdateFramerate();
 
     // Loads framebuffer from emulated memory into the display information structure
