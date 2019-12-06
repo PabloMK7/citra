@@ -131,10 +131,13 @@ void Config::ReadValues() {
         sdl2_config->GetInteger("Renderer", "render_3d", 0));
     Settings::values.factor_3d =
         static_cast<u8>(sdl2_config->GetInteger("Renderer", "factor_3d", 0));
-    Settings::values.pp_shader_name = sdl2_config->GetString(
-        "Renderer", "pp_shader_name",
-        (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) ? "dubois (builtin)"
-                                                                               : "none (builtin)");
+    std::string default_shader = "none (builtin)";
+    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
+        default_shader = "dubois (builtin)";
+    else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced)
+        default_shader = "horizontal (builtin)";
+    Settings::values.pp_shader_name =
+        sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);
     Settings::values.filter_mode = sdl2_config->GetBoolean("Renderer", "filter_mode", true);
 
     Settings::values.bg_red = static_cast<float>(sdl2_config->GetReal("Renderer", "bg_red", 0.0));

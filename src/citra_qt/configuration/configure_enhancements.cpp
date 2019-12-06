@@ -21,8 +21,7 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     connect(ui->render_3d_combobox,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             [this](int currentIndex) {
-                updateShaders(static_cast<Settings::StereoRenderOption>(currentIndex) ==
-                              Settings::StereoRenderOption::Anaglyph);
+                updateShaders(static_cast<Settings::StereoRenderOption>(currentIndex));
             });
 
     connect(ui->bg_button, &QPushButton::clicked, this, [this] {
@@ -49,7 +48,7 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor);
     ui->render_3d_combobox->setCurrentIndex(static_cast<int>(Settings::values.render_3d));
     ui->factor_3d->setValue(Settings::values.factor_3d);
-    updateShaders(Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph);
+    updateShaders(Settings::values.render_3d);
     ui->toggle_linear_filter->setChecked(Settings::values.filter_mode);
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
     ui->swap_screen->setChecked(Settings::values.swap_screen);
@@ -64,17 +63,20 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->bg_button->setIcon(color_icon);
 }
 
-void ConfigureEnhancements::updateShaders(bool anaglyph) {
+void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_option) {
     ui->shader_combobox->clear();
 
-    if (anaglyph)
+    if (stereo_option == Settings::StereoRenderOption::Anaglyph)
         ui->shader_combobox->addItem("dubois (builtin)");
+    else if (stereo_option == Settings::StereoRenderOption::Interlaced)
+        ui->shader_combobox->addItem("horizontal (builtin)");
     else
         ui->shader_combobox->addItem("none (builtin)");
 
     ui->shader_combobox->setCurrentIndex(0);
 
-    for (const auto& shader : OpenGL::GetPostProcessingShaderList(anaglyph)) {
+    for (const auto& shader : OpenGL::GetPostProcessingShaderList(
+             stereo_option == Settings::StereoRenderOption::Anaglyph)) {
         ui->shader_combobox->addItem(QString::fromStdString(shader));
         if (Settings::values.pp_shader_name == shader)
             ui->shader_combobox->setCurrentIndex(ui->shader_combobox->count() - 1);
