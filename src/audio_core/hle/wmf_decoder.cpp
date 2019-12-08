@@ -14,6 +14,9 @@ public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
+    bool IsValid() const {
+        return is_valid;
+    }
 
 private:
     std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
@@ -30,6 +33,9 @@ private:
     unique_mfptr<IMFTransform> transform;
     DWORD in_stream_id = 0;
     DWORD out_stream_id = 0;
+    bool is_valid = false;
+    bool mf_started = false;
+    bool coinited = false;
 };
 
 WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
@@ -45,6 +51,8 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     // S_FALSE will be returned when COM has already been initialized
     if (hr != S_OK && hr != S_FALSE) {
         ReportError("Failed to start COM components", hr);
+    } else {
+        coinited = true;
     }
 
     // lite startup is faster and all what we need is included
@@ -52,6 +60,8 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     if (hr != S_OK) {
         // Do you know you can't initialize MF in test mode or safe mode?
         ReportError("Failed to initialize Media Foundation", hr);
+    } else {
+        mf_started = true;
     }
 
     LOG_INFO(Audio_DSP, "Media Foundation activated");
@@ -73,6 +83,7 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
         return;
     }
     transform_initialized = true;
+    is_valid = true;
 }
 
 WMFDecoder::Impl::~Impl() {
@@ -82,8 +93,12 @@ WMFDecoder::Impl::~Impl() {
         // otherwise access violation will occur
         transform.reset();
     }
-    MFDecoder::MFShutdown();
-    CoUninitialize();
+    if (mf_started) {
+        MFDecoder::MFShutdown();
+    }
+    if (coinited) {
+        CoUninitialize();
+    }
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
@@ -121,8 +136,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     return response;
 }
 
-MFDecoder::MFOutputState WMFDecoder::Impl::DecodingLoop(
-    ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams) {
+MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
+                                             std::array<std::vector<u8>, 2>& out_streams) {
     MFOutputState output_status = MFOutputState::OK;
     std::optional<std::vector<f32>> output_buffer;
     unique_mfptr<IMFSample> output;
@@ -278,6 +293,10 @@ WMFDecoder::~WMFDecoder() = default;
 
 std::optional<BinaryResponse> WMFDecoder::ProcessRequest(const BinaryRequest& request) {
     return impl->ProcessRequest(request);
+}
+
+bool WMFDecoder::IsValid() const {
+    return impl->IsValid();
 }
 
 } // namespace AudioCore::HLE

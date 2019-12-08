@@ -13,6 +13,7 @@ public:
     explicit WMFDecoder(Memory::MemorySystem& memory);
     ~WMFDecoder() override;
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
+    bool IsValid() const override;
 
 private:
     class Impl;
