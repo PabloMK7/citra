@@ -7,6 +7,8 @@
 
 namespace AudioCore::HLE {
 
+using namespace MFDecoder;
+
 class WMFDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
@@ -31,6 +33,13 @@ private:
 };
 
 WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
+    // Attempt to load the symbols for mf.dll
+    if (!InitMFDLL()) {
+        LOG_CRITICAL(Audio_DSP,
+                     "Unable to load mf.dll. AAC audio through media foundation unavailable");
+        return;
+    }
+
     HRESULT hr = S_OK;
     hr = CoInitialize(NULL);
     // S_FALSE will be returned when COM has already been initialized
@@ -39,7 +48,7 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     }
 
     // lite startup is faster and all what we need is included
-    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
+    hr = MFDecoder::MFStartup(MF_VERSION, MFSTARTUP_LITE);
     if (hr != S_OK) {
         // Do you know you can't initialize MF in test mode or safe mode?
         ReportError("Failed to initialize Media Foundation", hr);
@@ -73,7 +82,7 @@ WMFDecoder::Impl::~Impl() {
         // otherwise access violation will occur
         transform.reset();
     }
-    MFShutdown();
+    MFDecoder::MFShutdown();
     CoUninitialize();
 }
 
@@ -112,8 +121,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     return response;
 }
 
-MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
-                                             std::array<std::vector<u8>, 2>& out_streams) {
+MFDecoder::MFOutputState WMFDecoder::Impl::DecodingLoop(
+    ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams) {
     MFOutputState output_status = MFOutputState::OK;
     std::optional<std::vector<f32>> output_buffer;
     unique_mfptr<IMFSample> output;

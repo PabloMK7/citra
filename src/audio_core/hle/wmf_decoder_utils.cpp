@@ -5,6 +5,8 @@
 #include "common/string_util.h"
 #include "wmf_decoder_utils.h"
 
+namespace MFDecoder {
+
 // utility functions
 void ReportError(std::string msg, HRESULT hr) {
     if (SUCCEEDED(hr)) {
@@ -26,6 +28,7 @@ void ReportError(std::string msg, HRESULT hr) {
 }
 
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
+
     HRESULT hr = S_OK;
     MFT_REGISTER_TYPE_INFO reg = {0};
     GUID category = MFT_CATEGORY_AUDIO_DECODER;
@@ -347,3 +350,112 @@ std::optional<std::vector<f32>> CopySampleToBuffer(IMFSample* sample) {
     buffer->Unlock();
     return output;
 }
+
+namespace {
+
+struct LibraryDeleter {
+    using pointer = HMODULE;
+    void operator()(HMODULE h) const {
+        if (h != nullptr)
+            FreeLibrary(h);
+    }
+};
+
+std::unique_ptr<HMODULE, LibraryDeleter> mf_dll{nullptr};
+std::unique_ptr<HMODULE, LibraryDeleter> mfplat_dll{nullptr};
+
+} // namespace
+
+bool InitMFDLL() {
+
+    mf_dll.reset(LoadLibrary(TEXT("mf.dll")));
+    if (!mf_dll) {
+        DWORD error_message_id = GetLastError();
+        LPSTR message_buffer = nullptr;
+        size_t size =
+            FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
+                           nullptr, error_message_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr);
+
+        std::string message(message_buffer, size);
+
+        LocalFree(message_buffer);
+        LOG_ERROR(Audio_DSP, "Could not load mf.dll: {}", message);
+        return false;
+    }
+
+    mfplat_dll.reset(LoadLibrary(TEXT("mfplat.dll")));
+    if (!mfplat_dll) {
+        DWORD error_message_id = GetLastError();
+        LPSTR message_buffer = nullptr;
+        size_t size =
+            FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
+                           nullptr, error_message_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr);
+
+        std::string message(message_buffer, size);
+
+        LocalFree(message_buffer);
+        LOG_ERROR(Audio_DSP, "Could not load mfplat.dll: {}", message);
+        return false;
+    }
+
+    MFStartup = Symbol<HRESULT(ULONG, DWORD)>(mfplat_dll.get(), "MFStartup");
+    if (!MFStartup) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFStartup");
+        return false;
+    }
+
+    MFShutdown = Symbol<HRESULT(void)>(mfplat_dll.get(), "MFShutdown");
+    if (!MFShutdown) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFShutdown");
+        return false;
+    }
+
+    MFShutdownObject = Symbol<HRESULT(IUnknown*)>(mf_dll.get(), "MFShutdownObject");
+    if (!MFShutdownObject) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFShutdownObject");
+        return false;
+    }
+
+    MFCreateAlignedMemoryBuffer = Symbol<HRESULT(DWORD, DWORD, IMFMediaBuffer**)>(
+        mfplat_dll.get(), "MFCreateAlignedMemoryBuffer");
+    if (!MFCreateAlignedMemoryBuffer) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFCreateAlignedMemoryBuffer");
+        return false;
+    }
+
+    MFCreateSample = Symbol<HRESULT(IMFSample**)>(mfplat_dll.get(), "MFCreateSample");
+    if (!MFCreateSample) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFCreateSample");
+        return false;
+    }
+
+    MFTEnumEx =
+        Symbol<HRESULT(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*,
+                       IMFActivate***, UINT32*)>(mfplat_dll.get(), "MFTEnumEx");
+    if (!MFTEnumEx) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFTEnumEx");
+        return false;
+    }
+
+    MFCreateMediaType = Symbol<HRESULT(IMFMediaType**)>(mfplat_dll.get(), "MFCreateMediaType");
+    if (!MFCreateMediaType) {
+        LOG_ERROR(Audio_DSP, "Cannot load function MFCreateMediaType");
+        return false;
+    }
+}
+
+Symbol<HRESULT(ULONG, DWORD)> MFStartup;
+Symbol<HRESULT(void)> MFShutdown;
+Symbol<HRESULT(IUnknown*)> MFShutdownObject;
+Symbol<HRESULT(DWORD, DWORD, IMFMediaBuffer**)> MFCreateAlignedMemoryBuffer;
+Symbol<HRESULT(IMFSample**)> MFCreateSample;
+Symbol<HRESULT(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*,
+               IMFActivate***, UINT32*)>
+    MFTEnumEx;
+Symbol<HRESULT(IMFMediaType**)> MFCreateMediaType;
+
+} // namespace MFDecoder
