@@ -6,16 +6,8 @@
 
 namespace Common {
 
-/// x86/x64 CPU vendors that may be detected by this module
-enum class CPUVendor {
-    INTEL,
-    AMD,
-    OTHER,
-};
-
 /// x86/x64 CPU capabilities that may be detected by this module
 struct CPUCaps {
-    CPUVendor vendor;
     char cpu_string[0x21];
     char brand_string[0x41];
     bool sse;

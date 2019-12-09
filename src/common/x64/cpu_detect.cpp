@@ -66,12 +66,6 @@ static CPUCaps Detect() {
     __cpuid(cpu_id, 0x80000000);
 
     u32 max_ex_fn = cpu_id[0];
-    if (!strcmp(caps.brand_string, "GenuineIntel"))
-        caps.vendor = CPUVendor::INTEL;
-    else if (!strcmp(caps.brand_string, "AuthenticAMD"))
-        caps.vendor = CPUVendor::AMD;
-    else
-        caps.vendor = CPUVendor::OTHER;
 
     // Set reasonable default brand string even if brand string not available
     strcpy(caps.cpu_string, caps.brand_string);
