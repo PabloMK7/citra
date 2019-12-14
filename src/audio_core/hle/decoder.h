@@ -56,6 +56,9 @@ class DecoderBase {
 public:
     virtual ~DecoderBase();
     virtual std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) = 0;
+    /// Return true if this Decoder can be loaded. Return false if the system cannot create the
+    /// decoder
+    virtual bool IsValid() const = 0;
 };
 
 class NullDecoder final : public DecoderBase {
@@ -63,6 +66,9 @@ public:
     NullDecoder();
     ~NullDecoder() override;
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
+    bool IsValid() const override {
+        return true;
+    }
 };
 
 } // namespace AudioCore::HLE

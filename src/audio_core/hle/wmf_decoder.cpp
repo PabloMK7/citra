@@ -7,11 +7,16 @@
 
 namespace AudioCore::HLE {
 
+using namespace MFDecoder;
+
 class WMFDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
+    bool IsValid() const {
+        return is_valid;
+    }
 
 private:
     std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
@@ -28,21 +33,35 @@ private:
     unique_mfptr<IMFTransform> transform;
     DWORD in_stream_id = 0;
     DWORD out_stream_id = 0;
+    bool is_valid = false;
+    bool mf_started = false;
+    bool coinited = false;
 };
 
 WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
+    // Attempt to load the symbols for mf.dll
+    if (!InitMFDLL()) {
+        LOG_CRITICAL(Audio_DSP,
+                     "Unable to load mf.dll. AAC audio through media foundation unavailable");
+        return;
+    }
+
     HRESULT hr = S_OK;
     hr = CoInitialize(NULL);
     // S_FALSE will be returned when COM has already been initialized
     if (hr != S_OK && hr != S_FALSE) {
         ReportError("Failed to start COM components", hr);
+    } else {
+        coinited = true;
     }
 
     // lite startup is faster and all what we need is included
-    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
+    hr = MFDecoder::MFStartup(MF_VERSION, MFSTARTUP_LITE);
     if (hr != S_OK) {
         // Do you know you can't initialize MF in test mode or safe mode?
         ReportError("Failed to initialize Media Foundation", hr);
+    } else {
+        mf_started = true;
     }
 
     LOG_INFO(Audio_DSP, "Media Foundation activated");
@@ -64,6 +83,7 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
         return;
     }
     transform_initialized = true;
+    is_valid = true;
 }
 
 WMFDecoder::Impl::~Impl() {
@@ -73,8 +93,12 @@ WMFDecoder::Impl::~Impl() {
         // otherwise access violation will occur
         transform.reset();
     }
-    MFShutdown();
-    CoUninitialize();
+    if (mf_started) {
+        MFDecoder::MFShutdown();
+    }
+    if (coinited) {
+        CoUninitialize();
+    }
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
@@ -269,6 +293,10 @@ WMFDecoder::~WMFDecoder() = default;
 
 std::optional<BinaryResponse> WMFDecoder::ProcessRequest(const BinaryRequest& request) {
     return impl->ProcessRequest(request);
+}
+
+bool WMFDecoder::IsValid() const {
+    return impl->IsValid();
 }
 
 } // namespace AudioCore::HLE

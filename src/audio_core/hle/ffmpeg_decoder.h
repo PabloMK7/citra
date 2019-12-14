@@ -13,6 +13,7 @@ public:
     explicit FFMPEGDecoder(Memory::MemorySystem& memory);
     ~FFMPEGDecoder() override;
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
+    bool IsValid() const override;
 
 private:
     class Impl;

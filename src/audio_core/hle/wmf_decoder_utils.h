@@ -18,6 +18,39 @@
 
 #include "adts.h"
 
+namespace MFDecoder {
+
+template <typename T>
+struct Symbol {
+    Symbol() = default;
+    Symbol(HMODULE dll, const char* name) {
+        if (dll) {
+            ptr_symbol = reinterpret_cast<T*>(GetProcAddress(dll, name));
+        }
+    }
+
+    operator T*() const {
+        return ptr_symbol;
+    }
+
+    explicit operator bool() const {
+        return ptr_symbol != nullptr;
+    }
+
+    T* ptr_symbol = nullptr;
+};
+
+// Runtime load the MF symbols to prevent mf.dll not found errors on citra load
+extern Symbol<HRESULT(ULONG, DWORD)> MFStartup;
+extern Symbol<HRESULT(void)> MFShutdown;
+extern Symbol<HRESULT(IUnknown*)> MFShutdownObject;
+extern Symbol<HRESULT(DWORD, DWORD, IMFMediaBuffer**)> MFCreateAlignedMemoryBuffer;
+extern Symbol<HRESULT(IMFSample**)> MFCreateSample;
+extern Symbol<HRESULT(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*,
+                      IMFActivate***, UINT32*)>
+    MFTEnumEx;
+extern Symbol<HRESULT(IMFMediaType**)> MFCreateMediaType;
+
 enum class MFOutputState { FatalError, OK, NeedMoreInput, NeedReconfig, HaveMoreData };
 enum class MFInputState { FatalError, OK, NotAccepted };
 
@@ -73,6 +106,9 @@ struct ADTSMeta {
 };
 
 // exported functions
+
+/// Loads the symbols from mf.dll at runtime. Returns false if the symbols can't be loaded
+bool InitMFDLL();
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format = MFAudioFormat_AAC);
 unique_mfptr<IMFSample> CreateSample(const void* data, DWORD len, DWORD alignment = 1,
                                      LONGLONG duration = 0);
@@ -87,3 +123,5 @@ MFInputState SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* 
 std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* transform,
                                                                  DWORD out_stream_id);
 std::optional<std::vector<f32>> CopySampleToBuffer(IMFSample* sample);
+
+} // namespace MFDecoder

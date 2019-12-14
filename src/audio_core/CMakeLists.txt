@@ -45,7 +45,9 @@ if(ENABLE_MF)
         hle/wmf_decoder_utils.cpp
         hle/wmf_decoder_utils.h
     )
-    target_link_libraries(audio_core PRIVATE mf.lib mfplat.lib mfuuid.lib)
+    # We dynamically load the required symbols from mf.dll and mfplat.dll but mfuuid is not a dll
+    # just a static library of GUIDS so include that one directly.
+    target_link_libraries(audio_core PRIVATE mfuuid.lib)
     target_compile_definitions(audio_core PUBLIC HAVE_MF)
 elseif(ENABLE_FFMPEG_AUDIO_DECODER)
     target_sources(audio_core PRIVATE
