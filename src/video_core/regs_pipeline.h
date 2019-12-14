@@ -138,7 +138,8 @@ struct PipelineRegs {
         };
 
         union {
-            BitField<0, 31, u32> offset; // relative to base attribute address
+            BitField<0, 28, u32> offset; // relative to base attribute address
+            BitField<28, 3, u32> unused;
             BitField<31, 1, IndexFormat> format;
         };
     } index_array;
