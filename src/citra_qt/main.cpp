@@ -1019,6 +1019,9 @@ void GMainWindow::ShutdownGame() {
     UpdateWindowTitle();
 
     game_path.clear();
+
+    // When closing the game, destroy the GLWindow to clear the context after the game is closed
+    render_window->ReleaseRenderTarget();
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
