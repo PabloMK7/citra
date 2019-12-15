@@ -171,20 +171,35 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.embedded_buffer_dirty) {
         config.embedded_buffer_dirty.Assign(0);
-        state.input_queue.emplace(Buffer{
-            config.physical_address,
-            config.length,
-            static_cast<u8>(config.adpcm_ps),
-            {config.adpcm_yn[0], config.adpcm_yn[1]},
-            static_cast<bool>(config.adpcm_dirty),
-            static_cast<bool>(config.is_looping),
-            config.buffer_id,
-            state.mono_or_stereo,
-            state.format,
-            false,
-            play_position,
-            false,
-        });
+        // HACK
+        // Luigi's Mansion Dark Moon configures the embedded buffer with an extremely large value
+        // for length, causing the Dequeue method to allocate a buffer of that size, eating up all
+        // of the users RAM. It appears that the game is calculating the length of the sample by
+        // using some value from the DSP and subtracting another value, which causes it to
+        // underflow. We need to investigate further into what value the game is reading from and
+        // fix that, but as a stop gap, we can just prevent these underflowed values from playing in
+        // the mean time
+        if (static_cast<s32>(config.length) < 0) {
+            LOG_ERROR(Audio_DSP,
+                      "Skipping embedded buffer sample! Game passed in improper value for length. "
+                      "addr {:X} length {:X}",
+                      config.physical_address, config.length);
+        } else {
+            state.input_queue.emplace(Buffer{
+                config.physical_address,
+                config.length,
+                static_cast<u8>(config.adpcm_ps),
+                {config.adpcm_yn[0], config.adpcm_yn[1]},
+                static_cast<bool>(config.adpcm_dirty),
+                static_cast<bool>(config.is_looping),
+                config.buffer_id,
+                state.mono_or_stereo,
+                state.format,
+                false,
+                play_position,
+                false,
+            });
+        }
         LOG_TRACE(Audio_DSP, "enqueuing embedded addr={:#010x} len={} id={} start={}",
                   config.physical_address, config.length, config.buffer_id,
                   static_cast<u32>(config.play_position));
@@ -201,20 +216,27 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         for (std::size_t i = 0; i < 4; i++) {
             if (config.buffers_dirty & (1 << i)) {
                 const auto& b = config.buffers[i];
-                state.input_queue.emplace(Buffer{
-                    b.physical_address,
-                    b.length,
-                    static_cast<u8>(b.adpcm_ps),
-                    {b.adpcm_yn[0], b.adpcm_yn[1]},
-                    b.adpcm_dirty != 0,
-                    b.is_looping != 0,
-                    b.buffer_id,
-                    state.mono_or_stereo,
-                    state.format,
-                    true,
-                    {}, // 0 in u32_dsp
-                    false,
-                });
+                if (static_cast<s32>(b.length) < 0) {
+                    LOG_ERROR(Audio_DSP,
+                              "Skipping buffer queue sample! Game passed in improper value for "
+                              "length. addr {:X} length {:X}",
+                              b.physical_address, b.length);
+                } else {
+                    state.input_queue.emplace(Buffer{
+                        b.physical_address,
+                        b.length,
+                        static_cast<u8>(b.adpcm_ps),
+                        {b.adpcm_yn[0], b.adpcm_yn[1]},
+                        b.adpcm_dirty != 0,
+                        b.is_looping != 0,
+                        b.buffer_id,
+                        state.mono_or_stereo,
+                        state.format,
+                        true,
+                        {}, // 0 in u32_dsp
+                        false,
+                    });
+                }
                 LOG_TRACE(Audio_DSP, "enqueuing queued {} addr={:#010x} len={} id={}", i,
                           b.physical_address, b.length, b.buffer_id);
             }
