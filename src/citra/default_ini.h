@@ -112,6 +112,11 @@ shaders_accurate_mul =
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_shader_jit =
 
+# Forces VSync on the display thread. Usually doesn't impact performance, but on some drivers it can
+# so only turn this off if you notice a speed difference.
+# 0: Off, 1 (default): On
+use_vsync_new =
+
 # Resolution scale factor
 # 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
 # factor for the 3DS resolution

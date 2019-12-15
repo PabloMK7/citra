@@ -173,6 +173,8 @@ struct Values {
     bool custom_textures;
     bool preload_textures;
 
+    bool use_vsync_new;
+
     // Audio
     bool enable_dsp_lle;
     bool enable_dsp_lle_multithread;

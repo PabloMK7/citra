@@ -96,10 +96,21 @@ void EmuThread::run() {
 OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context)
     : QWindow(parent), event_handler(event_handler),
       context(new QOpenGLContext(shared_context->parent())) {
+
+    // disable vsync for any shared contexts
+    auto format = shared_context->format();
+    format.setSwapInterval(Settings::values.use_vsync_new ? 1 : 0);
+    this->setFormat(format);
+
     context->setShareContext(shared_context);
     context->setScreen(this->screen());
-    context->setFormat(shared_context->format());
+    context->setFormat(format);
     context->create();
+
+    LOG_WARNING(Frontend, "OpenGLWindow context format Interval {}",
+                context->format().swapInterval());
+
+    LOG_WARNING(Frontend, "OpenGLWindow surface format interval {}", this->format().swapInterval());
 
     setSurfaceType(QWindow::OpenGLSurface);
 
@@ -409,10 +420,16 @@ std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() 
 GLContext::GLContext(QOpenGLContext* shared_context)
     : context(new QOpenGLContext(shared_context->parent())),
       surface(new QOffscreenSurface(nullptr)) {
+
+    // disable vsync for any shared contexts
+    auto format = shared_context->format();
+    format.setSwapInterval(0);
+
     context->setShareContext(shared_context);
+    context->setFormat(format);
     context->create();
     surface->setParent(shared_context->parent());
-    surface->setFormat(shared_context->format());
+    surface->setFormat(format);
     surface->create();
 }
 
