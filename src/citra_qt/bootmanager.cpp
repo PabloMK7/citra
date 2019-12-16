@@ -1,31 +1,50 @@
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include <QApplication>
+#include <QDragEnterEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLWindow>
 #include <QScreen>
 #include <QWindow>
 #include <fmt/format.h>
-
 #include "citra_qt/bootmanager.h"
+#include "citra_qt/main.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "core/3ds.h"
 #include "core/core.h"
+#include "core/frontend/scope_acquire_context.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
 #include "network/network.h"
+#include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
-EmuThread::EmuThread(GRenderWindow* render_window) : render_window(render_window) {}
+EmuThread::EmuThread(Frontend::GraphicsContext& core_context) : core_context(core_context) {}
 
 EmuThread::~EmuThread() = default;
 
+static GMainWindow* GetMainWindow() {
+    for (QWidget* w : qApp->topLevelWidgets()) {
+        if (GMainWindow* main = qobject_cast<GMainWindow*>(w)) {
+            return main;
+        }
+    }
+    return nullptr;
+}
+
 void EmuThread::run() {
-    render_window->MakeCurrent();
-
     MicroProfileOnThreadCreate("EmuThread");
-
+    Frontend::ScopeAcquireContext scope(core_context);
     // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
     // next execution step.
@@ -72,48 +91,104 @@ void EmuThread::run() {
 #if MICROPROFILE_ENABLED
     MicroProfileOnThreadExit();
 #endif
-
-    render_window->moveContext();
 }
 
-// This class overrides paintEvent and resizeEvent to prevent the GUI thread from stealing GL
-// context.
-// The corresponding functionality is handled in EmuThread instead
-class GGLWidgetInternal : public QGLWidget {
-public:
-    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent)
-        : QGLWidget(fmt, parent), parent(parent) {}
+OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context)
+    : QWindow(parent), event_handler(event_handler),
+      context(new QOpenGLContext(shared_context->parent())) {
 
-    void paintEvent(QPaintEvent* ev) override {
-        if (do_painting) {
-            QPainter painter(this);
-        }
-    }
+    // disable vsync for any shared contexts
+    auto format = shared_context->format();
+    format.setSwapInterval(Settings::values.use_vsync_new ? 1 : 0);
+    this->setFormat(format);
 
-    void resizeEvent(QResizeEvent* ev) override {
-        parent->OnClientAreaResized(ev->size().width(), ev->size().height());
-        parent->OnFramebufferSizeChanged();
-    }
+    context->setShareContext(shared_context);
+    context->setScreen(this->screen());
+    context->setFormat(format);
+    context->create();
 
-    void DisablePainting() {
-        do_painting = false;
-    }
-    void EnablePainting() {
-        do_painting = true;
-    }
+    LOG_WARNING(Frontend, "OpenGLWindow context format Interval {}",
+                context->format().swapInterval());
 
-private:
-    GRenderWindow* parent;
-    bool do_painting;
-};
+    LOG_WARNING(Frontend, "OpenGLWindow surface format interval {}", this->format().swapInterval());
+
+    setSurfaceType(QWindow::OpenGLSurface);
+
+    // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
+    // WA_DontShowOnScreen, WA_DeleteOnClose
+}
+
+OpenGLWindow::~OpenGLWindow() {
+    context->doneCurrent();
+}
+
+void OpenGLWindow::Present() {
+    if (!isExposed())
+        return;
+    context->makeCurrent(this);
+    VideoCore::g_renderer->TryPresent(100);
+    context->swapBuffers(this);
+    auto f = context->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    f->glFinish();
+    QWindow::requestUpdate();
+}
+
+bool OpenGLWindow::event(QEvent* event) {
+    switch (event->type()) {
+    case QEvent::UpdateRequest:
+        Present();
+        return true;
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+    case QEvent::MouseMove:
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+    case QEvent::FocusIn:
+    case QEvent::FocusOut:
+    case QEvent::FocusAboutToChange:
+    case QEvent::Enter:
+    case QEvent::Leave:
+    case QEvent::Wheel:
+    case QEvent::TabletMove:
+    case QEvent::TabletPress:
+    case QEvent::TabletRelease:
+    case QEvent::TabletEnterProximity:
+    case QEvent::TabletLeaveProximity:
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::InputMethodQuery:
+    case QEvent::TouchCancel:
+        return QCoreApplication::sendEvent(event_handler, event);
+    case QEvent::Drop:
+        GetMainWindow()->DropAction(static_cast<QDropEvent*>(event));
+        return true;
+    case QEvent::DragResponse:
+    case QEvent::DragEnter:
+    case QEvent::DragLeave:
+    case QEvent::DragMove:
+        GetMainWindow()->AcceptDropEvent(static_cast<QDropEvent*>(event));
+        return true;
+    default:
+        return QWindow::event(event);
+    }
+}
+
+void OpenGLWindow::exposeEvent(QExposeEvent* event) {
+    QWindow::requestUpdate();
+    QWindow::exposeEvent(event);
+}
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QWidget(parent), child(nullptr), emu_thread(emu_thread) {
+    : QWidget(parent), emu_thread(emu_thread) {
 
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
                        .arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
     setAttribute(Qt::WA_AcceptTouchEvents);
-
+    auto layout = new QHBoxLayout(this);
+    layout->setMargin(0);
+    setLayout(layout);
     InputCommon::Init();
 }
 
@@ -121,35 +196,12 @@ GRenderWindow::~GRenderWindow() {
     InputCommon::Shutdown();
 }
 
-void GRenderWindow::moveContext() {
-    DoneCurrent();
-
-    // If the thread started running, move the GL Context to the new thread. Otherwise, move it
-    // back.
-    auto thread = (QThread::currentThread() == qApp->thread() && emu_thread != nullptr)
-                      ? emu_thread
-                      : qApp->thread();
-    child->context()->moveToThread(thread);
-}
-
-void GRenderWindow::SwapBuffers() {
-    // In our multi-threaded QGLWidget use case we shouldn't need to call `makeCurrent`,
-    // since we never call `doneCurrent` in this thread.
-    // However:
-    // - The Qt debug runtime prints a bogus warning on the console if `makeCurrent` wasn't called
-    // since the last time `swapBuffers` was executed;
-    // - On macOS, if `makeCurrent` isn't called explicitely, resizing the buffer breaks.
-    child->makeCurrent();
-
-    child->swapBuffers();
-}
-
 void GRenderWindow::MakeCurrent() {
-    child->makeCurrent();
+    core_context->MakeCurrent();
 }
 
 void GRenderWindow::DoneCurrent() {
-    child->doneCurrent();
+    core_context->DoneCurrent();
 }
 
 void GRenderWindow::PollEvents() {}
@@ -163,8 +215,8 @@ void GRenderWindow::OnFramebufferSizeChanged() {
     // Screen changes potentially incur a change in screen DPI, hence we should update the
     // framebuffer size
     const qreal pixel_ratio = windowPixelRatio();
-    const u32 width = child->QPaintDevice::width() * pixel_ratio;
-    const u32 height = child->QPaintDevice::height() * pixel_ratio;
+    const u32 width = this->width() * pixel_ratio;
+    const u32 height = this->height() * pixel_ratio;
     UpdateCurrentFramebufferLayout(width, height);
 }
 
@@ -194,8 +246,7 @@ QByteArray GRenderWindow::saveGeometry() {
 }
 
 qreal GRenderWindow::windowPixelRatio() const {
-    // windowHandle() might not be accessible until the window is displayed to screen.
-    return windowHandle() ? windowHandle()->screen()->devicePixelRatio() : 1.0f;
+    return devicePixelRatio();
 }
 
 std::pair<u32, u32> GRenderWindow::ScaleTouch(const QPointF pos) const {
@@ -279,15 +330,19 @@ void GRenderWindow::TouchEndEvent() {
 }
 
 bool GRenderWindow::event(QEvent* event) {
-    if (event->type() == QEvent::TouchBegin) {
+    switch (event->type()) {
+    case QEvent::TouchBegin:
         TouchBeginEvent(static_cast<QTouchEvent*>(event));
         return true;
-    } else if (event->type() == QEvent::TouchUpdate) {
+    case QEvent::TouchUpdate:
         TouchUpdateEvent(static_cast<QTouchEvent*>(event));
         return true;
-    } else if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel) {
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
         TouchEndEvent();
         return true;
+    default:
+        break;
     }
 
     return QWidget::event(event);
@@ -298,43 +353,34 @@ void GRenderWindow::focusOutEvent(QFocusEvent* event) {
     InputCommon::GetKeyboard()->ReleaseAllKeys();
 }
 
-void GRenderWindow::OnClientAreaResized(u32 width, u32 height) {
-    NotifyClientAreaSizeChanged(std::make_pair(width, height));
+void GRenderWindow::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    OnFramebufferSizeChanged();
 }
 
 void GRenderWindow::InitRenderTarget() {
-    if (child) {
-        delete child;
-    }
+    ReleaseRenderTarget();
 
-    if (layout()) {
-        delete layout();
-    }
+    GMainWindow* parent = GetMainWindow();
+    QWindow* parent_win_handle = parent ? parent->windowHandle() : nullptr;
+    child_window = new OpenGLWindow(parent_win_handle, this, QOpenGLContext::globalShareContext());
+    child_window->create();
+    child_widget = createWindowContainer(child_window, this);
+    child_widget->resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
+    layout()->addWidget(child_widget);
 
-    // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
-    // WA_DontShowOnScreen, WA_DeleteOnClose
-    QGLFormat fmt;
-    fmt.setVersion(3, 3);
-    fmt.setProfile(QGLFormat::CoreProfile);
-    fmt.setSwapInterval(Settings::values.vsync_enabled);
-
-    // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
-    fmt.setOption(QGL::NoDeprecatedFunctions);
-
-    child = new GGLWidgetInternal(fmt, this);
-    QBoxLayout* layout = new QHBoxLayout(this);
-
+    core_context = CreateSharedContext();
     resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
-    layout->addWidget(child);
-    layout->setMargin(0);
-    setLayout(layout);
-
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
-
-    OnFramebufferSizeChanged();
-    NotifyClientAreaSizeChanged(std::pair<unsigned, unsigned>(child->width(), child->height()));
-
     BackupGeometry();
+}
+
+void GRenderWindow::ReleaseRenderTarget() {
+    if (child_widget) {
+        layout()->removeWidget(child_widget);
+        delete child_widget;
+        child_widget = nullptr;
+    }
 }
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
@@ -361,18 +407,40 @@ void GRenderWindow::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal
 
 void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
-    child->DisablePainting();
 }
 
 void GRenderWindow::OnEmulationStopping() {
     emu_thread = nullptr;
-    child->EnablePainting();
 }
 
 void GRenderWindow::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
+}
 
-    // windowHandle() is not initialized until the Window is shown, so we connect it here.
-    connect(windowHandle(), &QWindow::screenChanged, this, &GRenderWindow::OnFramebufferSizeChanged,
-            Qt::UniqueConnection);
+std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() const {
+    return std::make_unique<GLContext>(QOpenGLContext::globalShareContext());
+}
+
+GLContext::GLContext(QOpenGLContext* shared_context)
+    : context(new QOpenGLContext(shared_context->parent())),
+      surface(new QOffscreenSurface(nullptr)) {
+
+    // disable vsync for any shared contexts
+    auto format = shared_context->format();
+    format.setSwapInterval(0);
+
+    context->setShareContext(shared_context);
+    context->setFormat(format);
+    context->create();
+    surface->setParent(shared_context->parent());
+    surface->setFormat(format);
+    surface->create();
+}
+
+void GLContext::MakeCurrent() {
+    context->makeCurrent(surface);
+}
+
+void GLContext::DoneCurrent() {
+    context->doneCurrent();
 }

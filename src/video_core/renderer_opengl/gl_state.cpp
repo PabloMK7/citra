@@ -89,6 +89,8 @@ OpenGLState::OpenGLState() {
     viewport.height = 0;
 
     clip_distance = {};
+
+    renderbuffer = 0;
 }
 
 void OpenGLState::Apply() const {
@@ -337,6 +339,10 @@ void OpenGLState::Apply() const {
         }
     }
 
+    if (renderbuffer != cur_state.renderbuffer) {
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    }
+
     cur_state = *this;
 }
 
@@ -418,6 +424,13 @@ OpenGLState& OpenGLState::ResetFramebuffer(GLuint handle) {
     }
     if (draw.draw_framebuffer == handle) {
         draw.draw_framebuffer = 0;
+    }
+    return *this;
+}
+
+OpenGLState& OpenGLState::ResetRenderbuffer(GLuint handle) {
+    if (renderbuffer == handle) {
+        renderbuffer = 0;
     }
     return *this;
 }

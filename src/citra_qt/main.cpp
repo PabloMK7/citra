@@ -5,12 +5,11 @@
 #include <clocale>
 #include <memory>
 #include <thread>
-#include <glad/glad.h>
-#define QT_NO_OPENGL
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QMessageBox>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
@@ -72,6 +71,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
+#include "core/frontend/scope_acquire_context.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
@@ -768,13 +768,14 @@ bool GMainWindow::LoadROM(const QString& filename) {
         ShutdownGame();
 
     render_window->InitRenderTarget();
-    render_window->MakeCurrent();
+
+    Frontend::ScopeAcquireContext scope(*render_window);
 
     const QString below_gl33_title = tr("OpenGL 3.3 Unsupported");
     const QString below_gl33_message = tr("Your GPU may not support OpenGL 3.3, or you do not "
                                           "have the latest graphics driver.");
 
-    if (!gladLoadGL()) {
+    if (!QOpenGLContext::globalShareContext()->versionFunctions<QOpenGLFunctions_3_3_Core>()) {
         QMessageBox::critical(this, below_gl33_title, below_gl33_message);
         return false;
     }
@@ -893,9 +894,8 @@ void GMainWindow::BootGame(const QString& filename) {
         return;
 
     // Create and start the emulation thread
-    emu_thread = std::make_unique<EmuThread>(render_window);
+    emu_thread = std::make_unique<EmuThread>(*render_window);
     emit EmulationStarting(emu_thread.get());
-    render_window->moveContext();
     emu_thread->start();
 
     connect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
@@ -1019,6 +1019,9 @@ void GMainWindow::ShutdownGame() {
     UpdateWindowTitle();
 
     game_path.clear();
+
+    // When closing the game, destroy the GLWindow to clear the context after the game is closed
+    render_window->ReleaseRenderTarget();
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
@@ -1869,14 +1872,33 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     QWidget::closeEvent(event);
 }
 
-static bool IsSingleFileDropEvent(QDropEvent* event) {
-    const QMimeData* mimeData = event->mimeData();
-    return mimeData->hasUrls() && mimeData->urls().length() == 1;
+static bool IsSingleFileDropEvent(const QMimeData* mime) {
+    return mime->hasUrls() && mime->urls().length() == 1;
 }
 
-void GMainWindow::dropEvent(QDropEvent* event) {
-    if (!IsSingleFileDropEvent(event)) {
-        return;
+static const std::array<std::string, 8> AcceptedExtensions = {"cci",  "3ds", "cxi", "bin",
+                                                              "3dsx", "app", "elf", "axf"};
+
+static bool IsCorrectFileExtension(const QMimeData* mime) {
+    const QString& filename = mime->urls().at(0).toLocalFile();
+    return std::find(AcceptedExtensions.begin(), AcceptedExtensions.end(),
+                     QFileInfo(filename).suffix().toStdString()) != AcceptedExtensions.end();
+}
+
+static bool IsAcceptableDropEvent(QDropEvent* event) {
+    return IsSingleFileDropEvent(event->mimeData()) && IsCorrectFileExtension(event->mimeData());
+}
+
+void GMainWindow::AcceptDropEvent(QDropEvent* event) {
+    if (IsAcceptableDropEvent(event)) {
+        event->setDropAction(Qt::DropAction::LinkAction);
+        event->accept();
+    }
+}
+
+bool GMainWindow::DropAction(QDropEvent* event) {
+    if (!IsAcceptableDropEvent(event)) {
+        return false;
     }
 
     const QMimeData* mime_data = event->mimeData();
@@ -1891,16 +1913,19 @@ void GMainWindow::dropEvent(QDropEvent* event) {
             BootGame(filename);
         }
     }
+    return true;
+}
+
+void GMainWindow::dropEvent(QDropEvent* event) {
+    DropAction(event);
 }
 
 void GMainWindow::dragEnterEvent(QDragEnterEvent* event) {
-    if (IsSingleFileDropEvent(event)) {
-        event->acceptProposedAction();
-    }
+    AcceptDropEvent(event);
 }
 
 void GMainWindow::dragMoveEvent(QDragMoveEvent* event) {
-    event->acceptProposedAction();
+    AcceptDropEvent(event);
 }
 
 bool GMainWindow::ConfirmChangeGame() {
@@ -2050,11 +2075,20 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setOrganizationName("Citra team");
     QCoreApplication::setApplicationName("Citra");
 
+    QSurfaceFormat format;
+    format.setVersion(3, 3);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSwapInterval(0);
+    // TODO: expose a setting for buffer value (ie default/single/double/triple)
+    format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
+    QSurfaceFormat::setDefaultFormat(format);
+
 #ifdef __APPLE__
     std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
     chdir(bin_path.c_str());
 #endif
-
+    QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication app(argc, argv);
 
     // Qt changes the locale and causes issues in float conversion using std::to_string() when

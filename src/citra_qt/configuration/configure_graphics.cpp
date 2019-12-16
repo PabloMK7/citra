@@ -18,6 +18,8 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     SetConfiguration();
 
     ui->hw_renderer_group->setEnabled(ui->toggle_hw_renderer->isChecked());
+    ui->toggle_vsync_new->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+
     connect(ui->toggle_hw_renderer, &QCheckBox::toggled, this, [this] {
         auto checked = ui->toggle_hw_renderer->isChecked();
         ui->hw_renderer_group->setEnabled(checked);
@@ -46,6 +48,7 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader);
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul);
     ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit);
+    ui->toggle_vsync_new->setChecked(Settings::values.use_vsync_new);
 }
 
 void ConfigureGraphics::ApplyConfiguration() {
@@ -53,6 +56,7 @@ void ConfigureGraphics::ApplyConfiguration() {
     Settings::values.use_hw_shader = ui->toggle_hw_shader->isChecked();
     Settings::values.shaders_accurate_mul = ui->toggle_accurate_mul->isChecked();
     Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
+    Settings::values.use_vsync_new = ui->toggle_vsync_new->isChecked();
 }
 
 void ConfigureGraphics::RetranslateUI() {

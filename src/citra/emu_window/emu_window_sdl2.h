@@ -10,13 +10,29 @@
 
 struct SDL_Window;
 
+class SharedContext_SDL2 : public Frontend::GraphicsContext {
+public:
+    using SDL_GLContext = void*;
+
+    SharedContext_SDL2();
+
+    ~SharedContext_SDL2() override;
+
+    void MakeCurrent() override;
+
+    void DoneCurrent() override;
+
+private:
+    SDL_GLContext context;
+    SDL_Window* window;
+};
+
 class EmuWindow_SDL2 : public Frontend::EmuWindow {
 public:
     explicit EmuWindow_SDL2(bool fullscreen);
     ~EmuWindow_SDL2();
 
-    /// Swap buffers to display the next frame
-    void SwapBuffers() override;
+    void Present();
 
     /// Polls window events
     void PollEvents() override;
@@ -29,6 +45,9 @@ public:
 
     /// Whether the window is still open, and a close request hasn't yet been sent
     bool IsOpen() const;
+
+    /// Creates a new context that is shared with the current context
+    std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
 
 private:
     /// Called by PollEvents when a key is pressed or released.
@@ -67,9 +86,16 @@ private:
     /// Internal SDL2 render window
     SDL_Window* render_window;
 
+    /// Fake hidden window for the core context
+    SDL_Window* dummy_window;
+
     using SDL_GLContext = void*;
+
     /// The OpenGL context associated with the window
-    SDL_GLContext gl_context;
+    SDL_GLContext window_context;
+
+    /// The OpenGL context associated with the core
+    std::unique_ptr<Frontend::GraphicsContext> core_context;
 
     /// Keeps track of how often to update the title bar during gameplay
     u32 last_time = 0;

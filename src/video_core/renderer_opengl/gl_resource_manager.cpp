@@ -15,6 +15,24 @@ MICROPROFILE_DEFINE(OpenGL_ResourceDeletion, "OpenGL", "Resource Deletion", MP_R
 
 namespace OpenGL {
 
+void OGLRenderbuffer::Create() {
+    if (handle != 0)
+        return;
+
+    MICROPROFILE_SCOPE(OpenGL_ResourceCreation);
+    glGenRenderbuffers(1, &handle);
+}
+
+void OGLRenderbuffer::Release() {
+    if (handle == 0)
+        return;
+
+    MICROPROFILE_SCOPE(OpenGL_ResourceDeletion);
+    glDeleteRenderbuffers(1, &handle);
+    OpenGLState::GetCurState().ResetRenderbuffer(handle).Apply();
+    handle = 0;
+}
+
 void OGLTexture::Create() {
     if (handle != 0)
         return;
