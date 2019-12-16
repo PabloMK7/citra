@@ -43,7 +43,7 @@ static void AdvanceAndCheck(Core::Timing& timing, u32 idx, int downcount, int ex
 }
 
 TEST_CASE("CoreTiming[BasicOrder]", "[core]") {
-    Core::Timing timing(1);
+    Core::Timing timing(1, 100);
 
     Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
     Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
@@ -90,7 +90,7 @@ void FifoCallback(u64 userdata, s64 cycles_late) {
 TEST_CASE("CoreTiming[SharedSlot]", "[core]") {
     using namespace SharedSlotTest;
 
-    Core::Timing timing(1);
+    Core::Timing timing(1, 100);
 
     Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", FifoCallback<0>);
     Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", FifoCallback<1>);
@@ -118,7 +118,7 @@ TEST_CASE("CoreTiming[SharedSlot]", "[core]") {
 }
 
 TEST_CASE("CoreTiming[PredictableLateness]", "[core]") {
-    Core::Timing timing(1);
+    Core::Timing timing(1, 100);
 
     Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
     Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
@@ -149,7 +149,7 @@ static void RescheduleCallback(Core::Timing& timing, u64 userdata, s64 cycles_la
 TEST_CASE("CoreTiming[ChainScheduling]", "[core]") {
     using namespace ChainSchedulingTest;
 
-    Core::Timing timing(1);
+    Core::Timing timing(1, 100);
 
     Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
     Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);

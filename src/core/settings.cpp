@@ -40,6 +40,7 @@ void Apply() {
 
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
+        system.CoreTiming().UpdateClockSpeed(values.cpu_clock_percentage);
         Core::DSP().SetSink(values.sink_id, values.audio_device_id);
         Core::DSP().EnableStretching(values.enable_audio_stretching);
 
