@@ -13,7 +13,7 @@ public:
     ~Impl();
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
     bool IsValid() const {
-        return initalized;
+        return have_ffmpeg_dl;
     }
 
 private:
