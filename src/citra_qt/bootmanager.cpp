@@ -107,11 +107,6 @@ OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLConte
     context->setFormat(format);
     context->create();
 
-    LOG_WARNING(Frontend, "OpenGLWindow context format Interval {}",
-                context->format().swapInterval());
-
-    LOG_WARNING(Frontend, "OpenGLWindow surface format interval {}", this->format().swapInterval());
-
     setSurfaceType(QWindow::OpenGLSurface);
 
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
