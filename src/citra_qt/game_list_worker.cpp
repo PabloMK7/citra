@@ -60,28 +60,24 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             u64 extdata_id = 0;
             loader->ReadExtdataId(extdata_id);
 
-            std::vector<u8> smdh = [program_id, &loader]() -> std::vector<u8> {
-                std::vector<u8> original_smdh;
-                loader->ReadIcon(original_smdh);
-
-                if (program_id < 0x0004000000000000 || program_id > 0x00040000FFFFFFFF)
-                    return original_smdh;
-
+            std::vector<u8> smdh;
+            // Look for an update icon if available
+            if (!(program_id & ~0x00040000FFFFFFFF)) {
                 std::string update_path = Service::AM::GetTitleContentPath(
-                    Service::FS::MediaType::SDMC, program_id + 0x0000000E00000000);
+                    Service::FS::MediaType::SDMC, program_id | 0x0000000E00000000);
+                if (FileUtil::Exists(update_path)) {
+                    std::unique_ptr<Loader::AppLoader> update_loader =
+                        Loader::GetLoader(update_path);
+                    if (update_loader) {
+                        update_loader->ReadIcon(smdh);
+                    }
+                }
+            }
 
-                if (!FileUtil::Exists(update_path))
-                    return original_smdh;
-
-                std::unique_ptr<Loader::AppLoader> update_loader = Loader::GetLoader(update_path);
-
-                if (!update_loader)
-                    return original_smdh;
-
-                std::vector<u8> update_smdh;
-                update_loader->ReadIcon(update_smdh);
-                return update_smdh;
-            }();
+            if (!Loader::IsValidSMDH(smdh)) {
+                // Read the original smdh if there is no valid update smdh
+                loader->ReadIcon(smdh);
+            }
 
             if (!Loader::IsValidSMDH(smdh) && UISettings::values.game_list_hide_no_icon) {
                 // Skip this invalid entry
