@@ -507,20 +507,22 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     return Loader::ResultStatus::ErrorNotUsed;
 }
 
-bool NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const {
+Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const {
     const std::string override_ips = filepath + ".exefsdir/code.ips";
 
     FileUtil::IOFile ips_file{override_ips, "rb"};
     if (!ips_file)
-        return false;
+        return Loader::ResultStatus::ErrorNotUsed;
 
     std::vector<u8> ips(ips_file.GetSize());
     if (ips_file.ReadBytes(ips.data(), ips.size()) != ips.size())
-        return false;
+        return Loader::ResultStatus::Error;
 
     LOG_INFO(Service_FS, "File {} patching code.bin", override_ips);
-    Patch::ApplyIpsPatch(ips, code);
-    return true;
+    if (!Patch::ApplyIpsPatch(ips, code))
+        return Loader::ResultStatus::Error;
+
+    return Loader::ResultStatus::Success;
 }
 
 Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,

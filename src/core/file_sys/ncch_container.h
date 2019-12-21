@@ -274,9 +274,9 @@ public:
     /**
      * Apply a patch for .code (if it exists).
      * This should only be called after allocating .bss.
-     * @return bool true if a patch was applied, false otherwise
+     * @return ResultStatus success if a patch was applied, ErrorNotUsed if no patch was found
      */
-    bool ApplyCodePatch(std::vector<u8>& code) const;
+    Loader::ResultStatus ApplyCodePatch(std::vector<u8>& code) const;
 
     /**
      * Checks whether the NCCH container contains an ExeFS
