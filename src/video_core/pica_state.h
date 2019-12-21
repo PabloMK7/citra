@@ -9,6 +9,7 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
+#include "video_core/video_core.h"
 #include "video_core/geometry_pipeline.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/regs.h"
