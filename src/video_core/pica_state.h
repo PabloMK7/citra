@@ -228,7 +228,7 @@ private:
         ar & immediate;
         ar & gs_unit;
         ar & geometry_pipeline;
-        // ar & primitive_assembler;
+        ar & primitive_assembler;
         ar & vs_float_regs_counter;
         ar & vs_uniform_write_buffer;
         ar & gs_float_regs_counter;

@@ -16,6 +16,7 @@
 #include "common/common_types.h"
 #include "common/hash.h"
 #include "common/vector_math.h"
+#include "common/pod.h"
 #include "video_core/pica_types.h"
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
@@ -64,6 +65,8 @@ struct OutputVertex {
     static void ValidateSemantics(const RasterizerRegs& regs);
     static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs,
                                             const AttributeBuffer& output);
+
+    SERIALIZE_AS_POD
 };
 #define ASSERT_POS(var, pos)                                                                       \
     static_assert(offsetof(OutputVertex, var) == pos * sizeof(float24), "Semantic at wrong "       \
