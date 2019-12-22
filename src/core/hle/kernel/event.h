@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
@@ -12,7 +13,7 @@ namespace Kernel {
 
 class Event final : public WaitObject {
 public:
-    explicit Event(KernelSystem& kernel);
+    explicit Event();
     ~Event() override;
 
     std::string GetTypeName() const override {
@@ -62,3 +63,5 @@ private:
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::Event)

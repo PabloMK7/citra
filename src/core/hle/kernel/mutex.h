@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/wait_object.h"
@@ -78,3 +79,5 @@ private:
 void ReleaseThreadMutexes(Thread* thread);
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::Mutex)

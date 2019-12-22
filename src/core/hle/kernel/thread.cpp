@@ -25,6 +25,8 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::Thread)
+
 namespace Kernel {
 
 template <class Archive>

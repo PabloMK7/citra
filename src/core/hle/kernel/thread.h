@@ -12,6 +12,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"
@@ -337,3 +338,5 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
                                         std::shared_ptr<Process> owner_process);
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::Thread)

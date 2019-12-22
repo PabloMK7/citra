@@ -398,6 +398,8 @@ void System::Reset() {
 template<class Archive>
 void System::serialize(Archive & ar, const unsigned int file_version)
 {
+    ar & *cpu_core.get();
+    //ar & *service_manager.get();
     ar & GPU::g_regs;
     ar & LCD::g_regs;
     ar & dsp_core->GetDspMemory();

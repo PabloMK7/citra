@@ -94,6 +94,7 @@ private:
         ar & permissions;
         ar & meminfo_state;
         // TODO: backing memory ref
+        // backing memory can be: Physical/FCRAM pointer, config mem, shared page
         ar & paddr;
         ar & mmio_handler;
     }

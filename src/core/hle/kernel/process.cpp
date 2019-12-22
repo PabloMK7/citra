@@ -34,6 +34,7 @@ void Process::serialize(Archive& ar, const unsigned int file_version)
     ar & flags.raw;
     ar & kernel_version;
     ar & ideal_processor;
+    ar & status;
     ar & process_id;
     ar & vm_manager;
     ar & memory_used;

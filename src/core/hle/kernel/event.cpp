@@ -6,17 +6,20 @@
 #include <map>
 #include <vector>
 #include "common/assert.h"
+#include "common/archives.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::Event)
+
 namespace Kernel {
 
-Event::Event(KernelSystem& kernel) : WaitObject(kernel) {}
+Event::Event() : WaitObject() {}
 Event::~Event() {}
 
 std::shared_ptr<Event> KernelSystem::CreateEvent(ResetType reset_type, std::string name) {
-    auto evt{std::make_shared<Event>(*this)};
+    auto evt{std::make_shared<Event>()};
 
     evt->signaled = false;
     evt->reset_type = reset_type;
