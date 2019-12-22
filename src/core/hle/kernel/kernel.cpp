@@ -108,6 +108,7 @@ void KernelSystem::AddNamedPort(std::string name, std::shared_ptr<ClientPort> po
 template <class Archive>
 void KernelSystem::serialize(Archive& ar, const unsigned int file_version)
 {
+    ar & memory_regions;
     ar & named_ports;
     ar & *current_cpu.get();
     // NB: subsystem references and prepare_reschedule_callback are constant
@@ -120,7 +121,6 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version)
     ar & *thread_manager.get();
     ar & *config_mem_handler.get();
     // Shared page data is read-only at the moment, so doesn't need serializing
-    //ar & *shared_page_handler.get();
 }
 
 SERIALIZE_IMPL(KernelSystem)

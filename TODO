@@ -11,7 +11,7 @@
 ✔ HW @done(19-08-13 15:41)
     ✔ GPU regs @done(19-08-13 15:41)
     ✔ LCD regs @done(19-08-13 15:41)
-☐ Video core @started(19-08-13 16:43)
+✔ Video core @started(19-08-13 16:43) @done(19-12-22 16:06)
     ✔ Geometry pipeline @done(19-12-22 15:52)
         Required more use of g_state
     ✔ PICA state @done(19-08-13 15:41)
@@ -28,7 +28,7 @@
         ✔ Handle table @done(19-08-13 16:42)
         ☐ HLE IPC
         ☐ IPC
-        ☐ Memory @started(19-08-13 16:43)
+        ✔ Memory @started(19-08-13 16:43) @done(19-12-22 18:34)
         ☐ Mutex @started(19-08-13 16:43)
         ✔ Object @done(19-08-13 15:41)
         ☐ Process @started(19-08-13 16:43)

@@ -6,6 +6,8 @@
 
 #include <optional>
 #include <boost/icl/interval_set.hpp>
+#include <boost/serialization/set.hpp>
+#include "common/serialization/boost_discrete_interval.hpp"
 #include "common/common_types.h"
 
 namespace Kernel {
@@ -69,7 +71,8 @@ private:
         ar & base;
         ar & size;
         ar & used;
-        // TODO: boost icl / free_blocks
+        // This works because interval_set has exactly one member of type ImplSetT
+        ar & *(reinterpret_cast<IntervalSet::ImplSetT*>(&free_blocks));
     }
 };
 
