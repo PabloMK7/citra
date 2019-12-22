@@ -45,5 +45,10 @@ private:
     Shader::ShaderEngine* shader_engine;
     std::unique_ptr<GeometryPipelineBackend> backend;
     State& state;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version);
+
+    friend class boost::serialization::access;
 };
 } // namespace Pica

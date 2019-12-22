@@ -11,7 +11,7 @@
     ✔ GPU regs @done(19-08-13 15:41)
     ✔ LCD regs @done(19-08-13 15:41)
 ☐ Video core @started(19-08-13 16:43)
-    ☐ Geometry pipeline
+    ✔ Geometry pipeline @done(19-12-22 15:52)
     ✔ PICA state @done(19-08-13 15:41)
     ☐ Primitive assembly
     ✔ Shader @done(19-08-13 16:03)
@@ -35,9 +35,11 @@
         ✔ Server session @done(19-08-13 16:44)
         ✔ Session @done(19-08-13 16:44)
         ☐ Shared memory
-        ☐ Shared page @started(19-08-13 16:44)
+        ✘ Shared page @started(19-08-13 16:44) @cancelled(19-12-22 11:19)
+            Not needed right now as shared_page is read-only and derived from other data
         ☐ SVC
         ☐ Thread @started(19-08-13 16:45)
+            This requires refactoring wakeup_callback to be an object ref
         ✔ Timer @done(19-08-13 16:45)
         ☐ VM Manager @started(19-08-13 16:46)
         ✔ Wait object @done(19-08-13 16:46)

@@ -227,7 +227,7 @@ private:
         ar & cmd_list.length;
         ar & immediate;
         ar & gs_unit;
-        // ar & geometry_pipeline;
+        ar & geometry_pipeline;
         // ar & primitive_assembler;
         ar & vs_float_regs_counter;
         ar & vs_uniform_write_buffer;

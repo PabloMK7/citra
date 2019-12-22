@@ -119,7 +119,8 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version)
     ar & current_process;
     ar & *thread_manager.get();
     ar & *config_mem_handler.get();
-    ar & *shared_page_handler.get();
+    // Shared page data is read-only at the moment, so doesn't need serializing
+    //ar & *shared_page_handler.get();
 }
 
 SERIALIZE_IMPL(KernelSystem)
