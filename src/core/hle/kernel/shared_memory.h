@@ -117,7 +117,7 @@ private:
         ar & owner_process;
         ar & base_address;
         ar & name;
-        ar & *(reinterpret_cast<MemoryRegionInfo::IntervalSet::ImplSetT*>(&holding_memory));;
+        ar & *(reinterpret_cast<MemoryRegionInfo::IntervalSet::ImplSetT*>(&holding_memory));
     }
     friend class boost::serialization::access;
 };

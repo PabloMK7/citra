@@ -305,7 +305,7 @@ private:
     std::unique_ptr<Core::TelemetrySession> telemetry_session;
 
     /// Service manager
-    std::shared_ptr<Service::SM::ServiceManager> service_manager;
+    std::unique_ptr<Service::SM::ServiceManager> service_manager;
 
     /// Frontend applets
     std::shared_ptr<Frontend::MiiSelector> registered_mii_selector;

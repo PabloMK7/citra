@@ -235,7 +235,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     rpc_server = std::make_unique<RPC::RPCServer>();
 
-    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
+    service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::Init(*memory);
@@ -399,7 +399,7 @@ template<class Archive>
 void System::serialize(Archive & ar, const unsigned int file_version)
 {
     ar & *cpu_core.get();
-    //ar & *service_manager.get();
+    ar & *service_manager.get();
     ar & GPU::g_regs;
     ar & LCD::g_regs;
     ar & dsp_core->GetDspMemory();

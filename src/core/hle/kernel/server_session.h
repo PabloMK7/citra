@@ -115,10 +115,10 @@ private:
         ar & boost::serialization::base_object<Object>(*this);
         ar & name;
         ar & parent;
-        //ar & hle_handler;
+        ar & hle_handler;
         ar & pending_requesting_threads;
         ar & currently_handling;
-        //ar & mapped_buffer_context;
+        ar & mapped_buffer_context;
     }
 };
 

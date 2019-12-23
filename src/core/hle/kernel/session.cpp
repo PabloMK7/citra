@@ -8,6 +8,7 @@
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/hle_ipc.h"
 
 SERIALIZE_IMPL(Kernel::Session)
 

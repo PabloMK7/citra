@@ -11,11 +11,18 @@
 #include <string>
 #include <vector>
 #include <boost/container/small_vector.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/assume_abstract.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_session.h"
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Kernel::SessionRequestHandler)
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Kernel::SessionRequestHandler::SessionDataBase)
 
 namespace Service {
 class ServiceFrameworkBase;
@@ -90,11 +97,30 @@ protected:
 
         std::shared_ptr<ServerSession> session;
         std::unique_ptr<SessionDataBase> data;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version)
+        {
+            ar & session;
+            ar & data;
+        }
+        friend class boost::serialization::access;
     };
     /// List of sessions that are connected to this handler. A ServerSession whose server endpoint
     /// is an HLE implementation is kept alive by this list for the duration of the connection.
     std::vector<SessionInfo> connected_sessions;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & connected_sessions;
+    }
+    friend class boost::serialization::access;
 };
+
+// NOTE: The below classes are ephemeral and don't need serialization
 
 class MappedBuffer {
 public:
