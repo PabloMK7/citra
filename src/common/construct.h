@@ -1,9 +1,5 @@
 #include <boost/serialization/serialization.hpp>
 
-#define BOOST_SERIALIZATION_FRIENDS \
-    friend class boost::serialization::access; \
-    friend class construct_access;
-
 class construct_access {
 public:
     template<class Archive, class T>

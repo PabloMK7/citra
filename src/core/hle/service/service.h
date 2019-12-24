@@ -10,7 +10,9 @@
 #include <memory>
 #include <string>
 #include <boost/container/flat_map.hpp>
+#include <boost/serialization/assume_abstract.hpp>
 #include "common/common_types.h"
+#include "common/construct.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/service/sm/sm.h"
@@ -194,3 +196,26 @@ struct ServiceModuleInfo {
 extern const std::array<ServiceModuleInfo, 40> service_module_map;
 
 } // namespace Service
+
+#define SERVICE_SERIALIZATION(T, MFIELD) \
+    template <class Archive> \
+    void save_construct(Archive& ar, const unsigned int file_version) const \
+    { \
+        ar << MFIELD; \
+    } \
+ \
+    template <class Archive> \
+    static void load_construct(Archive& ar, T* t, const unsigned int file_version) \
+    { \
+        std::shared_ptr<Module> MFIELD; \
+        ar >> MFIELD; \
+        ::new(t)T(MFIELD); \
+    } \
+ \
+    template <class Archive> \
+    void serialize(Archive& ar, const unsigned int) \
+    { \
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this); \
+    } \
+    friend class boost::serialization::access; \
+    friend class construct_access;
