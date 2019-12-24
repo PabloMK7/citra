@@ -24,7 +24,7 @@ struct Entry {
     std::chrono::microseconds timestamp;
     Class log_class;
     Level log_level;
-    std::string filename;
+    const char* filename;
     unsigned int line_num;
     std::string function;
     std::string message;
