@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/act/act_u.h"
+#include "common/archives.h"
 
 namespace Service::ACT {
 
@@ -20,3 +21,5 @@ ACT_U::ACT_U(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "a
 }
 
 } // namespace Service::ACT
+
+SERIALIZE_EXPORT_IMPL(Service::ACT::ACT_U)

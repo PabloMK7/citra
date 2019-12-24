@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/base_object.hpp>
 #include "core/hle/service/ac/ac.h"
 
 namespace Service::AC {

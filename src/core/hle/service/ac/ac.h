@@ -6,8 +6,6 @@
 
 #include <array>
 #include <memory>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {

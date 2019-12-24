@@ -11,6 +11,8 @@
 #include <string>
 #include <boost/container/flat_map.hpp>
 #include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/base_object.hpp>
 #include "common/common_types.h"
 #include "common/construct.h"
 #include "core/hle/kernel/hle_ipc.h"

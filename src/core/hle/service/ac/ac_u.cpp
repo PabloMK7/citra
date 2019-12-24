@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/ac/ac_u.h"
+#include "common/archives.h"
 
 namespace Service::AC {
 
@@ -33,3 +34,5 @@ AC_U::AC_U(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:u"
 }
 
 } // namespace Service::AC
+
+SERIALIZE_EXPORT_IMPL(Service::AC::AC_U)
