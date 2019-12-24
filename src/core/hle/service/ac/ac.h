@@ -6,6 +6,9 @@
 
 #include <array>
 #include <memory>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include "common/construct.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -139,6 +142,34 @@ public:
 
     protected:
         std::shared_ptr<Module> ac;
+
+    private:
+        template <class Archive>
+        void save_construct(Archive& ar, const unsigned int file_version) const
+        {
+            ar << ac;
+            ar << GetServiceName();
+            ar << GetMaxSessions();
+        }
+
+        template <class Archive>
+        static void load_construct(Archive& ar, Interface* t, const unsigned int file_version)
+        {
+            std::shared_ptr<Module> ac;
+            std::string name;
+            u32 max_sessions;
+            ar >> ac;
+            ar >> name;
+            ar >> max_sessions;
+            ::new(t)Interface(ac, name.c_str(), max_sessions);
+        }
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version)
+        {
+            ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        }
+        BOOST_SERIALIZATION_FRIENDS
     };
 
 protected:
@@ -153,8 +184,23 @@ protected:
     std::shared_ptr<Kernel::Event> close_event;
     std::shared_ptr<Kernel::Event> connect_event;
     std::shared_ptr<Kernel::Event> disconnect_event;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version)
+    {
+        ar & ac_connected;
+        ar & close_event;
+        ar & connect_event;
+        ar & disconnect_event;
+        // default_config is never written to
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AC
+
+BOOST_SERIALIZATION_CONSTRUCT(Service::AC::Module::Interface)
+BOOST_CLASS_EXPORT_KEY(Service::AC::Module::Interface)

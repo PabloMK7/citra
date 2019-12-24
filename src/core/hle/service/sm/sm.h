@@ -11,6 +11,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/split_member.hpp>
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
@@ -85,11 +86,23 @@ private:
     std::unordered_map<u32, std::string> registered_services_inverse;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
+    void save(Archive& ar, const unsigned int file_version) const
     {
-        ar & registered_services;
-        ar & registered_services_inverse; // TODO: Instead, compute this from registered_services
+        ar << registered_services;
     }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version)
+    {
+        ar >> registered_services;
+        registered_services_inverse.clear();
+        for (const auto& pair : registered_services) {
+            registered_services_inverse.emplace(pair.second->GetObjectId(), pair.first);
+        }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     friend class boost::serialization::access;
 };
 

@@ -1,9 +1,11 @@
 ☐ Save/load UI
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)
+    ☐ Page tables
+    ☐ Skip N3DS RAM if unused
 ✔ DSP @done(19-08-13 15:41)
 ✔ Service manager @started(19-12-23 00:36) @done(19-12-23 11:38) @lasted(11h2m3s)
-    ☐ Fix or ignore inverse map
+    ✔ Fix or ignore inverse map @done(19-12-23 12:46)
 ☐ App loader
 ☐ Archive manager
 ☐ Custom texture cache
@@ -58,8 +60,8 @@
         ☐ VM Manager @started(19-08-13 16:46)
             Just need to figure out backing_mem (a u8*)
         ✔ Wait object @done(19-08-13 16:46)
-    ☐ Service
-        ☐ AC
+    ☐ Service @started(19-12-23 12:49)
+        ☐ AC @started(19-12-23 12:48)
         ☐ ACT
         ☐ AM
         ☐ APT

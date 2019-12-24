@@ -85,6 +85,7 @@ private:
     using InvokerFn = void(ServiceFrameworkBase* object, HandlerFnP<ServiceFrameworkBase> member,
                            Kernel::HLERequestContext& ctx);
 
+    // TODO: Replace all these with virtual functions!
     ServiceFrameworkBase(const char* service_name, u32 max_sessions, InvokerFn* handler_invoker);
     ~ServiceFrameworkBase() override;
 

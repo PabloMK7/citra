@@ -75,6 +75,10 @@ public:
     /// in each service must inherit from this.
     struct SessionDataBase {
         virtual ~SessionDataBase() = default;
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version) { }
+        friend class boost::serialization::access;
     };
 
 protected:
@@ -94,6 +98,7 @@ protected:
 
     struct SessionInfo {
         SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
+        SessionInfo() = default;
 
         std::shared_ptr<ServerSession> session;
         std::unique_ptr<SessionDataBase> data;

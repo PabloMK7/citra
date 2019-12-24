@@ -56,7 +56,7 @@ private:
     std::array<bool, LINEAR_HEAP_SIZE / PAGE_SIZE> linear_heap{};
     std::array<bool, NEW_LINEAR_HEAP_SIZE / PAGE_SIZE> new_linear_heap{};
 
-    static_assert(sizeof(bool) == 1); // TODO: Maybe this isn't true?
+    static_assert(sizeof(bool) == 1);
     friend class boost::serialization::access;
     template<typename Archive>
     void serialize(Archive & ar, const unsigned int file_version)
