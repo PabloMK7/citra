@@ -9,6 +9,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
@@ -150,6 +153,8 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type);
 class Module final {
 public:
     explicit Module(Core::System& system);
+    explicit Module(Kernel::KernelSystem& kernel);
+    Module() = default;
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -557,7 +562,7 @@ public:
          */
         void GetMetaDataFromCia(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         std::shared_ptr<Module> am;
     };
 
@@ -573,12 +578,29 @@ private:
      */
     void ScanForAllTitles();
 
-    Core::System& system;
+    Kernel::KernelSystem& kernel;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & cia_installing;
+        ar & am_title_list;
+        ar & system_updater_mutex;
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM
+
+namespace boost::serialization {
+    template <class Archive>
+    inline void load_construct_data(Archive& ar, Service::AM::Module* t, const unsigned int)
+    {
+        ::new(t)Service::AM::Module(*Kernel::g_kernel);
+    }
+}

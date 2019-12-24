@@ -27,6 +27,7 @@
 #include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/core.h"
 
 namespace Service::FS {
 
@@ -90,7 +91,7 @@ ArchiveManager::OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys:
     if (backend.Failed())
         return std::make_tuple(backend.Code(), open_timeout_ns);
 
-    auto file = std::shared_ptr<File>(new File(system, std::move(backend).Unwrap(), path));
+    auto file = std::shared_ptr<File>(new File(system.Kernel(), std::move(backend).Unwrap(), path));
     return std::make_tuple(MakeResult<std::shared_ptr<File>>(std::move(file)), open_timeout_ns);
 }
 

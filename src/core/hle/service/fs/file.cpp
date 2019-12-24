@@ -15,9 +15,9 @@
 
 namespace Service::FS {
 
-File::File(Core::System& system, std::unique_ptr<FileSys::FileBackend>&& backend,
+File::File(Kernel::KernelSystem& kernel, std::unique_ptr<FileSys::FileBackend>&& backend,
            const FileSys::Path& path)
-    : ServiceFramework("", 1), path(path), backend(std::move(backend)), system(system) {
+    : ServiceFramework("", 1), path(path), backend(std::move(backend)), kernel(kernel) {
     static const FunctionInfo functions[] = {
         {0x08010100, &File::OpenSubFile, "OpenSubFile"},
         {0x080200C2, &File::Read, "Read"},
@@ -197,7 +197,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     using Kernel::ServerSession;
     IPC::RequestParser rp(ctx, 0x080C, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    auto [server, client] = system.Kernel().CreateSessionPair(GetName());
+    auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
     FileSessionSlot* slot = GetSessionData(server);
@@ -243,7 +243,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     using Kernel::ClientSession;
     using Kernel::ServerSession;
-    auto [server, client] = system.Kernel().CreateSessionPair(GetName());
+    auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
     FileSessionSlot* slot = GetSessionData(server);
@@ -257,7 +257,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 }
 
 std::shared_ptr<Kernel::ClientSession> File::Connect() {
-    auto [server, client] = system.Kernel().CreateSessionPair(GetName());
+    auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
     FileSessionSlot* slot = GetSessionData(server);

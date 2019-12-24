@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/am/am_u.h"
+#include "common/archives.h"
 
 namespace Service::AM {
 
@@ -83,3 +84,5 @@ AM_U::AM_U(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:u"
 }
 
 } // namespace Service::AM
+
+SERIALIZE_EXPORT_IMPL(Service::AM::AM_U)

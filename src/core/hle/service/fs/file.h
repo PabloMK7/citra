@@ -25,7 +25,7 @@ struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
 // Consider splitting ServiceFramework interface.
 class File final : public ServiceFramework<File, FileSessionSlot> {
 public:
-    File(Core::System& system, std::unique_ptr<FileSys::FileBackend>&& backend,
+    File(Kernel::KernelSystem& kernel, std::unique_ptr<FileSys::FileBackend>&& backend,
          const FileSys::Path& path);
     ~File() = default;
 
@@ -59,7 +59,7 @@ private:
     void OpenLinkFile(Kernel::HLERequestContext& ctx);
     void OpenSubFile(Kernel::HLERequestContext& ctx);
 
-    Core::System& system;
+    Kernel::KernelSystem& kernel;
 };
 
 } // namespace Service::FS
