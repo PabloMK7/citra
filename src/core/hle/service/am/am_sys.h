@@ -12,7 +12,7 @@ class AM_SYS final : public Module::Interface {
 public:
     explicit AM_SYS(std::shared_ptr<Module> am);
 private:
-    SERVICE_SERIALIZATION(AM_SYS, am)
+    SERVICE_SERIALIZATION(AM_SYS, am, Module)
 };
 
 } // namespace Service::AM

@@ -14,7 +14,7 @@ public:
     explicit AC_U(std::shared_ptr<Module> ac);
 
 private:
-    SERVICE_SERIALIZATION(AC_U, ac)
+    SERVICE_SERIALIZATION(AC_U, ac, Module)
 };
 
 } // namespace Service::AC

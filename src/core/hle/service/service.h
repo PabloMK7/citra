@@ -199,7 +199,7 @@ extern const std::array<ServiceModuleInfo, 40> service_module_map;
 
 } // namespace Service
 
-#define SERVICE_SERIALIZATION(T, MFIELD) \
+#define SERVICE_SERIALIZATION(T, MFIELD, TMODULE) \
     template <class Archive> \
     void save_construct(Archive& ar, const unsigned int file_version) const \
     { \
@@ -209,7 +209,7 @@ extern const std::array<ServiceModuleInfo, 40> service_module_map;
     template <class Archive> \
     static void load_construct(Archive& ar, T* t, const unsigned int file_version) \
     { \
-        std::shared_ptr<Module> MFIELD; \
+        std::shared_ptr<TMODULE> MFIELD; \
         ar >> MFIELD; \
         ::new(t)T(MFIELD); \
     } \

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/apt/apt_a.h"
+#include "common/archives.h"
 
 namespace Service::APT {
 
@@ -105,3 +106,5 @@ APT_A::APT_A(std::shared_ptr<Module> apt)
 }
 
 } // namespace Service::APT
+
+SERIALIZE_EXPORT_IMPL(Service::APT::APT_A)

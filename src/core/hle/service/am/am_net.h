@@ -12,7 +12,7 @@ class AM_NET final : public Module::Interface {
 public:
     explicit AM_NET(std::shared_ptr<Module> am);
 private:
-    SERVICE_SERIALIZATION(AM_NET, am)
+    SERVICE_SERIALIZATION(AM_NET, am, Module)
 };
 
 } // namespace Service::AM

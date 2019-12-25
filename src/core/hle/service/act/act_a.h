@@ -12,7 +12,7 @@ class ACT_A final : public Module::Interface {
 public:
     explicit ACT_A(std::shared_ptr<Module> act);
 private:
-    SERVICE_SERIALIZATION(ACT_A, act)
+    SERVICE_SERIALIZATION(ACT_A, act, Module)
 };
 
 } // namespace Service::ACT

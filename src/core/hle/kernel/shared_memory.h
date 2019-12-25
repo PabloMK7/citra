@@ -16,7 +16,7 @@ namespace Kernel {
 
 class SharedMemory final : public Object {
 public:
-    explicit SharedMemory(KernelSystem& kernel);
+    explicit SharedMemory();
     ~SharedMemory() override;
 
     std::string GetTypeName() const override {

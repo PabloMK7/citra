@@ -5,6 +5,7 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -26,7 +27,34 @@
 #include "core/hw/aes/ccm.h"
 #include "core/hw/aes/key.h"
 
+namespace boost::serialization {
+    template <class Archive>
+    void load_construct_data(Archive& ar, Service::APT::Module* t, const unsigned int)
+    {
+        ::new(t)Service::APT::Module(Core::Global<Core::System>());
+    }
+
+    template
+    void load_construct_data<iarchive>(iarchive& ar, Service::APT::Module* t, const unsigned int);
+}
+
 namespace Service::APT {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int)
+{
+    ar & shared_font_mem;
+    ar & shared_font_loaded;
+    ar & shared_font_relocated;
+    ar & lock;
+    ar & cpu_percent;
+    ar & unknown_ns_state_field;
+    ar & screen_capture_buffer;
+    ar & screen_capture_post_permission;
+    ar & applet_manager;
+}
+
+SERIALIZE_IMPL(Module)
 
 Module::NSInterface::NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), apt(std::move(apt)) {}
