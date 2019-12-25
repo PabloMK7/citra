@@ -608,6 +608,14 @@ public:
     protected:
         bool application_reset_prepared{};
         std::shared_ptr<Module> apt;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int)
+        {
+            ar & application_reset_prepared;
+        }
+        friend class boost::serialization::access;
     };
 
 private:

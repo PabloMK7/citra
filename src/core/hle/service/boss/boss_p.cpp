@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/boss/boss_p.h"
+#include "common/archives.h"
 
 namespace Service::BOSS {
 
@@ -84,3 +85,5 @@ BOSS_P::BOSS_P(std::shared_ptr<Module> boss)
 }
 
 } // namespace Service::BOSS
+
+SERIALIZE_EXPORT_IMPL(Service::BOSS::BOSS_P)
