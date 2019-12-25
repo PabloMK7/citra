@@ -143,7 +143,8 @@ private:
 
 class Process final : public Object {
 public:
-    explicit Process();
+    Process();
+    explicit Process(KernelSystem& kernel);
     ~Process() override;
 
     std::string GetTypeName() const override {

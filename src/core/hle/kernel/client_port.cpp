@@ -11,6 +11,7 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
+#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::ClientPort)
 
@@ -26,7 +27,7 @@ ResultVal<std::shared_ptr<ClientSession>> ClientPort::Connect() {
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto [server, client] = g_kernel->CreateSessionPair(server_port->GetName(), SharedFrom(this));
+    auto [server, client] = Core::Global<KernelSystem>().CreateSessionPair(server_port->GetName(), SharedFrom(this));
 
     if (server_port->hle_handler)
         server_port->hle_handler->ClientConnected(server);

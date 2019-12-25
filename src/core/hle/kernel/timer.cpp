@@ -11,10 +11,11 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
+#include "core/global.h"
 
 namespace Kernel {
 
-Timer::Timer() : kernel(*g_kernel), timer_manager(g_kernel->GetTimerManager()) {}
+Timer::Timer() : kernel(Core::Global<KernelSystem>()), timer_manager(Core::Global<KernelSystem>().GetTimerManager()) {}
 Timer::~Timer() {
     Cancel();
     timer_manager.timer_callback_table.erase(callback_id);

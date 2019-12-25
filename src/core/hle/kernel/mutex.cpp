@@ -12,6 +12,7 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
+#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Mutex)
 
@@ -26,7 +27,7 @@ void ReleaseThreadMutexes(Thread* thread) {
     thread->held_mutexes.clear();
 }
 
-Mutex::Mutex() : kernel(*g_kernel) {}
+Mutex::Mutex() : kernel(Core::Global<KernelSystem>()) {}
 Mutex::~Mutex() {}
 
 std::shared_ptr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {

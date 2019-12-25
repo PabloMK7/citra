@@ -10,12 +10,13 @@
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
+#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::ServerSession)
 
 namespace Kernel {
 
-ServerSession::ServerSession() : kernel(*g_kernel) {}
+ServerSession::ServerSession() : kernel(Core::Global<KernelSystem>()) {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.

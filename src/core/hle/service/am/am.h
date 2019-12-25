@@ -18,6 +18,7 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
+#include "core/global.h"
 
 namespace Core {
 class System;
@@ -601,6 +602,6 @@ namespace boost::serialization {
     template <class Archive>
     inline void load_construct_data(Archive& ar, Service::AM::Module* t, const unsigned int)
     {
-        ::new(t)Service::AM::Module(*Kernel::g_kernel);
+        ::new(t)Service::AM::Module(Core::Global<Kernel::KernelSystem>());
     }
 }

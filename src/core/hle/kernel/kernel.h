@@ -292,6 +292,4 @@ private:
     void serialize(Archive& ar, const unsigned int file_version);
 };
 
-extern KernelSystem* g_kernel;
-
 } // namespace Kernel

@@ -18,8 +18,6 @@
 
 namespace Kernel {
 
-KernelSystem* g_kernel;
-
 /// Initialize the kernel
 KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                            std::function<void()> prepare_reschedule_callback, u32 system_mode)

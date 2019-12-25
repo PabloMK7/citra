@@ -11,6 +11,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
+#include "core/global.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
@@ -68,7 +69,7 @@ std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr addres
     return thread;
 }
 
-AddressArbiter::AddressArbiter() : kernel(*g_kernel) {}
+AddressArbiter::AddressArbiter() : kernel(Core::Global<KernelSystem>()) {}
 AddressArbiter::~AddressArbiter() {}
 
 std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {

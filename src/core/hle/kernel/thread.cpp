@@ -24,6 +24,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
+#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Thread)
 
@@ -66,8 +67,8 @@ u32 ThreadManager::NewThreadId() {
 }
 
 Thread::Thread()
-    : context(g_kernel->GetThreadManager().NewContext()),
-      thread_manager(g_kernel->GetThreadManager()) {}
+    : context(Core::Global<KernelSystem>().GetThreadManager().NewContext()),
+      thread_manager(Core::Global<KernelSystem>().GetThreadManager()) {}
 Thread::~Thread() {}
 
 Thread* ThreadManager::GetCurrentThread() const {

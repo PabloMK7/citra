@@ -18,6 +18,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
+#include "core/global.h"
 
 namespace Kernel {
 
@@ -427,7 +428,11 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process() : kernel(*g_kernel), handle_table(*g_kernel), vm_manager(g_kernel->memory)
+Kernel::Process::Process() : Kernel::Process::Process(Core::Global<KernelSystem>())
+{
+}
+
+Kernel::Process::Process(KernelSystem& kernel) : kernel(kernel), handle_table(kernel), vm_manager(kernel.memory)
 {
     kernel.memory.RegisterPageTable(&vm_manager.page_table);
 }

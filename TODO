@@ -26,7 +26,7 @@
     ✔ Shader @done(19-08-13 16:03)
 ☐ HLE @started(19-08-13 16:43)
     ☐ Kernel @started(19-08-13 16:43)
-        Most of these require adding g_kernel
+        Most of these require adding Core::Global
         ✔ Address arbiter @done(19-08-13 16:40)
         ✔ Client port @done(19-08-13 16:40)
         ✔ Client session @done(19-08-13 16:40)
