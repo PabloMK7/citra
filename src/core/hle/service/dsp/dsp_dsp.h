@@ -264,8 +264,27 @@ private:
 
     /// Each DSP pipe has an associated interrupt
     std::array<std::shared_ptr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes = {{}};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        ar & semaphore_event;
+        ar & preset_semaphore;
+        ar & interrupt_zero;
+        ar & interrupt_one;
+        ar & pipes;
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::DSP
+
+BOOST_CLASS_EXPORT_KEY(Service::DSP::DSP_DSP)
+
+namespace boost::serialization {
+    template <class Archive>
+    void load_construct_data(Archive& ar, Service::DSP::DSP_DSP* t, const unsigned int);
+}
