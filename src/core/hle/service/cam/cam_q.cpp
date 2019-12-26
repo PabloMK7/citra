@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/cam/cam_q.h"
+#include "common/archives.h"
 
 namespace Service::CAM {
 
@@ -13,3 +14,5 @@ CAM_Q::CAM_Q() : ServiceFramework("cam:q", 1 /*TODO: find the true value*/) {
 }
 
 } // namespace Service::CAM
+
+SERIALIZE_EXPORT_IMPL(Service::CAM::CAM_Q)

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include "common/archives.h"
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -21,6 +22,16 @@
 #include "core/settings.h"
 
 namespace Service::CAM {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int)
+{
+    ar & cameras;
+    ar & ports;
+    ar & is_camera_reload_pending;
+}
+
+SERIALIZE_IMPL(Module)
 
 // built-in resolution parameters
 constexpr std::array<Resolution, 8> PRESET_RESOLUTION{{

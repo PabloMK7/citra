@@ -11,6 +11,15 @@ namespace Service::CAM {
 class CAM_Q : public ServiceFramework<CAM_Q> {
 public:
     CAM_Q();
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::CAM
+
+BOOST_CLASS_EXPORT_KEY(Service::CAM::CAM_Q)
