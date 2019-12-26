@@ -3,10 +3,24 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/csnd/csnd_snd.h"
+
+namespace boost::serialization {
+    template <class Archive>
+    void load_construct_data(Archive& ar, Service::CSND::CSND_SND* t, const unsigned int)
+    {
+        ::new(t)Service::CSND::CSND_SND(Core::Global<Core::System>());
+    }
+
+    template
+    void load_construct_data<iarchive>(iarchive& ar, Service::CSND::CSND_SND* t, const unsigned int);
+}
+
+SERIALIZE_EXPORT_IMPL(Service::CSND::CSND_SND)
 
 namespace Service::CSND {
 
