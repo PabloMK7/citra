@@ -15,6 +15,15 @@ public:
 
 private:
     void IsChild(Kernel::HLERequestContext& ctx);
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::DLP
+
+BOOST_CLASS_EXPORT_KEY(Service::DLP::DLP_SRVR)

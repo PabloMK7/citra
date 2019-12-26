@@ -12,6 +12,15 @@ class DLP_FKCL final : public ServiceFramework<DLP_FKCL> {
 public:
     DLP_FKCL();
     ~DLP_FKCL() = default;
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::DLP
+
+BOOST_CLASS_EXPORT_KEY(Service::DLP::DLP_FKCL)

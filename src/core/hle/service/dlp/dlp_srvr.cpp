@@ -7,6 +7,9 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
+#include "common/archives.h"
+
+SERIALIZE_EXPORT_IMPL(Service::DLP::DLP_SRVR)
 
 namespace Service::DLP {
 
