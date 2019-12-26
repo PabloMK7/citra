@@ -3,6 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/service/frd/frd_a.h"
+#include "common/archives.h"
+
+SERIALIZE_EXPORT_IMPL(Service::FRD::FRD_A)
 
 namespace Service::FRD {
 
