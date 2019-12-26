@@ -34,8 +34,22 @@ private:
     void ThrowFatalError(Kernel::HLERequestContext& ctx);
 
     Core::System& system;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::ERR
+
+BOOST_CLASS_EXPORT_KEY(Service::ERR::ERR_F)
+
+namespace boost::serialization {
+    template <class Archive>
+    void load_construct_data(Archive& ar, Service::ERR::ERR_F* t, const unsigned int);
+}
