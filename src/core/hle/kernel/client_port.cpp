@@ -17,6 +17,9 @@ SERIALIZE_EXPORT_IMPL(Kernel::ClientPort)
 
 namespace Kernel {
 
+ClientPort::ClientPort(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+ClientPort::~ClientPort() = default;
+
 ResultVal<std::shared_ptr<ClientSession>> ClientPort::Connect() {
     // Note: Threads do not wait for the server endpoint to call
     // AcceptSession before returning from this call.
@@ -27,7 +30,7 @@ ResultVal<std::shared_ptr<ClientSession>> ClientPort::Connect() {
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto [server, client] = Core::Global<KernelSystem>().CreateSessionPair(server_port->GetName(), SharedFrom(this));
+    auto [server, client] = kernel.CreateSessionPair(server_port->GetName(), SharedFrom(this));
 
     if (server_port->hle_handler)
         server_port->hle_handler->ClientConnected(server);

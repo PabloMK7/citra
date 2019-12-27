@@ -20,6 +20,9 @@
 #include "core/memory.h"
 #include "core/global.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::Process)
+SERIALIZE_EXPORT_IMPL(Kernel::CodeSet)
+
 namespace Kernel {
 
 template <class Archive>
@@ -46,8 +49,7 @@ void Process::serialize(Archive& ar, const unsigned int file_version)
 SERIALIZE_IMPL(Process)
 
 std::shared_ptr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
-    auto codeset{std::make_shared<CodeSet>()};
-    codeset->Init(*this);
+    auto codeset{std::make_shared<CodeSet>(*this)};
 
     codeset->name = std::move(name);
     codeset->program_id = program_id;
@@ -55,9 +57,11 @@ std::shared_ptr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 progr
     return codeset;
 }
 
+CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
+CodeSet::~CodeSet() {}
+
 std::shared_ptr<Process> KernelSystem::CreateProcess(std::shared_ptr<CodeSet> code_set) {
-    auto process{std::make_shared<Process>()};
-    process->Init(*this);
+    auto process{std::make_shared<Process>(*this)};
 
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
@@ -428,12 +432,8 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process() : Kernel::Process::Process(Core::Global<KernelSystem>())
-{
-}
-
-Kernel::Process::Process(KernelSystem& kernel) : kernel(kernel), handle_table(kernel), vm_manager(kernel.memory)
-{
+Kernel::Process::Process(KernelSystem& kernel)
+    : Object(kernel), handle_table(kernel), vm_manager(kernel.memory), kernel(kernel) {
     kernel.memory.RegisterPageTable(&vm_manager.page_table);
 }
 Kernel::Process::~Process() {

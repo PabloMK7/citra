@@ -4,7 +4,7 @@
 
 #include <memory>
 #include <utility>
-#include "boost/serialization/array.hpp"
+#include <boost/serialization/array.hpp>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"

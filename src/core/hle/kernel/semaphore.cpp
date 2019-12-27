@@ -13,7 +13,7 @@ SERIALIZE_EXPORT_IMPL(Kernel::Semaphore)
 
 namespace Kernel {
 
-Semaphore::Semaphore() : WaitObject() {}
+Semaphore::Semaphore(KernelSystem& kernel) : WaitObject(kernel) {}
 Semaphore::~Semaphore() {}
 
 ResultVal<std::shared_ptr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_count,
@@ -23,7 +23,7 @@ ResultVal<std::shared_ptr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_
     if (initial_count > max_count)
         return ERR_INVALID_COMBINATION_KERNEL;
 
-    auto semaphore{std::make_shared<Semaphore>()};
+    auto semaphore{std::make_shared<Semaphore>(*this)};
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread

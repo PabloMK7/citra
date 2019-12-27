@@ -35,6 +35,8 @@ enum ResourceTypes {
 
 class ResourceLimit final : public Object {
 public:
+    explicit ResourceLimit(KernelSystem& kernel);
+    ~ResourceLimit() override;
 
     /**
      * Creates a resource limit object.
@@ -165,3 +167,6 @@ private:
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::ResourceLimit)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ResourceLimit)

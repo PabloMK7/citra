@@ -36,7 +36,7 @@ enum class ArbitrationType : u32 {
 
 class AddressArbiter final : public Object {
 public:
-    explicit AddressArbiter();
+    explicit AddressArbiter(KernelSystem& kernel);
     ~AddressArbiter() override;
 
     std::string GetTypeName() const override {
@@ -85,3 +85,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::AddressArbiter)
+CONSTRUCT_KERNEL_OBJECT(Kernel::AddressArbiter)

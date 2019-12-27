@@ -54,6 +54,7 @@ add_custom_command(OUTPUT scm_rev.cpp
 add_library(common STATIC
     alignment.h
     announce_multiplayer_room.h
+    archives.h
     assert.h
     detached_tasks.cpp
     detached_tasks.h
@@ -66,6 +67,7 @@ add_library(common STATIC
     common_funcs.h
     common_paths.h
     common_types.h
+    construct.h
     file_util.cpp
     file_util.h
     hash.h
@@ -91,8 +93,10 @@ add_library(common STATIC
     scm_rev.h
     scope_exit.h
     serialization/atomic.h
+    serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h
     serialization/boost_vector.hpp
+    serialization/optional.h
     string_util.cpp
     string_util.h
     swap.h

@@ -69,12 +69,11 @@ std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr addres
     return thread;
 }
 
-AddressArbiter::AddressArbiter() : kernel(Core::Global<KernelSystem>()) {}
+AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 AddressArbiter::~AddressArbiter() {}
 
 std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
-    auto address_arbiter{std::make_shared<AddressArbiter>()};
-    address_arbiter->Init(*this);
+    auto address_arbiter{std::make_shared<AddressArbiter>(*this)};
 
     address_arbiter->name = std::move(name);
 

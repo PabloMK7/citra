@@ -15,11 +15,11 @@ SERIALIZE_EXPORT_IMPL(Kernel::Event)
 
 namespace Kernel {
 
-Event::Event() : WaitObject() {}
+Event::Event(KernelSystem& kernel) : WaitObject(kernel) {}
 Event::~Event() {}
 
 std::shared_ptr<Event> KernelSystem::CreateEvent(ResetType reset_type, std::string name) {
-    auto evt{std::make_shared<Event>()};
+    auto evt{std::make_shared<Event>(*this)};
 
     evt->signaled = false;
     evt->reset_type = reset_type;

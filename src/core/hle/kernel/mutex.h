@@ -18,7 +18,7 @@ class Thread;
 
 class Mutex final : public WaitObject {
 public:
-    explicit Mutex();
+    explicit Mutex(KernelSystem& kernel);
     ~Mutex() override;
 
     std::string GetTypeName() const override {
@@ -81,3 +81,4 @@ void ReleaseThreadMutexes(Thread* thread);
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Mutex)
+CONSTRUCT_KERNEL_OBJECT(Kernel::Mutex)

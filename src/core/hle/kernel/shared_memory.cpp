@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
@@ -10,9 +11,11 @@
 #include "core/memory.h"
 #include "core/global.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::SharedMemory)
+
 namespace Kernel {
 
-SharedMemory::SharedMemory() : Object(Core::Global<KernelSystem>()), kernel(Core::Global<KernelSystem>()) {}
+SharedMemory::SharedMemory(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 SharedMemory::~SharedMemory() {
     for (const auto& interval : holding_memory) {
         kernel.GetMemoryRegion(MemoryRegion::SYSTEM)
@@ -28,7 +31,7 @@ SharedMemory::~SharedMemory() {
 ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
     Process* owner_process, u32 size, MemoryPermission permissions,
     MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
-    auto shared_memory{std::make_shared<SharedMemory>()};
+    auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
     shared_memory->owner_process = owner_process;
     shared_memory->name = std::move(name);
@@ -73,7 +76,7 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
 std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     u32 offset, u32 size, MemoryPermission permissions, MemoryPermission other_permissions,
     std::string name) {
-    auto shared_memory{std::make_shared<SharedMemory>()};
+    auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
     // Allocate memory in heap
     MemoryRegionInfo* memory_region = GetMemoryRegion(MemoryRegion::SYSTEM);

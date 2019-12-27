@@ -18,6 +18,8 @@ class ClientSession;
 
 class ClientPort final : public Object {
 public:
+    explicit ClientPort(KernelSystem& kernel);
+    ~ClientPort() override;
 
     friend class ServerPort;
     std::string GetTypeName() const override {
@@ -51,6 +53,7 @@ public:
     void ConnectionClosed();
 
 private:
+    KernelSystem& kernel;
     std::shared_ptr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions = 0;    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions = 0; ///< Number of currently open sessions to this port
@@ -75,3 +78,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::ClientPort)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ClientPort)

@@ -42,7 +42,7 @@ class Thread;
 class ServerSession final : public WaitObject {
 public:
     ~ServerSession() override;
-    explicit ServerSession();
+    explicit ServerSession(KernelSystem& kernel);
 
     std::string GetName() const override {
         return name;
@@ -125,3 +125,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::ServerSession)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ServerSession)

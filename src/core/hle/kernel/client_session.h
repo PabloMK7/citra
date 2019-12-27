@@ -20,7 +20,7 @@ class Thread;
 
 class ClientSession final : public Object {
 public:
-    explicit ClientSession();
+    explicit ClientSession(KernelSystem& kernel);
     ~ClientSession() override;
 
     friend class KernelSystem;
@@ -64,3 +64,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::ClientSession)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ClientSession)

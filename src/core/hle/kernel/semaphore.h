@@ -16,7 +16,7 @@ namespace Kernel {
 
 class Semaphore final : public WaitObject {
 public:
-    explicit Semaphore();
+    explicit Semaphore(KernelSystem& kernel);
     ~Semaphore() override;
 
     std::string GetTypeName() const override {
@@ -60,3 +60,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Semaphore)
+CONSTRUCT_KERNEL_OBJECT(Kernel::Semaphore)

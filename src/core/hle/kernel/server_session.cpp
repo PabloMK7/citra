@@ -16,7 +16,7 @@ SERIALIZE_EXPORT_IMPL(Kernel::ServerSession)
 
 namespace Kernel {
 
-ServerSession::ServerSession() : kernel(Core::Global<KernelSystem>()) {}
+ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.
@@ -33,8 +33,7 @@ ServerSession::~ServerSession() {
 
 ResultVal<std::shared_ptr<ServerSession>> ServerSession::Create(KernelSystem& kernel,
                                                                 std::string name) {
-    auto server_session{std::make_shared<ServerSession>()};
-    server_session->Init(kernel);
+    auto server_session{std::make_shared<ServerSession>(kernel)};
 
     server_session->name = std::move(name);
     server_session->parent = nullptr;
@@ -127,8 +126,7 @@ ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
 KernelSystem::SessionPair KernelSystem::CreateSessionPair(const std::string& name,
                                                           std::shared_ptr<ClientPort> port) {
     auto server_session = ServerSession::Create(*this, name + "_Server").Unwrap();
-    auto client_session{std::make_shared<ClientSession>()};
-    client_session->Init(*this);
+    auto client_session{std::make_shared<ClientSession>(*this)};
     client_session->name = name + "_Client";
 
     std::shared_ptr<Session> parent(new Session);

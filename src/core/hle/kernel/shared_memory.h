@@ -16,7 +16,7 @@ namespace Kernel {
 
 class SharedMemory final : public Object {
 public:
-    explicit SharedMemory();
+    explicit SharedMemory(KernelSystem& kernel);
     ~SharedMemory() override;
 
     std::string GetTypeName() const override {
@@ -123,3 +123,6 @@ private:
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::SharedMemory)
+CONSTRUCT_KERNEL_OBJECT(Kernel::SharedMemory)

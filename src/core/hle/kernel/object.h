@@ -8,9 +8,12 @@
 #include <memory>
 #include <string>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/serialization/atomic.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/global.h"
 
 namespace Kernel {
 
@@ -43,10 +46,7 @@ enum {
 class Object : NonCopyable, public std::enable_shared_from_this<Object> {
 public:
     explicit Object(KernelSystem& kernel);
-    Object();
     virtual ~Object();
-
-    virtual void Init(KernelSystem& kernel);
 
     /// Returns a unique identifier for the object. For debugging purposes only.
     u32 GetObjectId() const {
@@ -99,3 +99,14 @@ inline std::shared_ptr<T> DynamicObjectCast(std::shared_ptr<Object> object) {
 }
 
 } // namespace Kernel
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Kernel::Object)
+
+#define CONSTRUCT_KERNEL_OBJECT(T)                                \
+namespace boost::serialization {                                  \
+template<class Archive>                                           \
+inline void load_construct_data(                                  \
+    Archive & ar, T * t, const unsigned int file_version          \
+){                                                                \
+    ::new(t)T(Core::Global<Kernel::KernelSystem>());              \
+}}

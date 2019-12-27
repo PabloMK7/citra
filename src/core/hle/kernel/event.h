@@ -13,7 +13,7 @@ namespace Kernel {
 
 class Event final : public WaitObject {
 public:
-    explicit Event();
+    explicit Event(KernelSystem& kernel);
     ~Event() override;
 
     std::string GetTypeName() const override {
@@ -65,3 +65,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Event)
+CONSTRUCT_KERNEL_OBJECT(Kernel::Event)

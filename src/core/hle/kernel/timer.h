@@ -46,7 +46,7 @@ private:
 
 class Timer final : public WaitObject {
 public:
-    explicit Timer();
+    explicit Timer(KernelSystem& kernel);
     ~Timer() override;
 
     std::string GetTypeName() const override {
@@ -127,3 +127,6 @@ private:
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::Timer)
+CONSTRUCT_KERNEL_OBJECT(Kernel::Timer)

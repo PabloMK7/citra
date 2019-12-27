@@ -25,6 +25,8 @@ class SessionRequestHandler;
 
 class ServerPort final : public WaitObject {
 public:
+    explicit ServerPort(KernelSystem& kernel);
+    ~ServerPort() override;
 
     std::string GetTypeName() const override {
         return "ServerPort";
@@ -73,3 +75,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::ServerPort)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ServerPort)

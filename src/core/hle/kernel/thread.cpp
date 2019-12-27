@@ -66,9 +66,9 @@ u32 ThreadManager::NewThreadId() {
     return next_thread_id++;
 }
 
-Thread::Thread()
-    : context(Core::Global<KernelSystem>().GetThreadManager().NewContext()),
-      thread_manager(Core::Global<KernelSystem>().GetThreadManager()) {}
+Thread::Thread(KernelSystem& kernel)
+    : WaitObject(kernel), context(kernel.GetThreadManager().NewContext()),
+      thread_manager(kernel.GetThreadManager()) {}
 Thread::~Thread() {}
 
 Thread* ThreadManager::GetCurrentThread() const {
@@ -338,8 +338,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(std::string name, 
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
-    auto thread{std::make_shared<Thread>()};
-    thread->Init(*this);
+    auto thread{std::make_shared<Thread>(*this)};
 
     thread_manager->thread_list.push_back(thread);
     thread_manager->ready_queue.prepare(priority);

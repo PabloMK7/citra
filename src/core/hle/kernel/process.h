@@ -65,6 +65,9 @@ struct MemoryRegionInfo;
 
 class CodeSet final : public Object {
 public:
+    explicit CodeSet(KernelSystem& kernel);
+    ~CodeSet() override;
+
     struct Segment {
         std::size_t offset = 0;
         VAddr addr = 0;
@@ -143,8 +146,7 @@ private:
 
 class Process final : public Object {
 public:
-    Process();
-    explicit Process(KernelSystem& kernel);
+    explicit Process(Kernel::KernelSystem& kernel);
     ~Process() override;
 
     std::string GetTypeName() const override {
@@ -235,3 +237,8 @@ private:
     void serialize(Archive& ar, const unsigned int file_version);
 };
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::CodeSet)
+BOOST_CLASS_EXPORT_KEY(Kernel::Process)
+CONSTRUCT_KERNEL_OBJECT(Kernel::CodeSet)
+CONSTRUCT_KERNEL_OBJECT(Kernel::Process)

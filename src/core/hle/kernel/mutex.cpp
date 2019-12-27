@@ -27,12 +27,11 @@ void ReleaseThreadMutexes(Thread* thread) {
     thread->held_mutexes.clear();
 }
 
-Mutex::Mutex() : kernel(Core::Global<KernelSystem>()) {}
+Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 Mutex::~Mutex() {}
 
 std::shared_ptr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
-    auto mutex{std::make_shared<Mutex>()};
-    mutex->Init(*this);
+    auto mutex{std::make_shared<Mutex>(*this)};
 
     mutex->lock_count = 0;
     mutex->name = std::move(name);

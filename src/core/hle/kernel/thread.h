@@ -164,7 +164,7 @@ private:
 
 class Thread final : public WaitObject {
 public:
-    explicit Thread();
+    explicit Thread(KernelSystem&);
     ~Thread() override;
 
     std::string GetName() const override {
@@ -340,3 +340,4 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Thread)
+CONSTRUCT_KERNEL_OBJECT(Kernel::Thread)

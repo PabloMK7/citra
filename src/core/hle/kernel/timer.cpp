@@ -4,6 +4,7 @@
 
 #include <cinttypes>
 #include <unordered_map>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -13,17 +14,19 @@
 #include "core/hle/kernel/timer.h"
 #include "core/global.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::Timer)
+
 namespace Kernel {
 
-Timer::Timer() : kernel(Core::Global<KernelSystem>()), timer_manager(Core::Global<KernelSystem>().GetTimerManager()) {}
+Timer::Timer(KernelSystem& kernel)
+    : WaitObject(kernel), kernel(kernel), timer_manager(kernel.GetTimerManager()) {}
 Timer::~Timer() {
     Cancel();
     timer_manager.timer_callback_table.erase(callback_id);
 }
 
 std::shared_ptr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
-    auto timer{std::make_shared<Timer>()};
-    timer->Init(*this);
+    auto timer{std::make_shared<Timer>(*this)};
 
     timer->reset_type = reset_type;
     timer->signaled = false;
