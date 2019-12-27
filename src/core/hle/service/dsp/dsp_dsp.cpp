@@ -15,17 +15,7 @@ using DspPipe = AudioCore::DspPipe;
 using InterruptType = Service::DSP::DSP_DSP::InterruptType;
 
 SERIALIZE_EXPORT_IMPL(Service::DSP::DSP_DSP)
-
-namespace boost::serialization {
-    template <class Archive>
-    void load_construct_data(Archive& ar, Service::DSP::DSP_DSP* t, const unsigned int)
-    {
-        ::new(t)Service::DSP::DSP_DSP(Core::Global<Core::System>());
-    }
-
-    template
-    void load_construct_data<iarchive>(iarchive& ar, Service::DSP::DSP_DSP* t, const unsigned int);
-}
+SERVICE_CONSTRUCT_IMPL(Service::DSP::DSP_DSP)
 
 namespace AudioCore {
 enum class DspPipe;

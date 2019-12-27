@@ -22,6 +22,14 @@ struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
     // behaviour is modified. Since we don't emulate fs:REG mechanism, we assume the program ID is
     // the same as codeset ID and fetch from there directly.
     u64 program_id = 0;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & program_id;
+    }
+    friend class boost::serialization::access;
 };
 
 class FS_USER final : public ServiceFramework<FS_USER, ClientSlot> {
@@ -545,8 +553,20 @@ private:
 
     Core::System& system;
     ArchiveManager& archives;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        ar & priority;
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::FS
+
+SERVICE_CONSTRUCT(Service::FS::FS_USER)
+BOOST_CLASS_EXPORT_KEY(Service::FS::FS_USER)
+BOOST_CLASS_EXPORT_KEY(Service::FS::ClientSlot)

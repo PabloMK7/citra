@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch.hpp>
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc.h"
@@ -13,6 +14,8 @@
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/server_session.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler::SessionDataBase)
 
 namespace Kernel {
 

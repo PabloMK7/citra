@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cinttypes>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -24,6 +25,10 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/settings.h"
+
+SERVICE_CONSTRUCT_IMPL(Service::FS::FS_USER)
+SERIALIZE_EXPORT_IMPL(Service::FS::FS_USER)
+SERIALIZE_EXPORT_IMPL(Service::FS::ClientSlot)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User

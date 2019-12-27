@@ -260,6 +260,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int)
     {
+        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
         ar & mutex;
         ar & shared_memory;
         ar & capture_units;

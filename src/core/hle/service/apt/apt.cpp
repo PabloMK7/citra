@@ -27,16 +27,7 @@
 #include "core/hw/aes/ccm.h"
 #include "core/hw/aes/key.h"
 
-namespace boost::serialization {
-    template <class Archive>
-    void load_construct_data(Archive& ar, Service::APT::Module* t, const unsigned int)
-    {
-        ::new(t)Service::APT::Module(Core::Global<Core::System>());
-    }
-
-    template
-    void load_construct_data<iarchive>(iarchive& ar, Service::APT::Module* t, const unsigned int);
-}
+SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 
 namespace Service::APT {
 

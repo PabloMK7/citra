@@ -18,18 +18,17 @@
 // Boost::serialization doesn't like union types for some reason,
 // so we need to mark arrays of union values with a special serialization method
 template<typename Value, size_t Size>
-struct UnionArray : public std::array<Value, Size> { };
-
-namespace boost::serialization {
-
-template<class Archive, typename Value, size_t Size>
-void serialize(Archive& ar, UnionArray<Value, Size>& array, const unsigned int version)
+struct UnionArray : public std::array<Value, Size>
 {
-    static_assert(sizeof(Value) == sizeof(u32));
-    ar & *static_cast<u32 (*)[Size]>(static_cast<void *>(array.data()));
-}
-
-}
+private:
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int)
+    {
+        static_assert(sizeof(Value) == sizeof(u32));
+        ar & *static_cast<u32 (*)[Size]>(static_cast<void *>(this->data()));
+    }
+    friend class boost::serialization::access;
+};
 
 namespace Pica {
 

@@ -220,4 +220,21 @@ extern const std::array<ServiceModuleInfo, 40> service_module_map;
         ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this); \
     } \
     friend class boost::serialization::access; \
-    friend class construct_access;
+    friend class ::construct_access;
+
+#define SERVICE_CONSTRUCT(T) \
+namespace boost::serialization { \
+    template <class Archive> \
+    void load_construct_data(Archive& ar, T* t, const unsigned int); \
+}
+
+#define SERVICE_CONSTRUCT_IMPL(T) \
+namespace boost::serialization { \
+    template <class Archive> \
+    void load_construct_data(Archive& ar, T* t, const unsigned int) \
+    { \
+        ::new(t)T(Core::Global<Core::System>()); \
+    } \
+    template \
+    void load_construct_data<iarchive>(iarchive& ar, T* t, const unsigned int); \
+}
