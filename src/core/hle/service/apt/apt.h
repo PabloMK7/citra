@@ -13,6 +13,7 @@
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/service.h"
 #include "core/global.h"
 
