@@ -60,10 +60,9 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
+    void serialize(Archive& ar, const unsigned int file_version) {
         auto o_config_mem = boost::serialization::binary_object(&config_mem, sizeof(config_mem));
-        ar & o_config_mem;
+        ar& o_config_mem;
     }
 };
 

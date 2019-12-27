@@ -5,11 +5,11 @@
 #include <cstring>
 #include "common/archives.h"
 #include "common/logging/log.h"
+#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/memory.h"
-#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::SharedMemory)
 

@@ -116,30 +116,30 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<Object>(*this);
-        // NB most of these aren't used at all currently, but we're adding them here for forwards compatibility
-        ar & name;
-        ar & max_priority;
-        ar & max_commit;
-        ar & max_threads;
-        ar & max_events;
-        ar & max_mutexes;
-        ar & max_semaphores;
-        ar & max_timers;
-        ar & max_shared_mems;
-        ar & max_address_arbiters;
-        ar & max_cpu_time;
-        ar & current_commit;
-        ar & current_threads;
-        ar & current_events;
-        ar & current_mutexes;
-        ar & current_semaphores;
-        ar & current_timers;
-        ar & current_shared_mems;
-        ar & current_address_arbiters;
-        ar & current_cpu_time;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<Object>(*this);
+        // NB most of these aren't used at all currently, but we're adding them here for forwards
+        // compatibility
+        ar& name;
+        ar& max_priority;
+        ar& max_commit;
+        ar& max_threads;
+        ar& max_events;
+        ar& max_mutexes;
+        ar& max_semaphores;
+        ar& max_timers;
+        ar& max_shared_mems;
+        ar& max_address_arbiters;
+        ar& max_cpu_time;
+        ar& current_commit;
+        ar& current_threads;
+        ar& current_events;
+        ar& current_mutexes;
+        ar& current_semaphores;
+        ar& current_timers;
+        ar& current_shared_mems;
+        ar& current_address_arbiters;
+        ar& current_cpu_time;
     }
 };
 
@@ -160,9 +160,8 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & resource_limits;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& resource_limits;
     }
 };
 

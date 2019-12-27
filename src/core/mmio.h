@@ -36,9 +36,7 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-    }
+    void serialize(Archive& ar, const unsigned int file_version) {}
 };
 
 using MMIORegionPointer = std::shared_ptr<MMIORegion>;

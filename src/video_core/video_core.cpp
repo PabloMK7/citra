@@ -87,18 +87,15 @@ u16 GetResolutionScaleFactor() {
     }
 }
 
-void Save(std::ostream &stream)
-{
+void Save(std::ostream& stream) {
     oarchive oa{stream};
-    oa & Pica::g_state;
+    oa& Pica::g_state;
 }
 
-void Load(std::istream &stream)
-{
+void Load(std::istream& stream) {
     iarchive ia{stream};
-    ia & Pica::g_state;
+    ia& Pica::g_state;
     // TODO: Flush/reset things
-
 }
 
 } // namespace VideoCore

@@ -3,9 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <vector>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
@@ -181,12 +181,11 @@ void InstallInterfaces(Core::System& system) {
 }
 
 template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int)
-{
-    ar & ac_connected;
-    ar & close_event;
-    ar & connect_event;
-    ar & disconnect_event;
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& ac_connected;
+    ar& close_event;
+    ar& connect_event;
+    ar& disconnect_event;
     // default_config is never written to
 }
 

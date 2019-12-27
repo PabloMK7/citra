@@ -7,8 +7,8 @@
 #include <optional>
 #include <boost/icl/interval_set.hpp>
 #include <boost/serialization/set.hpp>
-#include "common/serialization/boost_discrete_interval.hpp"
 #include "common/common_types.h"
+#include "common/serialization/boost_discrete_interval.hpp"
 
 namespace Kernel {
 
@@ -66,13 +66,12 @@ struct MemoryRegionInfo {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & base;
-        ar & size;
-        ar & used;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& base;
+        ar& size;
+        ar& used;
         // This works because interval_set has exactly one member of type ImplSetT
-        ar & *(reinterpret_cast<IntervalSet::ImplSetT*>(&free_blocks));
+        ar&*(reinterpret_cast<IntervalSet::ImplSetT*>(&free_blocks));
     }
 };
 

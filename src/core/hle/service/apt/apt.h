@@ -12,10 +12,9 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
-#include "core/hle/kernel/kernel.h"
-#include "core/hle/service/apt/applet_manager.h"
-#include "core/hle/service/service.h"
 #include "core/global.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/service/service.h"
 
 namespace Core {
 class System;
@@ -612,9 +611,8 @@ public:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & application_reset_prepared;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& application_reset_prepared;
         }
         friend class boost::serialization::access;
     };
@@ -654,6 +652,6 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::APT
 
 namespace boost::serialization {
-    template <class Archive>
-    void load_construct_data(Archive& ar, Service::APT::Module* t, const unsigned int);
+template <class Archive>
+void load_construct_data(Archive& ar, Service::APT::Module* t, const unsigned int);
 }

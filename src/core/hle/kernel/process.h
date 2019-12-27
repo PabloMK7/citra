@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 #include <boost/container/static_vector.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/handle_table.h"
@@ -31,12 +31,11 @@ struct AddressMapping {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & address;
-        ar & size;
-        ar & read_only;
-        ar & unk_flag;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& address;
+        ar& size;
+        ar& read_only;
+        ar& unk_flag;
     }
 };
 
@@ -76,11 +75,10 @@ public:
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version)
-        {
-            ar & offset;
-            ar & addr;
-            ar & size;
+        void serialize(Archive& ar, const unsigned int file_version) {
+            ar& offset;
+            ar& addr;
+            ar& size;
         }
     };
 
@@ -133,14 +131,13 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<Object>(*this);
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<Object>(*this);
         // TODO: memory reference
-        ar & segments;
-        ar & entrypoint;
-        ar & name;
-        ar & program_id;
+        ar& segments;
+        ar& entrypoint;
+        ar& name;
+        ar& program_id;
     }
 };
 

@@ -38,10 +38,9 @@ struct AdpcmState {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & predictor;
-        ar & step_index;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& predictor;
+        ar& step_index;
     }
     friend class boost::serialization::access;
 };
@@ -66,24 +65,23 @@ struct Channel {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & block1_address;
-        ar & block2_address;
-        ar & block1_size;
-        ar & block2_size;
-        ar & block1_adpcm_state;
-        ar & block2_adpcm_state;
-        ar & block2_adpcm_reload;
-        ar & left_channel_volume;
-        ar & right_channel_volume;
-        ar & left_capture_volume;
-        ar & right_capture_volume;
-        ar & sample_rate;
-        ar & linear_interpolation;
-        ar & loop_mode;
-        ar & encoding;
-        ar & psg_duty;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& block1_address;
+        ar& block2_address;
+        ar& block1_size;
+        ar& block2_size;
+        ar& block1_adpcm_state;
+        ar& block2_adpcm_state;
+        ar& block2_adpcm_reload;
+        ar& left_channel_volume;
+        ar& right_channel_volume;
+        ar& left_capture_volume;
+        ar& right_capture_volume;
+        ar& sample_rate;
+        ar& linear_interpolation;
+        ar& loop_mode;
+        ar& encoding;
+        ar& psg_duty;
     }
     friend class boost::serialization::access;
 };
@@ -258,18 +256,17 @@ private:
     u32 acquired_channel_mask = 0;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar & mutex;
-        ar & shared_memory;
-        ar & capture_units;
-        ar & channels;
-        ar & master_state_offset;
-        ar & channel_state_offset;
-        ar & capture_state_offset;
-        ar & type1_command_offset;
-        ar & acquired_channel_mask;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        ar& mutex;
+        ar& shared_memory;
+        ar& capture_units;
+        ar& channels;
+        ar& master_state_offset;
+        ar& channel_state_offset;
+        ar& capture_state_offset;
+        ar& type1_command_offset;
+        ar& acquired_channel_mask;
     }
     friend class boost::serialization::access;
 };
@@ -282,6 +279,6 @@ void InstallInterfaces(Core::System& system);
 BOOST_CLASS_EXPORT_KEY(Service::CSND::CSND_SND)
 
 namespace boost::serialization {
-    template <class Archive>
-    void load_construct_data(Archive& ar, Service::CSND::CSND_SND* t, const unsigned int);
+template <class Archive>
+void load_construct_data(Archive& ar, Service::CSND::CSND_SND* t, const unsigned int);
 }

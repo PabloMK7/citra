@@ -74,11 +74,10 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<Object>(*this);
-        ar & name;
-        ar & waiting_threads;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<Object>(*this);
+        ar& name;
+        ar& waiting_threads;
     }
 };
 

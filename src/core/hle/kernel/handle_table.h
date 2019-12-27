@@ -121,12 +121,11 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & objects;
-        ar & generations;
-        ar & next_generation;
-        ar & next_free_slot;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& objects;
+        ar& generations;
+        ar& next_generation;
+        ar& next_free_slot;
     }
 };
 

@@ -9,9 +9,9 @@
 #include <type_traits>
 #include <unordered_map>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/split_member.hpp>
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
@@ -86,14 +86,12 @@ private:
     std::unordered_map<u32, std::string> registered_services_inverse;
 
     template <class Archive>
-    void save(Archive& ar, const unsigned int file_version) const
-    {
+    void save(Archive& ar, const unsigned int file_version) const {
         ar << registered_services;
     }
 
     template <class Archive>
-    void load(Archive& ar, const unsigned int file_version)
-    {
+    void load(Archive& ar, const unsigned int file_version) {
         ar >> registered_services;
         registered_services_inverse.clear();
         for (const auto& pair : registered_services) {

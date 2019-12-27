@@ -37,10 +37,9 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & next_timer_callback_id;
-        ar & timer_callback_table;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& next_timer_callback_id;
+        ar& timer_callback_table;
     }
 };
 
@@ -115,14 +114,13 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & reset_type;
-        ar & initial_delay;
-        ar & interval_delay;
-        ar & signaled;
-        ar & name;
-        ar & callback_id;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& reset_type;
+        ar& initial_delay;
+        ar& interval_delay;
+        ar& signaled;
+        ar& name;
+        ar& callback_id;
     }
 };
 

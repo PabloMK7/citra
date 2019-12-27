@@ -107,17 +107,16 @@ private:
     KernelSystem& kernel;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & linear_heap_phys_offset;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& linear_heap_phys_offset;
         // TODO: backing blocks u8* (this is always FCRAM I think)
-        ar & size;
-        ar & permissions;
-        ar & other_permissions;
-        ar & owner_process;
-        ar & base_address;
-        ar & name;
-        ar & *(reinterpret_cast<MemoryRegionInfo::IntervalSet::ImplSetT*>(&holding_memory));
+        ar& size;
+        ar& permissions;
+        ar& other_permissions;
+        ar& owner_process;
+        ar& base_address;
+        ar& name;
+        ar&*(reinterpret_cast<MemoryRegionInfo::IntervalSet::ImplSetT*>(&holding_memory));
     }
     friend class boost::serialization::access;
 };

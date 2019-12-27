@@ -8,15 +8,15 @@
 #include <cstddef>
 #include <functional>
 #include <type_traits>
-#include <nihstro/shader_bytecode.h>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/hash.h"
-#include "common/vector_math.h"
 #include "common/pod.h"
+#include "common/vector_math.h"
 #include "video_core/pica_types.h"
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
@@ -38,9 +38,8 @@ struct AttributeBuffer {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & attr;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& attr;
     }
 };
 
@@ -107,13 +106,12 @@ struct GSEmitter {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & buffer;
-        ar & vertex_id;
-        ar & prim_emit;
-        ar & winding;
-        ar & output_mask;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& buffer;
+        ar& vertex_id;
+        ar& prim_emit;
+        ar& winding;
+        ar& output_mask;
         // Handlers are ignored because they're constant
     }
 };
@@ -137,11 +135,10 @@ struct UnitState {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version)
-        {
-            ar & input;
-            ar & temporary;
-            ar & output;
+        void serialize(Archive& ar, const unsigned int file_version) {
+            ar& input;
+            ar& temporary;
+            ar& output;
         }
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
@@ -199,11 +196,10 @@ struct UnitState {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & registers;
-        ar & conditional_code;
-        ar & address_registers;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& registers;
+        ar& conditional_code;
+        ar& address_registers;
         // emitter_ptr is only set by GSUnitState and is serialized there
     }
 };
@@ -223,10 +219,9 @@ struct GSUnitState : public UnitState {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<UnitState>(*this);
-        ar & emitter;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<UnitState>(*this);
+        ar& emitter;
     }
 };
 
@@ -252,12 +247,11 @@ struct Uniforms {
 
 private:
     friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
-        ar & f;
-        ar & b;
-        ar & i;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& f;
+        ar& b;
+        ar& i;
     }
 };
 
@@ -305,16 +299,15 @@ private:
     u64 swizzle_data_hash = 0xDEADC0DE;
 
     friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
-        ar & uniforms;
-        ar & program_code;
-        ar & swizzle_data;
-        ar & program_code_hash_dirty;
-        ar & swizzle_data_hash_dirty;
-        ar & program_code_hash;
-        ar & swizzle_data_hash;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& uniforms;
+        ar& program_code;
+        ar& swizzle_data;
+        ar& program_code_hash_dirty;
+        ar& swizzle_data_hash_dirty;
+        ar& program_code_hash;
+        ar& swizzle_data_hash;
     }
 };
 

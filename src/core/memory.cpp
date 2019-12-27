@@ -4,9 +4,9 @@
 
 #include <array>
 #include <cstring>
+#include "audio_core/dsp_interface.h"
 #include "boost/serialization/array.hpp"
 #include "boost/serialization/binary_object.hpp"
-#include "audio_core/dsp_interface.h"
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -58,12 +58,11 @@ private:
 
     static_assert(sizeof(bool) == 1);
     friend class boost::serialization::access;
-    template<typename Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
-        ar & vram;
-        ar & linear_heap;
-        ar & new_linear_heap;
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& vram;
+        ar& linear_heap;
+        ar& new_linear_heap;
     }
 };
 
@@ -82,19 +81,18 @@ public:
     AudioCore::DspInterface* dsp = nullptr;
 
 private:
-
     friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
         // TODO: Skip n3ds ram when not used?
         auto s_fcram = boost::serialization::binary_object(fcram.get(), Memory::FCRAM_N3DS_SIZE);
         auto s_vram = boost::serialization::binary_object(vram.get(), Memory::VRAM_SIZE);
-        auto s_extra = boost::serialization::binary_object(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
-        ar & s_fcram;
-        ar & s_vram;
-        ar & s_extra;
-        ar & cache_marker;
+        auto s_extra =
+            boost::serialization::binary_object(n3ds_extra_ram.get(), Memory::N3DS_EXTRA_RAM_SIZE);
+        ar& s_fcram;
+        ar& s_vram;
+        ar& s_extra;
+        ar& cache_marker;
         // TODO: How the hell to do page tables..
         // ar & page_table_list;
         // ar & current_page_table;
@@ -104,10 +102,9 @@ private:
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;
 
-template<class Archive>
-void MemorySystem::serialize(Archive & ar, const unsigned int file_version)
-{
-    ar & *impl.get();
+template <class Archive>
+void MemorySystem::serialize(Archive& ar, const unsigned int file_version) {
+    ar&* impl.get();
 }
 
 SERIALIZE_IMPL(MemorySystem)

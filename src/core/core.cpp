@@ -48,10 +48,14 @@ namespace Core {
 /*static*/ System System::s_instance;
 
 template <>
-Core::System& Global() { return System::GetInstance(); }
+Core::System& Global() {
+    return System::GetInstance();
+}
 
 template <>
-Kernel::KernelSystem& Global() { return System::GetInstance().Kernel(); }
+Kernel::KernelSystem& Global() {
+    return System::GetInstance().Kernel();
+}
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
@@ -209,8 +213,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
-                                                    [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(
+        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -400,32 +404,29 @@ void System::Reset() {
     Load(*m_emu_window, m_filepath);
 }
 
-template<class Archive>
-void System::serialize(Archive & ar, const unsigned int file_version)
-{
-    ar & *cpu_core.get();
-    ar & *service_manager.get();
-    ar & GPU::g_regs;
-    ar & LCD::g_regs;
+template <class Archive>
+void System::serialize(Archive& ar, const unsigned int file_version) {
+    ar&* cpu_core.get();
+    ar&* service_manager.get();
+    ar& GPU::g_regs;
+    ar& LCD::g_regs;
     ar & dsp_core->GetDspMemory();
-    ar & *memory.get();
-    ar & *kernel.get();
+    ar&* memory.get();
+    ar&* kernel.get();
 }
 
-void System::Save(std::ostream &stream) const
-{
+void System::Save(std::ostream& stream) const {
     {
         oarchive oa{stream};
-        oa & *this;
+        oa&* this;
     }
     VideoCore::Save(stream);
 }
 
-void System::Load(std::istream &stream)
-{
+void System::Load(std::istream& stream) {
     {
         iarchive ia{stream};
-        ia & *this;
+        ia&* this;
     }
     VideoCore::Load(stream);
 }

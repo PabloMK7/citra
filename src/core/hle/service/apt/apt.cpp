@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/archives.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -32,17 +32,16 @@ SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 namespace Service::APT {
 
 template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int)
-{
-    ar & shared_font_mem;
-    ar & shared_font_loaded;
-    ar & shared_font_relocated;
-    ar & lock;
-    ar & cpu_percent;
-    ar & unknown_ns_state_field;
-    ar & screen_capture_buffer;
-    ar & screen_capture_post_permission;
-    ar & applet_manager;
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& shared_font_mem;
+    ar& shared_font_loaded;
+    ar& shared_font_relocated;
+    ar& lock;
+    ar& cpu_percent;
+    ar& unknown_ns_state_field;
+    ar& screen_capture_buffer;
+    ar& screen_capture_post_permission;
+    ar& applet_manager;
 }
 
 SERIALIZE_IMPL(Module)

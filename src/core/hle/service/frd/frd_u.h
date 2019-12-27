@@ -11,6 +11,7 @@ namespace Service::FRD {
 class FRD_U final : public Module::Interface {
 public:
     explicit FRD_U(std::shared_ptr<Module> frd);
+
 private:
     SERVICE_SERIALIZATION(FRD_U, frd, Module)
 };

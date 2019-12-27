@@ -86,17 +86,16 @@ struct VirtualMemoryArea {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & base;
-        ar & size;
-        ar & type;
-        ar & permissions;
-        ar & meminfo_state;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& base;
+        ar& size;
+        ar& type;
+        ar& permissions;
+        ar& meminfo_state;
         // TODO: backing memory ref
         // backing memory can be: Physical/FCRAM pointer, config mem, shared page
-        ar & paddr;
-        ar & mmio_handler;
+        ar& paddr;
+        ar& mmio_handler;
     }
 };
 
@@ -213,27 +212,25 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive& ar, const unsigned int file_version) const
-    {
-        ar & vma_map;
+    void save(Archive& ar, const unsigned int file_version) const {
+        ar& vma_map;
         for (int i = 0; i < page_table.pointers.size(); i++) {
             ar << memory.GetFCRAMOffset(page_table.pointers[i]);
         }
-        ar & page_table.special_regions;
-        ar & page_table.attributes;
+        ar& page_table.special_regions;
+        ar& page_table.attributes;
     }
 
     template <class Archive>
-    void load(Archive& ar, const unsigned int file_version)
-    {
-        ar & vma_map;
+    void load(Archive& ar, const unsigned int file_version) {
+        ar& vma_map;
         for (int i = 0; i < page_table.pointers.size(); i++) {
             u32 offset{};
             ar >> offset;
             page_table.pointers[i] = memory.GetFCRAMPointer(offset);
         }
-        ar & page_table.special_regions;
-        ar & page_table.attributes;
+        ar& page_table.special_regions;
+        ar& page_table.attributes;
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()

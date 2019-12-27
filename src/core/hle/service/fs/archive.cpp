@@ -13,6 +13,7 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_ncch.h"
@@ -27,7 +28,6 @@
 #include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/core.h"
 
 namespace Service::FS {
 

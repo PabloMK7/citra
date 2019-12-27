@@ -6,9 +6,9 @@
 
 #include <memory>
 #include <boost/serialization/shared_ptr.hpp>
+#include "core/global.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/service.h"
-#include "core/global.h"
 
 namespace Core {
 class System;
@@ -964,12 +964,11 @@ public:
         u8 output_flag;
 
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & new_arrival_flag;
-            ar & ns_data_new_flag;
-            ar & ns_data_new_flag_privileged;
-            ar & output_flag;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& new_arrival_flag;
+            ar& ns_data_new_flag;
+            ar& ns_data_new_flag_privileged;
+            ar& output_flag;
         }
         friend class boost::serialization::access;
     };
@@ -978,9 +977,8 @@ private:
     std::shared_ptr<Kernel::Event> task_finish_event;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & task_finish_event;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& task_finish_event;
     }
     friend class boost::serialization::access;
 };
@@ -990,9 +988,8 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::BOSS
 
 namespace boost::serialization {
-    template <class Archive>
-    inline void load_construct_data(Archive& ar, Service::BOSS::Module* t, const unsigned int)
-    {
-        ::new(t)Service::BOSS::Module(Core::Global<Core::System>());
-    }
+template <class Archive>
+inline void load_construct_data(Archive& ar, Service::BOSS::Module* t, const unsigned int) {
+    ::new (t) Service::BOSS::Module(Core::Global<Core::System>());
 }
+} // namespace boost::serialization

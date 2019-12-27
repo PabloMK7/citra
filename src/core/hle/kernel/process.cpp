@@ -11,6 +11,7 @@
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 #include "common/serialization/boost_vector.hpp"
+#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -18,7 +19,6 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
-#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Process)
 SERIALIZE_EXPORT_IMPL(Kernel::CodeSet)
@@ -26,24 +26,25 @@ SERIALIZE_EXPORT_IMPL(Kernel::CodeSet)
 namespace Kernel {
 
 template <class Archive>
-void Process::serialize(Archive& ar, const unsigned int file_version)
-{
-    ar & boost::serialization::base_object<Object>(*this);
-    ar & handle_table;
-    ar & codeset;
-    ar & resource_limit;
-    ar & svc_access_mask;
-    ar & handle_table_size;
-    ar & (boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<AddressMapping, 8> >&)address_mappings;
-    ar & flags.raw;
-    ar & kernel_version;
-    ar & ideal_processor;
-    ar & status;
-    ar & process_id;
-    ar & vm_manager;
-    ar & memory_used;
-    ar & memory_region;
-    ar & tls_slots;
+void Process::serialize(Archive& ar, const unsigned int file_version) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& handle_table;
+    ar& codeset;
+    ar& resource_limit;
+    ar& svc_access_mask;
+    ar& handle_table_size;
+    ar&(boost::container::vector<
+        AddressMapping, boost::container::dtl::static_storage_allocator<AddressMapping, 8>>&)
+        address_mappings;
+    ar& flags.raw;
+    ar& kernel_version;
+    ar& ideal_processor;
+    ar& status;
+    ar& process_id;
+    ar& vm_manager;
+    ar& memory_used;
+    ar& memory_region;
+    ar& tls_slots;
 }
 
 SERIALIZE_IMPL(Process)

@@ -3,17 +3,19 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include "core/global.h"
 #include "video_core/geometry_pipeline.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
-#include "core/global.h"
 
 namespace Core {
-    template <>
-    Pica::State& Global() { return Pica::g_state; }
+template <>
+Pica::State& Global() {
+    return Pica::g_state;
 }
+} // namespace Core
 
 namespace Pica {
 

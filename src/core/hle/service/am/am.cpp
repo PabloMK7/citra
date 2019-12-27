@@ -1455,7 +1455,7 @@ Module::Module(Core::System& system) : kernel(system.Kernel()) {
     system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }
 
-Module::Module(Kernel::KernelSystem& kernel) : kernel(kernel) { }
+Module::Module(Kernel::KernelSystem& kernel) : kernel(kernel) {}
 
 Module::~Module() = default;
 

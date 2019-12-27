@@ -21,11 +21,10 @@ struct FriendKey {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & friend_id;
-        ar & unknown;
-        ar & friend_code;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& friend_id;
+        ar& unknown;
+        ar& friend_code;
     }
     friend class boost::serialization::access;
 };
@@ -35,9 +34,8 @@ struct MyPresence {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & unknown;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& unknown;
     }
     friend class boost::serialization::access;
 };
@@ -157,10 +155,9 @@ private:
     MyPresence my_presence = {};
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & my_friend_key;
-        ar & my_presence;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& my_friend_key;
+        ar& my_presence;
     }
     friend class boost::serialization::access;
 };

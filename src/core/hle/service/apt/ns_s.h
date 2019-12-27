@@ -14,6 +14,7 @@ namespace Service::NS {
 class NS_S final : public Service::APT::Module::NSInterface {
 public:
     explicit NS_S(std::shared_ptr<Service::APT::Module> apt);
+
 private:
     SERVICE_SERIALIZATION(NS_S, apt, Service::APT::Module)
 };

@@ -6,12 +6,12 @@
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/global.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
-#include "core/global.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace

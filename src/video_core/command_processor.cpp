@@ -645,8 +645,7 @@ void ProcessCommandList(PAddr list, u32 size) {
     u32* buffer = (u32*)VideoCore::g_memory->GetPhysicalPointer(list);
 
     if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
-        Pica::g_debug_context->recorder->MemoryAccessed((u8*)buffer, size,
-                                                        list);
+        Pica::g_debug_context->recorder->MemoryAccessed((u8*)buffer, size, list);
     }
 
     g_state.cmd_list.addr = list;

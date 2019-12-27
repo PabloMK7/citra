@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/apt/ns_s.h"
 #include "common/archives.h"
+#include "core/hle/service/apt/ns_s.h"
 
 namespace Service::NS {
 

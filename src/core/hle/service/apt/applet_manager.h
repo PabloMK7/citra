@@ -10,10 +10,10 @@
 #include <vector>
 #include <boost/serialization/array.hpp>
 #include "common/serialization/optional.h"
+#include "core/global.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/global.h"
 
 namespace Core {
 class System;
@@ -90,13 +90,12 @@ struct MessageParameter {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & sender_id;
-        ar & destination_id;
-        ar & signal;
-        ar & object;
-        ar & buffer;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& sender_id;
+        ar& destination_id;
+        ar& signal;
+        ar& object;
+        ar& buffer;
     }
     friend class boost::serialization::access;
 };
@@ -179,12 +178,11 @@ public:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & next_title_id;
-            ar & next_media_type;
-            ar & current_title_id;
-            ar & current_media_type;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& next_title_id;
+            ar& next_media_type;
+            ar& current_title_id;
+            ar& current_media_type;
         }
         friend class boost::serialization::access;
     };
@@ -228,16 +226,15 @@ private:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & applet_id;
-            ar & slot;
-            ar & title_id;
-            ar & registered;
-            ar & loaded;
-            ar & attributes.raw;
-            ar & notification_event;
-            ar & parameter_event;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& applet_id;
+            ar& slot;
+            ar& title_id;
+            ar& registered;
+            ar& loaded;
+            ar& attributes.raw;
+            ar& notification_event;
+            ar& parameter_event;
         }
         friend class boost::serialization::access;
     };
@@ -260,12 +257,11 @@ private:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & next_parameter;
-        ar & app_jump_parameters;
-        ar & applet_slots;
-        ar & library_applet_closing_command;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& next_parameter;
+        ar& app_jump_parameters;
+        ar& applet_slots;
+        ar& library_applet_closing_command;
     }
     friend class boost::serialization::access;
 };
@@ -273,9 +269,8 @@ private:
 } // namespace Service::APT
 
 namespace boost::serialization {
-    template <class Archive>
-    inline void load_construct_data(Archive& ar, Service::APT::AppletManager* t, const unsigned int)
-    {
-        ::new(t)Service::APT::AppletManager(Core::Global<Core::System>());
-    }
+template <class Archive>
+inline void load_construct_data(Archive& ar, Service::APT::AppletManager* t, const unsigned int) {
+    ::new (t) Service::APT::AppletManager(Core::Global<Core::System>());
 }
+} // namespace boost::serialization

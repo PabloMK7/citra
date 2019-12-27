@@ -9,10 +9,10 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/container/flat_set.hpp>
+#include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"
@@ -152,13 +152,12 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & next_thread_id;
-        ar & current_thread;
-        ar & ready_queue;
-        ar & wakeup_callback_table;
-        ar & thread_list;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& next_thread_id;
+        ar& current_thread;
+        ar& ready_queue;
+        ar& wakeup_callback_table;
+        ar& thread_list;
     }
 };
 

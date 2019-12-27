@@ -54,12 +54,11 @@ struct SpecialRegion {
     u32 size;
     MMIORegionPointer handler;
 
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
-        ar & base;
-        ar & size;
-        ar & handler;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& base;
+        ar& size;
+        ar& handler;
     }
 };
 
@@ -326,8 +325,8 @@ private:
     std::unique_ptr<Impl> impl;
 
     friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int file_version);
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 /// Determines if the given VAddr is valid for the specified process.

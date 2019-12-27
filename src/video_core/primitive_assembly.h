@@ -6,7 +6,9 @@
 
 #include <functional>
 #include "video_core/regs_pipeline.h"
-namespace boost::serialization { class access; }
+namespace boost::serialization {
+class access;
+}
 
 namespace Pica {
 
@@ -65,13 +67,12 @@ private:
     bool winding = false;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-        ar & topology;
-        ar & buffer_index;
-        ar & buffer;
-        ar & strip_ready;
-        ar & winding;
+    void serialize(Archive& ar, const unsigned int version) {
+        ar& topology;
+        ar& buffer_index;
+        ar& buffer;
+        ar& strip_ready;
+        ar& winding;
     }
     friend class boost::serialization::access;
 };

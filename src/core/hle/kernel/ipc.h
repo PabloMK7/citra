@@ -30,15 +30,15 @@ struct MappedBufferContext {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & permissions;
-        ar & size;
-        ar & source_address;
-        ar & target_address;
-        // TODO: Check whether we need these. If we do, add a field for the size and/or change to a 'vector'
-        //ar & buffer;
-        //ar & reserve_buffer;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& permissions;
+        ar& size;
+        ar& source_address;
+        ar& target_address;
+        // TODO: Check whether we need these. If we do, add a field for the size and/or change to a
+        // 'vector'
+        // ar & buffer;
+        // ar & reserve_buffer;
     }
     friend class boost::serialization::access;
 };

@@ -4,13 +4,13 @@
 
 #include <tuple>
 #include "common/archives.h"
+#include "core/global.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
-#include "core/global.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::ServerSession)
 

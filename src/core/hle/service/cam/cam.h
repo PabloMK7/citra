@@ -10,9 +10,9 @@
 #include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/global.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
-#include "core/global.h"
 
 namespace Core {
 class System;
@@ -183,14 +183,13 @@ struct Resolution {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & width;
-        ar & height;
-        ar & crop_x0;
-        ar & crop_y0;
-        ar & crop_x1;
-        ar & crop_y1;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& width;
+        ar& height;
+        ar& crop_x0;
+        ar& crop_y0;
+        ar& crop_x1;
+        ar& crop_y1;
     }
     friend class boost::serialization::access;
 };
@@ -755,12 +754,11 @@ private:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & flip;
-            ar & effect;
-            ar & format;
-            ar & resolution;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& flip;
+            ar& effect;
+            ar& format;
+            ar& resolution;
         }
         friend class boost::serialization::access;
     };
@@ -773,12 +771,11 @@ private:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & impl;
-            ar & contexts;
-            ar & current_context;
-            ar & frame_rate;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& impl;
+            ar& contexts;
+            ar& current_context;
+            ar& frame_rate;
         }
         friend class boost::serialization::access;
     };
@@ -818,27 +815,26 @@ private:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int)
-        {
-            ar & camera_id;
-            ar & is_active;
-            ar & is_pending_receiving;
-            ar & is_busy;
-            ar & is_receiving;
-            ar & is_trimming;
-            ar & x0;
-            ar & y0;
-            ar & x1;
-            ar & y1;
-            ar & transfer_bytes;
-            ar & completion_event;
-            ar & buffer_error_interrupt_event;
-            ar & vsync_interrupt_event;
+        void serialize(Archive& ar, const unsigned int) {
+            ar& camera_id;
+            ar& is_active;
+            ar& is_pending_receiving;
+            ar& is_busy;
+            ar& is_receiving;
+            ar& is_trimming;
+            ar& x0;
+            ar& y0;
+            ar& x1;
+            ar& y1;
+            ar& transfer_bytes;
+            ar& completion_event;
+            ar& buffer_error_interrupt_event;
+            ar& vsync_interrupt_event;
             // TODO: Check if this is ever needed:
-            //ar & capture_result;
-            ar & dest_process;
-            ar & dest;
-            ar & dest_size;
+            // ar & capture_result;
+            ar& dest_process;
+            ar& dest;
+            ar& dest_size;
         }
         friend class boost::serialization::access;
     };
@@ -864,9 +860,8 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::CAM
 
 namespace boost::serialization {
-    template <class Archive>
-    inline void load_construct_data(Archive& ar, Service::CAM::Module* t, const unsigned int)
-    {
-        ::new(t)Service::CAM::Module(Core::Global<Core::System>());
-    }
+template <class Archive>
+inline void load_construct_data(Archive& ar, Service::CAM::Module* t, const unsigned int) {
+    ::new (t) Service::CAM::Module(Core::Global<Core::System>());
 }
+} // namespace boost::serialization

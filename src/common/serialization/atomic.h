@@ -6,20 +6,17 @@
 namespace boost::serialization {
 
 template <class Archive, class T>
-void serialize(Archive& ar, std::atomic<T>& value, const unsigned int file_version)
-{
+void serialize(Archive& ar, std::atomic<T>& value, const unsigned int file_version) {
     boost::serialization::split_free(ar, value, file_version);
 }
 
 template <class Archive, class T>
-void save(Archive& ar, const std::atomic<T>& value, const unsigned int file_version)
-{
+void save(Archive& ar, const std::atomic<T>& value, const unsigned int file_version) {
     ar << value.load();
 }
 
 template <class Archive, class T>
-void load(Archive& ar, std::atomic<T>& value, const unsigned int file_version)
-{
+void load(Archive& ar, std::atomic<T>& value, const unsigned int file_version) {
     T tmp;
     ar >> tmp;
     value.store(tmp);

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <iostream>
 #include <atomic>
+#include <iostream>
 #include <memory>
 #include "core/frontend/emu_window.h"
 
@@ -62,7 +62,7 @@ void RequestScreenshot(void* data, std::function<void()> callback,
 
 u16 GetResolutionScaleFactor();
 
-void Save(std::ostream &stream);
-void Load(std::istream &stream);
+void Save(std::ostream& stream);
+void Load(std::istream& stream);
 
 } // namespace VideoCore

@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cam/cam_c.h"
-#include "common/archives.h"
 
 namespace Service::CAM {
 

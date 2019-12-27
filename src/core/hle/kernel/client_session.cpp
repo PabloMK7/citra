@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/assert.h"
 #include "common/archives.h"
+#include "common/assert.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/hle_ipc.h"

@@ -272,9 +272,9 @@ public:
         return registered_image_interface;
     }
 
-    void Save(std::ostream &stream) const;
+    void Save(std::ostream& stream) const;
 
-    void Load(std::istream &stream);
+    void Load(std::istream& stream);
 
 private:
     /**
@@ -345,8 +345,8 @@ private:
     std::atomic<bool> shutdown_requested;
 
     friend class boost::serialization::access;
-    template<typename Archive>
-    void serialize(Archive & ar, const unsigned int file_version);
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 inline ARM_Interface& CPU() {

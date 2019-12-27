@@ -7,11 +7,11 @@
 #include "common/assert.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/errors.h"
+#include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/thread.h"
-#include "core/hle/kernel/hle_ipc.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::ServerPort)
 
@@ -53,12 +53,11 @@ KernelSystem::PortPair KernelSystem::CreatePortPair(u32 max_sessions, std::strin
 }
 
 template <class Archive>
-void ServerPort::serialize(Archive& ar, const unsigned int file_version)
-{
-    ar & boost::serialization::base_object<WaitObject>(*this);
-    ar & name;
-    ar & pending_sessions;
-    ar & hle_handler;
+void ServerPort::serialize(Archive& ar, const unsigned int file_version) {
+    ar& boost::serialization::base_object<WaitObject>(*this);
+    ar& name;
+    ar& pending_sessions;
+    ar& hle_handler;
 }
 SERIALIZE_IMPL(ServerPort)
 

@@ -37,9 +37,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-    }
+    void serialize(Archive& ar, const unsigned int file_version) {}
     friend class boost::serialization::access;
 };
 
@@ -92,16 +90,14 @@ private:
     unsigned int vs_output_num;
 
     template <typename Class, class Archive>
-    static void serialize_common(Class* self, Archive& ar, const unsigned int version)
-    {
-        ar & boost::serialization::base_object<GeometryPipelineBackend>(*self);
+    static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
         ar & self->attribute_buffer;
         ar & self->vs_output_num;
     }
 
-    template<class Archive>
-    void save(Archive & ar, const unsigned int version) const
-    {
+    template <class Archive>
+    void save(Archive& ar, const unsigned int version) const {
         serialize_common(this, ar, version);
         auto buffer_idx = static_cast<u32>(buffer_cur - attribute_buffer.attr);
         auto buffer_size = static_cast<u32>(buffer_end - attribute_buffer.attr);
@@ -109,9 +105,8 @@ private:
         ar << buffer_size;
     }
 
-    template<class Archive>
-    void load(Archive & ar, const unsigned int version)
-    {
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
         serialize_common(this, ar, version);
         u32 buffer_idx, buffer_size;
         ar >> buffer_idx;
@@ -130,8 +125,7 @@ private:
 // value in the batch. This mode is usually used for subdivision.
 class GeometryPipeline_VariablePrimitive : public GeometryPipelineBackend {
 public:
-    GeometryPipeline_VariablePrimitive()
-        : regs(g_state.regs), setup(g_state.gs) {
+    GeometryPipeline_VariablePrimitive() : regs(g_state.regs), setup(g_state.gs) {
         ASSERT(regs.pipeline.variable_primitive == 1);
         ASSERT(regs.gs.input_to_uniform == 1);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
@@ -190,26 +184,23 @@ private:
     unsigned int vs_output_num;
 
     template <typename Class, class Archive>
-    static void serialize_common(Class* self, Archive& ar, const unsigned int version)
-    {
-        ar & boost::serialization::base_object<GeometryPipelineBackend>(*self);
+    static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
         ar & self->need_index;
         ar & self->main_vertex_num;
         ar & self->total_vertex_num;
         ar & self->vs_output_num;
     }
 
-    template<class Archive>
-    void save(Archive & ar, const unsigned int version) const
-    {
+    template <class Archive>
+    void save(Archive& ar, const unsigned int version) const {
         serialize_common(this, ar, version);
         auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f);
         ar << buffer_idx;
     }
 
-    template<class Archive>
-    void load(Archive & ar, const unsigned int version)
-    {
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
         serialize_common(this, ar, version);
         u32 buffer_idx;
         ar >> buffer_idx;
@@ -226,8 +217,7 @@ private:
 // particle system.
 class GeometryPipeline_FixedPrimitive : public GeometryPipelineBackend {
 public:
-    GeometryPipeline_FixedPrimitive()
-        : regs(g_state.regs), setup(g_state.gs) {
+    GeometryPipeline_FixedPrimitive() : regs(g_state.regs), setup(g_state.gs) {
         ASSERT(regs.pipeline.variable_primitive == 0);
         ASSERT(regs.gs.input_to_uniform == 1);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
@@ -267,15 +257,13 @@ private:
     unsigned int vs_output_num;
 
     template <typename Class, class Archive>
-    static void serialize_common(Class* self, Archive& ar, const unsigned int version)
-    {
-        ar & boost::serialization::base_object<GeometryPipelineBackend>(*self);
+    static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
         ar & self->vs_output_num;
     }
 
-    template<class Archive>
-    void save(Archive & ar, const unsigned int version) const
-    {
+    template <class Archive>
+    void save(Archive& ar, const unsigned int version) const {
         serialize_common(this, ar, version);
         auto buffer_offset = static_cast<u32>(buffer_begin - setup.uniforms.f);
         auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f);
@@ -285,9 +273,8 @@ private:
         ar << buffer_size;
     }
 
-    template<class Archive>
-    void load(Archive & ar, const unsigned int version)
-    {
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
         serialize_common(this, ar, version);
         u32 buffer_offset, buffer_idx, buffer_size;
         ar >> buffer_offset;
@@ -385,7 +372,7 @@ void GeometryPipeline::SubmitVertex(const Shader::AttributeBuffer& input) {
 template <class Archive>
 void GeometryPipeline::serialize(Archive& ar, const unsigned int version) {
     // vertex_handler and shader_engine are always set to the same value
-    ar & backend;
+    ar& backend;
 }
 
 } // namespace Pica

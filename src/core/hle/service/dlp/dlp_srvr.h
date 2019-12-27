@@ -17,9 +17,8 @@ private:
     void IsChild(Kernel::HLERequestContext& ctx);
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     }
     friend class boost::serialization::access;
 };

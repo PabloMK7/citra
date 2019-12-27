@@ -10,15 +10,15 @@
 #include <string>
 #include <vector>
 #include <boost/serialization/array.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
+#include "core/global.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
-#include "core/global.h"
 
 namespace Core {
 class System;
@@ -585,11 +585,10 @@ private:
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & cia_installing;
-        ar & am_title_list;
-        ar & system_updater_mutex;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& cia_installing;
+        ar& am_title_list;
+        ar& system_updater_mutex;
     }
     friend class boost::serialization::access;
 };
@@ -599,9 +598,8 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::AM
 
 namespace boost::serialization {
-    template <class Archive>
-    inline void load_construct_data(Archive& ar, Service::AM::Module* t, const unsigned int)
-    {
-        ::new(t)Service::AM::Module(Core::Global<Kernel::KernelSystem>());
-    }
+template <class Archive>
+inline void load_construct_data(Archive& ar, Service::AM::Module* t, const unsigned int) {
+    ::new (t) Service::AM::Module(Core::Global<Kernel::KernelSystem>());
 }
+} // namespace boost::serialization

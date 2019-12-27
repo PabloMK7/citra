@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 #include <boost/container/small_vector.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
@@ -74,9 +74,10 @@ public:
     /// in each service must inherit from this.
     struct SessionDataBase {
         virtual ~SessionDataBase() = default;
+
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) { }
+        void serialize(Archive& ar, const unsigned int file_version) {}
         friend class boost::serialization::access;
     };
 
@@ -104,10 +105,9 @@ protected:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version)
-        {
-            ar & session;
-            ar & data;
+        void serialize(Archive& ar, const unsigned int file_version) {
+            ar& session;
+            ar& data;
         }
         friend class boost::serialization::access;
     };
@@ -117,9 +117,8 @@ protected:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & connected_sessions;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& connected_sessions;
     }
     friend class boost::serialization::access;
 };

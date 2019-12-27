@@ -20,8 +20,7 @@ public:
         friend class boost::serialization::access;
 
         template <class Archive>
-        void save(Archive& ar, const unsigned int file_version) const
-        {
+        void save(Archive& ar, const unsigned int file_version) const {
             for (auto i = 0; i < 16; i++) {
                 auto r = GetCpuRegister(i);
                 ar << r;
@@ -39,8 +38,7 @@ public:
         }
 
         template <class Archive>
-        void load(Archive& ar, const unsigned int file_version)
-        {
+        void load(Archive& ar, const unsigned int file_version) {
             u32 r;
             for (auto i = 0; i < 16; i++) {
                 ar >> r;
@@ -220,8 +218,7 @@ private:
     friend class boost::serialization::access;
 
     template <class Archive>
-    void save(Archive& ar, const unsigned int file_version) const
-    {
+    void save(Archive& ar, const unsigned int file_version) const {
         for (auto i = 0; i < 15; i++) {
             auto r = GetReg(i);
             ar << r;
@@ -245,8 +242,7 @@ private:
     }
 
     template <class Archive>
-    void load(Archive& ar, const unsigned int file_version)
-    {
+    void load(Archive& ar, const unsigned int file_version) {
         u32 r;
         for (auto i = 0; i < 15; i++) {
             ar >> r;

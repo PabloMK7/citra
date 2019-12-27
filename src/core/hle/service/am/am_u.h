@@ -11,6 +11,7 @@ namespace Service::AM {
 class AM_U final : public Module::Interface {
 public:
     explicit AM_U(std::shared_ptr<Module> am);
+
 private:
     SERVICE_SERIALIZATION(AM_U, am, Module)
 };

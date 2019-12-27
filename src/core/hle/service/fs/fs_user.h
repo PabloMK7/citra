@@ -25,9 +25,8 @@ struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & program_id;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& program_id;
     }
     friend class boost::serialization::access;
 };
@@ -555,10 +554,9 @@ private:
     ArchiveManager& archives;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar & priority;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        ar& priority;
     }
     friend class boost::serialization::access;
 };

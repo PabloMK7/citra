@@ -23,9 +23,10 @@ public:
     protected:
         std::shared_ptr<Module> act;
     };
+
 private:
     template <class Archive>
-    inline void serialize(Archive& ar, const unsigned int file_version) { }
+    inline void serialize(Archive& ar, const unsigned int file_version) {}
     friend class boost::serialization::access;
 };
 

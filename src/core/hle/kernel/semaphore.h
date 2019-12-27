@@ -5,8 +5,8 @@
 #pragma once
 
 #include <string>
-#include <queue>
 #include <boost/serialization/export.hpp>
+#include <queue>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
@@ -48,12 +48,11 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<WaitObject>(*this);
-        ar & max_count;
-        ar & available_count;
-        ar & name;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<WaitObject>(*this);
+        ar& max_count;
+        ar& available_count;
+        ar& name;
     }
 };
 

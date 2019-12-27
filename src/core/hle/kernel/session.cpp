@@ -4,22 +4,21 @@
 
 #include <boost/serialization/shared_ptr.hpp>
 #include "common/archives.h"
-#include "core/hle/kernel/session.h"
-#include "core/hle/kernel/client_session.h"
-#include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/hle_ipc.h"
+#include "core/hle/kernel/server_session.h"
+#include "core/hle/kernel/session.h"
 
 SERIALIZE_IMPL(Kernel::Session)
 
 namespace Kernel {
 
 template <class Archive>
-void Session::serialize(Archive& ar, const unsigned int file_version)
-{
-    ar & client;
-    ar & server;
-    ar & port;
+void Session::serialize(Archive& ar, const unsigned int file_version) {
+    ar& client;
+    ar& server;
+    ar& port;
 }
 
 } // namespace Kernel

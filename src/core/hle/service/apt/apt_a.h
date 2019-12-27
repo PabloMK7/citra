@@ -11,6 +11,7 @@ namespace Service::APT {
 class APT_A final : public Module::APTInterface {
 public:
     explicit APT_A(std::shared_ptr<Module> apt);
+
 private:
     SERVICE_SERIALIZATION(APT_A, apt, Module)
 };

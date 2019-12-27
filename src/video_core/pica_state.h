@@ -9,23 +9,21 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/video_core.h"
 #include "video_core/geometry_pipeline.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
+#include "video_core/video_core.h"
 
 // Boost::serialization doesn't like union types for some reason,
 // so we need to mark arrays of union values with a special serialization method
-template<typename Value, size_t Size>
-struct UnionArray : public std::array<Value, Size>
-{
+template <typename Value, size_t Size>
+struct UnionArray : public std::array<Value, Size> {
 private:
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
         static_assert(sizeof(Value) == sizeof(u32));
-        ar & *static_cast<u32 (*)[Size]>(static_cast<void *>(this->data()));
+        ar&* static_cast<u32(*)[Size]>(static_cast<void*>(this->data()));
     }
     friend class boost::serialization::access;
 };
@@ -99,14 +97,13 @@ struct State {
 
     private:
         friend class boost::serialization::access;
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int file_version)
-        {
-            ar & noise_table;
-            ar & color_map_table;
-            ar & alpha_map_table;
-            ar & color_table;
-            ar & color_diff_table;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version) {
+            ar& noise_table;
+            ar& color_map_table;
+            ar& alpha_map_table;
+            ar& color_table;
+            ar& color_diff_table;
         }
     } proctex;
 
@@ -131,10 +128,9 @@ struct State {
                 return neg_difference ? -diff : diff;
             }
 
-            template<class Archive>
-            void serialize(Archive & ar, const unsigned int file_version)
-            {
-                ar & raw;
+            template <class Archive>
+            void serialize(Archive& ar, const unsigned int file_version) {
+                ar& raw;
             }
         };
 
@@ -180,12 +176,11 @@ struct State {
 
     private:
         friend class boost::serialization::access;
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int file_version)
-        {
-            ar & input_vertex;
-            ar & current_attribute;
-            ar & reset_geometry_pipeline;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version) {
+            ar& input_vertex;
+            ar& current_attribute;
+            ar& reset_geometry_pipeline;
         }
 
     } immediate;
@@ -210,42 +205,38 @@ struct State {
     u32 default_attr_write_buffer[3]{};
 
 private:
-
     friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int file_version)
-    {
-        ar & regs.reg_array;
-        ar & vs;
-        ar & gs;
-        ar & input_default_attributes;
-        ar & proctex;
-        ar & lighting.luts;
-        ar & fog.lut;
-        ar & cmd_list.addr;
-        ar & cmd_list.length;
-        ar & immediate;
-        ar & gs_unit;
-        ar & geometry_pipeline;
-        ar & primitive_assembler;
-        ar & vs_float_regs_counter;
-        ar & vs_uniform_write_buffer;
-        ar & gs_float_regs_counter;
-        ar & gs_uniform_write_buffer;
-        ar & default_attr_counter;
-        ar & default_attr_write_buffer;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& regs.reg_array;
+        ar& vs;
+        ar& gs;
+        ar& input_default_attributes;
+        ar& proctex;
+        ar& lighting.luts;
+        ar& fog.lut;
+        ar& cmd_list.addr;
+        ar& cmd_list.length;
+        ar& immediate;
+        ar& gs_unit;
+        ar& geometry_pipeline;
+        ar& primitive_assembler;
+        ar& vs_float_regs_counter;
+        ar& vs_uniform_write_buffer;
+        ar& gs_float_regs_counter;
+        ar& gs_uniform_write_buffer;
+        ar& default_attr_counter;
+        ar& default_attr_write_buffer;
         boost::serialization::split_member(ar, *this, file_version);
     }
 
-    template<class Archive>
-    void save(Archive & ar, const unsigned int file_version) const
-    {
+    template <class Archive>
+    void save(Archive& ar, const unsigned int file_version) const {
         ar << static_cast<u32>(cmd_list.current_ptr - cmd_list.head_ptr);
     }
 
-    template<class Archive>
-    void load(Archive & ar, const unsigned int file_version)
-    {
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version) {
         u32 offset{};
         ar >> offset;
         cmd_list.head_ptr = (u32*)VideoCore::g_memory->GetPhysicalPointer(cmd_list.addr);

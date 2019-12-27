@@ -24,11 +24,10 @@
 namespace Service::CAM {
 
 template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int)
-{
-    ar & cameras;
-    ar & ports;
-    ar & is_camera_reload_pending;
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& cameras;
+    ar& ports;
+    ar& is_camera_reload_pending;
 }
 
 SERIALIZE_IMPL(Module)

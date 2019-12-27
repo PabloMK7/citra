@@ -110,15 +110,14 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version)
-    {
-        ar & boost::serialization::base_object<Object>(*this);
-        ar & name;
-        ar & parent;
-        ar & hle_handler;
-        ar & pending_requesting_threads;
-        ar & currently_handling;
-        ar & mapped_buffer_context;
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<Object>(*this);
+        ar& name;
+        ar& parent;
+        ar& hle_handler;
+        ar& pending_requesting_threads;
+        ar& currently_handling;
+        ar& mapped_buffer_context;
     }
 };
 
