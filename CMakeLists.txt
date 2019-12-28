@@ -126,9 +126,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 add_library(boost_libs INTERFACE)
 
-find_package(Boost 1.66.0 QUIET)
+find_package(Boost 1.70.0 QUIET EXACT)
 if (NOT Boost_FOUND)
-    message(STATUS "Boost 1.66.0 or newer not found, falling back to externals")
+    message(STATUS "Boost 1.70.0 not found, falling back to externals")
 
     set(BOOST_ROOT "${PROJECT_SOURCE_DIR}/externals/boost")
     set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")

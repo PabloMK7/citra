@@ -33,7 +33,6 @@ if (MSVC)
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
     add_compile_options(
         /W3
-        /MP
         /Zi
         /Zo
         /permissive-
@@ -42,8 +41,13 @@ if (MSVC)
         /volatile:iso
         /Zc:externConstexpr
         /Zc:inline
-        /Zc:throwingNew
     )
+    if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+        add_compile_options(
+            /MP
+            /Zc:throwingNew
+        )
+    endif()
 
     # /GS- - No stack buffer overflow checks
     add_compile_options("$<$<CONFIG:Release>:/GS->")
