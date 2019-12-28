@@ -6,10 +6,10 @@
 
 #include <array>
 #include <memory>
-#include <optional>
 #include <vector>
 #include <boost/serialization/array.hpp>
-#include "common/serialization/optional.h"
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/optional.hpp>
 #include "core/global.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
@@ -193,7 +193,8 @@ public:
 
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
-    std::optional<MessageParameter> next_parameter;
+    // NOTE: A bug in gcc prevents serializing std::optional
+    boost::optional<MessageParameter> next_parameter;
 
     static constexpr std::size_t NumAppletSlot = 4;
 
@@ -268,9 +269,4 @@ private:
 
 } // namespace Service::APT
 
-namespace boost::serialization {
-template <class Archive>
-inline void load_construct_data(Archive& ar, Service::APT::AppletManager* t, const unsigned int) {
-    ::new (t) Service::APT::AppletManager(Core::Global<Core::System>());
-}
-} // namespace boost::serialization
+SERVICE_CONSTRUCT(Service::APT::AppletManager)
