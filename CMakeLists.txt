@@ -132,7 +132,7 @@ if (NOT Boost_FOUND)
 
     set(BOOST_ROOT "${PROJECT_SOURCE_DIR}/externals/boost")
     set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
-    set(Boost_NO_SYSTEM_PATHS OFF)
+    set(Boost_NO_SYSTEM_PATHS ON)
     add_definitions( -DBOOST_ALL_NO_LIB )
     find_package(Boost QUIET REQUIRED)
 
