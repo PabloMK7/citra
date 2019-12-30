@@ -83,7 +83,7 @@
         ✔ FS @done(19-12-27 11:46)
         ✔ GSP @done(19-12-30 12:45)
             ☐ Fix the global weak_ptr to gsp
-        ☐ HID
+        ✔ HID @done(19-12-30 14:46)
         ☐ HTTP
         ☐ IR
         ☐ LDR_RO

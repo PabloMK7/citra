@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/3ds.h"
 #include "core/core.h"
@@ -20,7 +21,31 @@
 #include "core/movie.h"
 #include "video_core/video_core.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
+SERIALIZE_EXPORT_IMPL(Service::HID::Module)
+
 namespace Service::HID {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& shared_mem;
+    ar& event_pad_or_touch_1;
+    ar& event_pad_or_touch_2;
+    ar& event_accelerometer;
+    ar& event_gyroscope;
+    ar& event_debug_pad;
+    ar& next_pad_index;
+    ar& next_touch_index;
+    ar& next_accelerometer_index;
+    ar& next_gyroscope_index;
+    ar& enable_accelerometer_count;
+    ar& enable_gyroscope_count;
+    ReloadInputDevices();
+    // Pad state not needed as it's always updated
+    // Update events are set in the constructor
+    // Devices are set from the implementation (and are stateless afaik)
+}
+SERIALIZE_IMPL(Module)
 
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
 constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;

@@ -294,7 +294,7 @@ public:
          */
         void GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         std::shared_ptr<Module> hid;
     };
 
@@ -342,9 +342,16 @@ private:
     std::unique_ptr<Input::AnalogDevice> circle_pad;
     std::unique_ptr<Input::MotionDevice> motion_device;
     std::unique_ptr<Input::TouchDevice> touch_device;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 std::shared_ptr<Module> GetModule(Core::System& system);
 
 void InstallInterfaces(Core::System& system);
 } // namespace Service::HID
+
+SERVICE_CONSTRUCT(Service::HID::Module)
+BOOST_CLASS_EXPORT_KEY(Service::HID::Module)
