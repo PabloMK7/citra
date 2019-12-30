@@ -4,6 +4,7 @@
 
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -13,6 +14,9 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/http_c.h"
 #include "core/hw/aes/key.h"
+
+SERIALIZE_EXPORT_IMPL(Service::HTTP::HTTP_C)
+SERIALIZE_EXPORT_IMPL(Service::HTTP::SessionData)
 
 namespace Service::HTTP {
 
