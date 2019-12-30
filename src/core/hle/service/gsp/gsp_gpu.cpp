@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <vector>
+#include "common/archives.h"
 #include "common/bit_field.h"
 #include "common/microprofile.h"
 #include "common/swap.h"
@@ -20,6 +21,10 @@
 #include "core/memory.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu_debugger.h"
+
+SERIALIZE_EXPORT_IMPL(Service::GSP::SessionData)
+SERIALIZE_EXPORT_IMPL(Service::GSP::GSP_GPU)
+SERVICE_CONSTRUCT_IMPL(Service::GSP::GSP_GPU)
 
 // Main graphics debugger object - TODO: Here is probably not the best place for this
 GraphicsDebugger g_debugger;

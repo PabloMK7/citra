@@ -15,3 +15,5 @@ public:
 };
 
 } // namespace Service::GSP
+
+BOOST_CLASS_EXPORT_KEY(Service::GSP::GSP_LCD)

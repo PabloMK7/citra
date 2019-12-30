@@ -10,7 +10,7 @@
 
 namespace Service::GSP {
 
-static std::weak_ptr<GSP_GPU> gsp_gpu;
+static std::weak_ptr<GSP_GPU> gsp_gpu; // TODO: Fix this for the love of god
 
 void SignalInterrupt(InterruptId interrupt_id) {
     auto gpu = gsp_gpu.lock();

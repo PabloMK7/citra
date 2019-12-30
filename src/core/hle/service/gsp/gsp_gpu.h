@@ -199,6 +199,16 @@ public:
     u32 thread_id;
     /// Whether RegisterInterruptRelayQueue was called for this session
     bool registered = false;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& gsp;
+        ar& interrupt_event;
+        ar& thread_id;
+        ar& registered;
+    }
+    friend class boost::serialization::access;
 };
 
 class GSP_GPU final : public ServiceFramework<GSP_GPU, SessionData> {
@@ -431,8 +441,22 @@ private:
     std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
 
     friend class SessionData;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& shared_memory;
+        ar& active_thread_id;
+        ar& first_initialization;
+        ar& used_thread_ids;
+    }
+
+    friend class boost::serialization::access;
 };
 
 ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
 
 } // namespace Service::GSP
+
+BOOST_CLASS_EXPORT_KEY(Service::GSP::SessionData)
+BOOST_CLASS_EXPORT_KEY(Service::GSP::GSP_GPU)
+SERVICE_CONSTRUCT(Service::GSP::GSP_GPU)

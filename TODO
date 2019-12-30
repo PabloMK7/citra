@@ -81,7 +81,8 @@
         ✔ ERR @done(19-12-26 18:14)
         ✔ FRD @done(19-12-26 19:09)
         ✔ FS @done(19-12-27 11:46)
-        ☐ GSP
+        ✔ GSP @done(19-12-30 12:45)
+            ☐ Fix the global weak_ptr to gsp
         ☐ HID
         ☐ HTTP
         ☐ IR
