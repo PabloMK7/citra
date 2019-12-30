@@ -23,8 +23,8 @@ void IR_USER::serialize(Archive& ar, const unsigned int) {
     ar& receive_event;
     ar& shared_memory;
     ar& connected_device;
-    ar& *receive_buffer.get();
-    ar& *extra_hid.get();
+    ar&* receive_buffer.get();
+    ar&* extra_hid.get();
 }
 SERIALIZE_IMPL(IR_USER)
 
