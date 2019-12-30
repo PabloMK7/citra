@@ -85,7 +85,7 @@
             ☐ Fix the global weak_ptr to gsp
         ✔ HID @done(19-12-30 14:46)
         ✔ HTTP @done(19-12-30 15:18)
-        ☐ IR
+        ✔ IR @done(19-12-30 16:06)
         ☐ LDR_RO
         ☐ MIC
         ☐ MVD

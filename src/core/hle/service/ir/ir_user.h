@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <boost/serialization/shared_ptr.hpp>
 #include "core/hle/service/service.h"
 
 namespace Kernel {
@@ -45,6 +46,7 @@ protected:
     void Send(const std::vector<u8>& data);
 
 private:
+    // NOTE: This value is *not* serialized because it's always passed in the constructor
     const SendFunc send_func;
 };
 
@@ -164,9 +166,14 @@ private:
 
     std::shared_ptr<Kernel::Event> conn_status_event, send_event, receive_event;
     std::shared_ptr<Kernel::SharedMemory> shared_memory;
-    IRDevice* connected_device{nullptr};
+    bool connected_device;
     std::unique_ptr<BufferManager> receive_buffer;
     std::unique_ptr<ExtraHID> extra_hid;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::IR
