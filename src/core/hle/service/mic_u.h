@@ -190,6 +190,10 @@ private:
 
     struct Impl;
     std::unique_ptr<Impl> impl;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 void ReloadMic(Core::System& system);
@@ -197,3 +201,6 @@ void ReloadMic(Core::System& system);
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::MIC
+
+SERVICE_CONSTRUCT(Service::MIC::MIC_U)
+BOOST_CLASS_EXPORT_KEY(Service::MIC::MIC_U)

@@ -5,6 +5,7 @@
 #ifdef HAVE_CUBEB
 #include "audio_core/cubeb_input.h"
 #endif
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/frontend/mic.h"
@@ -17,7 +18,16 @@
 #include "core/hle/service/mic_u.h"
 #include "core/settings.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::MIC::MIC_U)
+SERIALIZE_EXPORT_IMPL(Service::MIC::MIC_U)
+
 namespace Service::MIC {
+
+template <class Archive>
+void MIC_U::serialize(Archive& ar, const unsigned int) {
+    ar&* impl.get();
+}
+SERIALIZE_IMPL(MIC_U)
 
 /// Microphone audio encodings.
 enum class Encoding : u8 {
@@ -59,6 +69,7 @@ constexpr u64 GetBufferUpdateRate(SampleRate sample_rate) {
 
 // Variables holding the current mic buffer writing state
 struct State {
+    std::shared_ptr<Kernel::SharedMemory> memory_ref = nullptr;
     u8* sharedmem_buffer = nullptr;
     u32 sharedmem_size = 0;
     std::size_t size = 0;
@@ -95,6 +106,20 @@ struct State {
         std::memcpy(sharedmem_buffer + (sharedmem_size - sizeof(u32)), reinterpret_cast<u8*>(&off),
                     sizeof(u32));
     }
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& sharedmem_size;
+        ar& size;
+        ar& offset;
+        ar& initial_offset;
+        ar& looped_buffer;
+        ar& sample_size;
+        ar& sample_rate;
+        sharedmem_buffer = memory_ref ? memory_ref->GetPointer() : nullptr;
+    }
+    friend class boost::serialization::access;
 };
 
 struct MIC_U::Impl {
@@ -363,6 +388,21 @@ struct MIC_U::Impl {
     std::unique_ptr<Frontend::Mic::Interface> mic;
     Core::Timing& timing;
     State state{};
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& change_mic_impl_requested;
+        ar& buffer_full_event;
+        // buffer_write_event set in constructor
+        ar& shared_memory;
+        ar& client_version;
+        ar& allow_shell_closed;
+        ar& clamp;
+        // mic interface set in constructor
+        ar& state;
+    }
+    friend class boost::serialization::access;
 };
 
 void MIC_U::MapSharedMem(Kernel::HLERequestContext& ctx) {
