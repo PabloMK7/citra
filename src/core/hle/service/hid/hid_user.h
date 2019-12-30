@@ -14,6 +14,7 @@ namespace Service::HID {
 class User final : public Module::Interface {
 public:
     explicit User(std::shared_ptr<Module> hid);
+
 private:
     SERVICE_SERIALIZATION(User, hid, Module)
 };
