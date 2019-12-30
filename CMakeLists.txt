@@ -1,5 +1,6 @@
 # CMake 3.8 required for 17 to be a valid value for CXX_STANDARD
 cmake_minimum_required(VERSION 3.8)
+cmake_policy(SET CMP0092 NEW)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
@@ -34,6 +35,8 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder (preferred over FFmpeg)" ON "WIN32" OFF)
 
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ON "MINGW" OFF)
+
+option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
 
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
@@ -123,25 +126,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 # System imported libraries
 # ======================
-
-add_library(boost_libs INTERFACE)
-
-find_package(Boost 1.70.0 QUIET EXACT)
-if (NOT Boost_FOUND)
-    message(STATUS "Boost 1.70.0 not found, falling back to externals")
-
-    set(BOOST_ROOT "${PROJECT_SOURCE_DIR}/externals/boost")
-    set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
-    set(Boost_NO_SYSTEM_PATHS ON)
-    add_definitions( -DBOOST_ALL_NO_LIB )
-    find_package(Boost QUIET REQUIRED)
-
-    # Boost external libraries
-    file(GLOB boost_serialization_SRC "externals/boost/libs/serialization/src/*.cpp")
-    add_library(boost_serialization STATIC ${boost_serialization_SRC})
-    target_link_libraries(boost_serialization PUBLIC Boost::boost)
-    target_link_libraries(boost_libs INTERFACE boost_serialization)
-endif()
 
 # Prefer the -pthread flag on Linux.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -340,8 +324,21 @@ git_describe(GIT_DESC --always --long --dirty)
 git_branch_name(GIT_BRANCH)
 get_timestamp(BUILD_DATE)
 
+if (NOT USE_SYSTEM_BOOST)
+    add_definitions( -DBOOST_ALL_NO_LIB )
+endif()
+
 enable_testing()
 add_subdirectory(externals)
+
+# Boost
+if (USE_SYSTEM_BOOST)
+    find_package(Boost 1.70.0 QUIET REQUIRED)
+else()
+    add_library(Boost::boost ALIAS boost)
+    add_library(Boost::serialization ALIAS boost_serialization)
+endif()
+
 add_subdirectory(src)
 add_subdirectory(dist/installer)
 

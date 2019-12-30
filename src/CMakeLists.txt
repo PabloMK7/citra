@@ -37,7 +37,7 @@ if (MSVC)
         /Zo
         /permissive-
         /EHsc
-        /std:c++latest
+        /std:c++17
         /volatile:iso
         /Zc:externConstexpr
         /Zc:inline
@@ -46,6 +46,10 @@ if (MSVC)
         add_compile_options(
             /MP
             /Zc:throwingNew
+            /experimental:external
+            /external:I "${CMAKE_SOURCE_DIR}/externals"
+            /external:anglebrackets
+            /external:W0
         )
     endif()
 
