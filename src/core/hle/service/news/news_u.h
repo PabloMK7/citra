@@ -15,3 +15,5 @@ public:
 };
 
 } // namespace Service::NEWS
+
+BOOST_CLASS_EXPORT_KEY(Service::NEWS::NEWS_U)

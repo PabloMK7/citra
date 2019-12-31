@@ -15,3 +15,5 @@ public:
 };
 
 } // namespace Service::IR
+
+BOOST_CLASS_EXPORT_KEY(Service::IR::IR_U)

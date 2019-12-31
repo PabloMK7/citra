@@ -226,7 +226,7 @@ public:
          */
         void GetIdentificationBlock(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         std::shared_ptr<Module> nfc;
     };
 
@@ -241,8 +241,15 @@ private:
 
     AmiiboData amiibo_data{};
     bool amiibo_in_range = false;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NFC
+
+SERVICE_CONSTRUCT(Service::NFC::Module)
+BOOST_CLASS_EXPORT_KEY(Service::NFC::Module)

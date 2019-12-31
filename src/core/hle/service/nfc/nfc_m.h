@@ -11,6 +11,12 @@ namespace Service::NFC {
 class NFC_M final : public Module::Interface {
 public:
     explicit NFC_M(std::shared_ptr<Module> nfc);
+
+private:
+    SERVICE_SERIALIZATION(NFC_M, nfc, Module)
 };
 
 } // namespace Service::NFC
+
+BOOST_CLASS_EXPORT_KEY(Service::NFC::NFC_M)
+BOOST_SERIALIZATION_CONSTRUCT(Service::NFC::NFC_M)

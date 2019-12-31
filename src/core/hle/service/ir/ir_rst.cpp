@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
@@ -12,7 +13,23 @@
 #include "core/movie.h"
 #include "core/settings.h"
 
+SERIALIZE_EXPORT_IMPL(Service::IR::IR_RST)
+SERVICE_CONSTRUCT_IMPL(Service::IR::IR_RST)
+
 namespace Service::IR {
+
+template <class Archive>
+void IR_RST::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& update_event;
+    ar& shared_memory;
+    ar& next_pad_index;
+    ar& raw_c_stick;
+    ar& update_period;
+    // update_callback_id and input devices are set separately
+    ReloadInputDevices();
+}
+SERIALIZE_IMPL(IR_RST)
 
 struct PadDataEntry {
     PadState current_state;
