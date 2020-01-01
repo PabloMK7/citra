@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <boost/serialization/array.hpp>
 #include "common/common_types.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
@@ -91,6 +92,16 @@ struct ConversionBuffer {
     u16 transfer_unit;
     /// Amount of bytes to be skipped between copying each `transfer_unit` bytes.
     u16 gap;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& address;
+        ar& image_size;
+        ar& transfer_unit;
+        ar& gap;
+    }
+    friend class boost::serialization::access;
 };
 
 struct ConversionConfiguration {
@@ -112,6 +123,26 @@ struct ConversionConfiguration {
     ResultCode SetInputLineWidth(u16 width);
     ResultCode SetInputLines(u16 lines);
     ResultCode SetStandardCoefficient(StandardCoefficient standard_coefficient);
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& input_format;
+        ar& output_format;
+        ar& rotation;
+        ar& block_alignment;
+        ar& input_line_width;
+        ar& input_lines;
+        ar& coefficients;
+        ar& padding;
+        ar& alpha;
+        ar& src_Y;
+        ar& src_U;
+        ar& src_V;
+        ar& src_YUYV;
+        ar& dst;
+    }
+    friend class boost::serialization::access;
 };
 
 struct DitheringWeightParams {
@@ -131,6 +162,28 @@ struct DitheringWeightParams {
     u16 w3_xOdd_yEven;
     u16 w3_xEven_yOdd;
     u16 w3_xOdd_yOdd;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& w0_xEven_yEven;
+        ar& w0_xOdd_yEven;
+        ar& w0_xEven_yOdd;
+        ar& w0_xOdd_yOdd;
+        ar& w1_xEven_yEven;
+        ar& w1_xOdd_yEven;
+        ar& w1_xEven_yOdd;
+        ar& w1_xOdd_yOdd;
+        ar& w2_xEven_yEven;
+        ar& w2_xOdd_yEven;
+        ar& w2_xEven_yOdd;
+        ar& w2_xOdd_yOdd;
+        ar& w3_xEven_yEven;
+        ar& w3_xOdd_yEven;
+        ar& w3_xEven_yOdd;
+        ar& w3_xOdd_yOdd;
+    }
+    friend class boost::serialization::access;
 };
 
 struct ConversionParameters {
@@ -301,8 +354,15 @@ private:
     bool temporal_dithering_enabled = false;
     bool transfer_end_interrupt_enabled = false;
     bool spacial_dithering_enabled = false;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::Y2R
+
+SERVICE_CONSTRUCT(Service::Y2R::Y2R_U)
+BOOST_CLASS_EXPORT_KEY(Service::Y2R::Y2R_U)
