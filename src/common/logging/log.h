@@ -9,6 +9,15 @@
 
 namespace Log {
 
+// trims up to and including the last of ../, ..\, src/, src\ in a string
+constexpr const char* TrimSourcePath(std::string_view source) {
+    const auto rfind = [source](const std::string_view match) {
+        return source.rfind(match) == source.npos ? 0 : (source.rfind(match) + match.size());
+    };
+    auto idx = std::max({rfind("src/"), rfind("src\\"), rfind("../"), rfind("..\\")});
+    return source.data() + idx;
+}
+
 /// Specifies the severity or level of detail of the log message.
 enum class Level : u8 {
     Trace,    ///< Extremely detailed and repetitive debugging information that is likely to
@@ -120,28 +129,29 @@ void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsig
 
 // Define the fmt lib macros
 #define LOG_GENERIC(log_class, log_level, ...)                                                     \
-    ::Log::FmtLogMessage(log_class, log_level, __FILE__, __LINE__, __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(log_class, log_level, ::Log::TrimSourcePath(__FILE__), __LINE__,          \
+                         __func__, __VA_ARGS__)
 
 #ifdef _DEBUG
 #define LOG_TRACE(log_class, ...)                                                                  \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Trace, __FILE__, __LINE__,         \
-                         __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Trace,                             \
+                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
 #else
 #define LOG_TRACE(log_class, fmt, ...) (void(0))
 #endif
 
 #define LOG_DEBUG(log_class, ...)                                                                  \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Debug, __FILE__, __LINE__,         \
-                         __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Debug,                             \
+                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
 #define LOG_INFO(log_class, ...)                                                                   \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Info, __FILE__, __LINE__,          \
-                         __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Info,                              \
+                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
 #define LOG_WARNING(log_class, ...)                                                                \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Warning, __FILE__, __LINE__,       \
-                         __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Warning,                           \
+                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
 #define LOG_ERROR(log_class, ...)                                                                  \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Error, __FILE__, __LINE__,         \
-                         __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Error,                             \
+                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
 #define LOG_CRITICAL(log_class, ...)                                                               \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Critical, __FILE__, __LINE__,      \
-                         __func__, __VA_ARGS__)
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Critical,                          \
+                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
