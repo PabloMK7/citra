@@ -4,7 +4,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/map.hpp>
 #include <cryptopp/osrng.h>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -22,6 +25,15 @@
 #include "core/memory.h"
 
 namespace Service::NWM {
+
+template <class Archive>
+void NWM_UDS::serialize(Archive& ar, const unsigned int) {
+    ar& node_map;
+    ar& connection_event;
+    ar& received_beacons;
+    // TODO: Fix wifi_packet_received?
+}
+SERIALIZE_IMPL(NWM_UDS)
 
 namespace ErrCodes {
 enum {

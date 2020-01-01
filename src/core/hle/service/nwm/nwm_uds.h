@@ -521,6 +521,14 @@ private:
     struct Node {
         bool connected;
         u16 node_id;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& connected;
+            ar& node_id;
+        }
+        friend class boost::serialization::access;
     };
 
     std::map<MacAddress, Node> node_map;
@@ -543,6 +551,12 @@ private:
 
     // List of the last <MaxBeaconFrames> beacons received from the network.
     std::list<Network::WifiPacket> received_beacons;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Service::NWM
+
+SERVICE_CONSTRUCT(Service::NWM::NWM_UDS)
+BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_UDS)

@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/nwm/nwm_cec.h"
+
+SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_CEC)
 
 namespace Service::NWM {
 

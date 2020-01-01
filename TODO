@@ -10,11 +10,16 @@
 ☐ App loader
 ☐ Archive manager
 ☐ Custom texture cache
-☐ MMIO
-☐ Movie
-☐ Perf stats
-☐ Settings
-☐ Telemetry session
+✘ MMIO @cancelled(20-01-01 01:06)
+    Seems that this whole subsystem is only used in tests
+✘ Movie @cancelled(20-01-01 01:07)
+    Doesn't need to be serialized here
+✘ Perf stats @cancelled(20-01-01 01:09)
+    Doesn't need to be serialized here
+✘ Settings @cancelled(20-01-01 01:11)
+    For now, let the settings just be whatever they are
+✘ Telemetry session @cancelled(20-01-01 01:12)
+    Doesn't need to be serialized here
 ☐ Replace SERIALIZE_AS_POD with BOOST_IS_BITWISE_SERIALIZABLE
 ☐ Review constructor/initialization code
 ✔ Fix CI @done(19-12-31 21:32)
@@ -94,7 +99,8 @@
         ✔ NFC @done(19-12-31 20:35)
         ✔ NIM @done(19-12-31 21:08)
         ✔ NS @done(20-01-01 00:46)
-        ☐ NWM
+        ✔ NWM @done(20-01-01 21:31)
+            ☐ Fix wifi_packet_received?
         ☐ PM
         ✔ PS @done(20-01-01 00:54)
         ☐ PTM
