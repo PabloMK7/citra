@@ -12,6 +12,12 @@ namespace Service::PTM {
 class PTM_U final : public Module::Interface {
 public:
     explicit PTM_U(std::shared_ptr<Module> ptm);
+
+private:
+    SERVICE_SERIALIZATION(PTM_U, ptm, Module)
 };
 
 } // namespace Service::PTM
+
+BOOST_CLASS_EXPORT_KEY(Service::PTM::PTM_U)
+BOOST_SERIALIZATION_CONSTRUCT(Service::PTM::PTM_U)

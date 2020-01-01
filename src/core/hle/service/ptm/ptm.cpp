@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cinttypes>
+#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -17,6 +18,8 @@
 #include "core/hle/service/ptm/ptm_sysm.h"
 #include "core/hle/service/ptm/ptm_u.h"
 #include "core/settings.h"
+
+SERIALIZE_EXPORT_IMPL(Service::PTM::Module)
 
 namespace Service::PTM {
 

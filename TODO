@@ -101,9 +101,9 @@
         ✔ NS @done(20-01-01 00:46)
         ✔ NWM @done(20-01-01 21:31)
             ☐ Fix wifi_packet_received?
-        ☐ PM
+        ✔ PM @done(20-01-01 22:14)
         ✔ PS @done(20-01-01 00:54)
-        ☐ PTM
+        ✔ PTM @done(20-01-01 22:36)
         ✔ PXI @done(20-01-01 00:53)
         ☐ QTM
         ✔ SOC @done(20-01-01 00:51)
