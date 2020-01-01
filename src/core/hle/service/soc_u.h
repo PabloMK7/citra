@@ -5,6 +5,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <boost/serialization/unordered_map.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -17,6 +18,14 @@ namespace Service::SOC {
 struct SocketHolder {
     u32 socket_fd; ///< The socket descriptor
     bool blocking; ///< Whether the socket is blocking or not, it is only read on Windows.
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& socket_fd;
+        ar& blocking;
+    }
+    friend class boost::serialization::access;
 };
 
 class SOC_U final : public ServiceFramework<SOC_U> {
@@ -55,8 +64,17 @@ private:
 
     /// Holds info about the currently open sockets
     std::unordered_map<u32, SocketHolder> open_sockets;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        ar& open_sockets;
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::SOC
+
+BOOST_CLASS_EXPORT_KEY(Service::SOC::SOC_U)

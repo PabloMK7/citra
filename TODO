@@ -17,7 +17,7 @@
 ☐ Telemetry session
 ☐ Replace SERIALIZE_AS_POD with BOOST_IS_BITWISE_SERIALIZABLE
 ☐ Review constructor/initialization code
-☐ Fix CI
+✔ Fix CI @done(19-12-31 21:32)
 ✔ HW @done(19-08-13 15:41)
     ✔ GPU regs @done(19-08-13 15:41)
     ✔ LCD regs @done(19-08-13 15:41)
@@ -92,15 +92,14 @@
         ✔ NDM @done(19-12-31 18:26)
         ✔ NEWS @done(19-12-31 18:29)
         ✔ NFC @done(19-12-31 20:35)
-        ☐ NIM
-        ☐ NS
+        ✔ NIM @done(19-12-31 21:08)
+        ✔ NS @done(20-01-01 00:46)
         ☐ NWM
         ☐ PM
-        ☐ PS
+        ✔ PS @done(20-01-01 00:54)
         ☐ PTM
-        ☐ PXI
+        ✔ PXI @done(20-01-01 00:53)
         ☐ QTM
-        ☐ SM
-        ☐ SOC
-        ☐ SSL
+        ✔ SOC @done(20-01-01 00:51)
+        ✔ SSL @done(20-01-01 00:48)
         ☐ Y2R

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -51,6 +52,8 @@
 #define GET_ERRNO errno
 #define closesocket(x) close(x)
 #endif
+
+SERIALIZE_EXPORT_IMPL(Service::SOC::SOC_U)
 
 namespace Service::SOC {
 

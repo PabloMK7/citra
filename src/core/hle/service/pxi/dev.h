@@ -16,3 +16,5 @@ public:
 };
 
 } // namespace Service::PXI
+
+BOOST_CLASS_EXPORT_KEY(Service::PXI::DEV)

@@ -2,10 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/nim/nim_u.h"
+
+SERVICE_CONSTRUCT_IMPL(Service::NIM::NIM_U)
+SERIALIZE_EXPORT_IMPL(Service::NIM::NIM_U)
 
 namespace Service::NIM {
 
