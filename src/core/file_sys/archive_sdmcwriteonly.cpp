@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include "common/archives.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_sdmcwriteonly.h"
 #include "core/file_sys/directory_backend.h"
@@ -12,6 +13,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
+
+SERIALIZE_EXPORT_IMPL(FileSys::SDMCWriteOnlyArchive)
+SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_SDMCWriteOnly)
 
 namespace FileSys {
 

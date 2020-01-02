@@ -10,19 +10,20 @@
 ✘ App loader @cancelled(20-01-01 22:59)
     No relevant state
 ☐ Archive manager @started(20-01-01 23:03)
-    ☐ NCCH
-        ☐ Normal
+    ☐ NCCH @started(20-01-02 22:50)
+        ✔ Normal @done(20-01-02 22:50)
         ☐ Self
-    ☐ SaveData
-        ☐ Normal
-        ☐ Ext
-        ☐ Other
-        ☐ Source SD
-        ☐ System
-    ☐ SDMC
-        ☐ Normal
-        ☐ Write-only
+    ✔ SaveData @started(20-01-02 23:03) @done(20-01-02 23:27) @lasted(25m)
+        ✔ Normal @done(20-01-02 23:03)
+        ✔ Ext @done(20-01-02 23:26)
+        ✔ Other @done(20-01-02 23:21)
+        ✔ Source SD @done(20-01-02 23:03)
+        ✔ System @done(20-01-02 23:13)
+    ✔ SDMC @done(20-01-02 23:34)
+        ✔ Normal @done(20-01-02 23:34)
+        ✔ Write-only @done(20-01-02 23:34)
     ☐ File refs
+    ☐ Replace delay generator with virtual fns
 ☐ Custom texture cache
 ✘ MMIO @cancelled(20-01-01 01:06)
     Seems that this whole subsystem is only used in tests

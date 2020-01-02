@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <memory>
+#include "common/archives.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "core/file_sys/archive_sdmc.h"
@@ -14,6 +15,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
+
+SERIALIZE_EXPORT_IMPL(FileSys::SDMCArchive)
+SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_SDMC)
 
 namespace FileSys {
 

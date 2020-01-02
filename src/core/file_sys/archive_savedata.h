@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <boost/serialization/shared_ptr.hpp>
 #include "core/file_sys/archive_source_sd_savedata.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,8 +28,17 @@ public:
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
 
 private:
-    std::string mount_point;
+    std::string mount_point; // TODO: Remove this? seems unused
     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source;
+
+    ArchiveFactory_SaveData() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& sd_savedata_source;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SaveData)

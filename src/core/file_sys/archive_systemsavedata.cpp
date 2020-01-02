@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include <fmt/format.h>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_systemsavedata.h"
@@ -16,6 +17,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
+
+SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_SystemSaveData)
 
 namespace FileSys {
 

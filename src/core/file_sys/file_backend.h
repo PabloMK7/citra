@@ -89,7 +89,12 @@ public:
     virtual void Flush() const = 0;
 
 protected:
-    std::unique_ptr<DelayGenerator> delay_generator;
+    std::unique_ptr<DelayGenerator> delay_generator; // TODO: replace with virtual Get*DelayNs
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {}
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
