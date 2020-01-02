@@ -168,7 +168,12 @@ public:
     }
 
 protected:
-    std::unique_ptr<DelayGenerator> delay_generator;
+    std::unique_ptr<DelayGenerator> delay_generator; // TODO: Replace with virtual GetOpenDelayNs
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {}
+    friend class boost::serialization::access;
 };
 
 class ArchiveFactory : NonCopyable {
@@ -205,6 +210,10 @@ public:
      * @return Format information about the archive or error code
      */
     virtual ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {}
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys

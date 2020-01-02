@@ -7,8 +7,22 @@
     Memory only
 ✔ Service manager @started(19-12-23 00:36) @done(19-12-23 11:38) @lasted(11h2m3s)
     ✔ Fix or ignore inverse map @done(19-12-23 12:46)
-☐ App loader
-☐ Archive manager
+✘ App loader @cancelled(20-01-01 22:59)
+    No relevant state
+☐ Archive manager @started(20-01-01 23:03)
+    ☐ NCCH
+        ☐ Normal
+        ☐ Self
+    ☐ SaveData
+        ☐ Normal
+        ☐ Ext
+        ☐ Other
+        ☐ Source SD
+        ☐ System
+    ☐ SDMC
+        ☐ Normal
+        ☐ Write-only
+    ☐ File refs
 ☐ Custom texture cache
 ✘ MMIO @cancelled(20-01-01 01:06)
     Seems that this whole subsystem is only used in tests
@@ -76,9 +90,8 @@
         ✔ BOSS @started(19-12-25 21:48) @done(19-12-25 23:18) @lasted(1h30m14s)
         ☐ CAM @started(19-12-26 10:37)
             Need to check capture_result
-        ☐ CECD
-            ☐ Archive backend / file handles
-        ☐ CFG
+        ✔ CECD @done(20-01-01 23:58)
+        ✔ CFG @done(20-01-02 00:44)
             Also needs archive backend..
         ✔ CSND @started(19-12-26 17:51) @done(19-12-26 17:56) @lasted(5m30s)
         ✔ DLP @done(19-12-26 18:02)

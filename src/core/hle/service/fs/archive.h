@@ -260,6 +260,13 @@ private:
      */
     std::unordered_map<ArchiveHandle, std::unique_ptr<ArchiveBackend>> handle_map;
     ArchiveHandle next_handle = 1;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& id_code_map;
+        ar& handle_map;
+        ar& next_handle;
+    }
 };
 
 } // namespace Service::FS

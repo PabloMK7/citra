@@ -584,7 +584,7 @@ public:
          */
         void GetCecInfoEventHandleSys(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         std::shared_ptr<Module> cecd;
     };
 
@@ -613,9 +613,16 @@ private:
     std::shared_ptr<Kernel::Event> change_state_event;
 
     Core::System& system;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 /// Initialize CECD service(s)
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CECD
+
+SERVICE_CONSTRUCT(Service::CECD::Module)
+BOOST_CLASS_EXPORT_KEY(Service::CECD::Module)

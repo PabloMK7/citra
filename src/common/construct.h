@@ -1,3 +1,4 @@
+#pragma once
 #include <boost/serialization/serialization.hpp>
 
 class construct_access {

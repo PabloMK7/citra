@@ -5,6 +5,7 @@
 #include <cryptopp/base64.h>
 #include <cryptopp/hmac.h>
 #include <cryptopp/sha.h>
+#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -24,7 +25,18 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "fmt/format.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::CECD::Module)
+SERIALIZE_EXPORT_IMPL(Service::CECD::Module)
+
 namespace Service::CECD {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& cecd_system_save_data_archive;
+    ar& cecinfo_event;
+    ar& change_state_event;
+}
+SERIALIZE_IMPL(Module)
 
 using CecDataPathType = Module::CecDataPathType;
 using CecOpenMode = Module::CecOpenMode;
@@ -1340,7 +1352,8 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
     case CecDataPathType::MboxData:
     case CecDataPathType::MboxIcon:
     case CecDataPathType::MboxTitle:
-    default: {}
+    default: {
+    }
     }
 }
 
