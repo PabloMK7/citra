@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
@@ -44,7 +45,10 @@ public:
 
 private:
     /// Mapping of ProgramId -> NCCHData
-    std::unordered_map<u64, NCCHData> ncch_data;
+    std::unordered_map<u64, NCCHData>
+        ncch_data; // TODO: Remove this, or actually set the values here
 };
 
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SelfNCCH)

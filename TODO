@@ -9,10 +9,11 @@
     ✔ Fix or ignore inverse map @done(19-12-23 12:46)
 ✘ App loader @cancelled(20-01-01 22:59)
     No relevant state
-☐ Archive manager @started(20-01-01 23:03)
-    ☐ NCCH @started(20-01-02 22:50)
+✔ Archive manager @started(20-01-01 23:03) @done(20-01-03 13:23) @lasted(1d14h20m40s)
+    NB that 'FileBackend' classes are not persistent
+    ✔ NCCH @started(20-01-02 22:50) @done(20-01-03 12:35) @lasted(13h45m50s)
         ✔ Normal @done(20-01-02 22:50)
-        ☐ Self
+        ✔ Self @done(20-01-03 12:35)
     ✔ SaveData @started(20-01-02 23:03) @done(20-01-02 23:27) @lasted(25m)
         ✔ Normal @done(20-01-02 23:03)
         ✔ Ext @done(20-01-02 23:26)
@@ -22,8 +23,12 @@
     ✔ SDMC @done(20-01-02 23:34)
         ✔ Normal @done(20-01-02 23:34)
         ✔ Write-only @done(20-01-02 23:34)
-    ☐ File refs
-    ☐ Replace delay generator with virtual fns
+    ✘ IVFC @cancelled(20-01-03 13:22)
+        Seems IVFCArchive is never used.. which is good because it has a file reference!
+    ✘ File refs @cancelled(20-01-03 13:22)
+        Not needed as nothing serializes file buffers
+    ✘ Replace delay generator with virtual fns @cancelled(20-01-03 13:16)
+        While they have no state, the extra refactoring here is unneeded
 ☐ Custom texture cache
 ✘ MMIO @cancelled(20-01-01 01:06)
     Seems that this whole subsystem is only used in tests
@@ -35,7 +40,7 @@
     For now, let the settings just be whatever they are
 ✘ Telemetry session @cancelled(20-01-01 01:12)
     Doesn't need to be serialized here
-☐ Replace SERIALIZE_AS_POD with BOOST_IS_BITWISE_SERIALIZABLE
+✔ Replace SERIALIZE_AS_POD with BOOST_IS_BITWISE_SERIALIZABLE @started(20-01-03 13:47) @done(20-01-03 13:58) @lasted(11m22s)
 ☐ Review constructor/initialization code
 ✔ Fix CI @done(19-12-31 21:32)
 ✔ HW @done(19-08-13 15:41)

@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <functional>
 #include <type_traits>
+#include <boost/serialization/access.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <nihstro/shader_bytecode.h>
@@ -15,7 +16,6 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/hash.h"
-#include "common/pod.h"
 #include "common/vector_math.h"
 #include "video_core/pica_types.h"
 #include "video_core/regs_rasterizer.h"
@@ -65,7 +65,18 @@ struct OutputVertex {
     static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs,
                                             const AttributeBuffer& output);
 
-    SERIALIZE_AS_POD
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& pos;
+        ar& quat;
+        ar& tc0;
+        ar& tc1;
+        ar& tc0_w;
+        ar& view;
+        ar& tc2;
+    }
+    friend class boost::serialization::access;
 };
 #define ASSERT_POS(var, pos)                                                                       \
     static_assert(offsetof(OutputVertex, var) == pos * sizeof(float24), "Semantic at wrong "       \

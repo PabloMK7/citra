@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cinttypes>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
@@ -15,6 +16,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
+
+SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_SelfNCCH)
 
 namespace FileSys {
 

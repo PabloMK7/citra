@@ -6,10 +6,10 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <boost/serialization/access.hpp>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/pod.h"
 
 #define LCD_REG_INDEX(field_name) (offsetof(LCD::Regs, field_name) / sizeof(u32))
 
@@ -52,7 +52,15 @@ struct Regs {
         return content[index];
     }
 
-    SERIALIZE_AS_POD
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& color_fill_top.raw;
+        ar& backlight_top;
+        ar& color_fill_bottom.raw;
+        ar& backlight_bottom;
+    }
+    friend class boost::serialization::access;
 };
 static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
 

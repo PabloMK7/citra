@@ -6,11 +6,11 @@
 
 #include <new>
 #include <utility>
+#include <boost/serialization/access.hpp>
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/pod.h"
 
 // All the constants in this file come from http://3dbrew.org/wiki/Error_codes
 
@@ -227,7 +227,12 @@ union ResultCode {
         return is_error.ExtractValue(raw) == 1;
     }
 
-    SERIALIZE_AS_POD
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& raw;
+    }
+    friend class boost::serialization::access;
 };
 
 constexpr bool operator==(const ResultCode& a, const ResultCode& b) {

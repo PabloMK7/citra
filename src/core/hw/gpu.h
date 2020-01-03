@@ -6,11 +6,12 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/binary_object.hpp>
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/pod.h"
 
 namespace Memory {
 class MemorySystem;
@@ -298,7 +299,12 @@ private:
         return register_value * 8;
     }
 
-    SERIALIZE_AS_POD
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        auto obj = boost::serialization::binary_object(this, sizeof(Regs));
+        ar& obj;
+    }
+    friend class boost::serialization::access;
 };
 static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
 
