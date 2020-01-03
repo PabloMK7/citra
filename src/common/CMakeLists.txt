@@ -86,7 +86,6 @@ add_library(common STATIC
     misc.cpp
     param_package.cpp
     param_package.h
-    pod.h
     quaternion.h
     ring_buffer.h
     scm_rev.cpp

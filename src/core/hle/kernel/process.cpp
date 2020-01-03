@@ -29,7 +29,7 @@ template <class Archive>
 void Process::serialize(Archive& ar, const unsigned int file_version) {
     ar& boost::serialization::base_object<Object>(*this);
     ar& handle_table;
-    ar& codeset;
+    ar& codeset; // TODO: Replace with apploader reference
     ar& resource_limit;
     ar& svc_access_mask;
     ar& handle_table_size;

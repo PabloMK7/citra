@@ -193,19 +193,19 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
             // TODO(Subv): Perform permission checks.
 
             // Reserve a page of memory before the mapped buffer
-            auto reserve_buffer = std::make_unique<u8[]>(Memory::PAGE_SIZE);
+            auto reserve_buffer = std::vector<u8>(Memory::PAGE_SIZE);
             dst_process->vm_manager.MapBackingMemoryToBase(
-                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer.get(),
+                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer.data(),
                 Memory::PAGE_SIZE, Kernel::MemoryState::Reserved);
 
-            auto buffer = std::make_unique<u8[]>(num_pages * Memory::PAGE_SIZE);
-            memory.ReadBlock(*src_process, source_address, buffer.get() + page_offset, size);
+            auto buffer = std::vector<u8>(num_pages * Memory::PAGE_SIZE);
+            memory.ReadBlock(*src_process, source_address, buffer.data() + page_offset, size);
 
             // Map the page(s) into the target process' address space.
             target_address =
                 dst_process->vm_manager
                     .MapBackingMemoryToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
-                                            buffer.get(), num_pages * Memory::PAGE_SIZE,
+                                            buffer.data(), num_pages * Memory::PAGE_SIZE,
                                             Kernel::MemoryState::Shared)
                     .Unwrap();
 
@@ -213,7 +213,7 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
 
             // Reserve a page of memory after the mapped buffer
             dst_process->vm_manager.MapBackingMemoryToBase(
-                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer.get(),
+                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer.data(),
                 Memory::PAGE_SIZE, Kernel::MemoryState::Reserved);
 
             mapped_buffer_context.push_back({permissions, size, source_address,

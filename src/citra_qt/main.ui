@@ -88,6 +88,8 @@
     <addaction name="separator"/>
     <addaction name="action_Configure"/>
     <addaction name="action_Cheats"/>
+    <addaction name="action_Save"/>
+    <addaction name="action_Load"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -216,6 +218,22 @@
    <property name="text">
     <string>&amp;Stop</string>
    </property>
+  </action>
+  <action name="action_Save">
+    <property name="enabled">
+      <bool>false</bool>
+    </property>
+    <property name="text">
+      <string>Save</string>
+    </property>
+  </action>
+  <action name="action_Load">
+    <property name="enabled">
+      <bool>false</bool>
+    </property>
+    <property name="text">
+      <string>Load</string>
+    </property>
   </action>
   <action name="action_FAQ">
    <property name="text">

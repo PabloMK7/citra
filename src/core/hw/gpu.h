@@ -301,8 +301,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        auto obj = boost::serialization::binary_object(this, sizeof(Regs));
-        ar& obj;
+        ar& boost::serialization::make_binary_object(this, sizeof(Regs));
     }
     friend class boost::serialization::access;
 };

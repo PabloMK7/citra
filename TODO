@@ -1,8 +1,11 @@
 ☐ Save/load UI
+    ✔ Basic version @done(20-01-03 15:27)
+    ☐ Multiple slots etc.
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)
     ☐ Page tables
-    ☐ Skip N3DS RAM if unused
+    ✘ Skip N3DS RAM if unused @cancelled(20-01-03 15:26)
+        Since no n3ds support, leave this for now
 ✔ DSP @done(19-12-28 16:57)
     Memory only
 ✔ Service manager @started(19-12-23 00:36) @done(19-12-23 11:38) @lasted(11h2m3s)
@@ -67,14 +70,16 @@
         ✔ Mutex @done(19-08-13 16:43)
         ✔ Object @done(19-08-13 15:41)
         ✔ Process @started(19-08-13 16:43) @done(19-12-22 18:41)
-        ☐ Code set @started(19-12-22 18:41)
+        ✔ Code set @started(19-12-22 18:41) @done(20-01-03 15:15) @lasted(1w4d20h34m2s)
             Needs a way to reference loaded images (so we don't serialize the entire ROM as well)
+            ☐ Serialize codeset with an apploader reference instead
         ✔ Resource limit @done(19-08-13 16:43)
         ✔ Semaphore @done(19-08-13 16:44)
         ✔ Server port @done(19-08-13 16:44)
         ✔ Server session @done(19-08-13 16:44)
-            ☐ Mapped buffer context
-                This may not be needed!
+            ✔ Mapped buffer context @done(20-01-03 15:25)
+                This is needed because IPC can take as long as it takes
+                Changed the unique_ptr<u8[]> to vector<u8>
         ✔ Session @done(19-08-13 16:44)
         ☐ Shared memory @started(19-12-22 21:20)
             Need to figure out backing memory (a u8*)

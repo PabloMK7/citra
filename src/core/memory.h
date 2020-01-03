@@ -9,7 +9,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "boost/serialization/access.hpp"
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "core/mmio.h"
 
@@ -54,12 +56,14 @@ struct SpecialRegion {
     u32 size;
     MMIORegionPointer handler;
 
+private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
         ar& base;
         ar& size;
         ar& handler;
     }
+    friend class boost::serialization::access;
 };
 
 /**
@@ -86,6 +90,15 @@ struct PageTable {
      * the corresponding entry in `pointers` MUST be set to null.
      */
     std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        // TODO: Pointers; same as VMA backing regions we need to serialize the u8*
+        ar& special_regions;
+        ar& attributes;
+    }
+    friend class boost::serialization::access;
 };
 
 /// Physical memory regions as seen from the ARM11
