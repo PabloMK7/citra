@@ -374,6 +374,7 @@ void GRenderWindow::InitRenderTarget() {
     core_context = CreateSharedContext();
     resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
+    OnFramebufferSizeChanged();
     BackupGeometry();
 }
 

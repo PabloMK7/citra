@@ -145,6 +145,7 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
 
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
+    unsigned int min_width, min_height;
     if (Settings::values.custom_layout == true) {
         layout = Layout::CustomFrameLayout(width, height);
     } else {
@@ -152,20 +153,34 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
         case Settings::LayoutOption::SingleScreen:
             layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen,
                                                Settings::values.upright_screen);
+            min_width = Settings::values.swap_screen ? 320u : 400u;
+            min_height = 240u;
             break;
         case Settings::LayoutOption::LargeScreen:
             layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screen,
                                               Settings::values.upright_screen);
+            min_width = Settings::values.swap_screen ? 420u : 480u;
+            min_height = 240u;
             break;
         case Settings::LayoutOption::SideScreen:
             layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen,
                                              Settings::values.upright_screen);
+            min_width = 720u;
+            min_height = 240u;
             break;
         case Settings::LayoutOption::Default:
         default:
             layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen,
                                                 Settings::values.upright_screen);
+            min_width = 400u;
+            min_height = 480u;
             break;
+        }
+        if(Settings::values.upright_screen){
+            UpdateMinimumWindowSize(min_height, min_width);
+        }
+        else{
+            UpdateMinimumWindowSize(min_width, min_height);
         }
     }
     NotifyFramebufferLayoutChanged(layout);
