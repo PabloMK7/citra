@@ -13,6 +13,7 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
+#include "common/memory_ref.h"
 #include "core/mmio.h"
 
 class ARM_Interface;
@@ -77,7 +78,48 @@ struct PageTable {
      * Array of memory pointers backing each page. An entry can only be non-null if the
      * corresponding entry in the `attributes` array is of type `Memory`.
      */
-    std::array<u8*, PAGE_TABLE_NUM_ENTRIES> pointers;
+
+    // The reason for this rigmarole is to keep the 'raw' and 'refs' arrays in sync.
+    // We need 'raw' for dynarmic and 'refs' for serialization
+    struct Pointers {
+
+        struct Entry {
+            Entry(Pointers& pointers_, VAddr idx_) : pointers(pointers_), idx(idx_) {}
+
+            inline void operator=(MemoryRef value) {
+                pointers.refs[idx] = value;
+                pointers.raw[idx] = value.GetPtr();
+            }
+
+            inline operator u8*() {
+                return pointers.raw[idx];
+            }
+
+        private:
+            Pointers& pointers;
+            VAddr idx;
+        };
+
+        inline Entry operator[](VAddr idx) {
+            return Entry(*this, idx);
+        }
+
+        inline u8* operator[](VAddr idx) const {
+            return raw[idx];
+        }
+
+        inline Entry operator[](std::size_t idx) {
+            return Entry(*this, static_cast<VAddr>(idx));
+        }
+
+    private:
+        std::array<u8*, PAGE_TABLE_NUM_ENTRIES> raw;
+
+        std::array<MemoryRef, PAGE_TABLE_NUM_ENTRIES> refs;
+
+        friend struct PageTable;
+    };
+    Pointers pointers;
 
     /**
      * Contains MMIO handlers that back memory regions whose entries in the `attribute` array is of
@@ -91,12 +133,21 @@ struct PageTable {
      */
     std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
 
+    inline std::array<u8*, PAGE_TABLE_NUM_ENTRIES>& GetPointerArray() {
+        return pointers.raw;
+    }
+
+    void Clear();
+
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        // TODO: Pointers; same as VMA backing regions we need to serialize the u8*
+        ar& pointers.refs;
         ar& special_regions;
         ar& attributes;
+        for (auto i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
+            pointers.raw[i] = pointers.refs[i].GetPtr();
+        }
     }
     friend class boost::serialization::access;
 };
@@ -141,6 +192,8 @@ enum : PAddr {
     FCRAM_PADDR_END = FCRAM_PADDR + FCRAM_SIZE,
     FCRAM_N3DS_PADDR_END = FCRAM_PADDR + FCRAM_N3DS_SIZE,
 };
+
+enum class Region { FCRAM, VRAM, DSP, N3DS };
 
 /// Virtual user-space memory regions
 enum : VAddr {
@@ -249,7 +302,7 @@ public:
      * @param size The amount of bytes to map. Must be page-aligned.
      * @param target Buffer with the memory backing the mapping. Must be of length at least `size`.
      */
-    void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target);
+    void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, MemoryRef target);
 
     /**
      * Maps a region of the emulated process address space as a IO region.
@@ -293,15 +346,20 @@ public:
      */
     u8* GetPhysicalPointer(PAddr address);
 
+    MemoryRef GetPhysicalRef(PAddr address);
+
     u8* GetPointer(VAddr vaddr);
 
     bool IsValidPhysicalAddress(PAddr paddr);
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
-    u32 GetFCRAMOffset(u8* pointer);
+    u32 GetFCRAMOffset(const u8* pointer);
 
     /// Gets pointer in FCRAM with given offset
     u8* GetFCRAMPointer(u32 offset);
+
+    /// Gets a serializable ref to FCRAM with the given offset
+    MemoryRef GetFCRAMRef(u32 offset);
 
     /**
      * Mark each page touching the region as cached.
@@ -329,9 +387,9 @@ private:
      * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
      * pointer of such virtual address
      */
-    u8* GetPointerForRasterizerCache(VAddr addr);
+    MemoryRef GetPointerForRasterizerCache(VAddr addr);
 
-    void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type);
+    void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
 
     class Impl;
 
@@ -340,9 +398,18 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version);
+
+public:
+    template <Region R>
+    class BackingMemImpl;
 };
 
 /// Determines if the given VAddr is valid for the specified process.
 bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
 } // namespace Memory
+
+BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::FCRAM>)
+BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::VRAM>)
+BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::DSP>)
+BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::N3DS>)

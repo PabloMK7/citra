@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <vector>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/thread.h"
@@ -25,8 +25,8 @@ struct MappedBufferContext {
     VAddr source_address;
     VAddr target_address;
 
-    std::vector<u8> buffer;
-    std::vector<u8> reserve_buffer;
+    std::shared_ptr<BackingMem> buffer;
+    std::shared_ptr<BackingMem> reserve_buffer;
 
 private:
     template <class Archive>

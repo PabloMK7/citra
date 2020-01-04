@@ -14,6 +14,7 @@
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#include "core/global.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
@@ -22,7 +23,18 @@
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
+SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::FCRAM>)
+SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::VRAM>)
+SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::DSP>)
+SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::N3DS>)
+
 namespace Memory {
+
+void PageTable::Clear() {
+    pointers.raw.fill(nullptr);
+    pointers.refs.fill(MemoryRef());
+    attributes.fill(PageType::Unmapped);
+}
 
 class RasterizerCacheMarker {
 public:
@@ -81,6 +93,43 @@ public:
 
     AudioCore::DspInterface* dsp = nullptr;
 
+    std::shared_ptr<BackingMem> fcram_mem;
+    std::shared_ptr<BackingMem> vram_mem;
+    std::shared_ptr<BackingMem> n3ds_extra_ram_mem;
+    std::shared_ptr<BackingMem> dsp_mem;
+
+    MemorySystem::Impl();
+
+    virtual u8* GetPtr(Region r) {
+        switch (r) {
+        case Region::VRAM:
+            return vram.get();
+        case Region::DSP:
+            return dsp->GetDspMemory().data();
+        case Region::FCRAM:
+            return fcram.get();
+        case Region::N3DS:
+            return n3ds_extra_ram.get();
+        default:
+            UNREACHABLE();
+        }
+    }
+
+    virtual u32 GetSize(Region r) const {
+        switch (r) {
+        case Region::VRAM:
+            return VRAM_SIZE;
+        case Region::DSP:
+            return DSP_RAM_SIZE;
+        case Region::FCRAM:
+            return FCRAM_N3DS_SIZE;
+        case Region::N3DS:
+            return N3DS_EXTRA_RAM_SIZE;
+        default:
+            UNREACHABLE();
+        }
+    }
+
 private:
     friend class boost::serialization::access;
     template <class Archive>
@@ -95,9 +144,40 @@ private:
         ar& cache_marker;
         ar& page_table_list;
         // dsp is set from Core::System at startup
-        // current page table set from current process?
+        // TODO: current_page_table
+        ar& fcram_mem;
+        ar& vram_mem;
+        ar& n3ds_extra_ram_mem;
+        ar& dsp_mem;
     }
 };
+
+// We use this rather than BufferMem because we don't want new objects to be allocated when
+// deserializing. This avoids unnecessary memory thrashing.
+template <Region R>
+class MemorySystem::BackingMemImpl : public BackingMem {
+public:
+    BackingMemImpl() : system(Core::Global<Core::System>().Memory()) {}
+    virtual u8* GetPtr() {
+        return system.impl->GetPtr(R);
+    }
+    virtual u32 GetSize() const {
+        return system.impl->GetSize(R);
+    }
+
+private:
+    MemorySystem& system;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {}
+    friend class boost::serialization::access;
+};
+
+MemorySystem::Impl::Impl()
+    : fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>()),
+      vram_mem(std::make_shared<BackingMemImpl<Region::VRAM>>()),
+      n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>()),
+      dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>()) {}
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;
@@ -117,8 +197,9 @@ PageTable* MemorySystem::GetCurrentPageTable() const {
     return impl->current_page_table;
 }
 
-void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
-    LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory, base * PAGE_SIZE,
+void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory,
+                            PageType type) {
+    LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory.GetPtr(), base * PAGE_SIZE,
               (base + size) * PAGE_SIZE);
 
     RasterizerFlushVirtualRegion(base << PAGE_BITS, size * PAGE_SIZE,
@@ -143,7 +224,7 @@ void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, u8* memor
     }
 }
 
-void MemorySystem::MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
+void MemorySystem::MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, MemoryRef target) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
@@ -164,15 +245,15 @@ void MemorySystem::UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
-u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
+MemoryRef MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
     if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
-        return impl->fcram.get() + (addr - LINEAR_HEAP_VADDR);
+        return {impl->fcram_mem, addr - LINEAR_HEAP_VADDR};
     }
     if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
-        return impl->fcram.get() + (addr - NEW_LINEAR_HEAP_VADDR);
+        return {impl->fcram_mem, addr - NEW_LINEAR_HEAP_VADDR};
     }
     if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
-        return impl->vram.get() + (addr - VRAM_VADDR);
+        return {impl->vram_mem, addr - VRAM_VADDR};
     }
     UNREACHABLE();
 }
@@ -271,7 +352,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
 bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     auto& page_table = process.vm_manager.page_table;
 
-    const u8* page_pointer = page_table.pointers[vaddr >> PAGE_BITS];
+    auto page_pointer = page_table.pointers[vaddr >> PAGE_BITS];
     if (page_pointer)
         return true;
 
@@ -323,6 +404,10 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
 }
 
 u8* MemorySystem::GetPhysicalPointer(PAddr address) {
+    return GetPhysicalRef(address);
+}
+
+MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
     struct MemoryArea {
         PAddr paddr_base;
         u32 size;
@@ -349,25 +434,25 @@ u8* MemorySystem::GetPhysicalPointer(PAddr address) {
 
     u32 offset_into_region = address - area->paddr_base;
 
-    u8* target_pointer = nullptr;
+    std::shared_ptr<BackingMem> target_mem = nullptr;
     switch (area->paddr_base) {
     case VRAM_PADDR:
-        target_pointer = impl->vram.get() + offset_into_region;
+        target_mem = impl->vram_mem;
         break;
     case DSP_RAM_PADDR:
-        target_pointer = impl->dsp->GetDspMemory().data() + offset_into_region;
+        target_mem = impl->dsp_mem;
         break;
     case FCRAM_PADDR:
-        target_pointer = impl->fcram.get() + offset_into_region;
+        target_mem = impl->fcram_mem;
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_pointer = impl->n3ds_extra_ram.get() + offset_into_region;
+        target_mem = impl->n3ds_extra_ram_mem;
         break;
     default:
         UNREACHABLE();
     }
 
-    return target_pointer;
+    return {target_mem, offset_into_region};
 }
 
 /// For a rasterizer-accessible PAddr, gets a list of all possible VAddr
@@ -781,7 +866,7 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
     mmio_handler->Write64(addr, data);
 }
 
-u32 MemorySystem::GetFCRAMOffset(u8* pointer) {
+u32 MemorySystem::GetFCRAMOffset(const u8* pointer) {
     ASSERT(pointer >= impl->fcram.get() && pointer <= impl->fcram.get() + Memory::FCRAM_N3DS_SIZE);
     return pointer - impl->fcram.get();
 }
@@ -789,6 +874,11 @@ u32 MemorySystem::GetFCRAMOffset(u8* pointer) {
 u8* MemorySystem::GetFCRAMPointer(u32 offset) {
     ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
     return impl->fcram.get() + offset;
+}
+
+MemoryRef MemorySystem::GetFCRAMRef(u32 offset) {
+    ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
+    return MemoryRef(impl->fcram_mem, offset);
 }
 
 void MemorySystem::SetDSP(AudioCore::DspInterface& dsp) {

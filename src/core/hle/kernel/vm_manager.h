@@ -11,6 +11,7 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
+#include "common/memory_ref.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
 #include "core/mmio.h"
@@ -73,7 +74,7 @@ struct VirtualMemoryArea {
 
     // Settings for type = BackingMemory
     /// Pointer backing this VMA. It will not be destroyed or freed when the VMA is removed.
-    u8* backing_memory = nullptr;
+    MemoryRef backing_memory{};
 
     // Settings for type = MMIO
     /// Physical address of the register area this VMA maps to.
@@ -92,8 +93,7 @@ private:
         ar& type;
         ar& permissions;
         ar& meminfo_state;
-        // TODO: backing memory ref
-        // backing memory can be: Physical/FCRAM pointer, config mem, shared page
+        ar& backing_memory;
         ar& paddr;
         ar& mmio_handler;
     }
@@ -151,7 +151,7 @@ public:
      * @param state MemoryState tag to attach to the VMA.
      * @returns The address at which the memory was mapped.
      */
-    ResultVal<VAddr> MapBackingMemoryToBase(VAddr base, u32 region_size, u8* memory, u32 size,
+    ResultVal<VAddr> MapBackingMemoryToBase(VAddr base, u32 region_size, MemoryRef memory, u32 size,
                                             MemoryState state);
     /**
      * Maps an unmanaged host memory pointer at a given address.
@@ -161,7 +161,8 @@ public:
      * @param size Size of the mapping.
      * @param state MemoryState tag to attach to the VMA.
      */
-    ResultVal<VMAHandle> MapBackingMemory(VAddr target, u8* memory, u32 size, MemoryState state);
+    ResultVal<VMAHandle> MapBackingMemory(VAddr target, MemoryRef memory, u32 size,
+                                          MemoryState state);
 
     /**
      * Maps a memory-mapped IO region at a given address.
@@ -203,38 +204,14 @@ public:
     void LogLayout(Log::Level log_level) const;
 
     /// Gets a list of backing memory blocks for the specified range
-    ResultVal<std::vector<std::pair<u8*, u32>>> GetBackingBlocksForRange(VAddr address, u32 size);
+    ResultVal<std::vector<std::pair<MemoryRef, u32>>> GetBackingBlocksForRange(VAddr address,
+                                                                               u32 size);
 
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.
     Memory::PageTable page_table;
 
 private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive& ar, const unsigned int file_version) const {
-        ar& vma_map;
-        for (int i = 0; i < page_table.pointers.size(); i++) {
-            ar << memory.GetFCRAMOffset(page_table.pointers[i]);
-        }
-        ar& page_table.special_regions;
-        ar& page_table.attributes;
-    }
-
-    template <class Archive>
-    void load(Archive& ar, const unsigned int file_version) {
-        ar& vma_map;
-        for (int i = 0; i < page_table.pointers.size(); i++) {
-            u32 offset{};
-            ar >> offset;
-            page_table.pointers[i] = memory.GetFCRAMPointer(offset);
-        }
-        ar& page_table.special_regions;
-        ar& page_table.attributes;
-    }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
-
     using VMAIter = decltype(vma_map)::iterator;
 
     /// Converts a VMAHandle to a mutable VMAIter.
@@ -271,5 +248,12 @@ private:
     void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
 
     Memory::MemorySystem& memory;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& vma_map;
+        ar& page_table;
+    }
+    friend class boost::serialization::access;
 };
 } // namespace Kernel

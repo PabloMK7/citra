@@ -223,7 +223,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         std::fill(kernel.memory.GetFCRAMPointer(interval.lower()),
                   kernel.memory.GetFCRAMPointer(interval.upper()), 0);
         auto vma = vm_manager.MapBackingMemory(interval_target,
-                                               kernel.memory.GetFCRAMPointer(interval.lower()),
+                                               kernel.memory.GetFCRAMRef(interval.lower()),
                                                interval_size, memory_state);
         ASSERT(vma.Succeeded());
         vm_manager.Reprotect(vma.Unwrap(), perms);
@@ -251,7 +251,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
     for (const auto [backing_memory, block_size] : backing_blocks) {
-        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory), block_size);
+        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory.GetPtr()), block_size);
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
@@ -295,9 +295,9 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         }
     }
 
-    u8* backing_memory = kernel.memory.GetFCRAMPointer(physical_offset);
+    auto backing_memory = kernel.memory.GetFCRAMRef(physical_offset);
 
-    std::fill(backing_memory, backing_memory + size, 0);
+    std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + size, 0);
     auto vma = vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous);
     ASSERT(vma.Succeeded());
     vm_manager.Reprotect(vma.Unwrap(), perms);

@@ -48,7 +48,7 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
         ASSERT_MSG(offset, "Not enough space in region to allocate shared memory!");
 
         std::fill(memory.GetFCRAMPointer(*offset), memory.GetFCRAMPointer(*offset + size), 0);
-        shared_memory->backing_blocks = {{memory.GetFCRAMPointer(*offset), size}};
+        shared_memory->backing_blocks = {{memory.GetFCRAMRef(*offset), size}};
         shared_memory->holding_memory += MemoryRegionInfo::Interval(*offset, *offset + size);
         shared_memory->linear_heap_phys_offset = *offset;
 
@@ -90,7 +90,7 @@ std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     shared_memory->other_permissions = other_permissions;
     for (const auto& interval : backing_blocks) {
         shared_memory->backing_blocks.push_back(
-            {memory.GetFCRAMPointer(interval.lower()), interval.upper() - interval.lower()});
+            {memory.GetFCRAMRef(interval.lower()), interval.upper() - interval.lower()});
         std::fill(memory.GetFCRAMPointer(interval.lower()),
                   memory.GetFCRAMPointer(interval.upper()), 0);
     }

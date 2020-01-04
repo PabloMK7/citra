@@ -80,6 +80,8 @@ add_library(common STATIC
     logging/text_formatter.cpp
     logging/text_formatter.h
     math_util.h
+    memory_ref.h
+    memory_ref.cpp
     microprofile.cpp
     microprofile.h
     microprofileui.h
@@ -127,7 +129,7 @@ endif()
 
 create_target_directory_groups(common)
 
-target_link_libraries(common PUBLIC fmt microprofile)
+target_link_libraries(common PUBLIC fmt microprofile Boost::boost Boost::serialization)
 target_link_libraries(common PRIVATE libzstd_static)
 if (ARCHITECTURE_x86_64)
     target_link_libraries(common PRIVATE xbyak)

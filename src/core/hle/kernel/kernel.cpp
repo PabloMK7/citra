@@ -116,8 +116,8 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
     ar& process_list;
     ar& current_process;
     ar&* thread_manager.get();
-    ar&* config_mem_handler.get();
-    // Shared page data is read-only at the moment, so doesn't need serializing
+    ar& config_mem_handler;
+    ar& shared_page_handler;
     // Deliberately don't include debugger info to allow debugging through loads
 }
 

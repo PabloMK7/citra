@@ -22,8 +22,7 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));
     page_table = &kernel->GetCurrentProcess()->vm_manager.page_table;
 
-    page_table->pointers.fill(nullptr);
-    page_table->attributes.fill(Memory::PageType::Unmapped);
+    page_table->Clear();
 
     memory->MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
     memory->MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);

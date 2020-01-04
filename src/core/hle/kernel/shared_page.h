@@ -17,6 +17,7 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/memory_ref.h"
 #include "common/swap.h"
 #include "core/memory.h"
 
@@ -83,7 +84,7 @@ struct SharedPageDef {
 static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
               "Shared page structure size is wrong");
 
-class Handler {
+class Handler : public BackingMem {
 public:
     Handler(Core::Timing& timing);
 
@@ -97,6 +98,14 @@ public:
 
     SharedPageDef& GetSharedPage();
 
+    virtual u8* GetPtr() {
+        return static_cast<u8*>(static_cast<void*>(&shared_page));
+    }
+
+    virtual u32 GetSize() const {
+        return sizeof(shared_page);
+    }
+
 private:
     u64 GetSystemTime() const;
     void UpdateTimeCallback(u64 userdata, int cycles_late);
@@ -105,6 +114,19 @@ private:
     std::chrono::seconds init_time;
 
     SharedPageDef shared_page;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::make_binary_object(&shared_page, sizeof(shared_page));
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace SharedPage
+
+namespace boost::serialization {
+
+template <class Archive>
+void load_construct_data(Archive& ar, SharedPage::Handler* t, const unsigned int);
+
+} // namespace boost::serialization

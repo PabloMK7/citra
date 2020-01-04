@@ -282,8 +282,8 @@ private:
 
     std::unique_ptr<ThreadManager> thread_manager;
 
-    std::unique_ptr<ConfigMem::Handler> config_mem_handler;
-    std::unique_ptr<SharedPage::Handler> shared_page_handler;
+    std::shared_ptr<ConfigMem::Handler> config_mem_handler;
+    std::shared_ptr<SharedPage::Handler> shared_page_handler;
 
     std::unique_ptr<IPCDebugger::Recorder> ipc_recorder;
 

@@ -12,6 +12,7 @@
 #include <boost/serialization/binary_object.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/memory_ref.h"
 #include "common/swap.h"
 #include "core/memory.h"
 
@@ -50,10 +51,18 @@ struct ConfigMemDef {
 static_assert(sizeof(ConfigMemDef) == Memory::CONFIG_MEMORY_SIZE,
               "Config Memory structure size is wrong");
 
-class Handler {
+class Handler : public BackingMem {
 public:
     Handler();
     ConfigMemDef& GetConfigMem();
+
+    virtual u8* GetPtr() {
+        return static_cast<u8*>(static_cast<void*>(&config_mem));
+    }
+
+    virtual u32 GetSize() const {
+        return sizeof(config_mem);
+    }
 
 private:
     ConfigMemDef config_mem;
