@@ -830,8 +830,7 @@ private:
             ar& completion_event;
             ar& buffer_error_interrupt_event;
             ar& vsync_interrupt_event;
-            // TODO: Check if this is ever needed:
-            // ar & capture_result;
+            // Ignore capture_result. In-progress captures might be affected but this is OK.
             ar& dest_process;
             ar& dest;
             ar& dest_size;

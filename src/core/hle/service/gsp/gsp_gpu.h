@@ -444,6 +444,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
         ar& shared_memory;
         ar& active_thread_id;
         ar& first_initialization;

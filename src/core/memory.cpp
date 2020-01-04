@@ -18,6 +18,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
 #include "core/memory.h"
+#include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
@@ -84,15 +85,17 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::make_binary_object(fcram.get(), Memory::FCRAM_N3DS_SIZE);
+        bool save_n3ds_ram = Settings::values.is_new_3ds;
+        ar& save_n3ds_ram;
         ar& boost::serialization::make_binary_object(vram.get(), Memory::VRAM_SIZE);
-        // TODO: When n3ds support is added, put this back in
-        // ar& boost::serialization::make_binary_object(n3ds_extra_ram.get(),
-        //                                              Memory::N3DS_EXTRA_RAM_SIZE);
-        ar& current_page_table;
+        ar& boost::serialization::make_binary_object(
+            fcram.get(), save_n3ds_ram ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE);
+        ar& boost::serialization::make_binary_object(
+            n3ds_extra_ram.get(), save_n3ds_ram ? Memory::N3DS_EXTRA_RAM_SIZE : 0);
         ar& cache_marker;
         ar& page_table_list;
         // dsp is set from Core::System at startup
+        // current page table set from current process?
     }
 };
 

@@ -4,8 +4,7 @@
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)
     ☐ Page tables
-    ✘ Skip N3DS RAM if unused @cancelled(20-01-03 15:26)
-        Since no n3ds support, leave this for now
+    ✔ Skip N3DS RAM if unused @done(20-01-03 23:26)
 ✔ DSP @done(19-12-28 16:57)
     Memory only
 ✔ Service manager @started(19-12-23 00:36) @done(19-12-23 11:38) @lasted(11h2m3s)
@@ -99,7 +98,7 @@
         ✔ AM @started(19-12-24 23:17) @done(19-12-24 23:53) @lasted(36m8s)
         ✔ APT @done(19-12-25 21:41)
         ✔ BOSS @started(19-12-25 21:48) @done(19-12-25 23:18) @lasted(1h30m14s)
-        ☐ CAM @started(19-12-26 10:37)
+        ✔ CAM @started(19-12-26 10:37) @done(20-01-03 23:38) @lasted(1w1d13h1m50s)
             Need to check capture_result
         ✔ CECD @done(20-01-01 23:58)
         ✔ CFG @done(20-01-02 00:44)
@@ -111,7 +110,8 @@
         ✔ FRD @done(19-12-26 19:09)
         ✔ FS @done(19-12-27 11:46)
         ✔ GSP @done(19-12-30 12:45)
-            ☐ Fix the global weak_ptr to gsp
+            ✔ Fix the global weak_ptr to gsp @done(20-01-04 00:29)
+                Didn't quite 'fix' it but worked around it
         ✔ HID @done(19-12-30 14:46)
         ✔ HTTP @done(19-12-30 15:18)
         ✔ IR @done(19-12-30 16:06)

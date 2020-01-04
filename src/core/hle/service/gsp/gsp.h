@@ -23,4 +23,6 @@ namespace Service::GSP {
 void SignalInterrupt(InterruptId interrupt_id);
 
 void InstallInterfaces(Core::System& system);
+
+void SetGlobalModule(Core::System& system);
 } // namespace Service::GSP

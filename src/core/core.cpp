@@ -31,6 +31,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hw/gpu.h"
@@ -213,8 +214,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
-                                                    [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(
+        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -413,6 +414,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar & dsp_core->GetDspMemory();
     ar&* memory.get();
     ar&* kernel.get();
+
+    // This needs to be set from somewhere - might as well be here!
+    Service::GSP::SetGlobalModule(*this);
 }
 
 void System::Save(std::ostream& stream) const {

@@ -10,7 +10,7 @@
 
 namespace Service::GSP {
 
-static std::weak_ptr<GSP_GPU> gsp_gpu; // TODO: Fix this for the love of god
+static std::weak_ptr<GSP_GPU> gsp_gpu;
 
 void SignalInterrupt(InterruptId interrupt_id) {
     auto gpu = gsp_gpu.lock();
@@ -25,6 +25,10 @@ void InstallInterfaces(Core::System& system) {
     gsp_gpu = gpu;
 
     std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
+}
+
+void SetGlobalModule(Core::System& system) {
+    gsp_gpu = system.ServiceManager().GetService<GSP_GPU>("gsp::Gpu");
 }
 
 } // namespace Service::GSP
