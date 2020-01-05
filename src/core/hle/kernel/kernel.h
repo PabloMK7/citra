@@ -214,7 +214,7 @@ public:
     std::shared_ptr<Process> GetCurrentProcess() const;
     void SetCurrentProcess(std::shared_ptr<Process> process);
 
-    void SetCurrentMemoryPageTable(Memory::PageTable* page_table);
+    void SetCurrentMemoryPageTable(std::shared_ptr<Memory::PageTable> page_table);
 
     void SetCPU(std::shared_ptr<ARM_Interface> cpu);
 

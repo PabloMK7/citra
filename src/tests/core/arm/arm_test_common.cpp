@@ -10,7 +10,7 @@
 
 namespace ArmTests {
 
-static Memory::PageTable* page_table = nullptr;
+static std::shared_ptr<Memory::PageTable> page_table = nullptr;
 
 TestEnvironment::TestEnvironment(bool mutable_memory_)
     : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
@@ -20,7 +20,7 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing, [] {}, 0);
 
     kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));
-    page_table = &kernel->GetCurrentProcess()->vm_manager.page_table;
+    page_table = kernel->GetCurrentProcess()->vm_manager.page_table;
 
     page_table->Clear();
 

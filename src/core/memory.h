@@ -316,8 +316,8 @@ public:
     void UnmapRegion(PageTable& page_table, VAddr base, u32 size);
 
     /// Currently active page table
-    void SetCurrentPageTable(PageTable* page_table);
-    PageTable* GetCurrentPageTable() const;
+    void SetCurrentPageTable(std::shared_ptr<PageTable> page_table);
+    std::shared_ptr<PageTable> GetCurrentPageTable() const;
 
     u8 Read8(VAddr addr);
     u16 Read16(VAddr addr);
@@ -367,10 +367,10 @@ public:
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
     /// Registers page table for rasterizer cache marking
-    void RegisterPageTable(PageTable* page_table);
+    void RegisterPageTable(std::shared_ptr<PageTable> page_table);
 
     /// Unregisters page table for rasterizer cache marking
-    void UnregisterPageTable(PageTable* page_table);
+    void UnregisterPageTable(std::shared_ptr<PageTable> page_table);
 
     void SetDSP(AudioCore::DspInterface& dsp);
 

@@ -87,9 +87,9 @@ public:
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
 
-    PageTable* current_page_table = nullptr;
+    std::shared_ptr<PageTable> current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
-    std::vector<PageTable*> page_table_list;
+    std::vector<std::shared_ptr<PageTable>> page_table_list;
 
     AudioCore::DspInterface* dsp = nullptr;
 
@@ -144,7 +144,7 @@ private:
         ar& cache_marker;
         ar& page_table_list;
         // dsp is set from Core::System at startup
-        // TODO: current_page_table
+        ar& current_page_table;
         ar& fcram_mem;
         ar& vram_mem;
         ar& n3ds_extra_ram_mem;
@@ -190,11 +190,11 @@ void MemorySystem::serialize(Archive& ar, const unsigned int file_version) {
 
 SERIALIZE_IMPL(MemorySystem)
 
-void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
+void MemorySystem::SetCurrentPageTable(std::shared_ptr<PageTable> page_table) {
     impl->current_page_table = page_table;
 }
 
-PageTable* MemorySystem::GetCurrentPageTable() const {
+std::shared_ptr<PageTable> MemorySystem::GetCurrentPageTable() const {
     return impl->current_page_table;
 }
 
@@ -259,11 +259,11 @@ MemoryRef MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
     UNREACHABLE();
 }
 
-void MemorySystem::RegisterPageTable(PageTable* page_table) {
+void MemorySystem::RegisterPageTable(std::shared_ptr<PageTable> page_table) {
     impl->page_table_list.push_back(page_table);
 }
 
-void MemorySystem::UnregisterPageTable(PageTable* page_table) {
+void MemorySystem::UnregisterPageTable(std::shared_ptr<PageTable> page_table) {
     impl->page_table_list.erase(
         std::find(impl->page_table_list.begin(), impl->page_table_list.end(), page_table));
 }
@@ -351,7 +351,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
 }
 
 bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
-    auto& page_table = process.vm_manager.page_table;
+    auto& page_table = *process.vm_manager.page_table;
 
     auto page_pointer = page_table.pointers[vaddr >> PAGE_BITS];
     if (page_pointer)
@@ -486,7 +486,7 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
             impl->cache_marker.Mark(vaddr, cached);
-            for (PageTable* page_table : impl->page_table_list) {
+            for (auto page_table : impl->page_table_list) {
                 PageType& page_type = page_table->attributes[vaddr >> PAGE_BITS];
 
                 if (cached) {
@@ -608,7 +608,7 @@ u64 MemorySystem::Read64(const VAddr addr) {
 
 void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_addr,
                              void* dest_buffer, const std::size_t size) {
-    auto& page_table = process.vm_manager.page_table;
+    auto& page_table = *process.vm_manager.page_table;
 
     std::size_t remaining_size = size;
     std::size_t page_index = src_addr >> PAGE_BITS;
@@ -674,7 +674,7 @@ void MemorySystem::Write64(const VAddr addr, const u64 data) {
 
 void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_addr,
                               const void* src_buffer, const std::size_t size) {
-    auto& page_table = process.vm_manager.page_table;
+    auto& page_table = *process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = dest_addr >> PAGE_BITS;
     std::size_t page_offset = dest_addr & PAGE_MASK;
@@ -722,7 +722,7 @@ void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_a
 
 void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_addr,
                              const std::size_t size) {
-    auto& page_table = process.vm_manager.page_table;
+    auto& page_table = *process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = dest_addr >> PAGE_BITS;
     std::size_t page_offset = dest_addr & PAGE_MASK;
@@ -777,7 +777,7 @@ void MemorySystem::CopyBlock(const Kernel::Process& process, VAddr dest_addr, VA
 void MemorySystem::CopyBlock(const Kernel::Process& dest_process,
                              const Kernel::Process& src_process, VAddr dest_addr, VAddr src_addr,
                              std::size_t size) {
-    auto& page_table = src_process.vm_manager.page_table;
+    auto& page_table = *src_process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = src_addr >> PAGE_BITS;
     std::size_t page_offset = src_addr & PAGE_MASK;

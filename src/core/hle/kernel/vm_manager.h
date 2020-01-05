@@ -209,7 +209,7 @@ public:
 
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.
-    Memory::PageTable page_table;
+    std::shared_ptr<Memory::PageTable> page_table;
 
 private:
     using VMAIter = decltype(vma_map)::iterator;

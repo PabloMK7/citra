@@ -435,7 +435,7 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
 
 Kernel::Process::Process(KernelSystem& kernel)
     : Object(kernel), handle_table(kernel), vm_manager(kernel.memory), kernel(kernel) {
-    kernel.memory.RegisterPageTable(&vm_manager.page_table);
+    kernel.memory.RegisterPageTable(vm_manager.page_table);
 }
 Kernel::Process::~Process() {
     // Release all objects this process owns first so that their potential destructor can do clean
@@ -444,7 +444,7 @@ Kernel::Process::~Process() {
     // memory etc.) even if they are still referenced by other processes.
     handle_table.Clear();
 
-    kernel.memory.UnregisterPageTable(&vm_manager.page_table);
+    kernel.memory.UnregisterPageTable(vm_manager.page_table);
 }
 
 std::shared_ptr<Process> KernelSystem::GetProcessById(u32 process_id) const {

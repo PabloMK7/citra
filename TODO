@@ -3,7 +3,7 @@
     ☐ Multiple slots etc.
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)
-    ☐ Page tables
+    ✔ Page tables @done(20-01-05 16:33)
         Need to change uses to shared_ptr
     ✔ Skip N3DS RAM if unused @done(20-01-03 23:26)
 ✔ DSP @done(19-12-28 16:57)

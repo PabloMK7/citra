@@ -37,7 +37,8 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     return true;
 }
 
-VMManager::VMManager(Memory::MemorySystem& memory) : memory(memory) {
+VMManager::VMManager(Memory::MemorySystem& memory)
+    : memory(memory), page_table(std::make_shared<Memory::PageTable>()) {
     Reset();
 }
 
@@ -51,7 +52,7 @@ void VMManager::Reset() {
     initial_vma.size = MAX_ADDRESS;
     vma_map.emplace(initial_vma.base, initial_vma);
 
-    page_table.Clear();
+    page_table->Clear();
 
     UpdatePageTableForVMA(initial_vma);
 }
@@ -348,13 +349,13 @@ VMManager::VMAIter VMManager::MergeAdjacent(VMAIter iter) {
 void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
     switch (vma.type) {
     case VMAType::Free:
-        memory.UnmapRegion(page_table, vma.base, vma.size);
+        memory.UnmapRegion(*page_table, vma.base, vma.size);
         break;
     case VMAType::BackingMemory:
-        memory.MapMemoryRegion(page_table, vma.base, vma.size, vma.backing_memory);
+        memory.MapMemoryRegion(*page_table, vma.base, vma.size, vma.backing_memory);
         break;
     case VMAType::MMIO:
-        memory.MapIoRegion(page_table, vma.base, vma.size, vma.mmio_handler);
+        memory.MapIoRegion(*page_table, vma.base, vma.size, vma.mmio_handler);
         break;
     }
 }
