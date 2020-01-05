@@ -98,7 +98,7 @@ public:
     std::shared_ptr<BackingMem> n3ds_extra_ram_mem;
     std::shared_ptr<BackingMem> dsp_mem;
 
-    MemorySystem::Impl();
+    Impl();
 
     virtual u8* GetPtr(Region r) {
         switch (r) {
@@ -157,16 +157,17 @@ private:
 template <Region R>
 class MemorySystem::BackingMemImpl : public BackingMem {
 public:
-    BackingMemImpl() : system(Core::Global<Core::System>().Memory()) {}
+    BackingMemImpl() : impl(*Core::Global<Core::System>().Memory().impl) {}
+    BackingMemImpl(MemorySystem::Impl& impl_) : impl(impl_) {}
     virtual u8* GetPtr() {
-        return system.impl->GetPtr(R);
+        return impl.GetPtr(R);
     }
     virtual u32 GetSize() const {
-        return system.impl->GetSize(R);
+        return impl.GetSize(R);
     }
 
 private:
-    MemorySystem& system;
+    MemorySystem::Impl& impl;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {}
@@ -174,10 +175,10 @@ private:
 };
 
 MemorySystem::Impl::Impl()
-    : fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>()),
-      vram_mem(std::make_shared<BackingMemImpl<Region::VRAM>>()),
-      n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>()),
-      dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>()) {}
+    : fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>(*this)),
+      vram_mem(std::make_shared<BackingMemImpl<Region::VRAM>>(*this)),
+      n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>(*this)),
+      dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>(*this)) {}
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;
@@ -219,7 +220,7 @@ void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef
         }
 
         base += 1;
-        if (memory != nullptr)
+        if (memory != nullptr && memory.GetSize() > PAGE_SIZE)
             memory += PAGE_SIZE;
     }
 }

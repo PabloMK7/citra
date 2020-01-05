@@ -1352,8 +1352,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
     case CecDataPathType::MboxData:
     case CecDataPathType::MboxIcon:
     case CecDataPathType::MboxTitle:
-    default: {
-    }
+    default: {}
     }
 }
 

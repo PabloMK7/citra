@@ -91,15 +91,20 @@ public:
     }
 
 private:
-    std::shared_ptr<BackingMem> backing_mem;
-    u32 offset;
+    std::shared_ptr<BackingMem> backing_mem = nullptr;
+    u32 offset = 0;
     // Cached values for speed
-    u8* cptr;
-    u32 csize;
+    u8* cptr = nullptr;
+    u32 csize = 0;
 
     void Init() {
-        cptr = backing_mem->GetPtr() + offset;
-        csize = static_cast<u32>(backing_mem->GetSize() - offset);
+        if (backing_mem) {
+            cptr = backing_mem->GetPtr() + offset;
+            csize = static_cast<u32>(backing_mem->GetSize() - offset);
+        } else {
+            cptr = nullptr;
+            csize = 0;
+        }
     }
 
     template <class Archive>
