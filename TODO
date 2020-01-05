@@ -93,7 +93,7 @@
         ✔ VM Manager @started(19-08-13 16:46) @done(20-01-04 21:09) @lasted(20w4d5h23m42s)
             Just need to figure out backing_mem (a u8*)
         ✔ Wait object @done(19-08-13 16:46)
-    ☐ Service @started(19-12-23 12:49)
+    ✔ Service @started(19-12-23 12:49) @done(20-01-05 16:41) @lasted(1w6d3h52m17s)
         ✔ AC @started(19-12-23 12:48) @done(19-12-24 22:38) @lasted(1d9h50m3s)
         ✔ ACT @done(19-12-24 23:17)
         ✔ AM @started(19-12-24 23:17) @done(19-12-24 23:53) @lasted(36m8s)
@@ -125,7 +125,7 @@
         ✔ NIM @done(19-12-31 21:08)
         ✔ NS @done(20-01-01 00:46)
         ✔ NWM @done(20-01-01 21:31)
-            ☐ Fix wifi_packet_received?
+            ✔ Fix wifi_packet_received @done(20-01-05 16:41)
         ✔ PM @done(20-01-01 22:14)
         ✔ PS @done(20-01-01 00:54)
         ✔ PTM @done(20-01-01 22:36)

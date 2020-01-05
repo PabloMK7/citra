@@ -31,7 +31,7 @@ void NWM_UDS::serialize(Archive& ar, const unsigned int) {
     ar& node_map;
     ar& connection_event;
     ar& received_beacons;
-    // TODO: Fix wifi_packet_received?
+    // wifi_packet_received set in constructor
 }
 SERIALIZE_IMPL(NWM_UDS)
 
@@ -636,13 +636,6 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
 
     recv_buffer_memory = std::move(sharedmem);
     ASSERT_MSG(recv_buffer_memory->GetSize() == sharedmem_size, "Invalid shared memory size.");
-
-    if (auto room_member = Network::GetRoomMember().lock()) {
-        wifi_packet_received = room_member->BindOnWifiPacketReceived(
-            [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
-    } else {
-        LOG_ERROR(Service_NWM, "Network isn't initalized");
-    }
 
     {
         std::lock_guard lock(connection_status_mutex);
@@ -1408,6 +1401,13 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
 
     system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
     system.Kernel().GetSharedPageHandler().SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
+
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        wifi_packet_received = room_member->BindOnWifiPacketReceived(
+            [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
+    } else {
+        LOG_ERROR(Service_NWM, "Network isn't initalized");
+    }
 }
 
 NWM_UDS::~NWM_UDS() {
