@@ -96,6 +96,7 @@ add_library(common STATIC
     serialization/atomic.h
     serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h
+    serialization/boost_small_vector.hpp
     serialization/boost_vector.hpp
     string_util.cpp
     string_util.h

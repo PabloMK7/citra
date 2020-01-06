@@ -37,7 +37,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             IPC::MakeHeader(0x1234, 0, 0),
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         REQUIRE(context.CommandBuffer()[0] == 0x12340000);
     }
@@ -50,7 +50,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             0xAABBCCDD,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(output[1] == 0x12345678);
@@ -67,7 +67,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             a_handle,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
@@ -83,7 +83,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             a_handle,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
@@ -103,7 +103,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             process->handle_table.Create(c).Unwrap(),
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
@@ -118,7 +118,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             0,
         };
 
-        auto result = context.PopulateFromIncomingCommandBuffer(input, *process);
+        auto result = context.PopulateFromIncomingCommandBuffer(input, process);
 
         REQUIRE(result == RESULT_SUCCESS);
         auto* output = context.CommandBuffer();
@@ -132,7 +132,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             0x98989898,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         REQUIRE(context.CommandBuffer()[2] == process->process_id);
     }
@@ -153,7 +153,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             target_address,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         CHECK(context.GetStaticBuffer(0) == mem->Vector());
 
@@ -175,7 +175,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             target_address,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         std::vector<u8> other_buffer(buffer.GetSize());
         context.GetMappedBuffer(0).Read(other_buffer.data(), 0, buffer.GetSize());
@@ -219,7 +219,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             target_address_mapped,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process);
+        context.PopulateFromIncomingCommandBuffer(input, process);
 
         auto* output = context.CommandBuffer();
         CHECK(output[1] == 0x12345678);
@@ -365,7 +365,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
             target_address,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input_cmdbuff, *process);
+        context.PopulateFromIncomingCommandBuffer(input_cmdbuff, process);
 
         context.GetMappedBuffer(0).Write(input_buffer.data(), 0, input_buffer.size());
 

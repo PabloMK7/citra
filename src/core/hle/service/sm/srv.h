@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <boost/serialization/export.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -25,6 +26,8 @@ public:
     explicit SRV(Core::System& system);
     ~SRV();
 
+    class ThreadCallback;
+
 private:
     void RegisterClient(Kernel::HLERequestContext& ctx);
     void EnableNotification(Kernel::HLERequestContext& ctx);
@@ -40,3 +43,5 @@ private:
 };
 
 } // namespace Service::SM
+
+BOOST_CLASS_EXPORT_KEY(Service::SM::SRV::ThreadCallback)

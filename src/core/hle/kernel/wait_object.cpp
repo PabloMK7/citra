@@ -80,7 +80,7 @@ void WaitObject::WakeupAllWaitingThreads() {
 
         // Invoke the wakeup callback before clearing the wait objects
         if (thread->wakeup_callback)
-            thread->wakeup_callback(ThreadWakeupReason::Signal, thread, SharedFrom(this));
+            thread->wakeup_callback->WakeUp(ThreadWakeupReason::Signal, thread, SharedFrom(this));
 
         for (auto& object : thread->wait_objects)
             object->RemoveWaitingThread(thread.get());

@@ -72,7 +72,7 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
                 if (handle == CurrentThread) {
                     object = src_thread;
                 } else if (handle == CurrentProcess) {
-                    object = SharedFrom(src_process);
+                    object = src_process;
                 } else if (handle != 0) {
                     object = src_process->handle_table.GetGeneric(handle);
                     if (descriptor == IPC::DescriptorType::MoveHandle) {

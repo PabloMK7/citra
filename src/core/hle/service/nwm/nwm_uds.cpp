@@ -1170,6 +1170,29 @@ void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
+class NWM_UDS::ThreadCallback : public Kernel::HLERequestContext::WakeupCallback {
+public:
+    ThreadCallback(u16 command_id_) : command_id(command_id_) {}
+
+    void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+                Kernel::ThreadWakeupReason reason) {
+        // TODO(B3N30): Add error handling for host full and timeout
+        IPC::RequestBuilder rb(ctx, command_id, 1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_DEBUG(Service_NWM, "connection sequence finished");
+    }
+
+private:
+    ThreadCallback() = default;
+    u16 command_id;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& command_id;
+    }
+    friend class boost::serialization::access;
+};
+
 void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
                                const u8* network_info_buffer, std::size_t network_info_size,
                                u8 connection_type, std::vector<u8> passphrase) {
@@ -1183,15 +1206,8 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
     // Since this timing is handled by core_timing it could differ from the 'real world' time
     static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
-    connection_event = ctx.SleepClientThread(
-        "uds::ConnectToNetwork", UDSConnectionTimeout,
-        [command_id](std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
-                     Kernel::ThreadWakeupReason reason) {
-            // TODO(B3N30): Add error handling for host full and timeout
-            IPC::RequestBuilder rb(ctx, command_id, 1, 0);
-            rb.Push(RESULT_SUCCESS);
-            LOG_DEBUG(Service_NWM, "connection sequence finished");
-        });
+    connection_event = ctx.SleepClientThread("uds::ConnectToNetwork", UDSConnectionTimeout,
+                                             std::make_shared<ThreadCallback>(command_id));
 }
 
 void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
@@ -1418,3 +1434,5 @@ NWM_UDS::~NWM_UDS() {
 }
 
 } // namespace Service::NWM
+
+SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS::ThreadCallback)

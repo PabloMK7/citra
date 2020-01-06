@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -71,6 +72,46 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
+class SRV::ThreadCallback : public Kernel::HLERequestContext::WakeupCallback {
+
+public:
+    ThreadCallback(Core::System& system_, std::string name_) : system(system_), name(name_) {}
+
+    void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+                Kernel::ThreadWakeupReason reason) {
+        LOG_ERROR(Service_SRV, "called service={} wakeup", name);
+        auto client_port = system.ServiceManager().GetServicePort(name);
+
+        auto session = client_port.Unwrap()->Connect();
+        if (session.Succeeded()) {
+            LOG_DEBUG(Service_SRV, "called service={} -> session={}", name,
+                      (*session)->GetObjectId());
+            IPC::RequestBuilder rb(ctx, 0x5, 1, 2);
+            rb.Push(session.Code());
+            rb.PushMoveObjects(std::move(session).Unwrap());
+        } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED) {
+            LOG_ERROR(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
+            UNREACHABLE();
+        } else {
+            LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, session.Code().raw);
+            IPC::RequestBuilder rb(ctx, 0x5, 1, 0);
+            rb.Push(session.Code());
+        }
+    }
+
+private:
+    Core::System& system;
+    std::string name;
+
+    ThreadCallback() : system(Core::Global<Core::System>()) {}
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& name;
+    }
+    friend class boost::serialization::access;
+};
+
 /**
  * SRV::GetServiceHandle service function
  *  Inputs:
@@ -100,28 +141,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 
     // TODO(yuriks): Permission checks go here
 
-    auto get_handle = [name, this](std::shared_ptr<Kernel::Thread> thread,
-                                   Kernel::HLERequestContext& ctx,
-                                   Kernel::ThreadWakeupReason reason) {
-        LOG_ERROR(Service_SRV, "called service={} wakeup", name);
-        auto client_port = system.ServiceManager().GetServicePort(name);
-
-        auto session = client_port.Unwrap()->Connect();
-        if (session.Succeeded()) {
-            LOG_DEBUG(Service_SRV, "called service={} -> session={}", name,
-                      (*session)->GetObjectId());
-            IPC::RequestBuilder rb(ctx, 0x5, 1, 2);
-            rb.Push(session.Code());
-            rb.PushMoveObjects(std::move(session).Unwrap());
-        } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED) {
-            LOG_ERROR(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
-            UNREACHABLE();
-        } else {
-            LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, session.Code().raw);
-            IPC::RequestBuilder rb(ctx, 0x5, 1, 0);
-            rb.Push(session.Code());
-        }
-    };
+    auto get_handle = std::make_shared<ThreadCallback>(system, name);
 
     auto client_port = system.ServiceManager().GetServicePort(name);
     if (client_port.Failed()) {
@@ -266,3 +286,5 @@ SRV::SRV(Core::System& system) : ServiceFramework("srv:", 4), system(system) {
 SRV::~SRV() = default;
 
 } // namespace Service::SM
+
+SERIALIZE_EXPORT_IMPL(Service::SM::SRV::ThreadCallback)

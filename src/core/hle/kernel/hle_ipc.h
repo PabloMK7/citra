@@ -16,6 +16,7 @@
 #include <boost/serialization/unique_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
+#include "common/serialization/boost_small_vector.hpp"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/object.h"
@@ -127,7 +128,7 @@ private:
 
 class MappedBuffer {
 public:
-    MappedBuffer(Memory::MemorySystem& memory, const Process& process, u32 descriptor,
+    MappedBuffer(Memory::MemorySystem& memory, std::shared_ptr<Process> process, u32 descriptor,
                  VAddr address, u32 id);
 
     // interface for service
@@ -151,9 +152,21 @@ private:
     Memory::MemorySystem* memory;
     u32 id;
     VAddr address;
-    const Process* process;
-    std::size_t size;
+    std::shared_ptr<Process> process;
+    u32 size;
     IPC::MappedBufferPermissions perms;
+
+    MappedBuffer();
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& id;
+        ar& address;
+        ar& process;
+        ar& size;
+        ar& perms;
+    }
+    friend class boost::serialization::access;
 };
 
 /**
@@ -185,9 +198,10 @@ private:
  * id of the memory interface and let kernel convert it back to client vaddr. No real unmapping is
  * needed in this case, though.
  */
-class HLERequestContext {
+class HLERequestContext : std::enable_shared_from_this<HLERequestContext> {
 public:
-    HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session, Thread* thread);
+    HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session,
+                      std::shared_ptr<Thread> thread);
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
@@ -203,8 +217,12 @@ public:
         return session;
     }
 
-    using WakeupCallback = std::function<void(
-        std::shared_ptr<Thread> thread, HLERequestContext& context, ThreadWakeupReason reason)>;
+    class WakeupCallback {
+    public:
+        virtual ~WakeupCallback() = default;
+        virtual void WakeUp(std::shared_ptr<Thread> thread, HLERequestContext& context,
+                            ThreadWakeupReason reason) = 0;
+    };
 
     /**
      * Puts the specified guest thread to sleep until the returned event is signaled or until the
@@ -219,7 +237,7 @@ public:
      */
     std::shared_ptr<Event> SleepClientThread(const std::string& reason,
                                              std::chrono::nanoseconds timeout,
-                                             WakeupCallback&& callback);
+                                             std::shared_ptr<WakeupCallback> callback);
 
     /**
      * Resolves a object id from the request command buffer into a pointer to an object. See the
@@ -259,26 +277,43 @@ public:
     MappedBuffer& GetMappedBuffer(u32 id_from_cmdbuf);
 
     /// Populates this context with data from the requesting process/thread.
-    ResultCode PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf, Process& src_process);
+    ResultCode PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
+                                                 std::shared_ptr<Process> src_process);
     /// Writes data from this context back to the requesting process/thread.
     ResultCode WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process) const;
 
     /// Reports an unimplemented function.
     void ReportUnimplemented() const;
 
+    class ThreadCallback;
+    friend class ThreadCallback;
+
 private:
     KernelSystem& kernel;
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     std::shared_ptr<ServerSession> session;
-    Thread* thread;
+    std::shared_ptr<Thread> thread;
     // TODO(yuriks): Check common usage of this and optimize size accordingly
     boost::container::small_vector<std::shared_ptr<Object>, 8> request_handles;
     // The static buffers will be created when the IPC request is translated.
     std::array<std::vector<u8>, IPC::MAX_STATIC_BUFFERS> static_buffers;
     // The mapped buffers will be created when the IPC request is translated
     boost::container::small_vector<MappedBuffer, 8> request_mapped_buffers;
+
+    HLERequestContext();
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& cmd_buf;
+        ar& session;
+        ar& thread;
+        ar& request_handles;
+        ar& static_buffers;
+        ar& request_mapped_buffers;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionDataBase)
+BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext::ThreadCallback)

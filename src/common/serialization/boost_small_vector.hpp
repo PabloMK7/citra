@@ -1,5 +1,5 @@
-#ifndef BOOST_SERIALIZATION_BOOST_VECTOR_HPP
-#define BOOST_SERIALIZATION_BOOST_VECTOR_HPP
+#ifndef BOOST_SERIALIZATION_BOOST_SMALL_VECTOR_HPP
+#define BOOST_SERIALIZATION_BOOST_SMALL_VECTOR_HPP
 
 // MS compatible compilers support #pragma once
 #if defined(_MSC_VER)
@@ -17,7 +17,7 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/container/vector.hpp>
+#include <boost/container/small_vector.hpp>
 
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
@@ -48,16 +48,15 @@ namespace serialization {
 
 // the default versions
 
-template <class Archive, class U, class Allocator, class Options>
-inline void save(Archive& ar, const boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void save(Archive& ar, const boost::container::small_vector<U, N>& t,
                  const unsigned int /* file_version */, mpl::false_) {
-    boost::serialization::stl::save_collection<Archive,
-                                               boost::container::vector<U, Allocator, Options>>(ar,
-                                                                                                t);
+    boost::serialization::stl::save_collection<Archive, boost::container::small_vector<U, N>>(ar,
+                                                                                              t);
 }
 
-template <class Archive, class U, class Allocator, class Options>
-inline void load(Archive& ar, boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void load(Archive& ar, boost::container::small_vector<U, N>& t,
                  const unsigned int /* file_version */, mpl::false_) {
     const boost::archive::library_version_type library_version(ar.get_library_version());
     // retrieve number of elements
@@ -73,8 +72,8 @@ inline void load(Archive& ar, boost::container::vector<U, Allocator, Options>& t
 
 // the optimized versions
 
-template <class Archive, class U, class Allocator, class Options>
-inline void save(Archive& ar, const boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void save(Archive& ar, const boost::container::small_vector<U, N>& t,
                  const unsigned int /* file_version */, mpl::true_) {
     const collection_size_type count(t.size());
     ar << BOOST_SERIALIZATION_NVP(count);
@@ -84,8 +83,8 @@ inline void save(Archive& ar, const boost::container::vector<U, Allocator, Optio
                                                                        count);
 }
 
-template <class Archive, class U, class Allocator, class Options>
-inline void load(Archive& ar, boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void load(Archive& ar, boost::container::small_vector<U, N>& t,
                  const unsigned int /* file_version */, mpl::true_) {
     collection_size_type count(t.size());
     ar >> BOOST_SERIALIZATION_NVP(count);
@@ -101,16 +100,16 @@ inline void load(Archive& ar, boost::container::vector<U, Allocator, Options>& t
 
 // dispatch to either default or optimized versions
 
-template <class Archive, class U, class Allocator, class Options>
-inline void save(Archive& ar, const boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void save(Archive& ar, const boost::container::small_vector<U, N>& t,
                  const unsigned int file_version) {
     typedef typename boost::serialization::use_array_optimization<Archive>::template apply<
         typename remove_const<U>::type>::type use_optimized;
     save(ar, t, file_version, use_optimized());
 }
 
-template <class Archive, class U, class Allocator, class Options>
-inline void load(Archive& ar, boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void load(Archive& ar, boost::container::small_vector<U, N>& t,
                  const unsigned int file_version) {
 #ifdef BOOST_SERIALIZATION_VECTOR_135_HPP
     if (ar.get_library_version() == boost::archive::library_version_type(5)) {
@@ -125,16 +124,16 @@ inline void load(Archive& ar, boost::container::vector<U, Allocator, Options>& t
 
 // split non-intrusive serialization function member into separate
 // non intrusive save/load member functions
-template <class Archive, class U, class Allocator, class Options>
-inline void serialize(Archive& ar, boost::container::vector<U, Allocator, Options>& t,
+template <class Archive, class U, std::size_t N>
+inline void serialize(Archive& ar, boost::container::small_vector<U, N>& t,
                       const unsigned int file_version) {
     boost::serialization::split_free(ar, t, file_version);
 }
 
 // split non-intrusive serialization function member into separate
 // non intrusive save/load member functions
-template <class Archive, class Allocator, class Options>
-inline void serialize(Archive& ar, boost::container::vector<bool, Allocator, Options>& t,
+template <class Archive, std::size_t N>
+inline void serialize(Archive& ar, boost::container::small_vector<bool, N>& t,
                       const unsigned int file_version) {
     boost::serialization::split_free(ar, t, file_version);
 }
@@ -142,8 +141,4 @@ inline void serialize(Archive& ar, boost::container::vector<bool, Allocator, Opt
 } // namespace serialization
 } // namespace boost
 
-#include <boost/serialization/collection_traits.hpp>
-
-BOOST_SERIALIZATION_COLLECTION_TRAITS(boost::container::vector)
-
-#endif // BOOST_SERIALIZATION_BOOST_VECTOR_HPP
+#endif // BOOST_SERIALIZATION_BOOST_SMALL_VECTOR_HPP

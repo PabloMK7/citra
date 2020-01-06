@@ -59,6 +59,15 @@ enum class ThreadWakeupReason {
     Timeout // The thread was woken up due to a wait timeout.
 };
 
+class Thread;
+
+class WakeupCallback {
+public:
+    virtual ~WakeupCallback() = default;
+    virtual void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                        std::shared_ptr<WaitObject> object) = 0;
+};
+
 class ThreadManager {
 public:
     explicit ThreadManager(Kernel::KernelSystem& kernel);
@@ -300,7 +309,7 @@ public:
     /// Mutexes that this thread is currently waiting for.
     boost::container::flat_set<std::shared_ptr<Mutex>> pending_mutexes;
 
-    Process* owner_process; ///< Process that owns this thread
+    std::shared_ptr<Process> owner_process; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on, in the same order as they were
     // passed to WaitSynchronization1/N.
@@ -310,12 +319,10 @@ public:
 
     std::string name;
 
-    using WakeupCallback = void(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                                std::shared_ptr<WaitObject> object);
     // Callback that will be invoked when the thread is resumed from a waiting state. If the thread
     // was waiting via WaitSynchronizationN then the object will be the last object that became
     // available. In case of a timeout, the object will be nullptr.
-    std::function<WakeupCallback> wakeup_callback;
+    std::shared_ptr<WakeupCallback> wakeup_callback;
 
 private:
     ThreadManager& thread_manager;

@@ -12,6 +12,7 @@
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 
 // Address arbiters are an underlying kernel synchronization object that can be created/used via
@@ -34,7 +35,7 @@ enum class ArbitrationType : u32 {
     DecrementAndWaitIfLessThanWithTimeout,
 };
 
-class AddressArbiter final : public Object {
+class AddressArbiter final : public Object, public WakeupCallback {
 public:
     explicit AddressArbiter(KernelSystem& kernel);
     ~AddressArbiter() override;
@@ -55,6 +56,9 @@ public:
 
     ResultCode ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type, VAddr address,
                                 s32 value, u64 nanoseconds);
+
+    void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                std::shared_ptr<WaitObject> object);
 
 private:
     KernelSystem& kernel;

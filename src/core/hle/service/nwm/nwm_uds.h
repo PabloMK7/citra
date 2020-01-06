@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/optional.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"
@@ -126,6 +127,8 @@ class NWM_UDS final : public ServiceFramework<NWM_UDS> {
 public:
     explicit NWM_UDS(Core::System& system);
     ~NWM_UDS();
+
+    class ThreadCallback;
 
 private:
     Core::System& system;
@@ -560,3 +563,4 @@ private:
 
 SERVICE_CONSTRUCT(Service::NWM::NWM_UDS)
 BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_UDS)
+BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_UDS::ThreadCallback)
