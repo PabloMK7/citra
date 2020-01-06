@@ -452,6 +452,9 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
     default:
         UNREACHABLE();
     }
+    if (offset_into_region >= target_mem->GetSize()) {
+        return {nullptr};
+    }
 
     return {target_mem, offset_into_region};
 }

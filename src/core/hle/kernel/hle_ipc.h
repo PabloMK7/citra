@@ -198,7 +198,7 @@ private:
  * id of the memory interface and let kernel convert it back to client vaddr. No real unmapping is
  * needed in this case, though.
  */
-class HLERequestContext : std::enable_shared_from_this<HLERequestContext> {
+class HLERequestContext : public std::enable_shared_from_this<HLERequestContext> {
 public:
     HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session,
                       std::shared_ptr<Thread> thread);

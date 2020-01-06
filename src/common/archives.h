@@ -11,5 +11,4 @@ using oarchive = boost::archive::binary_oarchive;
 
 #define SERIALIZE_EXPORT_IMPL(A)                                                                   \
     BOOST_SERIALIZATION_REGISTER_ARCHIVE(iarchive)                                                 \
-    BOOST_SERIALIZATION_REGISTER_ARCHIVE(oarchive)                                                 \
-    BOOST_CLASS_EXPORT_IMPLEMENT(A)
+    BOOST_SERIALIZATION_REGISTER_ARCHIVE(oarchive)
