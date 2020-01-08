@@ -70,6 +70,7 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<BackingMem>(*this);
         ar& boost::serialization::make_binary_object(&config_mem, sizeof(config_mem));
     }
 };

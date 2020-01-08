@@ -47,6 +47,12 @@ private:
     /// Mapping of ProgramId -> NCCHData
     std::unordered_map<u64, NCCHData>
         ncch_data; // TODO: Remove this, or actually set the values here
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys

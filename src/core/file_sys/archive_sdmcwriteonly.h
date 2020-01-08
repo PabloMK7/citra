@@ -67,6 +67,7 @@ private:
     ArchiveFactory_SDMCWriteOnly() = default;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
         ar& sdmc_directory;
     }
     friend class boost::serialization::access;

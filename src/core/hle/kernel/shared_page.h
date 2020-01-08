@@ -117,6 +117,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<BackingMem>(*this);
         ar& boost::serialization::make_binary_object(&shared_page, sizeof(shared_page));
     }
     friend class boost::serialization::access;

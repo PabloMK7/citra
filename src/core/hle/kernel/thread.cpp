@@ -32,6 +32,7 @@ namespace Kernel {
 
 template <class Archive>
 void Thread::serialize(Archive& ar, const unsigned int file_version) {
+    ar& boost::serialization::base_object<Object>(*this);
     ar&* context.get();
     ar& thread_id;
     ar& status;

@@ -434,6 +434,7 @@ private:
     SVC_SyncCallback() = default;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
         ar& do_output;
     }
     friend class boost::serialization::access;
@@ -466,7 +467,9 @@ private:
     SVC_IPCCallback() : system(Core::Global<Core::System>()) {}
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {}
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
+    }
     friend class boost::serialization::access;
 };
 

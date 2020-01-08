@@ -109,6 +109,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<Object>(*this);
         ar& linear_heap_phys_offset;
         ar& backing_blocks;
         ar& size;

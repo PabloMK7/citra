@@ -60,6 +60,7 @@ private:
     ArchiveFactory_ExtSaveData() = default;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
         ar& shared;
         ar& mount_point;
     }

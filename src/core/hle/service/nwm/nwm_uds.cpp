@@ -1189,6 +1189,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::HLERequestContext::WakeupCallback>(*this);
         ar& command_id;
     }
     friend class boost::serialization::access;
