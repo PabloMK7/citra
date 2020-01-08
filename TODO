@@ -5,6 +5,7 @@
 ☐ Review constructor/initialization code
 ☐ Review core timing events
 ☐ Review base class serialization everywhere
+    Make sure that all base/derived relationships are registered
 ☐ Serialize codeset with an apploader reference instead
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)

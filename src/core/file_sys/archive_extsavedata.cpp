@@ -80,6 +80,8 @@ public:
         static constexpr u64 IPCDelayNanoseconds(3085068);
         return IPCDelayNanoseconds;
     }
+
+    SERIALIZE_DELAY_GENERATOR
 };
 
 /**
@@ -300,3 +302,5 @@ void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data
 }
 
 } // namespace FileSys
+
+SERIALIZE_EXPORT_IMPL(FileSys::ExtSaveDataDelayGenerator)

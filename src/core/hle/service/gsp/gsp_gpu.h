@@ -203,6 +203,8 @@ public:
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
+            *this);
         ar& gsp;
         ar& interrupt_event;
         ar& thread_id;

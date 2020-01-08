@@ -25,6 +25,7 @@ namespace Service::MIC {
 
 template <class Archive>
 void MIC_U::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar&* impl.get();
 }
 SERIALIZE_IMPL(MIC_U)

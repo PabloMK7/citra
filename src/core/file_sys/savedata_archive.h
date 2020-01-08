@@ -40,4 +40,8 @@ protected:
     std::string mount_point;
 };
 
+class SaveDataDelayGenerator;
+
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::SaveDataDelayGenerator)

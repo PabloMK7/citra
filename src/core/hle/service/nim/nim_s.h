@@ -12,6 +12,9 @@ class NIM_S final : public ServiceFramework<NIM_S> {
 public:
     NIM_S();
     ~NIM_S();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NIM

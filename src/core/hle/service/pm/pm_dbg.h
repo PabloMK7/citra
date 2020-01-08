@@ -12,6 +12,9 @@ class PM_DBG final : public ServiceFramework<PM_DBG> {
 public:
     PM_DBG();
     ~PM_DBG() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::PM

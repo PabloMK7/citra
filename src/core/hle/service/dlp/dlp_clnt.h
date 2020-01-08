@@ -14,11 +14,7 @@ public:
     ~DLP_CLNT() = default;
 
 private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    }
-    friend class boost::serialization::access;
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::DLP

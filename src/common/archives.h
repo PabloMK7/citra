@@ -10,5 +10,6 @@ using oarchive = boost::archive::binary_oarchive;
     template void A::serialize<oarchive>(oarchive & ar, const unsigned int file_version);
 
 #define SERIALIZE_EXPORT_IMPL(A)                                                                   \
+    BOOST_CLASS_EXPORT_IMPLEMENT(A)                                                                \
     BOOST_SERIALIZATION_REGISTER_ARCHIVE(iarchive)                                                 \
     BOOST_SERIALIZATION_REGISTER_ARCHIVE(oarchive)

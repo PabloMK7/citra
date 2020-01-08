@@ -11,6 +11,9 @@ namespace Service::NWM {
 class NWM_CEC final : public ServiceFramework<NWM_CEC> {
 public:
     NWM_CEC();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NWM

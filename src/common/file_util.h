@@ -14,6 +14,8 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #ifdef _MSC_VER
 #include "common/string_util.h"
@@ -221,7 +223,6 @@ public:
 
     void Swap(IOFile& other);
 
-    bool Open(const std::string& filename, const char openmode[], int flags = 0);
     bool Close();
 
     template <typename T>
@@ -305,8 +306,34 @@ public:
     }
 
 private:
+    bool Open(const std::string& filename, const char openmode[], int flags = 0);
+
     std::FILE* m_file = nullptr;
     bool m_good = true;
+
+    std::string filename;
+    std::string openmode;
+    u32 flags;
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int) const {
+        ar << filename;
+        ar << openmode;
+        ar << flags;
+        ar << Tell();
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int) {
+        ar >> filename;
+        ar >> openmode;
+        ar >> flags;
+        u64 pos;
+        ar >> pos;
+        Seek(pos, SEEK_SET);
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 } // namespace FileUtil

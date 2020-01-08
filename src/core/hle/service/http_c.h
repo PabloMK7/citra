@@ -240,6 +240,8 @@ struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
+            *this);
         ar& current_http_context;
         ar& session_id;
         ar& num_http_contexts;

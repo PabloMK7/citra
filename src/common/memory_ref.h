@@ -14,6 +14,11 @@ public:
     virtual ~BackingMem() = default;
     virtual u8* GetPtr() = 0;
     virtual u32 GetSize() const = 0;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {}
+    friend class boost::serialization::access;
 };
 
 /// Backing memory implemented by a local buffer
@@ -39,6 +44,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<BackingMem>(*this);
         ar& data;
     }
     friend class boost::serialization::access;

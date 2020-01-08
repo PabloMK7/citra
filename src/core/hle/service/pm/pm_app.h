@@ -12,6 +12,9 @@ class PM_APP final : public ServiceFramework<PM_APP> {
 public:
     PM_APP();
     ~PM_APP() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::PM

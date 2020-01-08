@@ -12,6 +12,9 @@ class NIM_AOC final : public ServiceFramework<NIM_AOC> {
 public:
     NIM_AOC();
     ~NIM_AOC();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NIM

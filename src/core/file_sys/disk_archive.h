@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_backend.h"
@@ -43,6 +45,13 @@ public:
 protected:
     Mode mode;
     std::unique_ptr<FileUtil::IOFile> file;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<FileBackend>(*this);
+        ar& mode;
+        ar& file;
+    }
 };
 
 class DiskDirectory : public DirectoryBackend {

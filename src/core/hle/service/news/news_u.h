@@ -12,6 +12,9 @@ namespace Service::NEWS {
 class NEWS_U final : public ServiceFramework<NEWS_U> {
 public:
     NEWS_U();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NEWS

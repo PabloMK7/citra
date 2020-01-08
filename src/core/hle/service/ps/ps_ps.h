@@ -18,6 +18,8 @@ public:
     ~PS_PS() = default;
 
 private:
+    SERVICE_SERIALIZATION_SIMPLE
+
     /**
      * PS_PS::SignRsaSha256 service function
      *  Inputs:

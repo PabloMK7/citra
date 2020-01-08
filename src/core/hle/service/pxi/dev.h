@@ -13,6 +13,9 @@ class DEV final : public ServiceFramework<DEV> {
 public:
     DEV();
     ~DEV();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::PXI

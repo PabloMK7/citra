@@ -11,6 +11,9 @@ namespace Service::CFG {
 class CFG_NOR final : public ServiceFramework<CFG_NOR> {
 public:
     CFG_NOR();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::CFG

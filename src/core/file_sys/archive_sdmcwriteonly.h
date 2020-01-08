@@ -72,7 +72,10 @@ private:
     friend class boost::serialization::access;
 };
 
+class SDMCWriteOnlyDelayGenerator;
+
 } // namespace FileSys
 
 BOOST_CLASS_EXPORT_KEY(FileSys::SDMCWriteOnlyArchive)
 BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SDMCWriteOnly)
+BOOST_CLASS_EXPORT_KEY(FileSys::SDMCWriteOnlyDelayGenerator)

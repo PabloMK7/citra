@@ -19,6 +19,17 @@ struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
     u64 offset;   ///< Offset that this session will start reading from.
     u64 size;     ///< Max size of the file that this session is allowed to access
     bool subfile; ///< Whether this file was opened via OpenSubFile or not.
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
+            *this);
+        ar& priority;
+        ar& offset;
+        ar& size;
+        ar& subfile;
+    }
 };
 
 // TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.

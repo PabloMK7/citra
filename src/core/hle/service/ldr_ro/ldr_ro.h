@@ -18,6 +18,8 @@ struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
+            *this);
         ar& loaded_crs;
     }
     friend class boost::serialization::access;

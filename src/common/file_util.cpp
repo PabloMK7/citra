@@ -901,10 +901,18 @@ IOFile& IOFile::operator=(IOFile&& other) {
 void IOFile::Swap(IOFile& other) {
     std::swap(m_file, other.m_file);
     std::swap(m_good, other.m_good);
+    std::swap(filename, other.filename);
+    std::swap(openmode, other.openmode);
+    std::swap(flags, other.flags);
 }
 
 bool IOFile::Open(const std::string& filename, const char openmode[], int flags) {
     Close();
+
+    this->filename = filename;
+    this->openmode = openmode;
+    this->flags = flags;
+
 #ifdef _WIN32
     if (flags != 0) {
         m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(),

@@ -12,6 +12,9 @@ class QTM_S final : public ServiceFramework<QTM_S> {
 public:
     QTM_S();
     ~QTM_S() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::QTM

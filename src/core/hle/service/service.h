@@ -219,6 +219,13 @@ extern const std::array<ServiceModuleInfo, 40> service_module_map;
     friend class boost::serialization::access;                                                     \
     friend class ::construct_access;
 
+#define SERVICE_SERIALIZATION_SIMPLE                                                               \
+    template <class Archive>                                                                       \
+    void serialize(Archive& ar, const unsigned int) {                                              \
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);               \
+    }                                                                                              \
+    friend class boost::serialization::access;
+
 #define SERVICE_CONSTRUCT(T)                                                                       \
     namespace boost::serialization {                                                               \
     template <class Archive>                                                                       \

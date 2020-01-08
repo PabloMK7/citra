@@ -86,7 +86,10 @@ private:
     friend class boost::serialization::access;
 };
 
+class SDMCDelayGenerator;
+
 } // namespace FileSys
 
 BOOST_CLASS_EXPORT_KEY(FileSys::SDMCArchive)
 BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SDMC)
+BOOST_CLASS_EXPORT_KEY(FileSys::SDMCDelayGenerator)

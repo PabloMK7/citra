@@ -11,6 +11,9 @@ namespace Service::NWM {
 class NWM_EXT final : public ServiceFramework<NWM_EXT> {
 public:
     NWM_EXT();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NWM
