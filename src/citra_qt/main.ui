@@ -109,8 +109,8 @@
      <addaction name="action_Screen_Layout_Large_Screen"/>
      <addaction name="action_Screen_Layout_Side_by_Side"/>
      <addaction name="separator"/>
-     <addaction name="action_Screen_Layout_Swap_Screens"/>
      <addaction name="action_Screen_Layout_Upright_Screens"/>
+     <addaction name="action_Screen_Layout_Swap_Screens"/>
     </widget>
     <addaction name="action_Fullscreen"/>
     <addaction name="action_Single_Window_Mode"/>
