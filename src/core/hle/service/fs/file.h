@@ -6,6 +6,7 @@
 
 #include <memory>
 #include "core/file_sys/archive_backend.h"
+#include "core/global.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -30,6 +31,7 @@ private:
         ar& size;
         ar& subfile;
     }
+    friend class boost::serialization::access;
 };
 
 // TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.
@@ -71,6 +73,15 @@ private:
     void OpenSubFile(Kernel::HLERequestContext& ctx);
 
     Kernel::KernelSystem& kernel;
+
+    File();
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::FS
+
+BOOST_CLASS_EXPORT_KEY(Service::FS::FileSessionSlot)
+BOOST_CLASS_EXPORT_KEY(Service::FS::File)

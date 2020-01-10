@@ -4,14 +4,14 @@
 ☐ Custom texture cache
 ☐ Review constructor/initialization code
 ☐ Review core timing events
-☐ Review base class serialization everywhere
+✔ Review base class serialization everywhere @done(20-01-10 23:47)
     Make sure that all base/derived relationships are registered
 ☐ Serialize codeset with an apploader reference instead
 ☐ Additional stuff to serialize
     ☐ Self-NCCH archive
     ☐ File backends
     ☐ Directory backends
-    ☐ File/directory 'services'
+    ✔ File/directory 'services' @done(20-01-10 23:46)
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)
     ✔ Page tables @done(20-01-05 16:33)

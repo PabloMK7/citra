@@ -8,6 +8,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -63,7 +65,33 @@ private:
     LowPathType type;
     std::vector<u8> binary;
     std::string string;
-    std::u16string u16str;
+    std::u16string u16str{};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& type;
+        switch (type) {
+        case LowPathType::Binary:
+            ar& binary;
+            break;
+        case LowPathType::Char:
+            ar& string;
+            break;
+        case LowPathType::Wchar:
+            static_assert(sizeof(wchar_t) == sizeof(char16_t));
+            {
+                std::wstring wstring(reinterpret_cast<wchar_t*>(u16str.data()));
+                ar& wstring;
+                if (!Archive::is_saving::value) {
+                    u16str = std::u16string(reinterpret_cast<char16_t*>(wstring.data()));
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    friend class boost::serialization::access;
 };
 
 /// Parameters of the archive, as specified in the Create or Format call.

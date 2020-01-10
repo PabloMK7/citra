@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/file_sys/errors.h"
@@ -13,7 +14,19 @@
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/fs/file.h"
 
+SERIALIZE_EXPORT_IMPL(Service::FS::File)
+SERIALIZE_EXPORT_IMPL(Service::FS::FileSessionSlot)
+
 namespace Service::FS {
+
+template <class Archive>
+void File::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& path;
+    ar& backend;
+}
+
+File::File() : ServiceFramework("", 1), kernel(Core::Global<Kernel::KernelSystem>()) {}
 
 File::File(Kernel::KernelSystem& kernel, std::unique_ptr<FileSys::FileBackend>&& backend,
            const FileSys::Path& path)
