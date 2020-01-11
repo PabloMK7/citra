@@ -10,6 +10,7 @@
 // putting this as a subset of HLE for now.
 
 #include <boost/serialization/binary_object.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/memory_ref.h"
@@ -76,3 +77,5 @@ private:
 };
 
 } // namespace ConfigMem
+
+BOOST_CLASS_EXPORT_KEY(ConfigMem::Handler)

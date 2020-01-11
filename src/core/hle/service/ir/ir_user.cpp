@@ -4,6 +4,8 @@
 
 #include <memory>
 #include <boost/crc.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
@@ -12,6 +14,9 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/hle/service/ir/ir_user.h"
+
+SERIALIZE_EXPORT_IMPL(Service::IR::IR_USER)
+SERVICE_CONSTRUCT_IMPL(Service::IR::IR_USER)
 
 namespace Service::IR {
 
@@ -23,10 +28,9 @@ void IR_USER::serialize(Archive& ar, const unsigned int) {
     ar& receive_event;
     ar& shared_memory;
     ar& connected_device;
-    ar&* receive_buffer.get();
+    ar& receive_buffer;
     ar&* extra_hid.get();
 }
-SERIALIZE_IMPL(IR_USER)
 
 // This is a header that will present in the ir:USER shared memory if it is initialized with
 // InitializeIrNopShared service function. Otherwise the shared memory doesn't have this header if
@@ -204,6 +208,8 @@ private:
     u32 max_data_size;
 
 private:
+    BufferManager() = default;
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& info;
@@ -449,6 +455,7 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework("ir:USER", 1) {
 
     using namespace Kernel;
 
+    connected_device = false;
     conn_status_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ConnectionStatusEvent");
     send_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:SendEvent");
     receive_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ReceiveEvent");

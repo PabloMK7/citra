@@ -24,6 +24,9 @@
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
 
+SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS)
+SERVICE_CONSTRUCT_IMPL(Service::NWM::NWM_UDS)
+
 namespace Service::NWM {
 
 template <class Archive>
@@ -34,7 +37,6 @@ void NWM_UDS::serialize(Archive& ar, const unsigned int) {
     ar& received_beacons;
     // wifi_packet_received set in constructor
 }
-SERIALIZE_IMPL(NWM_UDS)
 
 namespace ErrCodes {
 enum {

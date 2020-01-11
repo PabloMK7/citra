@@ -7,7 +7,6 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <boost/serialization/shared_ptr.hpp>
 #include "core/hle/service/service.h"
 
 namespace Kernel {
@@ -177,3 +176,6 @@ private:
 };
 
 } // namespace Service::IR
+
+BOOST_CLASS_EXPORT_KEY(Service::IR::IR_USER)
+SERVICE_CONSTRUCT(Service::IR::IR_USER)

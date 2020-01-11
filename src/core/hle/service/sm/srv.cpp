@@ -35,7 +35,6 @@ void SRV::serialize(Archive& ar, const unsigned int) {
     ar& notification_semaphore;
     ar& get_service_handle_delayed_map;
 }
-SERIALIZE_IMPL(SRV)
 
 constexpr int MAX_PENDING_NOTIFICATIONS = 16;
 

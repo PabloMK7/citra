@@ -14,6 +14,7 @@
 #include <ctime>
 #include <memory>
 #include <boost/serialization/binary_object.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -131,3 +132,5 @@ template <class Archive>
 void load_construct_data(Archive& ar, SharedPage::Handler* t, const unsigned int);
 
 } // namespace boost::serialization
+
+BOOST_CLASS_EXPORT_KEY(SharedPage::Handler)

@@ -77,6 +77,15 @@ public:
 
 private:
     std::shared_ptr<std::vector<u8>> data;
+
+    ExeFSSectionFile() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<FileBackend>(*this);
+        ar& data;
+    }
+    friend class boost::serialization::access;
 };
 
 // SelfNCCHArchive represents the running application itself. From this archive the application can
@@ -234,6 +243,15 @@ private:
     }
 
     NCCHData ncch_data;
+
+    SelfNCCHArchive() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveBackend>(*this);
+        ar& ncch_data;
+    }
+    friend class boost::serialization::access;
 };
 
 void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
@@ -300,3 +318,6 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_SelfNCCH::GetFormatInfo(const Path&,
 }
 
 } // namespace FileSys
+
+SERIALIZE_EXPORT_IMPL(FileSys::ExeFSSectionFile)
+SERIALIZE_EXPORT_IMPL(FileSys::SelfNCCHArchive)

@@ -334,6 +334,7 @@ private:
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+    friend class boost::serialization::access;
 };
 
 } // namespace FileUtil

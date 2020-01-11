@@ -3,14 +3,15 @@
     ☐ Multiple slots etc.
 ☐ Custom texture cache
 ☐ Review constructor/initialization code
-☐ Review core timing events
+☐ Core timing events
+☐ Serialize codeset with an apploader reference instead
 ✔ Review base class serialization everywhere @done(20-01-10 23:47)
     Make sure that all base/derived relationships are registered
-☐ Serialize codeset with an apploader reference instead
-☐ Additional stuff to serialize
-    ☐ Self-NCCH archive
-    ☐ File backends
-    ☐ Directory backends
+✔ Additional stuff to serialize @done(20-01-11 16:32)
+    ✔ Self-NCCH archive @done(20-01-11 16:32)
+    ✔ File backends @done(20-01-11 16:32)
+    ✘ Directory backends @cancelled(20-01-11 16:32)
+        Not needed for now
     ✔ File/directory 'services' @done(20-01-10 23:46)
 ✔ CPU @done(19-08-13 15:41)
 ✔ Memory @done(19-08-13 15:41)
@@ -37,10 +38,8 @@
     ✔ SDMC @done(20-01-02 23:34)
         ✔ Normal @done(20-01-02 23:34)
         ✔ Write-only @done(20-01-02 23:34)
-    ✘ IVFC @cancelled(20-01-03 13:22)
-        Seems IVFCArchive is never used.. which is good because it has a file reference!
-    ✘ File refs @cancelled(20-01-03 13:22)
-        Not needed as nothing serializes file buffers
+    ✔ IVFC @done(20-01-11 16:33)
+    ✔ File refs @done(20-01-11 16:33)
     ✘ Replace delay generator with virtual fns @cancelled(20-01-03 13:16)
         While they have no state, the extra refactoring here is unneeded
 ✘ MMIO @cancelled(20-01-01 01:06)

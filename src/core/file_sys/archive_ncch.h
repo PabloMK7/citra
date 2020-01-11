@@ -95,9 +95,16 @@ public:
     void Flush() const override {}
 
 private:
-    NCCHFile() = default; // NOTE: If the public ctor has behaviour, need to replace this with
-                          // *_construct_data
-    std::vector<u8> file_buffer; // TODO: Replace with file ref for serialization
+    std::vector<u8> file_buffer;
+
+    NCCHFile() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<FileBackend>(*this);
+        ar& file_buffer; // TODO: See about a more efficient way to do this
+    }
+    friend class boost::serialization::access;
 };
 
 /// File system interface to the NCCH archive
@@ -125,4 +132,5 @@ private:
 } // namespace FileSys
 
 BOOST_CLASS_EXPORT_KEY(FileSys::NCCHArchive)
+BOOST_CLASS_EXPORT_KEY(FileSys::NCCHFile)
 BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_NCCH)

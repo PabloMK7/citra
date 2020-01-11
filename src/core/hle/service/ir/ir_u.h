@@ -12,6 +12,9 @@ namespace Service::IR {
 class IR_U final : public ServiceFramework<IR_U> {
 public:
     IR_U();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::IR

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <boost/serialization/array.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
 
@@ -29,9 +30,23 @@ private:
     FileUtil::IOFile file;
     std::array<u8, 16> key;
     std::array<u8, 16> ctr;
-    std::size_t file_offset;
-    std::size_t crypto_offset;
-    std::size_t data_size;
+    u64 file_offset;
+    u64 crypto_offset;
+    u64 data_size;
+
+    RomFSReader() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& is_encrypted;
+        ar& file;
+        ar& key;
+        ar& ctr;
+        ar& file_offset;
+        ar& crypto_offset;
+        ar& data_size;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys

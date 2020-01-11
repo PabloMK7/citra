@@ -29,7 +29,6 @@ void IR_RST::serialize(Archive& ar, const unsigned int) {
     // update_callback_id and input devices are set separately
     ReloadInputDevices();
 }
-SERIALIZE_IMPL(IR_RST)
 
 struct PadDataEntry {
     PadState current_state;
