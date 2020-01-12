@@ -160,15 +160,33 @@ private:
     // The priority level queues of thread ids.
     std::array<Queue, NUM_QUEUES> queues;
 
+    s32 ToIndex(Queue* q) const {
+        if (q == nullptr) {
+            return -2;
+        } else if (q == UnlinkedTag()) {
+            return -1;
+        } else {
+            return static_cast<s32>(q - &queues[0]);
+        }
+    }
+
+    Queue* ToPointer(s32 idx) {
+        if (idx == -1) {
+            return UnlinkedTag();
+        } else if (idx < 0) {
+            return nullptr;
+        } else {
+            return &queues[idx];
+        }
+    }
+
     friend class boost::serialization::access;
     template <class Archive>
     void save(Archive& ar, const unsigned int file_version) const {
-        s32 idx = first == UnlinkedTag() ? -1 : static_cast<s32>(first - &queues[0]);
+        s32 idx = ToIndex(first);
         ar << idx;
         for (auto i = 0; i < NUM_QUEUES; i++) {
-            s32 idx1 = first == UnlinkedTag()
-                           ? -1
-                           : static_cast<s32>(queues[i].next_nonempty - &queues[0]);
+            s32 idx1 = ToIndex(queues[i].next_nonempty);
             ar << idx1;
             ar << queues[i].data;
         }
@@ -178,10 +196,10 @@ private:
     void load(Archive& ar, const unsigned int file_version) {
         s32 idx;
         ar >> idx;
-        first = idx < 0 ? UnlinkedTag() : &queues[idx];
+        first = ToPointer(idx);
         for (auto i = 0; i < NUM_QUEUES; i++) {
             ar >> idx;
-            queues[i].next_nonempty = idx < 0 ? UnlinkedTag() : &queues[idx];
+            queues[i].next_nonempty = ToPointer(idx);
             ar >> queues[i].data;
         }
     }

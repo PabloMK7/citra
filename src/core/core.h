@@ -116,14 +116,18 @@ public:
     /// Shutdown and then load again
     void Reset();
 
+    enum class Signal : u32 { None, Shutdown, Reset, Save, Load };
+
+    bool SendSignal(Signal signal);
+
     /// Request reset of the system
     void RequestReset() {
-        reset_requested = true;
+        SendSignal(Signal::Reset);
     }
 
     /// Request shutdown of the system
     void RequestShutdown() {
-        shutdown_requested = true;
+        SendSignal(Signal::Shutdown);
     }
 
     /**
@@ -341,8 +345,7 @@ private:
     Frontend::EmuWindow* m_emu_window;
     std::string m_filepath;
 
-    std::atomic<bool> reset_requested;
-    std::atomic<bool> shutdown_requested;
+    std::atomic<Signal> current_signal;
 
     friend class boost::serialization::access;
     template <typename Archive>

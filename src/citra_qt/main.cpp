@@ -1504,19 +1504,12 @@ void GMainWindow::OnCheats() {
 }
 
 void GMainWindow::OnSave() {
-    Core::System& system{Core::System::GetInstance()};
-    auto fs = std::ofstream("save0.citrasave");
-    emu_thread->SetRunning(false);
-    Core::System::GetInstance().Save(fs);
-    emu_thread->SetRunning(true);
+    Core::System::GetInstance().SendSignal(Core::System::Signal::Save);
 }
 
 void GMainWindow::OnLoad() {
     if (QFileInfo("save0.citrasave").exists()) {
-        auto fs = std::ifstream("save0.citrasave");
-        emu_thread->SetRunning(false);
-        Core::System::GetInstance().Load(fs);
-        emu_thread->SetRunning(true);
+        Core::System::GetInstance().SendSignal(Core::System::Signal::Load);
     }
 }
 

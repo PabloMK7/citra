@@ -49,9 +49,9 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     // the sizes specified in the memory_region_sizes table.
     VAddr base = 0;
     for (int i = 0; i < 3; ++i) {
-        memory_regions[i].Reset(base, memory_region_sizes[mem_type][i]);
+        memory_regions[i]->Reset(base, memory_region_sizes[mem_type][i]);
 
-        base += memory_regions[i].size;
+        base += memory_regions[i]->size;
     }
 
     // We must've allocated the entire FCRAM by the end
@@ -63,20 +63,20 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     // app_mem_malloc does not always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the game expects, not the real one.
     config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
-    config_mem.sys_mem_alloc = memory_regions[1].size;
-    config_mem.base_mem_alloc = memory_regions[2].size;
+    config_mem.sys_mem_alloc = memory_regions[1]->size;
+    config_mem.base_mem_alloc = memory_regions[2]->size;
 
     shared_page_handler = std::make_shared<SharedPage::Handler>(timing);
 }
 
-MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {
+std::shared_ptr<MemoryRegionInfo> KernelSystem::GetMemoryRegion(MemoryRegion region) {
     switch (region) {
     case MemoryRegion::APPLICATION:
-        return &memory_regions[0];
+        return memory_regions[0];
     case MemoryRegion::SYSTEM:
-        return &memory_regions[1];
+        return memory_regions[1];
     case MemoryRegion::BASE:
-        return &memory_regions[2];
+        return memory_regions[2];
     default:
         UNREACHABLE();
     }

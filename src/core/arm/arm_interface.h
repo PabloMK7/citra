@@ -264,7 +264,7 @@ private:
             ar >> r;
             SetCP15Register(static_cast<CP15Register>(i), r);
         }
-        // TODO: Clear caches etc?
+        ClearInstructionCache();
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()

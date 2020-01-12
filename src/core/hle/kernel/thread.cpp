@@ -32,7 +32,7 @@ namespace Kernel {
 
 template <class Archive>
 void Thread::serialize(Archive& ar, const unsigned int file_version) {
-    ar& boost::serialization::base_object<Object>(*this);
+    ar& boost::serialization::base_object<WaitObject>(*this);
     ar&* context.get();
     ar& thread_id;
     ar& status;
@@ -363,7 +363,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     if (needs_allocation) {
         // There are no already-allocated pages with free slots, lets allocate a new one.
         // TLS pages are allocated from the BASE region in the linear heap.
-        MemoryRegionInfo* memory_region = GetMemoryRegion(MemoryRegion::BASE);
+        auto memory_region = GetMemoryRegion(MemoryRegion::BASE);
 
         // Allocate some memory from the end of the linear heap for this region.
         auto offset = memory_region->LinearAllocate(Memory::PAGE_SIZE);

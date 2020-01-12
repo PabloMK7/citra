@@ -23,6 +23,9 @@ KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                            std::function<void()> prepare_reschedule_callback, u32 system_mode)
     : memory(memory), timing(timing),
       prepare_reschedule_callback(std::move(prepare_reschedule_callback)) {
+    for (auto i = 0; i < memory_regions.size(); i++) {
+        memory_regions[i] = std::make_shared<MemoryRegionInfo>();
+    }
     MemoryInit(system_mode);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);
@@ -107,7 +110,7 @@ template <class Archive>
 void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
     ar& memory_regions;
     ar& named_ports;
-    ar&* current_cpu.get();
+    // current_cpu set externally
     // NB: subsystem references and prepare_reschedule_callback are constant
     ar&* resource_limits.get();
     ar& next_object_id;

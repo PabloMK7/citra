@@ -187,7 +187,7 @@ class GSP_GPU;
 
 class SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
 public:
-    SessionData();
+    SessionData() = default;
     SessionData(GSP_GPU* gsp);
     ~SessionData();
 

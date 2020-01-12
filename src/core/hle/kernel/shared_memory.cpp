@@ -42,7 +42,7 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
     if (address == 0) {
         // We need to allocate a block from the Linear Heap ourselves.
         // We'll manually allocate some memory from the linear heap in the specified region.
-        MemoryRegionInfo* memory_region = GetMemoryRegion(region);
+        auto memory_region = GetMemoryRegion(region);
         auto offset = memory_region->LinearAllocate(size);
 
         ASSERT_MSG(offset, "Not enough space in region to allocate shared memory!");
@@ -79,7 +79,7 @@ std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
     // Allocate memory in heap
-    MemoryRegionInfo* memory_region = GetMemoryRegion(MemoryRegion::SYSTEM);
+    auto memory_region = GetMemoryRegion(MemoryRegion::SYSTEM);
     auto backing_blocks = memory_region->HeapAllocate(size);
     ASSERT_MSG(!backing_blocks.empty(), "Not enough space in region to allocate shared memory!");
     shared_memory->holding_memory = backing_blocks;

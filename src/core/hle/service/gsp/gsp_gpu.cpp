@@ -824,10 +824,6 @@ std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> GSP_GPU::MakeSes
     return std::make_unique<SessionData>(this);
 }
 
-SessionData::SessionData() {
-    UNREACHABLE();
-}
-
 SessionData::SessionData(GSP_GPU* gsp) : gsp(gsp) {
     // Assign a new thread id to this session when it connects. Note: In the real GSP service this
     // is done through a real thread (svcCreateThread) but we have to simulate it since our HLE

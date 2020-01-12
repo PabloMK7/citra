@@ -23,14 +23,10 @@ bool Timing::Event::operator<(const Event& right) const {
 TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback callback) {
     // check for existing type with same name.
     // we want event type names to remain unique so that we can use them for serialization.
-    ASSERT_MSG(event_types.find(name) == event_types.end(),
-               "CoreTiming Event \"{}\" is already registered. Events should only be registered "
-               "during Init to avoid breaking save states.",
-               name);
-
-    auto info = event_types.emplace(name, TimingEventType{callback, nullptr});
+    auto info = event_types.emplace(name, TimingEventType{});
     TimingEventType* event_type = &info.first->second;
     event_type->name = &info.first->first;
+    event_type->callback = callback;
     return event_type;
 }
 
@@ -129,6 +125,10 @@ void Timing::Advance() {
         Event evt = std::move(event_queue.front());
         std::pop_heap(event_queue.begin(), event_queue.end(), std::greater<>());
         event_queue.pop_back();
+        if (event_types.find(*evt.type->name) == event_types.end()) {
+            LOG_ERROR(Core, "Unknown queued event");
+            continue;
+        }
         evt.type->callback(evt.userdata, global_timer - evt.time);
     }
 

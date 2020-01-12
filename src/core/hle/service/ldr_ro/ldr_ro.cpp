@@ -15,6 +15,7 @@
 
 SERVICE_CONSTRUCT_IMPL(Service::LDR::RO)
 SERIALIZE_EXPORT_IMPL(Service::LDR::RO)
+SERIALIZE_EXPORT_IMPL(Service::LDR::ClientSlot)
 
 namespace Service::LDR {
 

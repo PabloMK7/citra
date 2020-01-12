@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fstream>
 #include <memory>
 #include <utility>
 #include <boost/serialization/array.hpp>
@@ -103,13 +104,36 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     HW::Update();
     Reschedule();
 
-    if (reset_requested.exchange(false)) {
+    auto signal = current_signal.exchange(Signal::None);
+    switch (signal) {
+    case Signal::Reset:
         Reset();
-    } else if (shutdown_requested.exchange(false)) {
+        break;
+    case Signal::Shutdown:
         return ResultStatus::ShutdownRequested;
+        break;
+    case Signal::Load: {
+        auto stream = std::ifstream("save0.citrasave", std::fstream::binary);
+        System::Load(stream);
+    } break;
+    case Signal::Save: {
+        auto stream = std::ofstream("save0.citrasave", std::fstream::binary);
+        System::Save(stream);
+    } break;
+    default:
+        break;
     }
 
     return status;
+}
+
+bool System::SendSignal(System::Signal signal) {
+    auto prev = System::Signal::None;
+    if (!current_signal.compare_exchange_strong(prev, signal)) {
+        LOG_ERROR(Core, "Unable to {} as {} is ongoing", signal, prev);
+        return false;
+    }
+    return true;
 }
 
 System::ResultStatus System::SingleStep() {
@@ -216,8 +240,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(
-        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
+                                                    [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -409,6 +433,7 @@ void System::Reset() {
 
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
+    Memory::RasterizerFlushAndInvalidateRegion(0, 0xFFFFFFFF);
     ar&* cpu_core.get();
     ar&* service_manager.get();
     ar& GPU::g_regs;
@@ -436,11 +461,20 @@ void System::Save(std::ostream& stream) const {
 }
 
 void System::Load(std::istream& stream) {
-    {
-        iarchive ia{stream};
-        ia&* this;
+    try {
+
+        {
+            iarchive ia{stream};
+            ia&* this;
+        }
+        VideoCore::Load(stream);
+
+        // Flush state through:
+        Kernel().SetCurrentProcess(Kernel().GetCurrentProcess());
+
+    } catch (const std::exception& e) {
+        LOG_ERROR(Core, "Error loading: {}", e.what());
     }
-    VideoCore::Load(stream);
 }
 
 } // namespace Core

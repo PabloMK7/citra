@@ -176,11 +176,23 @@ private:
     std::vector<u8> romfs_file;
     u64 data_offset;
     u64 data_size;
+
+    IVFCFileInMemory() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<FileBackend>(*this);
+        ar& romfs_file;
+        ar& data_offset;
+        ar& data_size;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
 
 BOOST_CLASS_EXPORT_KEY(FileSys::IVFCFile)
+BOOST_CLASS_EXPORT_KEY(FileSys::IVFCFileInMemory)
 BOOST_CLASS_EXPORT_KEY(FileSys::IVFCDelayGenerator)
 BOOST_CLASS_EXPORT_KEY(FileSys::RomFSDelayGenerator)
 BOOST_CLASS_EXPORT_KEY(FileSys::ExeFSDelayGenerator)
