@@ -23,6 +23,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/threadsafe_queue.h"
@@ -190,6 +192,8 @@ public:
     s64 GetDowncount() const;
 
 private:
+    static Timing* deserializing;
+
     struct Event {
         s64 time;
         u64 fifo_order;
@@ -198,6 +202,29 @@ private:
 
         bool operator>(const Event& right) const;
         bool operator<(const Event& right) const;
+
+    private:
+        template <class Archive>
+        void save(Archive& ar, const unsigned int) const {
+            ar& time;
+            ar& fifo_order;
+            ar& userdata;
+            std::string name = *(type->name);
+            ar << name;
+        }
+
+        template <class Archive>
+        void load(Archive& ar, const unsigned int) {
+            ar& time;
+            ar& fifo_order;
+            ar& userdata;
+            std::string name;
+            ar >> name;
+            type = Timing::deserializing->RegisterEvent(name, nullptr);
+        }
+        friend class boost::serialization::access;
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
     };
 
     static constexpr int MAX_SLICE_LENGTH = 20000;
@@ -229,6 +256,21 @@ private:
     // executing the first cycle of each slice to prepare the slice length and downcount for
     // that slice.
     bool is_global_timer_sane = true;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        // event_types set during initialization of other things
+        deserializing = this;
+        MoveEvents();
+        ar& global_timer;
+        ar& slice_length;
+        ar& downcount;
+        ar& event_queue;
+        ar& event_fifo_id;
+        ar& idled_cycles;
+        deserializing = nullptr;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Core

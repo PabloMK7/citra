@@ -1,9 +1,10 @@
 ☐ Save/load UI
     ✔ Basic version @done(20-01-03 15:27)
     ☐ Multiple slots etc.
+☐ Add 'force flush all' to Rasterizer interface + impls
 ☐ Custom texture cache
 ☐ Review constructor/initialization code
-☐ Core timing events
+✔ Core timing events @done(20-01-12 15:14)
 ☐ Serialize codeset with an apploader reference instead
 ✔ Review base class serialization everywhere @done(20-01-10 23:47)
     Make sure that all base/derived relationships are registered

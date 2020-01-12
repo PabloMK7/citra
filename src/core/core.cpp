@@ -434,6 +434,7 @@ void System::Reset() {
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
     Memory::RasterizerFlushAndInvalidateRegion(0, 0xFFFFFFFF);
+    ar&* timing.get();
     ar&* cpu_core.get();
     ar&* service_manager.get();
     ar& GPU::g_regs;

@@ -11,6 +11,8 @@
 
 namespace Core {
 
+Timing* Timing::deserializing = nullptr;
+
 // Sort by time, unless the times are the same, in which case sort by the order added to the queue
 bool Timing::Event::operator>(const Event& right) const {
     return std::tie(time, fifo_order) > std::tie(right.time, right.fifo_order);
@@ -26,7 +28,9 @@ TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback ca
     auto info = event_types.emplace(name, TimingEventType{});
     TimingEventType* event_type = &info.first->second;
     event_type->name = &info.first->first;
-    event_type->callback = callback;
+    if (callback != nullptr) {
+        event_type->callback = callback;
+    }
     return event_type;
 }
 
@@ -129,7 +133,9 @@ void Timing::Advance() {
             LOG_ERROR(Core, "Unknown queued event");
             continue;
         }
-        evt.type->callback(evt.userdata, global_timer - evt.time);
+        if (evt.type->callback != nullptr) {
+            evt.type->callback(evt.userdata, global_timer - evt.time);
+        }
     }
 
     is_global_timer_sane = false;

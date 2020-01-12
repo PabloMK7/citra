@@ -172,6 +172,7 @@ private:
         ar& ready_queue;
         ar& wakeup_callback_table;
         ar& thread_list;
+        SwitchContext(current_thread.get());
     }
 };
 
