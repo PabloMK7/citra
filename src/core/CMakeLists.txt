@@ -74,6 +74,8 @@ add_library(core STATIC
     file_sys/ivfc_archive.h
     file_sys/ncch_container.cpp
     file_sys/ncch_container.h
+    file_sys/patch.cpp
+    file_sys/patch.h
     file_sys/path_parser.cpp
     file_sys/path_parser.h
     file_sys/romfs_reader.cpp

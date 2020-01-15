@@ -12,6 +12,7 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/file_sys/ncch_container.h"
+#include "core/file_sys/patch.h"
 #include "core/file_sys/seed_db.h"
 #include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
@@ -23,53 +24,6 @@ namespace FileSys {
 
 static const int kMaxSections = 8;   ///< Maximum number of sections (files) in an ExeFs
 static const int kBlockSize = 0x200; ///< Size of ExeFS blocks (in bytes)
-
-/**
- * Attempts to patch a buffer using an IPS
- * @param ips Vector of the patches to apply
- * @param buffer Vector to patch data into
- */
-static void ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
-    u32 cursor = 5;
-    u32 patch_length = ips.size() - 3;
-    std::string ips_header(ips.begin(), ips.begin() + 5);
-
-    if (ips_header != "PATCH") {
-        LOG_INFO(Service_FS, "Attempted to load invalid IPS");
-        return;
-    }
-
-    while (cursor < patch_length) {
-        std::string eof_check(ips.begin() + cursor, ips.begin() + cursor + 3);
-
-        if (eof_check == "EOF")
-            return;
-
-        u32 offset = ips[cursor] << 16 | ips[cursor + 1] << 8 | ips[cursor + 2];
-        std::size_t length = ips[cursor + 3] << 8 | ips[cursor + 4];
-
-        // check for an rle record
-        if (length == 0) {
-            length = ips[cursor + 5] << 8 | ips[cursor + 6];
-
-            if (buffer.size() < offset + length)
-                return;
-
-            for (u32 i = 0; i < length; ++i)
-                buffer[offset + i] = ips[cursor + 7];
-
-            cursor += 8;
-
-            continue;
-        }
-
-        if (buffer.size() < offset + length)
-            return;
-
-        std::memcpy(&buffer[offset], &ips[cursor + 5], length);
-        cursor += length + 5;
-    }
-}
 
 /**
  * Get the decompressed size of an LZSS compressed ExeFS file
@@ -553,20 +507,32 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     return Loader::ResultStatus::ErrorNotUsed;
 }
 
-bool NCCHContainer::ApplyIPSPatch(std::vector<u8>& code) const {
-    const std::string override_ips = filepath + ".exefsdir/code.ips";
+Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const {
+    struct PatchLocation {
+        std::string path;
+        bool (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
+    };
+    const std::array<PatchLocation, 2> patch_paths{{
+        {filepath + ".exefsdir/code.ips", Patch::ApplyIpsPatch},
+        {filepath + ".exefsdir/code.bps", Patch::ApplyBpsPatch},
+    }};
 
-    FileUtil::IOFile ips_file{override_ips, "rb"};
-    if (!ips_file)
-        return false;
+    for (const PatchLocation& info : patch_paths) {
+        FileUtil::IOFile file{info.path, "rb"};
+        if (!file)
+            continue;
 
-    std::vector<u8> ips(ips_file.GetSize());
-    if (ips_file.ReadBytes(ips.data(), ips.size()) != ips.size())
-        return false;
+        std::vector<u8> patch(file.GetSize());
+        if (file.ReadBytes(patch.data(), patch.size()) != patch.size())
+            return Loader::ResultStatus::Error;
 
-    LOG_INFO(Service_FS, "File {} patching code.bin", override_ips);
-    ApplyIPS(ips, code);
-    return true;
+        LOG_INFO(Service_FS, "File {} patching code.bin", info.path);
+        if (!info.patch_fn(patch, code))
+            return Loader::ResultStatus::Error;
+
+        return Loader::ResultStatus::Success;
+    }
+    return Loader::ResultStatus::ErrorNotUsed;
 }
 
 Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,

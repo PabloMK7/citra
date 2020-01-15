@@ -100,8 +100,10 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
             overlay_ncch->exheader_header.codeset_info.data.num_max_pages * Memory::PAGE_SIZE +
             bss_page_size;
 
-        // Apply any IPS patch now that the entire codeset (including .bss) has been allocated
-        overlay_ncch->ApplyIPSPatch(code);
+        // Apply patches now that the entire codeset (including .bss) has been allocated
+        const ResultStatus patch_result = overlay_ncch->ApplyCodePatch(code);
+        if (patch_result != ResultStatus::Success && patch_result != ResultStatus::ErrorNotUsed)
+            return patch_result;
 
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::move(code);
