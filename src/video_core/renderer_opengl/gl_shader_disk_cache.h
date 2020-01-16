@@ -46,8 +46,8 @@ class ShaderDiskCacheRaw {
 public:
     explicit ShaderDiskCacheRaw(u64 unique_identifier, ProgramType program_type,
                                 RawShaderConfig config, ProgramCode program_code);
-    ShaderDiskCacheRaw();
-    ~ShaderDiskCacheRaw();
+    ShaderDiskCacheRaw() = default;
+    ~ShaderDiskCacheRaw() = default;
 
     bool Load(FileUtil::IOFile& file);
 
@@ -90,7 +90,7 @@ struct ShaderDiskCacheDump {
 class ShaderDiskCache {
 public:
     explicit ShaderDiskCache(bool separable);
-    ~ShaderDiskCache();
+    ~ShaderDiskCache() = default;
 
     /// Loads transferable cache. If file has a old version or on failure, it deletes the file.
     std::optional<std::vector<ShaderDiskCacheRaw>> LoadTransferable();

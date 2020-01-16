@@ -6,7 +6,6 @@
 
 #include <memory>
 #include "common/common_types.h"
-#include "core/frontend/emu_window.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/video_core.h"
 

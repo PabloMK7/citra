@@ -11,7 +11,7 @@
 namespace Common::Compression {
 
 std::vector<u8> CompressDataZSTD(const u8* source, std::size_t source_size, s32 compression_level) {
-    compression_level = std::clamp(compression_level, 1, ZSTD_maxCLevel());
+    compression_level = std::clamp(compression_level, ZSTD_minCLevel(), ZSTD_maxCLevel());
 
     const std::size_t max_compressed_size = ZSTD_compressBound(source_size);
     std::vector<u8> compressed(max_compressed_size);

@@ -19,7 +19,8 @@
 
 namespace OpenGL {
 
-using ShaderCacheVersionHash = std::array<u8, 64>;
+constexpr std::size_t HASH_LENGTH = 64;
+using ShaderCacheVersionHash = std::array<u8, HASH_LENGTH>;
 
 enum class TransferableEntryKind : u32 {
     Raw,
@@ -43,10 +44,6 @@ ShaderDiskCacheRaw::ShaderDiskCacheRaw(u64 unique_identifier, ProgramType progra
                                        RawShaderConfig config, ProgramCode program_code)
     : unique_identifier{unique_identifier}, program_type{program_type}, config{config},
       program_code{std::move(program_code)} {}
-
-ShaderDiskCacheRaw::ShaderDiskCacheRaw() = default;
-
-ShaderDiskCacheRaw::~ShaderDiskCacheRaw() = default;
 
 bool ShaderDiskCacheRaw::Load(FileUtil::IOFile& file) {
     if (file.ReadBytes(&unique_identifier, sizeof(u64)) != sizeof(u64) ||
@@ -107,8 +104,6 @@ bool ShaderDiskCacheRaw::Save(FileUtil::IOFile& file) const {
 
 ShaderDiskCache::ShaderDiskCache(bool separable) : separable{separable} {}
 
-ShaderDiskCache::~ShaderDiskCache() = default;
-
 std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable() {
     const bool has_title_id = GetProgramID() != 0;
     if (!Settings::values.use_disk_shader_cache || !has_title_id)
@@ -158,7 +153,7 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
                 LOG_ERROR(Render_OpenGL, "Failed to load transferable raw entry - skipping");
                 return {};
             }
-            transferable.insert({entry.GetUniqueIdentifier(), {}});
+            transferable.emplace(entry.GetUniqueIdentifier(), ShaderDiskCacheRaw{});
             raws.push_back(std::move(entry));
             break;
         }

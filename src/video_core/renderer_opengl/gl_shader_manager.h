@@ -19,8 +19,6 @@ class System;
 
 namespace OpenGL {
 
-class ShaderDiskCacheOpenGL;
-
 enum class UniformBindings : GLuint { Common, VS, GS };
 
 struct LightSrc {
