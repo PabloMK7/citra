@@ -74,6 +74,7 @@ private:
 
     Kernel::KernelSystem& kernel;
 
+    File(Kernel::KernelSystem& kernel);
     File();
 
     template <class Archive>

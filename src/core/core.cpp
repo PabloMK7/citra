@@ -113,12 +113,16 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         return ResultStatus::ShutdownRequested;
         break;
     case Signal::Load: {
+        LOG_INFO(Core, "Begin load");
         auto stream = std::ifstream("save0.citrasave", std::fstream::binary);
         System::Load(stream);
+        LOG_INFO(Core, "Load completed");
     } break;
     case Signal::Save: {
+        LOG_INFO(Core, "Begin save");
         auto stream = std::ofstream("save0.citrasave", std::fstream::binary);
         System::Save(stream);
+        LOG_INFO(Core, "Save completed");
     } break;
     default:
         break;

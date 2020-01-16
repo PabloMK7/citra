@@ -26,11 +26,17 @@ void File::serialize(Archive& ar, const unsigned int) {
     ar& backend;
 }
 
-File::File() : ServiceFramework("", 1), kernel(Core::Global<Kernel::KernelSystem>()) {}
+File::File() : File(Core::Global<Kernel::KernelSystem>()) {}
 
 File::File(Kernel::KernelSystem& kernel, std::unique_ptr<FileSys::FileBackend>&& backend,
            const FileSys::Path& path)
-    : ServiceFramework("", 1), path(path), backend(std::move(backend)), kernel(kernel) {
+    : File(kernel) {
+    this->backend = std::move(backend);
+    this->path = path;
+}
+
+File::File(Kernel::KernelSystem& kernel)
+    : ServiceFramework("", 1), path(""), backend(nullptr), kernel(kernel) {
     static const FunctionInfo functions[] = {
         {0x08010100, &File::OpenSubFile, "OpenSubFile"},
         {0x080200C2, &File::Read, "Read"},

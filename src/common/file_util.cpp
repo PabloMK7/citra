@@ -881,8 +881,9 @@ std::string SanitizePath(std::string_view path_, DirectorySeparator directory_se
 
 IOFile::IOFile() {}
 
-IOFile::IOFile(const std::string& filename, const char openmode[], int flags) {
-    Open(filename, openmode, flags);
+IOFile::IOFile(const std::string& filename, const char openmode[], int flags)
+    : filename(filename), openmode(openmode), flags(flags) {
+    Open();
 }
 
 IOFile::~IOFile() {
@@ -906,12 +907,8 @@ void IOFile::Swap(IOFile& other) {
     std::swap(flags, other.flags);
 }
 
-bool IOFile::Open(const std::string& filename, const char openmode[], int flags) {
+bool IOFile::Open() {
     Close();
-
-    this->filename = filename;
-    this->openmode = openmode;
-    this->flags = flags;
 
 #ifdef _WIN32
     if (flags != 0) {
@@ -922,7 +919,7 @@ bool IOFile::Open(const std::string& filename, const char openmode[], int flags)
                   Common::UTF8ToUTF16W(openmode).c_str());
     }
 #else
-    m_file = fopen(filename.c_str(), openmode);
+    m_file = fopen(filename.c_str(), openmode.c_str());
 #endif
 
     m_good = IsOpen();

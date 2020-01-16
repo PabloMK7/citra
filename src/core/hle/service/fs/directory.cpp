@@ -19,11 +19,14 @@ void Directory::serialize(Archive& ar, const unsigned int) {
     ar& backend;
 }
 
-Directory::Directory() : ServiceFramework("", 1) {}
-
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)
-    : ServiceFramework("", 1), path(path), backend(std::move(backend)) {
+    : Directory() {
+    this->backend = std::move(backend);
+    this->path = path;
+}
+
+Directory::Directory() : ServiceFramework("", 1), path(""), backend(nullptr) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x08010042, &Directory::Read, "Read"},

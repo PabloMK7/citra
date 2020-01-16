@@ -306,7 +306,7 @@ public:
     }
 
 private:
-    bool Open(const std::string& filename, const char openmode[], int flags = 0);
+    bool Open();
 
     std::FILE* m_file = nullptr;
     bool m_good = true;
@@ -330,6 +330,7 @@ private:
         ar >> flags;
         u64 pos;
         ar >> pos;
+        Open();
         Seek(pos, SEEK_SET);
     }
 
