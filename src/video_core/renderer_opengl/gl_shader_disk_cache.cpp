@@ -203,12 +203,10 @@ ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file) {
 
     ShaderCacheVersionHash file_hash{};
     if (!LoadArrayFromPrecompiled(file_hash.data(), file_hash.size())) {
-        decompressed_precompiled_cache_offset = 0;
         return {};
     }
     if (GetShaderCacheVersionHash() != file_hash) {
         LOG_INFO(Render_OpenGL, "Precompiled cache is from another version of the emulator");
-        decompressed_precompiled_cache_offset = 0;
         return {};
     }
 

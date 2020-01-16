@@ -491,14 +491,14 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 const auto dump{dumps.find(unique_identifier)};
                 const auto decomp{decompiled.find(unique_identifier)};
 
-                // Only load this shader if its sanitize_mul setting matches
-                if (decomp->second.sanitize_mul == VideoCore::g_hw_shader_accurate_mul) {
-                    continue;
-                }
-
                 OGLProgram shader;
 
                 if (dump != dumps.end() && decomp != decompiled.end()) {
+                    // Only load this shader if its sanitize_mul setting matches
+                    if (decomp->second.sanitize_mul == VideoCore::g_hw_shader_accurate_mul) {
+                        continue;
+                    }
+
                     // If the shader is dumped, attempt to load it
                     shader = GeneratePrecompiledProgram(dump->second, supported_formats);
                     if (shader.handle == 0) {
