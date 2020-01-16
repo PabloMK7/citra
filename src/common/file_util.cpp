@@ -557,7 +557,7 @@ std::optional<std::string> GetCurrentDir() {
 #endif
     free(dir);
     return strDir;
-}
+} // namespace FileUtil
 
 bool SetCurrentDir(const std::string& directory) {
 #ifdef _WIN32

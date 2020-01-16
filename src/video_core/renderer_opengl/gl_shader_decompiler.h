@@ -12,7 +12,10 @@
 namespace OpenGL::ShaderDecompiler {
 
 using RegGetter = std::function<std::string(u32)>;
-using ProgramResult = std::string;
+
+struct ProgramResult {
+    std::string code;
+};
 
 std::string GetCommonDeclarations();
 

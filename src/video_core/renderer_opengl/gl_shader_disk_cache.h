@@ -78,7 +78,8 @@ private:
 
 /// Contains decompiled data from a shader
 struct ShaderDiskCacheDecompiled {
-    ShaderDecompiler::ProgramResult code;
+    ShaderDecompiler::ProgramResult result;
+    bool sanitize_mul;
 };
 
 /// Contains an OpenGL dumped binary program
@@ -108,7 +109,8 @@ public:
     void SaveRaw(const ShaderDiskCacheRaw& entry);
 
     /// Saves a decompiled entry to the precompiled file. Does not check for collisions.
-    void SaveDecompiled(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code);
+    void SaveDecompiled(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code,
+                        bool sanitize_mul);
 
     /// Saves a dump entry to the precompiled file. Does not check for collisions.
     void SaveDump(u64 unique_identifier, GLuint program);
@@ -126,7 +128,8 @@ private:
     std::optional<ShaderDiskCacheDecompiled> LoadDecompiledEntry();
 
     /// Saves a decompiled entry to the passed file. Returns true on success.
-    bool SaveDecompiledFile(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code);
+    bool SaveDecompiledFile(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code,
+                            bool sanitize_mul);
 
     /// Returns if the cache can be used
     bool IsUsable() const;

@@ -889,16 +889,17 @@ bool exec_shader();
 )";
 }
 
-std::optional<std::string> DecompileProgram(const Pica::Shader::ProgramCode& program_code,
-                                            const Pica::Shader::SwizzleData& swizzle_data,
-                                            u32 main_offset, const RegGetter& inputreg_getter,
-                                            const RegGetter& outputreg_getter, bool sanitize_mul) {
+std::optional<ProgramResult> DecompileProgram(const Pica::Shader::ProgramCode& program_code,
+                                              const Pica::Shader::SwizzleData& swizzle_data,
+                                              u32 main_offset, const RegGetter& inputreg_getter,
+                                              const RegGetter& outputreg_getter,
+                                              bool sanitize_mul) {
 
     try {
         auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();
         GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
                                 inputreg_getter, outputreg_getter, sanitize_mul);
-        return generator.MoveShaderCode();
+        return {ProgramResult{generator.MoveShaderCode()}};
     } catch (const DecompileFail& exception) {
         LOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());
         return {};
