@@ -283,15 +283,21 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
 
 void ARM_Dynarmic::PageTableChanged() {
     current_page_table = memory.GetCurrentPageTable();
+    Dynarmic::A32::Context ctx{};
+    if (jit) {
+        jit->SaveContext(ctx);
+    }
 
     auto iter = jits.find(current_page_table);
     if (iter != jits.end()) {
         jit = iter->second.get();
+        jit->LoadContext(ctx);
         return;
     }
 
     auto new_jit = MakeJit();
     jit = new_jit.get();
+    jit->LoadContext(ctx);
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
