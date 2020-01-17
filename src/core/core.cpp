@@ -437,7 +437,9 @@ void System::Reset() {
 
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
-    Memory::RasterizerFlushAndInvalidateRegion(0, 0xFFFFFFFF);
+    // flush on save, don't flush on load
+    bool should_flush = !Archive::is_loading::value;
+    Memory::RasterizerClearAll(should_flush);
     ar&* timing.get();
     ar&* cpu_core.get();
     ar&* service_manager.get();

@@ -556,6 +556,16 @@ void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size) {
     VideoCore::g_renderer->Rasterizer()->FlushAndInvalidateRegion(start, size);
 }
 
+void RasterizerClearAll(bool flush) {
+    // Since pages are unmapped on shutdown after video core is shutdown, the renderer may be
+    // null here
+    if (VideoCore::g_renderer == nullptr) {
+        return;
+    }
+
+    VideoCore::g_renderer->Rasterizer()->ClearAll(flush);
+}
+
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     // Since pages are unmapped on shutdown after video core is shutdown, the renderer may be
     // null here

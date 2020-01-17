@@ -284,6 +284,12 @@ enum class FlushMode {
 };
 
 /**
+ * Flushes and invalidates all memory in the rasterizer cache and removes any leftover state
+ * If flush is true, the rasterizer should flush any cached resources to RAM before clearing
+ */
+void RasterizerClearAll(bool flush);
+
+/**
  * Flushes and invalidates any externally cached rasterizer resources touching the given virtual
  * address region.
  */
