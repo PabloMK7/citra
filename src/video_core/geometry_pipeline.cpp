@@ -49,7 +49,7 @@ private:
 // TODO: what happens when the input size is not divisible by the output size?
 class GeometryPipeline_Point : public GeometryPipelineBackend {
 public:
-    GeometryPipeline_Point() : regs(g_state.regs), unit(g_state.gs_unit) {
+    GeometryPipeline_Point(const Regs& regs, Shader::GSUnitState& unit) : regs(regs), unit(unit) {
         ASSERT(regs.pipeline.variable_primitive == 0);
         ASSERT(regs.gs.input_to_uniform == 0);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
@@ -89,6 +89,8 @@ private:
     Common::Vec4<float24>* buffer_end;
     unsigned int vs_output_num;
 
+    GeometryPipeline_Point() : regs(g_state.regs), unit(g_state.gs_unit) {}
+
     template <typename Class, class Archive>
     static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
         ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
@@ -125,7 +127,8 @@ private:
 // value in the batch. This mode is usually used for subdivision.
 class GeometryPipeline_VariablePrimitive : public GeometryPipelineBackend {
 public:
-    GeometryPipeline_VariablePrimitive() : regs(g_state.regs), setup(g_state.gs) {
+    GeometryPipeline_VariablePrimitive(const Regs& regs, Shader::ShaderSetup& setup)
+        : regs(regs), setup(setup) {
         ASSERT(regs.pipeline.variable_primitive == 1);
         ASSERT(regs.gs.input_to_uniform == 1);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
@@ -183,6 +186,8 @@ private:
     Common::Vec4<float24>* buffer_cur;
     unsigned int vs_output_num;
 
+    GeometryPipeline_VariablePrimitive() : regs(g_state.regs), setup(g_state.gs) {}
+
     template <typename Class, class Archive>
     static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
         ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
@@ -217,7 +222,8 @@ private:
 // particle system.
 class GeometryPipeline_FixedPrimitive : public GeometryPipelineBackend {
 public:
-    GeometryPipeline_FixedPrimitive() : regs(g_state.regs), setup(g_state.gs) {
+    GeometryPipeline_FixedPrimitive(const Regs& regs, Shader::ShaderSetup& setup)
+        : regs(regs), setup(setup) {
         ASSERT(regs.pipeline.variable_primitive == 0);
         ASSERT(regs.gs.input_to_uniform == 1);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
@@ -255,6 +261,8 @@ private:
     Common::Vec4<float24>* buffer_cur;
     Common::Vec4<float24>* buffer_end;
     unsigned int vs_output_num;
+
+    GeometryPipeline_FixedPrimitive() : regs(g_state.regs), setup(g_state.gs) {}
 
     template <typename Class, class Archive>
     static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
@@ -329,13 +337,13 @@ void GeometryPipeline::Reconfigure() {
 
     switch (state.regs.pipeline.gs_config.mode) {
     case PipelineRegs::GSMode::Point:
-        backend = std::make_unique<GeometryPipeline_Point>();
+        backend = std::make_unique<GeometryPipeline_Point>(state.regs, state.gs_unit);
         break;
     case PipelineRegs::GSMode::VariablePrimitive:
-        backend = std::make_unique<GeometryPipeline_VariablePrimitive>();
+        backend = std::make_unique<GeometryPipeline_VariablePrimitive>(state.regs, state.gs);
         break;
     case PipelineRegs::GSMode::FixedPrimitive:
-        backend = std::make_unique<GeometryPipeline_FixedPrimitive>();
+        backend = std::make_unique<GeometryPipeline_FixedPrimitive>(state.regs, state.gs);
         break;
     default:
         UNREACHABLE();
