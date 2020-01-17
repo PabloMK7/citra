@@ -448,7 +448,10 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar&* kernel.get();
 
     // This needs to be set from somewhere - might as well be here!
-    Service::GSP::SetGlobalModule(*this);
+    if (Archive::is_loading::value) {
+        Service::GSP::SetGlobalModule(*this);
+        DSP().SetServiceToInterrupt(ServiceManager().GetService<Service::DSP::DSP_DSP>("dsp::DSP"));
+    }
 }
 
 void System::Save(std::ostream& stream) const {

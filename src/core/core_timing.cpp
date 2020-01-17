@@ -130,8 +130,9 @@ void Timing::Advance() {
         std::pop_heap(event_queue.begin(), event_queue.end(), std::greater<>());
         event_queue.pop_back();
         if (event_types.find(*evt.type->name) == event_types.end()) {
-            LOG_ERROR(Core, "Unknown queued event");
-            continue;
+            LOG_ERROR(Core, "Unknown queued event {}", *evt.type->name);
+        } else if (evt.type->callback == nullptr) {
+            LOG_ERROR(Core, "Event '{}' has no callback", *evt.type->name);
         }
         if (evt.type->callback != nullptr) {
             evt.type->callback(evt.userdata, global_timer - evt.time);
