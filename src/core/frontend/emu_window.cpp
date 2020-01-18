@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <mutex>
+#include "core/3ds.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/input.h"
 #include "core/settings.h"
@@ -45,7 +46,7 @@ private:
 
 EmuWindow::EmuWindow() {
     // TODO: Find a better place to set this.
-    config.min_client_area_size = std::make_pair(400u, 480u);
+    config.min_client_area_size = std::make_pair(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     active_config = config;
     touch_state = std::make_shared<TouchState>();
     Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
@@ -153,27 +154,27 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
         case Settings::LayoutOption::SingleScreen:
             layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen,
                                                Settings::values.upright_screen);
-            min_width = Settings::values.swap_screen ? 320u : 400u;
-            min_height = 240u;
+            min_width = Settings::values.swap_screen ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
+            min_height = Core::kScreenBottomHeight;
             break;
         case Settings::LayoutOption::LargeScreen:
             layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screen,
                                               Settings::values.upright_screen);
-            min_width = Settings::values.swap_screen ? 420u : 480u;
-            min_height = 240u;
+            min_width = Settings::values.swap_screen ? Core::kScreenTopWidth/4 + Core::kScreenBottomWidth : Core::kScreenTopWidth + Core::kScreenBottomWidth/4;
+            min_height = Core::kScreenBottomHeight;
             break;
         case Settings::LayoutOption::SideScreen:
             layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen,
                                              Settings::values.upright_screen);
-            min_width = 720u;
-            min_height = 240u;
+            min_width = Core::kScreenTopWidth + Core::kScreenBottomWidth;
+            min_height = Core::kScreenBottomHeight;
             break;
         case Settings::LayoutOption::Default:
         default:
             layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen,
                                                 Settings::values.upright_screen);
-            min_width = 400u;
-            min_height = 480u;
+            min_width = Core::kScreenTopWidth;
+            min_height = Core::kScreenTopHeight + Core::kScreenBottomHeight;
             break;
         }
         if(Settings::values.upright_screen){
