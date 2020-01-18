@@ -152,6 +152,11 @@
             <string>Anaglyph</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Interlaced</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>

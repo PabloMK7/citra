@@ -6,6 +6,10 @@
 
 #include <QWidget>
 
+namespace Settings {
+enum class StereoRenderOption;
+}
+
 namespace Ui {
 class ConfigureEnhancements;
 }
@@ -22,7 +26,7 @@ public:
     void SetConfiguration();
 
 private:
-    void updateShaders(bool anaglyph);
+    void updateShaders(Settings::StereoRenderOption stereo_option);
 
     Ui::ConfigureEnhancements* ui;
     QColor bg_color;
