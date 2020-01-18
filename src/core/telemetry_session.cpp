@@ -23,20 +23,6 @@
 
 namespace Core {
 
-#ifdef ARCHITECTURE_x86_64
-static const char* CpuVendorToStr(Common::CPUVendor vendor) {
-    switch (vendor) {
-    case Common::CPUVendor::INTEL:
-        return "Intel";
-    case Common::CPUVendor::AMD:
-        return "Amd";
-    case Common::CPUVendor::OTHER:
-        return "Other";
-    }
-    UNREACHABLE();
-}
-#endif
-
 static u64 GenerateTelemetryId() {
     u64 telemetry_id{};
     CryptoPP::AutoSeededRandomPool rng;
@@ -143,8 +129,6 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
     AddField(Telemetry::FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
     AddField(Telemetry::FieldType::UserSystem, "CPU_BrandString",
              Common::GetCPUCaps().brand_string);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Vendor",
-             CpuVendorToStr(Common::GetCPUCaps().vendor));
     AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AES", Common::GetCPUCaps().aes);
     AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AVX", Common::GetCPUCaps().avx);
     AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AVX2", Common::GetCPUCaps().avx2);

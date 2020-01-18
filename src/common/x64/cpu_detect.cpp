@@ -3,8 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-#include <string>
-#include <thread>
 #include "common/common_types.h"
 #include "common/x64/cpu_detect.h"
 
@@ -51,8 +49,6 @@ namespace Common {
 static CPUCaps Detect() {
     CPUCaps caps = {};
 
-    caps.num_cores = std::thread::hardware_concurrency();
-
     // Assumes the CPU supports the CPUID instruction. Those that don't would likely not support
     // Citra at all anyway
 
@@ -70,12 +66,6 @@ static CPUCaps Detect() {
     __cpuid(cpu_id, 0x80000000);
 
     u32 max_ex_fn = cpu_id[0];
-    if (!strcmp(caps.brand_string, "GenuineIntel"))
-        caps.vendor = CPUVendor::INTEL;
-    else if (!strcmp(caps.brand_string, "AuthenticAMD"))
-        caps.vendor = CPUVendor::AMD;
-    else
-        caps.vendor = CPUVendor::OTHER;
 
     // Set reasonable default brand string even if brand string not available
     strcpy(caps.cpu_string, caps.brand_string);
@@ -96,14 +86,8 @@ static CPUCaps Detect() {
             caps.sse4_1 = true;
         if ((cpu_id[2] >> 20) & 1)
             caps.sse4_2 = true;
-        if ((cpu_id[2] >> 22) & 1)
-            caps.movbe = true;
         if ((cpu_id[2] >> 25) & 1)
             caps.aes = true;
-
-        if ((cpu_id[3] >> 24) & 1) {
-            caps.fxsave_fxrstor = true;
-        }
 
         // AVX support requires 3 separate checks:
         //  - Is the AVX bit set in CPUID?
@@ -129,8 +113,6 @@ static CPUCaps Detect() {
         }
     }
 
-    caps.flush_to_zero = caps.sse;
-
     if (max_ex_fn >= 0x80000004) {
         // Extract CPU model string
         __cpuid(cpu_id, 0x80000002);
@@ -144,14 +126,8 @@ static CPUCaps Detect() {
     if (max_ex_fn >= 0x80000001) {
         // Check for more features
         __cpuid(cpu_id, 0x80000001);
-        if (cpu_id[2] & 1)
-            caps.lahf_sahf_64 = true;
-        if ((cpu_id[2] >> 5) & 1)
-            caps.lzcnt = true;
         if ((cpu_id[2] >> 16) & 1)
             caps.fma4 = true;
-        if ((cpu_id[3] >> 29) & 1)
-            caps.long_mode = true;
     }
 
     return caps;
@@ -160,50 +136,6 @@ static CPUCaps Detect() {
 const CPUCaps& GetCPUCaps() {
     static CPUCaps caps = Detect();
     return caps;
-}
-
-std::string GetCPUCapsString() {
-    auto caps = GetCPUCaps();
-
-    std::string sum(caps.cpu_string);
-    sum += " (";
-    sum += caps.brand_string;
-    sum += ")";
-
-    if (caps.sse)
-        sum += ", SSE";
-    if (caps.sse2) {
-        sum += ", SSE2";
-        if (!caps.flush_to_zero)
-            sum += " (without DAZ)";
-    }
-
-    if (caps.sse3)
-        sum += ", SSE3";
-    if (caps.ssse3)
-        sum += ", SSSE3";
-    if (caps.sse4_1)
-        sum += ", SSE4.1";
-    if (caps.sse4_2)
-        sum += ", SSE4.2";
-    if (caps.avx)
-        sum += ", AVX";
-    if (caps.avx2)
-        sum += ", AVX2";
-    if (caps.bmi1)
-        sum += ", BMI1";
-    if (caps.bmi2)
-        sum += ", BMI2";
-    if (caps.fma)
-        sum += ", FMA";
-    if (caps.aes)
-        sum += ", AES";
-    if (caps.movbe)
-        sum += ", MOVBE";
-    if (caps.long_mode)
-        sum += ", 64-bit support";
-
-    return sum;
 }
 
 } // namespace Common
