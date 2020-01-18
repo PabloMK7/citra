@@ -62,6 +62,10 @@ if (ARCHITECTURE_x86_64)
     target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
 endif()
 
+# Zstandard
+add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
+target_include_directories(libzstd_static INTERFACE ./zstd/lib)
+
 # ENet
 add_subdirectory(enet)
 target_include_directories(enet INTERFACE ./enet/include)

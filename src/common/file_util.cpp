@@ -4,6 +4,7 @@
 
 #include <array>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include "common/assert.h"
 #include "common/common_funcs.h"
@@ -355,12 +356,12 @@ u64 GetSize(FILE* f) {
     // can't use off_t here because it can be 32-bit
     u64 pos = ftello(f);
     if (fseeko(f, 0, SEEK_END) != 0) {
-        LOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", (void*)f, GetLastErrorMsg());
+        LOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", fmt::ptr(f), GetLastErrorMsg());
         return 0;
     }
     u64 size = ftello(f);
     if ((size != pos) && (fseeko(f, pos, SEEK_SET) != 0)) {
-        LOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", (void*)f, GetLastErrorMsg());
+        LOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", fmt::ptr(f), GetLastErrorMsg());
         return 0;
     }
     return size;
@@ -369,7 +370,7 @@ u64 GetSize(FILE* f) {
 bool CreateEmptyFile(const std::string& filename) {
     LOG_TRACE(Common_Filesystem, "{}", filename);
 
-    if (!FileUtil::IOFile(filename, "wb")) {
+    if (!FileUtil::IOFile(filename, "wb").IsOpen()) {
         LOG_ERROR(Common_Filesystem, "failed {}: {}", filename, GetLastErrorMsg());
         return false;
     }
@@ -541,12 +542,11 @@ std::optional<std::string> GetCurrentDir() {
 // Get the current working directory (getcwd uses malloc)
 #ifdef _WIN32
     wchar_t* dir;
-    if (!(dir = _wgetcwd(nullptr, 0)))
+    if (!(dir = _wgetcwd(nullptr, 0))) {
 #else
     char* dir;
-    if (!(dir = getcwd(nullptr, 0)))
+    if (!(dir = getcwd(nullptr, 0))) {
 #endif
-    {
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: {}", GetLastErrorMsg());
         return {};
     }
@@ -557,7 +557,7 @@ std::optional<std::string> GetCurrentDir() {
 #endif
     free(dir);
     return strDir;
-}
+} // namespace FileUtil
 
 bool SetCurrentDir(const std::string& directory) {
 #ifdef _WIN32
@@ -733,7 +733,6 @@ const std::string& GetUserPath(UserPath path) {
         SetUserPath();
     return g_paths[path];
 }
-
 std::size_t WriteStringToFile(bool text_file, const std::string& filename, std::string_view str) {
     return IOFile(filename, text_file ? "w" : "wb").WriteString(str);
 }
@@ -741,8 +740,8 @@ std::size_t WriteStringToFile(bool text_file, const std::string& filename, std::
 std::size_t ReadFileToString(bool text_file, const std::string& filename, std::string& str) {
     IOFile file(filename, text_file ? "r" : "rb");
 
-    if (!file)
-        return false;
+    if (!file.IsOpen())
+        return 0;
 
     str.resize(static_cast<u32>(file.GetSize()));
     return file.ReadArray(&str[0], str.size());
@@ -781,6 +780,103 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
         for (char letter : filename.substr(point + 1, 3))
             extension[j++] = toupper(letter);
     }
+}
+
+std::vector<std::string> SplitPathComponents(std::string_view filename) {
+    std::string copy(filename);
+    std::replace(copy.begin(), copy.end(), '\\', '/');
+    std::vector<std::string> out;
+
+    std::stringstream stream(copy);
+    std::string item;
+    while (std::getline(stream, item, '/')) {
+        out.push_back(std::move(item));
+    }
+
+    return out;
+}
+
+std::string_view GetParentPath(std::string_view path) {
+    const auto name_bck_index = path.rfind('\\');
+    const auto name_fwd_index = path.rfind('/');
+    std::size_t name_index;
+
+    if (name_bck_index == std::string_view::npos || name_fwd_index == std::string_view::npos) {
+        name_index = std::min(name_bck_index, name_fwd_index);
+    } else {
+        name_index = std::max(name_bck_index, name_fwd_index);
+    }
+
+    return path.substr(0, name_index);
+}
+
+std::string_view GetPathWithoutTop(std::string_view path) {
+    if (path.empty()) {
+        return path;
+    }
+
+    while (path[0] == '\\' || path[0] == '/') {
+        path.remove_prefix(1);
+        if (path.empty()) {
+            return path;
+        }
+    }
+
+    const auto name_bck_index = path.find('\\');
+    const auto name_fwd_index = path.find('/');
+    return path.substr(std::min(name_bck_index, name_fwd_index) + 1);
+}
+
+std::string_view GetFilename(std::string_view path) {
+    const auto name_index = path.find_last_of("\\/");
+
+    if (name_index == std::string_view::npos) {
+        return {};
+    }
+
+    return path.substr(name_index + 1);
+}
+
+std::string_view GetExtensionFromFilename(std::string_view name) {
+    const std::size_t index = name.rfind('.');
+
+    if (index == std::string_view::npos) {
+        return {};
+    }
+
+    return name.substr(index + 1);
+}
+
+std::string_view RemoveTrailingSlash(std::string_view path) {
+    if (path.empty()) {
+        return path;
+    }
+
+    if (path.back() == '\\' || path.back() == '/') {
+        path.remove_suffix(1);
+        return path;
+    }
+
+    return path;
+}
+
+std::string SanitizePath(std::string_view path_, DirectorySeparator directory_separator) {
+    std::string path(path_);
+    char type1 = directory_separator == DirectorySeparator::BackwardSlash ? '/' : '\\';
+    char type2 = directory_separator == DirectorySeparator::BackwardSlash ? '\\' : '/';
+
+    if (directory_separator == DirectorySeparator::PlatformDefault) {
+#ifdef _WIN32
+        type1 = '/';
+        type2 = '\\';
+#endif
+    }
+
+    std::replace(path.begin(), path.end(), type1, type2);
+    path.erase(std::unique(path.begin(), path.end(),
+                           [type2](char c1, char c2) { return c1 == type2 && c2 == type2; }),
+               path.end());
+    return std::string(RemoveTrailingSlash(path));
 }
 
 IOFile::IOFile() {}

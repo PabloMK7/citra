@@ -270,6 +270,13 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_8">
       <item>
+       <widget class="QCheckBox" name="toggle_disk_shader_cache">
+        <property name="text">
+         <string>Use Disk Shader Cache</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="toggle_custom_textures">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace textures with PNG files.&lt;/p&gt;&lt;p&gt;Textures are loaded from load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

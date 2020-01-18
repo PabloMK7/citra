@@ -46,3 +46,6 @@
 [submodule "lodepng"]
     path = externals/lodepng/lodepng
     url = https://github.com/lvandeve/lodepng.git
+[submodule "zstd"]
+    path = externals/zstd
+    url = https://github.com/facebook/zstd.git

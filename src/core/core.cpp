@@ -237,9 +237,16 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     Service::Init(*this);
     GDBStub::Init();
 
-    ResultStatus result = VideoCore::Init(emu_window, *memory);
-    if (result != ResultStatus::Success) {
-        return result;
+    VideoCore::ResultStatus result = VideoCore::Init(emu_window, *memory);
+    if (result != VideoCore::ResultStatus::Success) {
+        switch (result) {
+        case VideoCore::ResultStatus::ErrorGenericDrivers:
+            return ResultStatus::ErrorVideoCore_ErrorGenericDrivers;
+        case VideoCore::ResultStatus::ErrorBelowGL33:
+            return ResultStatus::ErrorVideoCore_ErrorBelowGL33;
+        default:
+            return ResultStatus::ErrorVideoCore;
+        }
     }
 
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
@@ -251,6 +258,10 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     LOG_DEBUG(Core, "Initialized OK");
 
     return ResultStatus::Success;
+}
+
+RendererBase& System::Renderer() {
+    return *VideoCore::g_renderer;
 }
 
 Service::SM::ServiceManager& System::ServiceManager() {

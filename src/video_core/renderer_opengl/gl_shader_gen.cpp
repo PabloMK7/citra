@@ -1231,7 +1231,8 @@ float ProcTexNoiseCoef(vec2 x) {
     }
 }
 
-std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_shader) {
+ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& config,
+                                                       bool separable_shader) {
     const auto& state = config.state;
 
     std::string out = R"(
@@ -1482,7 +1483,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (state.alpha_test_func == FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
-        return out;
+        return {out};
     }
 
     // Append the scissor test
@@ -1546,7 +1547,7 @@ vec4 secondary_fragment_color = vec4(0.0);
                                                                 "VideoCore_Pica_UseGasMode", true);
         LOG_CRITICAL(Render_OpenGL, "Unimplemented gas mode");
         out += "discard; }";
-        return out;
+        return {out};
     }
 
     if (state.shadow_rendering) {
@@ -1584,10 +1585,10 @@ do {
 
     out += "}";
 
-    return out;
+    return {out};
 }
 
-std::string GenerateTrivialVertexShader(bool separable_shader) {
+ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shader) {
     std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
@@ -1630,11 +1631,11 @@ void main() {
 }
 )";
 
-    return out;
+    return {out};
 }
 
-std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
-                                                const PicaVSConfig& config, bool separable_shader) {
+std::optional<ShaderDecompiler::ProgramResult> GenerateVertexShader(
+    const Pica::Shader::ShaderSetup& setup, const PicaVSConfig& config, bool separable_shader) {
     std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
@@ -1664,7 +1665,7 @@ std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup&
     if (!program_source_opt)
         return {};
 
-    std::string& program_source = *program_source_opt;
+    std::string& program_source = program_source_opt->code;
 
     out += R"(
 #define uniforms vs_uniforms
@@ -1696,7 +1697,7 @@ layout (std140) uniform vs_config {
 
     out += program_source;
 
-    return out;
+    return {{out}};
 }
 
 static std::string GetGSCommonSource(const PicaGSConfigCommonRaw& config, bool separable_shader) {
@@ -1784,7 +1785,8 @@ void EmitPrim(Vertex vtx0, Vertex vtx1, Vertex vtx2) {
     return out;
 };
 
-std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool separable_shader) {
+ShaderDecompiler::ProgramResult GenerateFixedGeometryShader(const PicaFixedGSConfig& config,
+                                                            bool separable_shader) {
     std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n\n";
@@ -1814,6 +1816,6 @@ void main() {
     out += "    EmitPrim(prim_buffer[0], prim_buffer[1], prim_buffer[2]);\n";
     out += "}\n";
 
-    return out;
+    return {out};
 }
 } // namespace OpenGL

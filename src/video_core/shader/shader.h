@@ -26,6 +26,8 @@ namespace Pica::Shader {
 
 constexpr unsigned MAX_PROGRAM_CODE_LENGTH = 4096;
 constexpr unsigned MAX_SWIZZLE_DATA_LENGTH = 4096;
+using ProgramCode = std::array<u32, MAX_PROGRAM_CODE_LENGTH>;
+using SwizzleData = std::array<u32, MAX_SWIZZLE_DATA_LENGTH>;
 
 struct AttributeBuffer {
     alignas(16) Common::Vec4<float24> attr[16];
@@ -196,8 +198,8 @@ struct Uniforms {
 struct ShaderSetup {
     Uniforms uniforms;
 
-    std::array<u32, MAX_PROGRAM_CODE_LENGTH> program_code;
-    std::array<u32, MAX_SWIZZLE_DATA_LENGTH> swizzle_data;
+    ProgramCode program_code;
+    SwizzleData swizzle_data;
 
     /// Data private to ShaderEngines
     struct EngineData {
