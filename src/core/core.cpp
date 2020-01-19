@@ -1,3 +1,4 @@
+#pragma optimize("", off)
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -244,8 +245,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
-                                                    [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(
+        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -445,14 +446,20 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar&* service_manager.get();
     ar& GPU::g_regs;
     ar& LCD::g_regs;
-    ar & dsp_core->GetDspMemory();
+    if (Archive::is_loading::value) {
+        dsp_core.reset();
+    }
+    ar& dsp_core;
     ar&* memory.get();
     ar&* kernel.get();
 
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {
         Service::GSP::SetGlobalModule(*this);
-        DSP().SetServiceToInterrupt(ServiceManager().GetService<Service::DSP::DSP_DSP>("dsp::DSP"));
+
+        memory->SetDSP(*dsp_core);
+        dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
+        dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
     }
 }
 
