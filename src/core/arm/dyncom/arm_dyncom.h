@@ -29,7 +29,6 @@ public:
 
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u32 start_address, std::size_t length) override;
-    void PageTableChanged() override;
 
     void SetPC(u32 pc) override;
     u32 GetPC() const override;
@@ -48,7 +47,10 @@ public:
     void SaveContext(const std::unique_ptr<ThreadContext>& arg) override;
     void LoadContext(const std::unique_ptr<ThreadContext>& arg) override;
 
+    void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
+    std::shared_ptr<Memory::PageTable> GetPageTable() const override;
     void PrepareReschedule() override;
+    void PurgeState() override;
 
 private:
     void ExecuteInstructions(u64 num_instructions);

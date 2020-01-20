@@ -486,9 +486,6 @@ void System::Load(std::istream& stream) {
         }
         VideoCore::Load(stream);
 
-        // Flush state through:
-        Kernel().SetCurrentProcess(Kernel().GetCurrentProcess());
-
     } catch (const std::exception& e) {
         LOG_ERROR(Core, "Error loading: {}", e.what());
     }

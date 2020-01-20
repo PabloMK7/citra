@@ -167,7 +167,7 @@ ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory,
                            PrivilegeMode initial_mode)
     : system(*system), memory(memory), cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
     interpreter_state = std::make_shared<ARMul_State>(system, memory, initial_mode);
-    PageTableChanged();
+    SetPageTable(memory.GetCurrentPageTable());
 }
 
 ARM_Dynarmic::~ARM_Dynarmic() = default;
@@ -281,8 +281,12 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
     jit->InvalidateCacheRange(start_address, length);
 }
 
-void ARM_Dynarmic::PageTableChanged() {
-    current_page_table = memory.GetCurrentPageTable();
+std::shared_ptr<Memory::PageTable> ARM_Dynarmic::GetPageTable() const {
+    return current_page_table;
+}
+
+void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) {
+    current_page_table = page_table;
     Dynarmic::A32::Context ctx{};
     if (jit) {
         jit->SaveContext(ctx);
@@ -308,4 +312,8 @@ std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {
     config.coprocessors[15] = std::make_shared<DynarmicCP15>(interpreter_state);
     config.define_unpredictable_behaviour = true;
     return std::make_unique<Dynarmic::A32::Jit>(config);
+}
+
+void ARM_Dynarmic::PurgeState() {
+    ClearInstructionCache();
 }

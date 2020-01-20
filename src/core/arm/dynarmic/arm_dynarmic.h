@@ -51,7 +51,9 @@ public:
 
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u32 start_address, std::size_t length) override;
-    void PageTableChanged() override;
+    void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
+    std::shared_ptr<Memory::PageTable> GetPageTable() const override;
+    void PurgeState() override;
 
 private:
     friend class DynarmicUserCallbacks;

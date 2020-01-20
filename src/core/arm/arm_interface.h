@@ -11,6 +11,10 @@
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
+namespace Memory {
+struct PageTable;
+}
+
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
@@ -111,7 +115,9 @@ public:
     virtual void InvalidateCacheRange(u32 start_address, std::size_t length) = 0;
 
     /// Notify CPU emulation that page tables have changed
-    virtual void PageTableChanged() = 0;
+    virtual void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) = 0;
+
+    virtual std::shared_ptr<Memory::PageTable> GetPageTable() const = 0;
 
     /**
      * Set the Program Counter to an address
@@ -214,11 +220,15 @@ public:
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;
 
+    virtual void PurgeState() = 0;
+
 private:
     friend class boost::serialization::access;
 
     template <class Archive>
     void save(Archive& ar, const unsigned int file_version) const {
+        auto page_table = GetPageTable();
+        ar << page_table;
         for (auto i = 0; i < 15; i++) {
             auto r = GetReg(i);
             ar << r;
@@ -243,6 +253,10 @@ private:
 
     template <class Archive>
     void load(Archive& ar, const unsigned int file_version) {
+        PurgeState();
+        std::shared_ptr<Memory::PageTable> page_table = nullptr;
+        ar >> page_table;
+        SetPageTable(page_table);
         u32 r;
         for (auto i = 0; i < 15; i++) {
             ar >> r;
@@ -264,7 +278,6 @@ private:
             ar >> r;
             SetCP15Register(static_cast<CP15Register>(i), r);
         }
-        ClearInstructionCache();
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
