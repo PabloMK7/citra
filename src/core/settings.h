@@ -150,6 +150,7 @@ struct Values {
 
     LayoutOption layout_option;
     bool swap_screen;
+    bool upright_screen;
     bool custom_layout;
     u16 custom_top_left;
     u16 custom_top_top;

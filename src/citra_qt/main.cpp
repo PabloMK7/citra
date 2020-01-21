@@ -410,6 +410,8 @@ void GMainWindow::InitializeHotkeys() {
             });
     connect(hotkey_registry.GetHotkey("Main Window", "Swap Screens", render_window),
             &QShortcut::activated, ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Rotate Screens Upright", render_window),
+            &QShortcut::activated, ui.action_Screen_Layout_Upright_Screens, &QAction::trigger);
     connect(hotkey_registry.GetHotkey("Main Window", "Toggle Screen Layout", render_window),
             &QShortcut::activated, this, &GMainWindow::ToggleScreenLayout);
     connect(hotkey_registry.GetHotkey("Main Window", "Fullscreen", render_window),
@@ -607,6 +609,9 @@ void GMainWindow::ConnectMenuEvents() {
     ui.action_Screen_Layout_Swap_Screens->setShortcut(
         hotkey_registry.GetHotkey("Main Window", "Swap Screens", this)->key());
     ui.action_Screen_Layout_Swap_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    ui.action_Screen_Layout_Upright_Screens->setShortcut(
+        hotkey_registry.GetHotkey("Main Window", "Rotate Screens Upright", this)->key());
+    ui.action_Screen_Layout_Upright_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(ui.action_Fullscreen, &QAction::triggered, this, &GMainWindow::ToggleFullscreen);
     connect(ui.action_Screen_Layout_Default, &QAction::triggered, this,
             &GMainWindow::ChangeScreenLayout);
@@ -618,6 +623,8 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::ChangeScreenLayout);
     connect(ui.action_Screen_Layout_Swap_Screens, &QAction::triggered, this,
             &GMainWindow::OnSwapScreens);
+    connect(ui.action_Screen_Layout_Upright_Screens, &QAction::triggered, this,
+            &GMainWindow::OnRotateScreens);
 
     // Movie
     connect(ui.action_Record_Movie, &QAction::triggered, this, &GMainWindow::OnRecordMovie);
@@ -1435,6 +1442,11 @@ void GMainWindow::OnSwapScreens() {
     Settings::Apply();
 }
 
+void GMainWindow::OnRotateScreens() {
+    Settings::values.upright_screen = ui.action_Screen_Layout_Upright_Screens->isChecked();
+    Settings::Apply();
+}
+
 void GMainWindow::OnCheats() {
     CheatDialog cheat_dialog(this);
     cheat_dialog.exec();
@@ -2032,6 +2044,7 @@ void GMainWindow::SyncMenuUISettings() {
     ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
                                                      Settings::LayoutOption::SideScreen);
     ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen);
+    ui.action_Screen_Layout_Upright_Screens->setChecked(Settings::values.upright_screen);
 }
 
 void GMainWindow::RetranslateStatusBar() {

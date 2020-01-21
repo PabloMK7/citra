@@ -109,6 +109,7 @@
      <addaction name="action_Screen_Layout_Large_Screen"/>
      <addaction name="action_Screen_Layout_Side_by_Side"/>
      <addaction name="separator"/>
+     <addaction name="action_Screen_Layout_Upright_Screens"/>
      <addaction name="action_Screen_Layout_Swap_Screens"/>
     </widget>
     <addaction name="action_Fullscreen"/>
@@ -423,6 +424,14 @@
    </property>
    <property name="text">
     <string>Swap Screens</string>
+   </property>
+  </action>
+  <action name="action_Screen_Layout_Upright_Screens">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Rotate Upright</string>
    </property>
   </action>
   <action name="action_Check_For_Updates">

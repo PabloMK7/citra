@@ -781,6 +781,35 @@ void RendererOpenGL::DrawSingleScreenRotated(const ScreenInfo& screen_info, floa
     state.Apply();
 }
 
+void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w,
+                                      float h) {
+    const auto& texcoords = screen_info.display_texcoords;
+
+    const std::array<ScreenRectVertex, 4> vertices = {{
+        ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
+        ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
+        ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
+        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+    }};
+
+    u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    glUniform4f(uniform_i_resolution, screen_info.texture.width * scale_factor,
+                screen_info.texture.height * scale_factor,
+                1.0 / (screen_info.texture.width * scale_factor),
+                1.0 / (screen_info.texture.height * scale_factor));
+    glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
+    state.texture_units[0].texture_2d = screen_info.display_texture;
+    state.texture_units[0].sampler = filter_sampler.handle;
+    state.Apply();
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    state.texture_units[0].texture_2d = 0;
+    state.texture_units[0].sampler = 0;
+    state.Apply();
+}
+
 /**
  * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
  * rotation.
@@ -803,6 +832,40 @@ void RendererOpenGL::DrawSingleScreenStereoRotated(const ScreenInfo& screen_info
                 1.0 / (screen_info_l.texture.width * scale_factor),
                 1.0 / (screen_info_l.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
+    state.texture_units[0].texture_2d = screen_info_l.display_texture;
+    state.texture_units[1].texture_2d = screen_info_r.display_texture;
+    state.texture_units[0].sampler = filter_sampler.handle;
+    state.texture_units[1].sampler = filter_sampler.handle;
+    state.Apply();
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    state.texture_units[0].texture_2d = 0;
+    state.texture_units[1].texture_2d = 0;
+    state.texture_units[0].sampler = 0;
+    state.texture_units[1].sampler = 0;
+    state.Apply();
+}
+
+void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
+                                            const ScreenInfo& screen_info_r, float x, float y,
+                                            float w, float h) {
+    const auto& texcoords = screen_info_l.display_texcoords;
+
+    const std::array<ScreenRectVertex, 4> vertices = {{
+        ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
+        ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
+        ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
+        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+    }};
+
+    u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    glUniform4f(uniform_i_resolution, screen_info_l.texture.width * scale_factor,
+                screen_info_l.texture.height * scale_factor,
+                1.0 / (screen_info_l.texture.width * scale_factor),
+                1.0 / (screen_info_l.texture.height * scale_factor));
+    glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
     state.texture_units[0].sampler = filter_sampler.handle;
@@ -866,44 +929,85 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout) {
 
     glUniform1i(uniform_layer, 0);
     if (layout.top_screen_enabled) {
-        if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
-            DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
-                                    (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
-        } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
-            DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
-                                    (float)top_screen.top, (float)top_screen.GetWidth() / 2,
-                                    (float)top_screen.GetHeight());
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreenRotated(screen_infos[1],
-                                    ((float)top_screen.left / 2) + ((float)layout.width / 2),
-                                    (float)top_screen.top, (float)top_screen.GetWidth() / 2,
-                                    (float)top_screen.GetHeight());
-        } else if (stereo_single_screen) {
-            DrawSingleScreenStereoRotated(screen_infos[0], screen_infos[1], (float)top_screen.left,
-                                          (float)top_screen.top, (float)top_screen.GetWidth(),
-                                          (float)top_screen.GetHeight());
+        if (layout.is_rotated) {
+            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+                DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left,
+                                        (float)top_screen.top, (float)top_screen.GetWidth(),
+                                        (float)top_screen.GetHeight());
+            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+                DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
+                                        (float)top_screen.top, (float)top_screen.GetWidth() / 2,
+                                        (float)top_screen.GetHeight());
+                glUniform1i(uniform_layer, 1);
+                DrawSingleScreenRotated(screen_infos[1],
+                                        ((float)top_screen.left / 2) + ((float)layout.width / 2),
+                                        (float)top_screen.top, (float)top_screen.GetWidth() / 2,
+                                        (float)top_screen.GetHeight());
+            } else if (stereo_single_screen) {
+                DrawSingleScreenStereoRotated(
+                    screen_infos[0], screen_infos[1], (float)top_screen.left, (float)top_screen.top,
+                    (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
+            }
+        } else {
+            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+                DrawSingleScreen(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
+                                 (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
+            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+                DrawSingleScreen(screen_infos[0], (float)top_screen.left / 2, (float)top_screen.top,
+                                 (float)top_screen.GetWidth() / 2, (float)top_screen.GetHeight());
+                glUniform1i(uniform_layer, 1);
+                DrawSingleScreen(screen_infos[1],
+                                 ((float)top_screen.left / 2) + ((float)layout.width / 2),
+                                 (float)top_screen.top, (float)top_screen.GetWidth() / 2,
+                                 (float)top_screen.GetHeight());
+            } else if (stereo_single_screen) {
+                DrawSingleScreenStereo(screen_infos[0], screen_infos[1], (float)top_screen.left,
+                                       (float)top_screen.top, (float)top_screen.GetWidth(),
+                                       (float)top_screen.GetHeight());
+            }
         }
     }
     glUniform1i(uniform_layer, 0);
     if (layout.bottom_screen_enabled) {
-        if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
-            DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
-                                    (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
-                                    (float)bottom_screen.GetHeight());
-        } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
-            DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left / 2,
-                                    (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
-                                    (float)bottom_screen.GetHeight());
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreenRotated(screen_infos[2],
-                                    ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
-                                    (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
-                                    (float)bottom_screen.GetHeight());
-        } else if (stereo_single_screen) {
-            DrawSingleScreenStereoRotated(screen_infos[2], screen_infos[2],
-                                          (float)bottom_screen.left, (float)bottom_screen.top,
-                                          (float)bottom_screen.GetWidth(),
-                                          (float)bottom_screen.GetHeight());
+        if (layout.is_rotated) {
+            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+                DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
+                                        (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
+                                        (float)bottom_screen.GetHeight());
+            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+                DrawSingleScreenRotated(
+                    screen_infos[2], (float)bottom_screen.left / 2, (float)bottom_screen.top,
+                    (float)bottom_screen.GetWidth() / 2, (float)bottom_screen.GetHeight());
+                glUniform1i(uniform_layer, 1);
+                DrawSingleScreenRotated(
+                    screen_infos[2], ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
+                    (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
+                    (float)bottom_screen.GetHeight());
+            } else if (stereo_single_screen) {
+                DrawSingleScreenStereoRotated(screen_infos[2], screen_infos[2],
+                                              (float)bottom_screen.left, (float)bottom_screen.top,
+                                              (float)bottom_screen.GetWidth(),
+                                              (float)bottom_screen.GetHeight());
+            }
+        } else {
+            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+                DrawSingleScreen(screen_infos[2], (float)bottom_screen.left,
+                                 (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
+                                 (float)bottom_screen.GetHeight());
+            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+                DrawSingleScreen(screen_infos[2], (float)bottom_screen.left / 2,
+                                 (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
+                                 (float)bottom_screen.GetHeight());
+                glUniform1i(uniform_layer, 1);
+                DrawSingleScreen(screen_infos[2],
+                                 ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
+                                 (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
+                                 (float)bottom_screen.GetHeight());
+            } else if (stereo_single_screen) {
+                DrawSingleScreenStereo(screen_infos[2], screen_infos[2], (float)bottom_screen.left,
+                                       (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
+                                       (float)bottom_screen.GetHeight());
+            }
         }
     }
 }

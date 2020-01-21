@@ -151,6 +151,7 @@ void Config::ReadValues() {
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(sdl2_config->GetInteger("Layout", "layout_option", 0));
     Settings::values.swap_screen = sdl2_config->GetBoolean("Layout", "swap_screen", false);
+    Settings::values.upright_screen = sdl2_config->GetBoolean("Layout", "upright_screen", false);
     Settings::values.custom_layout = sdl2_config->GetBoolean("Layout", "custom_layout", false);
     Settings::values.custom_top_left =
         static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_left", 0));

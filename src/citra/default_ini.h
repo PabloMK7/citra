@@ -183,6 +183,10 @@ custom_bottom_bottom =
 # 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
 swap_screen =
 
+# Toggle upright orientation, for book style games.
+# 0 (default): Off, 1: On
+upright_screen =
+
 # Dumps textures as PNG to dump/textures/[Title ID]/.
 # 0 (default): Off, 1: On
 dump_textures =
