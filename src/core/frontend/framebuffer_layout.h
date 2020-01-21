@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/math_util.h"
+#include "core/settings.h"
 
 namespace Layout {
 
@@ -79,5 +80,8 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height);
  * @param res_scale resolution scale factor
  */
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale);
+
+std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
+                                                       bool upright_screen);
 
 } // namespace Layout

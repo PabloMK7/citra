@@ -216,9 +216,9 @@ private:
      */
     std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y) const;
 
-    void UpdateMinimumWindowSize(unsigned int min_width, unsigned int min_height) {
+    void UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size) {
         WindowConfig new_config = config;
-        new_config.min_client_area_size = std::make_pair(min_width, min_height);
+        new_config.min_client_area_size = min_size;
         SetConfig(new_config);
         ProcessConfigurationChanges();
     }
