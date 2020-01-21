@@ -46,7 +46,8 @@ private:
 
 EmuWindow::EmuWindow() {
     // TODO: Find a better place to set this.
-    config.min_client_area_size = std::make_pair(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
+    config.min_client_area_size =
+        std::make_pair(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     active_config = config;
     touch_state = std::make_shared<TouchState>();
     Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
@@ -152,35 +153,41 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
     } else {
         switch (Settings::values.layout_option) {
         case Settings::LayoutOption::SingleScreen:
-            min_width = Settings::values.swap_screen ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
+            min_width =
+                Settings::values.swap_screen ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
             min_height = Core::kScreenBottomHeight;
-            layout = Layout::SingleFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
-                                               Settings::values.upright_screen);
+            layout = Layout::SingleFrameLayout(
+                std::max(width, min_width), std::max(height, min_height),
+                Settings::values.swap_screen, Settings::values.upright_screen);
             break;
         case Settings::LayoutOption::LargeScreen:
-            min_width = Settings::values.swap_screen ? Core::kScreenTopWidth/4 + Core::kScreenBottomWidth : Core::kScreenTopWidth + Core::kScreenBottomWidth/4;
+            min_width = Settings::values.swap_screen
+                            ? Core::kScreenTopWidth / 4 + Core::kScreenBottomWidth
+                            : Core::kScreenTopWidth + Core::kScreenBottomWidth / 4;
             min_height = Core::kScreenBottomHeight;
-            layout = Layout::LargeFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
-                                              Settings::values.upright_screen);
+            layout = Layout::LargeFrameLayout(
+                std::max(width, min_width), std::max(height, min_height),
+                Settings::values.swap_screen, Settings::values.upright_screen);
             break;
         case Settings::LayoutOption::SideScreen:
             min_width = Core::kScreenTopWidth + Core::kScreenBottomWidth;
             min_height = Core::kScreenBottomHeight;
-            layout = Layout::SideFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
-                                             Settings::values.upright_screen);
+            layout = Layout::SideFrameLayout(
+                std::max(width, min_width), std::max(height, min_height),
+                Settings::values.swap_screen, Settings::values.upright_screen);
             break;
         case Settings::LayoutOption::Default:
         default:
             min_width = Core::kScreenTopWidth;
             min_height = Core::kScreenTopHeight + Core::kScreenBottomHeight;
-            layout = Layout::DefaultFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
-                                                Settings::values.upright_screen);
+            layout = Layout::DefaultFrameLayout(
+                std::max(width, min_width), std::max(height, min_height),
+                Settings::values.swap_screen, Settings::values.upright_screen);
             break;
         }
-        if(Settings::values.upright_screen){
+        if (Settings::values.upright_screen) {
             UpdateMinimumWindowSize(min_height, min_width);
-        }
-        else{
+        } else {
             UpdateMinimumWindowSize(min_width, min_height);
         }
     }
