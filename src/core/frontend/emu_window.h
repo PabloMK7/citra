@@ -180,7 +180,7 @@ protected:
 
         if (config.min_client_area_size != active_config.min_client_area_size) {
             OnMinimalClientAreaChangeRequest(config.min_client_area_size);
-            config.min_client_area_size = active_config.min_client_area_size;
+            active_config.min_client_area_size = config.min_client_area_size;
         }
     }
 
