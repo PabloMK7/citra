@@ -152,29 +152,29 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
     } else {
         switch (Settings::values.layout_option) {
         case Settings::LayoutOption::SingleScreen:
-            layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen,
-                                               Settings::values.upright_screen);
             min_width = Settings::values.swap_screen ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
             min_height = Core::kScreenBottomHeight;
+            layout = Layout::SingleFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
+                                               Settings::values.upright_screen);
             break;
         case Settings::LayoutOption::LargeScreen:
-            layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screen,
-                                              Settings::values.upright_screen);
             min_width = Settings::values.swap_screen ? Core::kScreenTopWidth/4 + Core::kScreenBottomWidth : Core::kScreenTopWidth + Core::kScreenBottomWidth/4;
             min_height = Core::kScreenBottomHeight;
+            layout = Layout::LargeFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
+                                              Settings::values.upright_screen);
             break;
         case Settings::LayoutOption::SideScreen:
-            layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen,
-                                             Settings::values.upright_screen);
             min_width = Core::kScreenTopWidth + Core::kScreenBottomWidth;
             min_height = Core::kScreenBottomHeight;
+            layout = Layout::SideFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
+                                             Settings::values.upright_screen);
             break;
         case Settings::LayoutOption::Default:
         default:
-            layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen,
-                                                Settings::values.upright_screen);
             min_width = Core::kScreenTopWidth;
             min_height = Core::kScreenTopHeight + Core::kScreenBottomHeight;
+            layout = Layout::DefaultFrameLayout(std::max(width, min_width), std::max(height, min_height), Settings::values.swap_screen,
+                                                Settings::values.upright_screen);
             break;
         }
         if(Settings::values.upright_screen){
