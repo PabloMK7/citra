@@ -181,7 +181,7 @@ QMenu::icon {
 }
 
 QMenu::item {
-    padding: 5px 30px 5px 30px;
+    padding: 5px 16px 5px 40px;
     border: 1px solid transparent;
     /* reserve space for selection border */
 }
@@ -192,12 +192,13 @@ QMenu::item:selected {
 
 QMenu::separator {
     height: 2px;
-    background: lightblue;
+    background: #76797C;
     margin-left: 10px;
     margin-right: 5px;
 }
 
 QMenu::indicator {
+	margin: 0 -26px 0 8px;
     width: 18px;
     height: 18px;
 }
@@ -252,7 +253,7 @@ QWidget:disabled {
 }
 
 QAbstractItemView {
-    alternate-background-color: #31363b;
+    alternate-background-color: #2c2f32;
     color: #eff0f1;
     border: 1px solid #3A3939;
     border-radius: 2px;
@@ -577,8 +578,6 @@ QTreeView:hover {
 }
 
 QComboBox:on {
-    padding-top: 3px;
-    padding-left: 4px;
     selection-background-color: #4a4a4a;
 }
 
@@ -703,10 +702,10 @@ QTabBar::close-button:pressed {
 QTabBar::tab:top {
     color: #eff0f1;
     border: 1px solid #76797C;
-    border-bottom: 1px transparent black;
+    border-bottom: 2px transparent;
     background-color: #31363b;
-    padding: 5px;
-    min-width: 50px;
+    padding: 4px 16px 2px;
+    min-width: 38px;
     border-top-left-radius: 2px;
     border-top-right-radius: 2px;
 }
@@ -1078,7 +1077,7 @@ QListView::item:selected:active {
 }
 
 QHeaderView {
-    background-color: #31363b;
+    background-color: #403F3F;
     border: 1px transparent;
     border-radius: 0px;
     margin: 0px;
@@ -1086,30 +1085,32 @@ QHeaderView {
 }
 
 QHeaderView::section {
-    background-color: #31363b;
+    background-color: #232629;
     color: #eff0f1;
-    padding: 5px;
-    border: 1px solid #76797C;
+    padding: 0 5px;
+    border: 1px solid #403F3F;
+	border-bottom: 0;
     border-radius: 0px;
     text-align: center;
 }
 
 QHeaderView::section::vertical::first,
 QHeaderView::section::vertical::only-one {
-    border-top: 1px solid #76797C;
+    border-top: 1px solid #31363b;
 }
 
 QHeaderView::section::vertical {
     border-top: transparent;
 }
 
+QHeaderView::section::horizontal,
 QHeaderView::section::horizontal::first,
 QHeaderView::section::horizontal::only-one {
-    border-left: 1px solid #76797C;
+    border-left: transparent;
 }
 
-QHeaderView::section::horizontal {
-    border-left: transparent;
+QHeaderView::section::horizontal::last {
+	border-right: transparent;
 }
 
 QHeaderView::section:checked {
