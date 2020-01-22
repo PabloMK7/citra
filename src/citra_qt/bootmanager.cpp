@@ -46,11 +46,14 @@ void EmuThread::run() {
     MicroProfileOnThreadCreate("EmuThread");
     Frontend::ScopeAcquireContext scope(core_context);
 
+    emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+
     Core::System::GetInstance().Renderer().Rasterizer()->LoadDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
-            LOG_DEBUG(Frontend, "Loading stage {} progress {} {}", static_cast<u32>(stage), value,
-                      total);
+            emit LoadProgress(stage, value, total);
         });
+
+    emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
 
     // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
@@ -127,6 +130,7 @@ OpenGLWindow::~OpenGLWindow() {
 void OpenGLWindow::Present() {
     if (!isExposed())
         return;
+
     context->makeCurrent(this);
     VideoCore::g_renderer->TryPresent(100);
     context->swapBuffers(this);
@@ -182,8 +186,8 @@ void OpenGLWindow::exposeEvent(QExposeEvent* event) {
     QWindow::exposeEvent(event);
 }
 
-GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QWidget(parent), emu_thread(emu_thread) {
+GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread)
+    : QWidget(parent_), emu_thread(emu_thread) {
 
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
                        .arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
@@ -192,6 +196,9 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     layout->setMargin(0);
     setLayout(layout);
     InputCommon::Init();
+
+    GMainWindow* parent = GetMainWindow();
+    connect(this, &GRenderWindow::FirstFrameDisplayed, parent, &GMainWindow::OnLoadComplete);
 }
 
 GRenderWindow::~GRenderWindow() {
@@ -206,7 +213,12 @@ void GRenderWindow::DoneCurrent() {
     core_context->DoneCurrent();
 }
 
-void GRenderWindow::PollEvents() {}
+void GRenderWindow::PollEvents() {
+    if (!first_frame) {
+        first_frame = true;
+        emit FirstFrameDisplayed();
+    }
+}
 
 // On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).
 //
@@ -363,12 +375,15 @@ void GRenderWindow::resizeEvent(QResizeEvent* event) {
 void GRenderWindow::InitRenderTarget() {
     ReleaseRenderTarget();
 
+    first_frame = false;
+
     GMainWindow* parent = GetMainWindow();
     QWindow* parent_win_handle = parent ? parent->windowHandle() : nullptr;
     child_window = new OpenGLWindow(parent_win_handle, this, QOpenGLContext::globalShareContext());
     child_window->create();
     child_widget = createWindowContainer(child_window, this);
     child_widget->resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
+
     layout()->addWidget(child_widget);
 
     core_context = CreateSharedContext();

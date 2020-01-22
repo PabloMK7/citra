@@ -47,6 +47,7 @@
 #include "citra_qt/discord.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
+#include "citra_qt/loading_screen.h"
 #include "citra_qt/main.h"
 #include "citra_qt/multiplayer/state.h"
 #include "citra_qt/qt_image_interface.h"
@@ -221,6 +222,17 @@ void GMainWindow::InitializeWidgets() {
     game_list_placeholder = new GameListPlaceholder(this);
     ui.horizontalLayout->addWidget(game_list_placeholder);
     game_list_placeholder->setVisible(false);
+
+    loading_screen = new LoadingScreen(this);
+    loading_screen->hide();
+    ui.horizontalLayout->addWidget(loading_screen);
+    connect(loading_screen, &LoadingScreen::Hidden, [&] {
+        loading_screen->Clear();
+        if (emulation_running) {
+            render_window->show();
+            render_window->setFocus();
+        }
+    });
 
     multiplayer_state = new MultiplayerState(this, game_list->GetModel(), ui.action_Leave_Room,
                                              ui.action_Show_Room);
@@ -917,6 +929,9 @@ void GMainWindow::BootGame(const QString& filename) {
     connect(emu_thread.get(), &EmuThread::DebugModeLeft, waitTreeWidget,
             &WaitTreeWidget::OnDebugModeLeft, Qt::BlockingQueuedConnection);
 
+    connect(emu_thread.get(), &EmuThread::LoadProgress, loading_screen,
+            &LoadingScreen::OnLoadProgress, Qt::QueuedConnection);
+
     // Update the GUI
     registersWidget->OnDebugModeEntered();
     if (ui.action_Single_Window_Mode->isChecked()) {
@@ -925,8 +940,12 @@ void GMainWindow::BootGame(const QString& filename) {
     }
     status_bar_update_timer.start(2000);
 
+    // show and hide the render_window to create the context
     render_window->show();
-    render_window->setFocus();
+    render_window->hide();
+
+    loading_screen->Prepare(Core::System::GetInstance().GetAppLoader());
+    loading_screen->show();
 
     emulation_running = true;
     if (ui.action_Fullscreen->isChecked()) {
@@ -1003,6 +1022,8 @@ void GMainWindow::ShutdownGame() {
     ui.action_Advance_Frame->setEnabled(false);
     ui.action_Capture_Screenshot->setEnabled(false);
     render_window->hide();
+    loading_screen->hide();
+    loading_screen->Clear();
     if (game_list->isEmpty())
         game_list_placeholder->show();
     else
@@ -1324,6 +1345,10 @@ void GMainWindow::OnPauseGame() {
 
 void GMainWindow::OnStopGame() {
     ShutdownGame();
+}
+
+void GMainWindow::OnLoadComplete() {
+    loading_screen->OnLoadComplete();
 }
 
 void GMainWindow::OnMenuReportCompatibility() {
