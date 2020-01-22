@@ -216,12 +216,7 @@ private:
      */
     std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y) const;
 
-    void UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size) {
-        WindowConfig new_config = config;
-        new_config.min_client_area_size = min_size;
-        SetConfig(new_config);
-        ProcessConfigurationChanges();
-    }
+    void UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size);
 };
 
 } // namespace Frontend

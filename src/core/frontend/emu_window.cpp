@@ -147,8 +147,8 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
 
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
-    Settings::LayoutOption layout_option = Settings::values.layout_option;
-    std::pair<unsigned, unsigned> min_size =
+    const auto layout_option = Settings::values.layout_option;
+    const auto min_size =
         Layout::GetMinimumSizeFromLayout(layout_option, Settings::values.upright_screen);
 
     if (Settings::values.custom_layout == true) {
@@ -178,6 +178,13 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
         UpdateMinimumWindowSize(min_size);
     }
     NotifyFramebufferLayoutChanged(layout);
+}
+
+void EmuWindow::UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size) {
+    WindowConfig new_config = config;
+    new_config.min_client_area_size = min_size;
+    SetConfig(new_config);
+    ProcessConfigurationChanges();
 }
 
 } // namespace Frontend
