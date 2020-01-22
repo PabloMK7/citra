@@ -198,7 +198,7 @@ QMenu::separator {
 }
 
 QMenu::indicator {
-	margin: 0 -26px 0 8px;
+    margin: 0 -26px 0 8px;
     width: 18px;
     height: 18px;
 }
@@ -1089,7 +1089,7 @@ QHeaderView::section {
     color: #eff0f1;
     padding: 0 5px;
     border: 1px solid #403F3F;
-	border-bottom: 0;
+    border-bottom: 0;
     border-radius: 0px;
     text-align: center;
 }
@@ -1110,7 +1110,7 @@ QHeaderView::section::horizontal::only-one {
 }
 
 QHeaderView::section::horizontal::last {
-	border-right: transparent;
+    border-right: transparent;
 }
 
 QHeaderView::section:checked {
