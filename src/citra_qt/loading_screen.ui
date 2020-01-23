@@ -48,7 +48,7 @@
        <number>0</number>
       </property>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,0,1,0">
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,0,0,1,0">
         <property name="spacing">
          <number>15</number>
         </property>
@@ -74,7 +74,7 @@
            <string/>
           </property>
           <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+           <set>Qt::AlignCenter</set>
           </property>
           <property name="margin">
            <number>5</number>
@@ -91,7 +91,7 @@ font: 75 20pt &quot;Arial&quot;;</string>
            <string/>
           </property>
           <property name="alignment">
-           <set>Qt::AlignHCenter|Qt::AlignTop</set>
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
