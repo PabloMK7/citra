@@ -23,6 +23,10 @@ class QOpenGLContext;
 class GMainWindow;
 class GRenderWindow;
 
+namespace VideoCore {
+enum class LoadCallbackStage;
+}
+
 class GLContext : public Frontend::GraphicsContext {
 public:
     explicit GLContext(QOpenGLContext* shared_context);
@@ -116,6 +120,8 @@ signals:
     void DebugModeLeft();
 
     void ErrorThrown(Core::System::ResultStatus, std::string);
+
+    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total);
 };
 
 class OpenGLWindow : public QWindow {
@@ -188,6 +194,11 @@ signals:
     /// Emitted when the window is closed
     void Closed();
 
+    /**
+     * Emitted when the guest first calls SwapBuffers. This is used to hide the loading screen
+     */
+    void FirstFrameDisplayed();
+
 private:
     std::pair<u32, u32> ScaleTouch(QPointF pos) const;
     void TouchBeginEvent(const QTouchEvent* event);
@@ -212,6 +223,7 @@ private:
 
     /// Temporary storage of the screenshot taken
     QImage screenshot_image;
+    bool first_frame = false;
 
 protected:
     void showEvent(QShowEvent* event) override;
