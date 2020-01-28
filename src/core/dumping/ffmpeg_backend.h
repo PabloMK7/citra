@@ -163,8 +163,8 @@ public:
     ~FFmpegBackend() override;
     bool StartDumping(const std::string& path, const std::string& format,
                       const Layout::FramebufferLayout& layout) override;
-    void AddVideoFrame(const VideoFrame& frame) override;
-    void AddAudioFrame(const AudioCore::StereoFrame16& frame) override;
+    void AddVideoFrame(VideoFrame frame) override;
+    void AddAudioFrame(AudioCore::StereoFrame16 frame) override;
     void AddAudioSample(const std::array<s16, 2>& sample) override;
     void StopDumping() override;
     bool IsDumping() const override;

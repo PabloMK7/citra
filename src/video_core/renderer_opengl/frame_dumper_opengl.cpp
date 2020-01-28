@@ -67,7 +67,7 @@ void FrameDumperOpenGL::PresentLoop() {
         glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[next_pbo].handle);
         GLubyte* pixels = static_cast<GLubyte*>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
         VideoDumper::VideoFrame frame_data{layout.width, layout.height, pixels};
-        video_dumper.AddVideoFrame(frame_data);
+        video_dumper.AddVideoFrame(std::move(frame_data));
         glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 

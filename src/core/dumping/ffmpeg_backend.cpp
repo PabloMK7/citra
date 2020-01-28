@@ -450,13 +450,13 @@ bool FFmpegBackend::StartDumping(const std::string& path, const std::string& for
     return true;
 }
 
-void FFmpegBackend::AddVideoFrame(const VideoFrame& frame) {
+void FFmpegBackend::AddVideoFrame(VideoFrame frame) {
     event1.Wait();
     video_frame_buffers[next_buffer] = std::move(frame);
     event2.Set();
 }
 
-void FFmpegBackend::AddAudioFrame(const AudioCore::StereoFrame16& frame) {
+void FFmpegBackend::AddAudioFrame(AudioCore::StereoFrame16 frame) {
     std::array<std::array<s16, 160>, 2> refactored_frame;
     for (std::size_t i = 0; i < frame.size(); i++) {
         refactored_frame[0][i] = frame[i][0];
