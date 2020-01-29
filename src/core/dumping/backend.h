@@ -28,8 +28,7 @@ public:
 class Backend {
 public:
     virtual ~Backend();
-    virtual bool StartDumping(const std::string& path, const std::string& format,
-                              const Layout::FramebufferLayout& layout) = 0;
+    virtual bool StartDumping(const std::string& path, const Layout::FramebufferLayout& layout) = 0;
     virtual void AddVideoFrame(VideoFrame frame) = 0;
     virtual void AddAudioFrame(AudioCore::StereoFrame16 frame) = 0;
     virtual void AddAudioSample(const std::array<s16, 2>& sample) = 0;
@@ -41,7 +40,7 @@ public:
 class NullBackend : public Backend {
 public:
     ~NullBackend() override;
-    bool StartDumping(const std::string& /*path*/, const std::string& /*format*/,
+    bool StartDumping(const std::string& /*path*/,
                       const Layout::FramebufferLayout& /*layout*/) override {
         return false;
     }

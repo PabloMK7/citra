@@ -5,7 +5,9 @@
 #include "common/assert.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/param_package.h"
 #include "core/dumping/ffmpeg_backend.h"
+#include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
@@ -25,6 +27,15 @@ void InitializeFFmpegLibraries() {
 #endif
     avformat_network_init();
     initialized = true;
+}
+
+AVDictionary* ToAVDictionary(const std::string& serialized) {
+    Common::ParamPackage param_package{serialized};
+    AVDictionary* result = nullptr;
+    for (const auto& [key, value] : param_package) {
+        av_dict_set(&result, key.c_str(), value.c_str(), 0);
+    }
+    return result;
 }
 
 FFmpegStream::~FFmpegStream() {
@@ -100,9 +111,7 @@ bool FFmpegVideoStream::Init(AVFormatContext* format_context, AVOutputFormat* ou
     frame_count = 0;
 
     // Initialize video codec
-    // Ensure VP9 codec here, also to avoid patent issues
-    constexpr AVCodecID codec_id = AV_CODEC_ID_VP9;
-    const AVCodec* codec = avcodec_find_encoder(codec_id);
+    const AVCodec* codec = avcodec_find_encoder_by_name(Settings::values.video_encoder.c_str());
     codec_context.reset(avcodec_alloc_context3(codec));
     if (!codec || !codec_context) {
         LOG_ERROR(Render, "Could not find video encoder or allocate video codec context");
@@ -111,21 +120,26 @@ bool FFmpegVideoStream::Init(AVFormatContext* format_context, AVOutputFormat* ou
 
     // Configure video codec context
     codec_context->codec_type = AVMEDIA_TYPE_VIDEO;
-    codec_context->bit_rate = 2500000;
+    codec_context->bit_rate = Settings::values.video_bitrate;
     codec_context->width = layout.width;
     codec_context->height = layout.height;
     codec_context->time_base.num = 1;
     codec_context->time_base.den = 60;
     codec_context->gop_size = 12;
     codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
-    codec_context->thread_count = 8;
     if (output_format->flags & AVFMT_GLOBALHEADER)
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-    av_opt_set_int(codec_context.get(), "cpu-used", 5, 0);
 
-    if (avcodec_open2(codec_context.get(), codec, nullptr) < 0) {
+    AVDictionary* options = ToAVDictionary(Settings::values.video_encoder_options);
+    if (avcodec_open2(codec_context.get(), codec, &options) < 0) {
         LOG_ERROR(Render, "Could not open video codec");
         return false;
+    }
+
+    if (av_dict_count(options) != 0) { // Successfully set options are removed from the dict
+        char* buf = nullptr;
+        av_dict_get_string(options, &buf, ':', ';');
+        LOG_WARNING(Render, "Video encoder options not found: {}", buf);
     }
 
     // Create video stream
@@ -200,8 +214,7 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     sample_count = 0;
 
     // Initialize audio codec
-    constexpr AVCodecID codec_id = AV_CODEC_ID_VORBIS;
-    const AVCodec* codec = avcodec_find_encoder(codec_id);
+    const AVCodec* codec = avcodec_find_encoder_by_name(Settings::values.audio_encoder.c_str());
     codec_context.reset(avcodec_alloc_context3(codec));
     if (!codec || !codec_context) {
         LOG_ERROR(Render, "Could not find audio encoder or allocate audio codec context");
@@ -210,15 +223,22 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
 
     // Configure audio codec context
     codec_context->codec_type = AVMEDIA_TYPE_AUDIO;
-    codec_context->bit_rate = 64000;
+    codec_context->bit_rate = Settings::values.audio_bitrate;
     codec_context->sample_fmt = codec->sample_fmts[0];
     codec_context->sample_rate = AudioCore::native_sample_rate;
     codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
     codec_context->channels = 2;
 
-    if (avcodec_open2(codec_context.get(), codec, nullptr) < 0) {
+    AVDictionary* options = ToAVDictionary(Settings::values.audio_encoder_options);
+    if (avcodec_open2(codec_context.get(), codec, &options) < 0) {
         LOG_ERROR(Render, "Could not open audio codec");
         return false;
+    }
+
+    if (av_dict_count(options) != 0) { // Successfully set options are removed from the dict
+        char* buf = nullptr;
+        av_dict_get_string(options, &buf, ':', ';');
+        LOG_WARNING(Render, "Audio encoder options not found: {}", buf);
     }
 
     // Create audio stream
@@ -305,8 +325,7 @@ FFmpegMuxer::~FFmpegMuxer() {
     Free();
 }
 
-bool FFmpegMuxer::Init(const std::string& path, const std::string& format,
-                       const Layout::FramebufferLayout& layout) {
+bool FFmpegMuxer::Init(const std::string& path, const Layout::FramebufferLayout& layout) {
 
     InitializeFFmpegLibraries();
 
@@ -315,9 +334,8 @@ bool FFmpegMuxer::Init(const std::string& path, const std::string& format,
     }
 
     // Get output format
-    // Ensure webm here to avoid patent issues
-    ASSERT_MSG(format == "webm", "Only webm is allowed for frame dumping");
-    auto* output_format = av_guess_format(format.c_str(), path.c_str(), "video/webm");
+    const auto format = Settings::values.output_format;
+    auto* output_format = av_guess_format(format.c_str(), path.c_str(), nullptr);
     if (!output_format) {
         LOG_ERROR(Render, "Could not get format {}", format);
         return false;
@@ -338,12 +356,18 @@ bool FFmpegMuxer::Init(const std::string& path, const std::string& format,
     if (!audio_stream.Init(format_context.get()))
         return false;
 
+    AVDictionary* options = ToAVDictionary(Settings::values.format_options);
     // Open video file
     if (avio_open(&format_context->pb, path.c_str(), AVIO_FLAG_WRITE) < 0 ||
-        avformat_write_header(format_context.get(), nullptr)) {
+        avformat_write_header(format_context.get(), &options)) {
 
         LOG_ERROR(Render, "Could not open {}", path);
         return false;
+    }
+    if (av_dict_count(options) != 0) { // Successfully set options are removed from the dict
+        char* buf = nullptr;
+        av_dict_get_string(options, &buf, ':', ';');
+        LOG_WARNING(Render, "Format options not found: {}", buf);
     }
 
     LOG_INFO(Render, "Dumping frames to {} ({}x{})", path, layout.width, layout.height);
@@ -392,12 +416,11 @@ FFmpegBackend::~FFmpegBackend() {
     ffmpeg.Free();
 }
 
-bool FFmpegBackend::StartDumping(const std::string& path, const std::string& format,
-                                 const Layout::FramebufferLayout& layout) {
+bool FFmpegBackend::StartDumping(const std::string& path, const Layout::FramebufferLayout& layout) {
 
     InitializeFFmpegLibraries();
 
-    if (!ffmpeg.Init(path, format, layout)) {
+    if (!ffmpeg.Init(path, layout)) {
         ffmpeg.Free();
         return false;
     }

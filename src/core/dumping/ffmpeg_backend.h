@@ -129,8 +129,7 @@ class FFmpegMuxer {
 public:
     ~FFmpegMuxer();
 
-    bool Init(const std::string& path, const std::string& format,
-              const Layout::FramebufferLayout& layout);
+    bool Init(const std::string& path, const Layout::FramebufferLayout& layout);
     void Free();
     void ProcessVideoFrame(VideoFrame& frame);
     void ProcessAudioFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1);
@@ -161,8 +160,7 @@ class FFmpegBackend : public Backend {
 public:
     FFmpegBackend();
     ~FFmpegBackend() override;
-    bool StartDumping(const std::string& path, const std::string& format,
-                      const Layout::FramebufferLayout& layout) override;
+    bool StartDumping(const std::string& path, const Layout::FramebufferLayout& layout) override;
     void AddVideoFrame(VideoFrame frame) override;
     void AddAudioFrame(AudioCore::StereoFrame16 frame) override;
     void AddAudioSample(const std::array<s16, 2>& sample) override;
