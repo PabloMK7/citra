@@ -75,10 +75,11 @@ Q_DECLARE_METATYPE(QList<QWidget*>);
 void ConfigureDialog::PopulateSelectionList() {
     ui->selectorList->clear();
 
-    const std::array<std::pair<QString, QList<QWidget*>>, 4> items{
+    const std::array<std::pair<QString, QList<QWidget*>>, 5> items{
         {{tr("General"), {ui->generalTab, ui->webTab, ui->debugTab, ui->uiTab}},
-         {tr("System"), {ui->systemTab, ui->audioTab, ui->cameraTab}},
+         {tr("System"), {ui->systemTab, ui->cameraTab}},
          {tr("Graphics"), {ui->enhancementsTab, ui->graphicsTab}},
+         {tr("Audio"), {ui->audioTab}},
          {tr("Controls"), {ui->inputTab, ui->hotkeysTab}}}};
 
     for (const auto& entry : items) {
