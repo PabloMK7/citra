@@ -2,17 +2,19 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <unordered_set>
 #include "common/assert.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "common/string_util.h"
 #include "core/dumping/ffmpeg_backend.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
 extern "C" {
-#include <libavutil/opt.h>
+#include <libavutil/pixdesc.h>
 }
 
 namespace VideoDumper {
@@ -589,6 +591,245 @@ void FFmpegBackend::EndDumping() {
     ffmpeg.WriteTrailer();
     ffmpeg.Free();
     processing_ended.Set();
+}
+
+// To std string, but handles nullptr
+std::string ToStdString(const char* str, const std::string& fallback = "") {
+    return str ? std::string{str} : fallback;
+}
+
+std::string FormatDuration(s64 duration) {
+    // The following is implemented according to libavutil code (opt.c)
+    std::string out;
+    if (duration < 0 && duration != std::numeric_limits<s64>::min()) {
+        out.append("-");
+        duration = -duration;
+    }
+    if (duration == std::numeric_limits<s64>::max()) {
+        return "INT64_MAX";
+    } else if (duration == std::numeric_limits<s64>::min()) {
+        return "INT64_MIN";
+    } else if (duration > 3600ll * 1000000ll) {
+        out.append(fmt::format("{}:{:02d}:{:02d}.{:06d}", duration / 3600000000ll,
+                               ((duration / 60000000ll) % 60), ((duration / 1000000ll) % 60),
+                               duration % 1000000));
+    } else if (duration > 60ll * 1000000ll) {
+        out.append(fmt::format("{}:{:02d}.{:06d}", duration / 60000000ll,
+                               ((duration / 1000000ll) % 60), duration % 1000000));
+    } else {
+        out.append(fmt::format("{}.{:06d}", duration / 1000000ll, duration % 1000000));
+    }
+    while (out.back() == '0') {
+        out.erase(out.size() - 1, 1);
+    }
+    if (out.back() == '.') {
+        out.erase(out.size() - 1, 1);
+    }
+    return out;
+}
+
+std::string FormatDefaultValue(const AVOption* option,
+                               const std::vector<OptionInfo::NamedConstant>& named_constants) {
+    // The following is taken and modified from libavutil code (opt.c)
+    switch (option->type) {
+    case AV_OPT_TYPE_BOOL: {
+        const auto value = option->default_val.i64;
+        if (value < 0) {
+            return "auto";
+        }
+        return value ? "true" : "false";
+    }
+    case AV_OPT_TYPE_FLAGS: {
+        const auto value = option->default_val.i64;
+        std::string out;
+        for (const auto& constant : named_constants) {
+            if (!(value & constant.value)) {
+                continue;
+            }
+            if (!out.empty()) {
+                out.append("+");
+            }
+            out.append(constant.name);
+        }
+        return out.empty() ? fmt::format("{}", value) : out;
+    }
+    case AV_OPT_TYPE_DURATION: {
+        return FormatDuration(option->default_val.i64);
+    }
+    case AV_OPT_TYPE_INT:
+    case AV_OPT_TYPE_UINT64:
+    case AV_OPT_TYPE_INT64: {
+        const auto value = option->default_val.i64;
+        for (const auto& constant : named_constants) {
+            if (constant.value == value) {
+                return constant.name;
+            }
+        }
+        return fmt::format("{}", value);
+    }
+    case AV_OPT_TYPE_DOUBLE:
+    case AV_OPT_TYPE_FLOAT: {
+        return fmt::format("{}", option->default_val.dbl);
+    }
+    case AV_OPT_TYPE_RATIONAL: {
+        const auto q = av_d2q(option->default_val.dbl, std::numeric_limits<int>::max());
+        return fmt::format("{}/{}", q.num, q.den);
+    }
+    case AV_OPT_TYPE_PIXEL_FMT: {
+        const char* name = av_get_pix_fmt_name(static_cast<AVPixelFormat>(option->default_val.i64));
+        return ToStdString(name, "none");
+    }
+    case AV_OPT_TYPE_SAMPLE_FMT: {
+        const char* name =
+            av_get_sample_fmt_name(static_cast<AVSampleFormat>(option->default_val.i64));
+        return ToStdString(name, "none");
+    }
+    case AV_OPT_TYPE_COLOR:
+    case AV_OPT_TYPE_IMAGE_SIZE:
+    case AV_OPT_TYPE_STRING:
+    case AV_OPT_TYPE_DICT:
+    case AV_OPT_TYPE_VIDEO_RATE: {
+        return ToStdString(option->default_val.str);
+    }
+    case AV_OPT_TYPE_CHANNEL_LAYOUT: {
+        return fmt::format("{:#x}", option->default_val.i64);
+    }
+    default:
+        return "";
+    }
+}
+
+void GetOptionListSingle(std::vector<OptionInfo>& out, const AVClass* av_class) {
+    if (av_class == nullptr) {
+        return;
+    }
+
+    const AVOption* current = nullptr;
+    std::unordered_map<std::string, std::vector<OptionInfo::NamedConstant>> named_constants_map;
+    // First iteration: find and place all named constants
+    while ((current = av_opt_next(&av_class, current))) {
+        if (current->type != AV_OPT_TYPE_CONST || !current->unit) {
+            continue;
+        }
+        named_constants_map[current->unit].push_back(
+            {current->name, ToStdString(current->help), current->default_val.i64});
+    }
+    // Second iteration: find all options
+    current = nullptr;
+    while ((current = av_opt_next(&av_class, current))) {
+        // Currently we cannot handle binary options
+        if (current->type == AV_OPT_TYPE_CONST || current->type == AV_OPT_TYPE_BINARY) {
+            continue;
+        }
+        std::vector<OptionInfo::NamedConstant> named_constants;
+        if (current->unit && named_constants_map.count(current->unit)) {
+            named_constants = named_constants_map.at(current->unit);
+        }
+        const auto default_value = FormatDefaultValue(current, named_constants);
+        out.push_back({current->name, ToStdString(current->help), current->type, default_value,
+                       std::move(named_constants), current->min, current->max});
+    }
+}
+
+void GetOptionList(std::vector<OptionInfo>& out, const AVClass* av_class) {
+    if (av_class == nullptr) {
+        return;
+    }
+
+    GetOptionListSingle(out, av_class);
+
+    const AVClass* child_class = nullptr;
+    while ((child_class = av_opt_child_class_next(av_class, child_class))) {
+        GetOptionListSingle(out, child_class);
+    }
+}
+
+std::vector<OptionInfo> GetOptionList(const AVClass* av_class) {
+    std::vector<OptionInfo> out;
+    GetOptionList(out, av_class);
+
+    // Filter out identical options (why do they exist in the first place?)
+    std::unordered_set<std::string> option_name_set;
+    std::vector<OptionInfo> final_out;
+    for (auto& option : out) {
+        if (option_name_set.count(option.name)) {
+            continue;
+        }
+        option_name_set.emplace(option.name);
+        final_out.emplace_back(std::move(option));
+    }
+
+    return final_out;
+}
+
+std::vector<EncoderInfo> ListEncoders(AVMediaType type) {
+    InitializeFFmpegLibraries();
+
+    const auto general_options = GetOptionList(avcodec_get_class());
+
+    std::vector<EncoderInfo> out;
+
+    const AVCodec* current = nullptr;
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 10, 100)
+    while ((current = av_codec_next(current))) {
+#else
+    void* data = nullptr; // For libavcodec to save the iteration state
+    while ((current = av_codec_iterate(&data))) {
+#endif
+        if (!av_codec_is_encoder(current) || current->type != type) {
+            continue;
+        }
+        auto options = GetOptionList(current->priv_class);
+        options.insert(options.end(), general_options.begin(), general_options.end());
+        out.push_back(
+            {current->name, ToStdString(current->long_name), current->id, std::move(options)});
+    }
+    return out;
+}
+
+std::vector<FormatInfo> ListFormats() {
+    InitializeFFmpegLibraries();
+
+    const auto general_options = GetOptionList(avformat_get_class());
+
+    std::vector<FormatInfo> out;
+
+    const AVOutputFormat* current = nullptr;
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100)
+    while ((current = av_oformat_next(current))) {
+#else
+    void* data = nullptr; // For libavformat to save the iteration state
+    while ((current = av_muxer_iterate(&data))) {
+#endif
+        auto options = GetOptionList(current->priv_class);
+        options.insert(options.end(), general_options.begin(), general_options.end());
+
+        std::vector<std::string> extensions;
+        Common::SplitString(ToStdString(current->extensions), ',', extensions);
+
+        std::set<AVCodecID> supported_video_codecs;
+        std::set<AVCodecID> supported_audio_codecs;
+        // Go through all codecs
+        const AVCodecDescriptor* codec = nullptr;
+        while ((codec = avcodec_descriptor_next(codec))) {
+            if (avformat_query_codec(current, codec->id, FF_COMPLIANCE_NORMAL) == 1) {
+                if (codec->type == AVMEDIA_TYPE_VIDEO) {
+                    supported_video_codecs.emplace(codec->id);
+                } else if (codec->type == AVMEDIA_TYPE_AUDIO) {
+                    supported_audio_codecs.emplace(codec->id);
+                }
+            }
+        }
+
+        if (supported_video_codecs.empty() || supported_audio_codecs.empty()) {
+            continue;
+        }
+
+        out.push_back({current->name, ToStdString(current->long_name), std::move(extensions),
+                       std::move(supported_video_codecs), std::move(supported_audio_codecs),
+                       std::move(options)});
+    }
+    return out;
 }
 
 } // namespace VideoDumper

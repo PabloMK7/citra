@@ -9,6 +9,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <vector>
 #include "common/common_types.h"
@@ -19,6 +20,7 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/opt.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -187,5 +189,44 @@ private:
 
     Common::Event processing_ended;
 };
+
+/// Struct describing encoder/muxer options
+struct OptionInfo {
+    std::string name;
+    std::string description;
+    AVOptionType type;
+    std::string default_value;
+    struct NamedConstant {
+        std::string name;
+        std::string description;
+        s64 value;
+    };
+    std::vector<NamedConstant> named_constants;
+
+    // If this is a scalar type
+    double min;
+    double max;
+};
+
+/// Struct describing an encoder
+struct EncoderInfo {
+    std::string name;
+    std::string long_name;
+    AVCodecID codec;
+    std::vector<OptionInfo> options;
+};
+
+/// Struct describing a format
+struct FormatInfo {
+    std::string name;
+    std::string long_name;
+    std::vector<std::string> extensions;
+    std::set<AVCodecID> supported_video_codecs;
+    std::set<AVCodecID> supported_audio_codecs;
+    std::vector<OptionInfo> options;
+};
+
+std::vector<EncoderInfo> ListEncoders(AVMediaType type);
+std::vector<FormatInfo> ListFormats();
 
 } // namespace VideoDumper
