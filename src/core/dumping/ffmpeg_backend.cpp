@@ -224,7 +224,25 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     // Configure audio codec context
     codec_context->codec_type = AVMEDIA_TYPE_AUDIO;
     codec_context->bit_rate = Settings::values.audio_bitrate;
-    codec_context->sample_fmt = codec->sample_fmts[0];
+    if (codec->sample_fmts) {
+        codec_context->sample_fmt = AV_SAMPLE_FMT_NONE;
+        // Use any planar format
+        const AVSampleFormat* ptr = codec->sample_fmts;
+        while ((*ptr) != -1) {
+            if (av_sample_fmt_is_planar((*ptr))) {
+                codec_context->sample_fmt = (*ptr);
+                break;
+            }
+            ptr++;
+        }
+        if (codec_context->sample_fmt == AV_SAMPLE_FMT_NONE) {
+            LOG_ERROR(Render, "Specified audio encoder does not support any planar format");
+            return false;
+        }
+    } else {
+        codec_context->sample_fmt = AV_SAMPLE_FMT_S16P;
+    }
+
     codec_context->sample_rate = AudioCore::native_sample_rate;
     codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
     codec_context->channels = 2;
