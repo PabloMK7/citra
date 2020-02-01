@@ -87,6 +87,10 @@
 #include "citra_qt/discord_impl.h"
 #endif
 
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
+#include "citra_qt/dumping/dumping_dialog.h"
+#endif
+
 #ifdef QT_STATICPLUGIN
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #endif
@@ -679,9 +683,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Capture_Screenshot, &QAction::triggered, this,
             &GMainWindow::OnCaptureScreenshot);
 
-#ifndef ENABLE_FFMPEG_VIDEO_DUMPER
-    ui.action_Dump_Video->setEnabled(false);
-#endif
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     connect(ui.action_Dump_Video, &QAction::triggered, [this] {
         if (ui.action_Dump_Video->isChecked()) {
             OnStartVideoDumping();
@@ -689,6 +691,9 @@ void GMainWindow::ConnectMenuEvents() {
             OnStopVideoDumping();
         }
     });
+#else
+    ui.action_Dump_Video->setEnabled(false);
+#endif
 
     // Help
     connect(ui.action_Open_Citra_Folder, &QAction::triggered, this,
@@ -992,11 +997,13 @@ void GMainWindow::ShutdownGame() {
         HideFullscreen();
     }
 
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     if (Core::System::GetInstance().VideoDumper().IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
         return;
     }
+#endif
 
     AllowOSSleep();
 
@@ -1804,14 +1811,13 @@ void GMainWindow::OnCaptureScreenshot() {
     OnStartGame();
 }
 
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 void GMainWindow::OnStartVideoDumping() {
-    const QString path = QFileDialog::getSaveFileName(
-        this, tr("Save Video"), UISettings::values.video_dumping_path, tr("WebM Videos (*.webm)"));
-    if (path.isEmpty()) {
-        ui.action_Dump_Video->setChecked(false);
+    DumpingDialog dialog(this);
+    if (dialog.exec() != QDialog::DialogCode::Accepted) {
         return;
     }
-    UISettings::values.video_dumping_path = QFileInfo(path).path();
+    const auto path = dialog.GetFilePath();
     if (emulation_running) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
@@ -1848,6 +1854,7 @@ void GMainWindow::OnStopVideoDumping() {
         future_watcher->setFuture(future);
     }
 }
+#endif
 
 void GMainWindow::UpdateStatusBar() {
     if (emu_thread == nullptr) {
