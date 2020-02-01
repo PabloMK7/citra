@@ -126,7 +126,7 @@ bool FFmpegVideoStream::Init(AVFormatContext* format_context, AVOutputFormat* ou
     codec_context->time_base.num = 1;
     codec_context->time_base.den = 60;
     codec_context->gop_size = 12;
-    codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
+    codec_context->pix_fmt = codec->pix_fmts ? codec->pix_fmts[0] : AV_PIX_FMT_YUV420P;
     if (output_format->flags & AVFMT_GLOBALHEADER)
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
