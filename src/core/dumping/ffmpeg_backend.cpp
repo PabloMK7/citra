@@ -211,7 +211,7 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     if (!FFmpegStream::Init(format_context))
         return false;
 
-    sample_count = 0;
+    frame_count = 0;
 
     // Initialize audio codec
     const AVCodec* codec = avcodec_find_encoder_by_name(Settings::values.audio_encoder.c_str());
@@ -243,7 +243,20 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
         codec_context->sample_fmt = AV_SAMPLE_FMT_S16P;
     }
 
-    codec_context->sample_rate = AudioCore::native_sample_rate;
+    if (codec->supported_samplerates) {
+        codec_context->sample_rate = codec->supported_samplerates[0];
+        // Prefer native sample rate if supported
+        const int* ptr = codec->supported_samplerates;
+        while ((*ptr)) {
+            if ((*ptr) == AudioCore::native_sample_rate) {
+                codec_context->sample_rate = AudioCore::native_sample_rate;
+                break;
+            }
+            ptr++;
+        }
+    } else {
+        codec_context->sample_rate = AudioCore::native_sample_rate;
+    }
     codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
     codec_context->channels = 2;
 
@@ -257,6 +270,12 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
         char* buf = nullptr;
         av_dict_get_string(options, &buf, ':', ';');
         LOG_WARNING(Render, "Audio encoder options not found: {}", buf);
+    }
+
+    if (codec_context->frame_size) {
+        frame_size = static_cast<u64>(codec_context->frame_size);
+    } else { // variable frame size support
+        frame_size = std::tuple_size<AudioCore::StereoFrame16>::value;
     }
 
     // Create audio stream
@@ -291,7 +310,7 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     // Allocate resampled data
     int error =
         av_samples_alloc_array_and_samples(&resampled_data, nullptr, codec_context->channels,
-                                           codec_context->frame_size, codec_context->sample_fmt, 0);
+                                           frame_size, codec_context->sample_fmt, 0);
     if (error < 0) {
         LOG_ERROR(Render, "Could not allocate samples storage");
         return false;
@@ -312,31 +331,62 @@ void FFmpegAudioStream::Free() {
     av_freep(&resampled_data);
 }
 
-void FFmpegAudioStream::ProcessFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1) {
+void FFmpegAudioStream::ProcessFrame(const VariableAudioFrame& channel0,
+                                     const VariableAudioFrame& channel1) {
     ASSERT_MSG(channel0.size() == channel1.size(),
                "Frames of the two channels must have the same number of samples");
-    std::array<const u8*, 2> src_data = {reinterpret_cast<u8*>(channel0.data()),
-                                         reinterpret_cast<u8*>(channel1.data())};
-    if (swr_convert(swr_context.get(), resampled_data, channel0.size(), src_data.data(),
-                    channel0.size()) < 0) {
 
+    const auto sample_size = av_get_bytes_per_sample(codec_context->sample_fmt);
+    std::array<const u8*, 2> src_data = {reinterpret_cast<const u8*>(channel0.data()),
+                                         reinterpret_cast<const u8*>(channel1.data())};
+    std::array<u8*, 2> dst_data = {resampled_data[0] + sample_size * offset,
+                                   resampled_data[1] + sample_size * offset};
+
+    auto resampled_count = swr_convert(swr_context.get(), dst_data.data(), frame_size - offset,
+                                       src_data.data(), channel0.size());
+    if (resampled_count < 0) {
         LOG_ERROR(Render, "Audio frame dropped: Could not resample data");
         return;
     }
 
-    // Prepare frame
-    audio_frame->nb_samples = channel0.size();
-    audio_frame->data[0] = resampled_data[0];
-    audio_frame->data[1] = resampled_data[1];
-    audio_frame->pts = sample_count;
-    sample_count += channel0.size();
+    offset += resampled_count;
+    if (offset < frame_size) { // Still not enough to form a frame
+        return;
+    }
 
-    SendFrame(audio_frame.get());
+    while (true) {
+        // Prepare frame
+        audio_frame->nb_samples = frame_size;
+        audio_frame->data[0] = resampled_data[0];
+        audio_frame->data[1] = resampled_data[1];
+        audio_frame->pts = frame_count * frame_size;
+        frame_count++;
+
+        SendFrame(audio_frame.get());
+
+        // swr_convert buffers input internally. Try to get more resampled data
+        resampled_count = swr_convert(swr_context.get(), resampled_data, frame_size, nullptr, 0);
+        if (resampled_count < 0) {
+            LOG_ERROR(Render, "Audio frame dropped: Could not resample data");
+            return;
+        }
+        if (static_cast<u64>(resampled_count) < frame_size) {
+            offset = resampled_count;
+            break;
+        }
+    }
 }
 
-std::size_t FFmpegAudioStream::GetAudioFrameSize() const {
-    ASSERT_MSG(codec_context, "Codec context is not initialized yet!");
-    return codec_context->frame_size;
+void FFmpegAudioStream::Flush() {
+    // Send the last samples
+    audio_frame->nb_samples = offset;
+    audio_frame->data[0] = resampled_data[0];
+    audio_frame->data[1] = resampled_data[1];
+    audio_frame->pts = frame_count * frame_size;
+
+    SendFrame(audio_frame.get());
+
+    FFmpegStream::Flush();
 }
 
 FFmpegMuxer::~FFmpegMuxer() {
@@ -402,7 +452,8 @@ void FFmpegMuxer::ProcessVideoFrame(VideoFrame& frame) {
     video_stream.ProcessFrame(frame);
 }
 
-void FFmpegMuxer::ProcessAudioFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1) {
+void FFmpegMuxer::ProcessAudioFrame(const VariableAudioFrame& channel0,
+                                    const VariableAudioFrame& channel1) {
     audio_stream.ProcessFrame(channel0, channel1);
 }
 
@@ -412,10 +463,6 @@ void FFmpegMuxer::FlushVideo() {
 
 void FFmpegMuxer::FlushAudio() {
     audio_stream.Flush();
-}
-
-std::size_t FFmpegMuxer::GetAudioFrameSize() const {
-    return audio_stream.GetAudioFrameSize();
 }
 
 void FFmpegMuxer::WriteTrailer() {
@@ -498,24 +545,20 @@ void FFmpegBackend::AddVideoFrame(VideoFrame frame) {
 }
 
 void FFmpegBackend::AddAudioFrame(AudioCore::StereoFrame16 frame) {
-    std::array<std::array<s16, 160>, 2> refactored_frame;
+    std::array<VariableAudioFrame, 2> refactored_frame;
+    for (auto& channel : refactored_frame) {
+        channel.resize(frame.size());
+    }
     for (std::size_t i = 0; i < frame.size(); i++) {
         refactored_frame[0][i] = frame[i][0];
         refactored_frame[1][i] = frame[i][1];
     }
 
-    for (auto i : {0, 1}) {
-        audio_buffers[i].insert(audio_buffers[i].end(), refactored_frame[i].begin(),
-                                refactored_frame[i].end());
-    }
-    CheckAudioBuffer();
+    ffmpeg.ProcessAudioFrame(refactored_frame[0], refactored_frame[1]);
 }
 
 void FFmpegBackend::AddAudioSample(const std::array<s16, 2>& sample) {
-    for (auto i : {0, 1}) {
-        audio_buffers[i].push_back(sample[i]);
-    }
-    CheckAudioBuffer();
+    ffmpeg.ProcessAudioFrame({sample[0]}, {sample[1]});
 }
 
 void FFmpegBackend::StopDumping() {
@@ -525,12 +568,6 @@ void FFmpegBackend::StopDumping() {
     // Flush the video processing queue
     AddVideoFrame(VideoFrame());
     for (auto i : {0, 1}) {
-        // Add remaining data to audio queue
-        if (audio_buffers[i].size() >= 0) {
-            VariableAudioFrame buffer(audio_buffers[i].begin(), audio_buffers[i].end());
-            audio_frame_queues[i].Push(std::move(buffer));
-            audio_buffers[i].clear();
-        }
         // Flush the audio processing queue
         audio_frame_queues[i].Push(VariableAudioFrame());
     }
@@ -552,20 +589,6 @@ void FFmpegBackend::EndDumping() {
     ffmpeg.WriteTrailer();
     ffmpeg.Free();
     processing_ended.Set();
-}
-
-void FFmpegBackend::CheckAudioBuffer() {
-    for (auto i : {0, 1}) {
-        const std::size_t frame_size = ffmpeg.GetAudioFrameSize();
-        // Add audio data to the queue when there is enough to form a frame
-        while (audio_buffers[i].size() >= frame_size) {
-            VariableAudioFrame buffer(audio_buffers[i].begin(),
-                                      audio_buffers[i].begin() + frame_size);
-            audio_frame_queues[i].Push(std::move(buffer));
-
-            audio_buffers[i].erase(audio_buffers[i].begin(), audio_buffers[i].begin() + frame_size);
-        }
-    }
 }
 
 } // namespace VideoDumper

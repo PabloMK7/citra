@@ -96,6 +96,7 @@ private:
 /**
  * A FFmpegStream used for audio data.
  * Resamples (converts), encodes and writes a frame.
+ * This also temporarily stores resampled audio data before there are enough to form a frame.
  */
 class FFmpegAudioStream : public FFmpegStream {
 public:
@@ -103,8 +104,8 @@ public:
 
     bool Init(AVFormatContext* format_context);
     void Free();
-    void ProcessFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1);
-    std::size_t GetAudioFrameSize() const;
+    void ProcessFrame(const VariableAudioFrame& channel0, const VariableAudioFrame& channel1);
+    void Flush();
 
 private:
     struct SwrContextDeleter {
@@ -113,12 +114,14 @@ private:
         }
     };
 
-    u64 sample_count{};
+    u64 frame_size{};
+    u64 frame_count{};
 
     std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame{};
     std::unique_ptr<SwrContext, SwrContextDeleter> swr_context{};
 
     u8** resampled_data{};
+    u64 offset{}; // Number of output samples that are currently in resampled_data.
 };
 
 /**
@@ -132,10 +135,9 @@ public:
     bool Init(const std::string& path, const Layout::FramebufferLayout& layout);
     void Free();
     void ProcessVideoFrame(VideoFrame& frame);
-    void ProcessAudioFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1);
+    void ProcessAudioFrame(const VariableAudioFrame& channel0, const VariableAudioFrame& channel1);
     void FlushVideo();
     void FlushAudio();
-    std::size_t GetAudioFrameSize() const;
     void WriteTrailer();
 
 private:
@@ -153,8 +155,7 @@ private:
 
 /**
  * FFmpeg video dumping backend.
- * This class implements a double buffer, and an audio queue to keep audio data
- * before enough data is received to form a frame.
+ * This class implements a double buffer.
  */
 class FFmpegBackend : public Backend {
 public:
@@ -169,7 +170,6 @@ public:
     Layout::FramebufferLayout GetLayout() const override;
 
 private:
-    void CheckAudioBuffer();
     void EndDumping();
 
     std::atomic_bool is_dumping = false; ///< Whether the backend is currently dumping
@@ -182,9 +182,6 @@ private:
     Common::Event event1, event2;
     std::thread video_processing_thread;
 
-    /// An audio buffer used to temporarily hold audio data, before the size is big enough
-    /// to be sent to the encoder as a frame
-    std::array<VariableAudioFrame, 2> audio_buffers;
     std::array<Common::SPSCQueue<VariableAudioFrame>, 2> audio_frame_queues;
     std::thread audio_processing_thread;
 
