@@ -980,8 +980,14 @@ void GMainWindow::BootGame(const QString& filename) {
     if (video_dumping_on_start) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
-        Core::System::GetInstance().VideoDumper().StartDumping(video_dumping_path.toStdString(),
-                                                               layout);
+        if (!Core::System::GetInstance().VideoDumper().StartDumping(
+                video_dumping_path.toStdString(), layout)) {
+
+            QMessageBox::critical(
+                this, tr("Citra"),
+                tr("Could not start video dumping.<br>Refer to the log for details."));
+            ui.action_Dump_Video->setChecked(false);
+        }
         video_dumping_on_start = false;
         video_dumping_path.clear();
     }
@@ -1821,7 +1827,12 @@ void GMainWindow::OnStartVideoDumping() {
     if (emulation_running) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
-        Core::System::GetInstance().VideoDumper().StartDumping(path.toStdString(), layout);
+        if (!Core::System::GetInstance().VideoDumper().StartDumping(path.toStdString(), layout)) {
+            QMessageBox::critical(
+                this, tr("Citra"),
+                tr("Could not start video dumping.<br>Refer to the log for details."));
+            ui.action_Dump_Video->setChecked(false);
+        }
     } else {
         video_dumping_on_start = true;
         video_dumping_path = path;
