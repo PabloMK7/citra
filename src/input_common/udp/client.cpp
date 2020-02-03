@@ -125,7 +125,7 @@ static void SocketLoop(Socket* socket) {
 
 Client::Client(std::shared_ptr<DeviceStatus> status, const std::string& host, u16 port,
                u8 pad_index, u32 client_id)
-    : status(status) {
+    : status(std::move(status)) {
     StartCommunication(host, port, pad_index, client_id);
 }
 
