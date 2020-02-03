@@ -14,7 +14,6 @@
 #include "input_common/udp/client.h"
 #include "input_common/udp/protocol.h"
 
-using boost::asio::ip::address_v4;
 using boost::asio::ip::udp;
 
 namespace InputCommon::CemuhookUDP {
@@ -33,7 +32,8 @@ public:
                     SocketCallback callback)
         : callback(std::move(callback)), timer(io_service),
           socket(io_service, udp::endpoint(udp::v4(), 0)), client_id(client_id),
-          pad_index(pad_index), send_endpoint(udp::endpoint(address_v4::from_string(host), port)) {}
+          pad_index(pad_index),
+          send_endpoint(udp::endpoint(boost::asio::ip::make_address_v4(host), port)) {}
 
     void Stop() {
         io_service.stop();
