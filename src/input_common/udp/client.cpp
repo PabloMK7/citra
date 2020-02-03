@@ -207,7 +207,7 @@ void TestCommunication(const std::string& host, u16 port, u8 pad_index, u32 clie
         Common::Event success_event;
         SocketCallback callback{[](Response::Version version) {}, [](Response::PortInfo info) {},
                                 [&](Response::PadData data) { success_event.Set(); }};
-        Socket socket{host, port, pad_index, client_id, callback};
+        Socket socket{host, port, pad_index, client_id, std::move(callback)};
         std::thread worker_thread{SocketLoop, &socket};
         bool result = success_event.WaitFor(std::chrono::seconds(8));
         socket.Stop();
@@ -263,7 +263,7 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
                                         complete_event.Set();
                                     }
                                 }};
-        Socket socket{host, port, pad_index, client_id, callback};
+        Socket socket{host, port, pad_index, client_id, std::move(callback)};
         std::thread worker_thread{SocketLoop, &socket};
         complete_event.Wait();
         socket.Stop();
