@@ -31,10 +31,9 @@ public:
 
     explicit Socket(const std::string& host, u16 port, u8 pad_index, u32 client_id,
                     SocketCallback callback)
-        : client_id(client_id), timer(io_service),
-          send_endpoint(udp::endpoint(address_v4::from_string(host), port)),
-          socket(io_service, udp::endpoint(udp::v4(), 0)), pad_index(pad_index),
-          callback(std::move(callback)) {}
+        : callback(std::move(callback)), timer(io_service),
+          socket(io_service, udp::endpoint(udp::v4(), 0)), client_id(client_id),
+          pad_index(pad_index), send_endpoint(udp::endpoint(address_v4::from_string(host), port)) {}
 
     void Stop() {
         io_service.stop();
