@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/log.h"
+#include <mutex>
+#include <tuple>
+
 #include "common/param_package.h"
 #include "core/frontend/input.h"
 #include "core/settings.h"

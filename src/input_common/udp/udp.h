@@ -5,14 +5,10 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
-#include "input_common/main.h"
-#include "input_common/udp/client.h"
 
 namespace InputCommon::CemuhookUDP {
 
-class UDPTouchDevice;
-class UDPMotionDevice;
+class Client;
 
 class State {
 public:
