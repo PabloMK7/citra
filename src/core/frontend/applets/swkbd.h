@@ -47,8 +47,7 @@ struct KeyboardConfig {
     bool has_custom_button_text; /// If true, use the button_text instead
     std::vector<std::string> button_text; /// Contains the button text that the caller provides
     struct Filters {
-        bool prevent_digit;     /// Disallow the use of more than a certain number of digits
-                                /// TODO: how many is a certain number
+        bool prevent_digit;     /// Limit maximum digit count to max_digits
         bool prevent_at;        /// Disallow the use of the @ sign.
         bool prevent_percent;   /// Disallow the use of the % sign.
         bool prevent_backslash; /// Disallow the use of the \ sign.
@@ -68,7 +67,7 @@ enum class ValidationError {
     // Button Selection
     ButtonOutOfRange,
     // Configured Filters
-    DigitNotAllowed,
+    MaxDigitsExceeded,
     AtSignNotAllowed,
     PercentNotAllowed,
     BackslashNotAllowed,
