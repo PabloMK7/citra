@@ -15,9 +15,9 @@ namespace Frontend {
 
 ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) const {
     if (config.filters.prevent_digit) {
-        if (std::any_of(input.begin(), input.end(),
-                        [](unsigned char c) { return std::isdigit(c); })) {
-            return ValidationError::DigitNotAllowed;
+        if (std::count_if(input.begin(), input.end(),
+                          [](unsigned char c) { return std::isdigit(c); }) > config.max_digits) {
+            return ValidationError::MaxDigitsExceeded;
         }
     }
     if (config.filters.prevent_at) {
