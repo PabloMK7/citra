@@ -42,7 +42,7 @@ class LayeredFS : public RomFSReader {
 public:
     explicit LayeredFS(std::shared_ptr<RomFSReader> romfs, std::string patch_path,
                        std::string patch_ext_path);
-    ~LayeredFS();
+    ~LayeredFS() override;
 
     std::size_t GetSize() const override;
     std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) override;

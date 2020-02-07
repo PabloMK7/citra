@@ -515,12 +515,13 @@ std::size_t LayeredFS::ReadFile(std::size_t offset, std::size_t length, u8* buff
         const auto relative_offset = offset - current->first;
         std::size_t to_read{};
         if (current->second->relocation.size > relative_offset) {
-            to_read =
-                std::min(current->second->relocation.size - relative_offset, length - read_size);
+            to_read = std::min<std::size_t>(current->second->relocation.size - relative_offset,
+                                            length - read_size);
         }
         const auto alignment =
-            std::min(Common::AlignUp(current->second->relocation.size, 16) - relative_offset,
-                     length - read_size) -
+            std::min<std::size_t>(Common::AlignUp(current->second->relocation.size, 16) -
+                                      relative_offset,
+                                  length - read_size) -
             to_read;
 
         // Read the file in different ways depending on relocation type
