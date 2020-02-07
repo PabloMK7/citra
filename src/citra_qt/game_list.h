@@ -35,7 +35,8 @@ enum class GameListOpenTarget {
     APPLICATION = 2,
     UPDATE_DATA = 3,
     TEXTURE_DUMP = 4,
-    TEXTURE_LOAD = 5
+    TEXTURE_LOAD = 5,
+    MODS = 6,
 };
 
 class GameList : public QWidget {
