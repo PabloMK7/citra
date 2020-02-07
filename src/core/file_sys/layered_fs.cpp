@@ -306,18 +306,10 @@ void LayeredFS::PrepareBuild(Directory& current) {
 // Implementation from 3dbrew
 u32 CalcHash(const std::string& name, u32 parent_offset) {
     u32 hash = parent_offset ^ 123456789;
-
     std::u16string u16name = Common::UTF8ToUTF16(name);
-    std::vector<u16_le> tmp_buffer(u16name.size());
-    std::transform(u16name.begin(), u16name.end(), tmp_buffer.begin(), [](char16_t character) {
-        return static_cast<u16_le>(static_cast<u16>(character));
-    });
-
-    std::vector<u8> buffer(tmp_buffer.size() * 2);
-    std::memcpy(buffer.data(), tmp_buffer.data(), buffer.size());
-    for (std::size_t i = 0; i < buffer.size(); i += 2) {
+    for (char16_t c : u16name) {
         hash = (hash >> 5) | (hash << 27);
-        hash ^= static_cast<u16>((buffer[i]) | (buffer[i + 1] << 8));
+        hash ^= static_cast<u16>(c);
     }
     return hash;
 }
