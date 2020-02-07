@@ -11,6 +11,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/file_sys/layered_fs.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/patch.h"
 #include "core/file_sys/seed_db.h"
@@ -597,12 +598,24 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
     if (!romfs_file_inner.IsOpen())
         return Loader::ResultStatus::Error;
 
+    std::shared_ptr<RomFSReader> direct_romfs;
     if (is_encrypted) {
-        romfs_file = std::make_shared<RomFSReader>(std::move(romfs_file_inner), romfs_offset,
-                                                   romfs_size, secondary_key, romfs_ctr, 0x1000);
+        direct_romfs =
+            std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner), romfs_offset,
+                                                romfs_size, secondary_key, romfs_ctr, 0x1000);
     } else {
-        romfs_file =
-            std::make_shared<RomFSReader>(std::move(romfs_file_inner), romfs_offset, romfs_size);
+        direct_romfs = std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner),
+                                                           romfs_offset, romfs_size);
+    }
+
+    const auto path =
+        fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                    ncch_header.program_id);
+    if (FileUtil::Exists(path + "romfs/") || FileUtil::Exists(path + "romfs_ext/")) {
+        romfs_file = std::make_shared<LayeredFS>(std::move(direct_romfs), path + "romfs/",
+                                                 path + "romfs_ext/");
+    } else {
+        romfs_file = std::move(direct_romfs);
     }
 
     return Loader::ResultStatus::Success;
@@ -614,9 +627,10 @@ Loader::ResultStatus NCCHContainer::ReadOverrideRomFS(std::shared_ptr<RomFSReade
     if (FileUtil::Exists(split_filepath)) {
         FileUtil::IOFile romfs_file_inner(split_filepath, "rb");
         if (romfs_file_inner.IsOpen()) {
-            LOG_WARNING(Service_FS, "File {} overriding built-in RomFS", split_filepath);
-            romfs_file = std::make_shared<RomFSReader>(std::move(romfs_file_inner), 0,
-                                                       romfs_file_inner.GetSize());
+            LOG_WARNING(Service_FS, "File {} overriding built-in RomFS; LayeredFS not enabled",
+                        split_filepath);
+            romfs_file = std::make_shared<DirectRomFSReader>(std::move(romfs_file_inner), 0,
+                                                             romfs_file_inner.GetSize());
             return Loader::ResultStatus::Success;
         }
     }
