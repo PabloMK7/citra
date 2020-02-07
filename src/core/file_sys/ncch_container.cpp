@@ -513,7 +513,13 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
         std::string path;
         bool (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
     };
-    const std::array<PatchLocation, 2> patch_paths{{
+
+    const auto mods_path =
+        fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                    ncch_header.program_id);
+    const std::array<PatchLocation, 4> patch_paths{{
+        {mods_path + "exefs/code.ips", Patch::ApplyIpsPatch},
+        {mods_path + "exefs/code.bps", Patch::ApplyBpsPatch},
         {filepath + ".exefsdir/code.ips", Patch::ApplyIpsPatch},
         {filepath + ".exefsdir/code.bps", Patch::ApplyBpsPatch},
     }};
@@ -552,17 +558,26 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     else
         return Loader::ResultStatus::Error;
 
-    std::string section_override = filepath + ".exefsdir/" + override_name;
-    FileUtil::IOFile section_file(section_override, "rb");
+    const auto mods_path =
+        fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                    ncch_header.program_id);
+    std::array<std::string, 2> override_paths{{
+        mods_path + "exefs/" + override_name,
+        filepath + ".exefsdir/" + override_name,
+    }};
 
-    if (section_file.IsOpen()) {
-        auto section_size = section_file.GetSize();
-        buffer.resize(section_size);
+    for (const auto& path : override_paths) {
+        FileUtil::IOFile section_file(path, "rb");
 
-        section_file.Seek(0, SEEK_SET);
-        if (section_file.ReadBytes(&buffer[0], section_size) == section_size) {
-            LOG_WARNING(Service_FS, "File {} overriding built-in ExeFS file", section_override);
-            return Loader::ResultStatus::Success;
+        if (section_file.IsOpen()) {
+            auto section_size = section_file.GetSize();
+            buffer.resize(section_size);
+
+            section_file.Seek(0, SEEK_SET);
+            if (section_file.ReadBytes(&buffer[0], section_size) == section_size) {
+                LOG_WARNING(Service_FS, "File {} overriding built-in ExeFS file", path);
+                return Loader::ResultStatus::Success;
+            }
         }
     }
     return Loader::ResultStatus::ErrorNotUsed;
