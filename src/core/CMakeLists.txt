@@ -72,6 +72,8 @@ add_library(core STATIC
     file_sys/delay_generator.h
     file_sys/ivfc_archive.cpp
     file_sys/ivfc_archive.h
+    file_sys/layered_fs.cpp
+    file_sys/layered_fs.h
     file_sys/ncch_container.cpp
     file_sys/ncch_container.h
     file_sys/patch.cpp
