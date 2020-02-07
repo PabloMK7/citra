@@ -304,8 +304,22 @@ Loader::ResultStatus NCCHContainer::Load() {
                 }
             }
 
-            FileUtil::IOFile exheader_override_file{filepath + ".exheader", "rb"};
-            const bool has_exheader_override = read_exheader(exheader_override_file);
+            const auto mods_path =
+                fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                            ncch_header.program_id & 0x00040000'FFFFFFFF);
+            std::array<std::string, 2> exheader_override_paths{{
+                mods_path + "exheader.bin",
+                filepath + ".exheader",
+            }};
+
+            bool has_exheader_override = false;
+            for (const auto& path : exheader_override_paths) {
+                FileUtil::IOFile exheader_override_file{path, "rb"};
+                if (read_exheader(exheader_override_file)) {
+                    has_exheader_override = true;
+                    break;
+                }
+            }
             if (has_exheader_override) {
                 if (exheader_header.system_info.jump_id !=
                     exheader_header.arm11_system_local_caps.program_id) {
