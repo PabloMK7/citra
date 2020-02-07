@@ -516,7 +516,7 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
 
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    ncch_header.program_id);
+                    ncch_header.program_id & 0x00040000'FFFFFFFF);
     const std::array<PatchLocation, 4> patch_paths{{
         {mods_path + "exefs/code.ips", Patch::ApplyIpsPatch},
         {mods_path + "exefs/code.bps", Patch::ApplyBpsPatch},
@@ -560,7 +560,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
 
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    ncch_header.program_id);
+                    ncch_header.program_id & 0x00040000'FFFFFFFF);
     std::array<std::string, 2> override_paths{{
         mods_path + "exefs/" + override_name,
         filepath + ".exefsdir/" + override_name,
@@ -625,7 +625,7 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
 
     const auto path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    ncch_header.program_id);
+                    ncch_header.program_id & 0x00040000'FFFFFFFF);
     if (FileUtil::Exists(path + "romfs/") || FileUtil::Exists(path + "romfs_ext/")) {
         romfs_file = std::make_shared<LayeredFS>(std::move(direct_romfs), path + "romfs/",
                                                  path + "romfs_ext/");
