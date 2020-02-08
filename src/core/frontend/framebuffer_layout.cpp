@@ -363,4 +363,36 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale) {
     return layout;
 }
 
+std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
+                                                       bool upright_screen) {
+    unsigned min_width, min_height;
+
+    switch (layout) {
+    case Settings::LayoutOption::SingleScreen:
+        min_width = Settings::values.swap_screen ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
+        min_height = Core::kScreenBottomHeight;
+        break;
+    case Settings::LayoutOption::LargeScreen:
+        min_width = Settings::values.swap_screen
+                        ? Core::kScreenTopWidth / 4 + Core::kScreenBottomWidth
+                        : Core::kScreenTopWidth + Core::kScreenBottomWidth / 4;
+        min_height = Core::kScreenBottomHeight;
+        break;
+    case Settings::LayoutOption::SideScreen:
+        min_width = Core::kScreenTopWidth + Core::kScreenBottomWidth;
+        min_height = Core::kScreenBottomHeight;
+        break;
+    case Settings::LayoutOption::Default:
+    default:
+        min_width = Core::kScreenTopWidth;
+        min_height = Core::kScreenTopHeight + Core::kScreenBottomHeight;
+        break;
+    }
+    if (upright_screen) {
+        return std::make_pair(min_height, min_width);
+    } else {
+        return std::make_pair(min_width, min_height);
+    }
+}
+
 } // namespace Layout

@@ -180,7 +180,7 @@ protected:
 
         if (config.min_client_area_size != active_config.min_client_area_size) {
             OnMinimalClientAreaChangeRequest(config.min_client_area_size);
-            config.min_client_area_size = active_config.min_client_area_size;
+            active_config.min_client_area_size = config.min_client_area_size;
         }
     }
 
@@ -215,6 +215,8 @@ private:
      * Clip the provided coordinates to be inside the touchscreen area.
      */
     std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y) const;
+
+    void UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size);
 };
 
 } // namespace Frontend
