@@ -4,7 +4,6 @@
 
 #include <mutex>
 #include <tuple>
-
 #include "common/param_package.h"
 #include "core/frontend/input.h"
 #include "core/settings.h"

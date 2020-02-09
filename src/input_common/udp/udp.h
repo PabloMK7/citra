@@ -5,10 +5,9 @@
 #pragma once
 
 #include <memory>
+#include "input_common/udp/client.h"
 
 namespace InputCommon::CemuhookUDP {
-
-class Client;
 
 class State {
 public:
