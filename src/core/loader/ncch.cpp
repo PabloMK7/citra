@@ -261,8 +261,8 @@ ResultStatus AppLoader_NCCH::DumpRomFS(const std::string& target_path) {
 ResultStatus AppLoader_NCCH::DumpUpdateRomFS(const std::string& target_path) {
     u64 program_id;
     ReadProgramId(program_id);
-    update_ncch.OpenFile(Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC,
-                                                          program_id | UPDATE_MASK));
+    update_ncch.OpenFile(
+        Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, program_id | UPDATE_MASK));
     return update_ncch.DumpRomFS(target_path);
 }
 
