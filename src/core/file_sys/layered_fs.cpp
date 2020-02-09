@@ -52,7 +52,7 @@ struct FileMetadata {
 static_assert(sizeof(FileMetadata) == 0x20, "Size of FileMetadata is not correct");
 
 LayeredFS::LayeredFS(std::shared_ptr<RomFSReader> romfs_, std::string patch_path_,
-                     std::string patch_ext_path_)
+                     std::string patch_ext_path_, bool load_relocations)
     : romfs(std::move(romfs_)), patch_path(std::move(patch_path_)),
       patch_ext_path(std::move(patch_ext_path_)) {
 
@@ -64,8 +64,10 @@ LayeredFS::LayeredFS(std::shared_ptr<RomFSReader> romfs_, std::string patch_path
     root.parent = &root;
     LoadDirectory(root, 0);
 
-    LoadRelocations();
-    LoadExtRelocations();
+    if (load_relocations) {
+        LoadRelocations();
+        LoadExtRelocations();
+    }
 
     RebuildMetadata();
 }
@@ -539,6 +541,62 @@ std::size_t LayeredFS::ReadFile(std::size_t offset, std::size_t length, u8* buff
     }
 
     return read_size;
+}
+
+bool LayeredFS::ExtractDirectory(Directory& current, const std::string& target_path) {
+    if (!FileUtil::CreateFullPath(target_path + current.path)) {
+        LOG_ERROR(Service_FS, "Could not create path {}", target_path + current.path);
+        return false;
+    }
+
+    constexpr std::size_t BufferSize = 0x10000;
+    std::array<u8, BufferSize> buffer;
+    for (const auto& file : current.files) {
+        // Extract file
+        const auto path = target_path + file->path;
+        LOG_INFO(Service_FS, "Extracting {} to {}", file->path, path);
+
+        FileUtil::IOFile target_file(path, "wb");
+        if (!target_file) {
+            LOG_ERROR(Service_FS, "Could not open file {}", path);
+            return false;
+        }
+
+        std::size_t written = 0;
+        while (written < file->relocation.size) {
+            const auto to_read =
+                std::min<std::size_t>(buffer.size(), file->relocation.size - written);
+            if (romfs->ReadFile(file->relocation.original_offset + written, to_read,
+                                buffer.data()) != to_read) {
+                LOG_ERROR(Service_FS, "Could not read from RomFS");
+                return false;
+            }
+
+            if (target_file.WriteBytes(buffer.data(), to_read) != to_read) {
+                LOG_ERROR(Service_FS, "Could not write to file {}", path);
+                return false;
+            }
+
+            written += to_read;
+        }
+    }
+
+    for (const auto& directory : current.directories) {
+        if (!ExtractDirectory(*directory, target_path)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool LayeredFS::DumpRomFS(const std::string& target_path) {
+    std::string path = target_path;
+    if (path.back() == '/' || path.back() == '\\') {
+        path.erase(path.size() - 1, 1);
+    }
+
+    return ExtractDirectory(root, path);
 }
 
 } // namespace FileSys

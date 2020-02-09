@@ -187,12 +187,30 @@ public:
     }
 
     /**
+     * Dump the RomFS of the applciation
+     * @param target_path The target path to dump to
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus DumpRomFS(const std::string& target_path) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
+    /**
      * Get the update RomFS of the application
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
      * @return ResultStatus result of function
      */
     virtual ResultStatus ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
+    /**
+     * Dump the update RomFS of the applciation
+     * @param target_path The target path to dump to
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus DumpUpdateRomFS(const std::string& target_path) {
         return ResultStatus::ErrorNotImplemented;
     }
 

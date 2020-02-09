@@ -597,7 +597,8 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     return Loader::ResultStatus::ErrorNotUsed;
 }
 
-Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file) {
+Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file,
+                                              bool use_layered_fs) {
     Loader::ResultStatus result = Load();
     if (result != Loader::ResultStatus::Success)
         return result;
@@ -640,13 +641,30 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
     const auto path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                     ncch_header.program_id & 0x00040000'FFFFFFFF);
-    if (FileUtil::Exists(path + "romfs/") || FileUtil::Exists(path + "romfs_ext/")) {
+    if (use_layered_fs &&
+        (FileUtil::Exists(path + "romfs/") || FileUtil::Exists(path + "romfs_ext/"))) {
+
         romfs_file = std::make_shared<LayeredFS>(std::move(direct_romfs), path + "romfs/",
                                                  path + "romfs_ext/");
     } else {
         romfs_file = std::move(direct_romfs);
     }
 
+    return Loader::ResultStatus::Success;
+}
+
+Loader::ResultStatus NCCHContainer::DumpRomFS(const std::string& target_path) {
+    std::shared_ptr<RomFSReader> direct_romfs;
+    Loader::ResultStatus result = ReadRomFS(direct_romfs, false);
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
+    std::shared_ptr<LayeredFS> layered_fs =
+        std::make_shared<LayeredFS>(std::move(direct_romfs), "", "", false);
+
+    if (!layered_fs->DumpRomFS(target_path)) {
+        return Loader::ResultStatus::Error;
+    }
     return Loader::ResultStatus::Success;
 }
 

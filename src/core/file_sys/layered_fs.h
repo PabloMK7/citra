@@ -41,11 +41,13 @@ static_assert(sizeof(RomFSHeader) == 0x28, "Size of RomFSHeader is not correct")
 class LayeredFS : public RomFSReader {
 public:
     explicit LayeredFS(std::shared_ptr<RomFSReader> romfs, std::string patch_path,
-                       std::string patch_ext_path);
+                       std::string patch_ext_path, bool load_relocations = true);
     ~LayeredFS() override;
 
     std::size_t GetSize() const override;
     std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) override;
+
+    bool DumpRomFS(const std::string& target_path);
 
 private:
     struct File;
@@ -83,6 +85,10 @@ private:
 
     void BuildDirectories();
     void BuildFiles();
+
+    // Recursively extract a directory and all its contents to target_path
+    // target_path should be without trailing '/'.
+    bool ExtractDirectory(Directory& current, const std::string& target_path);
 
     void RebuildMetadata();
 
