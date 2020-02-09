@@ -18,7 +18,7 @@ namespace FileSys {
 struct FileRelocationInfo {
     int type;                      // 0 - none, 1 - replaced / created, 2 - patched, 3 - removed
     u64 original_offset;           // Type 0. Offset is absolute
-    FileUtil::IOFile replace_file; // Type 1
+    std::string replace_file_path; // Type 1
     std::vector<u8> patched_file;  // Type 2
     u64 size;                      // Relocated file size
 };
@@ -175,14 +175,9 @@ void LayeredFS::LoadRelocations() {
         }
 
         auto* file = file_path_map.at(path);
-        file->relocation.replace_file = FileUtil::IOFile(directory + virtual_name, "rb");
-        if (file->relocation.replace_file) {
-            file->relocation.type = 1;
-            file->relocation.size = file->relocation.replace_file.GetSize();
-            LOG_INFO(Service_FS, "LayeredFS replacement file in use for {}", path);
-        } else {
-            LOG_ERROR(Service_FS, "Could not open replacement file for {}", path);
-        }
+        file->relocation.type = 1;
+        file->relocation.replace_file_path = directory + virtual_name;
+        LOG_INFO(Service_FS, "LayeredFS replacement file in use for {}", path);
         return true;
     };
 
@@ -524,8 +519,14 @@ std::size_t LayeredFS::ReadFile(std::size_t offset, std::size_t length, u8* buff
             romfs->ReadFile(relocation.original_offset + relative_offset, to_read,
                             buffer + read_size);
         } else if (relocation.type == 1) { // replace
-            relocation.replace_file.Seek(relative_offset, SEEK_SET);
-            relocation.replace_file.ReadBytes(buffer + read_size, to_read);
+            FileUtil::IOFile replace_file(relocation.replace_file_path, "rb");
+            if (replace_file) {
+                replace_file.Seek(relative_offset, SEEK_SET);
+                replace_file.ReadBytes(buffer + read_size, to_read);
+            } else {
+                LOG_ERROR(Service_FS, "Could not open replacement file for {}",
+                          current->second->path);
+            }
         } else if (relocation.type == 2) { // patch
             std::memcpy(buffer + read_size, relocation.patched_file.data() + relative_offset,
                         to_read);
