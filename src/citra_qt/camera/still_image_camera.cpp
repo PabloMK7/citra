@@ -36,14 +36,16 @@ const std::string StillImageCameraFactory::GetFilePath() const {
         return last_path;
     }
     QList<QByteArray> types = QImageReader::supportedImageFormats();
-    QList<QString> temp_filters;
+    QStringList temp_filters;
     for (QByteArray type : types) {
-        temp_filters << QString("*." + QString(type));
+        temp_filters << QStringLiteral("*.%1").arg(QString::fromUtf8(type));
     }
 
-    QString filter = QObject::tr("Supported image files (%1)").arg(temp_filters.join(" "));
+    QString filter =
+        QObject::tr("Supported image files (%1)").arg(temp_filters.join(QLatin1Char{' '}));
     last_path =
-        QFileDialog::getOpenFileName(nullptr, QObject::tr("Open File"), ".", filter).toStdString();
+        QFileDialog::getOpenFileName(nullptr, QObject::tr("Open File"), QStringLiteral("."), filter)
+            .toStdString();
     return last_path;
 }
 

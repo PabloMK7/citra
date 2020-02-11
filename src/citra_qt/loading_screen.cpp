@@ -134,7 +134,7 @@ void LoadingScreen::Prepare(Loader::AppLoader& loader) {
     }
     std::string title;
     if (loader.ReadTitle(title) == Loader::ResultStatus::Success) {
-        ui->title->setText(QString("Now Loading\n") + QString::fromStdString(title));
+        ui->title->setText(tr("Now Loading\n%1").arg(QString::fromStdString(title)));
     }
     eta_shown = false;
     OnLoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
@@ -150,7 +150,7 @@ void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size
     const auto now = high_resolution_clock::now();
     // reset the timer if the stage changes
     if (stage != previous_stage) {
-        ui->progress_bar->setStyleSheet(progressbar_style.at(stage));
+        ui->progress_bar->setStyleSheet(QString::fromUtf8(progressbar_style.at(stage)));
         // Hide the progress bar during the prepare stage
         if (stage == VideoCore::LoadCallbackStage::Prepare) {
             ui->progress_bar->hide();

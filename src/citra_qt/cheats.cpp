@@ -54,7 +54,7 @@ void CheatDialog::LoadCheats() {
     for (size_t i = 0; i < cheats.size(); i++) {
         QCheckBox* enabled = new QCheckBox();
         enabled->setChecked(cheats[i]->IsEnabled());
-        enabled->setStyleSheet("margin-left:7px;");
+        enabled->setStyleSheet(QStringLiteral("margin-left:7px;"));
         ui->tableCheats->setItem(i, 0, new QTableWidgetItem());
         ui->tableCheats->setCellWidget(i, 0, enabled);
         ui->tableCheats->setItem(
@@ -90,7 +90,7 @@ bool CheatDialog::SaveCheat(int row) {
     }
 
     // Check if the cheat lines are valid
-    auto code_lines = ui->textCode->toPlainText().split("\n", QString::SkipEmptyParts);
+    auto code_lines = ui->textCode->toPlainText().split(QLatin1Char{'\n'}, QString::SkipEmptyParts);
     for (int i = 0; i < code_lines.size(); ++i) {
         Cheats::GatewayCheat::CheatLine cheat_line(code_lines[i].toStdString());
         if (cheat_line.valid)
@@ -195,9 +195,9 @@ void CheatDialog::OnDeleteCheat() {
 
     LoadCheats();
     if (cheats.empty()) {
-        ui->lineName->setText("");
-        ui->textCode->setPlainText("");
-        ui->textNotes->setPlainText("");
+        ui->lineName->clear();
+        ui->textCode->clear();
+        ui->textNotes->clear();
         ui->lineName->setEnabled(false);
         ui->textCode->setEnabled(false);
         ui->textNotes->setEnabled(false);
@@ -231,11 +231,11 @@ void CheatDialog::OnAddCheat() {
 
     // create a dummy item
     ui->tableCheats->setItem(row, 1, new QTableWidgetItem(tr("[new cheat]")));
-    ui->tableCheats->setItem(row, 2, new QTableWidgetItem(""));
-    ui->lineName->setText("");
+    ui->tableCheats->setItem(row, 2, new QTableWidgetItem(QString{}));
+    ui->lineName->clear();
     ui->lineName->setPlaceholderText(tr("[new cheat]"));
-    ui->textCode->setPlainText("");
-    ui->textNotes->setPlainText("");
+    ui->textCode->clear();
+    ui->textNotes->clear();
     ui->lineName->setEnabled(true);
     ui->textCode->setEnabled(true);
     ui->textNotes->setEnabled(true);

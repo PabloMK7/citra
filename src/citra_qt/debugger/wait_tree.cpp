@@ -178,7 +178,7 @@ QString WaitTreeThread::GetText() const {
     QString pc_info = tr(" PC = 0x%1 LR = 0x%2")
                           .arg(thread.context->GetProgramCounter(), 8, 16, QLatin1Char('0'))
                           .arg(thread.context->GetLinkRegister(), 8, 16, QLatin1Char('0'));
-    return WaitTreeWaitObject::GetText() + pc_info + " (" + status + ") ";
+    return QStringLiteral("%1%2 (%3) ").arg(WaitTreeWaitObject::GetText(), pc_info, status);
 }
 
 QColor WaitTreeThread::GetColor() const {

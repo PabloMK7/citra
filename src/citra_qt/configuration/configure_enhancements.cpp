@@ -72,11 +72,11 @@ void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_op
     ui->shader_combobox->clear();
 
     if (stereo_option == Settings::StereoRenderOption::Anaglyph)
-        ui->shader_combobox->addItem("dubois (builtin)");
+        ui->shader_combobox->addItem(QStringLiteral("dubois (builtin)"));
     else if (stereo_option == Settings::StereoRenderOption::Interlaced)
-        ui->shader_combobox->addItem("horizontal (builtin)");
+        ui->shader_combobox->addItem(QStringLiteral("horizontal (builtin)"));
     else
-        ui->shader_combobox->addItem("none (builtin)");
+        ui->shader_combobox->addItem(QStringLiteral("none (builtin)"));
 
     ui->shader_combobox->setCurrentIndex(0);
 

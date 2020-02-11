@@ -120,14 +120,15 @@ void GameListWorker::run() {
         if (game_dir.path == QStringLiteral("INSTALLED")) {
             QString games_path =
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)) +
-                "Nintendo "
-                "3DS/00000000000000000000000000000000/"
-                "00000000000000000000000000000000/title/00040000";
+                QStringLiteral("Nintendo "
+                               "3DS/00000000000000000000000000000000/"
+                               "00000000000000000000000000000000/title/00040000");
             QString demos_path =
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)) +
-                "Nintendo "
-                "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/"
-                "00040002";
+                QStringLiteral(
+                    "Nintendo "
+                    "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/"
+                    "00040002");
             watch_list.append(games_path);
             watch_list.append(demos_path);
             auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::InstalledDir);
@@ -137,7 +138,7 @@ void GameListWorker::run() {
         } else if (game_dir.path == QStringLiteral("SYSTEM")) {
             QString path =
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
-                "00000000000000000000000000000000/title/00040010";
+                QStringLiteral("00000000000000000000000000000000/title/00040010");
             watch_list.append(path);
             auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::SystemDir);
             emit DirEntryReady(game_list_dir);

@@ -637,7 +637,10 @@ void GMainWindow::ConnectMenuEvents() {
             ->key());
     ui.action_Screen_Layout_Swap_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     ui.action_Screen_Layout_Upright_Screens->setShortcut(
-        hotkey_registry.GetHotkey("Main Window", "Rotate Screens Upright", this)->key());
+        hotkey_registry
+            .GetHotkey(QStringLiteral("Main Window"), QStringLiteral("Rotate Screens Upright"),
+                       this)
+            ->key());
     ui.action_Screen_Layout_Upright_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(ui.action_Fullscreen, &QAction::triggered, this, &GMainWindow::ToggleFullscreen);
     connect(ui.action_Screen_Layout_Default, &QAction::triggered, this,
@@ -1169,7 +1172,7 @@ void GMainWindow::OnGameListNavigateToGamedbEntry(u64 program_id,
     if (it != compatibility_list.end())
         directory = it->second.second;
 
-    QDesktopServices::openUrl(QUrl("https://citra-emu.org/game/" + directory));
+    QDesktopServices::openUrl(QUrl(QStringLiteral("https://citra-emu.org/game/") + directory));
 }
 
 void GMainWindow::OnGameListOpenDirectory(const QString& directory) {
@@ -1232,7 +1235,7 @@ void GMainWindow::OnMenuLoadFile() {
 void GMainWindow::OnMenuInstallCIA() {
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
-        tr("3DS Installation File (*.CIA*)") + ";;" + tr("All Files (*.*)"));
+        tr("3DS Installation File (*.CIA*)") + QStringLiteral(";;") + tr("All Files (*.*)"));
     if (filepaths.isEmpty())
         return;
 

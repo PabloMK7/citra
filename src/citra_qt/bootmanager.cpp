@@ -190,7 +190,9 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread)
     : QWidget(parent_), emu_thread(emu_thread) {
 
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
-                       .arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
+                       .arg(QString::fromUtf8(Common::g_build_name),
+                            QString::fromUtf8(Common::g_scm_branch),
+                            QString::fromUtf8(Common::g_scm_desc)));
     setAttribute(Qt::WA_AcceptTouchEvents);
     auto layout = new QHBoxLayout(this);
     layout->setMargin(0);

@@ -183,8 +183,9 @@ void ConfigureCamera::StartPreviewing() {
     ui->preview_button->setHidden(true);
     preview_width = ui->preview_box->size().width();
     preview_height = preview_width * 0.75;
-    ui->preview_box->setToolTip(tr("Resolution: ") + QString::number(preview_width) + "*" +
-                                QString::number(preview_height));
+    ui->preview_box->setToolTip(
+        tr("Resolution: %1*%2")
+            .arg(QString::number(preview_width), QString::number(preview_height)));
     // Load previewing camera
     previewing_camera = Camera::CreateCameraPreview(
         camera_name[camera_selection], camera_config[camera_selection], preview_width,
@@ -270,7 +271,7 @@ void ConfigureCamera::OnToolButtonClicked() {
     QList<QByteArray> types = QImageReader::supportedImageFormats();
     QList<QString> temp_filters;
     for (const QByteArray& type : types) {
-        temp_filters << QString("*." + QString::fromUtf8(type));
+        temp_filters << QStringLiteral("*.%1").arg(QString::fromUtf8(type));
     }
     QString filter = tr("Supported image files (%1)").arg(temp_filters.join(QStringLiteral(" ")));
     QString path = QFileDialog::getOpenFileName(this, tr("Open File"), QStringLiteral("."), filter);

@@ -116,7 +116,8 @@ void Config::ReadAudioValues() {
     Settings::values.mic_input_type = static_cast<Settings::MicInputType>(
         ReadSetting(QStringLiteral("mic_input_type"), 0).toInt());
     Settings::values.mic_input_device =
-        ReadSetting(QStringLiteral("mic_input_device"), Frontend::Mic::default_device_name)
+        ReadSetting(QStringLiteral("mic_input_device"),
+                    QString::fromUtf8(Frontend::Mic::default_device_name))
             .toString()
             .toStdString();
 
@@ -635,7 +636,7 @@ void Config::SaveAudioValues() {
     WriteSetting(QStringLiteral("volume"), Settings::values.volume, 1.0f);
     WriteSetting(QStringLiteral("mic_input_device"),
                  QString::fromStdString(Settings::values.mic_input_device),
-                 Frontend::Mic::default_device_name);
+                 QString::fromUtf8(Frontend::Mic::default_device_name));
     WriteSetting(QStringLiteral("mic_input_type"),
                  static_cast<int>(Settings::values.mic_input_type), 0);
 
@@ -1006,7 +1007,7 @@ QVariant Config::ReadSetting(const QString& name) const {
 
 QVariant Config::ReadSetting(const QString& name, const QVariant& default_value) const {
     QVariant result;
-    if (qt_config->value(name + "/default", false).toBool()) {
+    if (qt_config->value(name + QStringLiteral("/default"), false).toBool()) {
         result = default_value;
     } else {
         result = qt_config->value(name, default_value);
@@ -1020,7 +1021,7 @@ void Config::WriteSetting(const QString& name, const QVariant& value) {
 
 void Config::WriteSetting(const QString& name, const QVariant& value,
                           const QVariant& default_value) {
-    qt_config->setValue(name + "/default", value == default_value);
+    qt_config->setValue(name + QStringLiteral("/default"), value == default_value);
     qt_config->setValue(name, value);
 }
 
