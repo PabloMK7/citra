@@ -26,6 +26,14 @@ namespace FileSys {
 static const int kMaxSections = 8;   ///< Maximum number of sections (files) in an ExeFs
 static const int kBlockSize = 0x200; ///< Size of ExeFS blocks (in bytes)
 
+u64 GetModId(u64 program_id) {
+    constexpr u64 UPDATE_MASK = 0x0000000e'00000000;
+    if ((program_id & 0x000000ff'00000000) == UPDATE_MASK) { // Apply the mods to updates
+        return program_id & ~UPDATE_MASK;
+    }
+    return program_id;
+}
+
 /**
  * Get the decompressed size of an LZSS compressed ExeFS file
  * @param buffer Buffer of compressed file
@@ -306,7 +314,7 @@ Loader::ResultStatus NCCHContainer::Load() {
 
             const auto mods_path =
                 fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                            ncch_header.program_id & 0x00040000'FFFFFFFF);
+                            GetModId(ncch_header.program_id));
             std::array<std::string, 2> exheader_override_paths{{
                 mods_path + "exheader.bin",
                 filepath + ".exheader",
@@ -530,7 +538,7 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
 
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    ncch_header.program_id & 0x00040000'FFFFFFFF);
+                    GetModId(ncch_header.program_id));
     const std::array<PatchLocation, 4> patch_paths{{
         {mods_path + "exefs/code.ips", Patch::ApplyIpsPatch},
         {mods_path + "exefs/code.bps", Patch::ApplyBpsPatch},
@@ -574,7 +582,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
 
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    ncch_header.program_id & 0x00040000'FFFFFFFF);
+                    GetModId(ncch_header.program_id));
     std::array<std::string, 2> override_paths{{
         mods_path + "exefs/" + override_name,
         filepath + ".exefsdir/" + override_name,
@@ -640,7 +648,7 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
 
     const auto path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    ncch_header.program_id & 0x00040000'FFFFFFFF);
+                    GetModId(ncch_header.program_id));
     if (use_layered_fs &&
         (FileUtil::Exists(path + "romfs/") || FileUtil::Exists(path + "romfs_ext/"))) {
 
