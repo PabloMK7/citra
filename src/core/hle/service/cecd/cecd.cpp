@@ -27,6 +27,7 @@
 
 SERVICE_CONSTRUCT_IMPL(Service::CECD::Module)
 SERIALIZE_EXPORT_IMPL(Service::CECD::Module)
+SERIALIZE_EXPORT_IMPL(Service::CECD::Module::SessionData)
 
 namespace Service::CECD {
 

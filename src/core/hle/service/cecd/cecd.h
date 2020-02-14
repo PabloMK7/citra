@@ -248,6 +248,19 @@ public:
         FileSys::Path path;
 
         std::unique_ptr<FileSys::FileBackend> file;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
+                *this);
+            ar& ncch_program_id;
+            ar& data_path_type;
+            ar& open_mode.raw;
+            ar& path;
+            ar& file;
+        }
+        friend class boost::serialization::access;
     };
 
     class Interface : public ServiceFramework<Interface, SessionData> {
@@ -626,3 +639,4 @@ void InstallInterfaces(Core::System& system);
 
 SERVICE_CONSTRUCT(Service::CECD::Module)
 BOOST_CLASS_EXPORT_KEY(Service::CECD::Module)
+BOOST_CLASS_EXPORT_KEY(Service::CECD::Module::SessionData)
