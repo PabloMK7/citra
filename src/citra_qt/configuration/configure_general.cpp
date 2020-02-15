@@ -25,10 +25,6 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
 ConfigureGeneral::~ConfigureGeneral() = default;
 
 void ConfigureGeneral::SetConfiguration() {
-    ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
-    ui->frame_limit->setEnabled(ui->toggle_frame_limit->isChecked());
-    ui->frame_limit->setValue(Settings::values.frame_limit);
-
     ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing);
     ui->toggle_background_pause->setChecked(UISettings::values.pause_when_in_background);
 
@@ -57,9 +53,6 @@ void ConfigureGeneral::ResetDefaults() {
 }
 
 void ConfigureGeneral::ApplyConfiguration() {
-    Settings::values.use_frame_limit = ui->toggle_frame_limit->isChecked();
-    Settings::values.frame_limit = ui->frame_limit->value();
-
     UISettings::values.confirm_before_closing = ui->toggle_check_exit->isChecked();
     UISettings::values.pause_when_in_background = ui->toggle_background_pause->isChecked();
 
