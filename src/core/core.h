@@ -278,7 +278,7 @@ public:
 
     void Save(std::ostream& stream) const;
 
-    void Load(std::istream& stream);
+    void Load(std::istream& stream, std::size_t size);
 
 private:
     /**

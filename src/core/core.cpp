@@ -13,6 +13,7 @@
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/texture.h"
+#include "common/zstd_compression.h"
 #include "core/arm/arm_interface.h"
 #ifdef ARCHITECTURE_x86_64
 #include "core/arm/dynarmic/arm_dynarmic.h"
@@ -116,7 +117,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     case Signal::Load: {
         LOG_INFO(Core, "Begin load");
         auto stream = std::ifstream("save0.citrasave", std::fstream::binary);
-        System::Load(stream);
+        System::Load(stream, FileUtil::GetSize("save0.citrasave"));
         LOG_INFO(Core, "Load completed");
     } break;
     case Signal::Save: {
@@ -464,27 +465,43 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
 }
 
 void System::Save(std::ostream& stream) const {
+    std::ostringstream sstream{std::ios_base::binary};
     try {
 
         {
-            oarchive oa{stream};
+            oarchive oa{sstream};
             oa&* this;
         }
-        VideoCore::Save(stream);
+        VideoCore::Save(sstream);
 
     } catch (const std::exception& e) {
         LOG_ERROR(Core, "Error saving: {}", e.what());
     }
+    const std::string& str{sstream.str()};
+    auto buffer = Common::Compression::CompressDataZSTDDefault(
+        reinterpret_cast<const u8*>(str.data()), str.size());
+    stream.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 }
 
-void System::Load(std::istream& stream) {
+void System::Load(std::istream& stream, std::size_t size) {
+    std::vector<u8> decompressed;
+    {
+        std::vector<u8> buffer(size);
+        stream.read(reinterpret_cast<char*>(buffer.data()), size);
+        decompressed = Common::Compression::DecompressDataZSTD(buffer);
+    }
+    std::istringstream sstream{
+        std::string{reinterpret_cast<char*>(decompressed.data()), decompressed.size()},
+        std::ios_base::binary};
+    decompressed.clear();
+
     try {
 
         {
-            iarchive ia{stream};
+            iarchive ia{sstream};
             ia&* this;
         }
-        VideoCore::Load(stream);
+        VideoCore::Load(sstream);
 
     } catch (const std::exception& e) {
         LOG_ERROR(Core, "Error loading: {}", e.what());
