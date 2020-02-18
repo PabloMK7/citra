@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include "boost/serialization/access.hpp"
 #include "common/common_types.h"
@@ -92,6 +93,8 @@ public:
         ErrorUnknown                        ///< Any other error
     };
 
+    ~System();
+
     /**
      * Run the core CPU loop
      * This function runs the core for the specified number of CPU instructions before trying to
@@ -118,7 +121,7 @@ public:
 
     enum class Signal : u32 { None, Shutdown, Reset, Save, Load };
 
-    bool SendSignal(Signal signal);
+    bool SendSignal(Signal signal, u32 param = 0);
 
     /// Request reset of the system
     void RequestReset() {
@@ -276,9 +279,9 @@ public:
         return registered_image_interface;
     }
 
-    void Save(std::ostream& stream) const;
+    void SaveState(u32 slot) const;
 
-    void Load(std::istream& stream, std::size_t size);
+    void LoadState(u32 slot);
 
 private:
     /**
@@ -344,8 +347,11 @@ private:
     /// Saved variables for reset
     Frontend::EmuWindow* m_emu_window;
     std::string m_filepath;
+    u64 title_id;
 
-    std::atomic<Signal> current_signal;
+    std::mutex signal_mutex;
+    Signal current_signal;
+    u32 signal_param;
 
     friend class boost::serialization::access;
     template <typename Archive>

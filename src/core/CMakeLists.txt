@@ -447,6 +447,8 @@ add_library(core STATIC
     rpc/server.h
     rpc/udp_server.cpp
     rpc/udp_server.h
+    savestate.cpp
+    savestate.h
     settings.cpp
     settings.h
     telemetry_session.cpp

@@ -10,10 +10,8 @@
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
-#include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/texture.h"
-#include "common/zstd_compression.h"
 #include "core/arm/arm_interface.h"
 #ifdef ARCHITECTURE_x86_64
 #include "core/arm/dynarmic/arm_dynarmic.h"
@@ -63,6 +61,8 @@ Kernel::KernelSystem& Global() {
     return System::GetInstance().Kernel();
 }
 
+System::~System() = default;
+
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
     if (!cpu_core) {
@@ -106,7 +106,16 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     HW::Update();
     Reschedule();
 
-    auto signal = current_signal.exchange(Signal::None);
+    Signal signal{Signal::None};
+    u32 param{};
+    {
+        std::lock_guard lock{signal_mutex};
+        if (current_signal != Signal::None) {
+            signal = current_signal;
+            param = signal_param;
+            current_signal = Signal::None;
+        }
+    }
     switch (signal) {
     case Signal::Reset:
         Reset();
@@ -116,14 +125,16 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         break;
     case Signal::Load: {
         LOG_INFO(Core, "Begin load");
-        auto stream = std::ifstream("save0.citrasave", std::fstream::binary);
-        System::Load(stream, FileUtil::GetSize("save0.citrasave"));
+        System::LoadState(param);
+        // auto stream = std::ifstream("save0.citrasave", std::fstream::binary);
+        // System::Load(stream, FileUtil::GetSize("save0.citrasave"));
         LOG_INFO(Core, "Load completed");
     } break;
     case Signal::Save: {
         LOG_INFO(Core, "Begin save");
-        auto stream = std::ofstream("save0.citrasave", std::fstream::binary);
-        System::Save(stream);
+        System::SaveState(param);
+        // auto stream = std::ofstream("save0.citrasave", std::fstream::binary);
+        // System::Save(stream);
         LOG_INFO(Core, "Save completed");
     } break;
     default:
@@ -133,12 +144,14 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     return status;
 }
 
-bool System::SendSignal(System::Signal signal) {
-    auto prev = System::Signal::None;
-    if (!current_signal.compare_exchange_strong(prev, signal)) {
-        LOG_ERROR(Core, "Unable to {} as {} is ongoing", signal, prev);
+bool System::SendSignal(System::Signal signal, u32 param) {
+    std::lock_guard lock{signal_mutex};
+    if (current_signal != signal && current_signal != Signal::None) {
+        LOG_ERROR(Core, "Unable to {} as {} is ongoing", signal, current_signal);
         return false;
     }
+    current_signal = signal;
+    signal_param = param;
     return true;
 }
 
@@ -196,7 +209,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         }
     }
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
-    u64 title_id{0};
+    title_id = 0;
     if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to find title id for ROM (Error {})",
                   static_cast<u32>(load_result));
@@ -246,8 +259,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(
-        *memory, *timing, [this] { PrepareReschedule(); }, system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing,
+                                                    [this] { PrepareReschedule(); }, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
@@ -464,48 +477,6 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     }
 }
 
-void System::Save(std::ostream& stream) const {
-    std::ostringstream sstream{std::ios_base::binary};
-    try {
-
-        {
-            oarchive oa{sstream};
-            oa&* this;
-        }
-        VideoCore::Save(sstream);
-
-    } catch (const std::exception& e) {
-        LOG_ERROR(Core, "Error saving: {}", e.what());
-    }
-    const std::string& str{sstream.str()};
-    auto buffer = Common::Compression::CompressDataZSTDDefault(
-        reinterpret_cast<const u8*>(str.data()), str.size());
-    stream.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
-}
-
-void System::Load(std::istream& stream, std::size_t size) {
-    std::vector<u8> decompressed;
-    {
-        std::vector<u8> buffer(size);
-        stream.read(reinterpret_cast<char*>(buffer.data()), size);
-        decompressed = Common::Compression::DecompressDataZSTD(buffer);
-    }
-    std::istringstream sstream{
-        std::string{reinterpret_cast<char*>(decompressed.data()), decompressed.size()},
-        std::ios_base::binary};
-    decompressed.clear();
-
-    try {
-
-        {
-            iarchive ia{sstream};
-            ia&* this;
-        }
-        VideoCore::Load(sstream);
-
-    } catch (const std::exception& e) {
-        LOG_ERROR(Core, "Error loading: {}", e.what());
-    }
-}
+SERIALIZE_IMPL(System)
 
 } // namespace Core

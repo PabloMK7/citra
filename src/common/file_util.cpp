@@ -725,6 +725,7 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::ShaderDir, user_path + SHADER_DIR DIR_SEP);
     g_paths.emplace(UserPath::DumpDir, user_path + DUMP_DIR DIR_SEP);
     g_paths.emplace(UserPath::LoadDir, user_path + LOAD_DIR DIR_SEP);
+    g_paths.emplace(UserPath::StatesDir, user_path + STATES_DIR DIR_SEP);
 }
 
 const std::string& GetUserPath(UserPath path) {
