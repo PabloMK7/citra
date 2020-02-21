@@ -18,3 +18,6 @@ get_directory_property(OPENSSL_LIBS
         DEFINITION OPENSSL_LIBS)
 target_compile_definitions(web_service PRIVATE -DCPPHTTPLIB_OPENSSL_SUPPORT)
 target_link_libraries(web_service PRIVATE common network json-headers ${OPENSSL_LIBS} httplib lurlparser cpp-jwt)
+if (ANDROID)
+    target_link_libraries(web_service PRIVATE ifaddrs)
+endif()

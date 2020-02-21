@@ -96,9 +96,14 @@ if (ENABLE_WEB_SERVICE)
     # lurlparser
     add_subdirectory(lurlparser EXCLUDE_FROM_ALL)
 
+    if(ANDROID)
+        add_subdirectory(android-ifaddrs)
+    endif()
+
     # httplib
     add_library(httplib INTERFACE)
     target_include_directories(httplib INTERFACE ./httplib)
+    target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
 
     # cpp-jwt
     add_library(cpp-jwt INTERFACE)

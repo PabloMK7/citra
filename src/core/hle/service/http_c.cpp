@@ -2,8 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <atomic>
+#ifdef ENABLE_WEB_SERVICE
+#include <LUrlParser.h>
+#endif
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include "common/assert.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -47,6 +52,82 @@ const ResultCode ERROR_WRONG_CERT_HANDLE = // 0xD8A0A0C9
     ResultCode(201, ErrorModule::HTTP, ErrorSummary::InvalidState, ErrorLevel::Permanent);
 const ResultCode ERROR_CERT_ALREADY_SET = // 0xD8A0A03D
     ResultCode(61, ErrorModule::HTTP, ErrorSummary::InvalidState, ErrorLevel::Permanent);
+
+void Context::MakeRequest() {
+    ASSERT(state == RequestState::NotStarted);
+
+#ifdef ENABLE_WEB_SERVICE
+    LUrlParser::clParseURL parsedUrl = LUrlParser::clParseURL::ParseURL(url);
+    int port;
+    std::unique_ptr<httplib::Client> client;
+    if (parsedUrl.m_Scheme == "http") {
+        if (!parsedUrl.GetPort(&port)) {
+            port = 80;
+        }
+        // TODO(B3N30): Support for setting timeout
+        // Figure out what the default timeout on 3DS is
+        client = std::make_unique<httplib::Client>(parsedUrl.m_Host.c_str(), port);
+    } else {
+        if (!parsedUrl.GetPort(&port)) {
+            port = 443;
+        }
+        // TODO(B3N30): Support for setting timeout
+        // Figure out what the default timeout on 3DS is
+
+        auto ssl_client = std::make_unique<httplib::SSLClient>(parsedUrl.m_Host, port);
+        SSL_CTX* ctx = ssl_client->ssl_context();
+        client = std::move(ssl_client);
+
+        if (auto client_cert = ssl_config.client_cert_ctx.lock()) {
+            SSL_CTX_use_certificate_ASN1(ctx, client_cert->certificate.size(),
+                                         client_cert->certificate.data());
+            SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA, ctx, client_cert->private_key.data(),
+                                        client_cert->private_key.size());
+        }
+
+        // TODO(B3N30): Check for SSLOptions-Bits and set the verify method accordingly
+        // https://www.3dbrew.org/wiki/SSL_Services#SSLOpt
+        // Hack: Since for now RootCerts are not implemented we set the VerifyMode to None.
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+    }
+
+    state = RequestState::InProgress;
+
+    static const std::unordered_map<RequestMethod, std::string> request_method_strings{
+        {RequestMethod::Get, "GET"},       {RequestMethod::Post, "POST"},
+        {RequestMethod::Head, "HEAD"},     {RequestMethod::Put, "PUT"},
+        {RequestMethod::Delete, "DELETE"}, {RequestMethod::PostEmpty, "POST"},
+        {RequestMethod::PutEmpty, "PUT"},
+    };
+
+    httplib::Request request;
+    request.method = request_method_strings.at(method);
+    request.path = url;
+    // TODO(B3N30): Add post data body
+    request.progress = [this](u64 current, u64 total) -> bool {
+        // TODO(B3N30): Is there a state that shows response header are available
+        current_download_size_bytes = current;
+        total_download_size_bytes = total;
+        return true;
+    };
+
+    for (const auto& header : headers) {
+        request.headers.emplace(header.name, header.value);
+    }
+
+    if (!client->send(request, response)) {
+        LOG_ERROR(Service_HTTP, "Request failed");
+        state = RequestState::TimedOut;
+    } else {
+        LOG_DEBUG(Service_HTTP, "Request successful");
+        // TODO(B3N30): Verify this state on HW
+        state = RequestState::ReadyToDownloadContent;
+    }
+#else
+    LOG_ERROR(Service_HTTP, "Tried to make request but WebServices is not enabled in this build");
+    state = RequestState::TimedOut;
+#endif
+}
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 1, 4);
@@ -152,7 +233,15 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
     auto itr = contexts.find(context_handle);
     ASSERT(itr != contexts.end());
 
-    // TODO(B3N30): Make the request
+    // On a 3DS BeginRequest and BeginRequestAsync will push the Request to a worker queue.
+    // You can only enqueue 8 requests at the same time.
+    // trying to enqueue any more will either fail (BeginRequestAsync), or block (BeginRequest)
+    // Note that you only can have 8 Contexts at a time. So this difference shouldn't matter
+    // Then there are 3? worker threads that pop the requests from the queue and send them
+    // For now make every request async in it's own thread.
+
+    itr->second.request_future =
+        std::async(std::launch::async, &Context::MakeRequest, std::ref(itr->second));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -197,7 +286,15 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
     auto itr = contexts.find(context_handle);
     ASSERT(itr != contexts.end());
 
-    // TODO(B3N30): Make the request
+    // On a 3DS BeginRequest and BeginRequestAsync will push the Request to a worker queue.
+    // You can only enqueue 8 requests at the same time.
+    // trying to enqueue any more will either fail (BeginRequestAsync), or block (BeginRequest)
+    // Note that you only can have 8 Contexts at a time. So this difference shouldn't matter
+    // Then there are 3? worker threads that pop the requests from the queue and send them
+    // For now make every request async in it's own thread.
+
+    itr->second.request_future =
+        std::async(std::launch::async, &Context::MakeRequest, std::ref(itr->second));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -260,7 +357,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    contexts.emplace(++context_counter, Context());
+    contexts.try_emplace(++context_counter);
     contexts[context_counter].url = std::move(url);
     contexts[context_counter].method = method;
     contexts[context_counter].state = RequestState::NotStarted;
@@ -307,10 +404,9 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     }
 
     // TODO(Subv): What happens if you try to close a context that's currently being used?
-    ASSERT(itr->second.state == RequestState::NotStarted);
-
     // TODO(Subv): Make sure that only the session that created the context can close it.
 
+    // Note that this will block if a request is still in progress
     contexts.erase(itr);
     session_data->num_http_contexts--;
 
