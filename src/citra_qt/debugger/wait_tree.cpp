@@ -12,6 +12,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/wait_object.h"
+#include "core/settings.h"
 
 WaitTreeItem::~WaitTreeItem() = default;
 
@@ -51,12 +52,16 @@ std::size_t WaitTreeItem::Row() const {
 }
 
 std::vector<std::unique_ptr<WaitTreeThread>> WaitTreeItem::MakeThreadItemList() {
-    const auto& threads = Core::System::GetInstance().Kernel().GetThreadManager().GetThreadList();
+    u32 num_cores = Core::GetNumCores();
     std::vector<std::unique_ptr<WaitTreeThread>> item_list;
-    item_list.reserve(threads.size());
-    for (std::size_t i = 0; i < threads.size(); ++i) {
-        item_list.push_back(std::make_unique<WaitTreeThread>(*threads[i]));
-        item_list.back()->row = i;
+    for (u32 i = 0; i < num_cores; ++i) {
+        const auto& threads =
+            Core::System::GetInstance().Kernel().GetThreadManager(i).GetThreadList();
+        item_list.reserve(item_list.size() + threads.size());
+        for (std::size_t i = 0; i < threads.size(); ++i) {
+            item_list.push_back(std::make_unique<WaitTreeThread>(*threads[i]));
+            item_list.back()->row = i;
+        }
     }
     return item_list;
 }

@@ -72,8 +72,7 @@ private:
 class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
     explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
-        : parent(parent), timing(parent.system.CoreTiming()), svc_context(parent.system),
-          memory(parent.memory) {}
+        : parent(parent), svc_context(parent.system), memory(parent.memory) {}
     ~DynarmicUserCallbacks() = default;
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
@@ -137,7 +136,7 @@ public:
                 parent.jit->HaltExecution();
                 parent.SetPC(pc);
                 Kernel::Thread* thread =
-                    parent.system.Kernel().GetThreadManager().GetCurrentThread();
+                    parent.system.Kernel().GetCurrentThreadManager().GetCurrentThread();
                 parent.SaveContext(thread->context);
                 GDBStub::Break();
                 GDBStub::SendTrap(thread, 5);
@@ -150,22 +149,23 @@ public:
     }
 
     void AddTicks(std::uint64_t ticks) override {
-        timing.AddTicks(ticks);
+        parent.GetTimer()->AddTicks(ticks);
     }
     std::uint64_t GetTicksRemaining() override {
-        s64 ticks = timing.GetDowncount();
+        s64 ticks = parent.GetTimer()->GetDowncount();
         return static_cast<u64>(ticks <= 0 ? 0 : ticks);
     }
 
     ARM_Dynarmic& parent;
-    Core::Timing& timing;
     Kernel::SVCContext svc_context;
     Memory::MemorySystem& memory;
 };
 
 ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory,
-                           PrivilegeMode initial_mode)
-    : system(*system), memory(memory), cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
+                           PrivilegeMode initial_mode, u32 id,
+                           std::shared_ptr<Core::Timing::Timer> timer)
+    : ARM_Interface(id, timer), system(*system), memory(memory),
+      cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
     interpreter_state = std::make_shared<ARMul_State>(system, memory, initial_mode);
     PageTableChanged();
 }

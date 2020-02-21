@@ -61,13 +61,14 @@ void RegistersWidget::OnDebugModeEntered() {
     if (!Core::System::GetInstance().IsPoweredOn())
         return;
 
+    // Todo: Handle all cores
     for (int i = 0; i < core_registers->childCount(); ++i)
         core_registers->child(i)->setText(
-            1, QStringLiteral("0x%1").arg(Core::CPU().GetReg(i), 8, 16, QLatin1Char('0')));
+            1, QStringLiteral("0x%1").arg(Core::GetCore(0).GetReg(i), 8, 16, QLatin1Char('0')));
 
     for (int i = 0; i < vfp_registers->childCount(); ++i)
         vfp_registers->child(i)->setText(
-            1, QStringLiteral("0x%1").arg(Core::CPU().GetVFPReg(i), 8, 16, QLatin1Char('0')));
+            1, QStringLiteral("0x%1").arg(Core::GetCore(0).GetVFPReg(i), 8, 16, QLatin1Char('0')));
 
     UpdateCPSRValues();
     UpdateVFPSystemRegisterValues();
@@ -127,7 +128,8 @@ void RegistersWidget::CreateCPSRChildren() {
 }
 
 void RegistersWidget::UpdateCPSRValues() {
-    const u32 cpsr_val = Core::CPU().GetCPSR();
+    // Todo: Handle all cores
+    const u32 cpsr_val = Core::GetCore(0).GetCPSR();
 
     cpsr->setText(1, QStringLiteral("0x%1").arg(cpsr_val, 8, 16, QLatin1Char('0')));
     cpsr->child(0)->setText(
@@ -191,10 +193,11 @@ void RegistersWidget::CreateVFPSystemRegisterChildren() {
 }
 
 void RegistersWidget::UpdateVFPSystemRegisterValues() {
-    const u32 fpscr_val = Core::CPU().GetVFPSystemReg(VFP_FPSCR);
-    const u32 fpexc_val = Core::CPU().GetVFPSystemReg(VFP_FPEXC);
-    const u32 fpinst_val = Core::CPU().GetVFPSystemReg(VFP_FPINST);
-    const u32 fpinst2_val = Core::CPU().GetVFPSystemReg(VFP_FPINST2);
+    // Todo: handle all cores
+    const u32 fpscr_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPSCR);
+    const u32 fpexc_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPEXC);
+    const u32 fpinst_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPINST);
+    const u32 fpinst2_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPINST2);
 
     QTreeWidgetItem* const fpscr = vfp_system_registers->child(0);
     fpscr->setText(1, QStringLiteral("0x%1").arg(fpscr_val, 8, 16, QLatin1Char('0')));

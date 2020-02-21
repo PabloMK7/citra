@@ -69,8 +69,9 @@ private:
 };
 
 ARM_DynCom::ARM_DynCom(Core::System* system, Memory::MemorySystem& memory,
-                       PrivilegeMode initial_mode)
-    : system(system) {
+                       PrivilegeMode initial_mode, u32 id,
+                       std::shared_ptr<Core::Timing::Timer> timer)
+    : ARM_Interface(id, timer), system(system) {
     state = std::make_unique<ARMul_State>(system, memory, initial_mode);
 }
 
@@ -78,7 +79,7 @@ ARM_DynCom::~ARM_DynCom() {}
 
 void ARM_DynCom::Run() {
     DEBUG_ASSERT(system != nullptr);
-    ExecuteInstructions(std::max<s64>(system->CoreTiming().GetDowncount(), 0));
+    ExecuteInstructions(std::max<s64>(timer->GetDowncount(), 0));
 }
 
 void ARM_DynCom::Step() {
@@ -150,7 +151,7 @@ void ARM_DynCom::ExecuteInstructions(u64 num_instructions) {
     state->NumInstrsToExecute = num_instructions;
     unsigned ticks_executed = InterpreterMainLoop(state.get());
     if (system != nullptr) {
-        system->CoreTiming().AddTicks(ticks_executed);
+        timer->AddTicks(ticks_executed);
     }
     state->ServeBreak();
 }

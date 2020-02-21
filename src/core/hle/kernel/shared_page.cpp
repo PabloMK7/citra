@@ -56,7 +56,7 @@ Handler::Handler(Core::Timing& timing) : timing(timing) {
     using namespace std::placeholders;
     update_time_event = timing.RegisterEvent("SharedPage::UpdateTimeCallback",
                                              std::bind(&Handler::UpdateTimeCallback, this, _1, _2));
-    timing.ScheduleEvent(0, update_time_event);
+    timing.ScheduleEvent(0, update_time_event, 0, 0);
 
     float slidestate = Settings::values.factor_3d / 100.0f;
     shared_page.sliderstate_3d = static_cast<float_le>(slidestate);

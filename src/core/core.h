@@ -140,7 +140,10 @@ public:
      * @returns True if the emulated system is powered on, otherwise false.
      */
     bool IsPoweredOn() const {
-        return cpu_core != nullptr;
+        return cpu_cores.size() > 0 &&
+               std::all_of(cpu_cores.begin(), cpu_cores.end(),
+                           [](std::shared_ptr<ARM_Interface> ptr) { return ptr != nullptr; });
+        ;
     }
 
     /**
@@ -160,8 +163,29 @@ public:
      * Gets a reference to the emulated CPU.
      * @returns A reference to the emulated CPU.
      */
-    ARM_Interface& CPU() {
-        return *cpu_core;
+
+    ARM_Interface& GetRunningCore() {
+        return *running_core;
+    };
+
+    /**
+     * Gets a reference to the emulated CPU.
+     * @param core_id The id of the core requested.
+     * @returns A reference to the emulated CPU.
+     */
+
+    ARM_Interface& GetCore(u32 core_id) {
+        return *cpu_cores[core_id];
+    };
+
+    u32 GetNumCores() const {
+        return cpu_cores.size();
+    }
+
+    void InvalidateCacheRange(u32 start_address, std::size_t length) {
+        for (const auto& cpu : cpu_cores) {
+            cpu->InvalidateCacheRange(start_address, length);
+        }
     }
 
     /**
@@ -288,7 +312,8 @@ private:
     std::unique_ptr<Loader::AppLoader> app_loader;
 
     /// ARM11 CPU core
-    std::shared_ptr<ARM_Interface> cpu_core;
+    std::vector<std::shared_ptr<ARM_Interface>> cpu_cores;
+    ARM_Interface* running_core = nullptr;
 
     /// DSP core
     std::unique_ptr<AudioCore::DspInterface> dsp_core;
@@ -330,6 +355,8 @@ private:
 private:
     static System s_instance;
 
+    bool initalized = false;
+
     ResultStatus status = ResultStatus::Success;
     std::string status_details = "";
     /// Saved variables for reset
@@ -340,8 +367,16 @@ private:
     std::atomic<bool> shutdown_requested;
 };
 
-inline ARM_Interface& CPU() {
-    return System::GetInstance().CPU();
+inline ARM_Interface& GetRunningCore() {
+    return System::GetInstance().GetRunningCore();
+}
+
+inline ARM_Interface& GetCore(u32 core_id) {
+    return System::GetInstance().GetCore(core_id);
+}
+
+inline u32 GetNumCores() {
+    return System::GetInstance().GetNumCores();
 }
 
 inline AudioCore::DspInterface& DSP() {
