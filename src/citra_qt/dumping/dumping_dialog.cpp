@@ -21,33 +21,33 @@ DumpingDialog::DumpingDialog(QWidget* parent)
         accept();
     });
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &DumpingDialog::reject);
-    connect(ui->formatOptionsButton, &QPushButton::clicked, [this] {
+    connect(ui->formatOptionsButton, &QToolButton::clicked, [this] {
         OpenOptionsDialog(formats.at(ui->formatComboBox->currentData().toUInt()).options,
-                          format_options);
+                          ui->formatOptionsLineEdit);
     });
-    connect(ui->videoEncoderOptionsButton, &QPushButton::clicked, [this] {
+    connect(ui->videoEncoderOptionsButton, &QToolButton::clicked, [this] {
         OpenOptionsDialog(
             video_encoders.at(ui->videoEncoderComboBox->currentData().toUInt()).options,
-            video_encoder_options);
+            ui->videoEncoderOptionsLineEdit);
     });
-    connect(ui->audioEncoderOptionsButton, &QPushButton::clicked, [this] {
+    connect(ui->audioEncoderOptionsButton, &QToolButton::clicked, [this] {
         OpenOptionsDialog(
             audio_encoders.at(ui->audioEncoderComboBox->currentData().toUInt()).options,
-            audio_encoder_options);
+            ui->audioEncoderOptionsLineEdit);
     });
 
     SetConfiguration();
 
     connect(ui->formatComboBox, qOverload<int>(&QComboBox::currentIndexChanged), [this] {
         ui->pathLineEdit->setText(QString{});
-        format_options.clear();
+        ui->formatOptionsLineEdit->clear();
         PopulateEncoders();
     });
 
     connect(ui->videoEncoderComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
-            [this] { video_encoder_options.clear(); });
+            [this] { ui->videoEncoderOptionsLineEdit->clear(); });
     connect(ui->audioEncoderComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
-            [this] { audio_encoder_options.clear(); });
+            [this] { ui->audioEncoderOptionsLineEdit->clear(); });
 }
 
 DumpingDialog::~DumpingDialog() = default;
@@ -174,21 +174,23 @@ void DumpingDialog::OnToolButtonClicked() {
 }
 
 void DumpingDialog::OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>& options,
-                                      std::string& current_value) {
-    OptionsDialog dialog(this, options, current_value);
+                                      QLineEdit* line_edit) {
+    OptionsDialog dialog(this, options, line_edit->text().toStdString());
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
         return;
     }
 
-    current_value = dialog.GetCurrentValue();
+    line_edit->setText(QString::fromStdString(dialog.GetCurrentValue()));
 }
 
 void DumpingDialog::SetConfiguration() {
     Populate();
 
-    format_options = Settings::values.format_options;
-    video_encoder_options = Settings::values.video_encoder_options;
-    audio_encoder_options = Settings::values.audio_encoder_options;
+    ui->formatOptionsLineEdit->setText(QString::fromStdString(Settings::values.format_options));
+    ui->videoEncoderOptionsLineEdit->setText(
+        QString::fromStdString(Settings::values.video_encoder_options));
+    ui->audioEncoderOptionsLineEdit->setText(
+        QString::fromStdString(Settings::values.audio_encoder_options));
     last_path = UISettings::values.video_dumping_path;
     ui->videoBitrateSpinBox->setValue(static_cast<int>(Settings::values.video_bitrate));
     ui->audioBitrateSpinBox->setValue(static_cast<int>(Settings::values.audio_bitrate));
@@ -196,14 +198,14 @@ void DumpingDialog::SetConfiguration() {
 
 void DumpingDialog::ApplyConfiguration() {
     Settings::values.output_format = formats.at(ui->formatComboBox->currentData().toUInt()).name;
-    Settings::values.format_options = format_options;
+    Settings::values.format_options = ui->formatOptionsLineEdit->text().toStdString();
     Settings::values.video_encoder =
         video_encoders.at(ui->videoEncoderComboBox->currentData().toUInt()).name;
-    Settings::values.video_encoder_options = video_encoder_options;
+    Settings::values.video_encoder_options = ui->videoEncoderOptionsLineEdit->text().toStdString();
     Settings::values.video_bitrate = ui->videoBitrateSpinBox->value();
     Settings::values.audio_encoder =
         audio_encoders.at(ui->audioEncoderComboBox->currentData().toUInt()).name;
-    Settings::values.audio_encoder_options = audio_encoder_options;
+    Settings::values.audio_encoder_options = ui->audioEncoderOptionsLineEdit->text().toStdString();
     Settings::values.audio_bitrate = ui->audioBitrateSpinBox->value();
     UISettings::values.video_dumping_path = last_path;
     Settings::Apply();

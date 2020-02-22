@@ -10,6 +10,8 @@ namespace Ui {
 class DumpingDialog;
 }
 
+class QLineEdit;
+
 class DumpingDialog : public QDialog {
     Q_OBJECT
 
@@ -26,12 +28,9 @@ private:
     void SetConfiguration();
     void OnToolButtonClicked();
     void OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>& options,
-                           std::string& current_value);
+                           QLineEdit* line_edit);
 
     std::unique_ptr<Ui::DumpingDialog> ui;
-    std::string format_options;
-    std::string video_encoder_options;
-    std::string audio_encoder_options;
 
     QString last_path;
 
