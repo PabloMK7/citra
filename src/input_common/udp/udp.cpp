@@ -2,7 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/log.h"
+#include <mutex>
+#include <tuple>
 #include "common/param_package.h"
 #include "core/frontend/input.h"
 #include "core/settings.h"
@@ -14,7 +15,7 @@ namespace InputCommon::CemuhookUDP {
 class UDPTouchDevice final : public Input::TouchDevice {
 public:
     explicit UDPTouchDevice(std::shared_ptr<DeviceStatus> status_) : status(std::move(status_)) {}
-    std::tuple<float, float, bool> GetStatus() const {
+    std::tuple<float, float, bool> GetStatus() const override {
         std::lock_guard guard(status->update_mutex);
         return status->touch_status;
     }
@@ -26,7 +27,7 @@ private:
 class UDPMotionDevice final : public Input::MotionDevice {
 public:
     explicit UDPMotionDevice(std::shared_ptr<DeviceStatus> status_) : status(std::move(status_)) {}
-    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() const {
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() const override {
         std::lock_guard guard(status->update_mutex);
         return status->motion_status;
     }
