@@ -101,6 +101,29 @@ enum class ScaleMatch {
 };
 
 struct SurfaceParams {
+private:
+    static constexpr std::array<unsigned int, 18> BPP_TABLE = {
+        32, // RGBA8
+        24, // RGB8
+        16, // RGB5A1
+        16, // RGB565
+        16, // RGBA4
+        16, // IA8
+        16, // RG8
+        8,  // I8
+        8,  // A8
+        8,  // IA4
+        4,  // I4
+        4,  // A4
+        4,  // ETC1
+        8,  // ETC1A4
+        16, // D16
+        0,
+        24, // D24
+        32, // D24S8
+    };
+
+public:
     enum class PixelFormat {
         // First 5 formats are shared between textures and color buffers
         RGBA8 = 0,
@@ -139,30 +162,11 @@ struct SurfaceParams {
     };
 
     static constexpr unsigned int GetFormatBpp(PixelFormat format) {
-        constexpr std::array<unsigned int, 18> bpp_table = {
-            32, // RGBA8
-            24, // RGB8
-            16, // RGB5A1
-            16, // RGB565
-            16, // RGBA4
-            16, // IA8
-            16, // RG8
-            8,  // I8
-            8,  // A8
-            8,  // IA4
-            4,  // I4
-            4,  // A4
-            4,  // ETC1
-            8,  // ETC1A4
-            16, // D16
-            0,
-            24, // D24
-            32, // D24S8
-        };
-
-        assert(static_cast<std::size_t>(format) < bpp_table.size());
-        return bpp_table[static_cast<std::size_t>(format)];
+        const auto format_idx = static_cast<std::size_t>(format);
+        DEBUG_ASSERT_MSG(format_idx < BPP_TABLE.size(), "Invalid pixel format {}", format_idx);
+        return BPP_TABLE[format_idx];
     }
+
     unsigned int GetFormatBpp() const {
         return GetFormatBpp(pixel_format);
     }
