@@ -1821,6 +1821,7 @@ void GMainWindow::OnCaptureScreenshot() {
 void GMainWindow::OnStartVideoDumping() {
     DumpingDialog dialog(this);
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
+        ui.action_Dump_Video->setChecked(false);
         return;
     }
     const auto path = dialog.GetFilePath();
