@@ -177,6 +177,7 @@ void LayeredFS::LoadRelocations() {
         auto* file = file_path_map.at(path);
         file->relocation.type = 1;
         file->relocation.replace_file_path = directory + virtual_name;
+        file->relocation.size = FileUtil::GetSize(directory + virtual_name);
         LOG_INFO(Service_FS, "LayeredFS replacement file in use for {}", path);
         return true;
     };
