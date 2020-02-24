@@ -468,6 +468,8 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
     QAction* open_texture_dump_location = context_menu.addAction(tr("Open Texture Dump Location"));
     QAction* open_texture_load_location =
         context_menu.addAction(tr("Open Custom Texture Location"));
+    QAction* open_mods_location = context_menu.addAction(tr("Open Mods Location"));
+    QAction* dump_romfs = context_menu.addAction(tr("Dump RomFS"));
     QAction* navigate_to_gamedb_entry = context_menu.addAction(tr("Navigate to GameDB entry"));
 
     const bool is_application =
@@ -497,6 +499,8 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
 
     open_texture_dump_location->setVisible(is_application);
     open_texture_load_location->setVisible(is_application);
+    open_mods_location->setVisible(is_application);
+    dump_romfs->setVisible(is_application);
 
     navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
@@ -526,6 +530,15 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
             emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_LOAD);
         }
     });
+    connect(open_mods_location, &QAction::triggered, [this, program_id] {
+        if (FileUtil::CreateFullPath(fmt::format("{}mods/{:016X}/",
+                                                 FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                                                 program_id))) {
+            emit OpenFolderRequested(program_id, GameListOpenTarget::MODS);
+        }
+    });
+    connect(dump_romfs, &QAction::triggered,
+            [this, path, program_id] { emit DumpRomFSRequested(path, program_id); });
     connect(navigate_to_gamedb_entry, &QAction::triggered, [this, program_id]() {
         emit NavigateToGamedbEntryRequested(program_id, compatibility_list);
     });

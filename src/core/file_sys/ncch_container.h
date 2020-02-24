@@ -247,7 +247,15 @@ public:
      * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    Loader::ResultStatus ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file);
+    Loader::ResultStatus ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file,
+                                   bool use_layered_fs = true);
+
+    /**
+     * Dump the RomFS of the NCCH container to the user folder.
+     * @param target_path target path to dump to
+     * @return ResultStatus result of function.
+     */
+    Loader::ResultStatus DumpRomFS(const std::string& target_path);
 
     /**
      * Get the override RomFS of the NCCH container

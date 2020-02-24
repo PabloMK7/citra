@@ -59,6 +59,10 @@ public:
 
     ResultStatus ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
 
+    ResultStatus DumpRomFS(const std::string& target_path) override;
+
+    ResultStatus DumpUpdateRomFS(const std::string& target_path) override;
+
     ResultStatus ReadTitle(std::string& title) override;
 
 private:
