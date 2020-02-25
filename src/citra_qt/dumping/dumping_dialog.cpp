@@ -17,6 +17,10 @@ DumpingDialog::DumpingDialog(QWidget* parent)
 
     connect(ui->pathExplore, &QToolButton::clicked, this, &DumpingDialog::OnToolButtonClicked);
     connect(ui->buttonBox, &QDialogButtonBox::accepted, [this] {
+        if (ui->pathLineEdit->text().isEmpty()) {
+            QMessageBox::critical(this, tr("Citra"), tr("Please specify the output path."));
+            return;
+        }
         ApplyConfiguration();
         accept();
     });
