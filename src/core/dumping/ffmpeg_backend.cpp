@@ -227,20 +227,7 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     codec_context->codec_type = AVMEDIA_TYPE_AUDIO;
     codec_context->bit_rate = Settings::values.audio_bitrate;
     if (codec->sample_fmts) {
-        codec_context->sample_fmt = AV_SAMPLE_FMT_NONE;
-        // Use any planar format
-        const AVSampleFormat* ptr = codec->sample_fmts;
-        while ((*ptr) != -1) {
-            if (av_sample_fmt_is_planar((*ptr))) {
-                codec_context->sample_fmt = (*ptr);
-                break;
-            }
-            ptr++;
-        }
-        if (codec_context->sample_fmt == AV_SAMPLE_FMT_NONE) {
-            LOG_ERROR(Render, "Specified audio encoder does not support any planar format");
-            return false;
-        }
+        codec_context->sample_fmt = codec->sample_fmts[0];
     } else {
         codec_context->sample_fmt = AV_SAMPLE_FMT_S16P;
     }
@@ -341,8 +328,14 @@ void FFmpegAudioStream::ProcessFrame(const VariableAudioFrame& channel0,
     const auto sample_size = av_get_bytes_per_sample(codec_context->sample_fmt);
     std::array<const u8*, 2> src_data = {reinterpret_cast<const u8*>(channel0.data()),
                                          reinterpret_cast<const u8*>(channel1.data())};
-    std::array<u8*, 2> dst_data = {resampled_data[0] + sample_size * offset,
-                                   resampled_data[1] + sample_size * offset};
+
+    std::array<u8*, 2> dst_data;
+    if (av_sample_fmt_is_planar(codec_context->sample_fmt)) {
+        dst_data = {resampled_data[0] + sample_size * offset,
+                    resampled_data[1] + sample_size * offset};
+    } else {
+        dst_data = {resampled_data[0] + sample_size * offset * 2}; // 2 channels
+    }
 
     auto resampled_count = swr_convert(swr_context.get(), dst_data.data(), frame_size - offset,
                                        src_data.data(), channel0.size());
@@ -360,7 +353,9 @@ void FFmpegAudioStream::ProcessFrame(const VariableAudioFrame& channel0,
         // Prepare frame
         audio_frame->nb_samples = frame_size;
         audio_frame->data[0] = resampled_data[0];
-        audio_frame->data[1] = resampled_data[1];
+        if (av_sample_fmt_is_planar(codec_context->sample_fmt)) {
+            audio_frame->data[1] = resampled_data[1];
+        }
         audio_frame->pts = frame_count * frame_size;
         frame_count++;
 
@@ -383,7 +378,9 @@ void FFmpegAudioStream::Flush() {
     // Send the last samples
     audio_frame->nb_samples = offset;
     audio_frame->data[0] = resampled_data[0];
-    audio_frame->data[1] = resampled_data[1];
+    if (av_sample_fmt_is_planar(codec_context->sample_fmt)) {
+        audio_frame->data[1] = resampled_data[1];
+    }
     audio_frame->pts = frame_count * frame_size;
 
     SendFrame(audio_frame.get());
