@@ -728,12 +728,16 @@ void GetOptionListSingle(std::vector<OptionInfo>& out, const AVClass* av_class) 
     }
 }
 
-void GetOptionList(std::vector<OptionInfo>& out, const AVClass* av_class) {
+void GetOptionList(std::vector<OptionInfo>& out, const AVClass* av_class, bool search_children) {
     if (av_class == nullptr) {
         return;
     }
 
     GetOptionListSingle(out, av_class);
+
+    if (!search_children) {
+        return;
+    }
 
     const AVClass* child_class = nullptr;
     while ((child_class = av_opt_child_class_next(av_class, child_class))) {
@@ -741,28 +745,16 @@ void GetOptionList(std::vector<OptionInfo>& out, const AVClass* av_class) {
     }
 }
 
-std::vector<OptionInfo> GetOptionList(const AVClass* av_class) {
+std::vector<OptionInfo> GetOptionList(const AVClass* av_class, bool search_children) {
     std::vector<OptionInfo> out;
-    GetOptionList(out, av_class);
-
-    // Filter out identical options (why do they exist in the first place?)
-    std::unordered_set<std::string> option_name_set;
-    std::vector<OptionInfo> final_out;
-    for (auto& option : out) {
-        if (option_name_set.count(option.name)) {
-            continue;
-        }
-        option_name_set.emplace(option.name);
-        final_out.emplace_back(std::move(option));
-    }
-
-    return final_out;
+    GetOptionList(out, av_class, search_children);
+    return out;
 }
 
 std::vector<EncoderInfo> ListEncoders(AVMediaType type) {
     InitializeFFmpegLibraries();
 
-    const auto general_options = GetOptionList(avcodec_get_class());
+    const auto general_options = GetOptionList(avcodec_get_class(), false);
 
     std::vector<EncoderInfo> out;
 
@@ -776,7 +768,7 @@ std::vector<EncoderInfo> ListEncoders(AVMediaType type) {
         if (!av_codec_is_encoder(current) || current->type != type) {
             continue;
         }
-        auto options = GetOptionList(current->priv_class);
+        auto options = GetOptionList(current->priv_class, true);
         options.insert(options.end(), general_options.begin(), general_options.end());
         out.push_back(
             {current->name, ToStdString(current->long_name), current->id, std::move(options)});
@@ -787,7 +779,7 @@ std::vector<EncoderInfo> ListEncoders(AVMediaType type) {
 std::vector<FormatInfo> ListFormats() {
     InitializeFFmpegLibraries();
 
-    const auto general_options = GetOptionList(avformat_get_class());
+    const auto general_options = GetOptionList(avformat_get_class(), false);
 
     std::vector<FormatInfo> out;
 
@@ -798,7 +790,7 @@ std::vector<FormatInfo> ListFormats() {
     void* data = nullptr; // For libavformat to save the iteration state
     while ((current = av_muxer_iterate(&data))) {
 #endif
-        auto options = GetOptionList(current->priv_class);
+        auto options = GetOptionList(current->priv_class, true);
         options.insert(options.end(), general_options.begin(), general_options.end());
 
         std::vector<std::string> extensions;
