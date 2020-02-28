@@ -754,8 +754,6 @@ std::vector<OptionInfo> GetOptionList(const AVClass* av_class, bool search_child
 std::vector<EncoderInfo> ListEncoders(AVMediaType type) {
     InitializeFFmpegLibraries();
 
-    const auto general_options = GetOptionList(avcodec_get_class(), false);
-
     std::vector<EncoderInfo> out;
 
     const AVCodec* current = nullptr;
@@ -768,18 +766,18 @@ std::vector<EncoderInfo> ListEncoders(AVMediaType type) {
         if (!av_codec_is_encoder(current) || current->type != type) {
             continue;
         }
-        auto options = GetOptionList(current->priv_class, true);
-        options.insert(options.end(), general_options.begin(), general_options.end());
-        out.push_back(
-            {current->name, ToStdString(current->long_name), current->id, std::move(options)});
+        out.push_back({current->name, ToStdString(current->long_name), current->id,
+                       GetOptionList(current->priv_class, true)});
     }
     return out;
 }
 
+std::vector<OptionInfo> GetEncoderGenericOptions() {
+    return GetOptionList(avcodec_get_class(), false);
+}
+
 std::vector<FormatInfo> ListFormats() {
     InitializeFFmpegLibraries();
-
-    const auto general_options = GetOptionList(avformat_get_class(), false);
 
     std::vector<FormatInfo> out;
 
@@ -790,9 +788,6 @@ std::vector<FormatInfo> ListFormats() {
     void* data = nullptr; // For libavformat to save the iteration state
     while ((current = av_muxer_iterate(&data))) {
 #endif
-        auto options = GetOptionList(current->priv_class, true);
-        options.insert(options.end(), general_options.begin(), general_options.end());
-
         std::vector<std::string> extensions;
         Common::SplitString(ToStdString(current->extensions), ',', extensions);
 
@@ -816,9 +811,13 @@ std::vector<FormatInfo> ListFormats() {
 
         out.push_back({current->name, ToStdString(current->long_name), std::move(extensions),
                        std::move(supported_video_codecs), std::move(supported_audio_codecs),
-                       std::move(options)});
+                       GetOptionList(current->priv_class, true)});
     }
     return out;
+}
+
+std::vector<OptionInfo> GetFormatGenericOptions() {
+    return GetOptionList(avformat_get_class(), false);
 }
 
 } // namespace VideoDumper

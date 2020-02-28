@@ -15,6 +15,9 @@ DumpingDialog::DumpingDialog(QWidget* parent)
 
     ui->setupUi(this);
 
+    format_generic_options = VideoDumper::GetFormatGenericOptions();
+    encoder_generic_options = VideoDumper::GetEncoderGenericOptions();
+
     connect(ui->pathExplore, &QToolButton::clicked, this, &DumpingDialog::OnToolButtonClicked);
     connect(ui->buttonBox, &QDialogButtonBox::accepted, [this] {
         if (ui->pathLineEdit->text().isEmpty()) {
@@ -27,17 +30,17 @@ DumpingDialog::DumpingDialog(QWidget* parent)
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &DumpingDialog::reject);
     connect(ui->formatOptionsButton, &QToolButton::clicked, [this] {
         OpenOptionsDialog(formats.at(ui->formatComboBox->currentData().toUInt()).options,
-                          ui->formatOptionsLineEdit);
+                          format_generic_options, ui->formatOptionsLineEdit);
     });
     connect(ui->videoEncoderOptionsButton, &QToolButton::clicked, [this] {
         OpenOptionsDialog(
             video_encoders.at(ui->videoEncoderComboBox->currentData().toUInt()).options,
-            ui->videoEncoderOptionsLineEdit);
+            encoder_generic_options, ui->videoEncoderOptionsLineEdit);
     });
     connect(ui->audioEncoderOptionsButton, &QToolButton::clicked, [this] {
         OpenOptionsDialog(
             audio_encoders.at(ui->audioEncoderComboBox->currentData().toUInt()).options,
-            ui->audioEncoderOptionsLineEdit);
+            encoder_generic_options, ui->audioEncoderOptionsLineEdit);
     });
 
     SetConfiguration();
@@ -177,9 +180,10 @@ void DumpingDialog::OnToolButtonClicked() {
     }
 }
 
-void DumpingDialog::OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>& options,
+void DumpingDialog::OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>& specific_options,
+                                      const std::vector<VideoDumper::OptionInfo>& generic_options,
                                       QLineEdit* line_edit) {
-    OptionsDialog dialog(this, options, line_edit->text().toStdString());
+    OptionsDialog dialog(this, specific_options, generic_options, line_edit->text().toStdString());
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
         return;
     }

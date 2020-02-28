@@ -227,6 +227,8 @@ struct FormatInfo {
 };
 
 std::vector<EncoderInfo> ListEncoders(AVMediaType type);
+std::vector<OptionInfo> GetEncoderGenericOptions();
 std::vector<FormatInfo> ListFormats();
+std::vector<OptionInfo> GetFormatGenericOptions();
 
 } // namespace VideoDumper

@@ -27,7 +27,8 @@ private:
     void PopulateEncoders();
     void SetConfiguration();
     void OnToolButtonClicked();
-    void OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>& options,
+    void OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>& specific_options,
+                           const std::vector<VideoDumper::OptionInfo>& generic_options,
                            QLineEdit* line_edit);
 
     std::unique_ptr<Ui::DumpingDialog> ui;
@@ -35,6 +36,8 @@ private:
     QString last_path;
 
     std::vector<VideoDumper::FormatInfo> formats;
+    std::vector<VideoDumper::OptionInfo> format_generic_options;
     std::vector<VideoDumper::EncoderInfo> video_encoders;
     std::vector<VideoDumper::EncoderInfo> audio_encoders;
+    std::vector<VideoDumper::OptionInfo> encoder_generic_options;
 };

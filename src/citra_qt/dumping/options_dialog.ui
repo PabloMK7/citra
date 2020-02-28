@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>300</height>
+    <width>650</width>
+    <height>350</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,6 +23,27 @@
       <string>Double click to see the description and change the values of the options.</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout">
+     <item>
+      <widget class="QRadioButton" name="specificRadioButton">
+       <property name="text">
+        <string>Specific</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="genericRadioButton">
+       <property name="text">
+        <string>Generic</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTreeWidget" name="main">
