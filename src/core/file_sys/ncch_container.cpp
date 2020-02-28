@@ -539,9 +539,11 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                     GetModId(ncch_header.program_id));
-    const std::array<PatchLocation, 4> patch_paths{{
+    const std::array<PatchLocation, 6> patch_paths{{
         {mods_path + "exefs/code.ips", Patch::ApplyIpsPatch},
         {mods_path + "exefs/code.bps", Patch::ApplyBpsPatch},
+        {mods_path + "code.ips", Patch::ApplyIpsPatch},
+        {mods_path + "code.bps", Patch::ApplyBpsPatch},
         {filepath + ".exefsdir/code.ips", Patch::ApplyIpsPatch},
         {filepath + ".exefsdir/code.bps", Patch::ApplyBpsPatch},
     }};
@@ -583,8 +585,9 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                     GetModId(ncch_header.program_id));
-    std::array<std::string, 2> override_paths{{
+    std::array<std::string, 3> override_paths{{
         mods_path + "exefs/" + override_name,
+        mods_path + override_name,
         filepath + ".exefsdir/" + override_name,
     }};
 
