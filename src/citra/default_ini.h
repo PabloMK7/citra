@@ -244,7 +244,7 @@ use_virtual_sd =
 
 [System]
 # The system model that Citra will try to emulate
-# 0: Old 3DS (default), 1: New 3DS
+# 0: Old 3DS, 1: New 3DS (default)
 is_new_3ds =
 
 # The system region that Citra will use during emulation

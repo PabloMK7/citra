@@ -277,6 +277,8 @@ void ConfigureSystem::SetConfiguration() {
     ui->slider_clock_speed->setValue(SettingsToSlider(Settings::values.cpu_clock_percentage));
     ui->clock_display_label->setText(
         QStringLiteral("%1%").arg(Settings::values.cpu_clock_percentage));
+
+    ui->toggle_new_3ds->setChecked(Settings::values.is_new_3ds);
 }
 
 void ConfigureSystem::ReadSystemSettings() {
@@ -374,6 +376,8 @@ void ConfigureSystem::ApplyConfiguration() {
         Settings::values.init_clock =
             static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
         Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
+
+        Settings::values.is_new_3ds = ui->toggle_new_3ds->isChecked();
     }
 
     Settings::values.cpu_clock_percentage = SliderToSettings(ui->slider_clock_speed->value());

@@ -117,15 +117,10 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
 void CheckNew3DS(IPC::RequestBuilder& rb) {
     const bool is_new_3ds = Settings::values.is_new_3ds;
 
-    if (is_new_3ds) {
-        LOG_CRITICAL(Service_PTM, "The option 'is_new_3ds' is enabled as part of the 'System' "
-                                  "settings. Citra does not fully support New 3DS emulation yet!");
-    }
-
     rb.Push(RESULT_SUCCESS);
     rb.Push(is_new_3ds);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x{:08x}", static_cast<u32>(is_new_3ds));
+    LOG_DEBUG(Service_PTM, "called isNew3DS = 0x{:08x}", static_cast<u32>(is_new_3ds));
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
