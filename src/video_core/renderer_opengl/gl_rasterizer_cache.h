@@ -80,11 +80,15 @@ struct CachedSurface;
 using Surface = std::shared_ptr<CachedSurface>;
 using SurfaceSet = std::set<Surface>;
 
-using SurfaceRegions = boost::icl::interval_set<PAddr>;
-using SurfaceMap = boost::icl::interval_map<PAddr, Surface>;
-using SurfaceCache = boost::icl::interval_map<PAddr, SurfaceSet>;
+using SurfaceInterval = boost::icl::right_open_interval<PAddr>;
+using SurfaceRegions = boost::icl::interval_set<PAddr, std::less, SurfaceInterval>;
+using SurfaceMap =
+    boost::icl::interval_map<PAddr, Surface, boost::icl::partial_absorber, std::less,
+                             boost::icl::inplace_plus, boost::icl::inter_section, SurfaceInterval>;
+using SurfaceCache =
+    boost::icl::interval_map<PAddr, SurfaceSet, boost::icl::partial_absorber, std::less,
+                             boost::icl::inplace_plus, boost::icl::inter_section, SurfaceInterval>;
 
-using SurfaceInterval = SurfaceCache::interval_type;
 static_assert(std::is_same<SurfaceRegions::interval_type, SurfaceCache::interval_type>() &&
                   std::is_same<SurfaceMap::interval_type, SurfaceCache::interval_type>(),
               "incorrect interval types");
@@ -249,7 +253,7 @@ public:
     }
 
     SurfaceInterval GetInterval() const {
-        return SurfaceInterval::right_open(addr, end);
+        return SurfaceInterval(addr, end);
     }
 
     // Returns the outer rectangle containing "interval"
