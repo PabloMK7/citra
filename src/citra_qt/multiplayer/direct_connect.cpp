@@ -56,7 +56,7 @@ void DirectConnectWindow::RetranslateUi() {
 
 void DirectConnectWindow::Connect() {
     if (!ui->nickname->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::USERNAME_NOT_VALID);
         return;
     }
     if (const auto member = Network::GetRoomMember().lock()) {
@@ -75,11 +75,12 @@ void DirectConnectWindow::Connect() {
         break;
     case ConnectionType::IP:
         if (!ui->ip->hasAcceptableInput()) {
-            NetworkMessage::ShowError(NetworkMessage::IP_ADDRESS_NOT_VALID);
+            NetworkMessage::ErrorManager::ShowError(
+                NetworkMessage::ErrorManager::IP_ADDRESS_NOT_VALID);
             return;
         }
         if (!ui->port->hasAcceptableInput()) {
-            NetworkMessage::ShowError(NetworkMessage::PORT_NOT_VALID);
+            NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::PORT_NOT_VALID);
             return;
         }
         break;
