@@ -105,11 +105,20 @@ public:
      * Loads the system mode that this application needs.
      * This function defaults to 2 (96MB allocated to the application) if it can't read the
      * information.
-     * @returns A pair with the optional system mode, and and the status.
+     * @returns A pair with the optional system mode, and the status.
      */
     virtual std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() {
         // 96MB allocated to the application.
         return std::make_pair(2, ResultStatus::Success);
+    }
+
+    /**
+     * Loads the N3ds mode that this application uses.
+     * It defaults to 0 (O3DS default) if it can't read the information.
+     * @returns A pair with the optional N3ds mode, and the status.
+     */
+    virtual std::pair<std::optional<u8>, ResultStatus> LoadKernelN3dsMode() {
+        return std::make_pair(0, ResultStatus::Success);
     }
 
     /**

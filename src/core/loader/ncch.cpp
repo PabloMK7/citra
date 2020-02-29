@@ -61,6 +61,19 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
                           ResultStatus::Success);
 }
 
+std::pair<std::optional<u8>, ResultStatus> AppLoader_NCCH::LoadKernelN3dsMode() {
+    if (!is_loaded) {
+        ResultStatus res = base_ncch.Load();
+        if (res != ResultStatus::Success) {
+            return std::make_pair(std::optional<u8>{}, res);
+        }
+    }
+
+    // Set the system mode as the one from the exheader.
+    return std::make_pair(overlay_ncch->exheader_header.arm11_system_local_caps.n3ds_mode,
+                          ResultStatus::Success);
+}
+
 ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process) {
     using Kernel::CodeSet;
 

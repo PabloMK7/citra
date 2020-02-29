@@ -19,6 +19,7 @@
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
+#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -40,10 +41,31 @@ static const u32 memory_region_sizes[8][3] = {
     {0x0B200000, 0x02E00000, 0x02000000}, // 7
 };
 
-void KernelSystem::MemoryInit(u32 mem_type) {
-    // TODO(yuriks): On the n3DS, all o3DS configurations (<=5) are forced to 6 instead.
-    ASSERT_MSG(mem_type <= 5, "New 3DS memory configuration aren't supported yet!");
+namespace MemoryMode {
+enum N3DSMode : u8 {
+    Mode6 = 1,
+    Mode7 = 2,
+    Mode6_2 = 3,
+};
+}
+
+void KernelSystem::MemoryInit(u32 mem_type, u8 n3ds_mode) {
     ASSERT(mem_type != 1);
+
+    const bool is_new_3ds = Settings::values.is_new_3ds;
+    u32 reported_mem_type = mem_type;
+    if (is_new_3ds) {
+        if (n3ds_mode == MemoryMode::Mode6 || n3ds_mode == MemoryMode::Mode6_2) {
+            mem_type = 6;
+            reported_mem_type = 6;
+        } else if (n3ds_mode == MemoryMode::Mode7) {
+            mem_type = 7;
+            reported_mem_type = 7;
+        } else {
+            // On the N3ds, all O3ds configurations (<=5) are forced to 6 instead.
+            mem_type = 6;
+        }
+    }
 
     // The kernel allocation regions (APPLICATION, SYSTEM and BASE) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
@@ -55,14 +77,12 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     }
 
     // We must've allocated the entire FCRAM by the end
-    ASSERT(base == Memory::FCRAM_SIZE);
+    ASSERT(base == (is_new_3ds ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE));
 
     config_mem_handler = std::make_unique<ConfigMem::Handler>();
     auto& config_mem = config_mem_handler->GetConfigMem();
-    config_mem.app_mem_type = mem_type;
-    // app_mem_malloc does not always match the configured size for memory_region[0]: in case the
-    // n3DS type override is in effect it reports the size the game expects, not the real one.
-    config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
+    config_mem.app_mem_type = reported_mem_type;
+    config_mem.app_mem_alloc = memory_region_sizes[reported_mem_type][0];
     config_mem.sys_mem_alloc = memory_regions[1].size;
     config_mem.base_mem_alloc = memory_regions[2].size;
 

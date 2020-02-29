@@ -174,7 +174,9 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     }
 
     ASSERT(system_mode.first);
-    ResultStatus init_result{Init(emu_window, *system_mode.first)};
+    auto n3ds_mode = app_loader->LoadKernelN3dsMode();
+    ASSERT(n3ds_mode.first);
+    ResultStatus init_result{Init(emu_window, *system_mode.first, *n3ds_mode.first)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -246,7 +248,7 @@ void System::Reschedule() {
     }
 }
 
-System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode) {
+System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     std::size_t num_cores = 2;
@@ -259,7 +261,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     timing = std::make_unique<Timing>(num_cores);
 
     kernel = std::make_unique<Kernel::KernelSystem>(
-        *memory, *timing, [this] { PrepareReschedule(); }, system_mode, num_cores);
+        *memory, *timing, [this] { PrepareReschedule(); }, system_mode, num_cores, n3ds_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
