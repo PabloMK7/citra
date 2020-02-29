@@ -315,7 +315,7 @@ Loader::ResultStatus NCCHContainer::Load() {
             const auto mods_path =
                 fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                             GetModId(ncch_header.program_id));
-            std::array<std::string, 2> exheader_override_paths{{
+            const std::array<std::string, 2> exheader_override_paths{{
                 mods_path + "exheader.bin",
                 filepath + ".exheader",
             }};
@@ -585,7 +585,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     const auto mods_path =
         fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                     GetModId(ncch_header.program_id));
-    std::array<std::string, 3> override_paths{{
+    const std::array<std::string, 3> override_paths{{
         mods_path + "exefs/" + override_name,
         mods_path + override_name,
         filepath + ".exefsdir/" + override_name,
