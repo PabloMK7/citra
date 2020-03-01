@@ -50,7 +50,7 @@ CAM_U::CAM_U(std::shared_ptr<Module> cam) : Module::Interface(std::move(cam), "c
         {0x00270140, nullptr, "SetAutoWhiteBalanceWindow"},
         {0x00280080, nullptr, "SetNoiseFilter"},
         {0x00290080, &CAM_U::SynchronizeVsyncTiming, "SynchronizeVsyncTiming"},
-        {0x002A0080, nullptr, "GetLatestVsyncTiming"},
+        {0x002A0080, &CAM_U::GetLatestVsyncTiming, "GetLatestVsyncTiming"},
         {0x002B0000, &CAM_U::GetStereoCameraCalibrationData, "GetStereoCameraCalibrationData"},
         {0x002C0400, nullptr, "SetStereoCameraCalibrationData"},
         {0x002D00C0, nullptr, "WriteRegisterI2c"},
