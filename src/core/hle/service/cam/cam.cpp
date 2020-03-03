@@ -901,9 +901,10 @@ void Module::Interface::GetLatestVsyncTiming(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
 
+    const std::size_t port_id = port_select.m_val == 1 ? 0 : 1;
     std::vector<u8> out(count * sizeof(s64_le));
     std::size_t offset = 0;
-    for (const s64_le timing : cam->ports[port_select.m_val].vsync_timings) {
+    for (const s64_le timing : cam->ports[port_id].vsync_timings) {
         std::memcpy(out.data() + offset * sizeof(timing), &timing, sizeof(timing));
         offset++;
         if (offset >= count) {
