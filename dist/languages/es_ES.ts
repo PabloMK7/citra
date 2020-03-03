@@ -2936,12 +2936,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1185"/>
         <source>Dumping...</source>
-        <translation type="unfinished"/>
+        <translation>Volcando...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1185"/>
         <source>Cancel</source>
-        <translation type="unfinished"/>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1206"/>
@@ -2954,7 +2954,8 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/main.cpp" line="1207"/>
         <source>Could not dump base RomFS.
 Refer to the log for details.</source>
-        <translation type="unfinished"/>
+        <translation>No se pudo volcar el RomFS base.
+Compruebe el registro para más detalles.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1238"/>
@@ -3412,12 +3413,12 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="471"/>
         <source>Open Mods Location</source>
-        <translation type="unfinished"/>
+        <translation>Abrir ubicación de los mods</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="472"/>
         <source>Dump RomFS</source>
-        <translation type="unfinished"/>
+        <translation>Volcar RomFS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="473"/>
