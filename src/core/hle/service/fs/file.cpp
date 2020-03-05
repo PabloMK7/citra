@@ -90,7 +90,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
-    const FileSessionSlot* file = GetSessionData(ctx.Session());
+    FileSessionSlot* file = GetSessionData(ctx.Session());
 
     // Subfiles can not be written to
     if (file->subfile) {
@@ -103,6 +103,10 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     std::vector<u8> data(length);
     buffer.Read(data.data(), 0, data.size());
     ResultVal<std::size_t> written = backend->Write(offset, data.size(), flush != 0, data.data());
+
+    // Update file size
+    file->size = backend->GetSize();
+
     if (written.Failed()) {
         rb.Push(written.Code());
         rb.Push<u32>(0);
