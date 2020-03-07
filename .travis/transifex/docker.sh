@@ -1,7 +1,13 @@
 #!/bin/bash -e
 
 # Setup RC file for tx
-echo $'[https://www.transifex.com]\nhostname = https://www.transifex.com\nusername = api\npassword = '"$TRANSIFEX_API_TOKEN"$'\n' > ~/.transifexrc
+cat << EOF > ~/.transifexrc
+[https://www.transifex.com]
+hostname = https://www.transifex.com
+username = api
+password = $TRANSIFEX_API_TOKEN
+EOF
+
 
 set -x
 

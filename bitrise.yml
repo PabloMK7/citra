@@ -52,7 +52,7 @@ workflows:
                 sudo apt remove cmake -y
                 sudo apt purge --auto-remove cmake -y
                 sudo apt install ninja-build -y
-                version=3.8
+                version=3.10
                 build=2
                 mkdir ~/temp
                 cd ~/temp
@@ -97,7 +97,7 @@ workflows:
                 sudo apt remove cmake -y
                 sudo apt purge --auto-remove cmake -y
                 sudo apt install ninja-build -y
-                version=3.8
+                version=3.10
                 build=2
                 mkdir ~/temp
                 cd ~/temp

@@ -88,7 +88,8 @@ enum class MemoryRegion : u16 {
 class KernelSystem {
 public:
     explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
-                          std::function<void()> prepare_reschedule_callback, u32 system_mode);
+                          std::function<void()> prepare_reschedule_callback, u32 system_mode,
+                          u32 num_cores, u8 n3ds_mode);
     ~KernelSystem();
 
     using PortPair = std::pair<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>>;
@@ -214,13 +215,19 @@ public:
 
     std::shared_ptr<Process> GetCurrentProcess() const;
     void SetCurrentProcess(std::shared_ptr<Process> process);
+    void SetCurrentProcessForCPU(std::shared_ptr<Process> process, u32 core_id);
 
     void SetCurrentMemoryPageTable(std::shared_ptr<Memory::PageTable> page_table);
 
-    void SetCPU(std::shared_ptr<ARM_Interface> cpu);
+    void SetCPUs(std::vector<std::shared_ptr<ARM_Interface>> cpu);
 
-    ThreadManager& GetThreadManager();
-    const ThreadManager& GetThreadManager() const;
+    void SetRunningCPU(std::shared_ptr<ARM_Interface> cpu);
+
+    ThreadManager& GetThreadManager(u32 core_id);
+    const ThreadManager& GetThreadManager(u32 core_id) const;
+
+    ThreadManager& GetCurrentThreadManager();
+    const ThreadManager& GetCurrentThreadManager() const;
 
     TimerManager& GetTimerManager();
     const TimerManager& GetTimerManager() const;
@@ -246,6 +253,10 @@ public:
         prepare_reschedule_callback();
     }
 
+    u32 NewThreadId();
+
+    void ResetThreadIDs();
+
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, std::shared_ptr<ClientPort>> named_ports;
 
@@ -256,7 +267,7 @@ public:
     Core::Timing& timing;
 
 private:
-    void MemoryInit(u32 mem_type);
+    void MemoryInit(u32 mem_type, u8 n3ds_mode);
 
     std::function<void()> prepare_reschedule_callback;
 
@@ -280,13 +291,16 @@ private:
     std::vector<std::shared_ptr<Process>> process_list;
 
     std::shared_ptr<Process> current_process;
+    std::vector<std::shared_ptr<Process>> stored_processes;
 
-    std::unique_ptr<ThreadManager> thread_manager;
+    std::vector<std::unique_ptr<ThreadManager>> thread_managers;
 
     std::shared_ptr<ConfigMem::Handler> config_mem_handler;
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
 
     std::unique_ptr<IPCDebugger::Recorder> ipc_recorder;
+
+    u32 next_thread_id;
 
     friend class boost::serialization::access;
     template <class Archive>

@@ -35,7 +35,7 @@ static inline std::enable_if_t<std::is_integral_v<T>> WriteOp(const GatewayCheat
                                                               Core::System& system) {
     u32 addr = line.address + state.offset;
     write_func(addr, static_cast<T>(line.value));
-    system.CPU().InvalidateCacheRange(addr, sizeof(T));
+    system.InvalidateCacheRange(addr, sizeof(T));
 }
 
 template <typename T, typename ReadFunction, typename CompareFunc>
@@ -105,7 +105,7 @@ static inline std::enable_if_t<std::is_integral_v<T>> IncrementiveWriteOp(
     Core::System& system) {
     u32 addr = line.value + state.offset;
     write_func(addr, static_cast<T>(state.reg));
-    system.CPU().InvalidateCacheRange(addr, sizeof(T));
+    system.InvalidateCacheRange(addr, sizeof(T));
     state.offset += sizeof(T);
 }
 
@@ -143,7 +143,8 @@ static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Co
     }
     u32 num_bytes = line.value;
     u32 addr = line.address + state.offset;
-    system.CPU().InvalidateCacheRange(addr, num_bytes);
+    system.InvalidateCacheRange(addr, num_bytes);
+
     bool first = true;
     u32 bit_offset = 0;
     if (num_bytes > 0)

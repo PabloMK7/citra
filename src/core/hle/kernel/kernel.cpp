@@ -20,22 +20,30 @@ namespace Kernel {
 
 /// Initialize the kernel
 KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
-                           std::function<void()> prepare_reschedule_callback, u32 system_mode)
+                           std::function<void()> prepare_reschedule_callback, u32 system_mode,
+                           u32 num_cores, u8 n3ds_mode)
     : memory(memory), timing(timing),
       prepare_reschedule_callback(std::move(prepare_reschedule_callback)) {
     for (auto i = 0; i < memory_regions.size(); i++) {
         memory_regions[i] = std::make_shared<MemoryRegionInfo>();
     }
-    MemoryInit(system_mode);
+    MemoryInit(system_mode, n3ds_mode);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);
-    thread_manager = std::make_unique<ThreadManager>(*this);
+    for (u32 core_id = 0; core_id < num_cores; ++core_id) {
+        thread_managers.push_back(std::make_unique<ThreadManager>(*this, core_id));
+    }
     timer_manager = std::make_unique<TimerManager>(timing);
     ipc_recorder = std::make_unique<IPCDebugger::Recorder>();
+    stored_processes.assign(num_cores, nullptr);
+
+    next_thread_id = 1;
 }
 
 /// Shutdown the kernel
-KernelSystem::~KernelSystem() = default;
+KernelSystem::~KernelSystem() {
+    ResetThreadIDs();
+};
 
 ResourceLimitList& KernelSystem::ResourceLimit() {
     return *resource_limits;
@@ -58,6 +66,15 @@ void KernelSystem::SetCurrentProcess(std::shared_ptr<Process> process) {
     SetCurrentMemoryPageTable(process->vm_manager.page_table);
 }
 
+void KernelSystem::SetCurrentProcessForCPU(std::shared_ptr<Process> process, u32 core_id) {
+    if (current_cpu->GetID() == core_id) {
+        current_process = process;
+        SetCurrentMemoryPageTable(process->vm_manager.page_table);
+    } else {
+        stored_processes[core_id] = process;
+    }
+}
+
 void KernelSystem::SetCurrentMemoryPageTable(std::shared_ptr<Memory::PageTable> page_table) {
     memory.SetCurrentPageTable(page_table);
     if (current_cpu != nullptr) {
@@ -65,17 +82,39 @@ void KernelSystem::SetCurrentMemoryPageTable(std::shared_ptr<Memory::PageTable> 
     }
 }
 
-void KernelSystem::SetCPU(std::shared_ptr<ARM_Interface> cpu) {
+void KernelSystem::SetCPUs(std::vector<std::shared_ptr<ARM_Interface>> cpus) {
+    ASSERT(cpus.size() == thread_managers.size());
+    u32 i = 0;
+    for (const auto& cpu : cpus) {
+        thread_managers[i++]->SetCPU(*cpu);
+    }
+}
+
+void KernelSystem::SetRunningCPU(std::shared_ptr<ARM_Interface> cpu) {
+    if (current_process) {
+        stored_processes[current_cpu->GetID()] = current_process;
+    }
     current_cpu = cpu;
-    thread_manager->SetCPU(*cpu);
+    timing.SetCurrentTimer(cpu->GetID());
+    if (stored_processes[current_cpu->GetID()]) {
+        SetCurrentProcess(stored_processes[current_cpu->GetID()]);
+    }
 }
 
-ThreadManager& KernelSystem::GetThreadManager() {
-    return *thread_manager;
+ThreadManager& KernelSystem::GetThreadManager(u32 core_id) {
+    return *thread_managers[core_id];
 }
 
-const ThreadManager& KernelSystem::GetThreadManager() const {
-    return *thread_manager;
+const ThreadManager& KernelSystem::GetThreadManager(u32 core_id) const {
+    return *thread_managers[core_id];
+}
+
+ThreadManager& KernelSystem::GetCurrentThreadManager() {
+    return *thread_managers[current_cpu->GetID()];
+}
+
+const ThreadManager& KernelSystem::GetCurrentThreadManager() const {
+    return *thread_managers[current_cpu->GetID()];
 }
 
 TimerManager& KernelSystem::GetTimerManager() {
@@ -106,6 +145,14 @@ void KernelSystem::AddNamedPort(std::string name, std::shared_ptr<ClientPort> po
     named_ports.emplace(std::move(name), std::move(port));
 }
 
+u32 KernelSystem::NewThreadId() {
+    return next_thread_id++;
+}
+
+void KernelSystem::ResetThreadIDs() {
+    next_thread_id = 0;
+}
+
 template <class Archive>
 void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
     ar& memory_regions;
@@ -118,9 +165,14 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
     ar& next_process_id;
     ar& process_list;
     ar& current_process;
-    ar&* thread_manager.get();
+    // NB: core count checked in 'core'
+    for (auto& thread_manager : thread_managers) {
+        ar&* thread_manager.get();
+    }
     ar& config_mem_handler;
     ar& shared_page_handler;
+    ar& stored_processes;
+    ar& next_thread_id;
     // Deliberately don't include debugger info to allow debugging through loads
 }
 

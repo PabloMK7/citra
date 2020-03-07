@@ -7,7 +7,6 @@
 #include <array>
 #include <optional>
 #include <type_traits>
-#include <vector>
 #include <boost/crc.hpp>
 #include "common/bit_field.h"
 #include "common/swap.h"

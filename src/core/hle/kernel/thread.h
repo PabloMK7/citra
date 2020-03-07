@@ -38,7 +38,9 @@ enum ThreadProcessorId : s32 {
     ThreadProcessorIdAll = -1,     ///< Run thread on either core
     ThreadProcessorId0 = 0,        ///< Run thread on core 0 (AppCore)
     ThreadProcessorId1 = 1,        ///< Run thread on core 1 (SysCore)
-    ThreadProcessorIdMax = 2,      ///< Processor ID must be less than this
+    ThreadProcessorId2 = 2,        ///< Run thread on core 2 (additional n3ds core)
+    ThreadProcessorId3 = 3,        ///< Run thread on core 3 (additional n3ds core)
+    ThreadProcessorIdMax = 4,      ///< Processor ID must be less than this
 };
 
 enum class ThreadStatus {
@@ -75,14 +77,8 @@ private:
 
 class ThreadManager {
 public:
-    explicit ThreadManager(Kernel::KernelSystem& kernel);
+    explicit ThreadManager(Kernel::KernelSystem& kernel, u32 core_id);
     ~ThreadManager();
-
-    /**
-     * Creates a new thread ID
-     * @return The new thread ID
-     */
-    u32 NewThreadId();
 
     /**
      * Gets the current thread
@@ -150,7 +146,6 @@ private:
     Kernel::KernelSystem& kernel;
     ARM_Interface* cpu;
 
-    u32 next_thread_id = 1;
     std::shared_ptr<Thread> current_thread;
     Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
     std::unordered_map<u64, Thread*> wakeup_callback_table;
@@ -167,7 +162,6 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
-        ar& next_thread_id;
         ar& current_thread;
         ar& ready_queue;
         ar& wakeup_callback_table;
@@ -177,7 +171,7 @@ private:
 
 class Thread final : public WaitObject {
 public:
-    explicit Thread(KernelSystem&);
+    explicit Thread(KernelSystem&, u32 core_id);
     ~Thread() override;
 
     std::string GetName() const override {
@@ -329,6 +323,8 @@ public:
     // available. In case of a timeout, the object will be nullptr.
     std::shared_ptr<WakeupCallback> wakeup_callback;
 
+    const u32 core_id;
+
 private:
     ThreadManager& thread_manager;
 
@@ -351,4 +347,20 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Thread)
-CONSTRUCT_KERNEL_OBJECT(Kernel::Thread)
+
+namespace boost::serialization {
+
+template <class Archive>
+inline void save_construct_data(Archive& ar, const Kernel::Thread* t,
+                                const unsigned int file_version) {
+    ar << t->core_id;
+}
+
+template <class Archive>
+inline void load_construct_data(Archive& ar, Kernel::Thread* t, const unsigned int file_version) {
+    u32 core_id;
+    ar >> core_id;
+    ::new (t) Kernel::Thread(Core::Global<Kernel::KernelSystem>(), core_id);
+}
+
+} // namespace boost::serialization

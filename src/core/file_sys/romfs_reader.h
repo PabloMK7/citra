@@ -7,23 +7,39 @@
 
 namespace FileSys {
 
+/**
+ * Interface for reading RomFS data.
+ */
 class RomFSReader {
 public:
-    RomFSReader(FileUtil::IOFile&& file, std::size_t file_offset, std::size_t data_size)
+    virtual ~RomFSReader() = default;
+
+    virtual std::size_t GetSize() const = 0;
+    virtual std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) = 0;
+};
+
+/**
+ * A RomFS reader that directly reads the RomFS file.
+ */
+class DirectRomFSReader : public RomFSReader {
+public:
+    DirectRomFSReader(FileUtil::IOFile&& file, std::size_t file_offset, std::size_t data_size)
         : is_encrypted(false), file(std::move(file)), file_offset(file_offset),
           data_size(data_size) {}
 
-    RomFSReader(FileUtil::IOFile&& file, std::size_t file_offset, std::size_t data_size,
-                const std::array<u8, 16>& key, const std::array<u8, 16>& ctr,
-                std::size_t crypto_offset)
+    DirectRomFSReader(FileUtil::IOFile&& file, std::size_t file_offset, std::size_t data_size,
+                      const std::array<u8, 16>& key, const std::array<u8, 16>& ctr,
+                      std::size_t crypto_offset)
         : is_encrypted(true), file(std::move(file)), key(key), ctr(ctr), file_offset(file_offset),
           crypto_offset(crypto_offset), data_size(data_size) {}
 
-    std::size_t GetSize() const {
+    ~DirectRomFSReader() override = default;
+
+    std::size_t GetSize() const override {
         return data_size;
     }
 
-    std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer);
+    std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) override;
 
 private:
     bool is_encrypted;
@@ -34,7 +50,7 @@ private:
     u64 crypto_offset;
     u64 data_size;
 
-    RomFSReader() = default;
+    DirectRomFSReader() = default;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {

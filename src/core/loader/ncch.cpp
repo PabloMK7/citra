@@ -61,6 +61,19 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
                           ResultStatus::Success);
 }
 
+std::pair<std::optional<u8>, ResultStatus> AppLoader_NCCH::LoadKernelN3dsMode() {
+    if (!is_loaded) {
+        ResultStatus res = base_ncch.Load();
+        if (res != ResultStatus::Success) {
+            return std::make_pair(std::optional<u8>{}, res);
+        }
+    }
+
+    // Set the system mode as the one from the exheader.
+    return std::make_pair(overlay_ncch->exheader_header.arm11_system_local_caps.n3ds_mode,
+                          ResultStatus::Success);
+}
+
 ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process) {
     using Kernel::CodeSet;
 
@@ -252,6 +265,18 @@ ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReade
         return base_ncch.ReadRomFS(romfs_file);
 
     return ResultStatus::Success;
+}
+
+ResultStatus AppLoader_NCCH::DumpRomFS(const std::string& target_path) {
+    return base_ncch.DumpRomFS(target_path);
+}
+
+ResultStatus AppLoader_NCCH::DumpUpdateRomFS(const std::string& target_path) {
+    u64 program_id;
+    ReadProgramId(program_id);
+    update_ncch.OpenFile(
+        Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, program_id | UPDATE_MASK));
+    return update_ncch.DumpRomFS(target_path);
 }
 
 ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {

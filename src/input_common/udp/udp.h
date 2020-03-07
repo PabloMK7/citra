@@ -2,15 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#pragma once
+
 #include <memory>
-#include <unordered_map>
-#include "input_common/main.h"
 #include "input_common/udp/client.h"
 
 namespace InputCommon::CemuhookUDP {
-
-class UDPTouchDevice;
-class UDPMotionDevice;
 
 class State {
 public:

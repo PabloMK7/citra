@@ -41,6 +41,8 @@ public:
      */
     std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() override;
 
+    std::pair<std::optional<u8>, ResultStatus> LoadKernelN3dsMode() override;
+
     ResultStatus IsExecutable(bool& out_executable) override;
 
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
@@ -58,6 +60,10 @@ public:
     ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
 
     ResultStatus ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
+
+    ResultStatus DumpRomFS(const std::string& target_path) override;
+
+    ResultStatus DumpUpdateRomFS(const std::string& target_path) override;
 
     ResultStatus ReadTitle(std::string& title) override;
 

@@ -402,8 +402,8 @@ inline void Write(u32 addr, const T data) {
     switch (index) {
 
     // Memory fills are triggered once the fill value is written.
-    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[0].trigger, 0x00004 + 0x3):
-    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[1].trigger, 0x00008 + 0x3): {
+    case GPU_REG_INDEX(memory_fill_config[0].trigger):
+    case GPU_REG_INDEX(memory_fill_config[1].trigger): {
         const bool is_second_filler = (index != GPU_REG_INDEX(memory_fill_config[0].trigger));
         auto& config = g_regs.memory_fill_config[is_second_filler];
 

@@ -597,6 +597,7 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::OpenFolderRequested, this, &GMainWindow::OnGameListOpenFolder);
     connect(game_list, &GameList::NavigateToGamedbEntryRequested, this,
             &GMainWindow::OnGameListNavigateToGamedbEntry);
+    connect(game_list, &GameList::DumpRomFSRequested, this, &GMainWindow::OnGameListDumpRomFS);
     connect(game_list, &GameList::AddDirectory, this, &GMainWindow::OnGameListAddDirectory);
     connect(game_list_placeholder, &GameListPlaceholder::AddDirectory, this,
             &GMainWindow::OnGameListAddDirectory);
@@ -1231,6 +1232,11 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
         path = fmt::format("{}textures/{:016X}/",
                            FileUtil::GetUserPath(FileUtil::UserPath::LoadDir), data_id);
         break;
+    case GameListOpenTarget::MODS:
+        open_target = "Mods";
+        path = fmt::format("{}mods/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
+                           data_id);
+        break;
     default:
         LOG_ERROR(Frontend, "Unexpected target {}", static_cast<int>(target));
         return;
@@ -1260,6 +1266,46 @@ void GMainWindow::OnGameListNavigateToGamedbEntry(u64 program_id,
         directory = it->second.second;
 
     QDesktopServices::openUrl(QUrl(QStringLiteral("https://citra-emu.org/game/") + directory));
+}
+
+void GMainWindow::OnGameListDumpRomFS(QString game_path, u64 program_id) {
+    auto* dialog = new QProgressDialog(tr("Dumping..."), tr("Cancel"), 0, 0, this);
+    dialog->setWindowModality(Qt::WindowModal);
+    dialog->setWindowFlags(dialog->windowFlags() &
+                           ~(Qt::WindowCloseButtonHint | Qt::WindowContextHelpButtonHint));
+    dialog->setCancelButton(nullptr);
+    dialog->setMinimumDuration(0);
+    dialog->setValue(0);
+
+    const auto base_path = fmt::format(
+        "{}romfs/{:016X}", FileUtil::GetUserPath(FileUtil::UserPath::DumpDir), program_id);
+    const auto update_path =
+        fmt::format("{}romfs/{:016X}", FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
+                    program_id | 0x0004000e00000000);
+    using FutureWatcher = QFutureWatcher<std::pair<Loader::ResultStatus, Loader::ResultStatus>>;
+    auto* future_watcher = new FutureWatcher(this);
+    connect(future_watcher, &FutureWatcher::finished,
+            [this, program_id, dialog, base_path, update_path, future_watcher] {
+                dialog->hide();
+                const auto& [base, update] = future_watcher->result();
+                if (base != Loader::ResultStatus::Success) {
+                    QMessageBox::critical(
+                        this, tr("Citra"),
+                        tr("Could not dump base RomFS.\nRefer to the log for details."));
+                    return;
+                }
+                QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(base_path)));
+                if (update == Loader::ResultStatus::Success) {
+                    QDesktopServices::openUrl(
+                        QUrl::fromLocalFile(QString::fromStdString(update_path)));
+                }
+            });
+
+    auto future = QtConcurrent::run([game_path, base_path, update_path] {
+        std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(game_path.toStdString());
+        return std::make_pair(loader->DumpRomFS(base_path), loader->DumpUpdateRomFS(update_path));
+    });
+    future_watcher->setFuture(future);
 }
 
 void GMainWindow::OnGameListOpenDirectory(const QString& directory) {

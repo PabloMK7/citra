@@ -309,8 +309,8 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>
         if (!romfs_file_inner.IsOpen())
             return ResultStatus::Error;
 
-        romfs_file = std::make_shared<FileSys::RomFSReader>(std::move(romfs_file_inner),
-                                                            romfs_offset, romfs_size);
+        romfs_file = std::make_shared<FileSys::DirectRomFSReader>(std::move(romfs_file_inner),
+                                                                  romfs_offset, romfs_size);
 
         return ResultStatus::Success;
     }

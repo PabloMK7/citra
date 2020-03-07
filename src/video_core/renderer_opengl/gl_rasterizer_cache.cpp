@@ -1926,7 +1926,7 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
 }
 
 void RasterizerCacheOpenGL::ClearAll(bool flush) {
-    const SurfaceInterval flush_interval(0x0, 0xFFFFFFFF);
+    const auto flush_interval = PageMap::interval_type::right_open(0x0, 0xFFFFFFFF);
     // Force flush all surfaces from the cache
     if (flush) {
         FlushRegion(0x0, 0xFFFFFFFF);
@@ -1945,8 +1945,8 @@ void RasterizerCacheOpenGL::ClearAll(bool flush) {
 
     // Remove the whole cache without really looking at it.
     cached_pages -= flush_interval;
-    dirty_regions -= flush_interval;
-    surface_cache -= flush_interval;
+    dirty_regions -= SurfaceInterval(0x0, 0xFFFFFFFF);
+    surface_cache -= SurfaceInterval(0x0, 0xFFFFFFFF);
     remove_surfaces.clear();
 }
 

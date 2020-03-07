@@ -114,7 +114,7 @@ void IPCRecorderWidget::SetEnabled(bool enabled) {
 }
 
 void IPCRecorderWidget::Clear() {
-    id_offset = records.size() + 1;
+    id_offset += records.size();
 
     records.clear();
     ui->main->invisibleRootItem()->takeChildren();
