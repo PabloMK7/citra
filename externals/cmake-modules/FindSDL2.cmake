@@ -128,6 +128,7 @@ SET(SDL2_SEARCH_PATHS
     /Library/Frameworks
     /usr/local
     /usr
+    /usr/include/SDL # Budgie
     /sw # Fink
     /opt/local # DarwinPorts
     /opt/csw # Blastwave
