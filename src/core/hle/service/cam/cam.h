@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <deque>
 #include <future>
 #include <memory>
 #include <vector>
@@ -617,6 +618,21 @@ public:
         void SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx);
 
         /**
+         * Gets the vsync timing record of the specified camera for the specified number of signals.
+         *  Inputs:
+         *      0: 0x002A0080
+         *      1: Port
+         *      2: Number of timings to get
+         *      64: ((PastTimings * 8) << 14) | 2
+         *      65: s64* TimingsOutput
+         *  Outputs:
+         *      0: 0x002A0042
+         *      1: ResultCode
+         *      2-3: Output static buffer
+         */
+        void GetLatestVsyncTiming(Kernel::HLERequestContext& ctx);
+
+        /**
          * Returns calibration data relating the outside cameras to each other, for use in AR
          * applications.
          *
@@ -716,6 +732,7 @@ public:
 
 private:
     void CompletionEventCallBack(u64 port_id, s64);
+    void VsyncInterruptEventCallBack(u64 port_id, s64 cycles_late);
 
     // Starts a receiving process on the specified port. This can only be called when is_busy = true
     // and is_receiving = false.
@@ -744,7 +761,7 @@ private:
         std::unique_ptr<Camera::CameraInterface> impl;
         std::array<ContextConfig, 2> contexts;
         int current_context{0};
-        FrameRate frame_rate{FrameRate::Rate_5};
+        FrameRate frame_rate{FrameRate::Rate_15};
     };
 
     struct PortConfig {
@@ -773,6 +790,8 @@ private:
         std::shared_ptr<Kernel::Event> buffer_error_interrupt_event;
         std::shared_ptr<Kernel::Event> vsync_interrupt_event;
 
+        std::deque<s64> vsync_timings;
+
         std::future<std::vector<u16>> capture_result; // will hold the received frame.
         Kernel::Process* dest_process{nullptr};
         VAddr dest{0};    // the destination address of the receiving process
@@ -787,6 +806,7 @@ private:
     std::array<CameraConfig, NumCameras> cameras;
     std::array<PortConfig, 2> ports;
     Core::TimingEventType* completion_event_callback;
+    Core::TimingEventType* vsync_interrupt_event_callback;
     std::atomic<bool> is_camera_reload_pending{false};
 };
 

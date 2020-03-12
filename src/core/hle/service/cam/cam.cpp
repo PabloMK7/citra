@@ -60,6 +60,7 @@ void Module::PortConfig::Clear() {
     completion_event->Clear();
     buffer_error_interrupt_event->Clear();
     vsync_interrupt_event->Clear();
+    vsync_timings.clear();
     is_receiving = false;
     is_active = false;
     is_pending_receiving = false;
@@ -133,6 +134,27 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
     port.completion_event->Signal();
 }
 
+static constexpr std::size_t MaxVsyncTimings = 5;
+
+void Module::VsyncInterruptEventCallBack(u64 port_id, s64 cycles_late) {
+    PortConfig& port = ports[port_id];
+    const CameraConfig& camera = cameras[port.camera_id];
+
+    if (!port.is_active) {
+        return;
+    }
+
+    port.vsync_timings.emplace_front(system.CoreTiming().GetGlobalTimeUs().count());
+    if (port.vsync_timings.size() > MaxVsyncTimings) {
+        port.vsync_timings.pop_back();
+    }
+    port.vsync_interrupt_event->Signal();
+
+    system.CoreTiming().ScheduleEvent(
+        msToCycles(LATENCY_BY_FRAME_RATE[static_cast<int>(camera.frame_rate)]) - cycles_late,
+        vsync_interrupt_event_callback, port_id);
+}
+
 void Module::StartReceiving(int port_id) {
     PortConfig& port = ports[port_id];
     port.is_receiving = true;
@@ -173,6 +195,9 @@ void Module::ActivatePort(int port_id, int camera_id) {
     }
     ports[port_id].is_active = true;
     ports[port_id].camera_id = camera_id;
+    system.CoreTiming().ScheduleEvent(
+        msToCycles(LATENCY_BY_FRAME_RATE[static_cast<int>(cameras[camera_id].frame_rate)]),
+        vsync_interrupt_event_callback, port_id);
 }
 
 template <int max_index>
@@ -631,6 +656,7 @@ void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
                     cam->ports[i].is_busy = false;
                 }
                 cam->ports[i].is_active = false;
+                cam->system.CoreTiming().UnscheduleEvent(cam->vsync_interrupt_event_callback, i);
             }
             rb.Push(RESULT_SUCCESS);
         } else if (camera_select[0] && camera_select[1]) {
@@ -860,6 +886,34 @@ void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
                 camera_select1, camera_select2);
 }
 
+void Module::Interface::GetLatestVsyncTiming(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2A, 2, 0);
+    const PortSet port_select(rp.Pop<u8>());
+    const u32 count = rp.Pop<u32>();
+
+    if (!port_select.IsSingle() || count > MaxVsyncTimings) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ERROR_OUT_OF_RANGE);
+        rb.PushStaticBuffer({}, 0);
+        return;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+
+    const std::size_t port_id = port_select.m_val == 1 ? 0 : 1;
+    std::vector<u8> out(count * sizeof(s64_le));
+    std::size_t offset = 0;
+    for (const s64_le timing : cam->ports[port_id].vsync_timings) {
+        std::memcpy(out.data() + offset * sizeof(timing), &timing, sizeof(timing));
+        offset++;
+        if (offset >= count) {
+            break;
+        }
+    }
+    rb.PushStaticBuffer(out, 0);
+}
+
 void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = IPC::RequestParser(ctx, 0x2B, 0, 0).MakeBuilder(17, 0);
 
@@ -1032,6 +1086,10 @@ Module::Module(Core::System& system) : system(system) {
     completion_event_callback = system.CoreTiming().RegisterEvent(
         "CAM::CompletionEventCallBack",
         [this](u64 userdata, s64 cycles_late) { CompletionEventCallBack(userdata, cycles_late); });
+    vsync_interrupt_event_callback = system.CoreTiming().RegisterEvent(
+        "CAM::VsyncInterruptEventCallBack", [this](u64 userdata, s64 cycles_late) {
+            VsyncInterruptEventCallBack(userdata, cycles_late);
+        });
 }
 
 Module::~Module() {
