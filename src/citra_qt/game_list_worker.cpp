@@ -47,12 +47,16 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
         if (!is_dir && HasSupportedFileExtension(physical_name)) {
             std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
             if (!loader)
+            {
                 return true;
+            }
 
             bool executable = false;
-            loader->IsExecutable(executable);
-            if (!executable)
+            auto res  = loader->IsExecutable(executable);
+            if (!executable && res != Loader::ResultStatus::ErrorEncrypted)
+            {
                 return true;
+            }
 
             u64 program_id = 0;
             loader->ReadProgramId(program_id);
