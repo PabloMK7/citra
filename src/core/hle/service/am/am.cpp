@@ -36,9 +36,8 @@
 
 namespace {
 bool HasSupportedFileExtension(std::string path) {
-    static const std::array<std::string, 7> extensions = {{".3ds", ".3dsx", ".elf", ".axf", ".cci",
-                                                           ".cxi"
-                                                           ".app"}};
+    static const std::array<std::string, 7> extensions = {
+        {".3ds", ".3dsx", ".elf", ".axf", ".cci", ".cxi", ".app"}};
     const auto file_ext = FileUtil::GetExtensionFromFilename(path);
     return std::find(extensions.begin(), extensions.end(), file_ext) != extensions.end();
 }

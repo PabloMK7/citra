@@ -137,7 +137,6 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
     if (has_header)
         return Loader::ResultStatus::Success;
     if (!file.IsOpen()) {
-
         return Loader::ResultStatus::Error;
     }
 
