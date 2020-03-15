@@ -46,15 +46,13 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
         const bool is_dir = FileUtil::IsDirectory(physical_name);
         if (!is_dir && HasSupportedFileExtension(physical_name)) {
             std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
-            if (!loader)
-            {
+            if (!loader) {
                 return true;
             }
 
             bool executable = false;
-            auto res  = loader->IsExecutable(executable);
-            if (!executable && res != Loader::ResultStatus::ErrorEncrypted)
-            {
+            auto res = loader->IsExecutable(executable);
+            if (!executable && res != Loader::ResultStatus::ErrorEncrypted) {
                 return true;
             }
 
