@@ -10,7 +10,6 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/hw/rsa/rsa.h"
 
 namespace HW::RSA {
@@ -21,7 +20,7 @@ std::vector<u8> HexToBytes(const std::string& hex) {
 
     for (unsigned int i = 0; i < hex.length(); i += 2) {
         std::string byteString = hex.substr(i, 2);
-        u8 byte = (u8)strtol(byteString.c_str(), NULL, 16);
+        u8 byte = static_cast<u8>(std::strtol(byteString.c_str(), nullptr, 16));
         bytes.push_back(byte);
     }
     return bytes;
@@ -48,7 +47,7 @@ void InitSlots() {
     initialized = true;
 
     const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9;
-    auto file = FileUtil::IOFile(filepath, "rb");
+    FileUtil::IOFile file(filepath, "rb");
     if (!file) {
         return;
     }
@@ -61,14 +60,12 @@ void InitSlots() {
 
     constexpr std::size_t RSA_MODULUS_POS = 0xB3E0;
     file.Seek(RSA_MODULUS_POS, SEEK_SET);
-    std::vector<u8> modulus;
-    modulus.resize(256);
+    std::vector<u8> modulus(256);
     file.ReadArray(modulus.data(), modulus.size());
 
     constexpr std::size_t RSA_EXPONENT_POS = 0xB4E0;
     file.Seek(RSA_EXPONENT_POS, SEEK_SET);
-    std::vector<u8> exponent;
-    exponent.resize(256);
+    std::vector<u8> exponent(256);
     file.ReadArray(exponent.data(), exponent.size());
 
     rsa_slots[0] = RsaSlot(exponent, modulus);
