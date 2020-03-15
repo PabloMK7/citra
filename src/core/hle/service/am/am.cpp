@@ -396,7 +396,7 @@ InstallStatus InstallCIA(const std::string& path,
                 }
 
                 bool executable = false;
-                auto res = loader->IsExecutable(executable);
+                const auto res = loader->IsExecutable(executable);
                 if (res == Loader::ResultStatus::ErrorEncrypted) {
                     return false;
                 }

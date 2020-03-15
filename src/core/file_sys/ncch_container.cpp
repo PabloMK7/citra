@@ -134,8 +134,9 @@ Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath, u32 nc
 }
 
 Loader::ResultStatus NCCHContainer::LoadHeader() {
-    if (has_header)
+    if (has_header) {
         return Loader::ResultStatus::Success;
+    }
     if (!file.IsOpen()) {
         return Loader::ResultStatus::Error;
     }
@@ -143,8 +144,9 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
     // Reset read pointer in case this file has been read before.
     file.Seek(ncch_offset, SEEK_SET);
 
-    if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
+    if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header)) {
         return Loader::ResultStatus::Error;
+    }
 
     // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
     if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
@@ -155,8 +157,9 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
     }
 
     // Verify we are loading the correct file type...
-    if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic)
+    if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
         return Loader::ResultStatus::ErrorInvalidFormat;
+    }
 
     has_header = true;
     return Loader::ResultStatus::Success;

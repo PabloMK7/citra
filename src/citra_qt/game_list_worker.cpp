@@ -51,7 +51,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             }
 
             bool executable = false;
-            auto res = loader->IsExecutable(executable);
+            const auto res = loader->IsExecutable(executable);
             if (!executable && res != Loader::ResultStatus::ErrorEncrypted) {
                 return true;
             }
