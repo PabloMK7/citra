@@ -57,6 +57,7 @@ ResultStatus Init(Frontend::EmuWindow& emu_window, Memory::MemorySystem& memory)
 void Shutdown() {
     Pica::Shutdown();
 
+    g_renderer->ShutDown();
     g_renderer.reset();
 
     LOG_DEBUG(Render, "shutdown OK");

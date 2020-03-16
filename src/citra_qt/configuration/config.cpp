@@ -448,6 +448,13 @@ void Config::ReadRendererValues() {
     Settings::values.bg_green = ReadSetting(QStringLiteral("bg_green"), 0.0).toFloat();
     Settings::values.bg_blue = ReadSetting(QStringLiteral("bg_blue"), 0.0).toFloat();
 
+    Settings::values.texture_filter_name =
+        ReadSetting(QStringLiteral("texture_filter_name"), QStringLiteral("none"))
+            .toString()
+            .toStdString();
+    Settings::values.texture_filter_factor =
+        ReadSetting(QStringLiteral("texture_filter_factor"), 1).toInt();
+
     qt_config->endGroup();
 }
 
@@ -878,6 +885,12 @@ void Config::SaveRendererValues() {
     WriteSetting(QStringLiteral("bg_red"), (double)Settings::values.bg_red, 0.0);
     WriteSetting(QStringLiteral("bg_green"), (double)Settings::values.bg_green, 0.0);
     WriteSetting(QStringLiteral("bg_blue"), (double)Settings::values.bg_blue, 0.0);
+
+    WriteSetting(QStringLiteral("texture_filter_name"),
+                 QString::fromStdString(Settings::values.texture_filter_name),
+                 QStringLiteral("none"));
+    WriteSetting(QStringLiteral("texture_filter_factor"), Settings::values.texture_filter_factor,
+                 1);
 
     qt_config->endGroup();
 }
