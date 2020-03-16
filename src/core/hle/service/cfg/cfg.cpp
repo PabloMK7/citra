@@ -90,7 +90,8 @@ static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exact
 } // namespace
 
 static const EULAVersion MAX_EULA_VERSION = {0x7F, 0x7F};
-static const ConsoleModelInfo CONSOLE_MODEL = {NINTENDO_3DS_XL, {0, 0, 0}};
+static const ConsoleModelInfo CONSOLE_MODEL_OLD = {NINTENDO_3DS_XL, {0, 0, 0}};
+static const ConsoleModelInfo CONSOLE_MODEL_NEW = {NEW_NINTENDO_3DS_XL, {0, 0, 0}};
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 static const UsernameBlock CONSOLE_USERNAME_BLOCK = {u"CITRA", 0, 0};
 static const BirthdayBlock PROFILE_BIRTHDAY = {3, 25}; // March 25th, 2014
@@ -233,6 +234,18 @@ void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
 
     // TODO(Subv): Find out the correct error codes
     rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
+    ConsoleModelInfo model;
+    std::memcpy(&model, &data, 4);
+    if ((model.model == NINTENDO_3DS || model.model == NINTENDO_3DS_XL ||
+         model.model == NINTENDO_2DS) &&
+        Settings::values.is_new_3ds) {
+        model.model = NEW_NINTENDO_3DS_XL;
+    } else if ((model.model == NEW_NINTENDO_3DS || model.model == NEW_NINTENDO_3DS_XL ||
+                model.model == NEW_NINTENDO_2DS_XL) &&
+               !Settings::values.is_new_3ds) {
+        model.model = NINTENDO_3DS_XL;
+    }
+    std::memcpy(&data, &model, 4);
     rb.Push<u8>(data & 0xFF);
 }
 
@@ -511,7 +524,8 @@ ResultCode Module::FormatConfig() {
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(ConsoleModelBlockID, sizeof(CONSOLE_MODEL), 0xC, &CONSOLE_MODEL);
+    res = CreateConfigInfoBlk(ConsoleModelBlockID, sizeof(CONSOLE_MODEL_OLD), 0xC,
+                              &CONSOLE_MODEL_OLD);
     if (!res.IsSuccess())
         return res;
 
@@ -525,7 +539,7 @@ ResultCode Module::FormatConfig() {
     if (!res.IsSuccess())
         return res;
     return RESULT_SUCCESS;
-}
+} // namespace Service::CFG
 
 ResultCode Module::LoadConfigNANDSaveFile() {
     std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
