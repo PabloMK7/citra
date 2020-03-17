@@ -34,15 +34,6 @@
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
 
-namespace {
-bool HasSupportedFileExtension(std::string path) {
-    static const std::array<std::string, 7> extensions = {
-        {".3ds", ".3dsx", ".elf", ".axf", ".cci", ".cxi", ".app"}};
-    const auto file_ext = FileUtil::GetExtensionFromFilename(path);
-    return std::find(extensions.begin(), extensions.end(), file_ext) != extensions.end();
-}
-} // namespace
-
 namespace Service::AM {
 
 constexpr u16 PLATFORM_CTR = 0x0004;
@@ -389,7 +380,7 @@ InstallStatus InstallCIA(const std::string& path,
                         const std::string& virtual_name) -> bool {
             const std::string physical_name = directory + DIR_SEP + virtual_name;
             const bool is_dir = FileUtil::IsDirectory(physical_name);
-            if (!is_dir && HasSupportedFileExtension(physical_name)) {
+            if (!is_dir) {
                 std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
                 if (!loader) {
                     return true;
@@ -405,7 +396,12 @@ InstallStatus InstallCIA(const std::string& path,
                 return FileUtil::ForeachDirectoryEntry(nullptr, physical_name, callback);
             }
         };
-        if (!FileUtil::ForeachDirectoryEntry(nullptr, path, callback)) {
+        if (!FileUtil::ForeachDirectoryEntry(
+                nullptr,
+                GetTitlePath(
+                    Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()),
+                    container.GetTitleMetadata().GetTitleID()),
+                callback)) {
             LOG_ERROR(Service_AM, "CIA {} contained encrypted files.", path);
             return InstallStatus::ErrorEncrypted;
         }
