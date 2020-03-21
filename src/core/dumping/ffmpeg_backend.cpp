@@ -44,10 +44,12 @@ FFmpegStream::~FFmpegStream() {
     Free();
 }
 
-bool FFmpegStream::Init(AVFormatContext* format_context_) {
+bool FFmpegStream::Init(FFmpegMuxer& muxer) {
     InitializeFFmpegLibraries();
 
-    format_context = format_context_;
+    format_context = muxer.format_context.get();
+    format_context_mutex = &muxer.format_context_mutex;
+
     return true;
 }
 
@@ -60,14 +62,12 @@ void FFmpegStream::Flush() {
 }
 
 void FFmpegStream::WritePacket(AVPacket& packet) {
-    if (packet.pts != static_cast<s64>(AV_NOPTS_VALUE)) {
-        packet.pts = av_rescale_q(packet.pts, codec_context->time_base, stream->time_base);
-    }
-    if (packet.dts != static_cast<s64>(AV_NOPTS_VALUE)) {
-        packet.dts = av_rescale_q(packet.dts, codec_context->time_base, stream->time_base);
-    }
+    av_packet_rescale_ts(&packet, codec_context->time_base, stream->time_base);
     packet.stream_index = stream->index;
-    av_interleaved_write_frame(format_context, &packet);
+    {
+        std::lock_guard lock{*format_context_mutex};
+        av_interleaved_write_frame(format_context, &packet);
+    }
 }
 
 void FFmpegStream::SendFrame(AVFrame* frame) {
@@ -101,12 +101,11 @@ FFmpegVideoStream::~FFmpegVideoStream() {
     Free();
 }
 
-bool FFmpegVideoStream::Init(AVFormatContext* format_context, AVOutputFormat* output_format,
-                             const Layout::FramebufferLayout& layout_) {
+bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout& layout_) {
 
     InitializeFFmpegLibraries();
 
-    if (!FFmpegStream::Init(format_context))
+    if (!FFmpegStream::Init(muxer))
         return false;
 
     layout = layout_;
@@ -129,7 +128,7 @@ bool FFmpegVideoStream::Init(AVFormatContext* format_context, AVOutputFormat* ou
     codec_context->time_base.den = 60;
     codec_context->gop_size = 12;
     codec_context->pix_fmt = codec->pix_fmts ? codec->pix_fmts[0] : AV_PIX_FMT_YUV420P;
-    if (output_format->flags & AVFMT_GLOBALHEADER)
+    if (format_context->oformat->flags & AVFMT_GLOBALHEADER)
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     AVDictionary* options = ToAVDictionary(Settings::values.video_encoder_options);
@@ -157,7 +156,7 @@ bool FFmpegVideoStream::Init(AVFormatContext* format_context, AVOutputFormat* ou
     scaled_frame->format = codec_context->pix_fmt;
     scaled_frame->width = layout.width;
     scaled_frame->height = layout.height;
-    if (av_frame_get_buffer(scaled_frame.get(), 1) < 0) {
+    if (av_frame_get_buffer(scaled_frame.get(), 0) < 0) {
         LOG_ERROR(Render, "Could not allocate frame buffer");
         return false;
     }
@@ -193,6 +192,10 @@ void FFmpegVideoStream::ProcessFrame(VideoFrame& frame) {
     current_frame->height = layout.height;
 
     // Scale the frame
+    if (av_frame_make_writable(scaled_frame.get()) < 0) {
+        LOG_ERROR(Render, "Video frame dropped: Could not prepare frame");
+        return;
+    }
     if (sws_context) {
         sws_scale(sws_context.get(), current_frame->data, current_frame->linesize, 0, layout.height,
                   scaled_frame->data, scaled_frame->linesize);
@@ -207,10 +210,10 @@ FFmpegAudioStream::~FFmpegAudioStream() {
     Free();
 }
 
-bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
+bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
     InitializeFFmpegLibraries();
 
-    if (!FFmpegStream::Init(format_context))
+    if (!FFmpegStream::Init(muxer))
         return false;
 
     frame_count = 0;
@@ -246,8 +249,12 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     } else {
         codec_context->sample_rate = AudioCore::native_sample_rate;
     }
+    codec_context->time_base.num = 1;
+    codec_context->time_base.den = codec_context->sample_rate;
     codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
     codec_context->channels = 2;
+    if (format_context->oformat->flags & AVFMT_GLOBALHEADER)
+        codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     AVDictionary* options = ToAVDictionary(Settings::values.audio_encoder_options);
     if (avcodec_open2(codec_context.get(), codec, &options) < 0) {
@@ -280,6 +287,7 @@ bool FFmpegAudioStream::Init(AVFormatContext* format_context) {
     audio_frame->format = codec_context->sample_fmt;
     audio_frame->channel_layout = codec_context->channel_layout;
     audio_frame->channels = codec_context->channels;
+    audio_frame->sample_rate = codec_context->sample_rate;
 
     // Allocate SWR context
     auto* context =
@@ -418,9 +426,9 @@ bool FFmpegMuxer::Init(const std::string& path, const Layout::FramebufferLayout&
     }
     format_context.reset(format_context_raw);
 
-    if (!video_stream.Init(format_context.get(), output_format, layout))
+    if (!video_stream.Init(*this, layout))
         return false;
-    if (!audio_stream.Init(format_context.get()))
+    if (!audio_stream.Init(*this))
         return false;
 
     AVDictionary* options = ToAVDictionary(Settings::values.format_options);
@@ -465,6 +473,8 @@ void FFmpegMuxer::FlushAudio() {
 }
 
 void FFmpegMuxer::WriteTrailer() {
+    std::lock_guard lock{format_context_mutex};
+    av_interleaved_write_frame(format_context.get(), nullptr);
     av_write_trailer(format_context.get());
 }
 
@@ -553,11 +563,13 @@ void FFmpegBackend::AddAudioFrame(AudioCore::StereoFrame16 frame) {
         refactored_frame[1][i] = frame[i][1];
     }
 
-    ffmpeg.ProcessAudioFrame(refactored_frame[0], refactored_frame[1]);
+    audio_frame_queues[0].Push(std::move(refactored_frame[0]));
+    audio_frame_queues[1].Push(std::move(refactored_frame[1]));
 }
 
 void FFmpegBackend::AddAudioSample(const std::array<s16, 2>& sample) {
-    ffmpeg.ProcessAudioFrame({sample[0]}, {sample[1]});
+    audio_frame_queues[0].Push(VariableAudioFrame{sample[0]});
+    audio_frame_queues[1].Push(VariableAudioFrame{sample[1]});
 }
 
 void FFmpegBackend::StopDumping() {

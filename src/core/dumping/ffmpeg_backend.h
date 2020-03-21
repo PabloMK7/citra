@@ -31,13 +31,15 @@ using VariableAudioFrame = std::vector<s16>;
 
 void InitFFmpegLibraries();
 
+class FFmpegMuxer;
+
 /**
  * Wrapper around FFmpeg AVCodecContext + AVStream.
  * Rescales/Resamples, encodes and writes a frame.
  */
 class FFmpegStream {
 public:
-    bool Init(AVFormatContext* format_context);
+    bool Init(FFmpegMuxer& muxer);
     void Free();
     void Flush();
 
@@ -60,6 +62,7 @@ protected:
     };
 
     AVFormatContext* format_context{};
+    std::mutex* format_context_mutex{};
     std::unique_ptr<AVCodecContext, AVCodecContextDeleter> codec_context{};
     AVStream* stream{};
 };
@@ -72,8 +75,7 @@ class FFmpegVideoStream : public FFmpegStream {
 public:
     ~FFmpegVideoStream();
 
-    bool Init(AVFormatContext* format_context, AVOutputFormat* output_format,
-              const Layout::FramebufferLayout& layout);
+    bool Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout& layout);
     void Free();
     void ProcessFrame(VideoFrame& frame);
 
@@ -104,7 +106,7 @@ class FFmpegAudioStream : public FFmpegStream {
 public:
     ~FFmpegAudioStream();
 
-    bool Init(AVFormatContext* format_context);
+    bool Init(FFmpegMuxer& muxer);
     void Free();
     void ProcessFrame(const VariableAudioFrame& channel0, const VariableAudioFrame& channel1);
     void Flush();
@@ -153,6 +155,9 @@ private:
     FFmpegAudioStream audio_stream{};
     FFmpegVideoStream video_stream{};
     std::unique_ptr<AVFormatContext, AVFormatContextDeleter> format_context{};
+    std::mutex format_context_mutex;
+
+    friend class FFmpegStream;
 };
 
 /**
