@@ -1850,6 +1850,8 @@ void GMainWindow::OnStopVideoDumping() {
         const bool was_dumping = Core::System::GetInstance().VideoDumper().IsDumping();
         if (!was_dumping)
             return;
+
+        game_paused_for_dumping = emu_thread->IsRunning();
         OnPauseGame();
 
         auto future =
@@ -1859,7 +1861,8 @@ void GMainWindow::OnStopVideoDumping() {
             if (game_shutdown_delayed) {
                 game_shutdown_delayed = false;
                 ShutdownGame();
-            } else {
+            } else if (game_paused_for_dumping) {
+                game_paused_for_dumping = false;
                 OnStartGame();
             }
         });
