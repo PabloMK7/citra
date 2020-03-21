@@ -92,7 +92,7 @@ void XbrzFreescale::scale(CachedSurface& surface, const Common::Rectangle<u32>& 
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                            cur_state.texture_units[0].texture_2d, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, NULL, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 
     cur_state.Apply();
 }
