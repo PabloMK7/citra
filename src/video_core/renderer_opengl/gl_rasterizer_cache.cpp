@@ -36,6 +36,7 @@
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
+#include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
@@ -64,13 +65,6 @@ static constexpr std::array<FormatTuple, 5> fb_format_tuples_oes = {{
     {GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4},   // RGBA4
 }};
 
-static constexpr std::array<FormatTuple, 4> depth_format_tuples = {{
-    {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // D16
-    {},
-    {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT},   // D24
-    {GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // D24S8
-}};
-
 const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
     const SurfaceType type = SurfaceParams::GetFormatType(pixel_format);
     if (type == SurfaceType::Color) {
@@ -85,79 +79,6 @@ const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
         return depth_format_tuples[tuple_idx];
     }
     return tex_tuple;
-}
-
-/**
- * OpenGL ES does not support glGetTexImage. Obtain the pixels by attaching the
- * texture to a framebuffer.
- * Originally from https://github.com/apitrace/apitrace/blob/master/retrace/glstate_images.cpp
- */
-static void GetTexImageOES(GLenum target, GLint level, GLenum format, GLenum type, GLint height,
-                           GLint width, GLint depth, GLubyte* pixels, std::size_t size) {
-    memset(pixels, 0x80, size);
-
-    OpenGLState cur_state = OpenGLState::GetCurState();
-    OpenGLState state;
-
-    GLenum texture_binding = GL_NONE;
-    switch (target) {
-    case GL_TEXTURE_2D:
-        texture_binding = cur_state.texture_units[0].texture_2d;
-        break;
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        texture_binding = cur_state.texture_cube_unit.texture_cube;
-        break;
-    default:
-        LOG_CRITICAL(Render_OpenGL, "Unexpected target {:x}", target);
-        UNIMPLEMENTED();
-        return;
-    }
-
-    GLint texture = 0;
-    glGetIntegerv(texture_binding, &texture);
-    if (!texture) {
-        return;
-    }
-
-    OGLFramebuffer fbo;
-    fbo.Create();
-    state.draw.read_framebuffer = fbo.handle;
-    state.Apply();
-
-    switch (target) {
-    case GL_TEXTURE_2D:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z: {
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture,
-                               level);
-        GLenum status = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_DEBUG(Render_OpenGL, "Framebuffer is incomplete, status: {:X}", status);
-        }
-        glReadPixels(0, 0, width, height, format, type, pixels);
-        break;
-    }
-    case GL_TEXTURE_3D_OES:
-        for (int i = 0; i < depth; i++) {
-            glFramebufferTexture3D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D,
-                                   texture, level, i);
-            glReadPixels(0, 0, width, height, format, type, pixels + 4 * i * width * height);
-        }
-        break;
-    }
-
-    cur_state.Apply();
-
-    fbo.Release();
 }
 
 template <typename Map, typename Interval>
@@ -775,23 +696,28 @@ void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
         LOG_INFO(Render_OpenGL, "Dumping texture to {}", dump_path);
         std::vector<u8> decoded_texture;
         decoded_texture.resize(width * height * 4);
-        glBindTexture(GL_TEXTURE_2D, target_tex);
+        OpenGLState state = OpenGLState::GetCurState();
+        GLuint old_texture = state.texture_units[0].texture_2d;
+        state.Apply();
         /*
            GetTexImageOES is used even if not using OpenGL ES to work around a small issue that
            happens if using custom textures with texture dumping at the same.
            Let's say there's 2 textures that are both 32x32 and one of them gets replaced with a
-           higher quality 256x256 texture. If the 256x256 texture is displayed first and the 32x32
-           texture gets uploaded to the same underlying OpenGL texture, the 32x32 texture will
-           appear in the corner of the 256x256 texture.
-           If texture dumping is enabled and the 32x32 is undumped, Citra will attempt to dump it.
-           Since the underlying OpenGL texture is still 256x256, Citra crashes because it thinks the
-           texture is only 32x32.
+           higher quality 256x256 texture. If the 256x256 texture is displayed first and the
+           32x32 texture gets uploaded to the same underlying OpenGL texture, the 32x32 texture
+           will appear in the corner of the 256x256 texture. If texture dumping is enabled and
+           the 32x32 is undumped, Citra will attempt to dump it. Since the underlying OpenGL
+           texture is still 256x256, Citra crashes because it thinks the texture is only 32x32.
            GetTexImageOES conveniently only dumps the specified region, and works on both
            desktop and ES.
         */
-        GetTexImageOES(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, height, width, 0,
-                       &decoded_texture[0], decoded_texture.size());
-        glBindTexture(GL_TEXTURE_2D, 0);
+        // if the backend isn't OpenGL ES, this won't be initialized yet
+        if (!owner.texture_downloader_es)
+            owner.texture_downloader_es = std::make_unique<TextureDownloaderES>(false);
+        owner.texture_downloader_es->GetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                                                 height, width, &decoded_texture[0]);
+        state.texture_units[0].texture_2d = old_texture;
+        state.Apply();
         Common::FlipRGBA8Texture(decoded_texture, width, height);
         if (!image_interface->EncodePNG(dump_path, decoded_texture, width, height))
             LOG_ERROR(Render_OpenGL, "Failed to save decoded texture");
@@ -905,14 +831,6 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
         return;
     }
 
-    if (GLES) {
-        if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
-            // TODO(bunnei): This is unsupported on GLES right now, fixme
-            LOG_WARNING(Render_OpenGL, "Unsupported depth/stencil surface download");
-            return;
-        }
-    }
-
     MICROPROFILE_SCOPE(OpenGL_TextureDL);
 
     if (gl_buffer.empty()) {
@@ -950,9 +868,9 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
 
         glActiveTexture(GL_TEXTURE0);
         if (GLES) {
-            GetTexImageOES(GL_TEXTURE_2D, 0, tuple.format, tuple.type, rect.GetHeight(),
-                           rect.GetWidth(), 0, &gl_buffer[buffer_offset],
-                           gl_buffer.size() - buffer_offset);
+            owner.texture_downloader_es->GetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type,
+                                                     rect.GetHeight(), rect.GetWidth(),
+                                                     &gl_buffer[buffer_offset]);
         } else {
             glGetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, &gl_buffer[buffer_offset]);
         }
@@ -1106,6 +1024,8 @@ RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
     texture_filterer = std::make_unique<TextureFilterer>(Settings::values.texture_filter_name,
                                                          resolution_scale_factor);
     format_reinterpreter = std::make_unique<FormatReinterpreterOpenGL>();
+    if (GLES)
+        texture_downloader_es = std::make_unique<TextureDownloaderES>(false);
 
     read_framebuffer.Create();
     draw_framebuffer.Create();
