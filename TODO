@@ -1,7 +1,7 @@
 ☐ Save/load UI
     ✔ Basic version @done(20-01-03 15:27)
     ☐ Multiple slots etc.
-☐ Add 'force flush all' to Rasterizer interface + impls
+✔ Add 'force flush all' to Rasterizer interface + impls @done(20-03-07 21:54)
 ☐ Custom texture cache
 ☐ Review constructor/initialization code
 ✔ Core timing events @done(20-01-12 15:14)

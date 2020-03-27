@@ -530,6 +530,9 @@ void System::Reset() {
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
     u32 num_cores;
+    if (Archive::is_saving::value) {
+        num_cores = this->GetNumCores();
+    }
     ar& num_cores;
     if (num_cores != this->GetNumCores()) {
         throw std::runtime_error("Wrong N3DS mode");
@@ -546,6 +549,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar& LCD::g_regs;
     if (Archive::is_loading::value) {
         dsp_core.reset();
+    }
+    if (dsp_core) {
+        throw "BLEH";
     }
     ar& dsp_core;
     ar&* memory.get();

@@ -223,10 +223,12 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
             MoveEvents();
-            ar& slice_length;
-            ar& downcount;
+            // NOTE: ts_queue should be empty now
             ar& event_queue;
             ar& event_fifo_id;
+            ar& slice_length;
+            ar& downcount;
+            ar& executed_ticks;
             ar& idled_cycles;
         }
         friend class boost::serialization::access;
@@ -283,7 +285,6 @@ private:
         deserializing = nullptr;
     }
     friend class boost::serialization::access;
-
 };
 
 } // namespace Core

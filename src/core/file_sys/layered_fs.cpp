@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
@@ -12,6 +13,8 @@
 #include "common/swap.h"
 #include "core/file_sys/layered_fs.h"
 #include "core/file_sys/patch.h"
+
+SERIALIZE_EXPORT_IMPL(FileSys::LayeredFS)
 
 namespace FileSys {
 
@@ -51,11 +54,16 @@ struct FileMetadata {
 };
 static_assert(sizeof(FileMetadata) == 0x20, "Size of FileMetadata is not correct");
 
-LayeredFS::LayeredFS(std::shared_ptr<RomFSReader> romfs_, std::string patch_path_,
-                     std::string patch_ext_path_, bool load_relocations)
-    : romfs(std::move(romfs_)), patch_path(std::move(patch_path_)),
-      patch_ext_path(std::move(patch_ext_path_)) {
+LayeredFS::LayeredFS() = default;
 
+LayeredFS::LayeredFS(std::shared_ptr<RomFSReader> romfs_, std::string patch_path_,
+                     std::string patch_ext_path_, bool load_relocations_)
+    : romfs(std::move(romfs_)), patch_path(std::move(patch_path_)),
+      patch_ext_path(std::move(patch_ext_path_)), load_relocations(load_relocations_) {
+    Load();
+}
+
+void LayeredFS::Load() {
     romfs->ReadFile(0, sizeof(header), reinterpret_cast<u8*>(&header));
 
     ASSERT_MSG(header.header_length == sizeof(header), "Header size is incorrect");
