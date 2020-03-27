@@ -547,13 +547,10 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar&* service_manager.get();
     ar& GPU::g_regs;
     ar& LCD::g_regs;
-    if (Archive::is_loading::value) {
-        dsp_core.reset();
+    if (!dynamic_cast<AudioCore::DspHle*>(dsp_core.get())) {
+        throw std::runtime_error("Only HLE audio supported");
     }
-    if (dsp_core) {
-        throw "BLEH";
-    }
-    ar& dsp_core;
+    ar&* dynamic_cast<AudioCore::DspHle*>(dsp_core.get());
     ar&* memory.get();
     ar&* kernel.get();
 
@@ -562,7 +559,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         Service::GSP::SetGlobalModule(*this);
 
         memory->SetDSP(*dsp_core);
-        dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
+        // dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
         dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
     }
 }

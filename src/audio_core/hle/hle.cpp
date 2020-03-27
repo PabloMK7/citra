@@ -16,6 +16,7 @@
 #elif HAVE_FDK
 #include "audio_core/hle/fdk_decoder.h"
 #endif
+#include <iostream>
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/decoder.h"
 #include "audio_core/hle/hle.h"
@@ -148,8 +149,11 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
 }
 
 DspHle::Impl::~Impl() {
+    LOG_WARNING(Audio_DSP, "b1");
     Core::Timing& timing = Core::System::GetInstance().CoreTiming();
+    LOG_WARNING(Audio_DSP, "b2");
     timing.UnscheduleEvent(tick_event, 0);
+    LOG_WARNING(Audio_DSP, "b3");
 }
 
 DspState DspHle::Impl::GetDspState() const {
@@ -448,7 +452,12 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
 }
 
 DspHle::DspHle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(*this, memory)) {}
-DspHle::~DspHle() = default;
+DspHle::~DspHle() {
+
+    LOG_WARNING(Audio_DSP, "a1");
+    impl.reset();
+    LOG_WARNING(Audio_DSP, "a2");
+}
 
 u16 DspHle::RecvData(u32 register_number) {
     return impl->RecvData(register_number);
