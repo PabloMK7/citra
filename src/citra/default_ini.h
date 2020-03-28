@@ -91,6 +91,12 @@ udp_pad_index=
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_cpu_jit =
 
+# Change the Clock Frequency of the emulated 3DS CPU.
+# Underclocking can increase the performance of the game at the risk of freezing.
+# Overclocking may fix lag that happens on console, but also comes with the risk of freezing.
+# Range is any positive integer (but we suspect 25 - 400 is a good idea) Default is 100
+cpu_clock_percentage =
+
 [Renderer]
 # Whether to render using GLES or OpenGL
 # 0 (default): OpenGL, 1: GLES

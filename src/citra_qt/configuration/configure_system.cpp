@@ -217,6 +217,17 @@ static const std::array<const char*, 187> country_names = {
     QT_TRANSLATE_NOOP("ConfigureSystem", "Bermuda"), // 180-186
 };
 
+// The QSlider doesn't have an easy way to set a custom step amount,
+// so we can just convert from the sliders range (0 - 79) to the expected
+// settings range (5 - 400) with simple math.
+static constexpr int SliderToSettings(int value) {
+    return 5 * value + 5;
+}
+
+static constexpr int SettingsToSlider(int value) {
+    return (value - 5) / 5;
+}
+
 ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureSystem) {
     ui->setupUi(this);
     connect(ui->combo_birthmonth,
@@ -232,6 +243,10 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
             ui->combo_country->addItem(tr(country_names.at(i)), i);
         }
     }
+
+    connect(ui->slider_clock_speed, &QSlider::valueChanged, [&](int value) {
+        ui->clock_display_label->setText(QStringLiteral("%1%").arg(SliderToSettings(value)));
+    });
 
     ConfigureTime();
 }
@@ -258,6 +273,10 @@ void ConfigureSystem::SetConfiguration() {
 
         ui->label_disable_info->hide();
     }
+
+    ui->slider_clock_speed->setValue(SettingsToSlider(Settings::values.cpu_clock_percentage));
+    ui->clock_display_label->setText(
+        QStringLiteral("%1%").arg(Settings::values.cpu_clock_percentage));
 }
 
 void ConfigureSystem::ReadSystemSettings() {
@@ -299,65 +318,65 @@ void ConfigureSystem::ReadSystemSettings() {
 }
 
 void ConfigureSystem::ApplyConfiguration() {
-    if (!enabled) {
-        return;
+    if (enabled) {
+        bool modified = false;
+
+        // apply username
+        // TODO(wwylele): Use this when we move to Qt 5.5
+        // std::u16string new_username = ui->edit_username->text().toStdU16String();
+        std::u16string new_username(
+            reinterpret_cast<const char16_t*>(ui->edit_username->text().utf16()));
+        if (new_username != username) {
+            cfg->SetUsername(new_username);
+            modified = true;
+        }
+
+        // apply birthday
+        int new_birthmonth = ui->combo_birthmonth->currentIndex() + 1;
+        int new_birthday = ui->combo_birthday->currentIndex() + 1;
+        if (birthmonth != new_birthmonth || birthday != new_birthday) {
+            cfg->SetBirthday(new_birthmonth, new_birthday);
+            modified = true;
+        }
+
+        // apply language
+        int new_language = ui->combo_language->currentIndex();
+        if (language_index != new_language) {
+            cfg->SetSystemLanguage(static_cast<Service::CFG::SystemLanguage>(new_language));
+            modified = true;
+        }
+
+        // apply sound
+        int new_sound = ui->combo_sound->currentIndex();
+        if (sound_index != new_sound) {
+            cfg->SetSoundOutputMode(static_cast<Service::CFG::SoundOutputMode>(new_sound));
+            modified = true;
+        }
+
+        // apply country
+        u8 new_country = static_cast<u8>(ui->combo_country->currentData().toInt());
+        if (country_code != new_country) {
+            cfg->SetCountryCode(new_country);
+            modified = true;
+        }
+
+        // apply play coin
+        u16 new_play_coin = static_cast<u16>(ui->spinBox_play_coins->value());
+        if (play_coin != new_play_coin) {
+            Service::PTM::Module::SetPlayCoins(new_play_coin);
+        }
+
+        // update the config savegame if any item is modified.
+        if (modified) {
+            cfg->UpdateConfigNANDSavegame();
+        }
+
+        Settings::values.init_clock =
+            static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
+        Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
     }
 
-    bool modified = false;
-
-    // apply username
-    // TODO(wwylele): Use this when we move to Qt 5.5
-    // std::u16string new_username = ui->edit_username->text().toStdU16String();
-    std::u16string new_username(
-        reinterpret_cast<const char16_t*>(ui->edit_username->text().utf16()));
-    if (new_username != username) {
-        cfg->SetUsername(new_username);
-        modified = true;
-    }
-
-    // apply birthday
-    int new_birthmonth = ui->combo_birthmonth->currentIndex() + 1;
-    int new_birthday = ui->combo_birthday->currentIndex() + 1;
-    if (birthmonth != new_birthmonth || birthday != new_birthday) {
-        cfg->SetBirthday(new_birthmonth, new_birthday);
-        modified = true;
-    }
-
-    // apply language
-    int new_language = ui->combo_language->currentIndex();
-    if (language_index != new_language) {
-        cfg->SetSystemLanguage(static_cast<Service::CFG::SystemLanguage>(new_language));
-        modified = true;
-    }
-
-    // apply sound
-    int new_sound = ui->combo_sound->currentIndex();
-    if (sound_index != new_sound) {
-        cfg->SetSoundOutputMode(static_cast<Service::CFG::SoundOutputMode>(new_sound));
-        modified = true;
-    }
-
-    // apply country
-    u8 new_country = static_cast<u8>(ui->combo_country->currentData().toInt());
-    if (country_code != new_country) {
-        cfg->SetCountryCode(new_country);
-        modified = true;
-    }
-
-    // apply play coin
-    u16 new_play_coin = static_cast<u16>(ui->spinBox_play_coins->value());
-    if (play_coin != new_play_coin) {
-        Service::PTM::Module::SetPlayCoins(new_play_coin);
-    }
-
-    // update the config savegame if any item is modified.
-    if (modified) {
-        cfg->UpdateConfigNANDSavegame();
-    }
-
-    Settings::values.init_clock =
-        static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
-    Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
+    Settings::values.cpu_clock_percentage = SliderToSettings(ui->slider_clock_speed->value());
     Settings::Apply();
 }
 

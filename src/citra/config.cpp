@@ -104,6 +104,8 @@ void Config::ReadValues() {
 
     // Core
     Settings::values.use_cpu_jit = sdl2_config->GetBoolean("Core", "use_cpu_jit", true);
+    Settings::values.cpu_clock_percentage =
+        sdl2_config->GetInteger("Core", "cpu_clock_percentage", 100);
 
     // Renderer
     Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", false);

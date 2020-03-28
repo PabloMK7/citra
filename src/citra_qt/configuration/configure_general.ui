@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>345</width>
-    <height>357</height>
+    <height>358</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,6 +68,13 @@
         <string>Emulation</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="toggle_frame_limit">
+          <property name="text">
+           <string>Limit Speed Percent</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
@@ -117,13 +124,6 @@
             <string notr="true">TWN</string>
            </property>
           </item>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="toggle_frame_limit">
-          <property name="text">
-           <string>Limit Speed Percent</string>
-          </property>
          </widget>
         </item>
         <item row="1" column="1">
