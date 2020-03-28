@@ -12,7 +12,7 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
     if (length == 0)
         return 0; // Crypto++ does not like zero size buffer
     file.Seek(file_offset + offset, SEEK_SET);
-    std::size_t read_length = std::min(length, data_size - offset);
+    std::size_t read_length = std::min(length, static_cast<std::size_t>(data_size) - offset);
     read_length = file.ReadBytes(buffer, read_length);
     if (is_encrypted) {
         CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d(key.data(), key.size(), ctr.data());
