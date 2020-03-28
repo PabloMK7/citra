@@ -31,11 +31,11 @@ public:
     BufferMem() = default;
     BufferMem(u32 size) : data(std::vector<u8>(size)) {}
 
-    virtual u8* GetPtr() {
+    u8* GetPtr() override {
         return data.data();
     }
 
-    virtual u32 GetSize() const {
+    u32 GetSize() const override {
         return static_cast<u32>(data.size());
     }
 
