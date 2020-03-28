@@ -239,7 +239,8 @@ private:
     void load(Archive& ar, const unsigned int file_version) {
         u32 offset{};
         ar >> offset;
-        cmd_list.head_ptr = reinterpret_cast<u32*>(VideoCore::g_memory->GetPhysicalPointer(cmd_list.addr));
+        cmd_list.head_ptr =
+            reinterpret_cast<u32*>(VideoCore::g_memory->GetPhysicalPointer(cmd_list.addr));
         cmd_list.current_ptr = cmd_list.head_ptr + offset;
     }
 };

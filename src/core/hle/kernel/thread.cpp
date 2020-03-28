@@ -63,8 +63,7 @@ void Thread::Acquire(Thread* thread) {
 }
 
 Thread::Thread(KernelSystem& kernel, u32 core_id)
-    : WaitObject(kernel), context(kernel.GetThreadManager(core_id).NewContext()),
-      core_id(core_id),
+    : WaitObject(kernel), context(kernel.GetThreadManager(core_id).NewContext()), core_id(core_id),
       thread_manager(kernel.GetThreadManager(core_id)) {}
 Thread::~Thread() {}
 

@@ -77,6 +77,7 @@ private:
         case LowPathType::Char:
             ar& string;
             break;
+#ifdef _WIN32
         case LowPathType::Wchar:
             static_assert(sizeof(wchar_t) == sizeof(char16_t));
             {
@@ -87,6 +88,7 @@ private:
                 }
             }
             break;
+#endif
         default:
             break;
         }
