@@ -110,6 +110,7 @@ struct State {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& memory_ref;
         ar& sharedmem_size;
         ar& size;
         ar& offset;
@@ -139,6 +140,7 @@ struct MIC_U::Impl {
 
         if (shared_memory) {
             shared_memory->SetName("MIC_U:shared_memory");
+            state.memory_ref = shared_memory;
             state.sharedmem_buffer = shared_memory->GetPointer();
             state.sharedmem_size = size;
         }

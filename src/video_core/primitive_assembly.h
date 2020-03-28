@@ -5,10 +5,8 @@
 #pragma once
 
 #include <functional>
+#include <boost/serialization/access.hpp>
 #include "video_core/regs_pipeline.h"
-namespace boost::serialization {
-class access;
-}
 
 namespace Pica {
 

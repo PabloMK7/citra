@@ -6,6 +6,7 @@
 
 #include <future>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -215,24 +216,6 @@ public:
 #ifdef ENABLE_WEB_SERVICE
     httplib::Response response;
 #endif
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& handle;
-        ar& session_id;
-        ar& url;
-        ar& method;
-        ar& state;
-        ar& proxy;
-        ar& basic_auth;
-        ar& ssl_config;
-        ar& socket_buffer_size;
-        ar& headers;
-        ar& post_data;
-    }
-    friend class boost::serialization::access;
-
 };
 
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
@@ -453,10 +436,18 @@ private:
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        // NOTE: Serialization of the HTTP service is on a 'best effort' basis.
+        // There is a very good chance that saving/loading during a network connection will break,
+        // regardless!
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
         ar& ClCertA.certificate;
         ar& ClCertA.private_key;
         ar& ClCertA.init;
+        ar& context_counter;
+        ar& client_certs_counter;
+        ar& client_certs;
+        // NOTE: `contexts` is not serialized because it contains non-serializable data. (i.e.
+        // handles to ongoing HTTP requests.) Serializing across HTTP contexts will break.
     }
     friend class boost::serialization::access;
 };
