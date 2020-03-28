@@ -70,6 +70,7 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar& pos;
         ar& quat;
+        ar& color;
         ar& tc0;
         ar& tc1;
         ar& tc0_w;
