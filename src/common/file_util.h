@@ -219,10 +219,10 @@ public:
 
     ~IOFile();
 
-    IOFile(IOFile&& other);
-    IOFile& operator=(IOFile&& other);
+    IOFile(IOFile&& other) noexcept;
+    IOFile& operator=(IOFile&& other) noexcept;
 
-    void Swap(IOFile& other);
+    void Swap(IOFile& other) noexcept;
 
     bool Close();
 

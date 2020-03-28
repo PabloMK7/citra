@@ -343,11 +343,11 @@ The icons used in this project have the following licenses:
 
 Icon Name                          | License       | Origin/Author
 ---                                | ---           | ---
-checked.png                        | Free for non-commercial use
+checked.png                        | CC BY-ND 3.0  | https://icons8.com
 connected.png                      | CC BY-ND 3.0  | https://icons8.com
 connected_notification.png         | CC BY-ND 3.0  | https://icons8.com
 disconnected.png                   | CC BY-ND 3.0  | https://icons8.com
-failed.png                         | Free for non-commercial use
+failed.png                         | CC BY-ND 3.0  | https://icons8.com
 lock.png                           | CC BY-ND 3.0  | https://icons8.com
 plus_folder.png                    | CC BY-ND 3.0  | https://icons8.com
 bad_folder.png                     | CC BY-ND 3.0  | https://icons8.com

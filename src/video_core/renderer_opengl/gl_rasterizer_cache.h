@@ -382,21 +382,18 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
                          : SurfaceParams::GetFormatBpp(format) / 8;
     }
 
-    std::unique_ptr<u8[]> gl_buffer;
-    std::size_t gl_buffer_size = 0;
+    std::vector<u8> gl_buffer;
 
     // Read/Write data in 3DS memory to/from gl_buffer
     void LoadGLBuffer(PAddr load_start, PAddr load_end);
     void FlushGLBuffer(PAddr flush_start, PAddr flush_end);
 
     // Custom texture loading and dumping
-    bool LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_info,
-                           Common::Rectangle<u32>& custom_rect);
+    bool LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_info);
     void DumpTexture(GLuint target_tex, u64 tex_hash);
 
     // Upload/Download data in gl_buffer in/to this surface's texture
-    void UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
-                         GLuint draw_fb_handle);
+    void UploadGLTexture(Common::Rectangle<u32> rect, GLuint read_fb_handle, GLuint draw_fb_handle);
     void DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
                            GLuint draw_fb_handle);
 
@@ -528,4 +525,14 @@ private:
 
     std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
 };
+
+struct FormatTuple {
+    GLint internal_format;
+    GLenum format;
+    GLenum type;
+};
+
+constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
+
+const FormatTuple& GetFormatTuple(SurfaceParams::PixelFormat pixel_format);
 } // namespace OpenGL

@@ -32,6 +32,7 @@
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/renderer_opengl/texture_filters/texture_filter_manager.h"
 #include "video_core/video_core.h"
 
 namespace Frontend {
@@ -1178,10 +1179,14 @@ VideoCore::ResultStatus RendererOpenGL::Init() {
 
     RefreshRasterizerSetting();
 
+    TextureFilterManager::GetInstance().Reset();
+
     return VideoCore::ResultStatus::Success;
 }
 
 /// Shutdown the renderer
-void RendererOpenGL::ShutDown() {}
+void RendererOpenGL::ShutDown() {
+    TextureFilterManager::GetInstance().Destroy();
+}
 
 } // namespace OpenGL

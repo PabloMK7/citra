@@ -147,6 +147,8 @@ struct Values {
     u16 resolution_factor;
     bool use_frame_limit;
     u16 frame_limit;
+    u16 texture_filter_factor;
+    std::string texture_filter_name;
 
     LayoutOption layout_option;
     bool swap_screen;
