@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 // Copyright 2017 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -149,11 +148,8 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
 }
 
 DspHle::Impl::~Impl() {
-    LOG_WARNING(Audio_DSP, "b1");
     Core::Timing& timing = Core::System::GetInstance().CoreTiming();
-    LOG_WARNING(Audio_DSP, "b2");
     timing.UnscheduleEvent(tick_event, 0);
-    LOG_WARNING(Audio_DSP, "b3");
 }
 
 DspState DspHle::Impl::GetDspState() const {
@@ -452,12 +448,7 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
 }
 
 DspHle::DspHle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(*this, memory)) {}
-DspHle::~DspHle() {
-
-    LOG_WARNING(Audio_DSP, "a1");
-    impl.reset();
-    LOG_WARNING(Audio_DSP, "a2");
-}
+DspHle::~DspHle() = default;
 
 u16 DspHle::RecvData(u32 register_number) {
     return impl->RecvData(register_number);

@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -313,7 +312,7 @@ void System::Reschedule() {
 System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
-    std::size_t num_cores = 2;
+    u32 num_cores = 2;
     if (Settings::values.is_new_3ds) {
         num_cores = 4;
     }
@@ -327,19 +326,19 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
-        for (std::size_t i = 0; i < num_cores; ++i) {
+        for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_Dynarmic>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
 #else
-        for (std::size_t i = 0; i < num_cores; ++i) {
+        for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_DynCom>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
     } else {
-        for (std::size_t i = 0; i < num_cores; ++i) {
+        for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_DynCom>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
@@ -541,26 +540,36 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     bool should_flush = !Archive::is_loading::value;
     Memory::RasterizerClearAll(should_flush);
     ar&* timing.get();
-    for (int i = 0; i < num_cores; i++) {
+    for (u32 i = 0; i < num_cores; i++) {
         ar&* cpu_cores[i].get();
     }
     ar&* service_manager.get();
     ar& GPU::g_regs;
     ar& LCD::g_regs;
-    if (!dynamic_cast<AudioCore::DspHle*>(dsp_core.get())) {
-        throw std::runtime_error("Only HLE audio supported");
+
+    // NOTE: DSP doesn't like being destroyed and recreated. So instead we do an inline
+    // serialization; this means that the DSP Settings need to match for loading to work.
+    bool dsp_type = Settings::values.enable_dsp_lle;
+    ar& dsp_type;
+    if (dsp_type != Settings::values.enable_dsp_lle) {
+        throw std::runtime_error(
+            "Incorrect DSP type - please change this in Settings before loading");
     }
-    ar&* dynamic_cast<AudioCore::DspHle*>(dsp_core.get());
+    auto dsp_hle = dynamic_cast<AudioCore::DspHle*>(dsp_core.get());
+    if (dsp_hle) {
+        ar&* dsp_hle;
+    }
+    auto dsp_lle = dynamic_cast<AudioCore::DspLle*>(dsp_core.get());
+    if (dsp_lle) {
+        ar&* dsp_lle;
+    }
+
     ar&* memory.get();
     ar&* kernel.get();
 
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {
         Service::GSP::SetGlobalModule(*this);
-
-        memory->SetDSP(*dsp_core);
-        // dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
-        dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
     }
 }
 

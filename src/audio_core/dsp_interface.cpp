@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 // Copyright 2017 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -15,11 +14,7 @@
 namespace AudioCore {
 
 DspInterface::DspInterface() = default;
-DspInterface::~DspInterface() {
-    LOG_WARNING(Audio_DSP, "c1");
-    sink.reset();
-    LOG_WARNING(Audio_DSP, "c2");
-}
+DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(const std::string& sink_id, const std::string& audio_device) {
     sink = CreateSinkFromID(Settings::values.sink_id, Settings::values.audio_device_id);

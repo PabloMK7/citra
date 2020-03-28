@@ -281,7 +281,7 @@ std::size_t GetNameSize(const std::string& name) {
 }
 
 void LayeredFS::PrepareBuildDirectory(Directory& current) {
-    directory_metadata_offset_map.emplace(&current, current_directory_offset);
+    directory_metadata_offset_map.emplace(&current, static_cast<u32>(current_directory_offset));
     directory_list.emplace_back(&current);
     current_directory_offset += sizeof(DirectoryMetadata) + GetNameSize(current.name);
 }
@@ -290,7 +290,7 @@ void LayeredFS::PrepareBuildFile(File& current) {
     if (current.relocation.type == 3) { // Deleted files are not counted
         return;
     }
-    file_metadata_offset_map.emplace(&current, current_file_offset);
+    file_metadata_offset_map.emplace(&current, static_cast<u32>(current_file_offset));
     file_list.emplace_back(&current);
     current_file_offset += sizeof(FileMetadata) + GetNameSize(current.name);
 }
@@ -369,7 +369,7 @@ void LayeredFS::BuildDirectories() {
 
         // Write metadata and name
         std::u16string u16name = Common::UTF8ToUTF16(directory->name);
-        metadata.name_length = u16name.size() * 2;
+        metadata.name_length = static_cast<u32_le>(u16name.size() * 2);
 
         std::memcpy(directory_metadata_table.data() + written, &metadata, sizeof(metadata));
         written += sizeof(metadata);
@@ -418,7 +418,7 @@ void LayeredFS::BuildFiles() {
 
         // Write metadata and name
         std::u16string u16name = Common::UTF8ToUTF16(file->name);
-        metadata.name_length = u16name.size() * 2;
+        metadata.name_length = static_cast<u32_le>(u16name.size() * 2);
 
         std::memcpy(file_metadata_table.data() + written, &metadata, sizeof(metadata));
         written += sizeof(metadata);
