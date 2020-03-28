@@ -33,9 +33,8 @@ void Process::serialize(Archive& ar, const unsigned int file_version) {
     ar& resource_limit;
     ar& svc_access_mask;
     ar& handle_table_size;
-    ar&(boost::container::vector<
-        AddressMapping, boost::container::dtl::static_storage_allocator<AddressMapping, 8>>&)
-        address_mappings;
+    ar&(boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<
+                                                     AddressMapping, 8, 0, true>>&)address_mappings;
     ar& flags.raw;
     ar& kernel_version;
     ar& ideal_processor;

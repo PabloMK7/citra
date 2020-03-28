@@ -17,7 +17,6 @@
 #elif HAVE_FDK
 #include "audio_core/hle/fdk_decoder.h"
 #endif
-#include <iostream>
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/decoder.h"
 #include "audio_core/hle/hle.h"

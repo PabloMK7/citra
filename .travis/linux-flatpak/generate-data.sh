@@ -43,7 +43,7 @@ cat > /tmp/org.citra.$REPO_NAME.json <<EOF
 {
     "app-id": "org.citra.$REPO_NAME",
     "runtime": "org.kde.Platform",
-    "runtime-version": "5.12",
+    "runtime-version": "5.13",
     "sdk": "org.kde.Sdk",
     "command": "citra-qt",
     "rename-desktop-file": "citra.desktop",
