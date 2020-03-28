@@ -41,10 +41,17 @@ static const ResultCode ERROR_NOT_LOADED = // 0xD8A12C0D
 
 static bool VerifyBufferState(Kernel::Process& process, VAddr buffer_ptr, u32 size) {
     auto vma = process.vm_manager.FindVMA(buffer_ptr);
-    return vma != process.vm_manager.vma_map.end() &&
-           vma->second.base + vma->second.size >= buffer_ptr + size &&
-           vma->second.permissions == Kernel::VMAPermission::ReadWrite &&
-           vma->second.meminfo_state == Kernel::MemoryState::Private;
+    while (vma != process.vm_manager.vma_map.end()) {
+        if (vma->second.permissions != Kernel::VMAPermission::ReadWrite ||
+            vma->second.meminfo_state != Kernel::MemoryState::Private) {
+            return false;
+        }
+        if (vma->second.base + vma->second.size >= buffer_ptr + size) {
+            return true;
+        }
+        vma = std::next(vma);
+    }
+    return false;
 }
 
 void RO::Initialize(Kernel::HLERequestContext& ctx) {

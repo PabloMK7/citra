@@ -151,13 +151,16 @@ ResultCode VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expe
     }
 
     CASCADE_RESULT(auto vma, CarveVMARange(target, size));
-    ASSERT(vma->second.size == size);
 
-    vma->second.permissions = new_perms;
-    vma->second.meminfo_state = new_state;
-    UpdatePageTableForVMA(vma->second);
-
-    MergeAdjacent(vma);
+    const VMAIter end = vma_map.end();
+    // The comparison against the end of the range must be done using addresses since VMAs can be
+    // merged during this process, causing invalidation of the iterators.
+    while (vma != end && vma->second.base < target_end) {
+        vma->second.permissions = new_perms;
+        vma->second.meminfo_state = new_state;
+        UpdatePageTableForVMA(vma->second);
+        vma = std::next(MergeAdjacent(vma));
+    }
 
     return RESULT_SUCCESS;
 }
