@@ -68,8 +68,8 @@ protected:
     Service::FS::MediaType media_type;
 
 private:
-    NCCHArchive() = default; // NOTE: If the public ctor has behaviour, need to replace this with
-                             // *_construct_data
+    NCCHArchive() = default;
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveBackend>(*this);

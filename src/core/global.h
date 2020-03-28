@@ -9,9 +9,13 @@ namespace Core {
 template <class T>
 T& Global();
 
-// Declare explicit specialisation to prevent im
+// Declare explicit specialisation to prevent automatic instantiation
 class System;
 template <>
 System& Global();
+
+class Timing;
+template <>
+Timing& Global();
 
 } // namespace Core

@@ -11,8 +11,6 @@
 
 namespace Core {
 
-Timing* Timing::deserializing = nullptr;
-
 // Sort by time, unless the times are the same, in which case sort by the order added to the queue
 bool Timing::Event::operator>(const Timing::Event& right) const {
     return std::tie(time, fifo_order) > std::tie(right.time, right.fifo_order);

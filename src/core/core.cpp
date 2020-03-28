@@ -61,6 +61,11 @@ Kernel::KernelSystem& Global() {
     return System::GetInstance().Kernel();
 }
 
+template <>
+Core::Timing& Global() {
+    return System::GetInstance().CoreTiming();
+}
+
 System::~System() = default;
 
 System::ResultStatus System::RunLoop(bool tight_loop) {

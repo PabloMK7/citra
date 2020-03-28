@@ -28,6 +28,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/threadsafe_queue.h"
+#include "core/global.h"
 
 // The timing we get from the assembly is 268,111,855.956 Hz
 // It is possible that this number isn't just an integer because the compiler could have
@@ -135,8 +136,6 @@ struct TimingEventType {
 };
 
 class Timing {
-private:
-    static Timing* deserializing;
 
 public:
     struct Event {
@@ -165,7 +164,7 @@ public:
             ar& userdata;
             std::string name;
             ar >> name;
-            type = Timing::deserializing->RegisterEvent(name, nullptr);
+            type = Global<Timing>().RegisterEvent(name, nullptr);
         }
         friend class boost::serialization::access;
 
@@ -291,11 +290,9 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         // event_types set during initialization of other things
-        deserializing = this;
         ar& global_timer;
         ar& timers;
         ar& current_timer;
-        deserializing = nullptr;
     }
     friend class boost::serialization::access;
 };

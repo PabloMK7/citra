@@ -196,7 +196,7 @@ public:
     }
 
 protected:
-    std::unique_ptr<DelayGenerator> delay_generator; // TODO: Replace with virtual GetOpenDelayNs
+    std::unique_ptr<DelayGenerator> delay_generator;
 
 private:
     template <class Archive>
