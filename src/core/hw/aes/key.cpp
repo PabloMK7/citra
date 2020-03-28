@@ -233,7 +233,7 @@ void LoadNativeFirmKeysOld3DS() {
     firm->Read(0, firm_buffer.size(), firm_buffer.data());
     firm->Close();
 
-    constexpr std::size_t SLOT_0x25_KEY_X_SECRET_OFFSET = 934444;
+    constexpr std::size_t SLOT_0x25_KEY_X_SECRET_OFFSET = 933480;
     constexpr std::size_t SLOT_0x25_KEY_X_SECRET_SIZE = 64;
     std::vector<u8> secret_data(SLOT_0x25_KEY_X_SECRET_SIZE);
     std::memcpy(secret_data.data(), firm_buffer.data() + SLOT_0x25_KEY_X_SECRET_OFFSET,
