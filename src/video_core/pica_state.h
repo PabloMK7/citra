@@ -5,7 +5,7 @@
 #pragma once
 
 #include <array>
-#include "boost/serialization/split_member.hpp"
+#include <boost/serialization/split_member.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
@@ -239,7 +239,7 @@ private:
     void load(Archive& ar, const unsigned int file_version) {
         u32 offset{};
         ar >> offset;
-        cmd_list.head_ptr = (u32*)VideoCore::g_memory->GetPhysicalPointer(cmd_list.addr);
+        cmd_list.head_ptr = reinterpret_cast<u32*>(VideoCore::g_memory->GetPhysicalPointer(cmd_list.addr));
         cmd_list.current_ptr = cmd_list.head_ptr + offset;
     }
 };
