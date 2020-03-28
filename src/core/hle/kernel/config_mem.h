@@ -57,11 +57,11 @@ public:
     Handler();
     ConfigMemDef& GetConfigMem();
 
-    virtual u8* GetPtr() {
+    u8* GetPtr() override {
         return static_cast<u8*>(static_cast<void*>(&config_mem));
     }
 
-    virtual u32 GetSize() const {
+    u32 GetSize() const override {
         return sizeof(config_mem);
     }
 

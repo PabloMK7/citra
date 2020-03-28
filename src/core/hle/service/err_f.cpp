@@ -15,7 +15,8 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
-#undef exception_info
+#undef exception_info // We use 'exception_info' as a plain identifier, but MSVC defines this in one
+                      // of its many headers.
 
 SERIALIZE_EXPORT_IMPL(Service::ERR::ERR_F)
 

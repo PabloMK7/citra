@@ -1438,7 +1438,7 @@ void GMainWindow::OnCIAInstallFinished() {
 
 void GMainWindow::OnMenuRecentFile() {
     QAction* action = qobject_cast<QAction*>(sender());
-    assert(action);
+    ASSERT(action);
 
     const QString filename = action->data().toString();
     if (QFileInfo::exists(filename)) {

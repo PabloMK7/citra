@@ -102,7 +102,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<FileBackend>(*this);
-        ar& file_buffer; // TODO: See about a more efficient way to do this
+        ar& file_buffer;
     }
     friend class boost::serialization::access;
 };

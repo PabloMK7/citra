@@ -99,12 +99,12 @@ protected:
 
     struct SessionInfo {
         SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
-        SessionInfo() = default;
 
         std::shared_ptr<ServerSession> session;
         std::unique_ptr<SessionDataBase> data;
 
     private:
+        SessionInfo() = default;
         template <class Archive>
         void serialize(Archive& ar, const unsigned int file_version) {
             ar& session;

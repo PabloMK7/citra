@@ -33,6 +33,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/gsp/gsp.h"
+#include "core/hle/service/pm/pm_app.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hw/gpu.h"
@@ -44,8 +45,6 @@
 #include "core/settings.h"
 #include "network/network.h"
 #include "video_core/video_core.h"
-
-#include "core/hle/service/pm/pm_app.h"
 
 namespace Core {
 
@@ -183,15 +182,11 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     case Signal::Load: {
         LOG_INFO(Core, "Begin load");
         System::LoadState(param);
-        // auto stream = std::ifstream("save0.citrasave", std::fstream::binary);
-        // System::Load(stream, FileUtil::GetSize("save0.citrasave"));
         LOG_INFO(Core, "Load completed");
     } break;
     case Signal::Save: {
         LOG_INFO(Core, "Begin save");
         System::SaveState(param);
-        // auto stream = std::ofstream("save0.citrasave", std::fstream::binary);
-        // System::Save(stream);
         LOG_INFO(Core, "Save completed");
     } break;
     default:

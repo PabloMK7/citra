@@ -28,7 +28,6 @@ public:
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
 
 private:
-    std::string mount_point; // TODO: Remove this? seems unused
     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source;
 
     ArchiveFactory_SaveData() = default;

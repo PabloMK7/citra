@@ -1,7 +1,7 @@
 # Definitions for all external bundled libraries
 
 # Suppress warnings from external libraries
-if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/W0)
 endif()
 

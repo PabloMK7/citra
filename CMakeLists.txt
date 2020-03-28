@@ -1,6 +1,7 @@
 # CMake 3.8 required for 17 to be a valid value for CXX_STANDARD
 cmake_minimum_required(VERSION 3.8)
 if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.15)
+    # Don't override the warning flags in MSVC:
     cmake_policy(SET CMP0092 NEW)
 endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")

@@ -42,7 +42,7 @@ if (MSVC)
         /Zc:externConstexpr
         /Zc:inline
     )
-    if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_compile_options(
             /MP
             /Zc:throwingNew
