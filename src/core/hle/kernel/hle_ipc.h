@@ -22,8 +22,6 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_session.h"
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Kernel::SessionRequestHandler)
-
 namespace Service {
 class ServiceFrameworkBase;
 }
@@ -320,5 +318,4 @@ private:
 
 } // namespace Kernel
 
-BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionDataBase)
 BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext::ThreadCallback)

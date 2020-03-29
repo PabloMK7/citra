@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <tuple>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
 #include "common/archives.h"

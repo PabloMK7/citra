@@ -16,8 +16,6 @@ namespace Kernel {
 class Event;
 }
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Service::AC::Module::Interface)
-
 namespace Service::AC {
 class Module final {
 public:

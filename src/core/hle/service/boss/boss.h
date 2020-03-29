@@ -989,7 +989,7 @@ void InstallInterfaces(Core::System& system);
 
 namespace boost::serialization {
 template <class Archive>
-inline void load_construct_data(Archive& ar, Service::BOSS::Module* t, const unsigned int) {
+void load_construct_data(Archive& ar, Service::BOSS::Module* t, const unsigned int) {
     ::new (t) Service::BOSS::Module(Core::Global<Core::System>());
 }
 } // namespace boost::serialization

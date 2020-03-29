@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <boost/crc.hpp>
+#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include "common/string_util.h"

@@ -10,7 +10,6 @@
 #include <memory>
 #include <string>
 #include <boost/container/flat_map.hpp>
-#include <boost/serialization/assume_abstract.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include "common/common_types.h"

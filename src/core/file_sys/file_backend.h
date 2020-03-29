@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/result.h"

@@ -277,8 +277,4 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::CSND
 
 BOOST_CLASS_EXPORT_KEY(Service::CSND::CSND_SND)
-
-namespace boost::serialization {
-template <class Archive>
-void load_construct_data(Archive& ar, Service::CSND::CSND_SND* t, const unsigned int);
-}
+SERVICE_CONSTRUCT(Service::CSND::CSND_SND)

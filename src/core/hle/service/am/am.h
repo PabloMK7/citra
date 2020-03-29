@@ -13,6 +13,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
+#include "common/construct.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
 #include "core/global.h"
@@ -154,7 +155,6 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type);
 class Module final {
 public:
     explicit Module(Core::System& system);
-    explicit Module(Kernel::KernelSystem& kernel);
     Module() = default;
     ~Module();
 
@@ -568,6 +568,8 @@ public:
     };
 
 private:
+    explicit Module(Kernel::KernelSystem& kernel);
+
     /**
      * Scans the for titles in a storage medium for listing.
      * @param media_type the storage medium to scan
@@ -590,6 +592,16 @@ private:
         ar& am_title_list;
         ar& system_updater_mutex;
     }
+
+    template <class Archive>
+    static void load_construct(Archive& ar, Module* t, const unsigned int file_version) {
+        ::new (t) Module(Core::Global<Kernel::KernelSystem>());
+    }
+
+    template <class Archive>
+    void save_construct(Archive& ar, const unsigned int file_version) const {}
+
+    friend class ::construct_access;
     friend class boost::serialization::access;
 };
 
@@ -597,9 +609,4 @@ void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM
 
-namespace boost::serialization {
-template <class Archive>
-inline void load_construct_data(Archive& ar, Service::AM::Module* t, const unsigned int) {
-    ::new (t) Service::AM::Module(Core::Global<Kernel::KernelSystem>());
-}
-} // namespace boost::serialization
+BOOST_SERIALIZATION_CONSTRUCT(Service::AM::Module);

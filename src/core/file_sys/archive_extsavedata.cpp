@@ -167,6 +167,14 @@ public:
         }
         return SaveDataArchive::CreateFile(path, size);
     }
+
+private:
+    ExtSaveDataArchive() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<SaveDataArchive>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 struct ExtSaveDataArchivePath {
@@ -304,3 +312,4 @@ void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data
 } // namespace FileSys
 
 SERIALIZE_EXPORT_IMPL(FileSys::ExtSaveDataDelayGenerator)
+SERIALIZE_EXPORT_IMPL(FileSys::ExtSaveDataArchive)

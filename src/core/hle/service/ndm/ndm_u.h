@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <boost/serialization/array.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {

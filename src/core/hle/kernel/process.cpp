@@ -6,12 +6,12 @@
 #include <memory>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/bitset.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 #include "common/serialization/boost_vector.hpp"
-#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"

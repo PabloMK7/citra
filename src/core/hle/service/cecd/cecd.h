@@ -258,7 +258,7 @@ public:
             ar& data_path_type;
             ar& open_mode.raw;
             ar& path;
-            // ar& file;
+            ar& file;
         }
         friend class boost::serialization::access;
     };

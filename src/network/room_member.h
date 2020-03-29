@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "network/room.h"
 

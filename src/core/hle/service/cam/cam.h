@@ -9,6 +9,10 @@
 #include <future>
 #include <memory>
 #include <vector>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/global.h"
@@ -849,6 +853,7 @@ private:
             ar& completion_event;
             ar& buffer_error_interrupt_event;
             ar& vsync_interrupt_event;
+            ar& vsync_timings;
             // Ignore capture_result. In-progress captures might be affected but this is OK.
             ar& dest_process;
             ar& dest;
@@ -879,7 +884,7 @@ void InstallInterfaces(Core::System& system);
 
 namespace boost::serialization {
 template <class Archive>
-inline void load_construct_data(Archive& ar, Service::CAM::Module* t, const unsigned int) {
+void load_construct_data(Archive& ar, Service::CAM::Module* t, const unsigned int) {
     ::new (t) Service::CAM::Module(Core::Global<Core::System>());
 }
 } // namespace boost::serialization

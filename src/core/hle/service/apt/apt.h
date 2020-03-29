@@ -6,8 +6,6 @@
 
 #include <memory>
 #include <vector>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/archives.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -651,7 +649,4 @@ void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT
 
-namespace boost::serialization {
-template <class Archive>
-void load_construct_data(Archive& ar, Service::APT::Module* t, const unsigned int);
-}
+SERVICE_CONSTRUCT(Service::APT::Module)

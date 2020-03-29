@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <boost/serialization/base_object.hpp>
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 

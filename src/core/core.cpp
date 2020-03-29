@@ -1,3 +1,4 @@
+#pragma optimize("", off)
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -544,6 +545,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         ar&* cpu_cores[i].get();
     }
     ar&* service_manager.get();
+    ar&* archive_manager.get();
     ar& GPU::g_regs;
     ar& LCD::g_regs;
 

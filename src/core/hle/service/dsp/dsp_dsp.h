@@ -5,6 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "audio_core/dsp_interface.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
@@ -282,8 +285,4 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::DSP
 
 BOOST_CLASS_EXPORT_KEY(Service::DSP::DSP_DSP)
-
-namespace boost::serialization {
-template <class Archive>
-void load_construct_data(Archive& ar, Service::DSP::DSP_DSP* t, const unsigned int);
-}
+SERVICE_CONSTRUCT(Service::DSP::DSP_DSP)

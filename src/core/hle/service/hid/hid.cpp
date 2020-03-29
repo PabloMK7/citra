@@ -4,6 +4,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/3ds.h"
@@ -208,7 +211,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
 
     Common::Vec3<float> accel;
     if (!motion_device) {
-        is_device_reload_pending.exchange(true);
+        is_device_reload_pending.store(true);
         return;
     }
     std::tie(accel, std::ignore) = motion_device->GetStatus();
@@ -259,7 +262,7 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
 
     Common::Vec3<float> gyro;
     if (!motion_device) {
-        is_device_reload_pending.exchange(true);
+        is_device_reload_pending.store(true);
         return;
     }
     std::tie(std::ignore, gyro) = motion_device->GetStatus();

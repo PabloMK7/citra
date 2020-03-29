@@ -65,7 +65,7 @@ private:
     LowPathType type;
     std::vector<u8> binary;
     std::string string;
-    std::u16string u16str{};
+    std::u16string u16str;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -77,18 +77,16 @@ private:
         case LowPathType::Char:
             ar& string;
             break;
-#ifdef _WIN32
-        case LowPathType::Wchar:
-            static_assert(sizeof(wchar_t) == sizeof(char16_t));
-            {
-                std::wstring wstring(reinterpret_cast<wchar_t*>(u16str.data()));
-                ar& wstring;
-                if (!Archive::is_saving::value) {
-                    u16str = std::u16string(reinterpret_cast<char16_t*>(wstring.data()));
-                }
+        case LowPathType::Wchar: {
+            std::vector<char16_t> data;
+            if (Archive::is_saving::value) {
+                std::copy(u16str.begin(), u16str.end(), std::back_inserter(data));
             }
-            break;
-#endif
+            ar& data;
+            if (Archive::is_loading::value) {
+                u16str = std::u16string(data.data(), data.size());
+            }
+        } break;
         default:
             break;
         }

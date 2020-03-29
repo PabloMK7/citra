@@ -1175,7 +1175,7 @@ void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
 
 class NWM_UDS::ThreadCallback : public Kernel::HLERequestContext::WakeupCallback {
 public:
-    ThreadCallback(u16 command_id_) : command_id(command_id_) {}
+    explicit ThreadCallback(u16 command_id_) : command_id(command_id_) {}
 
     void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
                 Kernel::ThreadWakeupReason reason) {

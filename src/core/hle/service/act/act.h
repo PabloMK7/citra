@@ -26,7 +26,7 @@ public:
 
 private:
     template <class Archive>
-    inline void serialize(Archive& ar, const unsigned int file_version) {}
+    void serialize(Archive& ar, const unsigned int file_version) {}
     friend class boost::serialization::access;
 };
 

@@ -7,7 +7,6 @@
 #include <array>
 #include <atomic>
 #include <boost/serialization/array.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/swap.h"
 #include "core/frontend/input.h"

@@ -10,6 +10,7 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "core/global.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"

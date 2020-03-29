@@ -23,14 +23,6 @@ struct RomFSHeader {
     struct Descriptor {
         u32_le offset;
         u32_le length;
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& offset;
-            ar& length;
-        }
-        friend class boost::serialization::access;
     };
     u32_le header_length;
     Descriptor directory_hash_table;
@@ -146,6 +138,7 @@ private:
         if (Archive::is_loading::value) {
             Load();
         }
+        // NOTE: Everything else is essentially cached, updated when we call Load
     }
     friend class boost::serialization::access;
 };

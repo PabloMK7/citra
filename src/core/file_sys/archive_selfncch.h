@@ -10,6 +10,7 @@
 #include <vector>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
@@ -63,7 +64,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        // NOTE: ncch_data is never written to, so we don't serialize it here
+        ar& ncch_data;
     }
     friend class boost::serialization::access;
 };
