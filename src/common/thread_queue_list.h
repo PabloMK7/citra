@@ -161,7 +161,7 @@ private:
     // The priority level queues of thread ids.
     std::array<Queue, NUM_QUEUES> queues;
 
-    s32 ToIndex(Queue* q) const {
+    s64 ToIndex(const Queue* q) const {
         if (q == nullptr) {
             return -2;
         } else if (q == UnlinkedTag()) {
@@ -171,7 +171,7 @@ private:
         }
     }
 
-    Queue* ToPointer(s32 idx) {
+    Queue* ToPointer(s64 idx) {
         if (idx == -1) {
             return UnlinkedTag();
         } else if (idx < 0) {
@@ -184,10 +184,10 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void save(Archive& ar, const unsigned int file_version) const {
-        s32 idx = ToIndex(first);
+        const s64 idx = ToIndex(first);
         ar << idx;
         for (size_t i = 0; i < NUM_QUEUES; i++) {
-            const s32 idx1 = ToIndex(queues[i].next_nonempty);
+            const s64 idx1 = ToIndex(queues[i].next_nonempty);
             ar << idx1;
             ar << queues[i].data;
         }
@@ -195,7 +195,7 @@ private:
 
     template <class Archive>
     void load(Archive& ar, const unsigned int file_version) {
-        s32 idx;
+        s64 idx;
         ar >> idx;
         first = ToPointer(idx);
         for (auto i = 0; i < NUM_QUEUES; i++) {

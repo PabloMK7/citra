@@ -99,11 +99,15 @@ public:
 
     SharedPageDef& GetSharedPage();
 
-    virtual u8* GetPtr() {
-        return static_cast<u8*>(static_cast<void*>(&shared_page));
+    u8* GetPtr() override {
+        return reinterpret_cast<u8*>(&shared_page);
     }
 
-    virtual u32 GetSize() const {
+    const u8* GetPtr() const override {
+        return reinterpret_cast<const u8*>(&shared_page);
+    }
+
+    std::size_t GetSize() const override {
         return sizeof(shared_page);
     }
 

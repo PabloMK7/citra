@@ -100,7 +100,7 @@ public:
 
     Impl();
 
-    virtual u8* GetPtr(Region r) {
+    const u8* GetPtr(Region r) const {
         switch (r) {
         case Region::VRAM:
             return vram.get();
@@ -115,7 +115,22 @@ public:
         }
     }
 
-    virtual u32 GetSize(Region r) const {
+    u8* GetPtr(Region r) {
+        switch (r) {
+        case Region::VRAM:
+            return vram.get();
+        case Region::DSP:
+            return dsp->GetDspMemory().data();
+        case Region::FCRAM:
+            return fcram.get();
+        case Region::N3DS:
+            return n3ds_extra_ram.get();
+        default:
+            UNREACHABLE();
+        }
+    }
+
+    u32 GetSize(Region r) const {
         switch (r) {
         case Region::VRAM:
             return VRAM_SIZE;
@@ -158,11 +173,14 @@ template <Region R>
 class MemorySystem::BackingMemImpl : public BackingMem {
 public:
     BackingMemImpl() : impl(*Core::Global<Core::System>().Memory().impl) {}
-    BackingMemImpl(MemorySystem::Impl& impl_) : impl(impl_) {}
-    virtual u8* GetPtr() {
+    explicit BackingMemImpl(MemorySystem::Impl& impl_) : impl(impl_) {}
+    u8* GetPtr() override {
         return impl.GetPtr(R);
     }
-    virtual u32 GetSize() const {
+    const u8* GetPtr() const override {
+        return impl.GetPtr(R);
+    }
+    std::size_t GetSize() const override {
         return impl.GetSize(R);
     }
 
@@ -884,7 +902,7 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
 
 u32 MemorySystem::GetFCRAMOffset(const u8* pointer) {
     ASSERT(pointer >= impl->fcram.get() && pointer <= impl->fcram.get() + Memory::FCRAM_N3DS_SIZE);
-    return pointer - impl->fcram.get();
+    return static_cast<u32>(pointer - impl->fcram.get());
 }
 
 u8* MemorySystem::GetFCRAMPointer(u32 offset) {

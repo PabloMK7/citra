@@ -83,10 +83,10 @@ void Context::MakeRequest() {
         client = std::move(ssl_client);
 
         if (auto client_cert = ssl_config.client_cert_ctx.lock()) {
-            SSL_CTX_use_certificate_ASN1(ctx, client_cert->certificate.size(),
+            SSL_CTX_use_certificate_ASN1(ctx, static_cast<int>(client_cert->certificate.size()),
                                          client_cert->certificate.data());
             SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA, ctx, client_cert->private_key.data(),
-                                        client_cert->private_key.size());
+                                        static_cast<long>(client_cert->private_key.size()));
         }
 
         // TODO(B3N30): Check for SSLOptions-Bits and set the verify method accordingly

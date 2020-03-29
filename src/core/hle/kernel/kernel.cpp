@@ -24,10 +24,8 @@ KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                            u32 num_cores, u8 n3ds_mode)
     : memory(memory), timing(timing),
       prepare_reschedule_callback(std::move(prepare_reschedule_callback)) {
-std::generate(memory_regions.begin(), memory_regions.end(),
-              [] { return std::make_shared<MemoryRegionInfo>(); });
-        memory_regions[i] = std::make_shared<MemoryRegionInfo>();
-    }
+    std::generate(memory_regions.begin(), memory_regions.end(),
+                  [] { return std::make_shared<MemoryRegionInfo>(); });
     MemoryInit(system_mode, n3ds_mode);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);

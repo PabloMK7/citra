@@ -17,7 +17,8 @@ class BackingMem {
 public:
     virtual ~BackingMem() = default;
     virtual u8* GetPtr() = 0;
-    virtual u32 GetSize() const = 0;
+    virtual const u8* GetPtr() const = 0;
+    virtual std::size_t GetSize() const = 0;
 
 private:
     template <class Archive>
@@ -35,7 +36,11 @@ public:
         return data.data();
     }
 
-    u32 GetSize() const override {
+    const u8* GetPtr() const override {
+        return data.data();
+    }
+
+    std::size_t GetSize() const override {
         return static_cast<u32>(data.size());
     }
 
@@ -66,51 +71,51 @@ public:
         : backing_mem(std::move(backing_mem_)), offset(0) {
         Init();
     }
-    MemoryRef(std::shared_ptr<BackingMem> backing_mem_, u32 offset_)
+    MemoryRef(std::shared_ptr<BackingMem> backing_mem_, u64 offset_)
         : backing_mem(std::move(backing_mem_)), offset(offset_) {
         ASSERT(offset < backing_mem->GetSize());
         Init();
     }
-    inline operator u8*() {
-        return cptr;
-    }
-    inline u8* GetPtr() {
-        return cptr;
-    }
     explicit operator bool() const {
         return cptr != nullptr;
     }
-    inline const u8* GetPtr() const {
+    operator u8*() {
         return cptr;
     }
-    inline u32 GetSize() const {
+    u8* GetPtr() {
+        return cptr;
+    }
+    operator const u8*() const {
+        return cptr;
+    }
+    const u8* GetPtr() const {
+        return cptr;
+    }
+    std::size_t GetSize() const {
         return csize;
     }
-    inline void operator+=(u32 offset_by) {
+    MemoryRef& operator+=(u32 offset_by) {
         ASSERT(offset_by < csize);
         offset += offset_by;
         Init();
+        return *this;
     }
-    inline MemoryRef operator+(u32 offset_by) const {
+    MemoryRef operator+(u32 offset_by) const {
         ASSERT(offset_by < csize);
         return MemoryRef(backing_mem, offset + offset_by);
     }
-    inline u8* operator+(std::size_t offset_by) const {
-        ASSERT(offset_by < csize);
-        return cptr + offset_by;
-    }
 
 private:
-    std::shared_ptr<BackingMem> backing_mem = nullptr;
-    u32 offset = 0;
+    std::shared_ptr<BackingMem> backing_mem{};
+    u64 offset{};
     // Cached values for speed
-    u8* cptr = nullptr;
-    u32 csize = 0;
+    u8* cptr{};
+    std::size_t csize{};
 
     void Init() {
         if (backing_mem) {
             cptr = backing_mem->GetPtr() + offset;
-            csize = static_cast<u32>(backing_mem->GetSize() - offset);
+            csize = static_cast<std::size_t>(backing_mem->GetSize() - offset);
         } else {
             cptr = nullptr;
             csize = 0;

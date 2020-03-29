@@ -58,10 +58,14 @@ public:
     ConfigMemDef& GetConfigMem();
 
     u8* GetPtr() override {
-        return reinterpret_cast<u8*>(&config_mem));
+        return reinterpret_cast<u8*>(&config_mem);
     }
 
-    u32 GetSize() const override {
+    const u8* GetPtr() const override {
+        return reinterpret_cast<const u8*>(&config_mem);
+    }
+
+    std::size_t GetSize() const override {
         return sizeof(config_mem);
     }
 

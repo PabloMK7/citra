@@ -36,11 +36,11 @@ public:
                 const auto r = GetFpuRegister(i);
                 ar << r;
             }
-            auto r1 = GetCpsr();
+            const auto r1 = GetCpsr();
             ar << r1;
-            auto r2 = GetFpscr();
+            const auto r2 = GetFpscr();
             ar << r2;
-            auto r3 = GetFpexc();
+            const auto r3 = GetFpexc();
             ar << r3;
         }
 
@@ -245,26 +245,26 @@ private:
     void save(Archive& ar, const unsigned int file_version) const {
         ar << timer;
         ar << id;
-        auto page_table = GetPageTable();
+        const auto page_table = GetPageTable();
         ar << page_table;
-        for (size_t i = 0; i < 15; i++) {
-            auto r = GetReg(i);
+        for (int i = 0; i < 15; i++) {
+            const auto r = GetReg(i);
             ar << r;
         }
-        auto pc = GetPC();
+        const auto pc = GetPC();
         ar << pc;
-        auto cpsr = GetCPSR();
+        const auto cpsr = GetCPSR();
         ar << cpsr;
-        for (size_t i = 0; i < 32; i++) {
-            auto r = GetVFPReg(i);
+        for (int i = 0; i < 32; i++) {
+            const auto r = GetVFPReg(i);
             ar << r;
         }
-        for (auto i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
-            auto r = GetVFPSystemReg(static_cast<VFPSystemRegister>(i));
+        for (size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
+            const auto r = GetVFPSystemReg(static_cast<VFPSystemRegister>(i));
             ar << r;
         }
-        for (auto i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
-            auto r = GetCP15Register(static_cast<CP15Register>(i));
+        for (size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
+            const auto r = GetCP15Register(static_cast<CP15Register>(i));
             ar << r;
         }
     }
@@ -274,11 +274,11 @@ private:
         PurgeState();
         ar >> timer;
         ar >> id;
-        std::shared_ptr<Memory::PageTable> page_table = nullptr;
+        std::shared_ptr<Memory::PageTable> page_table{};
         ar >> page_table;
         SetPageTable(page_table);
         u32 r;
-        for (size_t = 0; i < 15; i++) {
+        for (int i = 0; i < 15; i++) {
             ar >> r;
             SetReg(i, r);
         }
@@ -286,15 +286,15 @@ private:
         SetPC(r);
         ar >> r;
         SetCPSR(r);
-        for (auto i = 0; i < 32; i++) {
+        for (int i = 0; i < 32; i++) {
             ar >> r;
             SetVFPReg(i, r);
         }
-        for (auto i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
+        for (size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
             ar >> r;
             SetVFPSystemReg(static_cast<VFPSystemRegister>(i), r);
         }
-        for (auto i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
+        for (size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
             ar >> r;
             SetCP15Register(static_cast<CP15Register>(i), r);
         }
