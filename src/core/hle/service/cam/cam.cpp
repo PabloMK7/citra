@@ -21,6 +21,8 @@
 #include "core/memory.h"
 #include "core/settings.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::CAM::Module)
+
 namespace Service::CAM {
 
 template <class Archive>

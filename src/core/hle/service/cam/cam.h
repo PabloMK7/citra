@@ -882,9 +882,4 @@ void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CAM
 
-namespace boost::serialization {
-template <class Archive>
-void load_construct_data(Archive& ar, Service::CAM::Module* t, const unsigned int) {
-    ::new (t) Service::CAM::Module(Core::Global<Core::System>());
-}
-} // namespace boost::serialization
+SERVICE_CONSTRUCT(Service::CAM::Module)
