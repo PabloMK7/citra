@@ -19,7 +19,7 @@ void load(Archive& ar, boost::container::flat_set<T>& set, const unsigned int fi
     u64 count{};
     ar >> count;
     set.clear();
-    for (auto i = 0; i < count; i++) {
+    for (u64 i = 0; i < count; i++) {
         T value{};
         ar >> value;
         set.insert(value);

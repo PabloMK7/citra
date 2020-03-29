@@ -58,7 +58,7 @@ public:
     ConfigMemDef& GetConfigMem();
 
     u8* GetPtr() override {
-        return static_cast<u8*>(static_cast<void*>(&config_mem));
+        return reinterpret_cast<u8*>(&config_mem));
     }
 
     u32 GetSize() const override {

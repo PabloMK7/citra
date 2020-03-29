@@ -167,7 +167,7 @@ private:
         } else if (q == UnlinkedTag()) {
             return -1;
         } else {
-            return static_cast<s32>(q - &queues[0]);
+            return q - queues.data();
         }
     }
 
@@ -186,8 +186,8 @@ private:
     void save(Archive& ar, const unsigned int file_version) const {
         s32 idx = ToIndex(first);
         ar << idx;
-        for (auto i = 0; i < NUM_QUEUES; i++) {
-            s32 idx1 = ToIndex(queues[i].next_nonempty);
+        for (size_t i = 0; i < NUM_QUEUES; i++) {
+            const s32 idx1 = ToIndex(queues[i].next_nonempty);
             ar << idx1;
             ar << queues[i].data;
         }

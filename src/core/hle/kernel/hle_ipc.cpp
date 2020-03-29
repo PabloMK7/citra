@@ -21,7 +21,7 @@ class HLERequestContext::ThreadCallback : public Kernel::WakeupCallback {
 public:
     ThreadCallback(std::shared_ptr<HLERequestContext> context_,
                    std::shared_ptr<HLERequestContext::WakeupCallback> callback_)
-        : context(context_), callback(callback_) {}
+        : context(std::move(context_)), callback(std::move(callback_)) {}
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) {
         ASSERT(thread->status == ThreadStatus::WaitHleEvent);
@@ -296,7 +296,7 @@ MappedBuffer::MappedBuffer() : memory(&Core::Global<Core::System>().Memory()) {}
 
 MappedBuffer::MappedBuffer(Memory::MemorySystem& memory, std::shared_ptr<Process> process,
                            u32 descriptor, VAddr address, u32 id)
-    : memory(&memory), id(id), address(address), process(process) {
+    : memory(&memory), id(id), address(address), process(std::move(process)) {
     IPC::MappedBufferDescInfo desc{descriptor};
     size = desc.size;
     perms = desc.perms;

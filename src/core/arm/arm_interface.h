@@ -28,12 +28,12 @@ public:
 
         template <class Archive>
         void save(Archive& ar, const unsigned int file_version) const {
-            for (auto i = 0; i < 16; i++) {
-                auto r = GetCpuRegister(i);
+            for (size_t i = 0; i < 16; i++) {
+                const auto r = GetCpuRegister(i);
                 ar << r;
             }
-            for (auto i = 0; i < 16; i++) {
-                auto r = GetFpuRegister(i);
+            for (size_t i = 0; i < 16; i++) {
+                const auto r = GetFpuRegister(i);
                 ar << r;
             }
             auto r1 = GetCpsr();
@@ -47,11 +47,11 @@ public:
         template <class Archive>
         void load(Archive& ar, const unsigned int file_version) {
             u32 r;
-            for (auto i = 0; i < 16; i++) {
+            for (size_t i = 0; i < 16; i++) {
                 ar >> r;
                 SetCpuRegister(i, r);
             }
-            for (auto i = 0; i < 16; i++) {
+            for (size_t i = 0; i < 16; i++) {
                 ar >> r;
                 SetFpuRegister(i, r);
             }
@@ -247,7 +247,7 @@ private:
         ar << id;
         auto page_table = GetPageTable();
         ar << page_table;
-        for (auto i = 0; i < 15; i++) {
+        for (size_t i = 0; i < 15; i++) {
             auto r = GetReg(i);
             ar << r;
         }
@@ -255,7 +255,7 @@ private:
         ar << pc;
         auto cpsr = GetCPSR();
         ar << cpsr;
-        for (auto i = 0; i < 32; i++) {
+        for (size_t i = 0; i < 32; i++) {
             auto r = GetVFPReg(i);
             ar << r;
         }
@@ -278,7 +278,7 @@ private:
         ar >> page_table;
         SetPageTable(page_table);
         u32 r;
-        for (auto i = 0; i < 15; i++) {
+        for (size_t = 0; i < 15; i++) {
             ar >> r;
             SetReg(i, r);
         }

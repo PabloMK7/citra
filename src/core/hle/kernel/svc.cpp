@@ -409,7 +409,7 @@ static ResultCode ReceiveIPCRequest(Kernel::KernelSystem& kernel, Memory::Memory
 
 class SVC_SyncCallback : public Kernel::WakeupCallback {
 public:
-    SVC_SyncCallback(bool do_output_) : do_output(do_output_) {}
+    explicit SVC_SyncCallback(bool do_output_) : do_output(do_output_) {}
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) {
 
@@ -442,7 +442,7 @@ private:
 
 class SVC_IPCCallback : public Kernel::WakeupCallback {
 public:
-    SVC_IPCCallback(Core::System& system_) : system(system_) {}
+    explicit SVC_IPCCallback(Core::System& system_) : system(system_) {}
 
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) {

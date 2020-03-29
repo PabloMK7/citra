@@ -29,7 +29,7 @@ private:
 class BufferMem : public BackingMem {
 public:
     BufferMem() = default;
-    BufferMem(u32 size) : data(std::vector<u8>(size)) {}
+    explicit BufferMem(std::size_t size) : data(size) {}
 
     u8* GetPtr() override {
         return data.data();
@@ -77,7 +77,7 @@ public:
     inline u8* GetPtr() {
         return cptr;
     }
-    inline operator bool() const {
+    explicit operator bool() const {
         return cptr != nullptr;
     }
     inline const u8* GetPtr() const {
