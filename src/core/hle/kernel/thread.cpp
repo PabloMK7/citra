@@ -6,6 +6,7 @@
 #include <list>
 #include <unordered_map>
 #include <vector>
+#include <boost/serialization/string.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -15,7 +16,6 @@
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
-#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"

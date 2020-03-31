@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"

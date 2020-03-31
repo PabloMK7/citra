@@ -69,12 +69,7 @@ private:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<Object>(*this);
-        ar& waiting_threads;
-        // NB: hle_notifier *not* serialized since it's a callback!
-        // Fortunately it's only used in one place (DSP) so we can reconstruct it there
-    }
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 // Specialization of DynamicObjectCast for WaitObjects

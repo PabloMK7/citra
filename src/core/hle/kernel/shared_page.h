@@ -13,6 +13,7 @@
 #include <chrono>
 #include <ctime>
 #include <memory>
+#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/binary_object.hpp>
 #include <boost/serialization/export.hpp>
 #include "common/bit_field.h"

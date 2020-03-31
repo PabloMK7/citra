@@ -210,10 +210,6 @@ void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
 
     Common::Vec3<float> accel;
-    if (!motion_device) {
-        is_device_reload_pending.store(true);
-        return;
-    }
     std::tie(accel, std::ignore) = motion_device->GetStatus();
     accel *= accelerometer_coef;
     // TODO(wwylele): do a time stretch like the one in UpdateGyroscopeCallback
@@ -261,10 +257,6 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
     GyroscopeDataEntry& gyroscope_entry = mem->gyroscope.entries[mem->gyroscope.index];
 
     Common::Vec3<float> gyro;
-    if (!motion_device) {
-        is_device_reload_pending.store(true);
-        return;
-    }
     std::tie(std::ignore, gyro) = motion_device->GetStatus();
     double stretch = system.perf_stats->GetLastFrameTimeScale();
     gyro *= gyroscope_coef * static_cast<float>(stretch);

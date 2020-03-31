@@ -5,7 +5,9 @@
 #pragma once
 
 #include <string>
+#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/string.hpp>
 #include <queue>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"

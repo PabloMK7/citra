@@ -7,7 +7,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include "boost/serialization/access.hpp"
 #include "common/common_types.h"
 #include "core/custom_tex_cache.h"
 #include "core/frontend/applets/mii_selector.h"

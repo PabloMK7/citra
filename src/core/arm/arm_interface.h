@@ -6,15 +6,13 @@
 
 #include <cstddef>
 #include <memory>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 #include "core/core_timing.h"
-
-namespace Memory {
-struct PageTable;
-}
+#include "core/memory.h"
 
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
@@ -28,11 +26,11 @@ public:
 
         template <class Archive>
         void save(Archive& ar, const unsigned int file_version) const {
-            for (size_t i = 0; i < 16; i++) {
+            for (std::size_t i = 0; i < 16; i++) {
                 const auto r = GetCpuRegister(i);
                 ar << r;
             }
-            for (size_t i = 0; i < 16; i++) {
+            for (std::size_t i = 0; i < 16; i++) {
                 const auto r = GetFpuRegister(i);
                 ar << r;
             }
@@ -47,11 +45,11 @@ public:
         template <class Archive>
         void load(Archive& ar, const unsigned int file_version) {
             u32 r;
-            for (size_t i = 0; i < 16; i++) {
+            for (std::size_t i = 0; i < 16; i++) {
                 ar >> r;
                 SetCpuRegister(i, r);
             }
-            for (size_t i = 0; i < 16; i++) {
+            for (std::size_t i = 0; i < 16; i++) {
                 ar >> r;
                 SetFpuRegister(i, r);
             }
@@ -119,8 +117,6 @@ public:
 
     /// Notify CPU emulation that page tables have changed
     virtual void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) = 0;
-
-    virtual std::shared_ptr<Memory::PageTable> GetPageTable() const = 0;
 
     /**
      * Set the Program Counter to an address
@@ -234,6 +230,9 @@ public:
     }
 
 protected:
+    // This us used for serialization. Returning nullptr is valid if page tables are not used.
+    virtual std::shared_ptr<Memory::PageTable> GetPageTable() const = 0;
+
     std::shared_ptr<Core::Timing::Timer> timer;
 
 private:
@@ -259,11 +258,11 @@ private:
             const auto r = GetVFPReg(i);
             ar << r;
         }
-        for (size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
+        for (std::size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
             const auto r = GetVFPSystemReg(static_cast<VFPSystemRegister>(i));
             ar << r;
         }
-        for (size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
+        for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
             const auto r = GetCP15Register(static_cast<CP15Register>(i));
             ar << r;
         }
@@ -290,11 +289,11 @@ private:
             ar >> r;
             SetVFPReg(i, r);
         }
-        for (size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
+        for (std::size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
             ar >> r;
             SetVFPSystemReg(static_cast<VFPSystemRegister>(i), r);
         }
-        for (size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
+        for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
             ar >> r;
             SetCP15Register(static_cast<CP15Register>(i), r);
         }

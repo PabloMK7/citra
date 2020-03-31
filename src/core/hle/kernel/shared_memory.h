@@ -6,7 +6,9 @@
 
 #include <string>
 #include <utility>
+#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 #include "core/hle/kernel/object.h"
@@ -118,7 +120,7 @@ private:
         ar& owner_process;
         ar& base_address;
         ar& name;
-        ar&*(reinterpret_cast<MemoryRegionInfo::IntervalSet::ImplSetT*>(&holding_memory));
+        ar& holding_memory;
     }
     friend class boost::serialization::access;
 };

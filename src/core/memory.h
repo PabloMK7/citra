@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/serialization/access.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
@@ -86,12 +85,12 @@ struct PageTable {
         struct Entry {
             Entry(Pointers& pointers_, VAddr idx_) : pointers(pointers_), idx(idx_) {}
 
-            inline void operator=(MemoryRef value) {
+            void operator=(MemoryRef value) {
                 pointers.refs[idx] = value;
                 pointers.raw[idx] = value.GetPtr();
             }
 
-            inline operator u8*() {
+            operator u8*() {
                 return pointers.raw[idx];
             }
 
@@ -100,15 +99,15 @@ struct PageTable {
             VAddr idx;
         };
 
-        inline Entry operator[](VAddr idx) {
+        Entry operator[](VAddr idx) {
             return Entry(*this, idx);
         }
 
-        inline u8* operator[](VAddr idx) const {
+        u8* operator[](VAddr idx) const {
             return raw[idx];
         }
 
-        inline Entry operator[](std::size_t idx) {
+        Entry operator[](std::size_t idx) {
             return Entry(*this, static_cast<VAddr>(idx));
         }
 
@@ -133,7 +132,7 @@ struct PageTable {
      */
     std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
 
-    inline std::array<u8*, PAGE_TABLE_NUM_ENTRIES>& GetPointerArray() {
+    std::array<u8*, PAGE_TABLE_NUM_ENTRIES>& GetPointerArray() {
         return pointers.raw;
     }
 

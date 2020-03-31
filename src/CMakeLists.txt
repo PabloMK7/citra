@@ -31,8 +31,10 @@ if (MSVC)
     # /Zc:externConstexpr - Allow extern constexpr variables to have external linkage, like the standard mandates
     # /Zc:inline          - Let codegen omit inline functions in object files
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
+    # /external:*         - Suppress warnings from external headers
     add_compile_options(
         /W3
+        /MP
         /Zi
         /Zo
         /permissive-
@@ -40,17 +42,12 @@ if (MSVC)
         /volatile:iso
         /Zc:externConstexpr
         /Zc:inline
+        /Zc:throwingNew
+        /experimental:external
+        /external:I "${CMAKE_SOURCE_DIR}/externals"
+        /external:anglebrackets
+        /external:W0
     )
-    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        add_compile_options(
-            /MP
-            /Zc:throwingNew
-            /experimental:external
-            /external:I "${CMAKE_SOURCE_DIR}/externals"
-            /external:anglebrackets
-            /external:W0
-        )
-    endif()
 
     # /GS- - No stack buffer overflow checks
     add_compile_options("$<$<CONFIG:Release>:/GS->")

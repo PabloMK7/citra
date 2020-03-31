@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"

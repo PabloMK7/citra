@@ -385,7 +385,6 @@ void GeometryPipeline::serialize(Archive& ar, const unsigned int version) {
 
 } // namespace Pica
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Pica::GeometryPipelineBackend)
 SERIALIZE_EXPORT_IMPL(Pica::GeometryPipeline_Point)
 SERIALIZE_EXPORT_IMPL(Pica::GeometryPipeline_VariablePrimitive)
 SERIALIZE_EXPORT_IMPL(Pica::GeometryPipeline_FixedPrimitive)

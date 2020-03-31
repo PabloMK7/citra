@@ -186,7 +186,7 @@ private:
     void save(Archive& ar, const unsigned int file_version) const {
         const s64 idx = ToIndex(first);
         ar << idx;
-        for (size_t i = 0; i < NUM_QUEUES; i++) {
+        for (std::size_t i = 0; i < NUM_QUEUES; i++) {
             const s64 idx1 = ToIndex(queues[i].next_nonempty);
             ar << idx1;
             ar << queues[i].data;
@@ -198,7 +198,7 @@ private:
         s64 idx;
         ar >> idx;
         first = ToPointer(idx);
-        for (auto i = 0; i < NUM_QUEUES; i++) {
+        for (std::size_t i = 0; i < NUM_QUEUES; i++) {
             ar >> idx;
             queues[i].next_nonempty = ToPointer(idx);
             ar >> queues[i].data;

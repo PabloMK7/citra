@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -184,12 +183,14 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         LOG_INFO(Core, "Begin load");
         System::LoadState(param);
         LOG_INFO(Core, "Load completed");
-    } break;
+        break;
+    }
     case Signal::Save: {
         LOG_INFO(Core, "Begin save");
         System::SaveState(param);
         LOG_INFO(Core, "Save completed");
-    } break;
+        break;
+    }
     default:
         break;
     }
@@ -551,19 +552,11 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
 
     // NOTE: DSP doesn't like being destroyed and recreated. So instead we do an inline
     // serialization; this means that the DSP Settings need to match for loading to work.
-    bool dsp_type = Settings::values.enable_dsp_lle;
-    ar& dsp_type;
-    if (dsp_type != Settings::values.enable_dsp_lle) {
-        throw std::runtime_error(
-            "Incorrect DSP type - please change this in Settings before loading");
-    }
     auto dsp_hle = dynamic_cast<AudioCore::DspHle*>(dsp_core.get());
     if (dsp_hle) {
         ar&* dsp_hle;
-    }
-    auto dsp_lle = dynamic_cast<AudioCore::DspLle*>(dsp_core.get());
-    if (dsp_lle) {
-        ar&* dsp_lle;
+    } else {
+        throw std::runtime_error("LLE audio not supported for save states");
     }
 
     ar&* memory.get();

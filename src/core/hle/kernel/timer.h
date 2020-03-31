@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include "common/common_types.h"
 #include "core/core_timing.h"

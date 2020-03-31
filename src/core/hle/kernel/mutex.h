@@ -7,6 +7,9 @@
 #include <memory>
 #include <string>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/wait_object.h"

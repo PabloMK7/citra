@@ -104,7 +104,7 @@ BOOST_SERIALIZATION_ASSUME_ABSTRACT(Kernel::Object)
 #define CONSTRUCT_KERNEL_OBJECT(T)                                                                 \
     namespace boost::serialization {                                                               \
     template <class Archive>                                                                       \
-    inline void load_construct_data(Archive& ar, T* t, const unsigned int file_version) {          \
+    void load_construct_data(Archive& ar, T* t, const unsigned int file_version) {                 \
         ::new (t) T(Core::Global<Kernel::KernelSystem>());                                         \
     }                                                                                              \
     }

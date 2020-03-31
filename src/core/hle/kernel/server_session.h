@@ -7,8 +7,6 @@
 #include <memory>
 #include <string>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/ipc.h"
@@ -110,15 +108,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<WaitObject>(*this);
-        ar& name;
-        ar& parent;
-        ar& hle_handler;
-        ar& pending_requesting_threads;
-        ar& currently_handling;
-        ar& mapped_buffer_context;
-    }
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 } // namespace Kernel

@@ -183,11 +183,10 @@ void Timing::Timer::Advance(s64 max_slice_length) {
         Event evt = std::move(event_queue.front());
         std::pop_heap(event_queue.begin(), event_queue.end(), std::greater<>());
         event_queue.pop_back();
-        if (evt.type->callback == nullptr) {
-            LOG_ERROR(Core, "Event '{}' has no callback", *evt.type->name);
-        }
         if (evt.type->callback != nullptr) {
             evt.type->callback(evt.userdata, executed_ticks - evt.time);
+        } else {
+            LOG_ERROR(Core, "Event '{}' has no callback", *evt.type->name);
         }
     }
 

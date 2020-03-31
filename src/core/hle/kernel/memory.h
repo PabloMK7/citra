@@ -5,10 +5,11 @@
 #pragma once
 
 #include <optional>
+#include <type_traits>
 #include <boost/icl/interval_set.hpp>
 #include <boost/serialization/set.hpp>
 #include "common/common_types.h"
-#include "common/serialization/boost_discrete_interval.hpp"
+#include "common/serialization/boost_interval_set.hpp"
 
 namespace Kernel {
 
@@ -70,8 +71,7 @@ private:
         ar& base;
         ar& size;
         ar& used;
-        // This works because interval_set has exactly one member of type ImplSetT
-        ar&*(reinterpret_cast<IntervalSet::ImplSetT*>(&free_blocks));
+        ar& free_blocks;
     }
 };
 

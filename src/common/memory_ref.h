@@ -41,10 +41,14 @@ public:
     }
 
     std::size_t GetSize() const override {
-        return static_cast<u32>(data.size());
+        return data.size();
     }
 
     std::vector<u8>& Vector() {
+        return data;
+    }
+
+    const std::vector<u8>& Vector() const {
         return data;
     }
 

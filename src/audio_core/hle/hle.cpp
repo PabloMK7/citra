@@ -45,6 +45,7 @@ void DspHle::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<DspInterface>(*this);
     ar&* impl.get();
 }
+SERIALIZE_IMPL(DspHle)
 
 static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
 
