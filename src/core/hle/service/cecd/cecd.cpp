@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/unique_ptr.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include <cryptopp/base64.h>
 #include <cryptopp/hmac.h>
 #include <cryptopp/sha.h>
@@ -1361,8 +1361,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
     case CecDataPathType::MboxData:
     case CecDataPathType::MboxIcon:
     case CecDataPathType::MboxTitle:
-    default: {
-    }
+    default: {}
     }
 }
 

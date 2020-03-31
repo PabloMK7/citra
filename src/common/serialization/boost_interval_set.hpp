@@ -5,16 +5,34 @@
 #pragma once
 
 #include <boost/icl/interval_set.hpp>
+#include <boost/serialization/split_free.hpp>
 #include "common/serialization/boost_discrete_interval.hpp"
 
 namespace boost::serialization {
 
 template <class Archive, class T>
-void serialize(Archive& ar, boost::icl::interval_set<T>& obj, const unsigned int file_version) {
-    using IntervalSet = boost::icl::interval_set<T>;
-    // This works because interval_set has exactly one member of type ImplSetT
-    static_assert(std::is_standard_layout_v<IntervalSet>);
-    ar&*(reinterpret_cast<typename IntervalSet::ImplSetT*>(&obj));
+void save(Archive& ar, const boost::icl::interval_set<T>& set, const unsigned int file_version) {
+    ar << static_cast<u64>(set.size());
+    for (auto& v : set) {
+        ar << v;
+    }
+}
+
+template <class Archive, class T>
+void load(Archive& ar, boost::icl::interval_set<T>& set, const unsigned int file_version) {
+    u64 count{};
+    ar >> count;
+    set.clear();
+    for (u64 i = 0; i < count; i++) {
+        T value{};
+        ar >> value;
+        set.insert(value);
+    }
+}
+
+template <class Archive, class T>
+void serialize(Archive& ar, boost::icl::interval_set<T>& set, const unsigned int file_version) {
+    boost::serialization::split_free(ar, set, file_version);
 }
 
 } // namespace boost::serialization

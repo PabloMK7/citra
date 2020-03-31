@@ -5,7 +5,6 @@
 #pragma once
 
 #include <optional>
-#include <type_traits>
 #include <boost/icl/interval_set.hpp>
 #include <boost/serialization/set.hpp>
 #include "common/common_types.h"
