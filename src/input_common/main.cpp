@@ -10,6 +10,7 @@
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
 #include "input_common/sdl/sdl.h"
+#include "input_common/touch_from_button.h"
 #include "input_common/udp/udp.h"
 
 namespace InputCommon {
@@ -26,6 +27,8 @@ void Init() {
                                                 std::make_shared<AnalogFromButton>());
     motion_emu = std::make_shared<MotionEmu>();
     Input::RegisterFactory<Input::MotionDevice>("motion_emu", motion_emu);
+    Input::RegisterFactory<Input::TouchDevice>("touch_from_button",
+                                               std::make_shared<TouchFromButtonFactory>());
 
     sdl = SDL::Init();
 
@@ -38,6 +41,7 @@ void Shutdown() {
     Input::UnregisterFactory<Input::AnalogDevice>("analog_from_button");
     Input::UnregisterFactory<Input::MotionDevice>("motion_emu");
     motion_emu.reset();
+    Input::UnregisterFactory<Input::TouchDevice>("touch_from_button");
     sdl.reset();
     udp.reset();
 }

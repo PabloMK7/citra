@@ -7,6 +7,7 @@
 #include <memory>
 #include <QDialog>
 #include "common/param_package.h"
+#include "core/settings.h"
 #include "input_common/udp/udp.h"
 
 class QVBoxLayout;
@@ -54,6 +55,7 @@ public slots:
 private slots:
     void OnCemuhookUDPTest();
     void OnConfigureTouchCalibration();
+    void OnConfigureTouchFromButton();
 
 private:
     void closeEvent(QCloseEvent* event) override;
@@ -69,4 +71,6 @@ private:
     int min_x, min_y, max_x, max_y;
 
     bool udp_test_in_progress{};
+
+    std::vector<Settings::TouchFromButtonMap> touch_from_button_maps;
 };
