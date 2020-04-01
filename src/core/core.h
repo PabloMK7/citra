@@ -113,7 +113,7 @@ public:
     ResultStatus SingleStep();
 
     /// Shutdown the emulated system.
-    void Shutdown();
+    void Shutdown(bool is_deserializing = false);
 
     /// Shutdown and then load again
     void Reset();

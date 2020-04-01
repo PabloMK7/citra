@@ -12,7 +12,7 @@ namespace boost::serialization {
 
 template <class Archive, class T>
 void save(Archive& ar, const boost::icl::interval_set<T>& set, const unsigned int file_version) {
-    ar << static_cast<u64>(set.size());
+    ar << static_cast<u64>(set.iterative_size());
     for (auto& v : set) {
         ar << v;
     }
@@ -24,9 +24,9 @@ void load(Archive& ar, boost::icl::interval_set<T>& set, const unsigned int file
     ar >> count;
     set.clear();
     for (u64 i = 0; i < count; i++) {
-        T value{};
+        typename boost::icl::interval_set<T>::interval_type value{};
         ar >> value;
-        set.insert(value);
+        set.add(value);
     }
 }
 

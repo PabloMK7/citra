@@ -478,7 +478,7 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
     registered_image_interface = std::move(image_interface);
 }
 
-void System::Shutdown() {
+void System::Shutdown(bool is_deserializing) {
     // Log last frame performance stats
     const auto perf_results = GetAndResetPerfStats();
     telemetry_session->AddField(Telemetry::FieldType::Performance, "Shutdown_EmulationSpeed",
@@ -494,17 +494,19 @@ void System::Shutdown() {
     GDBStub::Shutdown();
     VideoCore::Shutdown();
     HW::Shutdown();
+    if (!is_deserializing) {
+        perf_stats.reset();
+        cheat_engine.reset();
+        app_loader.reset();
+    }
     telemetry_session.reset();
-    perf_stats.reset();
     rpc_server.reset();
-    cheat_engine.reset();
     archive_manager.reset();
     service_manager.reset();
     dsp_core.reset();
     cpu_cores.clear();
     kernel.reset();
     timing.reset();
-    app_loader.reset();
 
     if (video_dumper->IsDumping()) {
         video_dumper->StopDumping();
@@ -565,6 +567,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {
         Service::GSP::SetGlobalModule(*this);
+        memory->SetDSP(*dsp_core);
     }
 }
 

@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/zstd_compression.h"
+#include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/savestate.h"
 #include "video_core/video_core.h"
@@ -157,6 +158,15 @@ void System::LoadState(u32 slot) {
         std::string{reinterpret_cast<char*>(decompressed.data()), decompressed.size()},
         std::ios_base::binary};
     decompressed.clear();
+
+    // When loading, we want to make sure any lingering state gets cleared out before we begin.
+    // Shutdown, but persist a few things between loads...
+    Shutdown(true);
+
+    // Re-initialize everything like it was before
+    auto system_mode = this->app_loader->LoadKernelSystemMode();
+    auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
+    Init(*m_emu_window, *system_mode.first, *n3ds_mode.first);
 
     try {
 
