@@ -303,25 +303,25 @@ public:
     VAddr tls_address; ///< Virtual address of the Thread Local Storage of the thread
 
     /// Mutexes currently held by this thread, which will be released when it exits.
-    boost::container::flat_set<std::shared_ptr<Mutex>> held_mutexes;
+    boost::container::flat_set<std::shared_ptr<Mutex>> held_mutexes{};
 
     /// Mutexes that this thread is currently waiting for.
-    boost::container::flat_set<std::shared_ptr<Mutex>> pending_mutexes;
+    boost::container::flat_set<std::shared_ptr<Mutex>> pending_mutexes{};
 
-    std::shared_ptr<Process> owner_process; ///< Process that owns this thread
+    std::shared_ptr<Process> owner_process{}; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on, in the same order as they were
     // passed to WaitSynchronization1/N.
-    std::vector<std::shared_ptr<WaitObject>> wait_objects;
+    std::vector<std::shared_ptr<WaitObject>> wait_objects{};
 
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 
-    std::string name;
+    std::string name{};
 
     // Callback that will be invoked when the thread is resumed from a waiting state. If the thread
     // was waiting via WaitSynchronizationN then the object will be the last object that became
     // available. In case of a timeout, the object will be nullptr.
-    std::shared_ptr<WakeupCallback> wakeup_callback;
+    std::shared_ptr<WakeupCallback> wakeup_callback{};
 
     const u32 core_id;
 
