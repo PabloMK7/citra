@@ -296,7 +296,8 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    return perf_stats->GetAndResetStats(timing->GetGlobalTimeUs());
+    return (perf_stats && timing) ? perf_stats->GetAndResetStats(timing->GetGlobalTimeUs())
+                                  : PerfStats::Results{};
 }
 
 void System::Reschedule() {
