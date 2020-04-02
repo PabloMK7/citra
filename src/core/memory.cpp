@@ -284,8 +284,10 @@ void MemorySystem::RegisterPageTable(std::shared_ptr<PageTable> page_table) {
 }
 
 void MemorySystem::UnregisterPageTable(std::shared_ptr<PageTable> page_table) {
-    impl->page_table_list.erase(
-        std::find(impl->page_table_list.begin(), impl->page_table_list.end(), page_table));
+    auto it = std::find(impl->page_table_list.begin(), impl->page_table_list.end(), page_table);
+    if (it != impl->page_table_list.end()) {
+        impl->page_table_list.erase(it);
+    }
 }
 
 /**
