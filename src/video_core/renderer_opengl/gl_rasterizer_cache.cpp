@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <bitset>
 #include <cstring>
 #include <iterator>
 #include <memory>
@@ -884,6 +885,16 @@ bool CachedSurface::LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_inf
 }
 
 void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
+    // Make sure the texture size is a power of 2
+    // If not, the surface is actually a framebuffer
+    std::bitset<32> width_bits(width);
+    std::bitset<32> height_bits(height);
+    if (width_bits.count() != 1 || height_bits.count() != 1) {
+        LOG_WARNING(Render_OpenGL, "Not dumping {:016X} because size isn't a power of 2 ({}x{})",
+                    tex_hash, width, height);
+        return;
+    }
+
     // Dump texture to RGBA8 and encode as PNG
     const auto& image_interface = Core::System::GetInstance().GetImageInterface();
     auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
