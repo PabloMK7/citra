@@ -480,7 +480,7 @@ void Config::ReadShortcutValues() {
 void Config::ReadSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
-    Settings::values.is_new_3ds = ReadSetting(QStringLiteral("is_new_3ds"), false).toBool();
+    Settings::values.is_new_3ds = ReadSetting(QStringLiteral("is_new_3ds"), true).toBool();
     Settings::values.region_value =
         ReadSetting(QStringLiteral("region_value"), Settings::REGION_VALUE_AUTO_SELECT).toInt();
     Settings::values.init_clock = static_cast<Settings::InitClock>(
@@ -917,7 +917,7 @@ void Config::SaveShortcutValues() {
 void Config::SaveSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
-    WriteSetting(QStringLiteral("is_new_3ds"), Settings::values.is_new_3ds, false);
+    WriteSetting(QStringLiteral("is_new_3ds"), Settings::values.is_new_3ds, true);
     WriteSetting(QStringLiteral("region_value"), Settings::values.region_value,
                  Settings::REGION_VALUE_AUTO_SELECT);
     WriteSetting(QStringLiteral("init_clock"), static_cast<u32>(Settings::values.init_clock),

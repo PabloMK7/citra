@@ -199,7 +199,7 @@ void Config::ReadValues() {
         sdl2_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
     // System
-    Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", false);
+    Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", true);
     Settings::values.region_value =
         sdl2_config->GetInteger("System", "region_value", Settings::REGION_VALUE_AUTO_SELECT);
     Settings::values.init_clock =
