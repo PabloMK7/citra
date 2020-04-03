@@ -6,27 +6,24 @@
 
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
-#include "video_core/renderer_opengl/texture_filters/texture_filter_interface.h"
+#include "video_core/renderer_opengl/texture_filters/texture_filter_base.h"
 
 namespace OpenGL {
-class Bicubic : public TextureFilterInterface {
-public:
-    static TextureFilterInfo GetInfo() {
-        TextureFilterInfo info;
-        info.name = "Bicubic";
-        info.constructor = std::make_unique<Bicubic, u16>;
-        return info;
-    }
 
-    Bicubic(u16 scale_factor);
-    void scale(CachedSurface& surface, const Common::Rectangle<u32>& rect,
-               std::size_t buffer_offset) override;
+class Bicubic : public TextureFilterBase {
+public:
+    static constexpr std::string_view NAME = "Bicubic";
+
+    explicit Bicubic(u16 scale_factor);
+    void Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
+                const Common::Rectangle<u32>& dst_rect, GLuint read_fb_handle,
+                GLuint draw_fb_handle) override;
 
 private:
     OpenGLState state{};
     OGLProgram program{};
     OGLVertexArray vao{};
-    OGLFramebuffer draw_fbo{};
     OGLSampler src_sampler{};
 };
+
 } // namespace OpenGL

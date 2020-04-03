@@ -8,17 +8,14 @@
 #include "core/settings.h"
 #include "ui_configure_enhancements.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
-#include "video_core/renderer_opengl/texture_filters/texture_filter_manager.h"
+#include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 
 ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureEnhancements) {
     ui->setupUi(this);
 
-    for (const auto& filter : OpenGL::TextureFilterManager::TextureFilterMap())
-        ui->texture_filter_combobox->addItem(QString::fromStdString(filter.first.data()));
-
-    connect(ui->texture_filter_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-            &ConfigureEnhancements::updateTextureFilter);
+    for (const auto& filter : OpenGL::TextureFilterer::GetFilterNames())
+        ui->texture_filter_combobox->addItem(QString::fromStdString(filter.data()));
 
     SetConfiguration();
 
@@ -60,7 +57,6 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->factor_3d->setValue(Settings::values.factor_3d);
     updateShaders(Settings::values.render_3d);
     ui->toggle_linear_filter->setChecked(Settings::values.filter_mode);
-    ui->texture_scale_spinbox->setValue(Settings::values.texture_filter_factor);
     int tex_filter_idx = ui->texture_filter_combobox->findText(
         QString::fromStdString(Settings::values.texture_filter_name));
     if (tex_filter_idx == -1) {
@@ -68,7 +64,6 @@ void ConfigureEnhancements::SetConfiguration() {
     } else {
         ui->texture_filter_combobox->setCurrentIndex(tex_filter_idx);
     }
-    updateTextureFilter(tex_filter_idx);
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
     ui->swap_screen->setChecked(Settings::values.swap_screen);
     ui->toggle_disk_shader_cache->setChecked(Settings::values.use_hw_shader &&
@@ -105,17 +100,6 @@ void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_op
     }
 }
 
-void ConfigureEnhancements::updateTextureFilter(int index) {
-    if (index == -1)
-        return;
-    ui->texture_filter_group->setEnabled(index != 0);
-    const auto& clamp = OpenGL::TextureFilterManager::TextureFilterMap()
-                            .at(ui->texture_filter_combobox->currentText().toStdString())
-                            .clamp_scale;
-    ui->texture_scale_spinbox->setMinimum(clamp.min);
-    ui->texture_scale_spinbox->setMaximum(clamp.max);
-}
-
 void ConfigureEnhancements::RetranslateUI() {
     ui->retranslateUi(this);
 }
@@ -130,7 +114,6 @@ void ConfigureEnhancements::ApplyConfiguration() {
         ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     Settings::values.filter_mode = ui->toggle_linear_filter->isChecked();
     Settings::values.texture_filter_name = ui->texture_filter_combobox->currentText().toStdString();
-    Settings::values.texture_filter_factor = ui->texture_scale_spinbox->value();
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();

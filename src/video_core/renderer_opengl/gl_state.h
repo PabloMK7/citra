@@ -38,13 +38,6 @@ constexpr GLuint ShadowTexturePZ = 5;
 constexpr GLuint ShadowTextureNZ = 6;
 } // namespace ImageUnits
 
-struct Viewport {
-    GLint x;
-    GLint y;
-    GLsizei width;
-    GLsizei height;
-};
-
 class OpenGLState {
 public:
     struct {
@@ -142,7 +135,12 @@ public:
         GLsizei height;
     } scissor;
 
-    Viewport viewport;
+    struct {
+        GLint x;
+        GLint y;
+        GLsizei width;
+        GLsizei height;
+    } viewport;
 
     std::array<bool, 2> clip_distance; // GL_CLIP_DISTANCE
 

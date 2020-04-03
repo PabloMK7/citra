@@ -132,9 +132,8 @@ use_disk_shader_cache =
 # factor for the 3DS resolution
 resolution_factor =
 
-# Texture filter name and scale factor
+# Texture filter name
 texture_filter_name =
-texture_filter_factor =
 
 # Turns on the frame limiter, which will limit frames output to the target game speed
 # 0: Off, 1: On (default)

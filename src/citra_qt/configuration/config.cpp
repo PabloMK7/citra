@@ -454,8 +454,6 @@ void Config::ReadRendererValues() {
         ReadSetting(QStringLiteral("texture_filter_name"), QStringLiteral("none"))
             .toString()
             .toStdString();
-    Settings::values.texture_filter_factor =
-        ReadSetting(QStringLiteral("texture_filter_factor"), 1).toInt();
 
     qt_config->endGroup();
 }
@@ -893,8 +891,6 @@ void Config::SaveRendererValues() {
     WriteSetting(QStringLiteral("texture_filter_name"),
                  QString::fromStdString(Settings::values.texture_filter_name),
                  QStringLiteral("none"));
-    WriteSetting(QStringLiteral("texture_filter_factor"), Settings::values.texture_filter_factor,
-                 1);
 
     qt_config->endGroup();
 }
