@@ -87,6 +87,10 @@
 #include "citra_qt/discord_impl.h"
 #endif
 
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
+#include "citra_qt/dumping/dumping_dialog.h"
+#endif
+
 #ifdef QT_STATICPLUGIN
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #endif
@@ -679,9 +683,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Capture_Screenshot, &QAction::triggered, this,
             &GMainWindow::OnCaptureScreenshot);
 
-#ifndef ENABLE_FFMPEG_VIDEO_DUMPER
-    ui.action_Dump_Video->setEnabled(false);
-#endif
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     connect(ui.action_Dump_Video, &QAction::triggered, [this] {
         if (ui.action_Dump_Video->isChecked()) {
             OnStartVideoDumping();
@@ -689,6 +691,9 @@ void GMainWindow::ConnectMenuEvents() {
             OnStopVideoDumping();
         }
     });
+#else
+    ui.action_Dump_Video->setEnabled(false);
+#endif
 
     // Help
     connect(ui.action_Open_Citra_Folder, &QAction::triggered, this,
@@ -975,8 +980,14 @@ void GMainWindow::BootGame(const QString& filename) {
     if (video_dumping_on_start) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
-        Core::System::GetInstance().VideoDumper().StartDumping(video_dumping_path.toStdString(),
-                                                               "webm", layout);
+        if (!Core::System::GetInstance().VideoDumper().StartDumping(
+                video_dumping_path.toStdString(), layout)) {
+
+            QMessageBox::critical(
+                this, tr("Citra"),
+                tr("Could not start video dumping.<br>Refer to the log for details."));
+            ui.action_Dump_Video->setChecked(false);
+        }
         video_dumping_on_start = false;
         video_dumping_path.clear();
     }
@@ -992,11 +1003,13 @@ void GMainWindow::ShutdownGame() {
         HideFullscreen();
     }
 
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     if (Core::System::GetInstance().VideoDumper().IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
         return;
     }
+#endif
 
     AllowOSSleep();
 
@@ -1804,18 +1817,23 @@ void GMainWindow::OnCaptureScreenshot() {
     OnStartGame();
 }
 
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 void GMainWindow::OnStartVideoDumping() {
-    const QString path = QFileDialog::getSaveFileName(
-        this, tr("Save Video"), UISettings::values.video_dumping_path, tr("WebM Videos (*.webm)"));
-    if (path.isEmpty()) {
+    DumpingDialog dialog(this);
+    if (dialog.exec() != QDialog::DialogCode::Accepted) {
         ui.action_Dump_Video->setChecked(false);
         return;
     }
-    UISettings::values.video_dumping_path = QFileInfo(path).path();
+    const auto path = dialog.GetFilePath();
     if (emulation_running) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
-        Core::System::GetInstance().VideoDumper().StartDumping(path.toStdString(), "webm", layout);
+        if (!Core::System::GetInstance().VideoDumper().StartDumping(path.toStdString(), layout)) {
+            QMessageBox::critical(
+                this, tr("Citra"),
+                tr("Could not start video dumping.<br>Refer to the log for details."));
+            ui.action_Dump_Video->setChecked(false);
+        }
     } else {
         video_dumping_on_start = true;
         video_dumping_path = path;
@@ -1832,6 +1850,8 @@ void GMainWindow::OnStopVideoDumping() {
         const bool was_dumping = Core::System::GetInstance().VideoDumper().IsDumping();
         if (!was_dumping)
             return;
+
+        game_paused_for_dumping = emu_thread->IsRunning();
         OnPauseGame();
 
         auto future =
@@ -1841,13 +1861,15 @@ void GMainWindow::OnStopVideoDumping() {
             if (game_shutdown_delayed) {
                 game_shutdown_delayed = false;
                 ShutdownGame();
-            } else {
+            } else if (game_paused_for_dumping) {
+                game_paused_for_dumping = false;
                 OnStartGame();
             }
         });
         future_watcher->setFuture(future);
     }
 }
+#endif
 
 void GMainWindow::UpdateStatusBar() {
     if (emu_thread == nullptr) {

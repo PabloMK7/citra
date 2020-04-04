@@ -100,7 +100,7 @@ public:
     void EnableStretching(bool enable);
 
 protected:
-    void OutputFrame(StereoFrame16& frame);
+    void OutputFrame(StereoFrame16 frame);
     void OutputSample(std::array<s16, 2> sample);
 
 private:

@@ -93,6 +93,7 @@ void Config::ReadValues() {
     ReadMiscellaneousValues();
     ReadDebuggingValues();
     ReadWebServiceValues();
+    ReadVideoDumpingValues();
     ReadUIValues();
     ReadUtilityValues();
 }
@@ -492,6 +493,49 @@ void Config::ReadSystemValues() {
     qt_config->endGroup();
 }
 
+// Options for variable bit rate live streaming taken from here:
+// https://developers.google.com/media/vp9/live-encoding
+const QString DEFAULT_VIDEO_ENCODER_OPTIONS =
+    QStringLiteral("quality:realtime,speed:6,tile-columns:4,frame-parallel:1,threads:8,row-mt:1");
+const QString DEFAULT_AUDIO_ENCODER_OPTIONS = QString{};
+
+void Config::ReadVideoDumpingValues() {
+    qt_config->beginGroup(QStringLiteral("VideoDumping"));
+
+    Settings::values.output_format =
+        ReadSetting(QStringLiteral("output_format"), QStringLiteral("webm"))
+            .toString()
+            .toStdString();
+    Settings::values.format_options =
+        ReadSetting(QStringLiteral("format_options")).toString().toStdString();
+
+    Settings::values.video_encoder =
+        ReadSetting(QStringLiteral("video_encoder"), QStringLiteral("libvpx-vp9"))
+            .toString()
+            .toStdString();
+
+    Settings::values.video_encoder_options =
+        ReadSetting(QStringLiteral("video_encoder_options"), DEFAULT_VIDEO_ENCODER_OPTIONS)
+            .toString()
+            .toStdString();
+
+    Settings::values.video_bitrate =
+        ReadSetting(QStringLiteral("video_bitrate"), 2500000).toULongLong();
+
+    Settings::values.audio_encoder =
+        ReadSetting(QStringLiteral("audio_encoder"), QStringLiteral("libvorbis"))
+            .toString()
+            .toStdString();
+    Settings::values.audio_encoder_options =
+        ReadSetting(QStringLiteral("audio_encoder_options"), DEFAULT_AUDIO_ENCODER_OPTIONS)
+            .toString()
+            .toStdString();
+    Settings::values.audio_bitrate =
+        ReadSetting(QStringLiteral("audio_bitrate"), 64000).toULongLong();
+
+    qt_config->endGroup();
+}
+
 void Config::ReadUIValues() {
     qt_config->beginGroup(QStringLiteral("UI"));
 
@@ -624,6 +668,7 @@ void Config::SaveValues() {
     SaveMiscellaneousValues();
     SaveDebuggingValues();
     SaveWebServiceValues();
+    SaveVideoDumpingValues();
     SaveUIValues();
     SaveUtilityValues();
 }
@@ -924,6 +969,33 @@ void Config::SaveSystemValues() {
                  static_cast<u32>(Settings::InitClock::SystemTime));
     WriteSetting(QStringLiteral("init_time"),
                  static_cast<unsigned long long>(Settings::values.init_time), 946681277ULL);
+
+    qt_config->endGroup();
+}
+
+void Config::SaveVideoDumpingValues() {
+    qt_config->beginGroup(QStringLiteral("VideoDumping"));
+
+    WriteSetting(QStringLiteral("output_format"),
+                 QString::fromStdString(Settings::values.output_format), QStringLiteral("webm"));
+    WriteSetting(QStringLiteral("format_options"),
+                 QString::fromStdString(Settings::values.format_options));
+    WriteSetting(QStringLiteral("video_encoder"),
+                 QString::fromStdString(Settings::values.video_encoder),
+                 QStringLiteral("libvpx-vp9"));
+    WriteSetting(QStringLiteral("video_encoder_options"),
+                 QString::fromStdString(Settings::values.video_encoder_options),
+                 DEFAULT_VIDEO_ENCODER_OPTIONS);
+    WriteSetting(QStringLiteral("video_bitrate"),
+                 static_cast<unsigned long long>(Settings::values.video_bitrate), 2500000);
+    WriteSetting(QStringLiteral("audio_encoder"),
+                 QString::fromStdString(Settings::values.audio_encoder),
+                 QStringLiteral("libvorbis"));
+    WriteSetting(QStringLiteral("audio_encoder_options"),
+                 QString::fromStdString(Settings::values.audio_encoder_options),
+                 DEFAULT_AUDIO_ENCODER_OPTIONS);
+    WriteSetting(QStringLiteral("audio_bitrate"),
+                 static_cast<unsigned long long>(Settings::values.audio_bitrate), 64000);
 
     qt_config->endGroup();
 }

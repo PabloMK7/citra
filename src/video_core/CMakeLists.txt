@@ -23,6 +23,8 @@ add_library(video_core STATIC
     regs_texturing.h
     renderer_base.cpp
     renderer_base.h
+    renderer_opengl/frame_dumper_opengl.cpp
+    renderer_opengl/frame_dumper_opengl.h
     renderer_opengl/gl_rasterizer.cpp
     renderer_opengl/gl_rasterizer.h
     renderer_opengl/gl_rasterizer_cache.cpp

@@ -404,7 +404,7 @@ bool DspHle::Impl::Tick() {
     // shared memory region)
     current_frame = GenerateCurrentFrame();
 
-    parent.OutputFrame(current_frame);
+    parent.OutputFrame(std::move(current_frame));
 
     return true;
 }

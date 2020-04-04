@@ -200,8 +200,10 @@ private slots:
     void OnPlayMovie();
     void OnStopRecordingPlayback();
     void OnCaptureScreenshot();
+#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     void OnStartVideoDumping();
     void OnStopVideoDumping();
+#endif
     void OnCoreError(Core::System::ResultStatus, std::string);
     /// Called whenever a user selects Help->About Citra
     void OnMenuAboutCitra();
@@ -256,6 +258,8 @@ private:
     QString video_dumping_path;
     // Whether game shutdown is delayed due to video dumping
     bool game_shutdown_delayed = false;
+    // Whether game was paused due to stopping video dumping
+    bool game_paused_for_dumping = false;
 
     // Debugger panes
     ProfilerWidget* profilerWidget;

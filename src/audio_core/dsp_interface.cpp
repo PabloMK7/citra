@@ -38,14 +38,14 @@ void DspInterface::EnableStretching(bool enable) {
     perform_time_stretching = enable;
 }
 
-void DspInterface::OutputFrame(StereoFrame16& frame) {
+void DspInterface::OutputFrame(StereoFrame16 frame) {
     if (!sink)
         return;
 
     fifo.Push(frame.data(), frame.size());
 
     if (Core::System::GetInstance().VideoDumper().IsDumping()) {
-        Core::System::GetInstance().VideoDumper().AddAudioFrame(frame);
+        Core::System::GetInstance().VideoDumper().AddAudioFrame(std::move(frame));
     }
 }
 
@@ -56,7 +56,7 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
     fifo.Push(&sample, 1);
 
     if (Core::System::GetInstance().VideoDumper().IsDumping()) {
-        Core::System::GetInstance().VideoDumper().AddAudioSample(sample);
+        Core::System::GetInstance().VideoDumper().AddAudioSample(std::move(sample));
     }
 }
 

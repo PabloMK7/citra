@@ -9,6 +9,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <vector>
 #include "common/common_types.h"
@@ -19,6 +20,7 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/opt.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -29,13 +31,15 @@ using VariableAudioFrame = std::vector<s16>;
 
 void InitFFmpegLibraries();
 
+class FFmpegMuxer;
+
 /**
  * Wrapper around FFmpeg AVCodecContext + AVStream.
  * Rescales/Resamples, encodes and writes a frame.
  */
 class FFmpegStream {
 public:
-    bool Init(AVFormatContext* format_context);
+    bool Init(FFmpegMuxer& muxer);
     void Free();
     void Flush();
 
@@ -58,6 +62,7 @@ protected:
     };
 
     AVFormatContext* format_context{};
+    std::mutex* format_context_mutex{};
     std::unique_ptr<AVCodecContext, AVCodecContextDeleter> codec_context{};
     AVStream* stream{};
 };
@@ -70,8 +75,7 @@ class FFmpegVideoStream : public FFmpegStream {
 public:
     ~FFmpegVideoStream();
 
-    bool Init(AVFormatContext* format_context, AVOutputFormat* output_format,
-              const Layout::FramebufferLayout& layout);
+    bool Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout& layout);
     void Free();
     void ProcessFrame(VideoFrame& frame);
 
@@ -96,15 +100,16 @@ private:
 /**
  * A FFmpegStream used for audio data.
  * Resamples (converts), encodes and writes a frame.
+ * This also temporarily stores resampled audio data before there are enough to form a frame.
  */
 class FFmpegAudioStream : public FFmpegStream {
 public:
     ~FFmpegAudioStream();
 
-    bool Init(AVFormatContext* format_context);
+    bool Init(FFmpegMuxer& muxer);
     void Free();
-    void ProcessFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1);
-    std::size_t GetAudioFrameSize() const;
+    void ProcessFrame(const VariableAudioFrame& channel0, const VariableAudioFrame& channel1);
+    void Flush();
 
 private:
     struct SwrContextDeleter {
@@ -113,12 +118,14 @@ private:
         }
     };
 
-    u64 sample_count{};
+    u64 frame_size{};
+    u64 frame_count{};
 
     std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame{};
     std::unique_ptr<SwrContext, SwrContextDeleter> swr_context{};
 
     u8** resampled_data{};
+    u64 offset{}; // Number of output samples that are currently in resampled_data.
 };
 
 /**
@@ -129,14 +136,12 @@ class FFmpegMuxer {
 public:
     ~FFmpegMuxer();
 
-    bool Init(const std::string& path, const std::string& format,
-              const Layout::FramebufferLayout& layout);
+    bool Init(const std::string& path, const Layout::FramebufferLayout& layout);
     void Free();
     void ProcessVideoFrame(VideoFrame& frame);
-    void ProcessAudioFrame(VariableAudioFrame& channel0, VariableAudioFrame& channel1);
+    void ProcessAudioFrame(const VariableAudioFrame& channel0, const VariableAudioFrame& channel1);
     void FlushVideo();
     void FlushAudio();
-    std::size_t GetAudioFrameSize() const;
     void WriteTrailer();
 
 private:
@@ -150,28 +155,28 @@ private:
     FFmpegAudioStream audio_stream{};
     FFmpegVideoStream video_stream{};
     std::unique_ptr<AVFormatContext, AVFormatContextDeleter> format_context{};
+    std::mutex format_context_mutex;
+
+    friend class FFmpegStream;
 };
 
 /**
  * FFmpeg video dumping backend.
- * This class implements a double buffer, and an audio queue to keep audio data
- * before enough data is received to form a frame.
+ * This class implements a double buffer.
  */
 class FFmpegBackend : public Backend {
 public:
     FFmpegBackend();
     ~FFmpegBackend() override;
-    bool StartDumping(const std::string& path, const std::string& format,
-                      const Layout::FramebufferLayout& layout) override;
-    void AddVideoFrame(const VideoFrame& frame) override;
-    void AddAudioFrame(const AudioCore::StereoFrame16& frame) override;
+    bool StartDumping(const std::string& path, const Layout::FramebufferLayout& layout) override;
+    void AddVideoFrame(VideoFrame frame) override;
+    void AddAudioFrame(AudioCore::StereoFrame16 frame) override;
     void AddAudioSample(const std::array<s16, 2>& sample) override;
     void StopDumping() override;
     bool IsDumping() const override;
     Layout::FramebufferLayout GetLayout() const override;
 
 private:
-    void CheckAudioBuffer();
     void EndDumping();
 
     std::atomic_bool is_dumping = false; ///< Whether the backend is currently dumping
@@ -184,13 +189,51 @@ private:
     Common::Event event1, event2;
     std::thread video_processing_thread;
 
-    /// An audio buffer used to temporarily hold audio data, before the size is big enough
-    /// to be sent to the encoder as a frame
-    std::array<VariableAudioFrame, 2> audio_buffers;
     std::array<Common::SPSCQueue<VariableAudioFrame>, 2> audio_frame_queues;
     std::thread audio_processing_thread;
 
     Common::Event processing_ended;
 };
+
+/// Struct describing encoder/muxer options
+struct OptionInfo {
+    std::string name;
+    std::string description;
+    AVOptionType type;
+    std::string default_value;
+    struct NamedConstant {
+        std::string name;
+        std::string description;
+        s64 value;
+    };
+    std::vector<NamedConstant> named_constants;
+
+    // If this is a scalar type
+    double min;
+    double max;
+};
+
+/// Struct describing an encoder
+struct EncoderInfo {
+    std::string name;
+    std::string long_name;
+    AVCodecID codec;
+    std::vector<OptionInfo> options;
+};
+
+/// Struct describing a format
+struct FormatInfo {
+    std::string name;
+    std::string long_name;
+    std::vector<std::string> extensions;
+    std::set<AVCodecID> supported_video_codecs;
+    std::set<AVCodecID> supported_audio_codecs;
+    std::vector<OptionInfo> options;
+};
+
+std::vector<EncoderInfo> ListEncoders(AVMediaType type);
+std::vector<OptionInfo> GetEncoderGenericOptions();
+std::vector<FormatInfo> ListFormats();
+std::vector<OptionInfo> GetFormatGenericOptions();
 
 } // namespace VideoDumper

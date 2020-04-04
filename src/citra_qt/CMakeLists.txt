@@ -162,6 +162,20 @@ add_executable(citra-qt
     util/util.h
 )
 
+if (ENABLE_FFMPEG_VIDEO_DUMPER)
+    target_sources(citra-qt PRIVATE
+        dumping/dumping_dialog.cpp
+        dumping/dumping_dialog.h
+        dumping/dumping_dialog.ui
+        dumping/option_set_dialog.cpp
+        dumping/option_set_dialog.h
+        dumping/option_set_dialog.ui
+        dumping/options_dialog.cpp
+        dumping/options_dialog.h
+        dumping/options_dialog.ui
+    )
+endif()
+
 file(GLOB COMPAT_LIST
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.json)
