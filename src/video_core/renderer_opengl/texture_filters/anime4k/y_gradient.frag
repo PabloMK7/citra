@@ -1,16 +1,18 @@
 //? #version 330
-in vec2 input_max;
+precision mediump float;
+
+in vec2 tex_coord;
 
 out float frag_color;
 
-uniform sampler2DRect tex_input;
+uniform sampler2D tex_input;
 
 void main() {
-    vec2 t = texture(tex_input, min(gl_FragCoord.xy + vec2(0.0, 1.0), input_max)).xy;
-    vec2 c = texture(tex_input, gl_FragCoord.xy).xy;
-    vec2 b = texture(tex_input, max(gl_FragCoord.xy - vec2(0.0, 1.0), vec2(0.0))).xy;
+    vec2 t = textureLodOffset(tex_input, tex_coord, 0.0, ivec2(0, 1)).xy;
+    vec2 c = textureLod(tex_input, tex_coord, 0.0).xy;
+    vec2 b = textureLodOffset(tex_input, tex_coord, 0.0, ivec2(0, -1)).xy;
 
-    vec2 grad = vec2(t.x + 2 * c.x + b.x, b.y - t.y);
+    vec2 grad = vec2(t.x + 2.0 * c.x + b.x, b.y - t.y);
 
-    frag_color = 1 - length(grad);
+    frag_color = 1.0 - length(grad);
 }

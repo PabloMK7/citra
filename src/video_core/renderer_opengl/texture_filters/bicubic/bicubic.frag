@@ -1,4 +1,6 @@
 //? #version 330
+precision mediump float;
+
 in vec2 tex_coord;
 
 out vec4 frag_color;
@@ -18,7 +20,7 @@ vec4 cubic(float v) {
 
 vec4 textureBicubic(sampler2D sampler, vec2 texCoords) {
 
-    vec2 texSize = textureSize(sampler, 0);
+    vec2 texSize = vec2(textureSize(sampler, 0));
     vec2 invTexSize = 1.0 / texSize;
 
     texCoords = texCoords * texSize - 0.5;

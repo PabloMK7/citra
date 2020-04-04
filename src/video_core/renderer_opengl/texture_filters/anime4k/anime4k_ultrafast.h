@@ -30,8 +30,6 @@ private:
         OGLTexture tex;
         OGLFramebuffer fbo;
     };
-    TempTex LUMAD;
-    TempTex XY;
 
     std::array<OGLSampler, 3> samplers;
 
