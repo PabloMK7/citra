@@ -140,9 +140,14 @@ bool SetCurrentDir(const std::string& directory);
 
 void SetUserPath(const std::string& path = "");
 
+void SetCurrentRomPath(const std::string& path);
+
 // Returns a pointer to a string with a Citra data dir in the user's home
 // directory. To be used in "multi-user" mode (that is, installed).
 const std::string& GetUserPath(UserPath path);
+
+// Replaces install-specific paths with standard placeholders, and back again
+std::string SerializePath(const std::string& input, bool is_saving);
 
 // Returns the path to where the sys file are
 std::string GetSysDirectory();
@@ -318,7 +323,8 @@ private:
 
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
-        ar << filename;
+        auto s_filename = SerializePath(filename, true);
+        ar << s_filename;
         ar << openmode;
         ar << flags;
         ar << Tell();
@@ -327,6 +333,7 @@ private:
     template <class Archive>
     void load(Archive& ar, const unsigned int) {
         ar >> filename;
+        filename = SerializePath(filename, false);
         ar >> openmode;
         ar >> flags;
         u64 pos;

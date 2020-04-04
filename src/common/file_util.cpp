@@ -729,6 +729,33 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::StatesDir, user_path + STATES_DIR DIR_SEP);
 }
 
+std::string g_currentRomPath{};
+
+void SetCurrentRomPath(const std::string& path) {
+    g_currentRomPath = path;
+}
+
+bool StringReplace(std::string& haystack, const std::string& a, const std::string& b, bool swap) {
+    const auto& needle = swap ? b : a;
+    const auto& replacement = swap ? a : b;
+    if (needle.empty()) {
+        return false;
+    }
+    auto index = haystack.find(needle, 0);
+    if (index == std::string::npos) {
+        return false;
+    }
+    haystack.replace(index, needle.size(), replacement);
+    return true;
+}
+
+std::string SerializePath(const std::string& input, bool is_saving) {
+    auto result = input;
+    StringReplace(result, "%CITRA_ROM_FILE%", g_currentRomPath, is_saving);
+    StringReplace(result, "%CITRA_USER_DIR%", GetUserPath(UserPath::UserDir), is_saving);
+    return result;
+}
+
 const std::string& GetUserPath(UserPath path) {
     // Set up all paths and files on the first run
     if (g_paths.empty())
