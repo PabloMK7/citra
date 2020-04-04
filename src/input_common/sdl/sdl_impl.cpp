@@ -474,11 +474,10 @@ SDLState::SDLState() {
     }
 // these hints are only defined on sdl2.0.9 or higher
 #if SDL_VERSION_ATLEAST(2, 0, 9)
-    // This can be set back to 1 when the compatibility problems with the controllers are
-    // solved. There are also hints to toggle the individual drivers.
+#if !SDL_VERSION_ATLEAST(2, 0, 12)
+    // There are also hints to toggle the individual drivers if needed.
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
-    // This hint should probably stay as "0" as long as the hidapi PS4 led issue isn't fixed
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4, "0");
+#endif
 #endif
 
     SDL_AddEventWatch(&SDLEventWatcher, this);
