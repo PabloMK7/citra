@@ -167,6 +167,7 @@ void System::LoadState(u32 slot) {
     auto system_mode = this->app_loader->LoadKernelSystemMode();
     auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
     Init(*m_emu_window, *system_mode.first, *n3ds_mode.first);
+    cheat_engine->Connect();
 
     try {
 
