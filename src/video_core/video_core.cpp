@@ -88,15 +88,11 @@ u16 GetResolutionScaleFactor() {
     }
 }
 
-void Save(std::ostream& stream) {
-    oarchive oa{stream};
-    oa& Pica::g_state;
-}
-
-void Load(std::istream& stream) {
-    iarchive ia{stream};
-    ia& Pica::g_state;
-    // TODO: Flush/reset things
+template <class Archive>
+void serialize(Archive& ar, const unsigned int) {
+    ar& Pica::g_state;
 }
 
 } // namespace VideoCore
+
+SERIALIZE_IMPL(VideoCore)

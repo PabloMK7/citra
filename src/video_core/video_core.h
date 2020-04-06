@@ -62,7 +62,7 @@ void RequestScreenshot(void* data, std::function<void()> callback,
 
 u16 GetResolutionScaleFactor();
 
-void Save(std::ostream& stream);
-void Load(std::istream& stream);
+template <class Archive>
+void serialize(Archive& ar, const unsigned int file_version);
 
 } // namespace VideoCore

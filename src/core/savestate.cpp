@@ -84,13 +84,8 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
 void System::SaveState(u32 slot) const {
     std::ostringstream sstream{std::ios_base::binary};
     try {
-
-        {
-            oarchive oa{sstream};
-            oa&* this;
-        }
-        VideoCore::Save(sstream);
-
+        oarchive oa{sstream};
+        oa&* this;
     } catch (const std::exception& e) {
         LOG_ERROR(Core, "Error saving: {}", e.what());
     }
@@ -159,24 +154,9 @@ void System::LoadState(u32 slot) {
         std::ios_base::binary};
     decompressed.clear();
 
-    // When loading, we want to make sure any lingering state gets cleared out before we begin.
-    // Shutdown, but persist a few things between loads...
-    Shutdown(true);
-
-    // Re-initialize everything like it was before
-    auto system_mode = this->app_loader->LoadKernelSystemMode();
-    auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
-    Init(*m_emu_window, *system_mode.first, *n3ds_mode.first);
-    cheat_engine->Connect();
-
     try {
-
-        {
-            iarchive ia{sstream};
-            ia&* this;
-        }
-        VideoCore::Load(sstream);
-
+        iarchive ia{sstream};
+        ia&* this;
     } catch (const std::exception& e) {
         LOG_ERROR(Core, "Error loading: {}", e.what());
     }
