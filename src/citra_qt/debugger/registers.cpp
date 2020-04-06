@@ -103,8 +103,6 @@ void RegistersWidget::OnEmulationStopping() {
 
     vfp_system_registers->child(0)->setText(1, QString{});
     vfp_system_registers->child(1)->setText(1, QString{});
-    vfp_system_registers->child(2)->setText(1, QString{});
-    vfp_system_registers->child(3)->setText(1, QString{});
 
     setEnabled(false);
 }
@@ -188,16 +186,12 @@ void RegistersWidget::CreateVFPSystemRegisterChildren() {
 
     vfp_system_registers->addChild(fpscr);
     vfp_system_registers->addChild(fpexc);
-    vfp_system_registers->addChild(new QTreeWidgetItem(QStringList(QStringLiteral("FPINST"))));
-    vfp_system_registers->addChild(new QTreeWidgetItem(QStringList(QStringLiteral("FPINST2"))));
 }
 
 void RegistersWidget::UpdateVFPSystemRegisterValues() {
     // Todo: handle all cores
     const u32 fpscr_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPSCR);
     const u32 fpexc_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPEXC);
-    const u32 fpinst_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPINST);
-    const u32 fpinst2_val = Core::GetCore(0).GetVFPSystemReg(VFP_FPINST2);
 
     QTreeWidgetItem* const fpscr = vfp_system_registers->child(0);
     fpscr->setText(1, QStringLiteral("0x%1").arg(fpscr_val, 8, 16, QLatin1Char('0')));
@@ -237,9 +231,4 @@ void RegistersWidget::UpdateVFPSystemRegisterValues() {
     fpexc->child(5)->setText(1, QString::number((fpexc_val >> 28) & 1));
     fpexc->child(6)->setText(1, QString::number((fpexc_val >> 30) & 1));
     fpexc->child(7)->setText(1, QString::number((fpexc_val >> 31) & 1));
-
-    vfp_system_registers->child(2)->setText(
-        1, QStringLiteral("0x%1").arg(fpinst_val, 8, 16, QLatin1Char('0')));
-    vfp_system_registers->child(3)->setText(
-        1, QStringLiteral("0x%1").arg(fpinst2_val, 8, 16, QLatin1Char('0')));
 }
