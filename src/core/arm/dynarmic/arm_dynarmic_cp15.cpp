@@ -14,10 +14,10 @@ DynarmicCP15::DynarmicCP15(const std::shared_ptr<ARMul_State>& state) : interpre
 
 DynarmicCP15::~DynarmicCP15() = default;
 
-boost::optional<Callback> DynarmicCP15::CompileInternalOperation(bool two, unsigned opc1,
-                                                                 CoprocReg CRd, CoprocReg CRn,
-                                                                 CoprocReg CRm, unsigned opc2) {
-    return boost::none;
+std::optional<Callback> DynarmicCP15::CompileInternalOperation(bool two, unsigned opc1,
+                                                               CoprocReg CRd, CoprocReg CRn,
+                                                               CoprocReg CRm, unsigned opc2) {
+    return std::nullopt;
 }
 
 CallbackOrAccessOneWord DynarmicCP15::CompileSendOneWord(bool two, unsigned opc1, CoprocReg CRn,
@@ -38,7 +38,7 @@ CallbackOrAccessOneWord DynarmicCP15::CompileSendOneWord(bool two, unsigned opc1
             // This is a dummy write, we ignore the value written here.
             return &interpreter_state->CP15[CP15_DATA_MEMORY_BARRIER];
         default:
-            return boost::blank{};
+            return std::monostate{};
         }
     }
 
@@ -46,11 +46,11 @@ CallbackOrAccessOneWord DynarmicCP15::CompileSendOneWord(bool two, unsigned opc1
         return &interpreter_state->CP15[CP15_THREAD_UPRW];
     }
 
-    return boost::blank{};
+    return std::monostate{};
 }
 
 CallbackOrAccessTwoWords DynarmicCP15::CompileSendTwoWords(bool two, unsigned opc, CoprocReg CRm) {
-    return boost::blank{};
+    return std::monostate{};
 }
 
 CallbackOrAccessOneWord DynarmicCP15::CompileGetOneWord(bool two, unsigned opc1, CoprocReg CRn,
@@ -64,25 +64,23 @@ CallbackOrAccessOneWord DynarmicCP15::CompileGetOneWord(bool two, unsigned opc1,
         case 3:
             return &interpreter_state->CP15[CP15_THREAD_URO];
         default:
-            return boost::blank{};
+            return std::monostate{};
         }
     }
 
-    return boost::blank{};
+    return std::monostate{};
 }
 
 CallbackOrAccessTwoWords DynarmicCP15::CompileGetTwoWords(bool two, unsigned opc, CoprocReg CRm) {
-    return boost::blank{};
+    return std::monostate{};
 }
 
-boost::optional<Callback> DynarmicCP15::CompileLoadWords(bool two, bool long_transfer,
-                                                         CoprocReg CRd,
-                                                         boost::optional<u8> option) {
-    return boost::none;
+std::optional<Callback> DynarmicCP15::CompileLoadWords(bool two, bool long_transfer, CoprocReg CRd,
+                                                       std::optional<u8> option) {
+    return std::nullopt;
 }
 
-boost::optional<Callback> DynarmicCP15::CompileStoreWords(bool two, bool long_transfer,
-                                                          CoprocReg CRd,
-                                                          boost::optional<u8> option) {
-    return boost::none;
+std::optional<Callback> DynarmicCP15::CompileStoreWords(bool two, bool long_transfer, CoprocReg CRd,
+                                                        std::optional<u8> option) {
+    return std::nullopt;
 }

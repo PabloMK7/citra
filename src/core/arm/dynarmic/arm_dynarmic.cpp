@@ -143,6 +143,14 @@ public:
                 return;
             }
             break;
+        case Dynarmic::A32::Exception::SendEvent:
+        case Dynarmic::A32::Exception::SendEventLocal:
+        case Dynarmic::A32::Exception::WaitForInterrupt:
+        case Dynarmic::A32::Exception::WaitForEvent:
+        case Dynarmic::A32::Exception::Yield:
+        case Dynarmic::A32::Exception::PreloadData:
+        case Dynarmic::A32::Exception::PreloadDataWithIntentToWrite:
+            return;
         }
         ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})",
                    static_cast<std::size_t>(exception), pc, MemoryReadCode(pc));
