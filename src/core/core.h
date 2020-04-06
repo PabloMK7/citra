@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/custom_tex_cache.h"
 #include "core/frontend/applets/mii_selector.h"
@@ -401,3 +402,5 @@ inline AudioCore::DspInterface& DSP() {
 }
 
 } // namespace Core
+
+BOOST_CLASS_VERSION(Core::System, 1)

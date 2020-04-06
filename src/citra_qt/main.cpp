@@ -524,6 +524,10 @@ void GMainWindow::InitializeHotkeys() {
                     OnCaptureScreenshot();
                 }
             });
+    connect(hotkey_registry.GetHotkey(main_window, ui.action_Load_from_Newest_Slot->text(), this),
+            &QShortcut::activated, ui.action_Load_from_Newest_Slot, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey(main_window, ui.action_Save_to_Oldest_Slot->text(), this),
+            &QShortcut::activated, ui.action_Save_to_Oldest_Slot, &QAction::trigger);
 }
 
 void GMainWindow::ShowUpdaterWidgets() {
@@ -1636,7 +1640,7 @@ void GMainWindow::OnSaveState() {
     assert(action);
 
     Core::System::GetInstance().SendSignal(Core::System::Signal::Save, action->data().toUInt());
-    UpdateSaveStates();
+    newest_slot = action->data().toUInt();
 }
 
 void GMainWindow::OnLoadState() {
