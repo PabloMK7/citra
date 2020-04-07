@@ -1207,12 +1207,14 @@ VideoCore::ResultStatus RendererOpenGL::Init() {
     if (!gladLoadGL()) {
         return VideoCore::ResultStatus::ErrorBelowGL33;
     }
-#endif
 
+    // Qualcomm has some spammy info messages that are marked as errors but not important
+    // https://developer.qualcomm.com/comment/11845
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(DebugHandler, nullptr);
     }
+#endif
 
     const char* gl_version{reinterpret_cast<char const*>(glGetString(GL_VERSION))};
     const char* gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
