@@ -34,6 +34,7 @@ namespace OpenGL {
 
 class RasterizerCacheOpenGL;
 class TextureFilterer;
+class FormatReinterpreterOpenGL;
 
 struct TextureCubeConfig {
     PAddr px;
@@ -240,9 +241,6 @@ public:
     bool BlitSurfaces(const Surface& src_surface, const Common::Rectangle<u32>& src_rect,
                       const Surface& dst_surface, const Common::Rectangle<u32>& dst_rect);
 
-    void ConvertD24S8toABGR(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
-                            const Common::Rectangle<u32>& dst_rect);
-
     /// Copy one surface's region to another
     void CopySurface(const Surface& src_surface, const Surface& dst_surface,
                      SurfaceInterval copy_interval);
@@ -288,6 +286,18 @@ private:
     /// Update surface's texture for given region when necessary
     void ValidateSurface(const Surface& surface, PAddr addr, u32 size);
 
+    // Returns false if there is a surface in the cache at the interval with the same bit-width,
+    bool NoUnimplementedReinterpretations(const OpenGL::Surface& surface,
+                                          OpenGL::SurfaceParams& params,
+                                          const OpenGL::SurfaceInterval& interval);
+
+    // Return true if a surface with an invalid pixel format exists at the interval
+    bool IntervalHasInvalidPixelFormat(SurfaceParams& params, const SurfaceInterval& interval);
+
+    // Attempt to find a reinterpretable surface in the cache and use it to copy for validation
+    bool ValidateByReinterpretation(const Surface& surface, SurfaceParams& params,
+                                    const SurfaceInterval& interval);
+
     /// Create a new surface
     Surface CreateSurface(const SurfaceParams& params);
 
@@ -308,18 +318,13 @@ private:
     OGLFramebuffer read_framebuffer;
     OGLFramebuffer draw_framebuffer;
 
-    OGLVertexArray attributeless_vao;
-    OGLBuffer d24s8_abgr_buffer;
-    GLsizeiptr d24s8_abgr_buffer_size;
-    OGLProgram d24s8_abgr_shader;
-    GLint d24s8_abgr_tbo_size_u_id;
-    GLint d24s8_abgr_viewport_u_id;
     u16 resolution_scale_factor;
 
     std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
 
 public:
     std::unique_ptr<TextureFilterer> texture_filterer;
+    std::unique_ptr<FormatReinterpreterOpenGL> format_reinterpreter;
 };
 
 struct FormatTuple {

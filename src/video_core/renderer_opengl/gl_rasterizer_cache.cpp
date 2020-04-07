@@ -32,6 +32,7 @@
 #include "core/settings.h"
 #include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
+#include "video_core/renderer_opengl/gl_format_reinterpreter.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
@@ -1063,54 +1064,10 @@ RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
     resolution_scale_factor = VideoCore::GetResolutionScaleFactor();
     texture_filterer = std::make_unique<TextureFilterer>(Settings::values.texture_filter_name,
                                                          resolution_scale_factor);
+    format_reinterpreter = std::make_unique<FormatReinterpreterOpenGL>();
 
     read_framebuffer.Create();
     draw_framebuffer.Create();
-
-    attributeless_vao.Create();
-
-    d24s8_abgr_buffer.Create();
-    d24s8_abgr_buffer_size = 0;
-
-    std::string vs_source = R"(
-const vec2 vertices[4] = vec2[4](vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, 1.0));
-void main() {
-    gl_Position = vec4(vertices[gl_VertexID], 0.0, 1.0);
-}
-)";
-
-    std::string fs_source = GLES ? fragment_shader_precision_OES : "";
-    fs_source += R"(
-uniform samplerBuffer tbo;
-uniform vec2 tbo_size;
-uniform vec4 viewport;
-
-out vec4 color;
-
-void main() {
-    vec2 tbo_coord = (gl_FragCoord.xy - viewport.xy) * tbo_size / viewport.zw;
-    int tbo_offset = int(tbo_coord.y) * int(tbo_size.x) + int(tbo_coord.x);
-    color = texelFetch(tbo, tbo_offset).rabg;
-}
-)";
-    d24s8_abgr_shader.Create(vs_source.c_str(), fs_source.c_str());
-
-    OpenGLState state = OpenGLState::GetCurState();
-    GLuint old_program = state.draw.shader_program;
-    state.draw.shader_program = d24s8_abgr_shader.handle;
-    state.Apply();
-
-    GLint tbo_u_id = glGetUniformLocation(d24s8_abgr_shader.handle, "tbo");
-    ASSERT(tbo_u_id != -1);
-    glUniform1i(tbo_u_id, 0);
-
-    state.draw.shader_program = old_program;
-    state.Apply();
-
-    d24s8_abgr_tbo_size_u_id = glGetUniformLocation(d24s8_abgr_shader.handle, "tbo_size");
-    ASSERT(d24s8_abgr_tbo_size_u_id != -1);
-    d24s8_abgr_viewport_u_id = glGetUniformLocation(d24s8_abgr_shader.handle, "viewport");
-    ASSERT(d24s8_abgr_viewport_u_id != -1);
 }
 
 RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
@@ -1134,64 +1091,6 @@ bool RasterizerCacheOpenGL::BlitSurfaces(const Surface& src_surface,
     return BlitTextures(src_surface->texture.handle, src_rect, dst_surface->texture.handle,
                         dst_rect, src_surface->type, read_framebuffer.handle,
                         draw_framebuffer.handle);
-}
-
-void RasterizerCacheOpenGL::ConvertD24S8toABGR(GLuint src_tex,
-                                               const Common::Rectangle<u32>& src_rect,
-                                               GLuint dst_tex,
-                                               const Common::Rectangle<u32>& dst_rect) {
-    OpenGLState prev_state = OpenGLState::GetCurState();
-    SCOPE_EXIT({ prev_state.Apply(); });
-
-    OpenGLState state;
-    state.draw.read_framebuffer = read_framebuffer.handle;
-    state.draw.draw_framebuffer = draw_framebuffer.handle;
-    state.Apply();
-
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, d24s8_abgr_buffer.handle);
-
-    GLsizeiptr target_pbo_size = src_rect.GetWidth() * src_rect.GetHeight() * 4;
-    if (target_pbo_size > d24s8_abgr_buffer_size) {
-        d24s8_abgr_buffer_size = target_pbo_size * 2;
-        glBufferData(GL_PIXEL_PACK_BUFFER, d24s8_abgr_buffer_size, nullptr, GL_STREAM_COPY);
-    }
-
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, src_tex,
-                           0);
-    glReadPixels(static_cast<GLint>(src_rect.left), static_cast<GLint>(src_rect.bottom),
-                 static_cast<GLsizei>(src_rect.GetWidth()),
-                 static_cast<GLsizei>(src_rect.GetHeight()), GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8,
-                 0);
-
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-    // PBO now contains src_tex in RABG format
-    state.draw.shader_program = d24s8_abgr_shader.handle;
-    state.draw.vertex_array = attributeless_vao.handle;
-    state.viewport.x = static_cast<GLint>(dst_rect.left);
-    state.viewport.y = static_cast<GLint>(dst_rect.bottom);
-    state.viewport.width = static_cast<GLsizei>(dst_rect.GetWidth());
-    state.viewport.height = static_cast<GLsizei>(dst_rect.GetHeight());
-    state.Apply();
-
-    OGLTexture tbo;
-    tbo.Create();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_BUFFER, tbo.handle);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA8, d24s8_abgr_buffer.handle);
-
-    glUniform2f(d24s8_abgr_tbo_size_u_id, static_cast<GLfloat>(src_rect.GetWidth()),
-                static_cast<GLfloat>(src_rect.GetHeight()));
-    glUniform4f(d24s8_abgr_viewport_u_id, static_cast<GLfloat>(state.viewport.x),
-                static_cast<GLfloat>(state.viewport.y), static_cast<GLfloat>(state.viewport.width),
-                static_cast<GLfloat>(state.viewport.height));
-
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex, 0);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindTexture(GL_TEXTURE_BUFFER, 0);
 }
 
 Surface RasterizerCacheOpenGL::GetSurface(const SurfaceParams& params, ScaleMatch match_res_scale,
@@ -1721,9 +1620,15 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         return;
     }
 
+    auto validate_regions = surface->invalid_regions & validate_interval;
+    auto notify_validated = [&](SurfaceInterval interval) {
+        surface->invalid_regions.erase(interval);
+        validate_regions.erase(interval);
+    };
+
     while (true) {
-        const auto it = surface->invalid_regions.find(validate_interval);
-        if (it == surface->invalid_regions.end())
+        const auto it = validate_regions.begin();
+        if (it == validate_regions.end())
             break;
 
         const auto interval = *it & validate_interval;
@@ -1735,27 +1640,27 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         if (copy_surface != nullptr) {
             SurfaceInterval copy_interval = params.GetCopyableInterval(copy_surface);
             CopySurface(copy_surface, surface, copy_interval);
-            surface->invalid_regions.erase(copy_interval);
+            notify_validated(copy_interval);
             continue;
         }
 
-        // D24S8 to RGBA8
-        if (surface->pixel_format == PixelFormat::RGBA8) {
-            params.pixel_format = PixelFormat::D24S8;
-            Surface reinterpret_surface =
-                FindMatch<MatchFlags::Copy>(surface_cache, params, ScaleMatch::Ignore, interval);
-            if (reinterpret_surface != nullptr) {
-                ASSERT(reinterpret_surface->pixel_format == PixelFormat::D24S8);
-
-                SurfaceInterval convert_interval = params.GetCopyableInterval(reinterpret_surface);
-                SurfaceParams convert_params = surface->FromInterval(convert_interval);
-                auto src_rect = reinterpret_surface->GetScaledSubRect(convert_params);
-                auto dest_rect = surface->GetScaledSubRect(convert_params);
-
-                ConvertD24S8toABGR(reinterpret_surface->texture.handle, src_rect,
-                                   surface->texture.handle, dest_rect);
-
-                surface->invalid_regions.erase(convert_interval);
+        // Try to find surface in cache with different format
+        // that can can be reinterpreted to the requested format.
+        if (ValidateByReinterpretation(surface, params, interval)) {
+            notify_validated(interval);
+            continue;
+        }
+        // Could not find a matching reinterpreter, check if we need to implement a
+        // reinterpreter
+        if (NoUnimplementedReinterpretations(surface, params, interval) &&
+            !IntervalHasInvalidPixelFormat(params, interval)) {
+            // No surfaces were found in the cache that had a matching bit-width.
+            // If the region was created entirely on the GPU,
+            // assume it was a developer mistake and skip flushing.
+            if (boost::icl::contains(dirty_regions, interval)) {
+                LOG_DEBUG(Render_OpenGL, "Region created fully on GPU and reinterpretation is "
+                                         "invalid. Skipping validation");
+                validate_regions.erase(interval);
                 continue;
             }
         }
@@ -1765,8 +1670,101 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         surface->LoadGLBuffer(params.addr, params.end);
         surface->UploadGLTexture(surface->GetSubRect(params), read_framebuffer.handle,
                                  draw_framebuffer.handle);
-        surface->invalid_regions.erase(params.GetInterval());
+        notify_validated(params.GetInterval());
     }
+}
+
+bool RasterizerCacheOpenGL::NoUnimplementedReinterpretations(const Surface& surface,
+                                                             SurfaceParams& params,
+                                                             const SurfaceInterval& interval) {
+    static constexpr std::array<PixelFormat, 17> all_formats{
+        PixelFormat::RGBA8, PixelFormat::RGB8,   PixelFormat::RGB5A1, PixelFormat::RGB565,
+        PixelFormat::RGBA4, PixelFormat::IA8,    PixelFormat::RG8,    PixelFormat::I8,
+        PixelFormat::A8,    PixelFormat::IA4,    PixelFormat::I4,     PixelFormat::A4,
+        PixelFormat::ETC1,  PixelFormat::ETC1A4, PixelFormat::D16,    PixelFormat::D24,
+        PixelFormat::D24S8,
+    };
+    bool implemented = true;
+    for (PixelFormat format : all_formats) {
+        if (SurfaceParams::GetFormatBpp(format) == surface->GetFormatBpp()) {
+            params.pixel_format = format;
+            // This could potentially be expensive,
+            // although experimentally it hasn't been too bad
+            Surface test_surface =
+                FindMatch<MatchFlags::Copy>(surface_cache, params, ScaleMatch::Ignore, interval);
+            if (test_surface != nullptr) {
+                LOG_WARNING(Render_OpenGL, "Missing pixel_format reinterpreter: {} -> {}",
+                            SurfaceParams::PixelFormatAsString(format),
+                            SurfaceParams::PixelFormatAsString(surface->pixel_format));
+                implemented = false;
+            }
+        }
+    }
+    return implemented;
+}
+
+bool RasterizerCacheOpenGL::IntervalHasInvalidPixelFormat(SurfaceParams& params,
+                                                          const SurfaceInterval& interval) {
+    params.pixel_format = PixelFormat::Invalid;
+    for (const auto& set : RangeFromInterval(surface_cache, interval))
+        for (const auto& surface : set.second)
+            if (surface->pixel_format == PixelFormat::Invalid) {
+                LOG_WARNING(Render_OpenGL, "Surface found with invalid pixel format");
+                return true;
+            }
+    return false;
+}
+
+bool RasterizerCacheOpenGL::ValidateByReinterpretation(const Surface& surface,
+                                                       SurfaceParams& params,
+                                                       const SurfaceInterval& interval) {
+    auto [cvt_begin, cvt_end] =
+        format_reinterpreter->GetPossibleReinterpretations(surface->pixel_format);
+    for (auto reinterpreter = cvt_begin; reinterpreter != cvt_end; ++reinterpreter) {
+        PixelFormat format = reinterpreter->first.src_format;
+        params.pixel_format = format;
+        Surface reinterpret_surface =
+            FindMatch<MatchFlags::Copy>(surface_cache, params, ScaleMatch::Ignore, interval);
+
+        if (reinterpret_surface != nullptr) {
+            SurfaceInterval reinterpret_interval = params.GetCopyableInterval(reinterpret_surface);
+            SurfaceParams reinterpret_params = surface->FromInterval(reinterpret_interval);
+            auto src_rect = reinterpret_surface->GetScaledSubRect(reinterpret_params);
+            auto dest_rect = surface->GetScaledSubRect(reinterpret_params);
+
+            if (!texture_filterer->IsNull() && reinterpret_surface->res_scale == 1 &&
+                surface->res_scale == resolution_scale_factor) {
+                // The destination surface is either a framebuffer, or a filtered texture.
+                OGLTexture tmp_tex;
+                tmp_tex.Create();
+                // Create an intermediate surface to convert to before blitting to the
+                // destination.
+                Common::Rectangle<u32> tmp_rect{0, dest_rect.GetHeight() / resolution_scale_factor,
+                                                dest_rect.GetWidth() / resolution_scale_factor, 0};
+                AllocateSurfaceTexture(tmp_tex.handle,
+                                       GetFormatTuple(reinterpreter->first.dst_format),
+                                       tmp_rect.right, tmp_rect.top);
+                reinterpreter->second->Reinterpret(reinterpret_surface->texture.handle, src_rect,
+                                                   read_framebuffer.handle, tmp_tex.handle,
+                                                   tmp_rect, draw_framebuffer.handle);
+                SurfaceParams::SurfaceType type =
+                    SurfaceParams::GetFormatType(reinterpreter->first.dst_format);
+
+                if (!texture_filterer->Filter(tmp_tex.handle, tmp_rect, surface->texture.handle,
+                                              dest_rect, type, read_framebuffer.handle,
+                                              draw_framebuffer.handle)) {
+                    BlitTextures(tmp_tex.handle, tmp_rect, surface->texture.handle, dest_rect, type,
+                                 read_framebuffer.handle, draw_framebuffer.handle);
+                }
+            } else {
+                reinterpreter->second->Reinterpret(reinterpret_surface->texture.handle, src_rect,
+                                                   read_framebuffer.handle, surface->texture.handle,
+                                                   dest_rect, draw_framebuffer.handle);
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 void RasterizerCacheOpenGL::FlushRegion(PAddr addr, u32 size, Surface flush_surface) {
