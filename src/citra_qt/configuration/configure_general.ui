@@ -36,6 +36,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="toggle_hide_mouse">
+          <property name="text">
+           <string>Hide mouse on inactivity</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>

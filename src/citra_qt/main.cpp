@@ -102,6 +102,8 @@ __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
 }
 #endif
 
+constexpr int default_mouse_timeout = 2500;
+
 /**
  * "Callouts" are one-time instructional messages shown to the user. In the config settings, there
  * is a bitfield "callout_flags" options, used to track if a message has already been shown to the
@@ -193,6 +195,14 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
 
     // Show one-time "callout" messages to the user
     ShowTelemetryCallout();
+
+    // make sure menubar has the arrow cursor instead of inheriting from this
+    ui.menubar->setCursor(QCursor());
+    statusBar()->setCursor(QCursor());
+
+    mouse_hide_timer.setInterval(default_mouse_timeout);
+    connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
+    connect(ui.menubar, &QMenuBar::hovered, this, &GMainWindow::ShowMouseCursor);
 
     if (UISettings::values.check_for_update_on_start) {
         CheckForUpdates();
@@ -965,6 +975,13 @@ void GMainWindow::BootGame(const QString& filename) {
     }
     status_bar_update_timer.start(2000);
 
+    if (UISettings::values.hide_mouse) {
+        mouse_hide_timer.start();
+        setMouseTracking(true);
+        ui.centralwidget->setMouseTracking(true);
+        ui.menubar->setMouseTracking(true);
+    }
+
     // show and hide the render_window to create the context
     render_window->show();
     render_window->hide();
@@ -1062,6 +1079,10 @@ void GMainWindow::ShutdownGame() {
     else
         game_list->show();
     game_list->setFilterFocus();
+
+    setMouseTracking(false);
+    ui.centralwidget->setMouseTracking(false);
+    ui.menubar->setMouseTracking(false);
 
     // Disable status bar updates
     status_bar_update_timer.stop();
@@ -1578,6 +1599,16 @@ void GMainWindow::OnConfigure() {
         SyncMenuUISettings();
         game_list->RefreshGameDirectory();
         config->Save();
+        if (UISettings::values.hide_mouse && emulation_running) {
+            setMouseTracking(true);
+            ui.centralwidget->setMouseTracking(true);
+            ui.menubar->setMouseTracking(true);
+            mouse_hide_timer.start();
+        } else {
+            setMouseTracking(false);
+            ui.centralwidget->setMouseTracking(false);
+            ui.menubar->setMouseTracking(false);
+        }
     } else {
         Settings::values.input_profiles = old_input_profiles;
         Settings::LoadProfile(old_input_profile_index);
@@ -1892,6 +1923,30 @@ void GMainWindow::UpdateStatusBar() {
     emu_speed_label->setVisible(true);
     game_fps_label->setVisible(true);
     emu_frametime_label->setVisible(true);
+}
+
+void GMainWindow::HideMouseCursor() {
+    if (emu_thread == nullptr || UISettings::values.hide_mouse == false) {
+        mouse_hide_timer.stop();
+        ShowMouseCursor();
+        return;
+    }
+    setCursor(QCursor(Qt::BlankCursor));
+}
+
+void GMainWindow::ShowMouseCursor() {
+    unsetCursor();
+    if (emu_thread != nullptr && UISettings::values.hide_mouse) {
+        mouse_hide_timer.start();
+    }
+}
+
+void GMainWindow::mouseMoveEvent(QMouseEvent* event) {
+    ShowMouseCursor();
+}
+
+void GMainWindow::mousePressEvent(QMouseEvent* event) {
+    ShowMouseCursor();
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
