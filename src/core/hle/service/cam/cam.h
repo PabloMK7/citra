@@ -13,6 +13,7 @@
 #include <boost/serialization/deque.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/global.h"
@@ -792,8 +793,12 @@ private:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& impl;
+        void serialize(Archive& ar, const unsigned int file_version) {
+            // For compatibility: put a nullptr here
+            if (file_version == 0) {
+                std::unique_ptr<Camera::CameraInterface> x;
+                ar& x;
+            }
             ar& contexts;
             ar& current_context;
             ar& frame_rate;
@@ -883,3 +888,4 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::CAM
 
 SERVICE_CONSTRUCT(Service::CAM::Module)
+BOOST_CLASS_VERSION(Service::CAM::Module::CameraConfig, 1)

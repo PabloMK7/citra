@@ -30,6 +30,19 @@ void Module::serialize(Archive& ar, const unsigned int) {
     ar& cameras;
     ar& ports;
     ar& is_camera_reload_pending;
+    if (Archive::is_loading::value) {
+        for (int i = 0; i < NumCameras; i++) {
+            LoadCameraImplementation(cameras[i], i);
+        }
+        for (std::size_t i = 0; i < ports.size(); i++) {
+            if (ports[i].is_busy) {
+                cameras[ports[i].camera_id].impl->StartCapture();
+            }
+            if (ports[i].is_receiving) {
+                StartReceiving(static_cast<int>(i));
+            }
+        }
+    }
 }
 
 SERIALIZE_IMPL(Module)
