@@ -30,7 +30,7 @@ CalibrationConfigurationDialog::CalibrationConfigurationDialog(QWidget* parent,
     setLayout(layout);
 
     using namespace InputCommon::CemuhookUDP;
-    job = std::move(std::make_unique<CalibrationConfigurationJob>(
+    job = std::make_unique<CalibrationConfigurationJob>(
         host, port, pad_index, client_id,
         [this](CalibrationConfigurationJob::Status status) {
             QString text;
@@ -56,7 +56,7 @@ CalibrationConfigurationDialog::CalibrationConfigurationDialog(QWidget* parent,
             min_y = min_y_;
             max_x = max_x_;
             max_y = max_y_;
-        }));
+        });
 }
 
 CalibrationConfigurationDialog::~CalibrationConfigurationDialog() = default;
