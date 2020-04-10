@@ -6,6 +6,7 @@
 
 #include <boost/icl/discrete_interval.hpp>
 #include "common/common_types.h"
+#include "common/logging/log.h"
 
 namespace boost::serialization {
 
@@ -25,7 +26,7 @@ void load(Archive& ar, boost::icl::discrete_interval<DomainT, Compare>& obj,
     ar >> lower;
     ar >> upper;
     ar >> bounds;
-    obj = boost::icl::discrete_interval(upper, lower, boost::icl::interval_bounds(bounds));
+    obj = boost::icl::discrete_interval(lower, upper, boost::icl::interval_bounds(bounds));
 }
 
 template <class Archive, class DomainT, ICL_COMPARE Compare>

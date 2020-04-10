@@ -26,7 +26,7 @@ void load(Archive& ar, boost::icl::interval_set<T>& set, const unsigned int file
     for (u64 i = 0; i < count; i++) {
         typename boost::icl::interval_set<T>::interval_type value{};
         ar >> value;
-        set.add(value);
+        set += value;
     }
 }
 
