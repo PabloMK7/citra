@@ -8,6 +8,7 @@
 #include <memory>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
@@ -30,7 +31,8 @@ public:
                 const auto r = GetCpuRegister(i);
                 ar << r;
             }
-            for (std::size_t i = 0; i < 16; i++) {
+            std::size_t fpu_reg_count = file_version == 0 ? 16 : 64;
+            for (std::size_t i = 0; i < fpu_reg_count; i++) {
                 const auto r = GetFpuRegister(i);
                 ar << r;
             }
@@ -49,7 +51,8 @@ public:
                 ar >> r;
                 SetCpuRegister(i, r);
             }
-            for (std::size_t i = 0; i < 16; i++) {
+            std::size_t fpu_reg_count = file_version == 0 ? 16 : 64;
+            for (std::size_t i = 0; i < fpu_reg_count; i++) {
                 ar >> r;
                 SetFpuRegister(i, r);
             }
@@ -254,7 +257,8 @@ private:
         ar << pc;
         const auto cpsr = GetCPSR();
         ar << cpsr;
-        for (int i = 0; i < 32; i++) {
+        int vfp_reg_count = file_version == 0 ? 32 : 64;
+        for (int i = 0; i < vfp_reg_count; i++) {
             const auto r = GetVFPReg(i);
             ar << r;
         }
@@ -285,7 +289,8 @@ private:
         SetPC(r);
         ar >> r;
         SetCPSR(r);
-        for (int i = 0; i < 32; i++) {
+        int vfp_reg_count = file_version == 0 ? 32 : 64;
+        for (int i = 0; i < vfp_reg_count; i++) {
             ar >> r;
             SetVFPReg(i, r);
         }
@@ -301,3 +306,6 @@ private:
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
+
+BOOST_CLASS_VERSION(ARM_Interface, 1)
+BOOST_CLASS_VERSION(ARM_Interface::ThreadContext, 1)
