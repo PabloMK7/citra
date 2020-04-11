@@ -494,10 +494,10 @@ void System::Shutdown(bool is_deserializing) {
                                 perf_stats->GetMeanFrametime());
 
     // Shutdown emulation session
-    GDBStub::Shutdown();
     VideoCore::Shutdown();
     HW::Shutdown();
     if (!is_deserializing) {
+        GDBStub::Shutdown();
         perf_stats.reset();
         cheat_engine.reset();
         app_loader.reset();
