@@ -280,6 +280,26 @@ private:
         }
     };
 
+    template <typename SVCT>
+    struct WrapPass<SVCT, ResultCode /*empty for T, Ts...*/> {
+        // Call function R(Context::svc)(Us...) and transfer the return value to registers
+        template <typename... Us>
+        static void Call(Context& context, SVCT svc, Us... u) {
+            static_assert(std::is_same_v<SVCT, ResultCode (Context::*)(Us...)>);
+            if constexpr (std::is_void_v<ResultCode>) {
+                (context.*svc)(u...);
+            } else {
+                ResultCode r = (context.*svc)(u...);
+                if (r.IsError()) {
+                    LOG_ERROR(Kernel_SVC, "level={} summary={} module={} description={}",
+                              r.level.ExtractValue(r.raw), r.summary.ExtractValue(r.raw),
+                              r.module.ExtractValue(r.raw), r.description.ExtractValue(r.raw));
+                }
+                SetParam<INDEX_RETURN, ResultCode, ResultCode, Us...>(context, r);
+            }
+        }
+    };
+
     template <typename T>
     struct WrapHelper;
 
