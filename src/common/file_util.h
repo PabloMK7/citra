@@ -16,6 +16,7 @@
 #include <vector>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/wrapper.hpp>
 #include "common/common_types.h"
 #ifdef _MSC_VER
 #include "common/string_util.h"
@@ -41,6 +42,34 @@ enum class UserPath {
     UserDir,
 };
 
+// Replaces install-specific paths with standard placeholders, and back again
+std::string SerializePath(const std::string& input, bool is_saving);
+
+// A serializable path string
+struct Path : public boost::serialization::wrapper_traits<const Path> {
+    std::string& str;
+
+    explicit Path(std::string& _str) : str(_str) {}
+
+    static const Path make(std::string& str) {
+        return Path(str);
+    }
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int) const {
+        auto s_path = SerializePath(str, true);
+        ar << s_path;
+    }
+    template <class Archive>
+    void load(Archive& ar, const unsigned int) const {
+        ar >> str;
+        str = SerializePath(str, false);
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER();
+    friend class boost::serialization::access;
+};
+
 // FileSystem tree node/
 struct FSTEntry {
     bool isDirectory;
@@ -48,6 +77,17 @@ struct FSTEntry {
     std::string physicalName; // name on disk
     std::string virtualName;  // name in FST names table
     std::vector<FSTEntry> children;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& isDirectory;
+        ar& size;
+        ar& Path::make(physicalName);
+        ar& Path::make(virtualName);
+        ar& children;
+    }
+    friend class boost::serialization::access;
 };
 
 // Returns true if file filename exists
@@ -145,9 +185,6 @@ void SetCurrentRomPath(const std::string& path);
 // Returns a pointer to a string with a Citra data dir in the user's home
 // directory. To be used in "multi-user" mode (that is, installed).
 const std::string& GetUserPath(UserPath path);
-
-// Replaces install-specific paths with standard placeholders, and back again
-std::string SerializePath(const std::string& input, bool is_saving);
 
 // Returns the path to where the sys file are
 std::string GetSysDirectory();
@@ -322,27 +359,20 @@ private:
     u32 flags;
 
     template <class Archive>
-    void save(Archive& ar, const unsigned int) const {
-        auto s_filename = SerializePath(filename, true);
-        ar << s_filename;
-        ar << openmode;
-        ar << flags;
-        ar << Tell();
-    }
-
-    template <class Archive>
-    void load(Archive& ar, const unsigned int) {
-        ar >> filename;
-        filename = SerializePath(filename, false);
-        ar >> openmode;
-        ar >> flags;
+    void serialize(Archive& ar, const unsigned int) {
+        ar& Path::make(filename);
+        ar& openmode;
+        ar& flags;
         u64 pos;
-        ar >> pos;
-        Open();
-        Seek(pos, SEEK_SET);
+        if (Archive::is_saving::value) {
+            pos = Tell();
+        }
+        ar& pos;
+        if (Archive::is_loading::value) {
+            Open();
+            Seek(pos, SEEK_SET);
+        }
     }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
     friend class boost::serialization::access;
 };
 
