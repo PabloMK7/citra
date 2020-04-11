@@ -68,6 +68,7 @@ public:
     }
 
     void RefreshRasterizerSetting();
+    void Sync();
 
 protected:
     Frontend::EmuWindow& render_window; ///< Reference to the render window handle.

@@ -61,6 +61,9 @@ public:
                            u32 pixel_stride, ScreenInfo& screen_info) override;
     bool AccelerateDrawBatch(bool is_indexed) override;
 
+    /// Syncs entire status to match PICA registers
+    void SyncEntireState() override;
+
 private:
     struct SamplerInfo {
         using TextureConfig = Pica::TexturingRegs::TextureConfig;
@@ -131,9 +134,6 @@ private:
         GLvec4 normquat;
         GLvec3 view;
     };
-
-    /// Syncs entire status to match PICA registers
-    void SyncEntireState();
 
     /// Syncs the clip enabled status to match the PICA register
     void SyncClipEnabled();

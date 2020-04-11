@@ -44,6 +44,7 @@
 #include "core/rpc/rpc_server.h"
 #include "core/settings.h"
 #include "network/network.h"
+#include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
 namespace Core {
@@ -586,6 +587,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         Service::GSP::SetGlobalModule(*this);
         memory->SetDSP(*dsp_core);
         cheat_engine->Connect();
+        VideoCore::g_renderer->Sync();
     }
 }
 
