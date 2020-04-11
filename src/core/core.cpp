@@ -89,6 +89,40 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         }
     }
 
+    Signal signal{Signal::None};
+    u32 param{};
+    {
+        std::lock_guard lock{signal_mutex};
+        if (current_signal != Signal::None) {
+            signal = current_signal;
+            param = signal_param;
+            current_signal = Signal::None;
+        }
+    }
+    switch (signal) {
+    case Signal::Reset:
+        Reset();
+        return ResultStatus::Success;
+    case Signal::Shutdown:
+        return ResultStatus::ShutdownRequested;
+    case Signal::Load: {
+        LOG_INFO(Core, "Begin load");
+        System::LoadState(param);
+        LOG_INFO(Core, "Load completed");
+        frame_limiter.WaitOnce();
+        return ResultStatus::Success;
+    }
+    case Signal::Save: {
+        LOG_INFO(Core, "Begin save");
+        System::SaveState(param);
+        LOG_INFO(Core, "Save completed");
+        frame_limiter.WaitOnce();
+        return ResultStatus::Success;
+    }
+    default:
+        break;
+    }
+
     // All cores should have executed the same amount of ticks. If this is not the case an event was
     // scheduled with a cycles_into_future smaller then the current downcount.
     // So we have to get those cores to the same global time first
@@ -162,39 +196,6 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
 
     HW::Update();
     Reschedule();
-
-    Signal signal{Signal::None};
-    u32 param{};
-    {
-        std::lock_guard lock{signal_mutex};
-        if (current_signal != Signal::None) {
-            signal = current_signal;
-            param = signal_param;
-            current_signal = Signal::None;
-        }
-    }
-    switch (signal) {
-    case Signal::Reset:
-        Reset();
-        break;
-    case Signal::Shutdown:
-        return ResultStatus::ShutdownRequested;
-        break;
-    case Signal::Load: {
-        LOG_INFO(Core, "Begin load");
-        System::LoadState(param);
-        LOG_INFO(Core, "Load completed");
-        break;
-    }
-    case Signal::Save: {
-        LOG_INFO(Core, "Begin save");
-        System::SaveState(param);
-        LOG_INFO(Core, "Save completed");
-        break;
-    }
-    default:
-        break;
-    }
 
     return status;
 }

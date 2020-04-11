@@ -706,6 +706,7 @@ void GMainWindow::ConnectMenuEvents() {
         if (emulation_running) {
             ui.action_Enable_Frame_Advancing->setChecked(true);
             ui.action_Advance_Frame->setEnabled(true);
+            Core::System::GetInstance().frame_limiter.SetFrameAdvancing(true);
             Core::System::GetInstance().frame_limiter.AdvanceFrame();
         }
     });
@@ -1640,6 +1641,7 @@ void GMainWindow::OnSaveState() {
     assert(action);
 
     Core::System::GetInstance().SendSignal(Core::System::Signal::Save, action->data().toUInt());
+    Core::System::GetInstance().frame_limiter.AdvanceFrame();
     newest_slot = action->data().toUInt();
 }
 
@@ -1648,6 +1650,7 @@ void GMainWindow::OnLoadState() {
     assert(action);
 
     Core::System::GetInstance().SendSignal(Core::System::Signal::Load, action->data().toUInt());
+    Core::System::GetInstance().frame_limiter.AdvanceFrame();
 }
 
 void GMainWindow::OnConfigure() {

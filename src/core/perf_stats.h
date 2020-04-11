@@ -98,6 +98,7 @@ public:
      */
     void SetFrameAdvancing(bool value);
     void AdvanceFrame();
+    void WaitOnce();
 
 private:
     /// Emulated system time (in microseconds) at the last limiter invocation
