@@ -8,6 +8,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <boost/serialization/version.hpp>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -348,3 +349,4 @@ void InstallInterfaces(Core::System& system);
 
 SERVICE_CONSTRUCT(Service::HID::Module)
 BOOST_CLASS_EXPORT_KEY(Service::HID::Module)
+BOOST_CLASS_VERSION(Service::HID::Module, 1)

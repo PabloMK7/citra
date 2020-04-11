@@ -30,7 +30,7 @@ SERIALIZE_EXPORT_IMPL(Service::HID::Module)
 namespace Service::HID {
 
 template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
+void Module::serialize(Archive& ar, const unsigned int file_version) {
     ar& shared_mem;
     ar& event_pad_or_touch_1;
     ar& event_pad_or_touch_2;
@@ -46,7 +46,9 @@ void Module::serialize(Archive& ar, const unsigned int) {
     if (Archive::is_loading::value) {
         LoadInputDevices();
     }
-    // Pad state not needed as it's always updated
+    if (file_version >= 1) {
+        ar& state.hex;
+    }
     // Update events are set in the constructor
     // Devices are set from the implementation (and are stateless afaik)
 }
