@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/weak_ptr.hpp>
 #ifdef HAVE_CUBEB
 #include "audio_core/cubeb_input.h"
 #endif
@@ -69,7 +70,7 @@ constexpr u64 GetBufferUpdateRate(SampleRate sample_rate) {
 
 // Variables holding the current mic buffer writing state
 struct State {
-    std::shared_ptr<Kernel::SharedMemory> memory_ref = nullptr;
+    std::weak_ptr<Kernel::SharedMemory> memory_ref{};
     u8* sharedmem_buffer = nullptr;
     u32 sharedmem_size = 0;
     std::size_t size = 0;
@@ -110,7 +111,9 @@ struct State {
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& memory_ref;
+        std::shared_ptr<Kernel::SharedMemory> _memory_ref = memory_ref.lock();
+        ar& _memory_ref;
+        memory_ref = _memory_ref;
         ar& sharedmem_size;
         ar& size;
         ar& offset;
@@ -118,7 +121,7 @@ private:
         ar& looped_buffer;
         ar& sample_size;
         ar& sample_rate;
-        sharedmem_buffer = memory_ref ? memory_ref->GetPointer() : nullptr;
+        sharedmem_buffer = _memory_ref ? _memory_ref->GetPointer() : nullptr;
     }
     friend class boost::serialization::access;
 };
