@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <boost/serialization/binary_object.hpp>
 #include <cryptopp/hex.h>
 #include "common/archives.h"
 #include "common/logging/log.h"
@@ -11,6 +12,7 @@
 #include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/savestate.h"
+#include "network/network.h"
 #include "video_core/video_core.h"
 
 namespace Core {
@@ -23,6 +25,11 @@ struct CSTHeader {
     u64_le time;                 /// The time when this save state was created
 
     std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::binary_object(this, sizeof(CSTHeader));
+    }
 };
 static_assert(sizeof(CSTHeader) == 256, "CSTHeader should be 256 bytes");
 #pragma pack(pop)
@@ -127,6 +134,11 @@ void System::SaveState(u32 slot) const {
 }
 
 void System::LoadState(u32 slot) {
+    if (Network::GetRoomMember().lock()->IsConnected()) {
+        LOG_ERROR(Core, "Unable to load while connected to multiplayer");
+        return;
+    }
+
     const auto path = GetSaveStatePath(title_id, slot);
     if (!FileUtil::Exists(path)) {
         LOG_ERROR(Core, "File not exist {}", path);

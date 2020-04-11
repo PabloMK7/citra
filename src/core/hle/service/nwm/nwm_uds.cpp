@@ -504,6 +504,9 @@ void NWM_UDS::HandleDataFrame(const Network::WifiPacket& packet) {
 
 /// Callback to parse and handle a received wifi packet.
 void NWM_UDS::OnWifiPacketReceived(const Network::WifiPacket& packet) {
+    if (!initialized) {
+        return;
+    }
     switch (packet.type) {
     case Network::WifiPacket::PacketType::Beacon:
         HandleBeaconFrame(packet);
