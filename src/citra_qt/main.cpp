@@ -1232,7 +1232,7 @@ void GMainWindow::OnGameListDumpRomFS(QString game_path, u64 program_id) {
     using FutureWatcher = QFutureWatcher<std::pair<Loader::ResultStatus, Loader::ResultStatus>>;
     auto* future_watcher = new FutureWatcher(this);
     connect(future_watcher, &FutureWatcher::finished,
-            [this, program_id, dialog, base_path, update_path, future_watcher] {
+            [this, dialog, base_path, update_path, future_watcher] {
                 dialog->hide();
                 const auto& [base, update] = future_watcher->result();
                 if (base != Loader::ResultStatus::Success) {

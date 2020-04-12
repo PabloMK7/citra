@@ -242,6 +242,13 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     SetError(Error::LostConnection);
                 }
                 break;
+            case ENET_EVENT_TYPE_NONE:
+                break;
+            case ENET_EVENT_TYPE_CONNECT:
+                // The ENET_EVENT_TYPE_CONNECT event can not possibly happen here because we're
+                // already connected
+                ASSERT_MSG(false, "Received unexpected connect event while already connected");
+                break;
             }
         }
         {

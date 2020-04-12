@@ -104,8 +104,8 @@ void EmuThread::run() {
 }
 
 OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context)
-    : QWindow(parent), event_handler(event_handler),
-      context(new QOpenGLContext(shared_context->parent())) {
+    : QWindow(parent), context(new QOpenGLContext(shared_context->parent())),
+      event_handler(event_handler) {
 
     // disable vsync for any shared contexts
     auto format = shared_context->format();
