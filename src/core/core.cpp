@@ -267,7 +267,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 #ifdef ARCHITECTURE_x86_64
         for (std::size_t i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
-                std::make_shared<ARM_Dynarmic>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
+                std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i)));
         }
 #else
         for (std::size_t i = 0; i < num_cores; ++i) {

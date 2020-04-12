@@ -10,14 +10,14 @@ using Callback = Dynarmic::A32::Coprocessor::Callback;
 using CallbackOrAccessOneWord = Dynarmic::A32::Coprocessor::CallbackOrAccessOneWord;
 using CallbackOrAccessTwoWords = Dynarmic::A32::Coprocessor::CallbackOrAccessTwoWords;
 
-DynarmicCP15::DynarmicCP15(const std::shared_ptr<ARMul_State>& state) : interpreter_state(state) {}
+DynarmicCP15::DynarmicCP15(CP15State& state) : state(state) {}
 
 DynarmicCP15::~DynarmicCP15() = default;
 
-boost::optional<Callback> DynarmicCP15::CompileInternalOperation(bool two, unsigned opc1,
-                                                                 CoprocReg CRd, CoprocReg CRn,
-                                                                 CoprocReg CRm, unsigned opc2) {
-    return boost::none;
+std::optional<Callback> DynarmicCP15::CompileInternalOperation(bool two, unsigned opc1,
+                                                               CoprocReg CRd, CoprocReg CRn,
+                                                               CoprocReg CRm, unsigned opc2) {
+    return std::nullopt;
 }
 
 CallbackOrAccessOneWord DynarmicCP15::CompileSendOneWord(bool two, unsigned opc1, CoprocReg CRn,
@@ -26,31 +26,31 @@ CallbackOrAccessOneWord DynarmicCP15::CompileSendOneWord(bool two, unsigned opc1
 
     if (!two && CRn == CoprocReg::C7 && opc1 == 0 && CRm == CoprocReg::C5 && opc2 == 4) {
         // This is a dummy write, we ignore the value written here.
-        return &interpreter_state->CP15[CP15_FLUSH_PREFETCH_BUFFER];
+        return &state.cp15_flush_prefetch_buffer;
     }
 
     if (!two && CRn == CoprocReg::C7 && opc1 == 0 && CRm == CoprocReg::C10) {
         switch (opc2) {
         case 4:
             // This is a dummy write, we ignore the value written here.
-            return &interpreter_state->CP15[CP15_DATA_SYNC_BARRIER];
+            return &state.cp15_data_sync_barrier;
         case 5:
             // This is a dummy write, we ignore the value written here.
-            return &interpreter_state->CP15[CP15_DATA_MEMORY_BARRIER];
+            return &state.cp15_data_memory_barrier;
         default:
-            return boost::blank{};
+            return std::monostate{};
         }
     }
 
     if (!two && CRn == CoprocReg::C13 && opc1 == 0 && CRm == CoprocReg::C0 && opc2 == 2) {
-        return &interpreter_state->CP15[CP15_THREAD_UPRW];
+        return &state.cp15_thread_uprw;
     }
 
-    return boost::blank{};
+    return std::monostate{};
 }
 
 CallbackOrAccessTwoWords DynarmicCP15::CompileSendTwoWords(bool two, unsigned opc, CoprocReg CRm) {
-    return boost::blank{};
+    return std::monostate{};
 }
 
 CallbackOrAccessOneWord DynarmicCP15::CompileGetOneWord(bool two, unsigned opc1, CoprocReg CRn,
@@ -60,29 +60,27 @@ CallbackOrAccessOneWord DynarmicCP15::CompileGetOneWord(bool two, unsigned opc1,
     if (!two && CRn == CoprocReg::C13 && opc1 == 0 && CRm == CoprocReg::C0) {
         switch (opc2) {
         case 2:
-            return &interpreter_state->CP15[CP15_THREAD_UPRW];
+            return &state.cp15_thread_uprw;
         case 3:
-            return &interpreter_state->CP15[CP15_THREAD_URO];
+            return &state.cp15_thread_uro;
         default:
-            return boost::blank{};
+            return std::monostate{};
         }
     }
 
-    return boost::blank{};
+    return std::monostate{};
 }
 
 CallbackOrAccessTwoWords DynarmicCP15::CompileGetTwoWords(bool two, unsigned opc, CoprocReg CRm) {
-    return boost::blank{};
+    return std::monostate{};
 }
 
-boost::optional<Callback> DynarmicCP15::CompileLoadWords(bool two, bool long_transfer,
-                                                         CoprocReg CRd,
-                                                         boost::optional<u8> option) {
-    return boost::none;
+std::optional<Callback> DynarmicCP15::CompileLoadWords(bool two, bool long_transfer, CoprocReg CRd,
+                                                       std::optional<u8> option) {
+    return std::nullopt;
 }
 
-boost::optional<Callback> DynarmicCP15::CompileStoreWords(bool two, bool long_transfer,
-                                                          CoprocReg CRd,
-                                                          boost::optional<u8> option) {
-    return boost::none;
+std::optional<Callback> DynarmicCP15::CompileStoreWords(bool two, bool long_transfer, CoprocReg CRd,
+                                                        std::optional<u8> option) {
+    return std::nullopt;
 }

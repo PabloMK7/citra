@@ -9,7 +9,6 @@
 #include "common/microprofile.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dynarmic/arm_dynarmic_cp15.h"
-#include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
@@ -102,24 +101,9 @@ public:
     }
 
     void InterpreterFallback(VAddr pc, std::size_t num_instructions) override {
-        parent.interpreter_state->Reg = parent.jit->Regs();
-        parent.interpreter_state->Cpsr = parent.jit->Cpsr();
-        parent.interpreter_state->Reg[15] = pc;
-        parent.interpreter_state->ExtReg = parent.jit->ExtRegs();
-        parent.interpreter_state->VFP[VFP_FPSCR] = parent.jit->Fpscr();
-        parent.interpreter_state->NumInstrsToExecute = num_instructions;
-
-        InterpreterMainLoop(parent.interpreter_state.get());
-
-        bool is_thumb = (parent.interpreter_state->Cpsr & (1 << 5)) != 0;
-        parent.interpreter_state->Reg[15] &= (is_thumb ? 0xFFFFFFFE : 0xFFFFFFFC);
-
-        parent.jit->Regs() = parent.interpreter_state->Reg;
-        parent.jit->SetCpsr(parent.interpreter_state->Cpsr);
-        parent.jit->ExtRegs() = parent.interpreter_state->ExtReg;
-        parent.jit->SetFpscr(parent.interpreter_state->VFP[VFP_FPSCR]);
-
-        parent.interpreter_state->ServeBreak();
+        // Should never happen.
+        UNREACHABLE_MSG("InterpeterFallback reached with pc = 0x{:08x}, code = 0x{:08x}, num = {}",
+                        pc, MemoryReadCode(pc), num_instructions);
     }
 
     void CallSVC(std::uint32_t swi) override {
@@ -135,14 +119,18 @@ public:
             if (GDBStub::IsConnected()) {
                 parent.jit->HaltExecution();
                 parent.SetPC(pc);
-                Kernel::Thread* thread =
-                    parent.system.Kernel().GetCurrentThreadManager().GetCurrentThread();
-                parent.SaveContext(thread->context);
-                GDBStub::Break();
-                GDBStub::SendTrap(thread, 5);
+                parent.ServeBreak();
                 return;
             }
             break;
+        case Dynarmic::A32::Exception::SendEvent:
+        case Dynarmic::A32::Exception::SendEventLocal:
+        case Dynarmic::A32::Exception::WaitForInterrupt:
+        case Dynarmic::A32::Exception::WaitForEvent:
+        case Dynarmic::A32::Exception::Yield:
+        case Dynarmic::A32::Exception::PreloadData:
+        case Dynarmic::A32::Exception::PreloadDataWithIntentToWrite:
+            return;
         }
         ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})",
                    static_cast<std::size_t>(exception), pc, MemoryReadCode(pc));
@@ -161,12 +149,10 @@ public:
     Memory::MemorySystem& memory;
 };
 
-ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory,
-                           PrivilegeMode initial_mode, u32 id,
+ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory, u32 id,
                            std::shared_ptr<Core::Timing::Timer> timer)
     : ARM_Interface(id, timer), system(*system), memory(memory),
       cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
-    interpreter_state = std::make_shared<ARMul_State>(system, memory, initial_mode);
     PageTableChanged();
 }
 
@@ -182,7 +168,11 @@ void ARM_Dynarmic::Run() {
 }
 
 void ARM_Dynarmic::Step() {
-    cb->InterpreterFallback(jit->Regs()[15], 1);
+    jit->Step();
+
+    if (GDBStub::IsConnected()) {
+        ServeBreak();
+    }
 }
 
 void ARM_Dynarmic::SetPC(u32 pc) {
@@ -210,21 +200,25 @@ void ARM_Dynarmic::SetVFPReg(int index, u32 value) {
 }
 
 u32 ARM_Dynarmic::GetVFPSystemReg(VFPSystemRegister reg) const {
-    if (reg == VFP_FPSCR) {
+    switch (reg) {
+    case VFP_FPSCR:
         return jit->Fpscr();
+    case VFP_FPEXC:
+        return fpexc;
     }
-
-    // Dynarmic does not implement and/or expose other VFP registers, fallback to interpreter state
-    return interpreter_state->VFP[reg];
+    UNREACHABLE_MSG("Unknown VFP system register: {}", static_cast<size_t>(reg));
 }
 
 void ARM_Dynarmic::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
-    if (reg == VFP_FPSCR) {
+    switch (reg) {
+    case VFP_FPSCR:
         jit->SetFpscr(value);
+        return;
+    case VFP_FPEXC:
+        fpexc = value;
+        return;
     }
-
-    // Dynarmic does not implement and/or expose other VFP registers, fallback to interpreter state
-    interpreter_state->VFP[reg] = value;
+    UNREACHABLE_MSG("Unknown VFP system register: {}", static_cast<size_t>(reg));
 }
 
 u32 ARM_Dynarmic::GetCPSR() const {
@@ -236,11 +230,25 @@ void ARM_Dynarmic::SetCPSR(u32 cpsr) {
 }
 
 u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) {
-    return interpreter_state->CP15[reg];
+    switch (reg) {
+    case CP15_THREAD_UPRW:
+        return cp15_state.cp15_thread_uprw;
+    case CP15_THREAD_URO:
+        return cp15_state.cp15_thread_uro;
+    }
+    UNREACHABLE_MSG("Unknown CP15 register: {}", static_cast<size_t>(reg));
 }
 
 void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {
-    interpreter_state->CP15[reg] = value;
+    switch (reg) {
+    case CP15_THREAD_UPRW:
+        cp15_state.cp15_thread_uprw = value;
+        return;
+    case CP15_THREAD_URO:
+        cp15_state.cp15_thread_uro = value;
+        return;
+    }
+    UNREACHABLE_MSG("Unknown CP15 register: {}", static_cast<size_t>(reg));
 }
 
 std::unique_ptr<ARM_Interface::ThreadContext> ARM_Dynarmic::NewContext() const {
@@ -252,7 +260,7 @@ void ARM_Dynarmic::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
     ASSERT(ctx);
 
     jit->SaveContext(ctx->ctx);
-    ctx->fpexc = interpreter_state->VFP[VFP_FPEXC];
+    ctx->fpexc = fpexc;
 }
 
 void ARM_Dynarmic::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
@@ -260,7 +268,7 @@ void ARM_Dynarmic::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
     ASSERT(ctx);
 
     jit->LoadContext(ctx->ctx);
-    interpreter_state->VFP[VFP_FPEXC] = ctx->fpexc;
+    fpexc = ctx->fpexc;
 }
 
 void ARM_Dynarmic::PrepareReschedule() {
@@ -270,11 +278,9 @@ void ARM_Dynarmic::PrepareReschedule() {
 }
 
 void ARM_Dynarmic::ClearInstructionCache() {
-    // TODO: Clear interpreter cache when appropriate.
     for (const auto& j : jits) {
         j.second->ClearCache();
     }
-    interpreter_state->instruction_cache.clear();
 }
 
 void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
@@ -295,11 +301,18 @@ void ARM_Dynarmic::PageTableChanged() {
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
+void ARM_Dynarmic::ServeBreak() {
+    Kernel::Thread* thread = system.Kernel().GetCurrentThreadManager().GetCurrentThread();
+    SaveContext(thread->context);
+    GDBStub::Break();
+    GDBStub::SendTrap(thread, 5);
+}
+
 std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {
     Dynarmic::A32::UserConfig config;
     config.callbacks = cb.get();
     config.page_table = &current_page_table->pointers;
-    config.coprocessors[15] = std::make_shared<DynarmicCP15>(interpreter_state);
+    config.coprocessors[15] = std::make_shared<DynarmicCP15>(cp15_state);
     config.define_unpredictable_behaviour = true;
     return std::make_unique<Dynarmic::A32::Jit>(config);
 }
