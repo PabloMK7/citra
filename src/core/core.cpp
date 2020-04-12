@@ -107,15 +107,27 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         return ResultStatus::ShutdownRequested;
     case Signal::Load: {
         LOG_INFO(Core, "Begin load");
-        System::LoadState(param);
-        LOG_INFO(Core, "Load completed");
+        try {
+            System::LoadState(param);
+            LOG_INFO(Core, "Load completed");
+        } catch (const std::exception& e) {
+            LOG_ERROR(Core, "Error loading: {}", e.what());
+            status_details = e.what();
+            return ResultStatus::ErrorSavestate;
+        }
         frame_limiter.WaitOnce();
         return ResultStatus::Success;
     }
     case Signal::Save: {
         LOG_INFO(Core, "Begin save");
-        System::SaveState(param);
-        LOG_INFO(Core, "Save completed");
+        try {
+            System::SaveState(param);
+            LOG_INFO(Core, "Save completed");
+        } catch (const std::exception& e) {
+            LOG_ERROR(Core, "Error saving: {}", e.what());
+            status_details = e.what();
+            return ResultStatus::ErrorSavestate;
+        }
         frame_limiter.WaitOnce();
         return ResultStatus::Success;
     }

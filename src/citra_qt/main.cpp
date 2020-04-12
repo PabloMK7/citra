@@ -2079,6 +2079,9 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
 
         title = tr("System Archive Not Found");
         status_message = tr("System Archive Missing");
+    } else if (result == Core::System::ResultStatus::ErrorSavestate) {
+        title = tr("Save/load Error");
+        message = QString::fromStdString(details);
     } else {
         title = tr("Fatal Error");
         message =

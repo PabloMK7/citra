@@ -90,26 +90,22 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
 
 void System::SaveState(u32 slot) const {
     std::ostringstream sstream{std::ios_base::binary};
-    try {
-        oarchive oa{sstream};
-        oa&* this;
-    } catch (const std::exception& e) {
-        LOG_ERROR(Core, "Error saving: {}", e.what());
-    }
+    // Serialize
+    oarchive oa{sstream};
+    oa&* this;
+
     const std::string& str{sstream.str()};
     auto buffer = Common::Compression::CompressDataZSTDDefault(
         reinterpret_cast<const u8*>(str.data()), str.size());
 
     const auto path = GetSaveStatePath(title_id, slot);
     if (!FileUtil::CreateFullPath(path)) {
-        LOG_ERROR(Core, "Could not create path {}", path);
-        return;
+        throw std::runtime_error("Could not create path " + path);
     }
 
     FileUtil::IOFile file(path, "wb");
     if (!file) {
-        LOG_ERROR(Core, "Could not open file {}", path);
-        return;
+        throw std::runtime_error("Could not open file " + path);
     }
 
     CSTHeader header{};
@@ -123,41 +119,27 @@ void System::SaveState(u32 slot) const {
                       std::chrono::system_clock::now().time_since_epoch())
                       .count();
 
-    if (file.WriteBytes(&header, sizeof(header)) != sizeof(header)) {
-        LOG_ERROR(Core, "Could not write to file {}", path);
-        return;
-    }
-    if (file.WriteBytes(buffer.data(), buffer.size()) != buffer.size()) {
-        LOG_ERROR(Core, "Could not write to file {}", path);
-        return;
+    if (file.WriteBytes(&header, sizeof(header)) != sizeof(header) ||
+        file.WriteBytes(buffer.data(), buffer.size()) != buffer.size()) {
+        throw std::runtime_error("Could not write to file " + path);
     }
 }
 
 void System::LoadState(u32 slot) {
     if (Network::GetRoomMember().lock()->IsConnected()) {
-        LOG_ERROR(Core, "Unable to load while connected to multiplayer");
-        return;
+        throw std::runtime_error("Unable to load while connected to multiplayer");
     }
 
     const auto path = GetSaveStatePath(title_id, slot);
-    if (!FileUtil::Exists(path)) {
-        LOG_ERROR(Core, "File not exist {}", path);
-        return;
-    }
 
     std::vector<u8> decompressed;
     {
         std::vector<u8> buffer(FileUtil::GetSize(path) - sizeof(CSTHeader));
 
         FileUtil::IOFile file(path, "rb");
-        if (!file) {
-            LOG_ERROR(Core, "Could not open file {}", path);
-            return;
-        }
         file.Seek(sizeof(CSTHeader), SEEK_SET); // Skip header
         if (file.ReadBytes(buffer.data(), buffer.size()) != buffer.size()) {
-            LOG_ERROR(Core, "Could not read from file {}", path);
-            return;
+            throw std::runtime_error("Could not read from file at " + path);
         }
         decompressed = Common::Compression::DecompressDataZSTD(buffer);
     }
@@ -166,12 +148,9 @@ void System::LoadState(u32 slot) {
         std::ios_base::binary};
     decompressed.clear();
 
-    try {
-        iarchive ia{sstream};
-        ia&* this;
-    } catch (const std::exception& e) {
-        LOG_ERROR(Core, "Error loading: {}", e.what());
-    }
+    // Deserialize
+    iarchive ia{sstream};
+    ia&* this;
 }
 
 } // namespace Core
