@@ -315,7 +315,7 @@ private:
      * @param system_mode The system mode.
      * @return ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode);
+    ResultStatus Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode, u32 num_cores);
 
     /// Reschedule the core emulation
     void Reschedule();

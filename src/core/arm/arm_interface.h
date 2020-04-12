@@ -263,11 +263,23 @@ private:
             ar << r;
         }
         for (std::size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
-            const auto r = GetVFPSystemReg(static_cast<VFPSystemRegister>(i));
+            const auto reg = static_cast<VFPSystemRegister>(i);
+            u32 r = 0;
+            switch (reg) {
+            case VFP_FPSCR:
+            case VFP_FPEXC:
+                r = GetVFPSystemReg(reg);
+            }
             ar << r;
         }
         for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
-            const auto r = GetCP15Register(static_cast<CP15Register>(i));
+            const auto reg = static_cast<CP15Register>(i);
+            u32 r = 0;
+            switch (reg) {
+            case CP15_THREAD_UPRW:
+            case CP15_THREAD_URO:
+                r = GetCP15Register(reg);
+            }
             ar << r;
         }
     }
@@ -296,11 +308,21 @@ private:
         }
         for (std::size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
             ar >> r;
-            SetVFPSystemReg(static_cast<VFPSystemRegister>(i), r);
+            const auto reg = static_cast<VFPSystemRegister>(i);
+            switch (reg) {
+            case VFP_FPSCR:
+            case VFP_FPEXC:
+                SetVFPSystemReg(reg, r);
+            }
         }
         for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
             ar >> r;
-            SetCP15Register(static_cast<CP15Register>(i), r);
+            const auto reg = static_cast<CP15Register>(i);
+            switch (reg) {
+            case CP15_THREAD_UPRW:
+            case CP15_THREAD_URO:
+                SetCP15Register(reg, r);
+            }
         }
     }
 

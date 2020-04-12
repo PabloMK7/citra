@@ -242,7 +242,11 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     ASSERT(system_mode.first);
     auto n3ds_mode = app_loader->LoadKernelN3dsMode();
     ASSERT(n3ds_mode.first);
-    ResultStatus init_result{Init(emu_window, *system_mode.first, *n3ds_mode.first)};
+    u32 num_cores = 2;
+    if (Settings::values.is_new_3ds) {
+        num_cores = 4;
+    }
+    ResultStatus init_result{Init(emu_window, *system_mode.first, *n3ds_mode.first, num_cores)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -315,13 +319,9 @@ void System::Reschedule() {
     }
 }
 
-System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode) {
+System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode,
+                                  u32 num_cores) {
     LOG_DEBUG(HW_Memory, "initialized OK");
-
-    u32 num_cores = 2;
-    if (Settings::values.is_new_3ds) {
-        num_cores = 4;
-    }
 
     memory = std::make_unique<Memory::MemorySystem>();
 
@@ -334,7 +334,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 #ifdef ARCHITECTURE_x86_64
         for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
-                std::make_shared<ARM_Dynarmic>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
+                std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i)));
         }
 #else
         for (u32 i = 0; i < num_cores; ++i) {
@@ -536,6 +536,13 @@ void System::Reset() {
 
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
+
+    u32 num_cores;
+    if (Archive::is_saving::value) {
+        num_cores = this->GetNumCores();
+    }
+    ar& num_cores;
+
     if (Archive::is_loading::value) {
         // When loading, we want to make sure any lingering state gets cleared out before we begin.
         // Shutdown, but persist a few things between loads...
@@ -544,17 +551,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         // Re-initialize everything like it was before
         auto system_mode = this->app_loader->LoadKernelSystemMode();
         auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
-        Init(*m_emu_window, *system_mode.first, *n3ds_mode.first);
+        Init(*m_emu_window, *system_mode.first, *n3ds_mode.first, num_cores);
     }
 
-    u32 num_cores;
-    if (Archive::is_saving::value) {
-        num_cores = this->GetNumCores();
-    }
-    ar& num_cores;
-    if (num_cores != this->GetNumCores()) {
-        throw std::runtime_error("Wrong N3DS mode");
-    }
     // flush on save, don't flush on load
     bool should_flush = !Archive::is_loading::value;
     Memory::RasterizerClearAll(should_flush);
