@@ -5,15 +5,15 @@
 #pragma once
 
 #include <initializer_list>
+#include <map>
 #include <string>
-#include <unordered_map>
 
 namespace Common {
 
 /// A string-based key-value container supporting serializing to and deserializing from a string
 class ParamPackage {
 public:
-    using DataType = std::unordered_map<std::string, std::string>;
+    using DataType = std::map<std::string, std::string>;
 
     ParamPackage() = default;
     explicit ParamPackage(const std::string& serialized);
@@ -34,6 +34,12 @@ public:
     bool Has(const std::string& key) const;
     void Erase(const std::string& key);
     void Clear();
+
+    // For range-based for
+    DataType::iterator begin();
+    DataType::const_iterator begin() const;
+    DataType::iterator end();
+    DataType::const_iterator end() const;
 
 private:
     DataType data;

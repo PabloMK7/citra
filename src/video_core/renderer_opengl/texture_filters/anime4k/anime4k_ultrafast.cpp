@@ -42,18 +42,17 @@
 
 namespace OpenGL {
 
-Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterInterface(scale_factor) {
+Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterBase(scale_factor) {
     const OpenGLState cur_state = OpenGLState::GetCurState();
-    const auto setup_temp_tex = [this, scale_factor](TempTex& texture, GLint internal_format,
-                                                     GLint format) {
+    const auto setup_temp_tex = [this](TempTex& texture, GLint internal_format, GLint format) {
         texture.fbo.Create();
         texture.tex.Create();
         state.draw.draw_framebuffer = texture.fbo.handle;
         state.Apply();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_RECTANGLE, texture.tex.handle);
-        glTexImage2D(GL_TEXTURE_RECTANGLE, 0, internal_format, 1024 * scale_factor,
-                     1024 * scale_factor, 0, format, GL_HALF_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_RECTANGLE, 0, internal_format, 1024 * internal_scale_factor,
+                     1024 * internal_scale_factor, 0, format, GL_HALF_FLOAT, nullptr);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE,
                                texture.tex.handle, 0);
     };
@@ -61,7 +60,6 @@ Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterInterface(sc
     setup_temp_tex(XY, GL_RG16F, GL_RG);
 
     vao.Create();
-    out_fbo.Create();
 
     for (std::size_t idx = 0; idx < samplers.size(); ++idx) {
         samplers[idx].Create();
@@ -86,29 +84,25 @@ Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterInterface(sc
     state.draw.shader_program = refine_program.handle;
     state.Apply();
     glUniform1i(glGetUniformLocation(refine_program.handle, "LUMAD"), 1);
+    glUniform1f(glGetUniformLocation(refine_program.handle, "final_scale"),
+                static_cast<GLfloat>(internal_scale_factor) / scale_factor);
 
     cur_state.Apply();
 }
 
-void Anime4kUltrafast::scale(CachedSurface& surface, const Common::Rectangle<u32>& rect,
-                             std::size_t buffer_offset) {
+void Anime4kUltrafast::Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect,
+                              GLuint dst_tex, const Common::Rectangle<u32>& dst_rect,
+                              GLuint read_fb_handle, GLuint draw_fb_handle) {
     const OpenGLState cur_state = OpenGLState::GetCurState();
 
-    OGLTexture src_tex;
-    src_tex.Create();
-
-    state.viewport = RectToViewport(rect);
-
-    state.texture_units[0].texture_2d = src_tex.handle;
+    state.viewport = {static_cast<GLint>(src_rect.left * internal_scale_factor),
+                      static_cast<GLint>(src_rect.bottom * internal_scale_factor),
+                      static_cast<GLsizei>(src_rect.GetWidth() * internal_scale_factor),
+                      static_cast<GLsizei>(src_rect.GetHeight() * internal_scale_factor)};
+    state.texture_units[0].texture_2d = src_tex;
     state.draw.draw_framebuffer = XY.fbo.handle;
     state.draw.shader_program = gradient_x_program.handle;
     state.Apply();
-
-    const FormatTuple tuple = GetFormatTuple(surface.pixel_format);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(surface.stride));
-    glActiveTexture(GL_TEXTURE0);
-    glTexImage2D(GL_TEXTURE_2D, 0, tuple.internal_format, rect.GetWidth(), rect.GetHeight(), 0,
-                 tuple.format, tuple.type, &surface.gl_buffer[buffer_offset]);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_RECTANGLE, LUMAD.tex.handle);
@@ -124,14 +118,17 @@ void Anime4kUltrafast::scale(CachedSurface& surface, const Common::Rectangle<u32
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     // refine pass
-    state.draw.draw_framebuffer = out_fbo.handle;
+    state.viewport = {static_cast<GLint>(dst_rect.left), static_cast<GLint>(dst_rect.bottom),
+                      static_cast<GLsizei>(dst_rect.GetWidth()),
+                      static_cast<GLsizei>(dst_rect.GetHeight())};
+    state.draw.draw_framebuffer = draw_fb_handle;
     state.draw.shader_program = refine_program.handle;
     state.Apply();
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           cur_state.texture_units[0].texture_2d, 0);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
     cur_state.Apply();
 }
 

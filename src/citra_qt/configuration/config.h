@@ -44,6 +44,7 @@ private:
     void ReadUpdaterValues();
     void ReadUtilityValues();
     void ReadWebServiceValues();
+    void ReadVideoDumpingValues();
 
     void SaveValues();
     void SaveAudioValues();
@@ -65,6 +66,7 @@ private:
     void SaveUpdaterValues();
     void SaveUtilityValues();
     void SaveWebServiceValues();
+    void SaveVideoDumpingValues();
 
     QVariant ReadSetting(const QString& name) const;
     QVariant ReadSetting(const QString& name, const QVariant& default_value) const;

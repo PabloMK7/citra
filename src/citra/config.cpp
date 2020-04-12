@@ -132,8 +132,6 @@ void Config::ReadValues() {
         static_cast<u16>(sdl2_config->GetInteger("Renderer", "use_vsync_new", 1));
     Settings::values.texture_filter_name =
         sdl2_config->GetString("Renderer", "texture_filter_name", "none");
-    Settings::values.texture_filter_factor =
-        sdl2_config->GetInteger("Renderer", "texture_filter_factor", 1);
 
     Settings::values.render_3d = static_cast<Settings::StereoRenderOption>(
         sdl2_config->GetInteger("Renderer", "render_3d", 0));
@@ -201,7 +199,7 @@ void Config::ReadValues() {
         sdl2_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
     // System
-    Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", false);
+    Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", true);
     Settings::values.region_value =
         sdl2_config->GetInteger("System", "region_value", Settings::REGION_VALUE_AUTO_SELECT);
     Settings::values.init_clock =
@@ -270,6 +268,33 @@ void Config::ReadValues() {
         sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
     Settings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
     Settings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
+
+    // Video Dumping
+    Settings::values.output_format =
+        sdl2_config->GetString("Video Dumping", "output_format", "webm");
+    Settings::values.format_options = sdl2_config->GetString("Video Dumping", "format_options", "");
+
+    Settings::values.video_encoder =
+        sdl2_config->GetString("Video Dumping", "video_encoder", "libvpx-vp9");
+
+    // Options for variable bit rate live streaming taken from here:
+    // https://developers.google.com/media/vp9/live-encoding
+    std::string default_video_options;
+    if (Settings::values.video_encoder == "libvpx-vp9") {
+        default_video_options =
+            "quality:realtime,speed:6,tile-columns:4,frame-parallel:1,threads:8,row-mt:1";
+    }
+    Settings::values.video_encoder_options =
+        sdl2_config->GetString("Video Dumping", "video_encoder_options", default_video_options);
+    Settings::values.video_bitrate =
+        sdl2_config->GetInteger("Video Dumping", "video_bitrate", 2500000);
+
+    Settings::values.audio_encoder =
+        sdl2_config->GetString("Video Dumping", "audio_encoder", "libvorbis");
+    Settings::values.audio_encoder_options =
+        sdl2_config->GetString("Video Dumping", "audio_encoder_options", "");
+    Settings::values.audio_bitrate =
+        sdl2_config->GetInteger("Video Dumping", "audio_bitrate", 64000);
 }
 
 void Config::Reload() {

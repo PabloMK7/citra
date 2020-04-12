@@ -6,29 +6,25 @@
 
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
-#include "video_core/renderer_opengl/texture_filters/texture_filter_interface.h"
+#include "video_core/renderer_opengl/texture_filters/texture_filter_base.h"
 
 namespace OpenGL {
 
-class Anime4kUltrafast : public TextureFilterInterface {
+class Anime4kUltrafast : public TextureFilterBase {
 public:
-    static TextureFilterInfo GetInfo() {
-        TextureFilterInfo info;
-        info.name = "Anime4K Ultrafast";
-        info.clamp_scale = {2, 2};
-        info.constructor = std::make_unique<Anime4kUltrafast, u16>;
-        return info;
-    }
+    static constexpr std::string_view NAME = "Anime4K Ultrafast";
 
-    Anime4kUltrafast(u16 scale_factor);
-    void scale(CachedSurface& surface, const Common::Rectangle<u32>& rect,
-               std::size_t buffer_offset) override;
+    explicit Anime4kUltrafast(u16 scale_factor);
+    void Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
+                const Common::Rectangle<u32>& dst_rect, GLuint read_fb_handle,
+                GLuint draw_fb_handle) override;
 
 private:
+    static constexpr u8 internal_scale_factor = 2;
+
     OpenGLState state{};
 
     OGLVertexArray vao;
-    OGLFramebuffer out_fbo;
 
     struct TempTex {
         OGLTexture tex;

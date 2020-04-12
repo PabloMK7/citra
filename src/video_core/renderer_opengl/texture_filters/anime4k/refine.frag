@@ -8,6 +8,8 @@ uniform sampler2D HOOKED;
 uniform sampler2DRect LUMAD;
 uniform sampler2DRect LUMAG;
 
+uniform float final_scale;
+
 const float LINE_DETECT_THRESHOLD = 0.4;
 const float STRENGTH = 0.6;
 
@@ -24,7 +26,7 @@ vec4 getAverage(vec4 cc, vec4 a, vec4 b, vec4 c) {
 
 #define GetRGBAL(offset)                                                                           \
     RGBAL(textureOffset(HOOKED, tex_coord, offset),                                                \
-          texture(LUMAD, clamp(gl_FragCoord.xy + offset, vec2(0.0), input_max)).x)
+          texture(LUMAD, clamp((gl_FragCoord.xy + offset) * final_scale, vec2(0.0), input_max)).x)
 
 float min3v(float a, float b, float c) {
     return min(min(a, b), c);

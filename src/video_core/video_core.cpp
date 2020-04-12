@@ -28,6 +28,7 @@ std::atomic<bool> g_use_disk_shader_cache;
 std::atomic<bool> g_renderer_bg_color_update_requested;
 std::atomic<bool> g_renderer_sampler_update_requested;
 std::atomic<bool> g_renderer_shader_update_requested;
+std::atomic<bool> g_texture_filter_update_requested;
 // Screenshot
 std::atomic<bool> g_renderer_screenshot_requested;
 void* g_screenshot_bits;

@@ -10,12 +10,27 @@
 #include "common/math_util.h"
 #include "core/hw/gpu.h"
 #include "video_core/renderer_base.h"
+#include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 
 namespace Layout {
 struct FramebufferLayout;
 }
+
+namespace Frontend {
+
+struct Frame {
+    u32 width{};                      /// Width of the frame (to detect resize)
+    u32 height{};                     /// Height of the frame
+    bool color_reloaded = false;      /// Texture attachment was recreated (ie: resized)
+    OpenGL::OGLRenderbuffer color{};  /// Buffer shared between the render/present FBO
+    OpenGL::OGLFramebuffer render{};  /// FBO created on the render thread
+    OpenGL::OGLFramebuffer present{}; /// FBO created on the present thread
+    GLsync render_fence{};            /// Fence created on the render thread
+    GLsync present_fence{};           /// Fence created on the presentation thread
+};
+} // namespace Frontend
 
 namespace OpenGL {
 
@@ -72,10 +87,11 @@ private:
     void ReloadShader();
     void PrepareRendertarget();
     void RenderScreenshot();
-    void RenderVideoDumping();
+    void RenderToMailbox(const Layout::FramebufferLayout& layout,
+                         std::unique_ptr<Frontend::TextureMailbox>& mailbox, bool flipped);
     void ConfigureFramebufferTexture(TextureInfo& texture,
                                      const GPU::Regs::FramebufferConfig& framebuffer);
-    void DrawScreens(const Layout::FramebufferLayout& layout);
+    void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
     void DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w, float h);
     void DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w, float h);
     void DrawSingleScreenStereoRotated(const ScreenInfo& screen_info_l,
@@ -90,9 +106,6 @@ private:
                             ScreenInfo& screen_info, bool right_eye);
     // Fills active OpenGL texture with the given RGB color.
     void LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b, const TextureInfo& texture);
-
-    void InitVideoDumpingGLObjects();
-    void ReleaseVideoDumpingGLObjects();
 
     OpenGLState state;
 
@@ -120,19 +133,7 @@ private:
     GLuint attrib_position;
     GLuint attrib_tex_coord;
 
-    // Frame dumping
-    OGLFramebuffer frame_dumping_framebuffer;
-    GLuint frame_dumping_renderbuffer;
-
-    // Whether prepare/cleanup video dumping has been requested.
-    // They will be executed on next frame.
-    std::atomic_bool prepare_video_dumping = false;
-    std::atomic_bool cleanup_video_dumping = false;
-
-    // PBOs used to dump frames faster
-    std::array<OGLBuffer, 2> frame_dumping_pbos;
-    GLuint current_pbo = 1;
-    GLuint next_pbo = 0;
+    FrameDumperOpenGL frame_dumper;
 };
 
 } // namespace OpenGL

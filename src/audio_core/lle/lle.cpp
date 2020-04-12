@@ -483,7 +483,8 @@ DspLle::DspLle(Memory::MemorySystem& memory, bool multithread)
         *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR) = value;
     };
     impl->teakra.SetAHBMCallback(ahbm);
-    impl->teakra.SetAudioCallback([this](std::array<s16, 2> sample) { OutputSample(sample); });
+    impl->teakra.SetAudioCallback(
+        [this](std::array<s16, 2> sample) { OutputSample(std::move(sample)); });
 }
 DspLle::~DspLle() = default;
 

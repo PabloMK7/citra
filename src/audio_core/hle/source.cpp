@@ -289,7 +289,9 @@ void Source::GenerateFrame() {
             break;
         }
     }
-    state.next_sample_number += static_cast<u32>(frame_position);
+    // TODO(jroweboy): Keep track of frame_position independently so that it doesn't lose precision
+    // over time
+    state.next_sample_number += static_cast<u32>(frame_position * state.rate_multiplier);
 
     state.filters.ProcessFrame(current_frame);
 }

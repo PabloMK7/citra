@@ -132,9 +132,8 @@ use_disk_shader_cache =
 # factor for the 3DS resolution
 resolution_factor =
 
-# Texture filter name and scale factor
+# Texture filter name
 texture_filter_name =
-texture_filter_factor =
 
 # Turns on the frame limiter, which will limit frames output to the target game speed
 # 0: Off, 1: On (default)
@@ -244,7 +243,7 @@ use_virtual_sd =
 
 [System]
 # The system model that Citra will try to emulate
-# 0: Old 3DS (default), 1: New 3DS
+# 0: Old 3DS, 1: New 3DS (default)
 is_new_3ds =
 
 # The system region that Citra will use during emulation
@@ -305,5 +304,31 @@ web_api_url = https://api.citra-emu.org
 # See https://profile.citra-emu.org/ for more info
 citra_username =
 citra_token =
+
+[Video Dumping]
+# Format of the video to output, default: webm
+output_format =
+
+# Options passed to the muxer (optional)
+# This is a param package, format: [key1]:[value1],[key2]:[value2],...
+format_options =
+
+# Video encoder used, default: libvpx-vp9
+video_encoder =
+
+# Options passed to the video codec (optional)
+video_encoder_options =
+
+# Video bitrate, default: 2500000
+video_bitrate =
+
+# Audio encoder used, default: libvorbis
+audio_encoder =
+
+# Options passed to the audio codec (optional)
+audio_encoder_options =
+
+# Audio bitrate, default: 64000
+audio_bitrate =
 )";
 }

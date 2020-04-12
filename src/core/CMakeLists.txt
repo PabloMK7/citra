@@ -495,5 +495,5 @@ if (ARCHITECTURE_x86_64)
 endif()
 
 if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_link_libraries(core PRIVATE FFmpeg::avcodec FFmpeg::avformat FFmpeg::swscale FFmpeg::swresample FFmpeg::avutil)
+    target_link_libraries(core PUBLIC FFmpeg::avcodec FFmpeg::avformat FFmpeg::swscale FFmpeg::swresample FFmpeg::avutil)
 endif()

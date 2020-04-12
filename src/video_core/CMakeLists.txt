@@ -23,6 +23,8 @@ add_library(video_core STATIC
     regs_texturing.h
     renderer_base.cpp
     renderer_base.h
+    renderer_opengl/frame_dumper_opengl.cpp
+    renderer_opengl/frame_dumper_opengl.h
     renderer_opengl/gl_rasterizer.cpp
     renderer_opengl/gl_rasterizer.h
     renderer_opengl/gl_rasterizer_cache.cpp
@@ -43,6 +45,8 @@ add_library(video_core STATIC
     renderer_opengl/gl_state.h
     renderer_opengl/gl_stream_buffer.cpp
     renderer_opengl/gl_stream_buffer.h
+    renderer_opengl/gl_surface_params.cpp
+    renderer_opengl/gl_surface_params.h
     renderer_opengl/gl_vars.cpp
     renderer_opengl/gl_vars.h
     renderer_opengl/pica_to_gl.h
@@ -54,11 +58,14 @@ add_library(video_core STATIC
     renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.h
     renderer_opengl/texture_filters/bicubic/bicubic.cpp
     renderer_opengl/texture_filters/bicubic/bicubic.h
-    renderer_opengl/texture_filters/texture_filter_interface.h
-    renderer_opengl/texture_filters/texture_filter_manager.cpp
-    renderer_opengl/texture_filters/texture_filter_manager.h
+    renderer_opengl/texture_filters/texture_filter_base.h
+    renderer_opengl/texture_filters/texture_filterer.cpp
+    renderer_opengl/texture_filters/texture_filterer.h
     renderer_opengl/texture_filters/xbrz/xbrz_freescale.cpp
     renderer_opengl/texture_filters/xbrz/xbrz_freescale.h
+    #temporary, move these back in alphabetical order before merging
+    renderer_opengl/gl_format_reinterpreter.cpp
+    renderer_opengl/gl_format_reinterpreter.h
     shader/debug_data.h
     shader/shader.cpp
     shader/shader.h

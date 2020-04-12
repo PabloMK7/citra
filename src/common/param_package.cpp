@@ -135,4 +135,20 @@ void ParamPackage::Clear() {
     data.clear();
 }
 
+ParamPackage::DataType::iterator ParamPackage::begin() {
+    return data.begin();
+}
+
+ParamPackage::DataType::const_iterator ParamPackage::begin() const {
+    return data.begin();
+}
+
+ParamPackage::DataType::iterator ParamPackage::end() {
+    return data.end();
+}
+
+ParamPackage::DataType::const_iterator ParamPackage::end() const {
+    return data.end();
+}
+
 } // namespace Common

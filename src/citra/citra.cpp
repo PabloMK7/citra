@@ -409,7 +409,7 @@ int main(int argc, char** argv) {
     if (!dump_video.empty()) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
-        system.VideoDumper().StartDumping(dump_video, "webm", layout);
+        system.VideoDumper().StartDumping(dump_video, layout);
     }
 
     std::thread render_thread([&emu_window] { emu_window->Present(); });

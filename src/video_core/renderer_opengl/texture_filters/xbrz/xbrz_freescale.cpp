@@ -48,12 +48,11 @@
 
 namespace OpenGL {
 
-XbrzFreescale::XbrzFreescale(u16 scale_factor) : TextureFilterInterface(scale_factor) {
+XbrzFreescale::XbrzFreescale(u16 scale_factor) : TextureFilterBase(scale_factor) {
     const OpenGLState cur_state = OpenGLState::GetCurState();
 
     program.Create(xbrz_freescale_vert.data(), xbrz_freescale_frag.data());
     vao.Create();
-    draw_fbo.Create();
     src_sampler.Create();
 
     state.draw.shader_program = program.handle;
@@ -68,31 +67,24 @@ XbrzFreescale::XbrzFreescale(u16 scale_factor) : TextureFilterInterface(scale_fa
     cur_state.Apply();
     state.draw.vertex_array = vao.handle;
     state.draw.shader_program = program.handle;
-    state.draw.draw_framebuffer = draw_fbo.handle;
     state.texture_units[0].sampler = src_sampler.handle;
 }
 
-void XbrzFreescale::scale(CachedSurface& surface, const Common::Rectangle<u32>& rect,
-                          std::size_t buffer_offset) {
+void XbrzFreescale::Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
+                           const Common::Rectangle<u32>& dst_rect, GLuint read_fb_handle,
+                           GLuint draw_fb_handle) {
     const OpenGLState cur_state = OpenGLState::GetCurState();
 
-    OGLTexture src_tex;
-    src_tex.Create();
-    state.texture_units[0].texture_2d = src_tex.handle;
-
-    state.viewport = RectToViewport(rect);
+    state.texture_units[0].texture_2d = src_tex;
+    state.draw.draw_framebuffer = draw_fb_handle;
+    state.viewport = {static_cast<GLint>(dst_rect.left), static_cast<GLint>(dst_rect.bottom),
+                      static_cast<GLsizei>(dst_rect.GetWidth()),
+                      static_cast<GLsizei>(dst_rect.GetHeight())};
     state.Apply();
 
-    const FormatTuple tuple = GetFormatTuple(surface.pixel_format);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(surface.stride));
-    glActiveTexture(GL_TEXTURE0);
-    glTexImage2D(GL_TEXTURE_2D, 0, tuple.internal_format, rect.GetWidth(), rect.GetHeight(), 0,
-                 tuple.format, tuple.type, &surface.gl_buffer[buffer_offset]);
-
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           cur_state.texture_units[0].texture_2d, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 
     cur_state.Apply();
 }

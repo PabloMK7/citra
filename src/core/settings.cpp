@@ -13,7 +13,6 @@
 #include "core/hle/service/mic_u.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
-#include "video_core/renderer_opengl/texture_filters/texture_filter_manager.h"
 #include "video_core/video_core.h"
 
 namespace Settings {
@@ -38,9 +37,7 @@ void Apply() {
     VideoCore::g_renderer_bg_color_update_requested = true;
     VideoCore::g_renderer_sampler_update_requested = true;
     VideoCore::g_renderer_shader_update_requested = true;
-
-    OpenGL::TextureFilterManager::GetInstance().SetTextureFilter(values.texture_filter_name,
-                                                                 values.texture_filter_factor);
+    VideoCore::g_texture_filter_update_requested = true;
 
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
@@ -88,7 +85,6 @@ void LogSettings() {
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
     LogSetting("Renderer_PostProcessingShader", Settings::values.pp_shader_name);
     LogSetting("Renderer_FilterMode", Settings::values.filter_mode);
-    LogSetting("Renderer_TextureFilterFactor", Settings::values.texture_filter_factor);
     LogSetting("Renderer_TextureFilterName", Settings::values.texture_filter_name);
     LogSetting("Stereoscopy_Render3d", static_cast<int>(Settings::values.render_3d));
     LogSetting("Stereoscopy_Factor3d", Settings::values.factor_3d);

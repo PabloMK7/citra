@@ -53,7 +53,7 @@ public:
     mutable std::mutex ban_list_mutex; ///< Mutex for the ban lists
 
     RoomImpl()
-        : random_gen(std::random_device()()), NintendoOUI{0x00, 0x1F, 0x32, 0x00, 0x00, 0x00} {}
+        : NintendoOUI{0x00, 0x1F, 0x32, 0x00, 0x00, 0x00}, random_gen(std::random_device()()) {}
 
     /// Thread that receives and dispatches network packets
     std::unique_ptr<std::thread> room_thread;

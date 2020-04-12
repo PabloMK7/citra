@@ -148,7 +148,6 @@ struct Values {
     u16 resolution_factor;
     bool use_frame_limit;
     u16 frame_limit;
-    u16 texture_filter_factor;
     std::string texture_filter_name;
 
     LayoutOption layout_option;
@@ -207,6 +206,18 @@ struct Values {
     std::string web_api_url;
     std::string citra_username;
     std::string citra_token;
+
+    // Video Dumping
+    std::string output_format;
+    std::string format_options;
+
+    std::string video_encoder;
+    std::string video_encoder_options;
+    u64 video_bitrate;
+
+    std::string audio_encoder;
+    std::string audio_encoder_options;
+    u64 audio_bitrate;
 } extern values;
 
 // a special value for Values::region_value indicating that citra will automatically select a region

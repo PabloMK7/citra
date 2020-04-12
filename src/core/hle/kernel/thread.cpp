@@ -223,6 +223,7 @@ void Thread::ResumeFromWait() {
     case ThreadStatus::WaitArb:
     case ThreadStatus::WaitSleep:
     case ThreadStatus::WaitIPC:
+    case ThreadStatus::Dormant:
         break;
 
     case ThreadStatus::Ready:
