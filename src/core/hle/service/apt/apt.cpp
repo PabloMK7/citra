@@ -650,6 +650,37 @@ void Module::APTInterface::CloseLibraryApplet(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->CloseLibraryApplet(std::move(object), std::move(buffer)));
 }
 
+void Module::APTInterface::LoadSysMenuArg(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x36, 1, 0); // 0x00360040
+    const auto size = std::min(std::size_t{rp.Pop<u32>()}, SysMenuArgSize);
+
+    // This service function does not clear the buffer.
+
+    std::vector<u8> buffer(size);
+    std::copy_n(apt->sys_menu_arg_buffer.cbegin(), size, buffer.begin());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushStaticBuffer(std::move(buffer), 0);
+
+    LOG_DEBUG(Service_APT, "called");
+}
+
+void Module::APTInterface::StoreSysMenuArg(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x37, 1, 2); // 0x00370042
+    const auto size = std::min(std::size_t{rp.Pop<u32>()}, SysMenuArgSize);
+    const auto& buffer = rp.PopStaticBuffer();
+
+    ASSERT_MSG(buffer.size() >= size, "Buffer too small to hold requested data");
+
+    std::copy_n(buffer.cbegin(), size, apt->sys_menu_arg_buffer.begin());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_APT, "called");
+}
+
 void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x40, 1, 2); // 0x00400042
     u32 size = rp.Pop<u32>();

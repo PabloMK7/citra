@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
 #include "common/common_funcs.h"
@@ -41,6 +42,8 @@ struct CaptureBufferInfo {
     u32_le bottom_screen_format;
 };
 static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has incorrect size");
+
+constexpr std::size_t SysMenuArgSize = 0x40;
 
 enum class StartupArgumentType : u32 {
     OtherApp = 0,
@@ -519,6 +522,32 @@ public:
         void CloseLibraryApplet(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::LoadSysMenuArg service function
+         *  Inputs:
+         *      0 : Command header [0x00360040]
+         *      1 : Buffer size
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         *     64 : Size << 14 | 2
+         *     65 : void* Output Buffer
+         */
+        void LoadSysMenuArg(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::StoreSysMenuArg service function
+         *  Inputs:
+         *      0 : Command header [0x00370042]
+         *      1 : Buffer size
+         *      2 : (Size << 14) | 2
+         *      3 : Input buffer virtual address
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void StoreSysMenuArg(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::SendCaptureBufferInfo service function
          *  Inputs:
          *      0 : Command header [0x00400042]
@@ -625,6 +654,7 @@ private:
     u8 unknown_ns_state_field = 0;
 
     std::vector<u8> screen_capture_buffer;
+    std::array<u8, SysMenuArgSize> sys_menu_arg_buffer;
 
     ScreencapPostPermission screen_capture_post_permission =
         ScreencapPostPermission::CleanThePermission; // TODO(JamePeng): verify the initial value
