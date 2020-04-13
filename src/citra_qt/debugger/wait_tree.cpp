@@ -216,7 +216,7 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeThread::GetChildren() const {
     std::vector<std::unique_ptr<WaitTreeItem>> list(WaitTreeWaitObject::GetChildren());
 
     const auto& thread = static_cast<const Kernel::Thread&>(object);
-    const auto* process = thread.owner_process;
+    const auto& process = thread.owner_process;
 
     QString processor;
     switch (thread.processor_id) {
