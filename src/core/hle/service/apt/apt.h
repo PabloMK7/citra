@@ -603,6 +603,19 @@ public:
          */
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
 
+        /**
+         * APT::IsTitleAllowed service function
+         *  Inputs:
+         *      0 : Header Code[0x01050100]
+         *    1-2 : Program id
+         *      3 : Media type
+         *      4 : Padding
+         *  Outputs:
+         *      1: Result code, 0 on success, otherwise error code
+         *      2: u8 output, 0 if the title is not allowed, 1 if it is
+         */
+        void IsTitleAllowed(Kernel::HLERequestContext& ctx);
+
     protected:
         bool application_reset_prepared{};
         std::shared_ptr<Module> apt;
