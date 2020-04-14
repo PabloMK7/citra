@@ -323,10 +323,12 @@ void Module::SyncTagState() {
         // detected on Scanning->TagInRange?
         nfc_tag_state = TagState::TagInRange;
         tag_in_range_event->Signal();
-    } else if (!amiibo_in_range && nfc_tag_state == TagState::TagInRange) {
-        nfc_tag_state = TagState::TagOutOfRange;
+    } else if (!amiibo_in_range &&
+               (nfc_tag_state == TagState::TagInRange || nfc_tag_state == TagState::TagDataLoaded ||
+                nfc_tag_state == TagState::Unknown6)) {
         // TODO (wwylele): If a tag is removed during TagDataLoaded/Unknown6, should this event
         // signals early?
+        nfc_tag_state = TagState::TagOutOfRange;
         tag_out_of_range_event->Signal();
     }
 }
