@@ -49,6 +49,14 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
 
+struct ArchiveResource {
+    u32 sector_size_in_bytes;
+    u32 cluster_size_in_bytes;
+    u32 partition_capacity_in_clusters;
+    u32 free_space_in_clusters;
+};
+static_assert(sizeof(ArchiveResource) == 0x10, "ArchiveResource has incorrect size");
+
 using FileSys::ArchiveBackend;
 using FileSys::ArchiveFactory;
 
@@ -229,6 +237,13 @@ public:
      * @return ResultCode 0 on success or the corresponding code on error
      */
     ResultCode CreateSystemSaveData(u32 high, u32 low);
+
+    /**
+     * Returns capacity and free space information about the given media type.
+     * @param media_type The media type to obtain the information about.
+     * @return The capacity information of the media type, or an error code if failed.
+     */
+    ResultVal<ArchiveResource> GetArchiveResource(MediaType media_type) const;
 
     /// Registers a new NCCH file with the SelfNCCH archive factory
     void RegisterSelfNCCH(Loader::AppLoader& app_loader);

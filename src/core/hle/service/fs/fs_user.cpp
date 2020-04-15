@@ -449,6 +449,41 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x814, 0, 0);
+
+    LOG_WARNING(Service_FS, "(STUBBED) called");
+
+    auto resource = archives.GetArchiveResource(MediaType::SDMC);
+
+    if (resource.Failed()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(resource.Code());
+        return;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(*resource);
+}
+
+void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x815, 0, 0);
+
+    LOG_WARNING(Service_FS, "(STUBBED) called");
+
+    auto resource = archives.GetArchiveResource(MediaType::NAND);
+    if (resource.Failed()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(resource.Code());
+        return;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(*resource);
+}
+
 void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Figure out the other parameters.
     IPC::RequestParser rp(ctx, 0x0851, 9, 2);
@@ -601,16 +636,20 @@ void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x849, 1, 0);
-    u32 system_media_type = rp.Pop<u32>();
+    auto media_type = rp.PopEnum<MediaType>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x{:08X}", system_media_type);
+    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x{:08X}", static_cast<u32>(media_type));
+
+    auto resource = archives.GetArchiveResource(media_type);
+    if (resource.Failed()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(resource.Code());
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(512);
-    rb.Push<u32>(16384);
-    rb.Push<u32>(0x80000); // 8GiB capacity
-    rb.Push<u32>(0x80000); // 8GiB free
+    rb.PushRaw(*resource);
 }
 
 void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
@@ -798,8 +837,8 @@ FS_USER::FS_USER(Core::System& system)
         {0x08110040, nullptr, "DeleteSystemSaveData"},
         {0x08120080, &FS_USER::GetFreeBytes, "GetFreeBytes"},
         {0x08130000, nullptr, "GetCardType"},
-        {0x08140000, nullptr, "GetSdmcArchiveResource"},
-        {0x08150000, nullptr, "GetNandArchiveResource"},
+        {0x08140000, &FS_USER::GetSdmcArchiveResource, "GetSdmcArchiveResource"},
+        {0x08150000, &FS_USER::GetNandArchiveResource, "GetNandArchiveResource"},
         {0x08160000, nullptr, "GetSdmcFatfsError"},
         {0x08170000, &FS_USER::IsSdmcDetected, "IsSdmcDetected"},
         {0x08180000, &FS_USER::IsSdmcWriteable, "IsSdmcWritable"},

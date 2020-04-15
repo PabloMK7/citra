@@ -292,6 +292,32 @@ private:
     void GetFreeBytes(Kernel::HLERequestContext& ctx);
 
     /**
+     * FS_User::GetSdmcArchiveResource service function.
+     *  Inputs:
+     *      0 : 0x08140000
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Sector byte-size
+     *      3 : Cluster byte-size
+     *      4 : Partition capacity in clusters
+     *      5 : Available free space in clusters
+     */
+    void GetSdmcArchiveResource(Kernel::HLERequestContext& ctx);
+
+    /**
+     * FS_User::GetNandArchiveResource service function.
+     *  Inputs:
+     *      0 : 0x08150000
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Sector byte-size
+     *      3 : Cluster byte-size
+     *      4 : Partition capacity in clusters
+     *      5 : Available free space in clusters
+     */
+    void GetNandArchiveResource(Kernel::HLERequestContext& ctx);
+
+    /**
      * FS_User::CreateExtSaveData service function
      *  Inputs:
      *      0 : 0x08510242

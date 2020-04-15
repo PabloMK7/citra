@@ -288,6 +288,16 @@ ResultCode ArchiveManager::CreateSystemSaveData(u32 high, u32 low) {
     return RESULT_SUCCESS;
 }
 
+ResultVal<ArchiveResource> ArchiveManager::GetArchiveResource(MediaType media_type) const {
+    // TODO(Subv): Implement querying the actual size information for these storages.
+    ArchiveResource resource{};
+    resource.sector_size_in_bytes = 512;
+    resource.cluster_size_in_bytes = 16384;
+    resource.partition_capacity_in_clusters = 0x80000; // 8GiB capacity
+    resource.free_space_in_clusters = 0x80000;         // 8GiB free
+    return MakeResult(resource);
+}
+
 void ArchiveManager::RegisterArchiveTypes() {
     // TODO(Subv): Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
