@@ -67,13 +67,15 @@ void KernelSystem::SetCurrentProcessForCPU(std::shared_ptr<Process> process, u32
         SetCurrentMemoryPageTable(&process->vm_manager.page_table);
     } else {
         stored_processes[core_id] = process;
+        thread_managers[core_id]->cpu->PageTableChanged(&process->vm_manager.page_table);
     }
 }
 
 void KernelSystem::SetCurrentMemoryPageTable(Memory::PageTable* page_table) {
     memory.SetCurrentPageTable(page_table);
     if (current_cpu != nullptr) {
-        current_cpu->PageTableChanged(); // notify the CPU the page table in memory has changed
+        // Notify the CPU the page table in memory has changed
+        current_cpu->PageTableChanged(page_table);
     }
 }
 

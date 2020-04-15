@@ -95,7 +95,7 @@ void ARM_DynCom::InvalidateCacheRange(u32, std::size_t) {
     ClearInstructionCache();
 }
 
-void ARM_DynCom::PageTableChanged() {
+void ARM_DynCom::PageTableChanged(Memory::PageTable*) {
     ClearInstructionCache();
 }
 

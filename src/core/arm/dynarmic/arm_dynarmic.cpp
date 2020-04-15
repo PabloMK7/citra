@@ -153,7 +153,7 @@ ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory, u
                            std::shared_ptr<Core::Timing::Timer> timer)
     : ARM_Interface(id, timer), system(*system), memory(memory),
       cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
-    PageTableChanged();
+    PageTableChanged(memory.GetCurrentPageTable());
 }
 
 ARM_Dynarmic::~ARM_Dynarmic() = default;
@@ -287,8 +287,8 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
     jit->InvalidateCacheRange(start_address, length);
 }
 
-void ARM_Dynarmic::PageTableChanged() {
-    current_page_table = memory.GetCurrentPageTable();
+void ARM_Dynarmic::PageTableChanged(Memory::PageTable* new_page_table) {
+    current_page_table = new_page_table;
 
     auto iter = jits.find(current_page_table);
     if (iter != jits.end()) {

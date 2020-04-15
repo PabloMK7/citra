@@ -75,11 +75,13 @@ void Thread::Stop() {
 
 void ThreadManager::SwitchContext(Thread* new_thread) {
     Thread* previous_thread = GetCurrentThread();
+    Process* previous_process = nullptr;
 
     Core::Timing& timing = kernel.timing;
 
     // Save context for previous thread
     if (previous_thread) {
+        previous_process = previous_thread->owner_process;
         previous_thread->last_running_ticks = timing.GetGlobalTicks();
         cpu->SaveContext(previous_thread->context);
 
@@ -99,14 +101,12 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
         // Cancel any outstanding wakeup events for this thread
         timing.UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
 
-        auto previous_process = kernel.GetCurrentProcess();
-
         current_thread = SharedFrom(new_thread);
 
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = ThreadStatus::Running;
 
-        if (previous_process.get() != current_thread->owner_process) {
+        if (previous_process != current_thread->owner_process) {
             kernel.SetCurrentProcessForCPU(SharedFrom(current_thread->owner_process), cpu->GetID());
         }
 

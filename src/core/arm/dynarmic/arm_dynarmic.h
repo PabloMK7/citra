@@ -52,7 +52,7 @@ public:
 
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u32 start_address, std::size_t length) override;
-    void PageTableChanged() override;
+    void PageTableChanged(Memory::PageTable* new_page_table) override;
 
 private:
     void ServeBreak();
