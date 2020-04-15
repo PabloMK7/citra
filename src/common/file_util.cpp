@@ -992,6 +992,36 @@ bool IOFile::Flush() {
     return m_good;
 }
 
+std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t data_size) {
+    if (!IsOpen()) {
+        m_good = false;
+        return std::numeric_limits<std::size_t>::max();
+    }
+
+    if (length == 0) {
+        return 0;
+    }
+
+    DEBUG_ASSERT(data != nullptr);
+
+    return std::fread(data, data_size, length, m_file);
+}
+
+std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {
+    if (!IsOpen()) {
+        m_good = false;
+        return std::numeric_limits<std::size_t>::max();
+    }
+
+    if (length == 0) {
+        return 0;
+    }
+
+    DEBUG_ASSERT(data != nullptr);
+
+    return std::fwrite(data, data_size, length, m_file);
+}
+
 bool IOFile::Resize(u64 size) {
     if (!IsOpen() || 0 !=
 #ifdef _WIN32
