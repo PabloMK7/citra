@@ -131,43 +131,44 @@ void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
     LOG_DEBUG(Frontend, "Network Error: {}", Network::GetErrorStr(error));
     switch (error) {
     case Network::RoomMember::Error::LostConnection:
-        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::LOST_CONNECTION);
         break;
     case Network::RoomMember::Error::HostKicked:
-        NetworkMessage::ShowError(NetworkMessage::HOST_KICKED);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::HOST_KICKED);
         break;
     case Network::RoomMember::Error::CouldNotConnect:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::UNABLE_TO_CONNECT);
         break;
     case Network::RoomMember::Error::NameCollision:
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
+        NetworkMessage::ErrorManager::ShowError(
+            NetworkMessage::ErrorManager::USERNAME_NOT_VALID_SERVER);
         break;
     case Network::RoomMember::Error::MacCollision:
-        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::MAC_COLLISION);
         break;
     case Network::RoomMember::Error::ConsoleIdCollision:
-        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::CONSOLE_ID_COLLISION);
         break;
     case Network::RoomMember::Error::RoomIsFull:
-        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::ROOM_IS_FULL);
         break;
     case Network::RoomMember::Error::WrongPassword:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::WRONG_PASSWORD);
         break;
     case Network::RoomMember::Error::WrongVersion:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::WRONG_VERSION);
         break;
     case Network::RoomMember::Error::HostBanned:
-        NetworkMessage::ShowError(NetworkMessage::HOST_BANNED);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::HOST_BANNED);
         break;
     case Network::RoomMember::Error::UnknownError:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::UNABLE_TO_CONNECT);
         break;
     case Network::RoomMember::Error::PermissionDenied:
-        NetworkMessage::ShowError(NetworkMessage::PERMISSION_DENIED);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::PERMISSION_DENIED);
         break;
     case Network::RoomMember::Error::NoSuchUser:
-        NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::NO_SUCH_USER);
         break;
     }
 }

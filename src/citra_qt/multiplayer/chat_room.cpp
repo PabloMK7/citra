@@ -226,7 +226,7 @@ void ChatRoom::SendModerationRequest(Network::RoomMessageTypes type, const std::
                                    return member.nickname == nickname;
                                });
         if (it == members.end()) {
-            NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+            NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::NO_SUCH_USER);
             return;
         }
         room->SendModerationRequest(type, nickname);

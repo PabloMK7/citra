@@ -74,6 +74,7 @@ void KernelSystem::SetCurrentProcessForCPU(std::shared_ptr<Process> process, u32
         SetCurrentMemoryPageTable(process->vm_manager.page_table);
     } else {
         stored_processes[core_id] = process;
+        thread_managers[core_id]->cpu->SetPageTable(process->vm_manager.page_table);
     }
 }
 

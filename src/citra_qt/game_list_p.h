@@ -89,18 +89,18 @@ static QString GetQStringLongTitleFromSMDH(const Loader::SMDH& smdh,
 static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
     using GameRegion = Loader::SMDH::GameRegion;
     static const std::map<GameRegion, const char*> regions_map = {
-        {GameRegion::Japan, QT_TR_NOOP("Japan")},
-        {GameRegion::NorthAmerica, QT_TR_NOOP("North America")},
-        {GameRegion::Europe, QT_TR_NOOP("Europe")},
-        {GameRegion::Australia, QT_TR_NOOP("Australia")},
-        {GameRegion::China, QT_TR_NOOP("China")},
-        {GameRegion::Korea, QT_TR_NOOP("Korea")},
-        {GameRegion::Taiwan, QT_TR_NOOP("Taiwan")}};
+        {GameRegion::Japan, QT_TRANSLATE_NOOP("GameRegion", "Japan")},
+        {GameRegion::NorthAmerica, QT_TRANSLATE_NOOP("GameRegion", "North America")},
+        {GameRegion::Europe, QT_TRANSLATE_NOOP("GameRegion", "Europe")},
+        {GameRegion::Australia, QT_TRANSLATE_NOOP("GameRegion", "Australia")},
+        {GameRegion::China, QT_TRANSLATE_NOOP("GameRegion", "China")},
+        {GameRegion::Korea, QT_TRANSLATE_NOOP("GameRegion", "Korea")},
+        {GameRegion::Taiwan, QT_TRANSLATE_NOOP("GameRegion", "Taiwan")}};
 
     std::vector<GameRegion> regions = smdh.GetRegions();
 
     if (regions.empty()) {
-        return QObject::tr("Invalid region");
+        return QCoreApplication::translate("GameRegion", "Invalid region");
     }
 
     const bool region_free =
@@ -108,14 +108,14 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
             return std::find(regions.begin(), regions.end(), it.first) != regions.end();
         });
     if (region_free) {
-        return QObject::tr("Region free");
+        return QCoreApplication::translate("GameRegion", "Region free");
     }
 
     const QString separator =
         UISettings::values.game_list_single_line_mode ? QStringLiteral(", ") : QStringLiteral("\n");
-    QString result = QObject::tr(regions_map.at(regions.front()));
+    QString result = QCoreApplication::translate("GameRegion", regions_map.at(regions.front()));
     for (auto region = ++regions.begin(); region != regions.end(); ++region) {
-        result += separator + QObject::tr(regions_map.at(*region));
+        result += separator + QCoreApplication::translate("GameRegion", regions_map.at(*region));
     }
     return result;
 }

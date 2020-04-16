@@ -15,6 +15,10 @@
 #include "core/core_timing.h"
 #include "core/memory.h"
 
+namespace Memory {
+struct PageTable;
+};
+
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
