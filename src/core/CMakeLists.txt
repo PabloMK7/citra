@@ -421,6 +421,8 @@ add_library(core STATIC
     hw/hw.h
     hw/lcd.cpp
     hw/lcd.h
+    hw/rsa/rsa.cpp
+    hw/rsa/rsa.h
     hw/y2r.cpp
     hw/y2r.h
     loader/3dsx.cpp

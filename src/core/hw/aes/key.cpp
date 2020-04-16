@@ -8,6 +8,7 @@
 #include <sstream>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
 #include <fmt/format.h>
 #include "common/common_paths.h"
 #include "common/file_util.h"
@@ -17,6 +18,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
+#include "core/hw/rsa/rsa.h"
 
 namespace HW::AES {
 
@@ -26,7 +28,7 @@ namespace {
 // normal key dumped from a Wii U solving the equation:
 // NormalKey = (((KeyX ROL 2) XOR KeyY) + constant) ROL 87
 // On a real 3DS the generation for the normal key is hardware based, and thus the constant can't
-// get dumped . generated normal keys are also not accesible on a 3DS. The used formula for
+// get dumped. Generated normal keys are also not accesible on a 3DS. The used formula for
 // calculating the constant is a software implementation of what the hardware generator does.
 constexpr AESKey generator_constant = {{0x1F, 0xF9, 0xE9, 0xAA, 0xC5, 0xFE, 0x04, 0x08, 0x02, 0x45,
                                         0x91, 0xDC, 0x5D, 0x52, 0x76, 0x8A}};
@@ -203,14 +205,67 @@ void LoadBootromKeys() {
 }
 
 void LoadNativeFirmKeysOld3DS() {
-    // Use the save mode native firm instead of the normal mode since there are only 2 version of it
+    constexpr u64 native_firm_id = 0x00040138'00000002;
+    FileSys::NCCHArchive archive(native_firm_id, Service::FS::MediaType::NAND);
+    std::array<char, 8> exefs_filepath = {'.', 'f', 'i', 'r', 'm', 0, 0, 0};
+    FileSys::Path file_path = FileSys::MakeNCCHFilePath(
+        FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath);
+    FileSys::Mode open_mode = {};
+    open_mode.read_flag.Assign(1);
+    auto file_result = archive.OpenFile(file_path, open_mode);
+    if (file_result.Failed())
+        return;
+
+    auto firm = std::move(file_result).Unwrap();
+    const std::size_t size = firm->GetSize();
+    if (size != 966656) {
+        LOG_ERROR(HW_AES, "native firm has wrong size {}", size);
+        return;
+    }
+
+    auto rsa = RSA::GetSlot(0);
+    if (!rsa) {
+        LOG_ERROR(HW_AES, "RSA slot is missing");
+        return;
+    }
+
+    std::vector<u8> firm_buffer(size);
+    firm->Read(0, firm_buffer.size(), firm_buffer.data());
+    firm->Close();
+
+    constexpr std::size_t SLOT_0x25_KEY_X_SECRET_OFFSET = 933480;
+    constexpr std::size_t SLOT_0x25_KEY_X_SECRET_SIZE = 64;
+    std::vector<u8> secret_data(SLOT_0x25_KEY_X_SECRET_SIZE);
+    std::memcpy(secret_data.data(), firm_buffer.data() + SLOT_0x25_KEY_X_SECRET_OFFSET,
+                secret_data.size());
+
+    auto asn1 = RSA::CreateASN1Message(secret_data);
+    auto result = rsa.GetSignature(asn1);
+    if (result.size() < 0x100) {
+        std::vector<u8> temp(0x100);
+        std::copy(result.begin(), result.end(), temp.end() - result.size());
+        result = temp;
+    } else if (result.size() > 0x100) {
+        result.resize(0x100);
+    }
+
+    CryptoPP::SHA256 sha;
+    std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash_result;
+    sha.CalculateDigest(hash_result.data(), result.data(), result.size());
+    AESKey key;
+    std::memcpy(key.data(), hash_result.data(), sizeof(key));
+    key_slots.at(0x2F).SetKeyY(key);
+    std::memcpy(key.data(), hash_result.data() + sizeof(key), sizeof(key));
+    key_slots.at(0x25).SetKeyX(key);
+}
+
+void LoadSafeModeNativeFirmKeysOld3DS() {
+    // Use the safe mode native firm instead of the normal mode since there are only 2 version of it
     // and thus we can use fixed offsets
 
-    constexpr u64 save_mode_native_firm_id = 0x00040138'00000003;
+    constexpr u64 safe_mode_native_firm_id = 0x00040138'00000003;
 
-    // TODO(B3N30): Add the 0x25 KeyX that gets initalized by native_firm
-
-    FileSys::NCCHArchive archive(save_mode_native_firm_id, Service::FS::MediaType::NAND);
+    FileSys::NCCHArchive archive(safe_mode_native_firm_id, Service::FS::MediaType::NAND);
     std::array<char, 8> exefs_filepath = {'.', 'f', 'i', 'r', 'm', 0, 0, 0};
     FileSys::Path file_path = FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath);
@@ -223,7 +278,7 @@ void LoadNativeFirmKeysOld3DS() {
     auto firm = std::move(file_result).Unwrap();
     const std::size_t size = firm->GetSize();
     if (size != 843776) {
-        LOG_ERROR(HW_AES, "save mode native firm has wrong size {}", size);
+        LOG_ERROR(HW_AES, "safe mode native firm has wrong size {}", size);
         return;
     }
     std::vector<u8> firm_buffer(size);
@@ -265,16 +320,16 @@ void LoadNativeFirmKeysNew3DS() {
     AESKey secret_key;
     secret.ReadArray(secret_key.data(), secret_key.size());
 
-    // Use the save mode native firm instead of the normal mode since there are only 1 version of it
+    // Use the safe mode native firm instead of the normal mode since there are only 1 version of it
     // and thus we can use fixed offsets
-    constexpr u64 save_mode_native_firm_id = 0x00040138'20000003;
+    constexpr u64 safe_mode_native_firm_id = 0x00040138'20000003;
 
     // TODO(B3N30): Add the 0x25 KeyX that gets initalized by native_firm
 
     // TODO(B3N30): Add the 0x18 - 0x1F KeyX that gets initalized by native_firm. This probably
     // requires the normal native firm with version > 9.6.0-X
 
-    FileSys::NCCHArchive archive(save_mode_native_firm_id, Service::FS::MediaType::NAND);
+    FileSys::NCCHArchive archive(safe_mode_native_firm_id, Service::FS::MediaType::NAND);
     std::array<char, 8> exefs_filepath = {'.', 'f', 'i', 'r', 'm', 0, 0, 0};
     FileSys::Path file_path = FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath);
@@ -296,7 +351,7 @@ void LoadNativeFirmKeysNew3DS() {
         return a | b << 8 | c << 16 | d << 24;
     };
     if (MakeMagic('F', 'I', 'R', 'M') != header.magic) {
-        LOG_ERROR(HW_AES, "N3DS SAVE MODE Native Firm has wrong header {}", header.magic);
+        LOG_ERROR(HW_AES, "N3DS SAFE MODE Native Firm has wrong header {}", header.magic);
         return;
     }
 
@@ -443,11 +498,13 @@ void InitKeys() {
     static bool initialized = false;
     if (initialized)
         return;
+    initialized = true;
+    HW::RSA::InitSlots();
     LoadBootromKeys();
     LoadNativeFirmKeysOld3DS();
+    LoadSafeModeNativeFirmKeysOld3DS();
     LoadNativeFirmKeysNew3DS();
     LoadPresetKeys();
-    initialized = true;
 }
 
 void SetKeyX(std::size_t slot_id, const AESKey& key) {
