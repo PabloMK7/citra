@@ -552,8 +552,7 @@ boost::optional<Network::MacAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id
 void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 0, 0);
 
-    if (auto room_member = Network::GetRoomMember().lock())
-        room_member->Unbind(wifi_packet_received);
+    initialized = false;
 
     for (auto bind_node : channel_data) {
         bind_node.second.event->Signal();
