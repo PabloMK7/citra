@@ -1264,10 +1264,9 @@ void SendTrap(Kernel::Thread* thread, int trap) {
         return;
     }
 
-    if (!halt_loop || current_thread == thread) {
-        current_thread = thread;
-        SendSignal(thread, trap);
-    }
+    current_thread = thread;
+    SendSignal(thread, trap);
+
     halt_loop = true;
     send_trap = false;
 }

@@ -50,6 +50,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     }
 
     if (GDBStub::IsServerEnabled()) {
+        Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+        if (thread && running_core) {
+            running_core->SaveContext(thread->context);
+        }
         GDBStub::HandlePacket();
 
         // If the loop is halted and we want to step, use a tiny (1) number of instructions to
