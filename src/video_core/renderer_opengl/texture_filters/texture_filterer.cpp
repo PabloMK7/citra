@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "video_core/renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.h"
 #include "video_core/renderer_opengl/texture_filters/bicubic/bicubic.h"
+#include "video_core/renderer_opengl/texture_filters/scale_force/scale_force.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filter_base.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 #include "video_core/renderer_opengl/texture_filters/xbrz/xbrz_freescale.h"
@@ -27,6 +28,7 @@ static const std::unordered_map<std::string_view, TextureFilterContructor> filte
     {TextureFilterer::NONE, [](u16) { return nullptr; }},
     FilterMapPair<Anime4kUltrafast>(),
     FilterMapPair<Bicubic>(),
+    FilterMapPair<ScaleForce>(),
     FilterMapPair<XbrzFreescale>(),
 };
 
