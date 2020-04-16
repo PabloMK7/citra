@@ -104,19 +104,19 @@ std::unique_ptr<Network::VerifyUser::Backend> HostRoomWindow::CreateVerifyBacken
 
 void HostRoomWindow::Host() {
     if (!ui->username->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::USERNAME_NOT_VALID);
         return;
     }
     if (!ui->room_name->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::ROOMNAME_NOT_VALID);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::ROOMNAME_NOT_VALID);
         return;
     }
     if (!ui->port->hasAcceptableInput()) {
-        NetworkMessage::ShowError(NetworkMessage::PORT_NOT_VALID);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::PORT_NOT_VALID);
         return;
     }
     if (ui->game_list->currentIndex() == -1) {
-        NetworkMessage::ShowError(NetworkMessage::GAME_NOT_SELECTED);
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::GAME_NOT_SELECTED);
         return;
     }
     if (auto member = Network::GetRoomMember().lock()) {
@@ -147,7 +147,8 @@ void HostRoomWindow::Host() {
                                         Settings::values.citra_username, game_name.toStdString(),
                                         game_id, CreateVerifyBackend(is_public), ban_list);
             if (!created) {
-                NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
+                NetworkMessage::ErrorManager::ShowError(
+                    NetworkMessage::ErrorManager::COULD_NOT_CREATE_ROOM);
                 LOG_ERROR(Network, "Could not create room!");
                 ui->host->setEnabled(true);
                 return;

@@ -20,34 +20,36 @@ private:
     std::string err;
 };
 
-/// When the nickname is considered invalid by the client
-extern const ConnectionError USERNAME_NOT_VALID;
-extern const ConnectionError ROOMNAME_NOT_VALID;
-/// When the nickname is considered invalid by the room server
-extern const ConnectionError USERNAME_NOT_VALID_SERVER;
-extern const ConnectionError IP_ADDRESS_NOT_VALID;
-extern const ConnectionError PORT_NOT_VALID;
-extern const ConnectionError GAME_NOT_SELECTED;
-extern const ConnectionError NO_INTERNET;
-extern const ConnectionError UNABLE_TO_CONNECT;
-extern const ConnectionError ROOM_IS_FULL;
-extern const ConnectionError COULD_NOT_CREATE_ROOM;
-extern const ConnectionError HOST_BANNED;
-extern const ConnectionError WRONG_VERSION;
-extern const ConnectionError WRONG_PASSWORD;
-extern const ConnectionError GENERIC_ERROR;
-extern const ConnectionError LOST_CONNECTION;
-extern const ConnectionError HOST_KICKED;
-extern const ConnectionError MAC_COLLISION;
-extern const ConnectionError CONSOLE_ID_COLLISION;
-extern const ConnectionError PERMISSION_DENIED;
-extern const ConnectionError NO_SUCH_USER;
-
-/**
- *  Shows a standard QMessageBox with a error message
- */
-void ShowError(const ConnectionError& e);
-
+class ErrorManager : QObject {
+    Q_OBJECT
+public:
+    /// When the nickname is considered invalid by the client
+    static const ConnectionError USERNAME_NOT_VALID;
+    static const ConnectionError ROOMNAME_NOT_VALID;
+    /// When the nickname is considered invalid by the room server
+    static const ConnectionError USERNAME_NOT_VALID_SERVER;
+    static const ConnectionError IP_ADDRESS_NOT_VALID;
+    static const ConnectionError PORT_NOT_VALID;
+    static const ConnectionError GAME_NOT_SELECTED;
+    static const ConnectionError NO_INTERNET;
+    static const ConnectionError UNABLE_TO_CONNECT;
+    static const ConnectionError ROOM_IS_FULL;
+    static const ConnectionError COULD_NOT_CREATE_ROOM;
+    static const ConnectionError HOST_BANNED;
+    static const ConnectionError WRONG_VERSION;
+    static const ConnectionError WRONG_PASSWORD;
+    static const ConnectionError GENERIC_ERROR;
+    static const ConnectionError LOST_CONNECTION;
+    static const ConnectionError HOST_KICKED;
+    static const ConnectionError MAC_COLLISION;
+    static const ConnectionError CONSOLE_ID_COLLISION;
+    static const ConnectionError PERMISSION_DENIED;
+    static const ConnectionError NO_SUCH_USER;
+    /**
+     *  Shows a standard QMessageBox with a error message
+     */
+    static void ShowError(const ConnectionError& e);
+};
 /**
  * Show a standard QMessageBox with a warning message about leaving the room
  * return true if the user wants to close the network connection
