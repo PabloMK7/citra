@@ -211,6 +211,12 @@ public:
     Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0);
 
     /**
+     * Ensure NCCH header is loaded and ready for reading sections
+     * @return ResultStatus result of function
+     */
+    Loader::ResultStatus LoadHeader();
+
+    /**
      * Ensure ExeFS and exheader is loaded and ready for reading sections
      * @return ResultStatus result of function
      */

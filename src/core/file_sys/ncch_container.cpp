@@ -133,8 +133,39 @@ Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath, u32 nc
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus NCCHContainer::LoadHeader() {
+    if (has_header) {
+        return Loader::ResultStatus::Success;
+    }
+    if (!file.IsOpen()) {
+        return Loader::ResultStatus::Error;
+    }
+
+    // Reset read pointer in case this file has been read before.
+    file.Seek(ncch_offset, SEEK_SET);
+
+    if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header)) {
+        return Loader::ResultStatus::Error;
+    }
+
+    // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
+    if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
+        LOG_DEBUG(Service_FS, "Only loading the first (bootable) NCCH within the NCSD file!");
+        ncch_offset += 0x4000;
+        file.Seek(ncch_offset, SEEK_SET);
+        file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
+    }
+
+    // Verify we are loading the correct file type...
+    if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
+        return Loader::ResultStatus::ErrorInvalidFormat;
+    }
+
+    has_header = true;
+    return Loader::ResultStatus::Success;
+}
+
 Loader::ResultStatus NCCHContainer::Load() {
-    LOG_INFO(Service_FS, "Loading NCCH from file {}", filepath);
     if (is_loaded)
         return Loader::ResultStatus::Success;
 
@@ -697,7 +728,7 @@ Loader::ResultStatus NCCHContainer::ReadOverrideRomFS(std::shared_ptr<RomFSReade
 }
 
 Loader::ResultStatus NCCHContainer::ReadProgramId(u64_le& program_id) {
-    Loader::ResultStatus result = Load();
+    Loader::ResultStatus result = LoadHeader();
     if (result != Loader::ResultStatus::Success)
         return result;
 
