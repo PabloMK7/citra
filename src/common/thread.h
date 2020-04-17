@@ -30,7 +30,7 @@ public:
 
     template <class Duration>
     bool WaitFor(const std::chrono::duration<Duration>& time) {
-        std::unique_lock lk(mutex);
+        std::unique_lock lk{mutex};
         if (!condvar.wait_for(lk, time, [this] { return is_set; }))
             return false;
         is_set = false;

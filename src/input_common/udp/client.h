@@ -17,8 +17,8 @@
 
 namespace InputCommon::CemuhookUDP {
 
-static constexpr u16 DEFAULT_PORT = 26760;
-static constexpr const char* DEFAULT_ADDR = "127.0.0.1";
+constexpr u16 DEFAULT_PORT = 26760;
+constexpr char DEFAULT_ADDR[] = "127.0.0.1";
 
 class Socket;
 
@@ -35,10 +35,10 @@ struct DeviceStatus {
 
     // calibration data for scaling the device's touch area to 3ds
     struct CalibrationData {
-        u16 min_x;
-        u16 min_y;
-        u16 max_x;
-        u16 max_y;
+        u16 min_x{};
+        u16 min_y{};
+        u16 max_x{};
+        u16 max_y{};
     };
     std::optional<CalibrationData> touch_calibration;
 };

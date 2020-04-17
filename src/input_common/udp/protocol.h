@@ -25,15 +25,15 @@ enum class Type : u32 {
 };
 
 struct Header {
-    u32_le magic;
-    u16_le protocol_version;
-    u16_le payload_length;
-    u32_le crc;
-    u32_le id;
+    u32_le magic{};
+    u16_le protocol_version{};
+    u16_le payload_length{};
+    u32_le crc{};
+    u32_le id{};
     ///> In the protocol, the type of the packet is not part of the header, but its convenient to
     ///> include in the header so the callee doesn't have to duplicate the type twice when building
     ///> the data
-    Type type;
+    Type type{};
 };
 static_assert(sizeof(Header) == 20, "UDP Message Header struct has wrong size");
 static_assert(std::is_trivially_copyable_v<Header>, "UDP Message Header is not trivially copyable");
@@ -44,7 +44,7 @@ constexpr MacAddress EMPTY_MAC_ADDRESS = {0, 0, 0, 0, 0, 0};
 #pragma pack(push, 1)
 template <typename T>
 struct Message {
-    Header header;
+    Header header{};
     T data;
 };
 #pragma pack(pop)
@@ -63,7 +63,7 @@ struct Version {};
  */
 constexpr u32 MAX_PORTS = 4;
 struct PortInfo {
-    u32_le pad_count; ///> Number of ports to request data for
+    u32_le pad_count{}; ///> Number of ports to request data for
     std::array<u8, MAX_PORTS> port;
 };
 static_assert(std::is_trivially_copyable_v<PortInfo>,
@@ -81,9 +81,9 @@ struct PadData {
         Mac,
     };
     /// Determines which method will be used as a look up for the controller
-    Flags flags;
+    Flags flags{};
     /// Index of the port of the controller to retrieve data about
-    u8 port_id;
+    u8 port_id{};
     /// Mac address of the controller to retrieve data about
     MacAddress mac;
 };
@@ -112,20 +112,20 @@ Message<T> Create(const T data, const u32 client_id = 0) {
 namespace Response {
 
 struct Version {
-    u16_le version;
+    u16_le version{};
 };
 static_assert(sizeof(Version) == 2, "UDP Response Version struct has wrong size");
 static_assert(std::is_trivially_copyable_v<Version>,
               "UDP Response Version is not trivially copyable");
 
 struct PortInfo {
-    u8 id;
-    u8 state;
-    u8 model;
-    u8 connection_type;
+    u8 id{};
+    u8 state{};
+    u8 model{};
+    u8 connection_type{};
     MacAddress mac;
-    u8 battery;
-    u8 is_pad_active;
+    u8 battery{};
+    u8 is_pad_active{};
 };
 static_assert(sizeof(PortInfo) == 12, "UDP Response PortInfo struct has wrong size");
 static_assert(std::is_trivially_copyable_v<PortInfo>,
@@ -133,10 +133,10 @@ static_assert(std::is_trivially_copyable_v<PortInfo>,
 
 #pragma pack(push, 1)
 struct PadData {
-    PortInfo info;
-    u32_le packet_counter;
+    PortInfo info{};
+    u32_le packet_counter{};
 
-    u16_le digital_button;
+    u16_le digital_button{};
     // The following union isn't trivially copyable but we don't use this input anyway.
     // union DigitalButton {
     //     u16_le button;
@@ -160,46 +160,46 @@ struct PadData {
 
     u8 home;
     /// If the device supports a "click" on the touchpad, this will change to 1 when a click happens
-    u8 touch_hard_press;
-    u8 left_stick_x;
-    u8 left_stick_y;
-    u8 right_stick_x;
-    u8 right_stick_y;
+    u8 touch_hard_press{};
+    u8 left_stick_x{};
+    u8 left_stick_y{};
+    u8 right_stick_x{};
+    u8 right_stick_y{};
 
     struct AnalogButton {
-        u8 button_8;
-        u8 button_7;
-        u8 button_6;
-        u8 button_5;
-        u8 button_12;
-        u8 button_11;
-        u8 button_10;
-        u8 button_9;
-        u8 button_16;
-        u8 button_15;
-        u8 button_14;
-        u8 button_13;
+        u8 button_8{};
+        u8 button_7{};
+        u8 button_6{};
+        u8 button_5{};
+        u8 button_12{};
+        u8 button_11{};
+        u8 button_10{};
+        u8 button_9{};
+        u8 button_16{};
+        u8 button_15{};
+        u8 button_14{};
+        u8 button_13{};
     } analog_button;
 
     struct TouchPad {
-        u8 is_active;
-        u8 id;
-        u16_le x;
-        u16_le y;
+        u8 is_active{};
+        u8 id{};
+        u16_le x{};
+        u16_le y{};
     } touch_1, touch_2;
 
     u64_le motion_timestamp;
 
     struct Accelerometer {
-        float x;
-        float y;
-        float z;
+        float x{};
+        float y{};
+        float z{};
     } accel;
 
     struct Gyroscope {
-        float pitch;
-        float yaw;
-        float roll;
+        float pitch{};
+        float yaw{};
+        float roll{};
     } gyro;
 };
 #pragma pack(pop)
@@ -210,6 +210,13 @@ static_assert(std::is_trivially_copyable_v<PadData>,
 
 static_assert(sizeof(Message<PadData>) == MAX_PACKET_SIZE,
               "UDP MAX_PACKET_SIZE is no longer larger than Message<PadData>");
+
+static_assert(sizeof(PadData::AnalogButton) == 12,
+              "UDP Response AnalogButton struct has wrong size ");
+static_assert(sizeof(PadData::TouchPad) == 6, "UDP Response TouchPad struct has wrong size ");
+static_assert(sizeof(PadData::Accelerometer) == 12,
+              "UDP Response Accelerometer struct has wrong size ");
+static_assert(sizeof(PadData::Gyroscope) == 12, "UDP Response Gyroscope struct has wrong size ");
 
 /**
  * Create a Response Message from the data
