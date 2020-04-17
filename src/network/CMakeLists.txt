@@ -13,4 +13,4 @@ add_library(network STATIC
 
 create_target_directory_groups(network)
 
-target_link_libraries(network PRIVATE common enet)
+target_link_libraries(network PRIVATE common enet Boost::serialization)

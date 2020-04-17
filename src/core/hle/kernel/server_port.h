@@ -7,8 +7,10 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
@@ -60,6 +62,14 @@ public:
 
     bool ShouldWait(const Thread* thread) const override;
     void Acquire(Thread* thread) override;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::ServerPort)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ServerPort)

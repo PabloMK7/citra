@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "audio_core/audio_types.h"
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -12,6 +13,9 @@
 
 using DspPipe = AudioCore::DspPipe;
 using InterruptType = Service::DSP::DSP_DSP::InterruptType;
+
+SERIALIZE_EXPORT_IMPL(Service::DSP::DSP_DSP)
+SERVICE_CONSTRUCT_IMPL(Service::DSP::DSP_DSP)
 
 namespace AudioCore {
 enum class DspPipe;

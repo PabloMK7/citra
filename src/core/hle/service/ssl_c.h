@@ -23,8 +23,12 @@ private:
 
     // TODO: Implement a proper CSPRNG in the future when actual security is needed
     std::mt19937 rand_gen;
+
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::SSL
+
+BOOST_CLASS_EXPORT_KEY(Service::SSL::SSL_C)

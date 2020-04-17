@@ -4,7 +4,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/map.hpp>
 #include <cryptopp/osrng.h>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -21,7 +24,19 @@
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
 
+SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS)
+SERVICE_CONSTRUCT_IMPL(Service::NWM::NWM_UDS)
+
 namespace Service::NWM {
+
+template <class Archive>
+void NWM_UDS::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& node_map;
+    ar& connection_event;
+    ar& received_beacons;
+    // wifi_packet_received set in constructor
+}
 
 namespace ErrCodes {
 enum {
@@ -489,6 +504,9 @@ void NWM_UDS::HandleDataFrame(const Network::WifiPacket& packet) {
 
 /// Callback to parse and handle a received wifi packet.
 void NWM_UDS::OnWifiPacketReceived(const Network::WifiPacket& packet) {
+    if (!initialized) {
+        return;
+    }
     switch (packet.type) {
     case Network::WifiPacket::PacketType::Beacon:
         HandleBeaconFrame(packet);
@@ -534,8 +552,7 @@ boost::optional<Network::MacAddress> NWM_UDS::GetNodeMacAddress(u16 dest_node_id
 void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 0, 0);
 
-    if (auto room_member = Network::GetRoomMember().lock())
-        room_member->Unbind(wifi_packet_received);
+    initialized = false;
 
     for (auto bind_node : channel_data) {
         bind_node.second.event->Signal();
@@ -624,13 +641,6 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
 
     recv_buffer_memory = std::move(sharedmem);
     ASSERT_MSG(recv_buffer_memory->GetSize() == sharedmem_size, "Invalid shared memory size.");
-
-    if (auto room_member = Network::GetRoomMember().lock()) {
-        wifi_packet_received = room_member->BindOnWifiPacketReceived(
-            [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
-    } else {
-        LOG_ERROR(Service_NWM, "Network isn't initalized");
-    }
 
     {
         std::lock_guard lock(connection_status_mutex);
@@ -1165,6 +1175,30 @@ void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
+class NWM_UDS::ThreadCallback : public Kernel::HLERequestContext::WakeupCallback {
+public:
+    explicit ThreadCallback(u16 command_id_) : command_id(command_id_) {}
+
+    void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+                Kernel::ThreadWakeupReason reason) {
+        // TODO(B3N30): Add error handling for host full and timeout
+        IPC::RequestBuilder rb(ctx, command_id, 1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_DEBUG(Service_NWM, "connection sequence finished");
+    }
+
+private:
+    ThreadCallback() = default;
+    u16 command_id;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::HLERequestContext::WakeupCallback>(*this);
+        ar& command_id;
+    }
+    friend class boost::serialization::access;
+};
+
 void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
                                const u8* network_info_buffer, std::size_t network_info_size,
                                u8 connection_type, std::vector<u8> passphrase) {
@@ -1178,15 +1212,8 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
     // Since this timing is handled by core_timing it could differ from the 'real world' time
     static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
-    connection_event = ctx.SleepClientThread(
-        "uds::ConnectToNetwork", UDSConnectionTimeout,
-        [command_id](std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
-                     Kernel::ThreadWakeupReason reason) {
-            // TODO(B3N30): Add error handling for host full and timeout
-            IPC::RequestBuilder rb(ctx, command_id, 1, 0);
-            rb.Push(RESULT_SUCCESS);
-            LOG_DEBUG(Service_NWM, "connection sequence finished");
-        });
+    connection_event = ctx.SleepClientThread("uds::ConnectToNetwork", UDSConnectionTimeout,
+                                             std::make_shared<ThreadCallback>(command_id));
 }
 
 void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
@@ -1396,6 +1423,13 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
 
     system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
     system.Kernel().GetSharedPageHandler().SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
+
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        wifi_packet_received = room_member->BindOnWifiPacketReceived(
+            [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
+    } else {
+        LOG_ERROR(Service_NWM, "Network isn't initalized");
+    }
 }
 
 NWM_UDS::~NWM_UDS() {
@@ -1406,3 +1440,5 @@ NWM_UDS::~NWM_UDS() {
 }
 
 } // namespace Service::NWM
+
+SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS::ThreadCallback)

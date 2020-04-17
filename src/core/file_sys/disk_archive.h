@@ -8,6 +8,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_backend.h"
@@ -43,6 +46,17 @@ public:
 protected:
     Mode mode;
     std::unique_ptr<FileUtil::IOFile> file;
+
+private:
+    DiskFile() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<FileBackend>(*this);
+        ar& mode.hex;
+        ar& file;
+    }
+    friend class boost::serialization::access;
 };
 
 class DiskDirectory : public DirectoryBackend {
@@ -65,6 +79,27 @@ protected:
     // We need to remember the last entry we returned, so a subsequent call to Read will continue
     // from the next one.  This iterator will always point to the next unread entry.
     std::vector<FileUtil::FSTEntry>::iterator children_iterator;
+
+private:
+    DiskDirectory() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<DirectoryBackend>(*this);
+        ar& directory;
+        u64 child_index;
+        if (Archive::is_saving::value) {
+            child_index = children_iterator - directory.children.begin();
+        }
+        ar& child_index;
+        if (Archive::is_loading::value) {
+            children_iterator = directory.children.begin() + child_index;
+        }
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::DiskFile)
+BOOST_CLASS_EXPORT_KEY(FileSys::DiskDirectory)

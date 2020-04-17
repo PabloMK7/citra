@@ -280,6 +280,9 @@ public:
     /// Flush all cached resources tracked by this cache manager
     void FlushAll();
 
+    /// Clear all cached resources tracked by this cache manager
+    void ClearAll(bool flush);
+
 private:
     void DuplicateSurface(const Surface& src_surface, const Surface& dest_surface);
 

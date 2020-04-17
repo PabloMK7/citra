@@ -30,7 +30,6 @@ public:
 
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u32 start_address, std::size_t length) override;
-    void PageTableChanged(Memory::PageTable* new_page_table) override;
 
     void SetPC(u32 pc) override;
     u32 GetPC() const override;
@@ -42,14 +41,19 @@ public:
     void SetVFPSystemReg(VFPSystemRegister reg, u32 value) override;
     u32 GetCPSR() const override;
     void SetCPSR(u32 cpsr) override;
-    u32 GetCP15Register(CP15Register reg) override;
+    u32 GetCP15Register(CP15Register reg) const override;
     void SetCP15Register(CP15Register reg, u32 value) override;
 
     std::unique_ptr<ThreadContext> NewContext() const override;
     void SaveContext(const std::unique_ptr<ThreadContext>& arg) override;
     void LoadContext(const std::unique_ptr<ThreadContext>& arg) override;
 
+    void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
     void PrepareReschedule() override;
+    void PurgeState() override;
+
+protected:
+    std::shared_ptr<Memory::PageTable> GetPageTable() const override;
 
 private:
     void ExecuteInstructions(u64 num_instructions);

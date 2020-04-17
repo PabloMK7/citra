@@ -4,6 +4,7 @@
 
 #include <cinttypes>
 #include <unordered_map>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -11,6 +12,8 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::Timer)
 
 namespace Kernel {
 

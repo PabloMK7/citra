@@ -14,6 +14,12 @@ namespace Service::HID {
 class User final : public Module::Interface {
 public:
     explicit User(std::shared_ptr<Module> hid);
+
+private:
+    SERVICE_SERIALIZATION(User, hid, Module)
 };
 
 } // namespace Service::HID
+
+BOOST_CLASS_EXPORT_KEY(Service::HID::User)
+BOOST_SERIALIZATION_CONSTRUCT(Service::HID::User)

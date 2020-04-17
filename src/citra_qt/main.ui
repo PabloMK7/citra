@@ -79,10 +79,27 @@
     <property name="title">
      <string>&amp;Emulation</string>
     </property>
+    <widget class="QMenu" name="menu_Save_State">
+     <property name="title">
+      <string>Save State</string>
+     </property>
+     <addaction name="action_Save_to_Oldest_Slot"/>
+     <addaction name="separator"/>
+    </widget>
+    <widget class="QMenu" name="menu_Load_State">
+     <property name="title">
+      <string>Load State</string>
+     </property>
+     <addaction name="action_Load_from_Newest_Slot"/>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="action_Start"/>
     <addaction name="action_Pause"/>
     <addaction name="action_Stop"/>
     <addaction name="action_Restart"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Load_State"/>
+    <addaction name="menu_Save_State"/>
     <addaction name="separator"/>
     <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
@@ -217,6 +234,22 @@
     <string>&amp;Stop</string>
    </property>
   </action>
+  <action name="action_Save">
+    <property name="enabled">
+      <bool>false</bool>
+    </property>
+    <property name="text">
+      <string>Save</string>
+    </property>
+  </action>
+  <action name="action_Load">
+    <property name="enabled">
+      <bool>false</bool>
+    </property>
+    <property name="text">
+      <string>Load</string>
+    </property>
+  </action>
   <action name="action_FAQ">
    <property name="text">
     <string>FAQ</string>
@@ -233,6 +266,16 @@
    </property>
    <property name="text">
     <string>Single Window Mode</string>
+   </property>
+  </action>
+  <action name="action_Save_to_Oldest_Slot">
+   <property name="text">
+    <string>Save to Oldest Slot</string>
+   </property>
+  </action>
+  <action name="action_Load_from_Newest_Slot">
+   <property name="text">
+    <string>Load from Newest Slot</string>
    </property>
   </action>
   <action name="action_Configure">

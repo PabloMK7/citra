@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/unique_ptr.hpp>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/file_sys/errors.h"
@@ -13,11 +15,29 @@
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/fs/file.h"
 
+SERIALIZE_EXPORT_IMPL(Service::FS::File)
+SERIALIZE_EXPORT_IMPL(Service::FS::FileSessionSlot)
+
 namespace Service::FS {
 
-File::File(Core::System& system, std::unique_ptr<FileSys::FileBackend>&& backend,
+template <class Archive>
+void File::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& path;
+    ar& backend;
+}
+
+File::File() : File(Core::Global<Kernel::KernelSystem>()) {}
+
+File::File(Kernel::KernelSystem& kernel, std::unique_ptr<FileSys::FileBackend>&& backend,
            const FileSys::Path& path)
-    : ServiceFramework("", 1), path(path), backend(std::move(backend)), system(system) {
+    : File(kernel) {
+    this->backend = std::move(backend);
+    this->path = path;
+}
+
+File::File(Kernel::KernelSystem& kernel)
+    : ServiceFramework("", 1), path(""), backend(nullptr), kernel(kernel) {
     static const FunctionInfo functions[] = {
         {0x08010100, &File::OpenSubFile, "OpenSubFile"},
         {0x080200C2, &File::Read, "Read"},
@@ -71,12 +91,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(buffer);
 
     std::chrono::nanoseconds read_timeout_ns{backend->GetReadDelayNs(length)};
-    ctx.SleepClientThread("file::read", read_timeout_ns,
-                          [](std::shared_ptr<Kernel::Thread> /*thread*/,
-                             Kernel::HLERequestContext& /*ctx*/,
-                             Kernel::ThreadWakeupReason /*reason*/) {
-                              // Nothing to do here
-                          });
+    ctx.SleepClientThread("file::read", read_timeout_ns, nullptr);
 }
 
 void File::Write(Kernel::HLERequestContext& ctx) {
@@ -201,7 +216,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     using Kernel::ServerSession;
     IPC::RequestParser rp(ctx, 0x080C, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    auto [server, client] = system.Kernel().CreateSessionPair(GetName());
+    auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
     FileSessionSlot* slot = GetSessionData(server);
@@ -247,7 +262,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     using Kernel::ClientSession;
     using Kernel::ServerSession;
-    auto [server, client] = system.Kernel().CreateSessionPair(GetName());
+    auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
     FileSessionSlot* slot = GetSessionData(server);
@@ -261,7 +276,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 }
 
 std::shared_ptr<Kernel::ClientSession> File::Connect() {
-    auto [server, client] = system.Kernel().CreateSessionPair(GetName());
+    auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
     FileSessionSlot* slot = GetSessionData(server);

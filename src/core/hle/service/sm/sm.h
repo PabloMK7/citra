@@ -8,6 +8,10 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/unordered_map.hpp>
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
@@ -80,6 +84,24 @@ private:
     // For IPC Recorder
     /// client port Object id -> service name
     std::unordered_map<u32, std::string> registered_services_inverse;
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int file_version) const {
+        ar << registered_services;
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version) {
+        ar >> registered_services;
+        registered_services_inverse.clear();
+        for (const auto& pair : registered_services) {
+            registered_services_inverse.emplace(pair.second->GetObjectId(), pair.first);
+        }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::SM

@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/frd/frd_a.h"
+
+SERIALIZE_EXPORT_IMPL(Service::FRD::FRD_A)
 
 namespace Service::FRD {
 

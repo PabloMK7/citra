@@ -2,6 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include "common/archives.h"
 #include "video_core/geometry_pipeline.h"
 #include "video_core/pica_state.h"
 #include "video_core/regs.h"
@@ -30,6 +34,11 @@ public:
      * @return if the buffer is full and the geometry shader should be invoked
      */
     virtual bool SubmitVertex(const Shader::AttributeBuffer& input) = 0;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {}
+    friend class boost::serialization::access;
 };
 
 // In the Point mode, vertex attributes are sent to the input registers in the geometry shader unit.
@@ -79,6 +88,38 @@ private:
     Common::Vec4<float24>* buffer_cur;
     Common::Vec4<float24>* buffer_end;
     unsigned int vs_output_num;
+
+    GeometryPipeline_Point() : regs(g_state.regs), unit(g_state.gs_unit) {}
+
+    template <typename Class, class Archive>
+    static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
+        ar & self->attribute_buffer;
+        ar & self->vs_output_num;
+    }
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int version) const {
+        serialize_common(this, ar, version);
+        auto buffer_idx = static_cast<u32>(buffer_cur - attribute_buffer.attr);
+        auto buffer_size = static_cast<u32>(buffer_end - attribute_buffer.attr);
+        ar << buffer_idx;
+        ar << buffer_size;
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
+        serialize_common(this, ar, version);
+        u32 buffer_idx, buffer_size;
+        ar >> buffer_idx;
+        ar >> buffer_size;
+        buffer_cur = attribute_buffer.attr + buffer_idx;
+        buffer_end = attribute_buffer.attr + buffer_size;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    friend class boost::serialization::access;
 };
 
 // In VariablePrimitive mode, vertex attributes are buffered into the uniform registers in the
@@ -144,6 +185,36 @@ private:
     unsigned int total_vertex_num;
     Common::Vec4<float24>* buffer_cur;
     unsigned int vs_output_num;
+
+    GeometryPipeline_VariablePrimitive() : regs(g_state.regs), setup(g_state.gs) {}
+
+    template <typename Class, class Archive>
+    static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
+        ar & self->need_index;
+        ar & self->main_vertex_num;
+        ar & self->total_vertex_num;
+        ar & self->vs_output_num;
+    }
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int version) const {
+        serialize_common(this, ar, version);
+        auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f);
+        ar << buffer_idx;
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
+        serialize_common(this, ar, version);
+        u32 buffer_idx;
+        ar >> buffer_idx;
+        buffer_cur = setup.uniforms.f + buffer_idx;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    friend class boost::serialization::access;
 };
 
 // In FixedPrimitive mode, vertex attributes are buffered into the uniform registers in the geometry
@@ -190,6 +261,41 @@ private:
     Common::Vec4<float24>* buffer_cur;
     Common::Vec4<float24>* buffer_end;
     unsigned int vs_output_num;
+
+    GeometryPipeline_FixedPrimitive() : regs(g_state.regs), setup(g_state.gs) {}
+
+    template <typename Class, class Archive>
+    static void serialize_common(Class* self, Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<GeometryPipelineBackend>(*self);
+        ar & self->vs_output_num;
+    }
+
+    template <class Archive>
+    void save(Archive& ar, const unsigned int version) const {
+        serialize_common(this, ar, version);
+        auto buffer_offset = static_cast<u32>(buffer_begin - setup.uniforms.f);
+        auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f);
+        auto buffer_size = static_cast<u32>(buffer_end - setup.uniforms.f);
+        ar << buffer_offset;
+        ar << buffer_idx;
+        ar << buffer_size;
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
+        serialize_common(this, ar, version);
+        u32 buffer_offset, buffer_idx, buffer_size;
+        ar >> buffer_offset;
+        ar >> buffer_idx;
+        ar >> buffer_size;
+        buffer_begin = setup.uniforms.f + buffer_offset;
+        buffer_cur = setup.uniforms.f + buffer_idx;
+        buffer_end = setup.uniforms.f + buffer_size;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    friend class boost::serialization::access;
 };
 
 GeometryPipeline::GeometryPipeline(State& state) : state(state) {}
@@ -271,4 +377,15 @@ void GeometryPipeline::SubmitVertex(const Shader::AttributeBuffer& input) {
     }
 }
 
+template <class Archive>
+void GeometryPipeline::serialize(Archive& ar, const unsigned int version) {
+    // vertex_handler and shader_engine are always set to the same value
+    ar& backend;
+}
+
 } // namespace Pica
+
+SERIALIZE_EXPORT_IMPL(Pica::GeometryPipeline_Point)
+SERIALIZE_EXPORT_IMPL(Pica::GeometryPipeline_VariablePrimitive)
+SERIALIZE_EXPORT_IMPL(Pica::GeometryPipeline_FixedPrimitive)
+SERIALIZE_IMPL(Pica::GeometryPipeline)

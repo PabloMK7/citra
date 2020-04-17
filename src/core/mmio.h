@@ -32,6 +32,11 @@ public:
     virtual void Write64(VAddr addr, u64 data) = 0;
 
     virtual bool WriteBlock(VAddr dest_addr, const void* src_buffer, std::size_t size) = 0;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {}
 };
 
 using MMIORegionPointer = std::shared_ptr<MMIORegion>;

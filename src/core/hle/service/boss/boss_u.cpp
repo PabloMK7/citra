@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/boss/boss_u.h"
 
 namespace Service::BOSS {
@@ -72,3 +73,5 @@ BOSS_U::BOSS_U(std::shared_ptr<Module> boss)
 }
 
 } // namespace Service::BOSS
+
+SERIALIZE_EXPORT_IMPL(Service::BOSS::BOSS_U)

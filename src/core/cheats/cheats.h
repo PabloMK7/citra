@@ -26,6 +26,7 @@ class CheatEngine {
 public:
     explicit CheatEngine(Core::System& system);
     ~CheatEngine();
+    void Connect();
     std::vector<std::shared_ptr<CheatBase>> GetCheats() const;
     void AddCheat(const std::shared_ptr<CheatBase>& cheat);
     void RemoveCheat(int index);

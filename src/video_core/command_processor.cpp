@@ -640,8 +640,16 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                  reinterpret_cast<void*>(&id));
 }
 
-void ProcessCommandList(const u32* list, u32 size) {
-    g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = list;
+void ProcessCommandList(PAddr list, u32 size) {
+
+    u32* buffer = (u32*)VideoCore::g_memory->GetPhysicalPointer(list);
+
+    if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
+        Pica::g_debug_context->recorder->MemoryAccessed((u8*)buffer, size, list);
+    }
+
+    g_state.cmd_list.addr = list;
+    g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = buffer;
     g_state.cmd_list.length = size / sizeof(u32);
 
     while (g_state.cmd_list.current_ptr < g_state.cmd_list.head_ptr + g_state.cmd_list.length) {

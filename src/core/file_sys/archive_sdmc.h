@@ -6,6 +6,9 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/string.hpp>
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
 
@@ -42,6 +45,14 @@ public:
 protected:
     ResultVal<std::unique_ptr<FileBackend>> OpenFileBase(const Path& path, const Mode& mode) const;
     std::string mount_point;
+
+    SDMCArchive() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveBackend>(*this);
+        ar& mount_point;
+    }
+    friend class boost::serialization::access;
 };
 
 /// File system interface to the SDMC archive
@@ -66,6 +77,20 @@ public:
 
 private:
     std::string sdmc_directory;
+
+    ArchiveFactory_SDMC() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
+        ar& sdmc_directory;
+    }
+    friend class boost::serialization::access;
 };
 
+class SDMCDelayGenerator;
+
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::SDMCArchive)
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SDMC)
+BOOST_CLASS_EXPORT_KEY(FileSys::SDMCDelayGenerator)

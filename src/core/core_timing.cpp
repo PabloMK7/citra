@@ -23,8 +23,9 @@ bool Timing::Event::operator<(const Timing::Event& right) const {
 Timing::Timing(std::size_t num_cores, u32 cpu_clock_percentage) {
     timers.resize(num_cores);
     for (std::size_t i = 0; i < num_cores; ++i) {
-        timers[i] = std::make_shared<Timer>(100.0 / cpu_clock_percentage);
+        timers[i] = std::make_shared<Timer>();
     }
+    UpdateClockSpeed(cpu_clock_percentage);
     current_timer = timers[0];
 }
 
@@ -37,14 +38,12 @@ void Timing::UpdateClockSpeed(u32 cpu_clock_percentage) {
 TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback callback) {
     // check for existing type with same name.
     // we want event type names to remain unique so that we can use them for serialization.
-    ASSERT_MSG(event_types.find(name) == event_types.end(),
-               "CoreTiming Event \"{}\" is already registered. Events should only be registered "
-               "during Init to avoid breaking save states.",
-               name);
-
-    auto info = event_types.emplace(name, TimingEventType{callback, nullptr});
+    auto info = event_types.emplace(name, TimingEventType{});
     TimingEventType* event_type = &info.first->second;
     event_type->name = &info.first->first;
+    if (callback != nullptr) {
+        event_type->callback = callback;
+    }
     return event_type;
 }
 
@@ -123,7 +122,7 @@ std::shared_ptr<Timing::Timer> Timing::GetTimer(std::size_t cpu_id) {
     return timers[cpu_id];
 }
 
-Timing::Timer::Timer(double cpu_clock_scale_) : cpu_clock_scale(cpu_clock_scale_) {}
+Timing::Timer::Timer() = default;
 
 Timing::Timer::~Timer() {
     MoveEvents();
@@ -184,7 +183,11 @@ void Timing::Timer::Advance(s64 max_slice_length) {
         Event evt = std::move(event_queue.front());
         std::pop_heap(event_queue.begin(), event_queue.end(), std::greater<>());
         event_queue.pop_back();
-        evt.type->callback(evt.userdata, executed_ticks - evt.time);
+        if (evt.type->callback != nullptr) {
+            evt.type->callback(evt.userdata, executed_ticks - evt.time);
+        } else {
+            LOG_ERROR(Core, "Event '{}' has no callback", *evt.type->name);
+        }
     }
 
     is_timer_sane = false;

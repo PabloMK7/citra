@@ -2,6 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 #include "audio_core/audio_types.h"
 #ifdef HAVE_MF
 #include "audio_core/hle/wmf_decoder.h"
@@ -26,10 +31,21 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 
+SERIALIZE_EXPORT_IMPL(AudioCore::DspHle)
+
 using InterruptType = Service::DSP::DSP_DSP::InterruptType;
 using Service::DSP::DSP_DSP;
 
 namespace AudioCore {
+
+DspHle::DspHle() : DspHle(Core::System::GetInstance().Memory()) {}
+
+template <class Archive>
+void DspHle::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<DspInterface>(*this);
+    ar&* impl.get();
+}
+SERIALIZE_IMPL(DspHle)
 
 static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
 
@@ -64,7 +80,7 @@ private:
     void AudioTickCallback(s64 cycles_late);
 
     DspState dsp_state = DspState::Off;
-    std::array<std::vector<u8>, num_dsp_pipe> pipe_data;
+    std::array<std::vector<u8>, num_dsp_pipe> pipe_data{};
 
     HLE::DspMemory dsp_memory;
     std::array<HLE::Source, HLE::num_sources> sources{{
@@ -74,14 +90,25 @@ private:
         HLE::Source(15), HLE::Source(16), HLE::Source(17), HLE::Source(18), HLE::Source(19),
         HLE::Source(20), HLE::Source(21), HLE::Source(22), HLE::Source(23),
     }};
-    HLE::Mixers mixers;
+    HLE::Mixers mixers{};
 
     DspHle& parent;
-    Core::TimingEventType* tick_event;
+    Core::TimingEventType* tick_event{};
 
-    std::unique_ptr<HLE::DecoderBase> decoder;
+    std::unique_ptr<HLE::DecoderBase> decoder{};
 
-    std::weak_ptr<DSP_DSP> dsp_dsp;
+    std::weak_ptr<DSP_DSP> dsp_dsp{};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& dsp_state;
+        ar& pipe_data;
+        ar& dsp_memory.raw_memory;
+        ar& sources;
+        ar& mixers;
+        ar& dsp_dsp;
+    }
+    friend class boost::serialization::access;
 };
 
 DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(parent_) {

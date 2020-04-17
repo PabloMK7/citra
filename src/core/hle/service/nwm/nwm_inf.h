@@ -11,6 +11,11 @@ namespace Service::NWM {
 class NWM_INF final : public ServiceFramework<NWM_INF> {
 public:
     NWM_INF();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NWM
+
+BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_INF)

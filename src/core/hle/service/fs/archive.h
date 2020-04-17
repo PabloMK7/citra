@@ -8,7 +8,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/container/flat_map.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/unordered_map.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
@@ -253,13 +254,21 @@ private:
      * Map of registered archives, identified by id code. Once an archive is registered here, it is
      * never removed until UnregisterArchiveTypes is called.
      */
-    boost::container::flat_map<ArchiveIdCode, std::unique_ptr<ArchiveFactory>> id_code_map;
+    std::unordered_map<ArchiveIdCode, std::unique_ptr<ArchiveFactory>> id_code_map;
 
     /**
      * Map of active archive handles to archive objects
      */
     std::unordered_map<ArchiveHandle, std::unique_ptr<ArchiveBackend>> handle_map;
     ArchiveHandle next_handle = 1;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& id_code_map;
+        ar& handle_map;
+        ar& next_handle;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::FS

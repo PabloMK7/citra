@@ -31,6 +31,14 @@ public:
                                                      const Mode& mode) const override;
 
     ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override;
+
+private:
+    SDMCWriteOnlyArchive() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<SDMCArchive>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 /// File system interface to the SDMC write-only archive
@@ -55,6 +63,20 @@ public:
 
 private:
     std::string sdmc_directory;
+
+    ArchiveFactory_SDMCWriteOnly() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
+        ar& sdmc_directory;
+    }
+    friend class boost::serialization::access;
 };
 
+class SDMCWriteOnlyDelayGenerator;
+
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::SDMCWriteOnlyArchive)
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SDMCWriteOnly)
+BOOST_CLASS_EXPORT_KEY(FileSys::SDMCWriteOnlyDelayGenerator)

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/apt/apt_s.h"
 
 namespace Service::APT {
@@ -105,3 +106,5 @@ APT_S::APT_S(std::shared_ptr<Module> apt)
 }
 
 } // namespace Service::APT
+
+SERIALIZE_EXPORT_IMPL(Service::APT::APT_S)

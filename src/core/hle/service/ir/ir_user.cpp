@@ -4,6 +4,9 @@
 
 #include <memory>
 #include <boost/crc.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
@@ -13,7 +16,22 @@
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/hle/service/ir/ir_user.h"
 
+SERIALIZE_EXPORT_IMPL(Service::IR::IR_USER)
+SERVICE_CONSTRUCT_IMPL(Service::IR::IR_USER)
+
 namespace Service::IR {
+
+template <class Archive>
+void IR_USER::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& conn_status_event;
+    ar& send_event;
+    ar& receive_event;
+    ar& shared_memory;
+    ar& connected_device;
+    ar& receive_buffer;
+    ar&* extra_hid.get();
+}
 
 // This is a header that will present in the ir:USER shared memory if it is initialized with
 // InitializeIrNopShared service function. Otherwise the shared memory doesn't have this header if
@@ -139,6 +157,16 @@ private:
         u32_le end_index;
         u32_le packet_count;
         u32_le unknown;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& begin_index;
+            ar& end_index;
+            ar& packet_count;
+            ar& unknown;
+        }
+        friend class boost::serialization::access;
     };
     static_assert(sizeof(BufferInfo) == 16, "BufferInfo has wrong size!");
 
@@ -179,6 +207,20 @@ private:
     u32 buffer_offset;
     u32 max_packet_count;
     u32 max_data_size;
+
+private:
+    BufferManager() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& info;
+        ar& shared_memory;
+        ar& info_offset;
+        ar& buffer_offset;
+        ar& max_packet_count;
+        ar& max_data_size;
+    }
+    friend class boost::serialization::access;
 };
 
 /// Wraps the payload into packet and puts it to the receive buffer
@@ -270,8 +312,8 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_role)] = 2;
         shared_memory_ptr[offsetof(SharedMemoryHeader, connected)] = 1;
 
-        connected_device = extra_hid.get();
-        connected_device->OnConnect();
+        connected_device = true;
+        extra_hid->OnConnect();
         conn_status_event->Signal();
     } else {
         LOG_WARNING(Service_IR, "unknown device id {}. Won't connect.", device_id);
@@ -305,8 +347,8 @@ void IR_USER::GetSendEvent(Kernel::HLERequestContext& ctx) {
 
 void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
     if (connected_device) {
-        connected_device->OnDisconnect();
-        connected_device = nullptr;
+        extra_hid->OnDisconnect();
+        connected_device = false;
         conn_status_event->Signal();
     }
 
@@ -331,8 +373,8 @@ void IR_USER::GetConnectionStatusEvent(Kernel::HLERequestContext& ctx) {
 
 void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
     if (connected_device) {
-        connected_device->OnDisconnect();
-        connected_device = nullptr;
+        extra_hid->OnDisconnect();
+        connected_device = false;
     }
 
     shared_memory = nullptr;
@@ -352,7 +394,7 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (connected_device) {
-        connected_device->OnReceive(buffer);
+        extra_hid->OnReceive(buffer);
         send_event->Signal();
         rb.Push(RESULT_SUCCESS);
     } else {
@@ -414,6 +456,7 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework("ir:USER", 1) {
 
     using namespace Kernel;
 
+    connected_device = false;
     conn_status_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ConnectionStatusEvent");
     send_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:SendEvent");
     receive_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ReceiveEvent");
@@ -424,7 +467,7 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework("ir:USER", 1) {
 
 IR_USER::~IR_USER() {
     if (connected_device) {
-        connected_device->OnDisconnect();
+        extra_hid->OnDisconnect();
     }
 }
 

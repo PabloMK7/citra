@@ -18,6 +18,12 @@ namespace Service::APT {
 class APT_S final : public Module::APTInterface {
 public:
     explicit APT_S(std::shared_ptr<Module> apt);
+
+private:
+    SERVICE_SERIALIZATION(APT_S, apt, Module)
 };
 
 } // namespace Service::APT
+
+BOOST_CLASS_EXPORT_KEY(Service::APT::APT_S)
+BOOST_SERIALIZATION_CONSTRUCT(Service::APT::APT_S)

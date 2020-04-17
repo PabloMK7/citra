@@ -10,6 +10,8 @@
 #include "core/hle/service/apt/ns.h"
 #include "core/hle/service/cfg/cfg.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::APT::AppletManager)
+
 namespace Service::APT {
 
 enum class AppletPos { Application = 0, Library = 1, System = 2, SysLibrary = 3, Resident = 4 };

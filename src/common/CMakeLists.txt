@@ -54,6 +54,7 @@ add_custom_command(OUTPUT scm_rev.cpp
 add_library(common STATIC
     alignment.h
     announce_multiplayer_room.h
+    archives.h
     assert.h
     detached_tasks.cpp
     detached_tasks.h
@@ -66,6 +67,7 @@ add_library(common STATIC
     common_funcs.h
     common_paths.h
     common_types.h
+    construct.h
     file_util.cpp
     file_util.h
     hash.h
@@ -78,6 +80,8 @@ add_library(common STATIC
     logging/text_formatter.cpp
     logging/text_formatter.h
     math_util.h
+    memory_ref.h
+    memory_ref.cpp
     microprofile.cpp
     microprofile.h
     microprofileui.h
@@ -89,6 +93,11 @@ add_library(common STATIC
     scm_rev.cpp
     scm_rev.h
     scope_exit.h
+    serialization/atomic.h
+    serialization/boost_discrete_interval.hpp
+    serialization/boost_flat_set.h
+    serialization/boost_small_vector.hpp
+    serialization/boost_vector.hpp
     string_util.cpp
     string_util.h
     swap.h
@@ -121,7 +130,7 @@ endif()
 
 create_target_directory_groups(common)
 
-target_link_libraries(common PUBLIC fmt microprofile)
+target_link_libraries(common PUBLIC fmt microprofile Boost::boost Boost::serialization)
 target_link_libraries(common PRIVATE libzstd_static)
 if (ARCHITECTURE_x86_64)
     target_link_libraries(common PRIVATE xbyak)

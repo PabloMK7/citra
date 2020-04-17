@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <vector>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -179,4 +180,15 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<AC_U>(ac)->InstallAsService(service_manager);
 }
 
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& ac_connected;
+    ar& close_event;
+    ar& connect_event;
+    ar& disconnect_event;
+    // default_config is never written to
+}
+
 } // namespace Service::AC
+
+SERIALIZE_IMPL(Service::AC::Module)

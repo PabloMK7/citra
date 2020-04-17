@@ -11,6 +11,12 @@ namespace Service::HID {
 class Spvr final : public Module::Interface {
 public:
     explicit Spvr(std::shared_ptr<Module> hid);
+
+private:
+    SERVICE_SERIALIZATION(Spvr, hid, Module)
 };
 
 } // namespace Service::HID
+
+BOOST_CLASS_EXPORT_KEY(Service::HID::Spvr)
+BOOST_SERIALIZATION_CONSTRUCT(Service::HID::Spvr)

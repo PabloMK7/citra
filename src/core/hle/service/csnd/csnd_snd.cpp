@@ -3,10 +3,14 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/csnd/csnd_snd.h"
+
+SERVICE_CONSTRUCT_IMPL(Service::CSND::CSND_SND)
+SERIALIZE_EXPORT_IMPL(Service::CSND::CSND_SND)
 
 namespace Service::CSND {
 

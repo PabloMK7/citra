@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include "common/archives.h"
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -20,7 +21,31 @@
 #include "core/memory.h"
 #include "core/settings.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::CAM::Module)
+
 namespace Service::CAM {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& cameras;
+    ar& ports;
+    ar& is_camera_reload_pending;
+    if (Archive::is_loading::value) {
+        for (int i = 0; i < NumCameras; i++) {
+            LoadCameraImplementation(cameras[i], i);
+        }
+        for (std::size_t i = 0; i < ports.size(); i++) {
+            if (ports[i].is_busy) {
+                cameras[ports[i].camera_id].impl->StartCapture();
+            }
+            if (ports[i].is_receiving) {
+                StartReceiving(static_cast<int>(i));
+            }
+        }
+    }
+}
+
+SERIALIZE_IMPL(Module)
 
 // built-in resolution parameters
 constexpr std::array<Resolution, 8> PRESET_RESOLUTION{{

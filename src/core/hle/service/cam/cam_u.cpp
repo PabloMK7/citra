@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cam/cam_u.h"
 
@@ -79,3 +80,5 @@ CAM_U::CAM_U(std::shared_ptr<Module> cam) : Module::Interface(std::move(cam), "c
 }
 
 } // namespace Service::CAM
+
+SERIALIZE_EXPORT_IMPL(Service::CAM::CAM_U)

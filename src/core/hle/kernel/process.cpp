@@ -4,9 +4,14 @@
 
 #include <algorithm>
 #include <memory>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/bitset.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
+#include "common/serialization/boost_vector.hpp"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -15,7 +20,33 @@
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::Process)
+SERIALIZE_EXPORT_IMPL(Kernel::CodeSet)
+
 namespace Kernel {
+
+template <class Archive>
+void Process::serialize(Archive& ar, const unsigned int file_version) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& handle_table;
+    ar& codeset; // TODO: Replace with apploader reference
+    ar& resource_limit;
+    ar& svc_access_mask;
+    ar& handle_table_size;
+    ar&(boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<
+                                                     AddressMapping, 8, 0, true>>&)address_mappings;
+    ar& flags.raw;
+    ar& kernel_version;
+    ar& ideal_processor;
+    ar& status;
+    ar& process_id;
+    ar& vm_manager;
+    ar& memory_used;
+    ar& memory_region;
+    ar& tls_slots;
+}
+
+SERIALIZE_IMPL(Process)
 
 std::shared_ptr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
     auto codeset{std::make_shared<CodeSet>(*this)};
@@ -191,7 +222,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         std::fill(kernel.memory.GetFCRAMPointer(interval.lower()),
                   kernel.memory.GetFCRAMPointer(interval.upper()), 0);
         auto vma = vm_manager.MapBackingMemory(interval_target,
-                                               kernel.memory.GetFCRAMPointer(interval.lower()),
+                                               kernel.memory.GetFCRAMRef(interval.lower()),
                                                interval_size, memory_state);
         ASSERT(vma.Succeeded());
         vm_manager.Reprotect(vma.Unwrap(), perms);
@@ -219,7 +250,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
     for (const auto [backing_memory, block_size] : backing_blocks) {
-        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory), block_size);
+        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory.GetPtr()), block_size);
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
@@ -263,9 +294,9 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         }
     }
 
-    u8* backing_memory = kernel.memory.GetFCRAMPointer(physical_offset);
+    auto backing_memory = kernel.memory.GetFCRAMRef(physical_offset);
 
-    std::fill(backing_memory, backing_memory + size, 0);
+    std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + size, 0);
     auto vma = vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous);
     ASSERT(vma.Succeeded());
     vm_manager.Reprotect(vma.Unwrap(), perms);
@@ -403,8 +434,7 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
 
 Kernel::Process::Process(KernelSystem& kernel)
     : Object(kernel), handle_table(kernel), vm_manager(kernel.memory), kernel(kernel) {
-
-    kernel.memory.RegisterPageTable(&vm_manager.page_table);
+    kernel.memory.RegisterPageTable(vm_manager.page_table);
 }
 Kernel::Process::~Process() {
     // Release all objects this process owns first so that their potential destructor can do clean
@@ -413,7 +443,7 @@ Kernel::Process::~Process() {
     // memory etc.) even if they are still referenced by other processes.
     handle_table.Clear();
 
-    kernel.memory.UnregisterPageTable(&vm_manager.page_table);
+    kernel.memory.UnregisterPageTable(vm_manager.page_table);
 }
 
 std::shared_ptr<Process> KernelSystem::GetProcessById(u32 process_id) const {

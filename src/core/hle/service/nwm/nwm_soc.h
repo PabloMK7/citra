@@ -11,6 +11,11 @@ namespace Service::NWM {
 class NWM_SOC final : public ServiceFramework<NWM_SOC> {
 public:
     NWM_SOC();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NWM
+
+BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_SOC)

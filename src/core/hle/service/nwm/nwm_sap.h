@@ -11,6 +11,11 @@ namespace Service::NWM {
 class NWM_SAP final : public ServiceFramework<NWM_SAP> {
 public:
     NWM_SAP();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NWM
+
+BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_SAP)

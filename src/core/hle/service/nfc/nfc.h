@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <memory>
+#include <boost/serialization/binary_object.hpp>
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
@@ -35,6 +36,13 @@ struct AmiiboData {
     u16_be model_number;
     u8 series;
     INSERT_PADDING_BYTES(0x1C1);
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::make_binary_object(this, sizeof(AmiiboData));
+    }
+    friend class boost::serialization::access;
 };
 static_assert(sizeof(AmiiboData) == 0x21C, "AmiiboData is an invalid size");
 
@@ -226,7 +234,7 @@ public:
          */
         void GetIdentificationBlock(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         std::shared_ptr<Module> nfc;
     };
 
@@ -241,8 +249,15 @@ private:
 
     AmiiboData amiibo_data{};
     bool amiibo_in_range = false;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NFC
+
+SERVICE_CONSTRUCT(Service::NFC::Module)
+BOOST_CLASS_EXPORT_KEY(Service::NFC::Module)

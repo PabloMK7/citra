@@ -9,8 +9,11 @@
 // bootrom. Because we're not emulating this, and essentially just "stubbing" the functionality, I'm
 // putting this as a subset of HLE for now.
 
+#include <boost/serialization/binary_object.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/memory_ref.h"
 #include "common/swap.h"
 #include "core/memory.h"
 
@@ -49,13 +52,34 @@ struct ConfigMemDef {
 static_assert(sizeof(ConfigMemDef) == Memory::CONFIG_MEMORY_SIZE,
               "Config Memory structure size is wrong");
 
-class Handler {
+class Handler : public BackingMem {
 public:
     Handler();
     ConfigMemDef& GetConfigMem();
 
+    u8* GetPtr() override {
+        return reinterpret_cast<u8*>(&config_mem);
+    }
+
+    const u8* GetPtr() const override {
+        return reinterpret_cast<const u8*>(&config_mem);
+    }
+
+    std::size_t GetSize() const override {
+        return sizeof(config_mem);
+    }
+
 private:
     ConfigMemDef config_mem;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<BackingMem>(*this);
+        ar& boost::serialization::make_binary_object(&config_mem, sizeof(config_mem));
+    }
 };
 
 } // namespace ConfigMem
+
+BOOST_CLASS_EXPORT_KEY(ConfigMem::Handler)

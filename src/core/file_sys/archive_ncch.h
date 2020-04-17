@@ -7,6 +7,9 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
@@ -63,6 +66,17 @@ public:
 protected:
     u64 title_id;
     Service::FS::MediaType media_type;
+
+private:
+    NCCHArchive() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveBackend>(*this);
+        ar& title_id;
+        ar& media_type;
+    }
+    friend class boost::serialization::access;
 };
 
 // File backend for NCCH files
@@ -82,6 +96,15 @@ public:
 
 private:
     std::vector<u8> file_buffer;
+
+    NCCHFile() = default;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<FileBackend>(*this);
+        ar& file_buffer;
+    }
+    friend class boost::serialization::access;
 };
 
 /// File system interface to the NCCH archive
@@ -97,6 +120,17 @@ public:
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
                       u64 program_id) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::NCCHArchive)
+BOOST_CLASS_EXPORT_KEY(FileSys::NCCHFile)
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_NCCH)

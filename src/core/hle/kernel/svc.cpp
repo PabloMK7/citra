@@ -282,7 +282,7 @@ void SVC::ExitProcess() {
     // Stop all the process threads that are currently waiting for objects.
     auto& thread_list = kernel.GetCurrentThreadManager().GetThreadList();
     for (auto& thread : thread_list) {
-        if (thread->owner_process != current_process.get())
+        if (thread->owner_process != current_process)
             continue;
 
         if (thread.get() == kernel.GetCurrentThreadManager().GetCurrentThread())
@@ -403,6 +403,76 @@ ResultCode SVC::CloseHandle(Handle handle) {
     return kernel.GetCurrentProcess()->handle_table.Close(handle);
 }
 
+static ResultCode ReceiveIPCRequest(Kernel::KernelSystem& kernel, Memory::MemorySystem& memory,
+                                    std::shared_ptr<ServerSession> server_session,
+                                    std::shared_ptr<Thread> thread);
+
+class SVC_SyncCallback : public Kernel::WakeupCallback {
+public:
+    explicit SVC_SyncCallback(bool do_output_) : do_output(do_output_) {}
+    void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                std::shared_ptr<WaitObject> object) {
+
+        if (reason == ThreadWakeupReason::Timeout) {
+            thread->SetWaitSynchronizationResult(RESULT_TIMEOUT);
+            return;
+        }
+
+        ASSERT(reason == ThreadWakeupReason::Signal);
+
+        thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
+
+        // The wait_all case does not update the output index.
+        if (do_output) {
+            thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
+        }
+    }
+
+private:
+    bool do_output;
+
+    SVC_SyncCallback() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
+        ar& do_output;
+    }
+    friend class boost::serialization::access;
+};
+
+class SVC_IPCCallback : public Kernel::WakeupCallback {
+public:
+    explicit SVC_IPCCallback(Core::System& system_) : system(system_) {}
+
+    void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                std::shared_ptr<WaitObject> object) {
+
+        ASSERT(thread->status == ThreadStatus::WaitSynchAny);
+        ASSERT(reason == ThreadWakeupReason::Signal);
+
+        ResultCode result = RESULT_SUCCESS;
+
+        if (object->GetHandleType() == HandleType::ServerSession) {
+            auto server_session = DynamicObjectCast<ServerSession>(object);
+            result = ReceiveIPCRequest(system.Kernel(), system.Memory(), server_session, thread);
+        }
+
+        thread->SetWaitSynchronizationResult(result);
+        thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
+    }
+
+private:
+    Core::System& system;
+
+    SVC_IPCCallback() : system(Core::Global<Core::System>()) {}
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
+    }
+    friend class boost::serialization::access;
+};
+
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 ResultCode SVC::WaitSynchronization1(Handle handle, s64 nano_seconds) {
     auto object = kernel.GetCurrentProcess()->handle_table.Get<WaitObject>(handle);
@@ -426,21 +496,7 @@ ResultCode SVC::WaitSynchronization1(Handle handle, s64 nano_seconds) {
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
-        thread->wakeup_callback = [](ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                                     std::shared_ptr<WaitObject> object) {
-            ASSERT(thread->status == ThreadStatus::WaitSynchAny);
-
-            if (reason == ThreadWakeupReason::Timeout) {
-                thread->SetWaitSynchronizationResult(RESULT_TIMEOUT);
-                return;
-            }
-
-            ASSERT(reason == ThreadWakeupReason::Signal);
-            thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-
-            // WaitSynchronization1 doesn't have an output index like WaitSynchronizationN, so we
-            // don't have to do anything else here.
-        };
+        thread->wakeup_callback = std::make_shared<SVC_SyncCallback>(false);
 
         system.PrepareReschedule();
 
@@ -515,20 +571,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
-        thread->wakeup_callback = [](ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                                     std::shared_ptr<WaitObject> object) {
-            ASSERT(thread->status == ThreadStatus::WaitSynchAll);
-
-            if (reason == ThreadWakeupReason::Timeout) {
-                thread->SetWaitSynchronizationResult(RESULT_TIMEOUT);
-                return;
-            }
-
-            ASSERT(reason == ThreadWakeupReason::Signal);
-
-            thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-            // The wait_all case does not update the output index.
-        };
+        thread->wakeup_callback = std::make_shared<SVC_SyncCallback>(false);
 
         system.PrepareReschedule();
 
@@ -575,20 +618,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
-        thread->wakeup_callback = [](ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                                     std::shared_ptr<WaitObject> object) {
-            ASSERT(thread->status == ThreadStatus::WaitSynchAny);
-
-            if (reason == ThreadWakeupReason::Timeout) {
-                thread->SetWaitSynchronizationResult(RESULT_TIMEOUT);
-                return;
-            }
-
-            ASSERT(reason == ThreadWakeupReason::Signal);
-
-            thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-            thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
-        };
+        thread->wakeup_callback = std::make_shared<SVC_SyncCallback>(true);
 
         system.PrepareReschedule();
 
@@ -730,22 +760,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
 
     thread->wait_objects = std::move(objects);
 
-    thread->wakeup_callback = [& kernel = this->kernel, &memory = this->memory](
-                                  ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                                  std::shared_ptr<WaitObject> object) {
-        ASSERT(thread->status == ThreadStatus::WaitSynchAny);
-        ASSERT(reason == ThreadWakeupReason::Signal);
-
-        ResultCode result = RESULT_SUCCESS;
-
-        if (object->GetHandleType() == HandleType::ServerSession) {
-            auto server_session = DynamicObjectCast<ServerSession>(object);
-            result = ReceiveIPCRequest(kernel, memory, server_session, thread);
-        }
-
-        thread->SetWaitSynchronizationResult(result);
-        thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
-    };
+    thread->wakeup_callback = std::make_shared<SVC_IPCCallback>(system);
 
     system.PrepareReschedule();
 
@@ -916,7 +931,7 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
 
     CASCADE_RESULT(std::shared_ptr<Thread> thread,
                    kernel.CreateThread(name, entry_point, priority, arg, processor_id, stack_top,
-                                       *current_process));
+                                       current_process));
 
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO |
                               FPSCR_ROUND_TOZERO); // 0x03C00000
@@ -1025,7 +1040,7 @@ ResultCode SVC::GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
     if (thread == nullptr)
         return ERR_INVALID_HANDLE;
 
-    const std::shared_ptr<Process> process = SharedFrom(thread->owner_process);
+    const std::shared_ptr<Process> process = thread->owner_process;
 
     ASSERT_MSG(process != nullptr, "Invalid parent process for thread={:#010X}", thread_handle);
 
@@ -1592,6 +1607,7 @@ void SVC::CallSVC(u32 immediate) {
                      "Running threads from exiting processes is unimplemented");
 
     const FunctionDef* info = GetSVCInfo(immediate);
+    LOG_TRACE(Kernel_SVC, "calling {}", info->name);
     if (info) {
         if (info->func) {
             (this->*(info->func))();
@@ -1619,3 +1635,6 @@ void SVCContext::CallSVC(u32 immediate) {
 }
 
 } // namespace Kernel
+
+SERIALIZE_EXPORT_IMPL(Kernel::SVC_SyncCallback)
+SERIALIZE_EXPORT_IMPL(Kernel::SVC_IPCCallback)

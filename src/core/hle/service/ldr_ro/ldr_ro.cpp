@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
@@ -11,6 +12,10 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/ldr_ro/cro_helper.h"
 #include "core/hle/service/ldr_ro/ldr_ro.h"
+
+SERVICE_CONSTRUCT_IMPL(Service::LDR::RO)
+SERIALIZE_EXPORT_IMPL(Service::LDR::RO)
+SERIALIZE_EXPORT_IMPL(Service::LDR::ClientSlot)
 
 namespace Service::LDR {
 

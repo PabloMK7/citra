@@ -5,7 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <string>
+#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/custom_tex_cache.h"
 #include "core/frontend/applets/mii_selector.h"
@@ -87,9 +89,12 @@ public:
                                             /// generic drivers installed
         ErrorVideoCore_ErrorBelowGL33,      ///< Error in the video core due to the user not having
                                             /// OpenGL 3.3 or higher
+        ErrorSavestate,                     ///< Error saving or loading
         ShutdownRequested,                  ///< Emulated program requested a system shutdown
         ErrorUnknown                        ///< Any other error
     };
+
+    ~System();
 
     /**
      * Run the core CPU loop
@@ -110,19 +115,23 @@ public:
     ResultStatus SingleStep();
 
     /// Shutdown the emulated system.
-    void Shutdown();
+    void Shutdown(bool is_deserializing = false);
 
     /// Shutdown and then load again
     void Reset();
 
+    enum class Signal : u32 { None, Shutdown, Reset, Save, Load };
+
+    bool SendSignal(Signal signal, u32 param = 0);
+
     /// Request reset of the system
     void RequestReset() {
-        reset_requested = true;
+        SendSignal(Signal::Reset);
     }
 
     /// Request shutdown of the system
     void RequestShutdown() {
-        shutdown_requested = true;
+        SendSignal(Signal::Shutdown);
     }
 
     /**
@@ -179,7 +188,7 @@ public:
     };
 
     u32 GetNumCores() const {
-        return cpu_cores.size();
+        return static_cast<u32>(cpu_cores.size());
     }
 
     void InvalidateCacheRange(u32 start_address, std::size_t length) {
@@ -295,6 +304,10 @@ public:
         return registered_image_interface;
     }
 
+    void SaveState(u32 slot) const;
+
+    void LoadState(u32 slot);
+
 private:
     /**
      * Initialize the emulated system.
@@ -303,7 +316,8 @@ private:
      * @param system_mode The system mode.
      * @return ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode);
+    ResultStatus Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode,
+                      u32 num_cores);
 
     /// Reschedule the core emulation
     void Reschedule();
@@ -325,7 +339,7 @@ private:
     std::unique_ptr<Core::TelemetrySession> telemetry_session;
 
     /// Service manager
-    std::shared_ptr<Service::SM::ServiceManager> service_manager;
+    std::unique_ptr<Service::SM::ServiceManager> service_manager;
 
     /// Frontend applets
     std::shared_ptr<Frontend::MiiSelector> registered_mii_selector;
@@ -362,9 +376,15 @@ private:
     /// Saved variables for reset
     Frontend::EmuWindow* m_emu_window;
     std::string m_filepath;
+    u64 title_id;
 
-    std::atomic<bool> reset_requested;
-    std::atomic<bool> shutdown_requested;
+    std::mutex signal_mutex;
+    Signal current_signal;
+    u32 signal_param;
+
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 inline ARM_Interface& GetRunningCore() {
@@ -384,3 +404,5 @@ inline AudioCore::DspInterface& DSP() {
 }
 
 } // namespace Core
+
+BOOST_CLASS_VERSION(Core::System, 1)

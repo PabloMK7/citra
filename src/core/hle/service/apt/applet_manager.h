@@ -6,8 +6,12 @@
 
 #include <array>
 #include <memory>
-#include <optional>
 #include <vector>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/optional.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include "core/global.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
@@ -84,6 +88,17 @@ struct MessageParameter {
     SignalType signal = SignalType::None;
     std::shared_ptr<Kernel::Object> object = nullptr;
     std::vector<u8> buffer;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& sender_id;
+        ar& destination_id;
+        ar& signal;
+        ar& object;
+        ar& buffer;
+    }
+    friend class boost::serialization::access;
 };
 
 /// Holds information about the parameters used in StartLibraryApplet
@@ -161,6 +176,16 @@ public:
 
         u64 current_title_id;
         FS::MediaType current_media_type;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& next_title_id;
+            ar& next_media_type;
+            ar& current_title_id;
+            ar& current_media_type;
+        }
+        friend class boost::serialization::access;
     };
 
     ApplicationJumpParameters GetApplicationJumpParameters() const {
@@ -169,7 +194,8 @@ public:
 
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
-    std::optional<MessageParameter> next_parameter;
+    // NOTE: A bug in gcc prevents serializing std::optional
+    boost::optional<MessageParameter> next_parameter;
 
     static constexpr std::size_t NumAppletSlot = 4;
 
@@ -199,6 +225,20 @@ private:
             title_id = 0;
             attributes.raw = 0;
         }
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& applet_id;
+            ar& slot;
+            ar& title_id;
+            ar& registered;
+            ar& loaded;
+            ar& attributes.raw;
+            ar& notification_event;
+            ar& parameter_event;
+        }
+        friend class boost::serialization::access;
     };
 
     ApplicationJumpParameters app_jump_parameters{};
@@ -216,6 +256,18 @@ private:
     SignalType library_applet_closing_command;
 
     Core::System& system;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& next_parameter;
+        ar& app_jump_parameters;
+        ar& applet_slots;
+        ar& library_applet_closing_command;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::APT
+
+SERVICE_CONSTRUCT(Service::APT::AppletManager)

@@ -15,6 +15,10 @@ public:
 
 private:
     void IsChild(Kernel::HLERequestContext& ctx);
+
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::DLP
+
+BOOST_CLASS_EXPORT_KEY(Service::DLP::DLP_SRVR)

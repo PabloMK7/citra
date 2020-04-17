@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <utility>
+#include <boost/serialization/array.hpp>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
@@ -23,24 +26,47 @@
 #endif
 #include "core/custom_tex_cache.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/global.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/gsp/gsp.h"
+#include "core/hle/service/pm/pm_app.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
+#include "core/hw/gpu.h"
 #include "core/hw/hw.h"
+#include "core/hw/lcd.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/rpc/rpc_server.h"
 #include "core/settings.h"
 #include "network/network.h"
+#include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
 namespace Core {
 
 /*static*/ System System::s_instance;
+
+template <>
+Core::System& Global() {
+    return System::GetInstance();
+}
+
+template <>
+Kernel::KernelSystem& Global() {
+    return System::GetInstance().Kernel();
+}
+
+template <>
+Core::Timing& Global() {
+    return System::GetInstance().CoreTiming();
+}
+
+System::~System() = default;
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
@@ -65,6 +91,52 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 return ResultStatus::Success;
             }
         }
+    }
+
+    Signal signal{Signal::None};
+    u32 param{};
+    {
+        std::lock_guard lock{signal_mutex};
+        if (current_signal != Signal::None) {
+            signal = current_signal;
+            param = signal_param;
+            current_signal = Signal::None;
+        }
+    }
+    switch (signal) {
+    case Signal::Reset:
+        Reset();
+        return ResultStatus::Success;
+    case Signal::Shutdown:
+        return ResultStatus::ShutdownRequested;
+    case Signal::Load: {
+        LOG_INFO(Core, "Begin load");
+        try {
+            System::LoadState(param);
+            LOG_INFO(Core, "Load completed");
+        } catch (const std::exception& e) {
+            LOG_ERROR(Core, "Error loading: {}", e.what());
+            status_details = e.what();
+            return ResultStatus::ErrorSavestate;
+        }
+        frame_limiter.WaitOnce();
+        return ResultStatus::Success;
+    }
+    case Signal::Save: {
+        LOG_INFO(Core, "Begin save");
+        try {
+            System::SaveState(param);
+            LOG_INFO(Core, "Save completed");
+        } catch (const std::exception& e) {
+            LOG_ERROR(Core, "Error saving: {}", e.what());
+            status_details = e.what();
+            return ResultStatus::ErrorSavestate;
+        }
+        frame_limiter.WaitOnce();
+        return ResultStatus::Success;
+    }
+    default:
+        break;
     }
 
     // All cores should have executed the same amount of ticks. If this is not the case an event was
@@ -141,13 +213,18 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     HW::Update();
     Reschedule();
 
-    if (reset_requested.exchange(false)) {
-        Reset();
-    } else if (shutdown_requested.exchange(false)) {
-        return ResultStatus::ShutdownRequested;
-    }
-
     return status;
+}
+
+bool System::SendSignal(System::Signal signal, u32 param) {
+    std::lock_guard lock{signal_mutex};
+    if (current_signal != signal && current_signal != Signal::None) {
+        LOG_ERROR(Core, "Unable to {} as {} is ongoing", signal, current_signal);
+        return false;
+    }
+    current_signal = signal;
+    signal_param = param;
+    return true;
 }
 
 System::ResultStatus System::SingleStep() {
@@ -155,6 +232,7 @@ System::ResultStatus System::SingleStep() {
 }
 
 System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath) {
+    FileUtil::SetCurrentRomPath(filepath);
     app_loader = Loader::GetLoader(filepath);
     if (!app_loader) {
         LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
@@ -180,7 +258,11 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     ASSERT(system_mode.first);
     auto n3ds_mode = app_loader->LoadKernelN3dsMode();
     ASSERT(n3ds_mode.first);
-    ResultStatus init_result{Init(emu_window, *system_mode.first, *n3ds_mode.first)};
+    u32 num_cores = 2;
+    if (Settings::values.is_new_3ds) {
+        num_cores = 4;
+    }
+    ResultStatus init_result{Init(emu_window, *system_mode.first, *n3ds_mode.first, num_cores)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -206,7 +288,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         }
     }
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
-    u64 title_id{0};
+    title_id = 0;
     if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to find title id for ROM (Error {})",
                   static_cast<u32>(load_result));
@@ -237,7 +319,8 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    return perf_stats->GetAndResetStats(timing->GetGlobalTimeUs());
+    return (perf_stats && timing) ? perf_stats->GetAndResetStats(timing->GetGlobalTimeUs())
+                                  : PerfStats::Results{};
 }
 
 void System::Reschedule() {
@@ -252,13 +335,9 @@ void System::Reschedule() {
     }
 }
 
-System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode) {
+System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode,
+                                  u32 num_cores) {
     LOG_DEBUG(HW_Memory, "initialized OK");
-
-    std::size_t num_cores = 2;
-    if (Settings::values.is_new_3ds) {
-        num_cores = 4;
-    }
 
     memory = std::make_unique<Memory::MemorySystem>();
 
@@ -269,19 +348,19 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
-        for (std::size_t i = 0; i < num_cores; ++i) {
+        for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i)));
         }
 #else
-        for (std::size_t i = 0; i < num_cores; ++i) {
+        for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_DynCom>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
     } else {
-        for (std::size_t i = 0; i < num_cores; ++i) {
+        for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_DynCom>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
@@ -307,7 +386,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
 
     rpc_server = std::make_unique<RPC::RPCServer>();
 
-    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
+    service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::Init(*memory);
@@ -419,7 +498,7 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
     registered_image_interface = std::move(image_interface);
 }
 
-void System::Shutdown() {
+void System::Shutdown(bool is_deserializing) {
     // Log last frame performance stats
     const auto perf_results = GetAndResetPerfStats();
     telemetry_session->AddField(Telemetry::FieldType::Performance, "Shutdown_EmulationSpeed",
@@ -432,20 +511,22 @@ void System::Shutdown() {
                                 perf_stats->GetMeanFrametime());
 
     // Shutdown emulation session
-    GDBStub::Shutdown();
     VideoCore::Shutdown();
     HW::Shutdown();
+    if (!is_deserializing) {
+        GDBStub::Shutdown();
+        perf_stats.reset();
+        cheat_engine.reset();
+        app_loader.reset();
+    }
     telemetry_session.reset();
-    perf_stats.reset();
     rpc_server.reset();
-    cheat_engine.reset();
     archive_manager.reset();
     service_manager.reset();
     dsp_core.reset();
     cpu_cores.clear();
     kernel.reset();
     timing.reset();
-    app_loader.reset();
 
     if (video_dumper->IsDumping()) {
         video_dumper->StopDumping();
@@ -468,5 +549,64 @@ void System::Reset() {
     // Reload the system with the same setting
     Load(*m_emu_window, m_filepath);
 }
+
+template <class Archive>
+void System::serialize(Archive& ar, const unsigned int file_version) {
+
+    u32 num_cores;
+    if (Archive::is_saving::value) {
+        num_cores = this->GetNumCores();
+    }
+    ar& num_cores;
+
+    if (Archive::is_loading::value) {
+        // When loading, we want to make sure any lingering state gets cleared out before we begin.
+        // Shutdown, but persist a few things between loads...
+        Shutdown(true);
+
+        // Re-initialize everything like it was before
+        auto system_mode = this->app_loader->LoadKernelSystemMode();
+        auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
+        Init(*m_emu_window, *system_mode.first, *n3ds_mode.first, num_cores);
+    }
+
+    // flush on save, don't flush on load
+    bool should_flush = !Archive::is_loading::value;
+    Memory::RasterizerClearAll(should_flush);
+    ar&* timing.get();
+    for (u32 i = 0; i < num_cores; i++) {
+        ar&* cpu_cores[i].get();
+    }
+    ar&* service_manager.get();
+    ar&* archive_manager.get();
+    ar& GPU::g_regs;
+    ar& LCD::g_regs;
+
+    // NOTE: DSP doesn't like being destroyed and recreated. So instead we do an inline
+    // serialization; this means that the DSP Settings need to match for loading to work.
+    auto dsp_hle = dynamic_cast<AudioCore::DspHle*>(dsp_core.get());
+    if (dsp_hle) {
+        ar&* dsp_hle;
+    } else {
+        throw std::runtime_error("LLE audio not supported for save states");
+    }
+
+    ar&* memory.get();
+    ar&* kernel.get();
+    VideoCore::serialize(ar, file_version);
+    if (file_version >= 1) {
+        ar& Movie::GetInstance();
+    }
+
+    // This needs to be set from somewhere - might as well be here!
+    if (Archive::is_loading::value) {
+        Service::GSP::SetGlobalModule(*this);
+        memory->SetDSP(*dsp_core);
+        cheat_engine->Connect();
+        VideoCore::g_renderer->Sync();
+    }
+}
+
+SERIALIZE_IMPL(System)
 
 } // namespace Core

@@ -1,8 +1,27 @@
 # Definitions for all external bundled libraries
 
+# Suppress warnings from external libraries
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/W0)
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 include(DownloadExternals)
 include(ExternalProject)
+
+# Boost
+set(BOOST_ROOT "${CMAKE_SOURCE_DIR}/externals/boost")
+set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
+set(Boost_NO_SYSTEM_PATHS ON)
+add_library(boost INTERFACE)
+target_include_directories(boost SYSTEM INTERFACE ${Boost_INCLUDE_DIR})
+
+# Boost::serialization
+file(GLOB boost_serialization_SRC "${CMAKE_SOURCE_DIR}/externals/boost/libs/serialization/src/*.cpp")
+add_library(boost_serialization STATIC ${boost_serialization_SRC})
+target_link_libraries(boost_serialization PUBLIC boost)
+
+# Add additional boost libs here; remember to ALIAS them in the root CMakeLists!
 
 # Catch
 add_library(catch-single-include INTERFACE)

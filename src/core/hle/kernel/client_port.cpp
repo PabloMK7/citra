@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "common/assert.h"
+#include "core/global.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/errors.h"
@@ -10,6 +12,8 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::ClientPort)
 
 namespace Kernel {
 

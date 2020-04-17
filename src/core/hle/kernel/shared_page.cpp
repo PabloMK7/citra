@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cstring>
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/shared_page.h"
@@ -12,6 +13,19 @@
 #include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+SERIALIZE_EXPORT_IMPL(SharedPage::Handler)
+
+namespace boost::serialization {
+
+template <class Archive>
+void load_construct_data(Archive& ar, SharedPage::Handler* t, const unsigned int) {
+    ::new (t) SharedPage::Handler(Core::System::GetInstance().CoreTiming());
+}
+template void load_construct_data<iarchive>(iarchive& ar, SharedPage::Handler* t,
+                                            const unsigned int);
+
+} // namespace boost::serialization
 
 namespace SharedPage {
 

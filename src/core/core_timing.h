@@ -23,9 +23,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/threadsafe_queue.h"
+#include "core/global.h"
 
 // The timing we get from the assembly is 268,111,855.956 Hz
 // It is possible that this number isn't just an integer because the compiler could have
@@ -133,6 +136,7 @@ struct TimingEventType {
 };
 
 class Timing {
+
 public:
     struct Event {
         s64 time;
@@ -142,13 +146,36 @@ public:
 
         bool operator>(const Event& right) const;
         bool operator<(const Event& right) const;
+
+    private:
+        template <class Archive>
+        void save(Archive& ar, const unsigned int) const {
+            ar& time;
+            ar& fifo_order;
+            ar& userdata;
+            std::string name = *(type->name);
+            ar << name;
+        }
+
+        template <class Archive>
+        void load(Archive& ar, const unsigned int) {
+            ar& time;
+            ar& fifo_order;
+            ar& userdata;
+            std::string name;
+            ar >> name;
+            type = Global<Timing>().RegisterEvent(name, nullptr);
+        }
+        friend class boost::serialization::access;
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
     };
 
     static constexpr int MAX_SLICE_LENGTH = 20000;
 
     class Timer {
     public:
-        Timer(double cpu_clock_scale);
+        Timer();
         ~Timer();
 
         s64 GetMaxSliceLength() const;
@@ -195,6 +222,19 @@ public:
         // Stores a scaling for the internal clockspeed. Changing this number results in
         // under/overclocking the guest cpu
         double cpu_clock_scale = 1.0;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            MoveEvents();
+            // NOTE: ts_queue should be empty now
+            ar& event_queue;
+            ar& event_fifo_id;
+            ar& slice_length;
+            ar& downcount;
+            ar& executed_ticks;
+            ar& idled_cycles;
+        }
+        friend class boost::serialization::access;
     };
 
     explicit Timing(std::size_t num_cores, u32 cpu_clock_percentage);
@@ -246,6 +286,15 @@ private:
     // Stores a scaling for the internal clockspeed. Changing this number results in
     // under/overclocking the guest cpu
     double cpu_clock_scale = 1.0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        // event_types set during initialization of other things
+        ar& global_timer;
+        ar& timers;
+        ar& current_timer;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace Core

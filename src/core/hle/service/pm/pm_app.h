@@ -12,6 +12,11 @@ class PM_APP final : public ServiceFramework<PM_APP> {
 public:
     PM_APP();
     ~PM_APP() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::PM
+
+BOOST_CLASS_EXPORT_KEY(Service::PM::PM_APP)

@@ -4,6 +4,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/3ds.h"
 #include "core/core.h"
@@ -20,7 +24,35 @@
 #include "core/movie.h"
 #include "video_core/video_core.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
+SERIALIZE_EXPORT_IMPL(Service::HID::Module)
+
 namespace Service::HID {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int file_version) {
+    ar& shared_mem;
+    ar& event_pad_or_touch_1;
+    ar& event_pad_or_touch_2;
+    ar& event_accelerometer;
+    ar& event_gyroscope;
+    ar& event_debug_pad;
+    ar& next_pad_index;
+    ar& next_touch_index;
+    ar& next_accelerometer_index;
+    ar& next_gyroscope_index;
+    ar& enable_accelerometer_count;
+    ar& enable_gyroscope_count;
+    if (Archive::is_loading::value) {
+        LoadInputDevices();
+    }
+    if (file_version >= 1) {
+        ar& state.hex;
+    }
+    // Update events are set in the constructor
+    // Devices are set from the implementation (and are stateless afaik)
+}
+SERIALIZE_IMPL(Module)
 
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
 constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;

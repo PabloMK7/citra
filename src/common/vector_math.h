@@ -32,6 +32,7 @@
 
 #include <cmath>
 #include <type_traits>
+#include <boost/serialization/access.hpp>
 
 namespace Common {
 
@@ -44,6 +45,13 @@ class Vec4;
 
 template <typename T>
 class Vec2 {
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& x;
+        ar& y;
+    }
+
 public:
     T x;
     T y;
@@ -191,6 +199,14 @@ inline float Vec2<float>::Normalize() {
 
 template <typename T>
 class Vec3 {
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& x;
+        ar& y;
+        ar& z;
+    }
+
 public:
     T x;
     T y;
@@ -399,6 +415,15 @@ using Vec3f = Vec3<float>;
 
 template <typename T>
 class Vec4 {
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& x;
+        ar& y;
+        ar& z;
+        ar& w;
+    }
+
 public:
     T x;
     T y;

@@ -6,9 +6,11 @@
 
 #include <memory>
 #include <vector>
+#include "common/archives.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/global.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
@@ -65,7 +67,7 @@ public:
         NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
         ~NSInterface();
 
-    private:
+    protected:
         std::shared_ptr<Module> apt;
     };
 
@@ -601,9 +603,16 @@ public:
          */
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         bool application_reset_prepared{};
         std::shared_ptr<Module> apt;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& application_reset_prepared;
+        }
+        friend class boost::serialization::access;
     };
 
 private:
@@ -630,8 +639,14 @@ private:
         ScreencapPostPermission::CleanThePermission; // TODO(JamePeng): verify the initial value
 
     std::shared_ptr<AppletManager> applet_manager;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT
+
+SERVICE_CONSTRUCT(Service::APT::Module)

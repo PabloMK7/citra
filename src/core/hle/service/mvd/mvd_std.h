@@ -12,6 +12,11 @@ class MVD_STD final : public ServiceFramework<MVD_STD> {
 public:
     MVD_STD();
     ~MVD_STD() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::MVD
+
+BOOST_CLASS_EXPORT_KEY(Service::MVD::MVD_STD)

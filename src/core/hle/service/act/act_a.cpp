@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/act/act_a.h"
 
 namespace Service::ACT {
@@ -24,3 +25,5 @@ ACT_A::ACT_A(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "a
 }
 
 } // namespace Service::ACT
+
+SERIALIZE_EXPORT_IMPL(Service::ACT::ACT_A)

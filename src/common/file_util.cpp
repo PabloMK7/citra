@@ -726,6 +726,34 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::ShaderDir, user_path + SHADER_DIR DIR_SEP);
     g_paths.emplace(UserPath::DumpDir, user_path + DUMP_DIR DIR_SEP);
     g_paths.emplace(UserPath::LoadDir, user_path + LOAD_DIR DIR_SEP);
+    g_paths.emplace(UserPath::StatesDir, user_path + STATES_DIR DIR_SEP);
+}
+
+std::string g_currentRomPath{};
+
+void SetCurrentRomPath(const std::string& path) {
+    g_currentRomPath = path;
+}
+
+bool StringReplace(std::string& haystack, const std::string& a, const std::string& b, bool swap) {
+    const auto& needle = swap ? b : a;
+    const auto& replacement = swap ? a : b;
+    if (needle.empty()) {
+        return false;
+    }
+    auto index = haystack.find(needle, 0);
+    if (index == std::string::npos) {
+        return false;
+    }
+    haystack.replace(index, needle.size(), replacement);
+    return true;
+}
+
+std::string SerializePath(const std::string& input, bool is_saving) {
+    auto result = input;
+    StringReplace(result, "%CITRA_ROM_FILE%", g_currentRomPath, is_saving);
+    StringReplace(result, "%CITRA_USER_DIR%", GetUserPath(UserPath::UserDir), is_saving);
+    return result;
 }
 
 const std::string& GetUserPath(UserPath path) {
@@ -882,8 +910,9 @@ std::string SanitizePath(std::string_view path_, DirectorySeparator directory_se
 
 IOFile::IOFile() {}
 
-IOFile::IOFile(const std::string& filename, const char openmode[], int flags) {
-    Open(filename, openmode, flags);
+IOFile::IOFile(const std::string& filename, const char openmode[], int flags)
+    : filename(filename), openmode(openmode), flags(flags) {
+    Open();
 }
 
 IOFile::~IOFile() {
@@ -902,10 +931,14 @@ IOFile& IOFile::operator=(IOFile&& other) noexcept {
 void IOFile::Swap(IOFile& other) noexcept {
     std::swap(m_file, other.m_file);
     std::swap(m_good, other.m_good);
+    std::swap(filename, other.filename);
+    std::swap(openmode, other.openmode);
+    std::swap(flags, other.flags);
 }
 
-bool IOFile::Open(const std::string& filename, const char openmode[], int flags) {
+bool IOFile::Open() {
     Close();
+
 #ifdef _WIN32
     if (flags != 0) {
         m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(),
@@ -916,7 +949,7 @@ bool IOFile::Open(const std::string& filename, const char openmode[], int flags)
                            Common::UTF8ToUTF16W(openmode).c_str()) == 0;
     }
 #else
-    m_file = std::fopen(filename.c_str(), openmode);
+    m_file = std::fopen(filename.c_str(), openmode.c_str());
     m_good = m_file != nullptr;
 #endif
 

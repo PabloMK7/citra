@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/cecd/cecd_u.h"
+
+SERIALIZE_EXPORT_IMPL(Service::CECD::CECD_U)
 
 namespace Service::CECD {
 

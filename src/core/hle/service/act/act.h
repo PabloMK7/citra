@@ -20,9 +20,14 @@ public:
         Interface(std::shared_ptr<Module> act, const char* name);
         ~Interface();
 
-    private:
+    protected:
         std::shared_ptr<Module> act;
     };
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {}
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);

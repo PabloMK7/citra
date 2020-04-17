@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <array>
 #include <deque>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/split_member.hpp>
+#include "common/common_types.h"
 
 namespace Common {
 
@@ -157,6 +160,52 @@ private:
     Queue* first;
     // The priority level queues of thread ids.
     std::array<Queue, NUM_QUEUES> queues;
+
+    s64 ToIndex(const Queue* q) const {
+        if (q == nullptr) {
+            return -2;
+        } else if (q == UnlinkedTag()) {
+            return -1;
+        } else {
+            return q - queues.data();
+        }
+    }
+
+    Queue* ToPointer(s64 idx) {
+        if (idx == -1) {
+            return UnlinkedTag();
+        } else if (idx < 0) {
+            return nullptr;
+        } else {
+            return &queues[idx];
+        }
+    }
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void save(Archive& ar, const unsigned int file_version) const {
+        const s64 idx = ToIndex(first);
+        ar << idx;
+        for (std::size_t i = 0; i < NUM_QUEUES; i++) {
+            const s64 idx1 = ToIndex(queues[i].next_nonempty);
+            ar << idx1;
+            ar << queues[i].data;
+        }
+    }
+
+    template <class Archive>
+    void load(Archive& ar, const unsigned int file_version) {
+        s64 idx;
+        ar >> idx;
+        first = ToPointer(idx);
+        for (std::size_t i = 0; i < NUM_QUEUES; i++) {
+            ar >> idx;
+            queues[i].next_nonempty = ToPointer(idx);
+            ar >> queues[i].data;
+        }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 } // namespace Common

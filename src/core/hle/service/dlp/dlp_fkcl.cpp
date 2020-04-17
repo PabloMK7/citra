@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/dlp/dlp_fkcl.h"
+
+SERIALIZE_EXPORT_IMPL(Service::DLP::DLP_FKCL)
 
 namespace Service::DLP {
 

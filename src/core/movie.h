@@ -5,6 +5,7 @@
 #pragma once
 
 #include <functional>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 
 namespace Service {
@@ -132,5 +133,16 @@ private:
     u64 init_time;
     std::function<void()> playback_completion_callback;
     std::size_t current_byte = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        // Only serialize what's needed to make savestates useful for TAS:
+        u64 _current_byte = static_cast<u64>(current_byte);
+        ar& _current_byte;
+        current_byte = static_cast<std::size_t>(_current_byte);
+        ar& recorded_input;
+        ar& init_time;
+    }
+    friend class boost::serialization::access;
 };
 } // namespace Core

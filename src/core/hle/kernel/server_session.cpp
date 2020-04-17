@@ -3,7 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
-
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
+#include "common/archives.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -11,7 +14,21 @@
 #include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::ServerSession)
+
 namespace Kernel {
+
+template <class Archive>
+void ServerSession::serialize(Archive& ar, const unsigned int file_version) {
+    ar& boost::serialization::base_object<WaitObject>(*this);
+    ar& name;
+    ar& parent;
+    ar& hle_handler;
+    ar& pending_requesting_threads;
+    ar& currently_handling;
+    ar& mapped_buffer_context;
+}
+SERIALIZE_IMPL(ServerSession)
 
 ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 ServerSession::~ServerSession() {
@@ -68,14 +85,15 @@ ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
         std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buf;
-        Kernel::Process* current_process = thread->owner_process;
+        auto current_process = thread->owner_process;
         kernel.memory.ReadBlock(*current_process, thread->GetCommandBufferAddress(), cmd_buf.data(),
                                 cmd_buf.size() * sizeof(u32));
 
-        Kernel::HLERequestContext context(kernel, SharedFrom(this), thread.get());
-        context.PopulateFromIncomingCommandBuffer(cmd_buf.data(), *current_process);
+        auto context =
+            std::make_shared<Kernel::HLERequestContext>(kernel, SharedFrom(this), thread);
+        context->PopulateFromIncomingCommandBuffer(cmd_buf.data(), current_process);
 
-        hle_handler->HandleSyncRequest(context);
+        hle_handler->HandleSyncRequest(*context);
 
         ASSERT(thread->status == Kernel::ThreadStatus::Running ||
                thread->status == Kernel::ThreadStatus::WaitHleEvent);
@@ -83,7 +101,7 @@ ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
         // put the thread to sleep then the writing of the command buffer will be deferred to the
         // wakeup callback.
         if (thread->status == Kernel::ThreadStatus::Running) {
-            context.WriteToOutgoingCommandBuffer(cmd_buf.data(), *current_process);
+            context->WriteToOutgoingCommandBuffer(cmd_buf.data(), *current_process);
             kernel.memory.WriteBlock(*current_process, thread->GetCommandBufferAddress(),
                                      cmd_buf.data(), cmd_buf.size() * sizeof(u32));
         }

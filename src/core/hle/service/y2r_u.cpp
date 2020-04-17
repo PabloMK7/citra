@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include "common/archives.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -12,7 +13,21 @@
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::Y2R::Y2R_U)
+SERIALIZE_EXPORT_IMPL(Service::Y2R::Y2R_U)
+
 namespace Service::Y2R {
+
+template <class Archive>
+void Y2R_U::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& completion_event;
+    ar& conversion;
+    ar& dithering_weight_params;
+    ar& temporal_dithering_enabled;
+    ar& transfer_end_interrupt_enabled;
+    ar& spacial_dithering_enabled;
+}
 
 static const CoefficientSet standard_coefficients[4] = {
     {{0x100, 0x166, 0xB6, 0x58, 0x1C5, -0x166F, 0x10EE, -0x1C5B}}, // ITU_Rec601

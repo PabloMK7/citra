@@ -12,6 +12,11 @@ class GSP_LCD final : public ServiceFramework<GSP_LCD> {
 public:
     GSP_LCD();
     ~GSP_LCD() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::GSP
+
+BOOST_CLASS_EXPORT_KEY(Service::GSP::GSP_LCD)

@@ -2,11 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "common/assert.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/thread.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::Semaphore)
 
 namespace Kernel {
 

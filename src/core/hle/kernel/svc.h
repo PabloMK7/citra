@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 
 namespace Core {
@@ -25,4 +26,10 @@ private:
     std::unique_ptr<SVC> impl;
 };
 
+class SVC_SyncCallback;
+class SVC_IPCCallback;
+
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::SVC_SyncCallback)
+BOOST_CLASS_EXPORT_KEY(Kernel::SVC_IPCCallback)

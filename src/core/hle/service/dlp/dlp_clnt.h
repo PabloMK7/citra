@@ -12,6 +12,11 @@ class DLP_CLNT final : public ServiceFramework<DLP_CLNT> {
 public:
     DLP_CLNT();
     ~DLP_CLNT() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::DLP
+
+BOOST_CLASS_EXPORT_KEY(Service::DLP::DLP_CLNT)

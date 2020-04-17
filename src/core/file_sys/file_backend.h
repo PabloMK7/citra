@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/result.h"
 #include "delay_generator.h"
@@ -90,6 +91,12 @@ public:
 
 protected:
     std::unique_ptr<DelayGenerator> delay_generator;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& delay_generator;
+    }
+    friend class boost::serialization::access;
 };
 
 } // namespace FileSys

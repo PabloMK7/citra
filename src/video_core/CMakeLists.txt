@@ -142,7 +142,7 @@ endif()
 create_target_directory_groups(video_core)
 
 target_link_libraries(video_core PUBLIC common core)
-target_link_libraries(video_core PRIVATE glad nihstro-headers)
+target_link_libraries(video_core PRIVATE glad nihstro-headers Boost::serialization)
 
 if (ARCHITECTURE_x86_64)
     target_link_libraries(video_core PUBLIC xbyak)

@@ -28,3 +28,7 @@ void RendererBase::RefreshRasterizerSetting() {
         }
     }
 }
+
+void RendererBase::Sync() {
+    rasterizer->SyncEntireState();
+}

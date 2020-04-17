@@ -27,4 +27,8 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
 }
 
+void SetGlobalModule(Core::System& system) {
+    gsp_gpu = system.ServiceManager().GetService<GSP_GPU>("gsp::Gpu");
+}
+
 } // namespace Service::GSP

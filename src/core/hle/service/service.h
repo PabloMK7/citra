@@ -10,7 +10,10 @@
 #include <memory>
 #include <string>
 #include <boost/container/flat_map.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "common/common_types.h"
+#include "common/construct.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/service/sm/sm.h"
@@ -85,6 +88,7 @@ private:
     using InvokerFn = void(ServiceFrameworkBase* object, HandlerFnP<ServiceFrameworkBase> member,
                            Kernel::HLERequestContext& ctx);
 
+    // TODO: Replace all these with virtual functions!
     ServiceFrameworkBase(const char* service_name, u32 max_sessions, InvokerFn* handler_invoker);
     ~ServiceFrameworkBase() override;
 
@@ -193,3 +197,45 @@ struct ServiceModuleInfo {
 extern const std::array<ServiceModuleInfo, 40> service_module_map;
 
 } // namespace Service
+
+#define SERVICE_SERIALIZATION(T, MFIELD, TMODULE)                                                  \
+    template <class Archive>                                                                       \
+    void save_construct(Archive& ar, const unsigned int file_version) const {                      \
+        ar << MFIELD;                                                                              \
+    }                                                                                              \
+                                                                                                   \
+    template <class Archive>                                                                       \
+    static void load_construct(Archive& ar, T* t, const unsigned int file_version) {               \
+        std::shared_ptr<TMODULE> MFIELD;                                                           \
+        ar >> MFIELD;                                                                              \
+        ::new (t) T(MFIELD);                                                                       \
+    }                                                                                              \
+                                                                                                   \
+    template <class Archive>                                                                       \
+    void serialize(Archive& ar, const unsigned int) {                                              \
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);               \
+    }                                                                                              \
+    friend class boost::serialization::access;                                                     \
+    friend class ::construct_access;
+
+#define SERVICE_SERIALIZATION_SIMPLE                                                               \
+    template <class Archive>                                                                       \
+    void serialize(Archive& ar, const unsigned int) {                                              \
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);               \
+    }                                                                                              \
+    friend class boost::serialization::access;
+
+#define SERVICE_CONSTRUCT(T)                                                                       \
+    namespace boost::serialization {                                                               \
+    template <class Archive>                                                                       \
+    void load_construct_data(Archive& ar, T* t, const unsigned int);                               \
+    }
+
+#define SERVICE_CONSTRUCT_IMPL(T)                                                                  \
+    namespace boost::serialization {                                                               \
+    template <class Archive>                                                                       \
+    void load_construct_data(Archive& ar, T* t, const unsigned int) {                              \
+        ::new (t) T(Core::Global<Core::System>());                                                 \
+    }                                                                                              \
+    template void load_construct_data<iarchive>(iarchive & ar, T* t, const unsigned int);          \
+    }

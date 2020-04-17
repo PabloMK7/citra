@@ -9,9 +9,14 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
+#include "common/construct.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
+#include "core/global.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
@@ -557,11 +562,13 @@ public:
          */
         void GetMetaDataFromCia(Kernel::HLERequestContext& ctx);
 
-    private:
+    protected:
         std::shared_ptr<Module> am;
     };
 
 private:
+    explicit Module(Kernel::KernelSystem& kernel);
+
     /**
      * Scans the for titles in a storage medium for listing.
      * @param media_type the storage medium to scan
@@ -573,12 +580,32 @@ private:
      */
     void ScanForAllTitles();
 
-    Core::System& system;
+    Kernel::KernelSystem& kernel;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& cia_installing;
+        ar& am_title_list;
+        ar& system_updater_mutex;
+    }
+
+    template <class Archive>
+    static void load_construct(Archive& ar, Module* t, const unsigned int file_version) {
+        ::new (t) Module(Core::Global<Kernel::KernelSystem>());
+    }
+
+    template <class Archive>
+    void save_construct(Archive& ar, const unsigned int file_version) const {}
+
+    friend class ::construct_access;
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM
+
+BOOST_SERIALIZATION_CONSTRUCT(Service::AM::Module);

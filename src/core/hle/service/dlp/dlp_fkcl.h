@@ -12,6 +12,11 @@ class DLP_FKCL final : public ServiceFramework<DLP_FKCL> {
 public:
     DLP_FKCL();
     ~DLP_FKCL() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::DLP
+
+BOOST_CLASS_EXPORT_KEY(Service::DLP::DLP_FKCL)

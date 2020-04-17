@@ -132,7 +132,9 @@ void OpenGLWindow::Present() {
         return;
 
     context->makeCurrent(this);
-    VideoCore::g_renderer->TryPresent(100);
+    if (VideoCore::g_renderer) {
+        VideoCore::g_renderer->TryPresent(100);
+    }
     context->swapBuffers(this);
     auto f = context->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->glFinish();

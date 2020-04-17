@@ -4,13 +4,17 @@
 
 #include <map>
 #include <vector>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "core/core.h"
+#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::Mutex)
 
 namespace Kernel {
 

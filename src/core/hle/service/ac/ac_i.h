@@ -12,6 +12,12 @@ namespace Service::AC {
 class AC_I final : public Module::Interface {
 public:
     explicit AC_I(std::shared_ptr<Module> ac);
+
+private:
+    SERVICE_SERIALIZATION(AC_I, ac, Module)
 };
 
 } // namespace Service::AC
+
+BOOST_CLASS_EXPORT_KEY(Service::AC::AC_I)
+BOOST_SERIALIZATION_CONSTRUCT(Service::AC::AC_I)

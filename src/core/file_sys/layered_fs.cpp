@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
@@ -12,6 +13,8 @@
 #include "common/swap.h"
 #include "core/file_sys/layered_fs.h"
 #include "core/file_sys/patch.h"
+
+SERIALIZE_EXPORT_IMPL(FileSys::LayeredFS)
 
 namespace FileSys {
 
@@ -51,11 +54,16 @@ struct FileMetadata {
 };
 static_assert(sizeof(FileMetadata) == 0x20, "Size of FileMetadata is not correct");
 
-LayeredFS::LayeredFS(std::shared_ptr<RomFSReader> romfs_, std::string patch_path_,
-                     std::string patch_ext_path_, bool load_relocations)
-    : romfs(std::move(romfs_)), patch_path(std::move(patch_path_)),
-      patch_ext_path(std::move(patch_ext_path_)) {
+LayeredFS::LayeredFS() = default;
 
+LayeredFS::LayeredFS(std::shared_ptr<RomFSReader> romfs_, std::string patch_path_,
+                     std::string patch_ext_path_, bool load_relocations_)
+    : romfs(std::move(romfs_)), patch_path(std::move(patch_path_)),
+      patch_ext_path(std::move(patch_ext_path_)), load_relocations(load_relocations_) {
+    Load();
+}
+
+void LayeredFS::Load() {
     romfs->ReadFile(0, sizeof(header), reinterpret_cast<u8*>(&header));
 
     ASSERT_MSG(header.header_length == sizeof(header), "Header size is incorrect");
@@ -273,7 +281,7 @@ std::size_t GetNameSize(const std::string& name) {
 }
 
 void LayeredFS::PrepareBuildDirectory(Directory& current) {
-    directory_metadata_offset_map.emplace(&current, current_directory_offset);
+    directory_metadata_offset_map.emplace(&current, static_cast<u32>(current_directory_offset));
     directory_list.emplace_back(&current);
     current_directory_offset += sizeof(DirectoryMetadata) + GetNameSize(current.name);
 }
@@ -282,7 +290,7 @@ void LayeredFS::PrepareBuildFile(File& current) {
     if (current.relocation.type == 3) { // Deleted files are not counted
         return;
     }
-    file_metadata_offset_map.emplace(&current, current_file_offset);
+    file_metadata_offset_map.emplace(&current, static_cast<u32>(current_file_offset));
     file_list.emplace_back(&current);
     current_file_offset += sizeof(FileMetadata) + GetNameSize(current.name);
 }
@@ -361,7 +369,7 @@ void LayeredFS::BuildDirectories() {
 
         // Write metadata and name
         std::u16string u16name = Common::UTF8ToUTF16(directory->name);
-        metadata.name_length = u16name.size() * 2;
+        metadata.name_length = static_cast<u32_le>(u16name.size() * 2);
 
         std::memcpy(directory_metadata_table.data() + written, &metadata, sizeof(metadata));
         written += sizeof(metadata);
@@ -410,7 +418,7 @@ void LayeredFS::BuildFiles() {
 
         // Write metadata and name
         std::u16string u16name = Common::UTF8ToUTF16(file->name);
-        metadata.name_length = u16name.size() * 2;
+        metadata.name_length = static_cast<u32_le>(u16name.size() * 2);
 
         std::memcpy(file_metadata_table.data() + written, &metadata, sizeof(metadata));
         written += sizeof(metadata);

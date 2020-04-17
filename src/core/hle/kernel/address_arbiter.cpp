@@ -3,8 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/global.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
@@ -13,6 +15,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
+
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
 
 namespace Kernel {
 
@@ -76,16 +80,18 @@ std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string n
     return address_arbiter;
 }
 
+void AddressArbiter::WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                            std::shared_ptr<WaitObject> object) {
+    ASSERT(reason == ThreadWakeupReason::Timeout);
+    // Remove the newly-awakened thread from the Arbiter's waiting list.
+    waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),
+                          waiting_threads.end());
+};
+
 ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type,
                                             VAddr address, s32 value, u64 nanoseconds) {
 
-    auto timeout_callback = [this](ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                                   std::shared_ptr<WaitObject> object) {
-        ASSERT(reason == ThreadWakeupReason::Timeout);
-        // Remove the newly-awakened thread from the Arbiter's waiting list.
-        waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),
-                              waiting_threads.end());
-    };
+    auto timeout_callback = std::dynamic_pointer_cast<WakeupCallback>(shared_from_this());
 
     switch (type) {
 

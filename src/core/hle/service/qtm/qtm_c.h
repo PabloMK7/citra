@@ -12,6 +12,11 @@ class QTM_C final : public ServiceFramework<QTM_C> {
 public:
     QTM_C();
     ~QTM_C() = default;
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::QTM
+
+BOOST_CLASS_EXPORT_KEY(Service::QTM::QTM_C)

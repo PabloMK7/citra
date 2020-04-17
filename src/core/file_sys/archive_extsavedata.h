@@ -6,6 +6,8 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
@@ -54,6 +56,15 @@ private:
 
     /// Returns a path with the correct SaveIdHigh value for Shared extdata paths.
     Path GetCorrectedPath(const Path& path);
+
+    ArchiveFactory_ExtSaveData() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
+        ar& shared;
+        ar& mount_point;
+    }
+    friend class boost::serialization::access;
 };
 
 /**
@@ -93,4 +104,9 @@ std::string GetExtDataContainerPath(const std::string& mount_point, bool shared)
  */
 Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low);
 
+class ExtSaveDataDelayGenerator;
+
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_ExtSaveData)
+BOOST_CLASS_EXPORT_KEY(FileSys::ExtSaveDataDelayGenerator)

@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include "common/archives.h"
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -14,6 +15,20 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
+#undef exception_info // We use 'exception_info' as a plain identifier, but MSVC defines this in one
+                      // of its many headers.
+
+SERIALIZE_EXPORT_IMPL(Service::ERR::ERR_F)
+
+namespace boost::serialization {
+template <class Archive>
+void load_construct_data(Archive& ar, Service::ERR::ERR_F* t, const unsigned int) {
+    ::new (t) Service::ERR::ERR_F(Core::Global<Core::System>());
+}
+
+template void load_construct_data<iarchive>(iarchive& ar, Service::ERR::ERR_F* t,
+                                            const unsigned int);
+} // namespace boost::serialization
 
 namespace Service::ERR {
 

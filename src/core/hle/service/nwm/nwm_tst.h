@@ -11,6 +11,11 @@ namespace Service::NWM {
 class NWM_TST final : public ServiceFramework<NWM_TST> {
 public:
     NWM_TST();
+
+private:
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NWM
+
+BOOST_CLASS_EXPORT_KEY(Service::NWM::NWM_TST)

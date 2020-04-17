@@ -6,6 +6,8 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
@@ -31,6 +33,14 @@ public:
 
 private:
     std::string base_path;
+
+    ArchiveFactory_SystemSaveData() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveFactory>(*this);
+        ar& base_path;
+    }
+    friend class boost::serialization::access;
 };
 
 /**
@@ -60,3 +70,5 @@ std::string GetSystemSaveDataContainerPath(const std::string& mount_point);
 Path ConstructSystemSaveDataBinaryPath(u32 high, u32 low);
 
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_SystemSaveData)

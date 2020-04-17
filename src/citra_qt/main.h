@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <QLabel>
 #include <QMainWindow>
@@ -14,6 +15,7 @@
 #include "common/announce_multiplayer_room.h"
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
+#include "core/savestate.h"
 #include "ui_main.h"
 
 class AboutDialog;
@@ -106,6 +108,7 @@ private:
     void InitializeWidgets();
     void InitializeDebugWidgets();
     void InitializeRecentFileMenuActions();
+    void InitializeSaveStateMenuActions();
 
     void SetDefaultUIGeometry();
     void SyncMenuUISettings();
@@ -149,6 +152,8 @@ private:
      */
     void UpdateRecentFiles();
 
+    void UpdateSaveStates();
+
     /**
      * If the emulation is running,
      * asks the user if he really want to close the emulator
@@ -163,6 +168,8 @@ private slots:
     void OnStartGame();
     void OnPauseGame();
     void OnStopGame();
+    void OnSaveState();
+    void OnLoadState();
     void OnMenuReportCompatibility();
     /// Called whenever a user selects a game in the game list widget.
     void OnGameListLoadFile(QString game_path);
@@ -282,6 +289,13 @@ private:
     bool defer_update_prompt = false;
 
     QAction* actions_recent_files[max_recent_files_item];
+    std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;
+    std::array<QAction*, Core::SaveStateSlotCount> actions_save_state;
+
+    u32 oldest_slot;
+    u64 oldest_slot_time;
+    u32 newest_slot;
+    u64 newest_slot_time;
 
     QTranslator translator;
 

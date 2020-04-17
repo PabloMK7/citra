@@ -55,6 +55,9 @@ public:
     /// and invalidated
     virtual void FlushAndInvalidateRegion(PAddr addr, u32 size) = 0;
 
+    /// Removes as much state as possible from the rasterizer in preparation for a save/load state
+    virtual void ClearAll(bool flush) = 0;
+
     /// Attempt to use a faster method to perform a display transfer with is_texture_copy = 0
     virtual bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
         return false;
@@ -84,5 +87,7 @@ public:
 
     virtual void LoadDiskResources(const std::atomic_bool& stop_loading,
                                    const DiskResourceLoadCallback& callback) {}
+
+    virtual void SyncEntireState() {}
 };
 } // namespace VideoCore

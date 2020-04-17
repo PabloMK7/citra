@@ -6,6 +6,10 @@
 
 #include <memory>
 #include <string>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/result.h"
@@ -46,6 +50,18 @@ public:
 
     /// The parent session, which links to the server endpoint.
     std::shared_ptr<Session> parent;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int file_version) {
+        ar& boost::serialization::base_object<Object>(*this);
+        ar& name;
+        ar& parent;
+    }
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::ClientSession)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ClientSession)

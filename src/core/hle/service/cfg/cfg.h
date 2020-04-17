@@ -244,7 +244,7 @@ public:
             (this->*function)(ctx, id);
         }
 
-    private:
+    protected:
         std::shared_ptr<Module> cfg;
     };
 
@@ -426,6 +426,10 @@ private:
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
     u32 preferred_region_code = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 std::shared_ptr<Module> GetModule(Core::System& system);
@@ -436,3 +440,5 @@ void InstallInterfaces(Core::System& system);
 std::string GetConsoleIdHash(Core::System& system);
 
 } // namespace Service::CFG
+
+BOOST_CLASS_EXPORT_KEY(Service::CFG::Module)

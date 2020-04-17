@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <boost/serialization/export.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -25,6 +26,8 @@ public:
     explicit SRV(Core::System& system);
     ~SRV();
 
+    class ThreadCallback;
+
 private:
     void RegisterClient(Kernel::HLERequestContext& ctx);
     void EnableNotification(Kernel::HLERequestContext& ctx);
@@ -37,6 +40,14 @@ private:
     Core::System& system;
     std::shared_ptr<Kernel::Semaphore> notification_semaphore;
     std::unordered_map<std::string, std::shared_ptr<Kernel::Event>> get_service_handle_delayed_map;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::SM
+
+SERVICE_CONSTRUCT(Service::SM::SRV)
+BOOST_CLASS_EXPORT_KEY(Service::SM::SRV)
+BOOST_CLASS_EXPORT_KEY(Service::SM::SRV::ThreadCallback)

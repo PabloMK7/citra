@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/hle/service/am/am_net.h"
 
 namespace Service::AM {
@@ -123,3 +124,5 @@ AM_NET::AM_NET(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
 }
 
 } // namespace Service::AM
+
+SERIALIZE_EXPORT_IMPL(Service::AM::AM_NET)

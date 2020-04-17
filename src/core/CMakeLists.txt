@@ -164,6 +164,7 @@ add_library(core STATIC
     hle/kernel/server_session.cpp
     hle/kernel/server_session.h
     hle/kernel/session.h
+    hle/kernel/session.cpp
     hle/kernel/shared_memory.cpp
     hle/kernel/shared_memory.h
     hle/kernel/shared_page.cpp
@@ -450,6 +451,8 @@ add_library(core STATIC
     rpc/server.h
     rpc/udp_server.cpp
     rpc/udp_server.h
+    savestate.cpp
+    savestate.h
     settings.cpp
     settings.h
     telemetry_session.cpp
@@ -469,7 +472,7 @@ endif()
 create_target_directory_groups(core)
 
 target_link_libraries(core PUBLIC common PRIVATE audio_core network video_core)
-target_link_libraries(core PUBLIC Boost::boost PRIVATE cryptopp fmt open_source_archives)
+target_link_libraries(core PUBLIC Boost::boost PRIVATE cryptopp fmt open_source_archives Boost::serialization)
 
 if (ENABLE_WEB_SERVICE)
     get_directory_property(OPENSSL_LIBS

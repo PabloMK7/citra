@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <boost/serialization/array.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -270,8 +271,23 @@ private:
     u32 scan_interval = DEFAULT_SCAN_INTERVAL;
     u32 retry_interval = DEFAULT_RETRY_INTERVAL;
     bool daemon_lock_enabled = false;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+        ar& daemon_bit_mask;
+        ar& default_daemon_bit_mask;
+        ar& daemon_status;
+        ar& exclusive_state;
+        ar& scan_interval;
+        ar& retry_interval;
+        ar& daemon_lock_enabled;
+    }
+    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NDM
+
+BOOST_CLASS_EXPORT_KEY(Service::NDM::NDM_U)

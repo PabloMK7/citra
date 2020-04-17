@@ -12,6 +12,12 @@ namespace Service::PTM {
 class PTM_Gets final : public Module::Interface {
 public:
     explicit PTM_Gets(std::shared_ptr<Module> ptm);
+
+private:
+    SERVICE_SERIALIZATION(PTM_Gets, ptm, Module)
 };
 
 } // namespace Service::PTM
+
+BOOST_CLASS_EXPORT_KEY(Service::PTM::PTM_Gets)
+BOOST_SERIALIZATION_CONSTRUCT(Service::PTM::PTM_Gets)

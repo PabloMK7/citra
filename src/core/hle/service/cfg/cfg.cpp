@@ -4,8 +4,11 @@
 
 #include <algorithm>
 #include <tuple>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
+#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -24,7 +27,17 @@
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/settings.h"
 
+SERIALIZE_EXPORT_IMPL(Service::CFG::Module)
+
 namespace Service::CFG {
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& cfg_config_file_buffer;
+    ar& cfg_system_save_data_archive;
+    ar& preferred_region_code;
+}
+SERIALIZE_IMPL(Module)
 
 /// The maximum number of block entries that can exist in the config file
 static const u32 CONFIG_FILE_MAX_BLOCK_ENTRIES = 1479;

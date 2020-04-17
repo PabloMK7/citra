@@ -117,6 +117,14 @@ double PerfStats::GetLastFrameTimeScale() {
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
 }
 
+void FrameLimiter::WaitOnce() {
+    if (frame_advancing_enabled) {
+        // Frame advancing is enabled: wait on event instead of doing framelimiting
+        frame_advance_event.Wait();
+        frame_advance_event.Reset();
+    }
+}
+
 void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
     if (frame_advancing_enabled) {
         // Frame advancing is enabled: wait on event instead of doing framelimiting
@@ -164,10 +172,6 @@ void FrameLimiter::SetFrameAdvancing(bool value) {
 }
 
 void FrameLimiter::AdvanceFrame() {
-    if (!frame_advancing_enabled) {
-        // Start frame advancing
-        frame_advancing_enabled = true;
-    }
     frame_advance_event.Set();
 }
 

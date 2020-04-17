@@ -87,6 +87,13 @@ private:
     std::atomic<bool> is_device_reload_pending{false};
     bool raw_c_stick{false};
     int update_period{0};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
 };
 
 } // namespace Service::IR
+
+BOOST_CLASS_EXPORT_KEY(Service::IR::IR_RST)
+SERVICE_CONSTRUCT(Service::IR::IR_RST)

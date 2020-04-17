@@ -11,6 +11,12 @@ namespace Service::CECD {
 class CECD_U final : public Module::Interface {
 public:
     explicit CECD_U(std::shared_ptr<Module> cecd);
+
+private:
+    SERVICE_SERIALIZATION(CECD_U, cecd, Module)
 };
 
 } // namespace Service::CECD
+
+BOOST_CLASS_EXPORT_KEY(Service::CECD::CECD_U)
+BOOST_SERIALIZATION_CONSTRUCT(Service::CECD::CECD_U)

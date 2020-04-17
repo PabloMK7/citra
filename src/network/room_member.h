@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "network/room.h"
 
@@ -30,6 +31,17 @@ struct WifiPacket {
     MacAddress transmitter_address; ///< Mac address of the transmitter.
     MacAddress destination_address; ///< Mac address of the receiver.
     u8 channel;                     ///< WiFi channel where this frame was transmitted.
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& type;
+        ar& data;
+        ar& transmitter_address;
+        ar& destination_address;
+        ar& channel;
+    }
+    friend class boost::serialization::access;
 };
 
 /// Represents a chat message.

@@ -3,9 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/settings.h"
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
@@ -87,4 +89,11 @@ u16 GetResolutionScaleFactor() {
     }
 }
 
+template <class Archive>
+void serialize(Archive& ar, const unsigned int) {
+    ar& Pica::g_state;
+}
+
 } // namespace VideoCore
+
+SERIALIZE_IMPL(VideoCore)

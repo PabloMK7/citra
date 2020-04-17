@@ -24,6 +24,10 @@ private:
      *      2 : Number of notifications
      */
     void GetTotalNotifications(Kernel::HLERequestContext& ctx);
+
+    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::NEWS
+
+BOOST_CLASS_EXPORT_KEY(Service::NEWS::NEWS_S)

@@ -153,7 +153,7 @@ ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory, u
                            std::shared_ptr<Core::Timing::Timer> timer)
     : ARM_Interface(id, timer), system(*system), memory(memory),
       cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
-    PageTableChanged(memory.GetCurrentPageTable());
+    SetPageTable(memory.GetCurrentPageTable());
 }
 
 ARM_Dynarmic::~ARM_Dynarmic() = default;
@@ -229,7 +229,7 @@ void ARM_Dynarmic::SetCPSR(u32 cpsr) {
     jit->SetCpsr(cpsr);
 }
 
-u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) {
+u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) const {
     switch (reg) {
     case CP15_THREAD_UPRW:
         return cp15_state.cp15_thread_uprw;
@@ -287,17 +287,27 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
     jit->InvalidateCacheRange(start_address, length);
 }
 
-void ARM_Dynarmic::PageTableChanged(Memory::PageTable* new_page_table) {
-    current_page_table = new_page_table;
+std::shared_ptr<Memory::PageTable> ARM_Dynarmic::GetPageTable() const {
+    return current_page_table;
+}
+
+void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) {
+    current_page_table = page_table;
+    Dynarmic::A32::Context ctx{};
+    if (jit) {
+        jit->SaveContext(ctx);
+    }
 
     auto iter = jits.find(current_page_table);
     if (iter != jits.end()) {
         jit = iter->second.get();
+        jit->LoadContext(ctx);
         return;
     }
 
     auto new_jit = MakeJit();
     jit = new_jit.get();
+    jit->LoadContext(ctx);
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
@@ -311,8 +321,12 @@ void ARM_Dynarmic::ServeBreak() {
 std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {
     Dynarmic::A32::UserConfig config;
     config.callbacks = cb.get();
-    config.page_table = &current_page_table->pointers;
+    config.page_table = &current_page_table->GetPointerArray();
     config.coprocessors[15] = std::make_shared<DynarmicCP15>(cp15_state);
     config.define_unpredictable_behaviour = true;
     return std::make_unique<Dynarmic::A32::Jit>(config);
+}
+
+void ARM_Dynarmic::PurgeState() {
+    ClearInstructionCache();
 }

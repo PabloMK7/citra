@@ -38,6 +38,22 @@ public:
 
 protected:
     std::string mount_point;
+    SaveDataArchive() = default;
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<ArchiveBackend>(*this);
+        ar& mount_point;
+    }
+    friend class boost::serialization::access;
 };
 
+class SaveDataDelayGenerator;
+class ExtSaveDataArchive;
+
 } // namespace FileSys
+
+BOOST_CLASS_EXPORT_KEY(FileSys::SaveDataArchive)
+BOOST_CLASS_EXPORT_KEY(FileSys::SaveDataDelayGenerator)
+BOOST_CLASS_EXPORT_KEY(FileSys::ExtSaveDataArchive)

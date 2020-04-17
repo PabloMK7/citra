@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <utility>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
@@ -15,6 +16,15 @@
 #include "core/hle/kernel/timer.h"
 
 namespace Kernel {
+
+template <class Archive>
+void WaitObject::serialize(Archive& ar, const unsigned int file_version) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& waiting_threads;
+    // NB: hle_notifier *not* serialized since it's a callback!
+    // Fortunately it's only used in one place (DSP) so we can reconstruct it there
+}
+SERIALIZE_IMPL(WaitObject)
 
 void WaitObject::AddWaitingThread(std::shared_ptr<Thread> thread) {
     auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
@@ -80,7 +90,7 @@ void WaitObject::WakeupAllWaitingThreads() {
 
         // Invoke the wakeup callback before clearing the wait objects
         if (thread->wakeup_callback)
-            thread->wakeup_callback(ThreadWakeupReason::Signal, thread, SharedFrom(this));
+            thread->wakeup_callback->WakeUp(ThreadWakeupReason::Signal, thread, SharedFrom(this));
 
         for (auto& object : thread->wait_objects)
             object->RemoveWaitingThread(thread.get());
