@@ -77,9 +77,9 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QCheckBox" name="toggle_seperable_shader">
+             <widget class="QCheckBox" name="toggle_separable_shader">
               <property name="text">
-               <string>Seperable Shader (Intel GPUs only)</string>
+               <string>Separable Shader (Intel GPUs only)</string>
               </property>
              </widget>
             </item>

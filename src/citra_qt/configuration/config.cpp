@@ -436,7 +436,7 @@ void Config::ReadRendererValues() {
     // Hardware shader is broken on macos thanks to poor drivers.
     // We still want to provide this option for test/development purposes, but disable it by
     // default.
-    Settings::values.seperable_shader = ReadSetting(QStringLiteral("seperable_shader"), false).toBool();
+    Settings::values.separable_shader = ReadSetting(QStringLiteral("separable_shader"), false).toBool();
 #endif
     Settings::values.shaders_accurate_mul =
         ReadSetting(QStringLiteral("shaders_accurate_mul"), false).toBool();
@@ -919,7 +919,7 @@ void Config::SaveRendererValues() {
 #ifdef __APPLE__
     // Hardware shader is broken on macos thanks to poor drivers.
     // TODO: enable this for none Intel GPUs
-    WriteSetting(QStringLiteral("use_seperable_shader"), Settings::values.seperable_shader, false);
+    WriteSetting(QStringLiteral("use_separable_shader"), Settings::values.separable_shader, false);
 #endif
     WriteSetting(QStringLiteral("shaders_accurate_mul"), Settings::values.shaders_accurate_mul,
                  false);

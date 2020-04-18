@@ -168,7 +168,7 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& window)
 #ifdef __APPLE__
     if (IsVendorIntel()) {
         shader_program_manager = std::make_unique<ShaderProgramManager>(
-            VideoCore::g_seperable_shader_enabled ? GLAD_GL_ARB_separate_shader_objects : false,
+            VideoCore::g_separable_shader_enabled ? GLAD_GL_ARB_separate_shader_objects : false,
             is_amd);
     } else {
         shader_program_manager =

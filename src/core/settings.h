@@ -142,7 +142,7 @@ struct Values {
     bool use_gles;
     bool use_hw_renderer;
     bool use_hw_shader;
-    bool seperable_shader;
+    bool separable_shader;
     bool use_disk_shader_cache;
     bool shaders_accurate_mul;
     bool use_shader_jit;
