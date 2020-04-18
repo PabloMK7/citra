@@ -1307,7 +1307,7 @@ void Module::Interface::GetDependencyListFromCia(Kernel::HLERequestContext& ctx)
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushStaticBuffer(buffer, 0);
+    rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
 void Module::Interface::GetTransferSizeFromCia(Kernel::HLERequestContext& ctx) {
