@@ -209,10 +209,11 @@ ResultVal<MessageParameter> AppletManager::GlanceParameter(AppletId app_id) {
 
     // Note: The NS module always clears the DSPSleep and DSPWakeup signals even in GlanceParameter.
     if (next_parameter->signal == SignalType::DspSleep ||
-        next_parameter->signal == SignalType::DspWakeup)
+        next_parameter->signal == SignalType::DspWakeup) {
         next_parameter = {};
+    }
 
-    return MakeResult<MessageParameter>(parameter);
+    return MakeResult<MessageParameter>(std::move(parameter));
 }
 
 ResultVal<MessageParameter> AppletManager::ReceiveParameter(AppletId app_id) {
