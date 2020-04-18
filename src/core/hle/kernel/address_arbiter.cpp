@@ -16,8 +16,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
 
-SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
-
 namespace Kernel {
 
 void AddressArbiter::WaitThread(std::shared_ptr<Thread> thread, VAddr wait_address) {
@@ -80,19 +78,36 @@ std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string n
     return address_arbiter;
 }
 
+class AddressArbiter::Callback : public WakeupCallback {
+public:
+    Callback(AddressArbiter& _parent) : parent(SharedFrom(&_parent)) {}
+    std::shared_ptr<AddressArbiter> parent;
+
+    void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+        std::shared_ptr<WaitObject> object) override {
+        parent->WakeUp(reason, thread, object);
+    }
+
+private:
+    Callback() = default;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<WakeupCallback>(*this);
+        ar& parent;
+    }
+    friend class boost::serialization::access;
+};
+
 void AddressArbiter::WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                             std::shared_ptr<WaitObject> object) {
     ASSERT(reason == ThreadWakeupReason::Timeout);
     // Remove the newly-awakened thread from the Arbiter's waiting list.
     waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),
-                          waiting_threads.end());
+                            waiting_threads.end());
 };
 
 ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type,
                                             VAddr address, s32 value, u64 nanoseconds) {
-
-    auto timeout_callback = std::dynamic_pointer_cast<WakeupCallback>(shared_from_this());
-
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
@@ -114,6 +129,9 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
         }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
+        if (!timeout_callback) {
+            timeout_callback = std::make_shared<Callback>(*this);
+        }
         if ((s32)kernel.memory.Read32(address) < value) {
             thread->wakeup_callback = timeout_callback;
             thread->WakeAfterDelay(nanoseconds);
@@ -130,6 +148,9 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
         break;
     }
     case ArbitrationType::DecrementAndWaitIfLessThanWithTimeout: {
+        if (!timeout_callback) {
+            timeout_callback = std::make_shared<Callback>(*this);
+        }
         s32 memory_value = kernel.memory.Read32(address);
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
@@ -157,3 +178,6 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
 }
 
 } // namespace Kernel
+
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter::Callback)
