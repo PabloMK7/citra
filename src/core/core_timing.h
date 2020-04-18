@@ -37,24 +37,24 @@
 constexpr u64 BASE_CLOCK_RATE_ARM11 = 268111856;
 constexpr u64 MAX_VALUE_TO_MULTIPLY = std::numeric_limits<s64>::max() / BASE_CLOCK_RATE_ARM11;
 
-inline s64 msToCycles(int ms) {
+constexpr s64 msToCycles(int ms) {
     // since ms is int there is no way to overflow
     return BASE_CLOCK_RATE_ARM11 * static_cast<s64>(ms) / 1000;
 }
 
-inline s64 msToCycles(float ms) {
+constexpr s64 msToCycles(float ms) {
     return static_cast<s64>(BASE_CLOCK_RATE_ARM11 * (0.001f) * ms);
 }
 
-inline s64 msToCycles(double ms) {
+constexpr s64 msToCycles(double ms) {
     return static_cast<s64>(BASE_CLOCK_RATE_ARM11 * (0.001) * ms);
 }
 
-inline s64 usToCycles(float us) {
+constexpr s64 usToCycles(float us) {
     return static_cast<s64>(BASE_CLOCK_RATE_ARM11 * (0.000001f) * us);
 }
 
-inline s64 usToCycles(int us) {
+constexpr s64 usToCycles(int us) {
     return (BASE_CLOCK_RATE_ARM11 * static_cast<s64>(us) / 1000000);
 }
 
@@ -82,11 +82,11 @@ inline s64 usToCycles(u64 us) {
     return (BASE_CLOCK_RATE_ARM11 * static_cast<s64>(us)) / 1000000;
 }
 
-inline s64 nsToCycles(float ns) {
+constexpr s64 nsToCycles(float ns) {
     return static_cast<s64>(BASE_CLOCK_RATE_ARM11 * (0.000000001f) * ns);
 }
 
-inline s64 nsToCycles(int ns) {
+constexpr s64 nsToCycles(int ns) {
     return BASE_CLOCK_RATE_ARM11 * static_cast<s64>(ns) / 1000000000;
 }
 
@@ -114,15 +114,15 @@ inline s64 nsToCycles(u64 ns) {
     return (BASE_CLOCK_RATE_ARM11 * static_cast<s64>(ns)) / 1000000000;
 }
 
-inline u64 cyclesToNs(s64 cycles) {
+constexpr u64 cyclesToNs(s64 cycles) {
     return cycles * 1000000000 / BASE_CLOCK_RATE_ARM11;
 }
 
-inline s64 cyclesToUs(s64 cycles) {
+constexpr s64 cyclesToUs(s64 cycles) {
     return cycles * 1000000 / BASE_CLOCK_RATE_ARM11;
 }
 
-inline u64 cyclesToMs(s64 cycles) {
+constexpr u64 cyclesToMs(s64 cycles) {
     return cycles * 1000 / BASE_CLOCK_RATE_ARM11;
 }
 

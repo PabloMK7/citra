@@ -5,7 +5,7 @@
 #pragma once
 
 #include <memory>
-
+#include <boost/serialization/version.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -204,3 +204,4 @@ void InstallInterfaces(Core::System& system);
 
 SERVICE_CONSTRUCT(Service::MIC::MIC_U)
 BOOST_CLASS_EXPORT_KEY(Service::MIC::MIC_U)
+BOOST_CLASS_VERSION(Service::MIC::MIC_U::Impl, 1)
