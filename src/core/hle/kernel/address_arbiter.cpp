@@ -84,7 +84,7 @@ public:
     std::shared_ptr<AddressArbiter> parent;
 
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-        std::shared_ptr<WaitObject> object) override {
+                std::shared_ptr<WaitObject> object) override {
         parent->WakeUp(reason, thread, object);
     }
 
@@ -103,7 +103,7 @@ void AddressArbiter::WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> t
     ASSERT(reason == ThreadWakeupReason::Timeout);
     // Remove the newly-awakened thread from the Arbiter's waiting list.
     waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),
-                            waiting_threads.end());
+                          waiting_threads.end());
 };
 
 ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type,

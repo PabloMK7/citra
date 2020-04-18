@@ -93,9 +93,10 @@ private:
     void serialize(Archive& ar, const unsigned int file_version) {
         ar& boost::serialization::base_object<Object>(*this);
         if (file_version == 1) {
-            // This rigmarole is needed because in past versions, AddressArbiter inherited WakeupCallback
-            // But it turns out this breaks shared_from_this, so we split it out.
-            // Using a dummy class to deserialize a base_object allows compatibility to be maintained.
+            // This rigmarole is needed because in past versions, AddressArbiter inherited
+            // WakeupCallback But it turns out this breaks shared_from_this, so we split it out.
+            // Using a dummy class to deserialize a base_object allows compatibility to be
+            // maintained.
             DummyCallback x;
             ar& boost::serialization::base_object<WakeupCallback>(x);
         }
