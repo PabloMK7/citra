@@ -83,7 +83,7 @@ APT_S::APT_S(std::shared_ptr<Module> apt)
         {0x00470104, &APT_S::Unwrap, "Unwrap"},
         {0x00480100, nullptr, "GetProgramInfo"},
         {0x00490180, nullptr, "Reboot"},
-        {0x004A0040, nullptr, "GetCaptureInfo"},
+        {0x004A0040, &APT_S::GetCaptureInfo, "GetCaptureInfo"},
         {0x004B00C2, &APT_S::AppletUtility, "AppletUtility"},
         {0x004C0000, nullptr, "SetFatalErrDispMode"},
         {0x004D0080, nullptr, "GetAppletProgramInfo"},

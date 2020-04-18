@@ -722,6 +722,18 @@ void Module::APTInterface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& c
     rb.PushStaticBuffer(std::move(apt->screen_capture_buffer), 0);
 }
 
+void Module::APTInterface::GetCaptureInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x4A, 1, 0); // 0x004A0040
+    const u32 size = rp.Pop<u32>();
+    ASSERT(size == 0x20);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(static_cast<u32>(apt->screen_capture_buffer.size()));
+    // This service function does not clear the capture buffer.
+    rb.PushStaticBuffer(apt->screen_capture_buffer, 0);
+}
+
 void Module::APTInterface::SetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x55, 1, 0); // 0x00550040
 

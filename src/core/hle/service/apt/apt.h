@@ -577,6 +577,20 @@ public:
         void ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::GetCaptureInfo service function
+         *  Inputs:
+         *      0 : Command header [0x004A0040]
+         *      1 : Size
+         *      64 : Size << 14 | 2
+         *      65 : void*, CaptureBufferInfo
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         *      2 : Actual Size
+         */
+        void GetCaptureInfo(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::GetStartupArgument service function
          *  Inputs:
          *      1 : Parameter Size (capped to 0x300)
