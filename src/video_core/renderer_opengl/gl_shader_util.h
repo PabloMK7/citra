@@ -15,10 +15,12 @@ static constexpr char fragment_shader_precision_OES[] = R"(
 precision highp int;
 precision highp float;
 precision highp samplerBuffer;
+precision highp uimage2D;
 #else
 precision mediump int;
 precision mediump float;
 precision mediump samplerBuffer;
+precision mediump uimage2D;
 #endif // GL_FRAGMENT_PRECISION_HIGH
 )";
 
