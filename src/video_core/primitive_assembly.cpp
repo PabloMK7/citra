@@ -11,11 +11,11 @@ namespace Pica {
 
 template <typename VertexType>
 PrimitiveAssembler<VertexType>::PrimitiveAssembler(PipelineRegs::TriangleTopology topology)
-    : topology(topology), buffer_index(0) {}
+    : topology(topology) {}
 
 template <typename VertexType>
 void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
-                                                  TriangleHandler triangle_handler) {
+                                                  const TriangleHandler& triangle_handler) {
     switch (topology) {
     case PipelineRegs::TriangleTopology::List:
     case PipelineRegs::TriangleTopology::Shader:
