@@ -99,14 +99,6 @@ struct PageTable {
             VAddr idx;
         };
 
-        Entry operator[](VAddr idx) {
-            return Entry(*this, idx);
-        }
-
-        u8* operator[](VAddr idx) const {
-            return raw[idx];
-        }
-
         Entry operator[](std::size_t idx) {
             return Entry(*this, static_cast<VAddr>(idx));
         }
