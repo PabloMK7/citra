@@ -554,7 +554,7 @@ void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
 
     initialized = false;
 
-    for (auto bind_node : channel_data) {
+    for (auto& bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
@@ -963,7 +963,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    for (auto bind_node : channel_data) {
+    for (auto& bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
@@ -1009,7 +1009,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
 
     SendPacket(deauth);
 
-    for (auto bind_node : channel_data) {
+    for (auto& bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
