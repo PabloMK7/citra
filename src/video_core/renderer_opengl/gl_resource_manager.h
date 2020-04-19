@@ -41,13 +41,13 @@ class OGLTexture : private NonCopyable {
 public:
     OGLTexture() = default;
 
-    OGLTexture(OGLTexture&& o) : handle(std::exchange(o.handle, 0)) {}
+    OGLTexture(OGLTexture&& o) noexcept : handle(std::exchange(o.handle, 0)) {}
 
     ~OGLTexture() {
         Release();
     }
 
-    OGLTexture& operator=(OGLTexture&& o) {
+    OGLTexture& operator=(OGLTexture&& o) noexcept {
         Release();
         handle = std::exchange(o.handle, 0);
         return *this;
@@ -66,13 +66,13 @@ class OGLSampler : private NonCopyable {
 public:
     OGLSampler() = default;
 
-    OGLSampler(OGLSampler&& o) : handle(std::exchange(o.handle, 0)) {}
+    OGLSampler(OGLSampler&& o) noexcept : handle(std::exchange(o.handle, 0)) {}
 
     ~OGLSampler() {
         Release();
     }
 
-    OGLSampler& operator=(OGLSampler&& o) {
+    OGLSampler& operator=(OGLSampler&& o) noexcept {
         Release();
         handle = std::exchange(o.handle, 0);
         return *this;
@@ -91,13 +91,13 @@ class OGLShader : private NonCopyable {
 public:
     OGLShader() = default;
 
-    OGLShader(OGLShader&& o) : handle(std::exchange(o.handle, 0)) {}
+    OGLShader(OGLShader&& o) noexcept : handle(std::exchange(o.handle, 0)) {}
 
     ~OGLShader() {
         Release();
     }
 
-    OGLShader& operator=(OGLShader&& o) {
+    OGLShader& operator=(OGLShader&& o) noexcept {
         Release();
         handle = std::exchange(o.handle, 0);
         return *this;
@@ -114,13 +114,13 @@ class OGLProgram : private NonCopyable {
 public:
     OGLProgram() = default;
 
-    OGLProgram(OGLProgram&& o) : handle(std::exchange(o.handle, 0)) {}
+    OGLProgram(OGLProgram&& o) noexcept : handle(std::exchange(o.handle, 0)) {}
 
     ~OGLProgram() {
         Release();
     }
 
-    OGLProgram& operator=(OGLProgram&& o) {
+    OGLProgram& operator=(OGLProgram&& o) noexcept {
         Release();
         handle = std::exchange(o.handle, 0);
         return *this;
