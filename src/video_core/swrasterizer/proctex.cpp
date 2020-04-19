@@ -112,8 +112,8 @@ static void ClampCoord(float& coord, ProcTexClamp mode) {
     }
 }
 
-float CombineAndMap(float u, float v, ProcTexCombiner combiner,
-                    const std::array<State::ProcTex::ValueEntry, 128>& map_table) {
+static float CombineAndMap(float u, float v, ProcTexCombiner combiner,
+                           const std::array<State::ProcTex::ValueEntry, 128>& map_table) {
     float f;
     switch (combiner) {
     case ProcTexCombiner::U:
