@@ -20,7 +20,7 @@ struct PrimitiveAssembler {
     using TriangleHandler =
         std::function<void(const VertexType& v0, const VertexType& v1, const VertexType& v2)>;
 
-    PrimitiveAssembler(
+    explicit PrimitiveAssembler(
         PipelineRegs::TriangleTopology topology = PipelineRegs::TriangleTopology::List);
 
     /*
