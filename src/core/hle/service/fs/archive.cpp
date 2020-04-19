@@ -267,25 +267,29 @@ ResultCode ArchiveManager::DeleteExtSaveData(MediaType media_type, u32 high, u32
 
 ResultCode ArchiveManager::DeleteSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
-    FileSys::Path path = FileSys::ConstructSystemSaveDataBinaryPath(high, low);
+    const FileSys::Path path = FileSys::ConstructSystemSaveDataBinaryPath(high, low);
 
-    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
-    std::string base_path = FileSys::GetSystemSaveDataContainerPath(nand_directory);
-    std::string systemsavedata_path = FileSys::GetSystemSaveDataPath(base_path, path);
-    if (!FileUtil::DeleteDirRecursively(systemsavedata_path))
+    const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    const std::string base_path = FileSys::GetSystemSaveDataContainerPath(nand_directory);
+    const std::string systemsavedata_path = FileSys::GetSystemSaveDataPath(base_path, path);
+    if (!FileUtil::DeleteDirRecursively(systemsavedata_path)) {
         return ResultCode(-1); // TODO(Subv): Find the right error code
+    }
+
     return RESULT_SUCCESS;
 }
 
 ResultCode ArchiveManager::CreateSystemSaveData(u32 high, u32 low) {
     // Construct the binary path to the archive first
-    FileSys::Path path = FileSys::ConstructSystemSaveDataBinaryPath(high, low);
+    const FileSys::Path path = FileSys::ConstructSystemSaveDataBinaryPath(high, low);
 
-    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
-    std::string base_path = FileSys::GetSystemSaveDataContainerPath(nand_directory);
-    std::string systemsavedata_path = FileSys::GetSystemSaveDataPath(base_path, path);
-    if (!FileUtil::CreateFullPath(systemsavedata_path))
+    const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    const std::string base_path = FileSys::GetSystemSaveDataContainerPath(nand_directory);
+    const std::string systemsavedata_path = FileSys::GetSystemSaveDataPath(base_path, path);
+    if (!FileUtil::CreateFullPath(systemsavedata_path)) {
         return ResultCode(-1); // TODO(Subv): Find the right error code
+    }
+
     return RESULT_SUCCESS;
 }
 

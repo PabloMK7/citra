@@ -1222,7 +1222,7 @@ void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    FileSys::TitleMetadata tmd = container.GetTitleMetadata();
+    const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
     TitleInfo title_info = {};
     container.Print();
 

@@ -134,7 +134,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 }
 
 static void WriteGameCoinData(GameCoin gamecoin_data) {
-    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
 
     FileSys::Path archive_path(ptm_shared_extdata_id);
@@ -167,7 +167,7 @@ static void WriteGameCoinData(GameCoin gamecoin_data) {
 }
 
 static GameCoin ReadGameCoinData() {
-    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
 
     FileSys::Path archive_path(ptm_shared_extdata_id);
@@ -197,10 +197,10 @@ static GameCoin ReadGameCoinData() {
 Module::Module() {
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
     // exist
-    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
-    FileSys::Path archive_path(ptm_shared_extdata_id);
-    auto archive_result = extdata_archive_factory.Open(archive_path, 0);
+    const FileSys::Path archive_path(ptm_shared_extdata_id);
+    const auto archive_result = extdata_archive_factory.Open(archive_path, 0);
     // If the archive didn't exist, write the default game coin file
     if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         WriteGameCoinData(default_game_coin);
