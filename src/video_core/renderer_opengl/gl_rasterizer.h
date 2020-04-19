@@ -33,9 +33,8 @@ namespace Frontend {
 class EmuWindow;
 }
 
-class ShaderProgramManager;
-
 namespace OpenGL {
+class ShaderProgramManager;
 
 class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:

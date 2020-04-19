@@ -13,10 +13,6 @@ namespace Frontend {
 class EmuWindow;
 }
 
-namespace FrameDumper {
-class Backend;
-}
-
 class RendererBase : NonCopyable {
 public:
     explicit RendererBase(Frontend::EmuWindow& window);
