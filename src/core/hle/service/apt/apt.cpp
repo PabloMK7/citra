@@ -921,6 +921,21 @@ void Module::APTInterface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
+void Module::APTInterface::IsTitleAllowed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x105, 4, 0); // 0x01050100
+    const u64 program_id = rp.Pop<u64>();
+    const auto media_type = rp.PopEnum<FS::MediaType>();
+    rp.Skip(1, false); // Padding
+
+    // We allow all titles to be launched, so this function is a no-op
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(true);
+
+    LOG_DEBUG(Service_APT, "called, title_id={:016X} media_type={}", program_id,
+              static_cast<u32>(media_type));
+}
+
 Module::APTInterface::APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), apt(std::move(apt)) {}
 
