@@ -144,7 +144,7 @@ private:
         ar& pointers.refs;
         ar& special_regions;
         ar& attributes;
-        for (auto i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
+        for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
             pointers.raw[i] = pointers.refs[i].GetPtr();
         }
     }
