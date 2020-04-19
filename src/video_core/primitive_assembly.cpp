@@ -15,7 +15,7 @@ PrimitiveAssembler<VertexType>::PrimitiveAssembler(PipelineRegs::TriangleTopolog
 
 template <typename VertexType>
 void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
-                                                  TriangleHandler triangle_handler) {
+                                                  const TriangleHandler& triangle_handler) {
     switch (topology) {
     case PipelineRegs::TriangleTopology::List:
     case PipelineRegs::TriangleTopology::Shader:

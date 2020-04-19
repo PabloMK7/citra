@@ -29,7 +29,7 @@ struct PrimitiveAssembler {
      * NOTE: We could specify the triangle handler in the constructor, but this way we can
      * keep event and handler code next to each other.
      */
-    void SubmitVertex(const VertexType& vtx, TriangleHandler triangle_handler);
+    void SubmitVertex(const VertexType& vtx, const TriangleHandler& triangle_handler);
 
     /**
      * Invert the vertex order of the next triangle. Called by geometry shader emitter.
