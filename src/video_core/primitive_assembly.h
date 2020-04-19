@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <functional>
 #include <boost/serialization/access.hpp>
 #include "video_core/regs_pipeline.h"
@@ -59,8 +60,8 @@ struct PrimitiveAssembler {
 private:
     PipelineRegs::TriangleTopology topology;
 
-    int buffer_index;
-    VertexType buffer[2];
+    int buffer_index = 0;
+    std::array<VertexType, 2> buffer;
     bool strip_ready = false;
     bool winding = false;
 

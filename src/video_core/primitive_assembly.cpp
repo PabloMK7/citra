@@ -11,7 +11,7 @@ namespace Pica {
 
 template <typename VertexType>
 PrimitiveAssembler<VertexType>::PrimitiveAssembler(PipelineRegs::TriangleTopology topology)
-    : topology(topology), buffer_index(0) {}
+    : topology(topology) {}
 
 template <typename VertexType>
 void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
