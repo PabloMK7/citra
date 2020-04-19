@@ -31,7 +31,7 @@
 namespace Pica::CommandProcessor {
 
 // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
-static const u32 expand_bits_to_bytes[] = {
+constexpr std::array<u32, 16> expand_bits_to_bytes{
     0x00000000, 0x000000ff, 0x0000ff00, 0x0000ffff, 0x00ff0000, 0x00ff00ff, 0x00ffff00, 0x00ffffff,
     0xff000000, 0xff0000ff, 0xff00ff00, 0xff00ffff, 0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff,
 };
@@ -62,7 +62,8 @@ static void WriteUniformIntReg(Shader::ShaderSetup& setup, unsigned index,
 }
 
 static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
-                                 int& float_regs_counter, u32 uniform_write_buffer[4], u32 value) {
+                                 int& float_regs_counter, std::array<u32, 4>& uniform_write_buffer,
+                                 u32 value) {
     auto& uniform_setup = config.uniform_setup;
 
     // TODO: Does actual hardware indeed keep an intermediate buffer or does
