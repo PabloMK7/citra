@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <memory>
 #include <utility>
 #include "common/assert.h"
@@ -86,8 +87,11 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
 
             // NOTE: The destination component order indeed is "backwards"
             if (uniform_setup.IsFloat32()) {
-                for (auto i : {0, 1, 2, 3})
-                    uniform[3 - i] = float24::FromFloat32(*(float*)(&uniform_write_buffer[i]));
+                for (auto i : {0, 1, 2, 3}) {
+                    float buffer_value;
+                    std::memcpy(&buffer_value, &uniform_write_buffer[i], sizeof(float));
+                    uniform[3 - i] = float24::FromFloat32(buffer_value);
+                }
             } else {
                 // TODO: Untested
                 uniform.w = float24::FromRaw(uniform_write_buffer[0] >> 8);
