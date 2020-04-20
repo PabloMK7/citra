@@ -229,7 +229,7 @@ public:
         return {cached_shader.GetHandle(), result};
     }
 
-    void Inject(const KeyConfigType& key, std::string decomp, OGLProgram&& program) {
+    void Inject(const KeyConfigType& key, OGLProgram&& program) {
         OGLShaderStage stage{separable};
         stage.Inject(std::move(program));
         shaders.emplace(key, std::move(stage));
@@ -284,9 +284,9 @@ public:
     void Inject(const KeyConfigType& key, std::string decomp, OGLProgram&& program) {
         OGLShaderStage stage{separable};
         stage.Inject(std::move(program));
-        auto [iter, new_shader] = shader_cache.emplace(decomp, std::move(stage));
+        const auto iter = shader_cache.emplace(std::move(decomp), std::move(stage)).first;
         OGLShaderStage& cached_shader = iter->second;
-        shader_map[key] = &cached_shader;
+        shader_map.insert_or_assign(key, &cached_shader);
     }
 
 private:
@@ -518,8 +518,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                     } else if (raw.GetProgramType() == ProgramType::FS) {
                         PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig());
                         std::scoped_lock lock(mutex);
-                        impl->fragment_shaders.Inject(conf, decomp->second.result.code,
-                                                      std::move(shader));
+                        impl->fragment_shaders.Inject(conf, std::move(shader));
                     } else {
                         // Unsupported shader type got stored somehow so nuke the cache
 
