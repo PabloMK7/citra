@@ -81,12 +81,12 @@ std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string n
 
 class AddressArbiter::Callback : public WakeupCallback {
 public:
-    Callback(AddressArbiter& _parent) : parent(_parent) {}
+    explicit Callback(AddressArbiter& _parent) : parent(_parent) {}
     AddressArbiter& parent;
 
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) override {
-        parent.WakeUp(reason, thread, object);
+        parent.WakeUp(reason, std::move(thread), std::move(object));
     }
 
 private:
