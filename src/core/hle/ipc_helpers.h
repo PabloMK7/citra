@@ -93,7 +93,7 @@ public:
     template <typename... O>
     void PushMoveObjects(std::shared_ptr<O>... pointers);
 
-    void PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id);
+    void PushStaticBuffer(std::vector<u8> buffer, u8 buffer_id);
 
     /// Pushes an HLE MappedBuffer interface back to unmapped the buffer.
     void PushMappedBuffer(const Kernel::MappedBuffer& mapped_buffer);
@@ -193,14 +193,14 @@ inline void RequestBuilder::PushMoveObjects(std::shared_ptr<O>... pointers) {
     PushMoveHLEHandles(context->AddOutgoingHandle(std::move(pointers))...);
 }
 
-inline void RequestBuilder::PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id) {
+inline void RequestBuilder::PushStaticBuffer(std::vector<u8> buffer, u8 buffer_id) {
     ASSERT_MSG(buffer_id < MAX_STATIC_BUFFERS, "Invalid static buffer id");
 
     Push(StaticBufferDesc(buffer.size(), buffer_id));
     // This address will be replaced by the correct static buffer address during IPC translation.
     Push<VAddr>(0xDEADC0DE);
 
-    context->AddStaticBuffer(buffer_id, buffer);
+    context->AddStaticBuffer(buffer_id, std::move(buffer));
 }
 
 inline void RequestBuilder::PushMappedBuffer(const Kernel::MappedBuffer& mapped_buffer) {

@@ -357,8 +357,8 @@ void Module::APTInterface::SendParameter(Kernel::HLERequestContext& ctx) {
 
 void Module::APTInterface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xD, 2, 0); // 0xD0080
-    AppletId app_id = rp.PopEnum<AppletId>();
-    u32 buffer_size = rp.Pop<u32>();
+    const auto app_id = rp.PopEnum<AppletId>();
+    const u32 buffer_size = rp.Pop<u32>();
 
     LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
               buffer_size);
@@ -379,14 +379,14 @@ void Module::APTInterface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(next_parameter->buffer.size() <= buffer_size, "Input static buffer is too small!");
     rb.Push(static_cast<u32>(next_parameter->buffer.size())); // Parameter buffer size
     rb.PushMoveObjects(next_parameter->object);
-    next_parameter->buffer.resize(buffer_size, 0); // APT always push a buffer with the maximum size
-    rb.PushStaticBuffer(next_parameter->buffer, 0);
+    next_parameter->buffer.resize(buffer_size); // APT always push a buffer with the maximum size
+    rb.PushStaticBuffer(std::move(next_parameter->buffer), 0);
 }
 
 void Module::APTInterface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xE, 2, 0); // 0xE0080
-    AppletId app_id = rp.PopEnum<AppletId>();
-    u32 buffer_size = rp.Pop<u32>();
+    const auto app_id = rp.PopEnum<AppletId>();
+    const u32 buffer_size = rp.Pop<u32>();
 
     LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
               buffer_size);
@@ -406,8 +406,8 @@ void Module::APTInterface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(next_parameter->buffer.size() <= buffer_size, "Input static buffer is too small!");
     rb.Push(static_cast<u32>(next_parameter->buffer.size())); // Parameter buffer size
     rb.PushMoveObjects(next_parameter->object);
-    next_parameter->buffer.resize(buffer_size, 0); // APT always push a buffer with the maximum size
-    rb.PushStaticBuffer(next_parameter->buffer, 0);
+    next_parameter->buffer.resize(buffer_size); // APT always push a buffer with the maximum size
+    rb.PushStaticBuffer(std::move(next_parameter->buffer), 0);
 }
 
 void Module::APTInterface::CancelParameter(Kernel::HLERequestContext& ctx) {
@@ -779,9 +779,8 @@ void Module::APTInterface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
 void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x51, 2, 0); // 0x00510080
     u32 parameter_size = rp.Pop<u32>();
-    StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
-
-    const u32 max_parameter_size{0x1000};
+    constexpr u32 max_parameter_size{0x1000};
+    const auto startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
 
     if (parameter_size > max_parameter_size) {
         LOG_ERROR(Service_APT,
@@ -791,7 +790,7 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
         parameter_size = max_parameter_size;
     }
 
-    std::vector<u8> parameter(parameter_size, 0);
+    std::vector<u8> parameter(parameter_size);
 
     LOG_WARNING(Service_APT, "(STUBBED) called, startup_argument_type={}, parameter_size={:#010X}",
                 static_cast<u32>(startup_argument_type), parameter_size);
@@ -799,7 +798,7 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
-    rb.PushStaticBuffer(parameter, 0);
+    rb.PushStaticBuffer(std::move(parameter), 0);
 }
 
 void Module::APTInterface::Wrap(Kernel::HLERequestContext& ctx) {
