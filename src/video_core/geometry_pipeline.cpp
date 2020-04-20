@@ -303,7 +303,7 @@ GeometryPipeline::GeometryPipeline(State& state) : state(state) {}
 GeometryPipeline::~GeometryPipeline() = default;
 
 void GeometryPipeline::SetVertexHandler(Shader::VertexHandler vertex_handler) {
-    this->vertex_handler = vertex_handler;
+    this->vertex_handler = std::move(vertex_handler);
 }
 
 void GeometryPipeline::Setup(Shader::ShaderEngine* shader_engine) {
