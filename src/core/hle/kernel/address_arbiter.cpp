@@ -67,7 +67,8 @@ std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr addres
     return thread;
 }
 
-AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+AddressArbiter::AddressArbiter(KernelSystem& kernel)
+    : Object(kernel), kernel(kernel), timeout_callback(std::make_shared<Callback>(*this)) {}
 AddressArbiter::~AddressArbiter() {}
 
 std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
@@ -80,20 +81,18 @@ std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string n
 
 class AddressArbiter::Callback : public WakeupCallback {
 public:
-    Callback(AddressArbiter& _parent) : parent(SharedFrom(&_parent)) {}
-    std::shared_ptr<AddressArbiter> parent;
+    Callback(AddressArbiter& _parent) : parent(_parent) {}
+    AddressArbiter& parent;
 
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) override {
-        parent->WakeUp(reason, thread, object);
+        parent.WakeUp(reason, thread, object);
     }
 
 private:
-    Callback() = default;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<WakeupCallback>(*this);
-        ar& parent;
     }
     friend class boost::serialization::access;
 };
@@ -129,9 +128,6 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
         }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
-        if (!timeout_callback) {
-            timeout_callback = std::make_shared<Callback>(*this);
-        }
         if ((s32)kernel.memory.Read32(address) < value) {
             thread->wakeup_callback = timeout_callback;
             thread->WakeAfterDelay(nanoseconds);
@@ -148,9 +144,6 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
         break;
     }
     case ArbitrationType::DecrementAndWaitIfLessThanWithTimeout: {
-        if (!timeout_callback) {
-            timeout_callback = std::make_shared<Callback>(*this);
-        }
         s32 memory_value = kernel.memory.Read32(address);
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
@@ -178,6 +171,23 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
 }
 
 } // namespace Kernel
+
+namespace boost::serialization {
+
+template <class Archive>
+void save_construct_data(Archive& ar, const Kernel::AddressArbiter::Callback* t,
+                         const unsigned int) {
+    ar << Kernel::SharedFrom(&t->parent);
+}
+
+template <class Archive>
+void load_construct_data(Archive& ar, Kernel::AddressArbiter::Callback* t, const unsigned int) {
+    std::shared_ptr<Kernel::AddressArbiter> parent;
+    ar >> parent;
+    ::new (t) Kernel::AddressArbiter::Callback(*parent);
+}
+
+} // namespace boost::serialization
 
 SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
 SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter::Callback)
