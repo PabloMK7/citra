@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace OpenGL {
@@ -18,6 +19,6 @@ std::vector<std::string> GetPostProcessingShaderList(bool anaglyph);
 // If anaglyph is true, it searches the shaders/anaglyph directory rather than
 // the shaders directory
 // If the shader cannot be loaded, an empty string is returned
-std::string GetPostProcessingShaderCode(bool anaglyph, std::string shader_name);
+std::string GetPostProcessingShaderCode(bool anaglyph, std::string_view shader_name);
 
 } // namespace OpenGL
