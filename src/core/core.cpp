@@ -295,14 +295,17 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     }
     perf_stats = std::make_unique<PerfStats>(title_id);
     custom_tex_cache = std::make_unique<Core::CustomTexCache>();
+
     if (Settings::values.custom_textures) {
-        FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
-                                             FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                                             Kernel().GetCurrentProcess()->codeset->program_id));
-        custom_tex_cache->FindCustomTextures();
+        const u64 program_id = Kernel().GetCurrentProcess()->codeset->program_id;
+        FileUtil::CreateFullPath(fmt::format(
+            "{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir), program_id));
+        custom_tex_cache->FindCustomTextures(program_id);
     }
-    if (Settings::values.preload_textures)
-        custom_tex_cache->PreloadTextures();
+    if (Settings::values.preload_textures) {
+        custom_tex_cache->PreloadTextures(*GetImageInterface());
+    }
+
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;

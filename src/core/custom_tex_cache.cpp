@@ -40,13 +40,12 @@ void CustomTexCache::AddTexturePath(u64 hash, const std::string& path) {
         custom_texture_paths[hash] = {path, hash};
 }
 
-void CustomTexCache::FindCustomTextures() {
+void CustomTexCache::FindCustomTextures(u64 program_id) {
     // Custom textures are currently stored as
     // [TitleID]/tex1_[width]x[height]_[64-bit hash]_[format].png
 
-    const std::string load_path =
-        fmt::format("{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
-                    Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
+    const std::string load_path = fmt::format(
+        "{}textures/{:016X}/", FileUtil::GetUserPath(FileUtil::UserPath::LoadDir), program_id);
 
     if (FileUtil::Exists(load_path)) {
         FileUtil::FSTEntry texture_dir;
@@ -74,13 +73,12 @@ void CustomTexCache::FindCustomTextures() {
     }
 }
 
-void CustomTexCache::PreloadTextures() {
+void CustomTexCache::PreloadTextures(Frontend::ImageInterface& image_interface) {
     for (const auto& path : custom_texture_paths) {
-        const auto& image_interface = Core::System::GetInstance().GetImageInterface();
         const auto& path_info = path.second;
         Core::CustomTexInfo tex_info;
-        if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
-                                       path_info.path)) {
+        if (image_interface.DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
+                                      path_info.path)) {
             // Make sure the texture size is a power of 2
             std::bitset<32> width_bits(tex_info.width);
             std::bitset<32> height_bits(tex_info.height);
