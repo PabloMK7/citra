@@ -196,12 +196,13 @@ private:
 
 class ShaderWriter {
 public:
-    void AddLine(const std::string& text) {
+    void AddLine(std::string_view text) {
         DEBUG_ASSERT(scope >= 0);
         if (!text.empty()) {
-            shader_source += std::string(static_cast<std::size_t>(scope) * 4, ' ');
+            shader_source.append(static_cast<std::size_t>(scope) * 4, ' ');
         }
-        shader_source += text + '\n';
+        shader_source += text;
+        shader_source += '\n';
     }
 
     std::string MoveResult() {
