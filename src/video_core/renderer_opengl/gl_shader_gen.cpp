@@ -5,6 +5,7 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
+#include <string_view>
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/bit_set.h"
@@ -30,7 +31,7 @@ using VSOutputAttributes = RasterizerRegs::VSOutputAttributes;
 
 namespace OpenGL {
 
-static const std::string UniformBlockDef = R"(
+constexpr std::string_view UniformBlockDef = R"(
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
 #define NUM_LIGHTING_SAMPLERS 24
