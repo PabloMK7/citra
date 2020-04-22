@@ -218,7 +218,7 @@ public:
 
     void SetCPUs(std::vector<std::shared_ptr<ARM_Interface>> cpu);
 
-    void SetRunningCPU(std::shared_ptr<ARM_Interface> cpu);
+    void SetRunningCPU(ARM_Interface* cpu);
 
     ThreadManager& GetThreadManager(u32 core_id);
     const ThreadManager& GetThreadManager(u32 core_id) const;
@@ -257,7 +257,7 @@ public:
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, std::shared_ptr<ClientPort>> named_ports;
 
-    std::shared_ptr<ARM_Interface> current_cpu;
+    ARM_Interface* current_cpu = nullptr;
 
     Memory::MemorySystem& memory;
 

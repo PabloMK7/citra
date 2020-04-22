@@ -228,8 +228,12 @@ public:
 
     virtual void PurgeState() = 0;
 
-    std::shared_ptr<Core::Timing::Timer> GetTimer() {
-        return timer;
+    Core::Timing::Timer& GetTimer() {
+        return *timer;
+    }
+
+    const Core::Timing::Timer& GetTimer() const {
+        return *timer;
     }
 
     u32 GetID() const {

@@ -137,10 +137,10 @@ public:
     }
 
     void AddTicks(std::uint64_t ticks) override {
-        parent.GetTimer()->AddTicks(ticks);
+        parent.GetTimer().AddTicks(ticks);
     }
     std::uint64_t GetTicksRemaining() override {
-        s64 ticks = parent.GetTimer()->GetDowncount();
+        s64 ticks = parent.GetTimer().GetDowncount();
         return static_cast<u64>(ticks <= 0 ? 0 : ticks);
     }
 

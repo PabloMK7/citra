@@ -281,20 +281,28 @@ private:
     std::unordered_map<std::string, TimingEventType> event_types = {};
 
     std::vector<std::shared_ptr<Timer>> timers;
-    std::shared_ptr<Timer> current_timer;
+    Timer* current_timer = nullptr;
 
     // Stores a scaling for the internal clockspeed. Changing this number results in
     // under/overclocking the guest cpu
     double cpu_clock_scale = 1.0;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
+    void serialize(Archive& ar, const unsigned int file_version) {
         // event_types set during initialization of other things
         ar& global_timer;
         ar& timers;
-        ar& current_timer;
+        if (file_version == 0) {
+            std::shared_ptr<Timer> x;
+            ar& x;
+            current_timer = x.get();
+        } else {
+            ar& current_timer;
+        }
     }
     friend class boost::serialization::access;
 };
 
 } // namespace Core
+
+BOOST_CLASS_VERSION(Core::Timing, 1)

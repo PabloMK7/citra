@@ -1254,10 +1254,10 @@ void SVC::SleepThread(s64 nanoseconds) {
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
 s64 SVC::GetSystemTick() {
     // TODO: Use globalTicks here?
-    s64 result = system.GetRunningCore().GetTimer()->GetTicks();
+    s64 result = system.GetRunningCore().GetTimer().GetTicks();
     // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
     // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
-    system.GetRunningCore().GetTimer()->AddTicks(150);
+    system.GetRunningCore().GetTimer().AddTicks(150);
     return result;
 }
 

@@ -26,7 +26,7 @@ Timing::Timing(std::size_t num_cores, u32 cpu_clock_percentage) {
         timers[i] = std::make_shared<Timer>();
     }
     UpdateClockSpeed(cpu_clock_percentage);
-    current_timer = timers[0];
+    current_timer = timers[0].get();
 }
 
 void Timing::UpdateClockSpeed(u32 cpu_clock_percentage) {
@@ -50,12 +50,12 @@ TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback ca
 void Timing::ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type, u64 userdata,
                            std::size_t core_id) {
     ASSERT(event_type != nullptr);
-    std::shared_ptr<Timing::Timer> timer;
+    Timing::Timer* timer = nullptr;
     if (core_id == std::numeric_limits<std::size_t>::max()) {
         timer = current_timer;
     } else {
         ASSERT(core_id < timers.size());
-        timer = timers.at(core_id);
+        timer = timers.at(core_id).get();
     }
 
     s64 timeout = timer->GetTicks() + cycles_into_future;
@@ -103,7 +103,7 @@ void Timing::RemoveEvent(const TimingEventType* event_type) {
 }
 
 void Timing::SetCurrentTimer(std::size_t core_id) {
-    current_timer = timers[core_id];
+    current_timer = timers[core_id].get();
 }
 
 s64 Timing::GetTicks() const {

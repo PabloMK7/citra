@@ -144,14 +144,14 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     // So we have to get those cores to the same global time first
     u64 global_ticks = timing->GetGlobalTicks();
     s64 max_delay = 0;
-    std::shared_ptr<ARM_Interface> current_core_to_execute = nullptr;
+    ARM_Interface* current_core_to_execute = nullptr;
     for (auto& cpu_core : cpu_cores) {
-        if (cpu_core->GetTimer()->GetTicks() < global_ticks) {
-            s64 delay = global_ticks - cpu_core->GetTimer()->GetTicks();
-            cpu_core->GetTimer()->Advance(delay);
+        if (cpu_core->GetTimer().GetTicks() < global_ticks) {
+            s64 delay = global_ticks - cpu_core->GetTimer().GetTicks();
+            cpu_core->GetTimer().Advance(delay);
             if (max_delay < delay) {
                 max_delay = delay;
-                current_core_to_execute = cpu_core;
+                current_core_to_execute = cpu_core.get();
             }
         }
     }
@@ -159,12 +159,14 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     if (max_delay > 0) {
         LOG_TRACE(Core_ARM11, "Core {} running (delayed) for {} ticks",
                   current_core_to_execute->GetID(),
-                  current_core_to_execute->GetTimer()->GetDowncount());
-        running_core = current_core_to_execute.get();
-        kernel->SetRunningCPU(current_core_to_execute);
+                  current_core_to_execute->GetTimer().GetDowncount());
+        if (running_core != current_core_to_execute) {
+            running_core = current_core_to_execute;
+            kernel->SetRunningCPU(running_core);
+        }
         if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
             LOG_TRACE(Core_ARM11, "Core {} idling", current_core_to_execute->GetID());
-            current_core_to_execute->GetTimer()->Idle();
+            current_core_to_execute->GetTimer().Idle();
             PrepareReschedule();
         } else {
             if (tight_loop) {
@@ -179,21 +181,21 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         // TODO: Make special check for idle since we can easily revert the time of idle cores
         s64 max_slice = Timing::MAX_SLICE_LENGTH;
         for (const auto& cpu_core : cpu_cores) {
-            max_slice = std::min(max_slice, cpu_core->GetTimer()->GetMaxSliceLength());
+            max_slice = std::min(max_slice, cpu_core->GetTimer().GetMaxSliceLength());
         }
         for (auto& cpu_core : cpu_cores) {
-            cpu_core->GetTimer()->Advance(max_slice);
+            cpu_core->GetTimer().Advance(max_slice);
         }
         for (auto& cpu_core : cpu_cores) {
             LOG_TRACE(Core_ARM11, "Core {} running for {} ticks", cpu_core->GetID(),
-                      cpu_core->GetTimer()->GetDowncount());
+                      cpu_core->GetTimer().GetDowncount());
             running_core = cpu_core.get();
-            kernel->SetRunningCPU(cpu_core);
+            kernel->SetRunningCPU(running_core);
             // If we don't have a currently active thread then don't execute instructions,
             // instead advance to the next event and try to yield to the next thread
             if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
                 LOG_TRACE(Core_ARM11, "Core {} idling", cpu_core->GetID());
-                cpu_core->GetTimer()->Idle();
+                cpu_core->GetTimer().Idle();
                 PrepareReschedule();
             } else {
                 if (tight_loop) {
@@ -371,7 +373,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     running_core = cpu_cores[0].get();
 
     kernel->SetCPUs(cpu_cores);
-    kernel->SetRunningCPU(cpu_cores[0]);
+    kernel->SetRunningCPU(cpu_cores[0].get());
 
     if (Settings::values.enable_dsp_lle) {
         dsp_core = std::make_unique<AudioCore::DspLle>(*memory,

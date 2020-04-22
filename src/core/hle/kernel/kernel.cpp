@@ -93,7 +93,7 @@ void KernelSystem::SetCPUs(std::vector<std::shared_ptr<ARM_Interface>> cpus) {
     }
 }
 
-void KernelSystem::SetRunningCPU(std::shared_ptr<ARM_Interface> cpu) {
+void KernelSystem::SetRunningCPU(ARM_Interface* cpu) {
     if (current_process) {
         stored_processes[current_cpu->GetID()] = current_process;
     }
