@@ -138,6 +138,7 @@ std::optional<BinaryResponse> MediaNDKDecoder::Impl::Decode(const BinaryRequest&
     u8* data = mMemory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
     ADTSData adts_data = ParseADTS(reinterpret_cast<const char*>(data));
     SetMediaType(adts_data);
+    response.sample_rate = GetSampleRateEnum(adts_data.samplerate);
     response.num_channels = adts_data.channels;
     if (!mDecoder) {
         LOG_ERROR(Audio_DSP, "Missing decoder for profile: {}, channels: {}, samplerate: {}",

@@ -219,6 +219,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         return response;
     }
 
+    response.sample_rate = GetSampleRateEnum(adts_meta->ADTSHeader.samplerate);
     response.num_channels = adts_meta->ADTSHeader.channels;
 
     if (!format_selected) {

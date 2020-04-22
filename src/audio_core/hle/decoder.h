@@ -24,6 +24,20 @@ enum class DecoderCodec : u16 {
     AAC,
 };
 
+// TODO(xperia64): I'm guessing that this is a u32 (from when it was an unknown)
+// but it could be a u16 or u8 I suppose
+enum class DecoderSampleRate : u32 {
+    Rate48000 = 0,
+    Rate44100 = 1,
+    Rate32000 = 2,
+    Rate24000 = 3,
+    Rate22050 = 4,
+    Rate16000 = 5,
+    Rate12000 = 6,
+    Rate11025 = 7,
+    Rate8000 = 8
+};
+
 struct BinaryRequest {
     enum_le<DecoderCodec> codec =
         DecoderCodec::None; // this is a guess. until now only 0x1 was observed here
@@ -43,7 +57,7 @@ struct BinaryResponse {
         DecoderCodec::None; // this could be something else. until now only 0x1 was observed here
     enum_le<DecoderCommand> cmd = DecoderCommand::Init;
     u32_le unknown1 = 0;
-    u32_le unknown2 = 0;
+    enum_le<DecoderSampleRate> sample_rate;
     u32_le num_channels = 0; // this is a guess, so far I only observed 2 here
     u32_le size = 0;
     u32_le unknown3 = 0;
@@ -51,6 +65,8 @@ struct BinaryResponse {
     u32_le num_samples = 0; // this is a guess, so far I only observed 1024 here
 };
 static_assert(sizeof(BinaryResponse) == 32, "Unexpected struct size for BinaryResponse");
+
+enum_le<DecoderSampleRate> GetSampleRateEnum(u32 sample_rate);
 
 class DecoderBase {
 public:

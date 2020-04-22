@@ -175,6 +175,7 @@ std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& requ
             // get the stream information
             stream_info = aacDecoder_GetStreamInfo(decoder);
             // fill the stream information for binary response
+            response.sample_rate = GetSampleRateEnum(stream_info->sampleRate);
             response.num_channels = stream_info->aacNumChannels;
             response.num_samples = stream_info->frameSize;
             // fill the output

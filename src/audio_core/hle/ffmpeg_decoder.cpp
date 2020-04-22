@@ -211,6 +211,7 @@ std::optional<BinaryResponse> FFMPEGDecoder::Impl::Decode(const BinaryRequest& r
 
                 std::size_t size = bytes_per_sample * (decoded_frame->nb_samples);
 
+                response.sample_rate = GetSampleRateEnum(decoded_frame->sample_rate);
                 response.num_channels = decoded_frame->channels;
                 response.num_samples += decoded_frame->nb_samples;
 
