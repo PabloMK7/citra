@@ -554,6 +554,8 @@ void System::Shutdown(bool is_deserializing) {
         room_member->SendGameInfo(game_info);
     }
 
+    memory.reset();
+
     LOG_DEBUG(Core, "Shutdown OK");
 }
 
