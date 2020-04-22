@@ -47,7 +47,19 @@ void DspHle::serialize(Archive& ar, const unsigned int) {
 }
 SERIALIZE_IMPL(DspHle)
 
-static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
+// TODO(xperia64): The value below is the "perfect" mathematical ratio
+// of ARM11 cycles per audio frame. As per merry, this was calculated to be
+// (ARM11 freq)*(samples per frame)/(sample rate)
+// = (268,111,855.956 Hz) * (160 samples)/(32,728 Hz)
+// = (1310739.946008311...) ~ 1310740
+//
+// This value was originally set to 1310252, which was determined by measuring it on hardware
+// However, as of when this was written, Project Mirai 1/2/DX desync on HLE
+// such that the music track runs ahead of the gameplay.
+// When the value is set to 1310740, all three games are playable
+// The audio track only drifts ~1ms over a 4+ minute song compared to hardware
+// and the button presses match as well as I can determine by playing the game/recording
+static constexpr u64 audio_frame_ticks = 1310740ull; ///< Units: ARM11 cycles
 
 struct DspHle::Impl final {
 public:
