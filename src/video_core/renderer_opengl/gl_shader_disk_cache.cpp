@@ -165,7 +165,7 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
     }
 
     LOG_INFO(Render_OpenGL, "Found a transferable disk cache with {} entries", raws.size());
-    return {raws};
+    return {std::move(raws)};
 }
 
 std::pair<std::unordered_map<u64, ShaderDiskCacheDecompiled>, ShaderDumpsMap>
