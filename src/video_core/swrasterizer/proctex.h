@@ -11,6 +11,6 @@
 namespace Pica::Rasterizer {
 
 /// Generates procedural texture color for the given coordinates
-Common::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex state);
+Common::Vec4<u8> ProcTex(float u, float v, const TexturingRegs& regs, const State::ProcTex& state);
 
 } // namespace Pica::Rasterizer

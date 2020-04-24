@@ -45,7 +45,7 @@ static float NoiseRand2D(unsigned int x, unsigned int y) {
     return -1.0f + v2 * 2.0f / 15.0f;
 }
 
-static float NoiseCoef(float u, float v, TexturingRegs regs, State::ProcTex state) {
+static float NoiseCoef(float u, float v, const TexturingRegs& regs, const State::ProcTex& state) {
     const float freq_u = float16::FromRaw(regs.proctex_noise_frequency.u).ToFloat32();
     const float freq_v = float16::FromRaw(regs.proctex_noise_frequency.v).ToFloat32();
     const float phase_u = float16::FromRaw(regs.proctex_noise_u.phase).ToFloat32();
@@ -112,8 +112,8 @@ static void ClampCoord(float& coord, ProcTexClamp mode) {
     }
 }
 
-float CombineAndMap(float u, float v, ProcTexCombiner combiner,
-                    const std::array<State::ProcTex::ValueEntry, 128>& map_table) {
+static float CombineAndMap(float u, float v, ProcTexCombiner combiner,
+                           const std::array<State::ProcTex::ValueEntry, 128>& map_table) {
     float f;
     switch (combiner) {
     case ProcTexCombiner::U:
@@ -154,7 +154,7 @@ float CombineAndMap(float u, float v, ProcTexCombiner combiner,
     return LookupLUT(map_table, f);
 }
 
-Common::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex state) {
+Common::Vec4<u8> ProcTex(float u, float v, const TexturingRegs& regs, const State::ProcTex& state) {
     u = std::abs(u);
     v = std::abs(v);
 
