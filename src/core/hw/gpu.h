@@ -19,7 +19,10 @@ class MemorySystem;
 
 namespace GPU {
 
-constexpr float SCREEN_REFRESH_RATE = 60;
+// TODO(xperia64): This should be defined by the number of
+// ARM11 cycles per vblank interval once that value is measured
+// and not the other way around
+constexpr double SCREEN_REFRESH_RATE = 59.833997376556916;
 
 // Returns index corresponding to the Regs member labeled by field_name
 #define GPU_REG_INDEX(field_name) (offsetof(GPU::Regs, field_name) / sizeof(u32))

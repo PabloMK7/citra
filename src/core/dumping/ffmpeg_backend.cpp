@@ -124,8 +124,11 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     codec_context->bit_rate = Settings::values.video_bitrate;
     codec_context->width = layout.width;
     codec_context->height = layout.height;
-    codec_context->time_base.num = 1;
-    codec_context->time_base.den = 60;
+    // TODO(xperia64): Replace with the core timing derived refresh rate
+    //                 Verify that an FPS of 59.83... can actually be requested
+    //                 (this doesn't seem to be working currently)
+    codec_context->time_base.num = 1000000;
+    codec_context->time_base.den = 59833997;
     codec_context->gop_size = 12;
     codec_context->pix_fmt = codec->pix_fmts ? codec->pix_fmts[0] : AV_PIX_FMT_YUV420P;
     if (format_context->oformat->flags & AVFMT_GLOBALHEADER)
