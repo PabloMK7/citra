@@ -319,7 +319,8 @@ T MemorySystem::Read(const VAddr vaddr) {
     PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
-        LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X}", sizeof(T) * 8, vaddr);
+        LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X} at PC 0x{:08X}", sizeof(T) * 8, vaddr,
+                  Core::GetRunningCore().GetPC());
         return 0;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -353,8 +354,8 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
     PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
-        LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X}", sizeof(data) * 8, (u32)data,
-                  vaddr);
+        LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
+                  sizeof(data) * 8, (u32)data, vaddr, Core::GetRunningCore().GetPC());
         return;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -408,7 +409,8 @@ u8* MemorySystem::GetPointer(const VAddr vaddr) {
         return GetPointerForRasterizerCache(vaddr);
     }
 
-    LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x}", vaddr);
+    LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x} at PC 0x{:08X}", vaddr,
+              Core::GetRunningCore().GetPC());
     return nullptr;
 }
 
@@ -451,7 +453,8 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
         });
 
     if (area == std::end(memory_areas)) {
-        LOG_ERROR(HW_Memory, "unknown GetPhysicalPointer @ 0x{:08X}", address);
+        LOG_ERROR(HW_Memory, "unknown GetPhysicalPointer @ 0x{:08X} at PC 0x{:08X}", address,
+                  Core::GetRunningCore().GetPC());
         return nullptr;
     }
 
@@ -496,7 +499,9 @@ static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
     // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
     // parts of the texture.
-    LOG_ERROR(HW_Memory, "Trying to use invalid physical address for rasterizer: {:08X}", addr);
+    LOG_ERROR(HW_Memory,
+              "Trying to use invalid physical address for rasterizer: {:08X} at PC 0x{:08X}", addr,
+              Core::GetRunningCore().GetPC());
     return {};
 }
 
@@ -656,8 +661,9 @@ void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_add
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                      "unmapped ReadBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                      current_vaddr, src_addr, size);
+                      "unmapped ReadBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
+                      "0x{:08X}",
+                      current_vaddr, src_addr, size, Core::GetRunningCore().GetPC());
             std::memset(dest_buffer, 0, copy_amount);
             break;
         }
@@ -721,8 +727,9 @@ void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_a
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                      "unmapped WriteBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                      current_vaddr, dest_addr, size);
+                      "unmapped WriteBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
+                      "0x{:08X}",
+                      current_vaddr, dest_addr, size, Core::GetRunningCore().GetPC());
             break;
         }
         case PageType::Memory: {
@@ -771,8 +778,9 @@ void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_ad
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                      "unmapped ZeroBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                      current_vaddr, dest_addr, size);
+                      "unmapped ZeroBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
+                      "0x{:08X}",
+                      current_vaddr, dest_addr, size, Core::GetRunningCore().GetPC());
             break;
         }
         case PageType::Memory: {
@@ -824,8 +832,9 @@ void MemorySystem::CopyBlock(const Kernel::Process& dest_process,
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                      "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                      current_vaddr, src_addr, size);
+                      "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
+                      "0x{:08X}",
+                      current_vaddr, src_addr, size, Core::GetRunningCore().GetPC());
             ZeroBlock(dest_process, dest_addr, copy_amount);
             break;
         }
