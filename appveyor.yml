@@ -27,7 +27,7 @@ install:
   - ps: |
         if ($env:BUILD_TYPE -eq 'mingw') {
           $dependencies = "mingw64/mingw-w64-x86_64-cmake mingw64/mingw-w64-x86_64-qt5 mingw64/mingw-w64-x86_64-ffmpeg"
-          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-SDL2-2.0.10-1-any.pkg.tar.xz"
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-SDL2-2.0.12-1-any.pkg.tar.xz"
           C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S $dependencies"
           # (HACK) ignore errors
           0
