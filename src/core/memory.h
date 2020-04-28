@@ -85,9 +85,10 @@ struct PageTable {
         struct Entry {
             Entry(Pointers& pointers_, VAddr idx_) : pointers(pointers_), idx(idx_) {}
 
-            void operator=(MemoryRef value) {
-                pointers.refs[idx] = value;
+            Entry& operator=(MemoryRef value) {
                 pointers.raw[idx] = value.GetPtr();
+                pointers.refs[idx] = std::move(value);
+                return *this;
             }
 
             operator u8*() {
