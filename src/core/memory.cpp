@@ -266,7 +266,7 @@ void MemorySystem::UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
-MemoryRef MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
+MemoryRef MemorySystem::GetPointerForRasterizerCache(VAddr addr) const {
     if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
         return {impl->fcram_mem, addr - LINEAR_HEAP_VADDR};
     }
@@ -394,7 +394,7 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     return false;
 }
 
-bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) {
+bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) const {
     return GetPhysicalPointer(paddr) != nullptr;
 }
 
@@ -411,6 +411,21 @@ u8* MemorySystem::GetPointer(const VAddr vaddr) {
 
     LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x} at PC 0x{:08X}", vaddr,
               Core::GetRunningCore().GetPC());
+    return nullptr;
+}
+
+const u8* MemorySystem::GetPointer(const VAddr vaddr) const {
+    const u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
+    if (page_pointer) {
+        return page_pointer + (vaddr & PAGE_MASK);
+    }
+
+    if (impl->current_page_table->attributes[vaddr >> PAGE_BITS] ==
+        PageType::RasterizerCachedMemory) {
+        return GetPointerForRasterizerCache(vaddr);
+    }
+
+    LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x}", vaddr);
     return nullptr;
 }
 
@@ -432,7 +447,11 @@ u8* MemorySystem::GetPhysicalPointer(PAddr address) {
     return GetPhysicalRef(address);
 }
 
-MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
+const u8* MemorySystem::GetPhysicalPointer(PAddr address) const {
+    return GetPhysicalRef(address);
+}
+
+MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
     struct MemoryArea {
         PAddr paddr_base;
         u32 size;
@@ -911,17 +930,22 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
     mmio_handler->Write64(addr, data);
 }
 
-u32 MemorySystem::GetFCRAMOffset(const u8* pointer) {
+u32 MemorySystem::GetFCRAMOffset(const u8* pointer) const {
     ASSERT(pointer >= impl->fcram.get() && pointer <= impl->fcram.get() + Memory::FCRAM_N3DS_SIZE);
     return static_cast<u32>(pointer - impl->fcram.get());
 }
 
-u8* MemorySystem::GetFCRAMPointer(u32 offset) {
+u8* MemorySystem::GetFCRAMPointer(std::size_t offset) {
     ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
     return impl->fcram.get() + offset;
 }
 
-MemoryRef MemorySystem::GetFCRAMRef(u32 offset) {
+const u8* MemorySystem::GetFCRAMPointer(std::size_t offset) const {
+    ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
+    return impl->fcram.get() + offset;
+}
+
+MemoryRef MemorySystem::GetFCRAMRef(std::size_t offset) const {
     ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
     return MemoryRef(impl->fcram_mem, offset);
 }

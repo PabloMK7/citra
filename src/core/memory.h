@@ -339,25 +339,30 @@ public:
 
     std::string ReadCString(VAddr vaddr, std::size_t max_length);
 
-    /**
-     * Gets a pointer to the memory region beginning at the specified physical address.
-     */
+    /// Gets a pointer to the memory region beginning at the specified physical address.
     u8* GetPhysicalPointer(PAddr address);
 
-    MemoryRef GetPhysicalRef(PAddr address);
+    /// Gets a pointer to the memory region beginning at the specified physical address.
+    const u8* GetPhysicalPointer(PAddr address) const;
+
+    MemoryRef GetPhysicalRef(PAddr address) const;
 
     u8* GetPointer(VAddr vaddr);
+    const u8* GetPointer(VAddr vaddr) const;
 
-    bool IsValidPhysicalAddress(PAddr paddr);
+    bool IsValidPhysicalAddress(PAddr paddr) const;
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
-    u32 GetFCRAMOffset(const u8* pointer);
+    u32 GetFCRAMOffset(const u8* pointer) const;
 
     /// Gets pointer in FCRAM with given offset
-    u8* GetFCRAMPointer(u32 offset);
+    u8* GetFCRAMPointer(std::size_t offset);
+
+    /// Gets pointer in FCRAM with given offset
+    const u8* GetFCRAMPointer(std::size_t offset) const;
 
     /// Gets a serializable ref to FCRAM with the given offset
-    MemoryRef GetFCRAMRef(u32 offset);
+    MemoryRef GetFCRAMRef(std::size_t offset) const;
 
     /**
      * Mark each page touching the region as cached.
@@ -385,7 +390,7 @@ private:
      * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
      * pointer of such virtual address
      */
-    MemoryRef GetPointerForRasterizerCache(VAddr addr);
+    MemoryRef GetPointerForRasterizerCache(VAddr addr) const;
 
     void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
 
