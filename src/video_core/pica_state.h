@@ -197,13 +197,13 @@ struct State {
     PrimitiveAssembler<Shader::OutputVertex> primitive_assembler;
 
     int vs_float_regs_counter = 0;
-    u32 vs_uniform_write_buffer[4]{};
+    std::array<u32, 4> vs_uniform_write_buffer{};
 
     int gs_float_regs_counter = 0;
-    u32 gs_uniform_write_buffer[4]{};
+    std::array<u32, 4> gs_uniform_write_buffer{};
 
     int default_attr_counter = 0;
-    u32 default_attr_write_buffer[3]{};
+    std::array<u32, 3> default_attr_write_buffer{};
 
 private:
     friend class boost::serialization::access;
@@ -223,11 +223,14 @@ private:
         ar& geometry_pipeline;
         ar& primitive_assembler;
         ar& vs_float_regs_counter;
-        ar& vs_uniform_write_buffer;
+        ar& boost::serialization::make_array(vs_uniform_write_buffer.data(),
+                                             vs_uniform_write_buffer.size());
         ar& gs_float_regs_counter;
-        ar& gs_uniform_write_buffer;
+        ar& boost::serialization::make_array(gs_uniform_write_buffer.data(),
+                                             gs_uniform_write_buffer.size());
         ar& default_attr_counter;
-        ar& default_attr_write_buffer;
+        ar& boost::serialization::make_array(default_attr_write_buffer.data(),
+                                             default_attr_write_buffer.size());
         boost::serialization::split_member(ar, *this, file_version);
     }
 

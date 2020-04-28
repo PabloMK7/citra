@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <type_traits>
 #include "core/global.h"
 #include "video_core/geometry_pipeline.h"
 #include "video_core/pica.h"
@@ -31,6 +32,8 @@ void Shutdown() {
 
 template <typename T>
 void Zero(T& o) {
+    static_assert(std::is_trivially_copyable_v<T>,
+                  "It's undefined behavior to memset a non-trivially copyable type");
     memset(&o, 0, sizeof(o));
 }
 
@@ -59,10 +62,10 @@ void State::Reset() {
     Zero(immediate);
     primitive_assembler.Reconfigure(PipelineRegs::TriangleTopology::List);
     vs_float_regs_counter = 0;
-    Zero(vs_uniform_write_buffer);
+    vs_uniform_write_buffer.fill(0);
     gs_float_regs_counter = 0;
-    Zero(gs_uniform_write_buffer);
+    gs_uniform_write_buffer.fill(0);
     default_attr_counter = 0;
-    Zero(default_attr_write_buffer);
+    default_attr_write_buffer.fill(0);
 }
 } // namespace Pica
