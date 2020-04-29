@@ -351,8 +351,8 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SaveDataArchive::OpenDirectory(
 }
 
 u64 SaveDataArchive::GetFreeBytes() const {
-    // TODO: Stubbed to return 1GiB
-    return 1024 * 1024 * 1024;
+    // TODO: Stubbed to return 32MiB
+    return 1024 * 1024 * 32;
 }
 
 } // namespace FileSys
