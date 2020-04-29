@@ -1,5 +1,12 @@
 #!/bin/bash -ex
 
+mkdir -p ~/bin/gold
+echo '#!/bin/bash' > ~/bin/gold/ld
+echo 'gold "$@"' >> ~/bin/gold/ld
+chmod a+x ~/bin/gold/ld
+export CFLAGS="-B$HOME/bin/gold $CFLAGS"
+export CXXFLAGS="-B$HOME/bin/gold $CXXFLAGS"
+
 cd /citra
 
 mkdir build && cd build

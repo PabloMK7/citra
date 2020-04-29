@@ -43,6 +43,7 @@ matrix:
       dist: trusty
       services: docker
       cache: ccache
+      install: "./.travis/linux-frozen/deps.sh"
       script: "./.travis/linux-frozen/build.sh"
     - os: linux
       env: NAME="MinGW build"
