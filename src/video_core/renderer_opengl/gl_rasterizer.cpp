@@ -168,7 +168,7 @@ RasterizerOpenGL::RasterizerOpenGL()
     SyncEntireState();
 }
 
-RasterizerOpenGL::~RasterizerOpenGL() {}
+RasterizerOpenGL::~RasterizerOpenGL() = default;
 
 void RasterizerOpenGL::LoadDiskResources(const std::atomic_bool& stop_loading,
                                          const VideoCore::DiskResourceLoadCallback& callback) {
