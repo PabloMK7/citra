@@ -184,7 +184,7 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     void FlushGLBuffer(PAddr flush_start, PAddr flush_end);
 
     // Custom texture loading and dumping
-    bool LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_info);
+    bool LoadCustomTexture(u64 tex_hash);
     void DumpTexture(GLuint target_tex, u64 tex_hash);
 
     // Upload/Download data in gl_buffer in/to this surface's texture
