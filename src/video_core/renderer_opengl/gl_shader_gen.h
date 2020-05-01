@@ -170,7 +170,7 @@ struct PicaVSConfig : Common::HashableStruct<PicaShaderConfigCommon> {
     explicit PicaVSConfig(const Pica::ShaderRegs& regs, Pica::Shader::ShaderSetup& setup) {
         state.Init(regs, setup);
     }
-    explicit PicaVSConfig(PicaShaderConfigCommon& conf) {
+    explicit PicaVSConfig(const PicaShaderConfigCommon& conf) {
         state = conf;
     }
 };
