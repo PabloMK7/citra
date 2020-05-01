@@ -693,36 +693,36 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
 }
 
 bool CachedSurface::LoadCustomTexture(u64 tex_hash, Core::CustomTexInfo& tex_info) {
-    bool result = false;
     auto& custom_tex_cache = Core::System::GetInstance().CustomTexCache();
     const auto& image_interface = Core::System::GetInstance().GetImageInterface();
 
     if (custom_tex_cache.IsTextureCached(tex_hash)) {
         tex_info = custom_tex_cache.LookupTexture(tex_hash);
-        result = true;
-    } else {
-        if (custom_tex_cache.CustomTextureExists(tex_hash)) {
-            const auto& path_info = custom_tex_cache.LookupTexturePathInfo(tex_hash);
-            if (image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
-                                           path_info.path)) {
-                std::bitset<32> width_bits(tex_info.width);
-                std::bitset<32> height_bits(tex_info.height);
-                if (width_bits.count() == 1 && height_bits.count() == 1) {
-                    LOG_DEBUG(Render_OpenGL, "Loaded custom texture from {}", path_info.path);
-                    Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
-                    custom_tex_cache.CacheTexture(tex_hash, tex_info.tex, tex_info.width,
-                                                  tex_info.height);
-                    result = true;
-                } else {
-                    LOG_ERROR(Render_OpenGL, "Texture {} size is not a power of 2", path_info.path);
-                }
-            } else {
-                LOG_ERROR(Render_OpenGL, "Failed to load custom texture {}", path_info.path);
-            }
-        }
+        return true;
     }
 
-    return result;
+    if (!custom_tex_cache.CustomTextureExists(tex_hash)) {
+        return false;
+    }
+
+    const auto& path_info = custom_tex_cache.LookupTexturePathInfo(tex_hash);
+    if (!image_interface->DecodePNG(tex_info.tex, tex_info.width, tex_info.height,
+                                    path_info.path)) {
+        LOG_ERROR(Render_OpenGL, "Failed to load custom texture {}", path_info.path);
+        return false;
+    }
+
+    const std::bitset<32> width_bits(tex_info.width);
+    const std::bitset<32> height_bits(tex_info.height);
+    if (width_bits.count() != 1 || height_bits.count() != 1) {
+        LOG_ERROR(Render_OpenGL, "Texture {} size is not a power of 2", path_info.path);
+        return false;
+    }
+
+    LOG_DEBUG(Render_OpenGL, "Loaded custom texture from {}", path_info.path);
+    Common::FlipRGBA8Texture(tex_info.tex, tex_info.width, tex_info.height);
+    custom_tex_cache.CacheTexture(tex_hash, tex_info.tex, tex_info.width, tex_info.height);
+    return true;
 }
 
 void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
