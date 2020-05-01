@@ -290,9 +290,9 @@ RasterizerOpenGL::VertexArrayInfo RasterizerOpenGL::AnalyzeVertexArray(bool is_i
         vertex_max = regs.pipeline.vertex_offset + regs.pipeline.num_vertices - 1;
     }
 
-    u32 vertex_num = vertex_max - vertex_min + 1;
+    const u32 vertex_num = vertex_max - vertex_min + 1;
     u32 vs_input_size = 0;
-    for (auto& loader : vertex_attributes.attribute_loaders) {
+    for (const auto& loader : vertex_attributes.attribute_loaders) {
         if (loader.component_count != 0) {
             vs_input_size += loader.byte_count * vertex_num;
         }
@@ -1338,7 +1338,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(lighting.lut_data[5]):
     case PICA_REG_INDEX(lighting.lut_data[6]):
     case PICA_REG_INDEX(lighting.lut_data[7]): {
-        auto& lut_config = regs.lighting.lut_config;
+        const auto& lut_config = regs.lighting.lut_config;
         uniform_block_data.lighting_lut_dirty[lut_config.type] = true;
         uniform_block_data.lighting_lut_dirty_any = true;
         break;
