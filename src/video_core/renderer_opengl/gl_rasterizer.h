@@ -38,7 +38,7 @@ class ShaderProgramManager;
 
 class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:
-    explicit RasterizerOpenGL(Frontend::EmuWindow& renderer);
+    explicit RasterizerOpenGL();
     ~RasterizerOpenGL() override;
 
     void LoadDiskResources(const std::atomic_bool& stop_loading,
@@ -195,7 +195,8 @@ private:
     void SyncCombinerColor();
 
     /// Syncs the TEV constant color to match the PICA register
-    void SyncTevConstColor(int tev_index, const Pica::TexturingRegs::TevStageConfig& tev_stage);
+    void SyncTevConstColor(std::size_t tev_index,
+                           const Pica::TexturingRegs::TevStageConfig& tev_stage);
 
     /// Syncs the lighting global ambient color to match the PICA register
     void SyncGlobalAmbient();
@@ -268,11 +269,9 @@ private:
 
     RasterizerCacheOpenGL res_cache;
 
-    Frontend::EmuWindow& emu_window;
-
     std::vector<HardwareVertex> vertex_batch;
 
-    bool shader_dirty;
+    bool shader_dirty = true;
 
     struct {
         UniformData data;

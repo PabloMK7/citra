@@ -43,10 +43,10 @@ struct ShaderRegs {
     u32 input_attribute_to_register_map_low;
     u32 input_attribute_to_register_map_high;
 
-    unsigned int GetRegisterForAttribute(unsigned int attribute_index) const {
-        u64 map = ((u64)input_attribute_to_register_map_high << 32) |
-                  (u64)input_attribute_to_register_map_low;
-        return (map >> (attribute_index * 4)) & 0b1111;
+    u32 GetRegisterForAttribute(std::size_t attribute_index) const {
+        const u64 map = (static_cast<u64>(input_attribute_to_register_map_high) << 32) |
+                        static_cast<u64>(input_attribute_to_register_map_low);
+        return static_cast<u32>((map >> (attribute_index * 4)) & 0b1111);
     }
 
     BitField<0, 16, u32> output_mask;
