@@ -8,10 +8,6 @@ namespace Core {
 class System;
 }
 
-namespace SM {
-class ServiceManager;
-}
-
 namespace Service::IR {
 
 void InstallInterfaces(Core::System& system);
