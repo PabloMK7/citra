@@ -17,7 +17,7 @@ namespace Common {
  * @param len Length of data (in bytes) to compute hash over
  * @returns 64-bit hash value that was computed over the data block
  */
-static inline u64 ComputeHash64(const void* data, std::size_t len) {
+static inline u64 ComputeHash64(const void* data, std::size_t len) noexcept {
     return CityHash64(static_cast<const char*>(data), len);
 }
 
@@ -27,7 +27,7 @@ static inline u64 ComputeHash64(const void* data, std::size_t len) {
  * by memsetting the struct to 0 before filling it in.
  */
 template <typename T>
-static inline u64 ComputeStructHash64(const T& data) {
+static inline u64 ComputeStructHash64(const T& data) noexcept {
     static_assert(std::is_trivially_copyable_v<T>,
                   "Type passed to ComputeStructHash64 must be trivially copyable");
     return ComputeHash64(&data, sizeof(data));
@@ -50,20 +50,20 @@ struct HashableStruct {
         T state;
     };
 
-    HashableStruct() {
+    HashableStruct() noexcept {
         // Memset structure to zero padding bits, so that they will be deterministic when hashing
         std::memset(&state, 0, sizeof(T));
     }
 
-    bool operator==(const HashableStruct<T>& o) const {
+    bool operator==(const HashableStruct<T>& o) const noexcept {
         return std::memcmp(&state, &o.state, sizeof(T)) == 0;
     };
 
-    bool operator!=(const HashableStruct<T>& o) const {
+    bool operator!=(const HashableStruct<T>& o) const noexcept {
         return !(*this == o);
     };
 
-    std::size_t Hash() const {
+    std::size_t Hash() const noexcept {
         return Common::ComputeStructHash64(state);
     }
 };

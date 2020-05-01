@@ -170,7 +170,7 @@ struct PicaVSConfig : Common::HashableStruct<PicaShaderConfigCommon> {
     explicit PicaVSConfig(const Pica::ShaderRegs& regs, Pica::Shader::ShaderSetup& setup) {
         state.Init(regs, setup);
     }
-    explicit PicaVSConfig(PicaShaderConfigCommon& conf) {
+    explicit PicaVSConfig(const PicaShaderConfigCommon& conf) {
         state = conf;
     }
 };
@@ -237,21 +237,21 @@ ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& confi
 namespace std {
 template <>
 struct hash<OpenGL::PicaFSConfig> {
-    std::size_t operator()(const OpenGL::PicaFSConfig& k) const {
+    std::size_t operator()(const OpenGL::PicaFSConfig& k) const noexcept {
         return k.Hash();
     }
 };
 
 template <>
 struct hash<OpenGL::PicaVSConfig> {
-    std::size_t operator()(const OpenGL::PicaVSConfig& k) const {
+    std::size_t operator()(const OpenGL::PicaVSConfig& k) const noexcept {
         return k.Hash();
     }
 };
 
 template <>
 struct hash<OpenGL::PicaFixedGSConfig> {
-    std::size_t operator()(const OpenGL::PicaFixedGSConfig& k) const {
+    std::size_t operator()(const OpenGL::PicaFixedGSConfig& k) const noexcept {
         return k.Hash();
     }
 };
