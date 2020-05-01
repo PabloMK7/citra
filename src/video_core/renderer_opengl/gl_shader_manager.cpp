@@ -445,7 +445,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     if (!transferable) {
         return;
     }
-    const auto raws = *transferable;
+    const auto& raws = *transferable;
 
     auto [decompiled, dumps] = disk_cache.LoadPrecompiled();
 
@@ -460,7 +460,6 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     bool precompiled_cache_altered = false;
 
     std::mutex mutex;
-    std::size_t built_shaders = 0; // It doesn't have be atomic since it's used behind a mutex
     std::atomic_bool compilation_failed = false;
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Decompile, 0, raws.size());
@@ -468,13 +467,13 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     std::vector<std::size_t> load_raws_index;
     // Loads both decompiled and precompiled shaders from the cache. If either one is missing for
     const auto LoadPrecompiledWorker =
-        [&](std::size_t begin, std::size_t end, const std::vector<ShaderDiskCacheRaw>& raws,
-            const ShaderDecompiledMap& decompiled, const ShaderDumpsMap& dumps) {
+        [&](std::size_t begin, std::size_t end, const std::vector<ShaderDiskCacheRaw>& raw_cache,
+            const ShaderDecompiledMap& decompiled_map, const ShaderDumpsMap& dump_map) {
             for (std::size_t i = 0; i < end; ++i) {
                 if (stop_loading || compilation_failed) {
                     return;
                 }
-                const auto& raw{raws[i]};
+                const auto& raw{raw_cache[i]};
                 const u64 unique_identifier{raw.GetUniqueIdentifier()};
 
                 const u64 calculated_hash =
@@ -488,12 +487,12 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                     return;
                 }
 
-                const auto dump{dumps.find(unique_identifier)};
-                const auto decomp{decompiled.find(unique_identifier)};
+                const auto dump{dump_map.find(unique_identifier)};
+                const auto decomp{decompiled_map.find(unique_identifier)};
 
                 OGLProgram shader;
 
-                if (dump != dumps.end() && decomp != decompiled.end()) {
+                if (dump != dump_map.end() && decomp != decompiled_map.end()) {
                     // Only load this shader if its sanitize_mul setting matches
                     if (decomp->second.sanitize_mul == VideoCore::g_hw_shader_accurate_mul) {
                         continue;
@@ -533,7 +532,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                     load_raws_index.push_back(i);
                 }
                 if (callback) {
-                    callback(VideoCore::LoadCallbackStage::Decompile, i, raws.size());
+                    callback(VideoCore::LoadCallbackStage::Decompile, i, raw_cache.size());
                 }
             }
         };
@@ -554,12 +553,12 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     compilation_failed = false;
 
     const auto LoadTransferable = [&](std::size_t begin, std::size_t end,
-                                      const std::vector<ShaderDiskCacheRaw>& raws) {
+                                      const std::vector<ShaderDiskCacheRaw>& raw_cache) {
         for (std::size_t i = 0; i < end; ++i) {
             if (stop_loading || compilation_failed) {
                 return;
             }
-            const auto& raw{raws[i]};
+            const auto& raw{raw_cache[i]};
             const u64 unique_identifier{raw.GetUniqueIdentifier()};
 
             bool sanitize_mul = false;
@@ -603,7 +602,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
             }
 
             if (callback) {
-                callback(VideoCore::LoadCallbackStage::Build, i, raws.size());
+                callback(VideoCore::LoadCallbackStage::Build, i, raw_cache.size());
             }
         }
     };
