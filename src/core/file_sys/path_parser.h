@@ -47,10 +47,10 @@ public:
     };
 
     /// Checks the status of the specified file / directory by the Path on the host file system.
-    HostStatus GetHostStatus(const std::string& mount_point) const;
+    HostStatus GetHostStatus(std::string_view mount_point) const;
 
     /// Builds a full path on the host file system.
-    std::string BuildHostPath(const std::string& mount_point) const;
+    std::string BuildHostPath(std::string_view mount_point) const;
 
 private:
     std::vector<std::string> path_sequence;

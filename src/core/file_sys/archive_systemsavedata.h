@@ -50,7 +50,7 @@ private:
  * @param path The path that identifies the requested concrete SystemSaveData archive.
  * @returns The complete path to the specified SystemSaveData archive in the host filesystem
  */
-std::string GetSystemSaveDataPath(const std::string& mount_point, const Path& path);
+std::string GetSystemSaveDataPath(std::string_view mount_point, const Path& path);
 
 /**
  * Constructs a path to the base folder to hold concrete SystemSaveData archives in the host file
@@ -58,7 +58,7 @@ std::string GetSystemSaveDataPath(const std::string& mount_point, const Path& pa
  * @param mount_point The base folder where this folder resides, ie. SDMC or NAND.
  * @returns The path to the base SystemSaveData archives' folder in the host file system
  */
-std::string GetSystemSaveDataContainerPath(const std::string& mount_point);
+std::string GetSystemSaveDataContainerPath(std::string_view mount_point);
 
 /**
  * Constructs a FileSys::Path object that refers to the SystemSaveData archive identified by
