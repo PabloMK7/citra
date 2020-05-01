@@ -460,7 +460,6 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     bool precompiled_cache_altered = false;
 
     std::mutex mutex;
-    std::size_t built_shaders = 0; // It doesn't have be atomic since it's used behind a mutex
     std::atomic_bool compilation_failed = false;
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Decompile, 0, raws.size());
