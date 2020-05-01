@@ -275,7 +275,7 @@ void LayeredFS::LoadExtRelocations() {
     }
 }
 
-std::size_t GetNameSize(const std::string& name) {
+static std::size_t GetNameSize(const std::string& name) {
     std::u16string u16name = Common::UTF8ToUTF16(name);
     return Common::AlignUp(u16name.size() * 2, 4);
 }
@@ -310,7 +310,7 @@ void LayeredFS::PrepareBuild(Directory& current) {
 }
 
 // Implementation from 3dbrew
-u32 CalcHash(const std::string& name, u32 parent_offset) {
+static u32 CalcHash(const std::string& name, u32 parent_offset) {
     u32 hash = parent_offset ^ 123456789;
     std::u16string u16name = Common::UTF8ToUTF16(name);
     for (char16_t c : u16name) {
@@ -320,7 +320,7 @@ u32 CalcHash(const std::string& name, u32 parent_offset) {
     return hash;
 }
 
-std::size_t WriteName(u8* dest, std::u16string name) {
+static std::size_t WriteName(u8* dest, std::u16string name) {
     const auto buffer_size = Common::AlignUp(name.size() * 2, 4);
     std::vector<u16_le> buffer(buffer_size / 2);
     std::transform(name.begin(), name.end(), buffer.begin(), [](char16_t character) {
@@ -431,7 +431,7 @@ void LayeredFS::BuildFiles() {
 }
 
 // Implementation from 3dbrew
-std::size_t GetHashTableSize(std::size_t entry_count) {
+static std::size_t GetHashTableSize(std::size_t entry_count) {
     if (entry_count < 3) {
         return 3;
     } else if (entry_count < 19) {
