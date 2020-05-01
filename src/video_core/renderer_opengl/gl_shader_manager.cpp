@@ -445,7 +445,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     if (!transferable) {
         return;
     }
-    const auto raws = *transferable;
+    const auto& raws = *transferable;
 
     auto [decompiled, dumps] = disk_cache.LoadPrecompiled();
 
