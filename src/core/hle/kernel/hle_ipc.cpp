@@ -21,7 +21,7 @@ class HLERequestContext::ThreadCallback : public Kernel::WakeupCallback {
 public:
     ThreadCallback(std::shared_ptr<HLERequestContext> context_,
                    std::shared_ptr<HLERequestContext::WakeupCallback> callback_)
-        : context(std::move(context_)), callback(std::move(callback_)) {}
+        : callback(std::move(callback_)), context(std::move(context_)) {}
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) {
         ASSERT(thread->status == ThreadStatus::WaitHleEvent);
