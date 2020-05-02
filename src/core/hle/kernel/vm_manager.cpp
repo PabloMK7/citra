@@ -38,7 +38,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
 }
 
 VMManager::VMManager(Memory::MemorySystem& memory)
-    : memory(memory), page_table(std::make_shared<Memory::PageTable>()) {
+    : page_table(std::make_shared<Memory::PageTable>()), memory(memory) {
     Reset();
 }
 
