@@ -82,6 +82,8 @@ enum class ValidationError {
 
 class SoftwareKeyboard {
 public:
+    virtual ~SoftwareKeyboard() = default;
+
     /**
      * Executes the software keyboard, configured with the given parameters.
      */
