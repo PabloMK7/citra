@@ -33,7 +33,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     return result;
 }
 
-Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, std::size_t offset) {
+Loader::ResultStatus TitleMetadata::Load(const std::vector<u8>& file_data, std::size_t offset) {
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     if (total_size < sizeof(u32_be))
         return Loader::ResultStatus::Error;

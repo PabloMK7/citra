@@ -57,8 +57,8 @@ PathParser::PathParser(const Path& path) {
     is_root = level == 0;
 }
 
-PathParser::HostStatus PathParser::GetHostStatus(const std::string& mount_point) const {
-    auto path = mount_point;
+PathParser::HostStatus PathParser::GetHostStatus(std::string_view mount_point) const {
+    std::string path{mount_point};
     if (!FileUtil::IsDirectory(path))
         return InvalidMountPoint;
     if (path_sequence.empty()) {
@@ -85,8 +85,8 @@ PathParser::HostStatus PathParser::GetHostStatus(const std::string& mount_point)
     return FileFound;
 }
 
-std::string PathParser::BuildHostPath(const std::string& mount_point) const {
-    std::string path = mount_point;
+std::string PathParser::BuildHostPath(std::string_view mount_point) const {
+    std::string path{mount_point};
     for (auto& node : path_sequence) {
         if (path.back() != '/')
             path += '/';

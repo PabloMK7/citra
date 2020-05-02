@@ -185,7 +185,7 @@ struct ExtSaveDataArchivePath {
 
 static_assert(sizeof(ExtSaveDataArchivePath) == 12, "Incorrect path size");
 
-std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
+std::string GetExtSaveDataPath(std::string_view mount_point, const Path& path) {
     std::vector<u8> vec_data = path.AsBinary();
 
     ExtSaveDataArchivePath path_data;
@@ -194,16 +194,16 @@ std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path)
     return fmt::format("{}{:08X}/{:08X}/", mount_point, path_data.save_high, path_data.save_low);
 }
 
-std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
-    if (shared)
+std::string GetExtDataContainerPath(std::string_view mount_point, bool shared) {
+    if (shared) {
         return fmt::format("{}data/{}/extdata/", mount_point, SYSTEM_ID);
-
+    }
     return fmt::format("{}Nintendo 3DS/{}/{}/extdata/", mount_point, SYSTEM_ID, SDCARD_ID);
 }
 
-std::string GetExtDataPathFromId(const std::string& mount_point, u64 extdata_id) {
-    u32 high = static_cast<u32>(extdata_id >> 32);
-    u32 low = static_cast<u32>(extdata_id & 0xFFFFFFFF);
+std::string GetExtDataPathFromId(std::string_view mount_point, u64 extdata_id) {
+    const u32 high = static_cast<u32>(extdata_id >> 32);
+    const u32 low = static_cast<u32>(extdata_id & 0xFFFFFFFF);
 
     return fmt::format("{}{:08x}/{:08x}/", GetExtDataContainerPath(mount_point, false), high, low);
 }
