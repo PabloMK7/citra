@@ -72,7 +72,7 @@ add_subdirectory(soundtouch)
 target_include_directories(SoundTouch INTERFACE ./soundtouch/include)
 
 # Teakra
-add_subdirectory(teakra)
+add_subdirectory(teakra EXCLUDE_FROM_ALL)
 
 # Xbyak
 if (ARCHITECTURE_x86_64)
