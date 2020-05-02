@@ -11,18 +11,18 @@ namespace HW::RSA {
 
 class RsaSlot {
 public:
-    RsaSlot() : init(false) {}
-    RsaSlot(const std::vector<u8>& exponent, const std::vector<u8>& modulus)
-        : init(true), exponent(exponent), modulus(modulus) {}
-    std::vector<u8> GetSignature(const std::vector<u8>& message);
+    RsaSlot() = default;
+    RsaSlot(std::vector<u8> exponent, std::vector<u8> modulus)
+        : init(true), exponent(std::move(exponent)), modulus(std::move(modulus)) {}
+    std::vector<u8> GetSignature(const std::vector<u8>& message) const;
 
-    operator bool() const {
+    explicit operator bool() const {
         // TODO(B3N30): Maybe check if exponent and modulus are vailid
         return init;
     }
 
 private:
-    bool init;
+    bool init = false;
     std::vector<u8> exponent;
     std::vector<u8> modulus;
 };

@@ -31,7 +31,7 @@ std::vector<u8> HexToBytes(const std::string& hex) {
 constexpr std::size_t SlotSize = 4;
 std::array<RsaSlot, SlotSize> rsa_slots;
 
-std::vector<u8> RsaSlot::GetSignature(const std::vector<u8>& message) {
+std::vector<u8> RsaSlot::GetSignature(const std::vector<u8>& message) const {
     CryptoPP::Integer sig =
         CryptoPP::ModularExponentiation(CryptoPP::Integer(message.data(), message.size()),
                                         CryptoPP::Integer(exponent.data(), exponent.size()),
@@ -74,7 +74,7 @@ void InitSlots() {
     std::vector<u8> exponent(256);
     file.ReadArray(exponent.data(), exponent.size());
 
-    rsa_slots[0] = RsaSlot(exponent, modulus);
+    rsa_slots[0] = RsaSlot(std::move(exponent), std::move(modulus));
     // TODO(B3N30): Initalize the other slots. But since they aren't used at all, we can skip them
     // for now
 }
