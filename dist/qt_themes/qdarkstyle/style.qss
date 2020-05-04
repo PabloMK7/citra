@@ -673,10 +673,6 @@ QTabWidget::pane {
     border-bottom-left-radius: 2px;
 }
 
-QTabWidget::tab-bar {
-    overflow: visible;
-}
-
 QTabBar {
     qproperty-drawBase: 0;
     border-radius: 3px;
