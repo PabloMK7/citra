@@ -7,12 +7,14 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <vector>
 #include <QDialog>
 #include "core/settings.h"
 
-class QKeyEvent;
+class QItemSelection;
 class QModelIndex;
 class QStandardItemModel;
+class QStandardItem;
 class QTimer;
 
 namespace Common {
@@ -34,33 +36,40 @@ class ConfigureTouchFromButton : public QDialog {
 
 public:
     explicit ConfigureTouchFromButton(QWidget* parent,
-                                      std::vector<Settings::TouchFromButtonMap> touch_maps,
-                                      int default_index = 0);
+                                      const std::vector<Settings::TouchFromButtonMap>& touch_maps,
+                                      const int default_index = 0);
     ~ConfigureTouchFromButton() override;
 
-    const int GetSelectedIndex();
-    const std::vector<Settings::TouchFromButtonMap> GetMaps();
+    int GetSelectedIndex() const;
+    std::vector<Settings::TouchFromButtonMap> GetMaps() const;
 
 public slots:
     void ApplyConfiguration();
+    void NewBinding(const QPoint& pos);
+    void SetActiveBinding(const int dot_id);
+    void SetCoordinates(const int dot_id, const QPoint& pos);
 
 protected:
-    void showEvent(QShowEvent* ev);
+    virtual void showEvent(QShowEvent* ev) override;
+    virtual void keyPressEvent(QKeyEvent* event) override;
+
+private slots:
+    void NewMapping();
+    void DeleteMapping();
+    void RenameMapping();
+    void EditBinding(const QModelIndex& qi);
+    void DeleteBinding();
+    void OnBindingSelection(const QItemSelection& selected, const QItemSelection& deselected);
+    void OnBindingChanged(QStandardItem* item);
+    void OnBindingDeleted(const QModelIndex& parent, int first, int last);
 
 private:
     void SetConfiguration();
     void UpdateUiDisplay();
     void ConnectEvents();
-    void NewMapping();
-    void DeleteMapping();
-    void RenameMapping();
-    void NewBinding();
-    void EditBinding(const QModelIndex& qi);
-    void DeleteBinding();
-    void GetButtonInput(int row_index, bool is_new);
-    void SetPollingResult(const Common::ParamPackage& params, bool cancel);
+    void GetButtonInput(const int row_index, const bool is_new);
+    void SetPollingResult(const Common::ParamPackage& params, const bool cancel);
     void SaveCurrentMapping();
-    void keyPressEvent(QKeyEvent* event) override;
 
     std::unique_ptr<Ui::ConfigureTouchFromButton> ui;
     std::unique_ptr<QStandardItemModel> binding_list_model;
@@ -71,4 +80,6 @@ private:
     std::unique_ptr<QTimer> poll_timer;
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
     std::optional<std::function<void(const Common::ParamPackage&, const bool)>> input_setter;
+
+    static constexpr int data_role_dot = Qt::ItemDataRole::UserRole + 2;
 };

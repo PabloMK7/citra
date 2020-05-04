@@ -1236,3 +1236,8 @@ QToolButton:disabled,
 QPlainTextEdit:disabled {
     background-color: #2b2e31;
 }
+
+/* touchscreen mapping widget */
+TouchScreenPreview {
+    qproperty-dotHighlightColor: #3daee9;
+}
