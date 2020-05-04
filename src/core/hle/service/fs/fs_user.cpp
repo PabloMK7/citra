@@ -220,15 +220,15 @@ void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x808, 8, 2);
 
     rp.Skip(1, false); // TransactionId
-    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 filename_size = rp.Pop<u32>();
-    u32 attributes = rp.Pop<u32>();
-    u64 file_size = rp.Pop<u64>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto filename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto filename_size = rp.Pop<u32>();
+    const auto attributes = rp.Pop<u32>();
+    const auto file_size = rp.Pop<u64>();
     std::vector<u8> filename = rp.PopStaticBuffer();
     ASSERT(filename.size() == filename_size);
 
-    FileSys::Path file_path(filename_type, filename);
+    const FileSys::Path file_path(filename_type, std::move(filename));
 
     LOG_DEBUG(Service_FS, "type={} attributes={} size={:x} data={}",
               static_cast<u32>(filename_type), attributes, file_size, file_path.DebugStr());
@@ -240,13 +240,13 @@ void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
 void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x809, 6, 2);
     rp.Skip(1, false); // TransactionId
-    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 dirname_size = rp.Pop<u32>();
-    u32 attributes = rp.Pop<u32>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto dirname_size = rp.Pop<u32>();
+    [[maybe_unused]] const auto attributes = rp.Pop<u32>();
     std::vector<u8> dirname = rp.PopStaticBuffer();
     ASSERT(dirname.size() == dirname_size);
-    FileSys::Path dir_path(dirname_type, dirname);
+    const FileSys::Path dir_path(dirname_type, std::move(dirname));
 
     LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr());
@@ -366,18 +366,18 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED)");
 
     IPC::RequestParser rp(ctx, 0x84C, 9, 2);
-    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
-    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 archivename_size = rp.Pop<u32>();
-    u32 block_size = rp.Pop<u32>();
-    u32 number_directories = rp.Pop<u32>();
-    u32 number_files = rp.Pop<u32>();
-    u32 directory_buckets = rp.Pop<u32>();
-    u32 file_buckets = rp.Pop<u32>();
-    bool duplicate_data = rp.Pop<bool>();
+    const auto archive_id = rp.PopEnum<ArchiveIdCode>();
+    const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto archivename_size = rp.Pop<u32>();
+    const auto block_size = rp.Pop<u32>();
+    const auto number_directories = rp.Pop<u32>();
+    const auto number_files = rp.Pop<u32>();
+    [[maybe_unused]] const auto directory_buckets = rp.Pop<u32>();
+    [[maybe_unused]] const auto file_buckets = rp.Pop<u32>();
+    const bool duplicate_data = rp.Pop<bool>();
     std::vector<u8> archivename = rp.PopStaticBuffer();
     ASSERT(archivename.size() == archivename_size);
-    FileSys::Path archive_path(archivename_type, archivename);
+    const FileSys::Path archive_path(archivename_type, std::move(archivename));
 
     LOG_DEBUG(Service_FS, "archive_path={}", archive_path.DebugStr());
 
@@ -409,12 +409,12 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x80F, 6, 0);
-    u32 block_size = rp.Pop<u32>();
-    u32 number_directories = rp.Pop<u32>();
-    u32 number_files = rp.Pop<u32>();
-    u32 directory_buckets = rp.Pop<u32>();
-    u32 file_buckets = rp.Pop<u32>();
-    bool duplicate_data = rp.Pop<bool>();
+    const auto block_size = rp.Pop<u32>();
+    const auto number_directories = rp.Pop<u32>();
+    const auto number_files = rp.Pop<u32>();
+    [[maybe_unused]] const auto directory_buckets = rp.Pop<u32>();
+    [[maybe_unused]] const auto file_buckets = rp.Pop<u32>();
+    const auto duplicate_data = rp.Pop<bool>();
 
     FileSys::ArchiveFormatInfo format_info;
     format_info.duplicate_data = duplicate_data;

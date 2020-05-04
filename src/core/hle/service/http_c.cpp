@@ -421,7 +421,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
 void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x11, 3, 4);
     const u32 context_handle = rp.Pop<u32>();
-    const u32 name_size = rp.Pop<u32>();
+    [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
     const u32 value_size = rp.Pop<u32>();
     const std::vector<u8> name_buffer = rp.PopStaticBuffer();
     Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
@@ -497,7 +497,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
 void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x12, 3, 4);
     const u32 context_handle = rp.Pop<u32>();
-    const u32 name_size = rp.Pop<u32>();
+    [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
     const u32 value_size = rp.Pop<u32>();
     const std::vector<u8> name_buffer = rp.PopStaticBuffer();
     Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();

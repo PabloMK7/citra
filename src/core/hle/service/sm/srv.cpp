@@ -50,17 +50,17 @@ constexpr int MAX_PENDING_NOTIFICATIONS = 16;
 void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 0, 2);
 
-    u32 pid_descriptor = rp.Pop<u32>();
+    const auto pid_descriptor = rp.Pop<u32>();
     if (pid_descriptor != IPC::CallingPidDesc()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(IPC::ERR_INVALID_BUFFER_DESCRIPTOR);
         return;
     }
-    u32 caller_pid = rp.Pop<u32>();
+    const auto caller_pid = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called");
+    LOG_WARNING(Service_SRV, "(STUBBED) called. Caller PID={}", caller_pid);
 }
 
 /**

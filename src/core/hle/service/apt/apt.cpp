@@ -449,11 +449,11 @@ void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext&
 
 void Module::APTInterface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x32, 2, 4); // 0x00320084
-    u32 param_size = rp.Pop<u32>();
-    u32 hmac_size = rp.Pop<u32>();
+    const auto param_size = rp.Pop<u32>();
+    const auto hmac_size = rp.Pop<u32>();
 
-    auto param = rp.PopStaticBuffer();
-    auto hmac = rp.PopStaticBuffer();
+    [[maybe_unused]] const auto param = rp.PopStaticBuffer();
+    [[maybe_unused]] const auto hmac = rp.PopStaticBuffer();
 
     LOG_WARNING(Service_APT, "(STUBBED) called param_size={:08X}, hmac_size={:08X}", param_size,
                 hmac_size);
@@ -502,11 +502,11 @@ void Module::APTInterface::PrepareToStartApplication(Kernel::HLERequestContext& 
 
 void Module::APTInterface::StartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1B, 3, 4); // 0x001B00C4
-    u32 buffer1_size = rp.Pop<u32>();
-    u32 buffer2_size = rp.Pop<u32>();
-    u32 flag = rp.Pop<u32>();
-    std::vector<u8> buffer1 = rp.PopStaticBuffer();
-    std::vector<u8> buffer2 = rp.PopStaticBuffer();
+    const auto buffer1_size = rp.Pop<u32>();
+    const auto buffer2_size = rp.Pop<u32>();
+    const auto flag = rp.Pop<u32>();
+    [[maybe_unused]] const std::vector<u8> buffer1 = rp.PopStaticBuffer();
+    [[maybe_unused]] const std::vector<u8> buffer2 = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
@@ -520,10 +520,10 @@ void Module::APTInterface::AppletUtility(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x4B, 3, 2); // 0x004B00C2
 
     // These are from 3dbrew - I'm not really sure what they're used for.
-    u32 utility_command = rp.Pop<u32>();
-    u32 input_size = rp.Pop<u32>();
-    u32 output_size = rp.Pop<u32>();
-    std::vector<u8> input = rp.PopStaticBuffer();
+    const auto utility_command = rp.Pop<u32>();
+    const auto input_size = rp.Pop<u32>();
+    const auto output_size = rp.Pop<u32>();
+    [[maybe_unused]] const std::vector<u8> input = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
@@ -611,21 +611,21 @@ void Module::APTInterface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1E, 2, 4); // 0x1E0084
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    std::size_t buffer_size = rp.Pop<u32>();
+    [[maybe_unused]] const std::size_t buffer_size = rp.Pop<u32>();
     std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
-    std::vector<u8> buffer = rp.PopStaticBuffer();
+    const std::vector<u8> buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, object, buffer));
+    rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, std::move(object), buffer));
 }
 
 void Module::APTInterface::CloseApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x27, 1, 4);
-    u32 parameters_size = rp.Pop<u32>();
-    std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
-    std::vector<u8> buffer = rp.PopStaticBuffer();
+    [[maybe_unused]] const u32 parameters_size = rp.Pop<u32>();
+    [[maybe_unused]] const std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
+    [[maybe_unused]] const std::vector<u8> buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT, "called");
 

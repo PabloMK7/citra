@@ -371,7 +371,7 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
                                      buffer);
         }
 
-        const u32 bytes_written = static_cast<u32>(
+        [[maybe_unused]] const u32 bytes_written = static_cast<u32>(
             session_data->file->Write(0, buffer.size(), true, buffer.data()).Unwrap());
         session_data->file->Close();
 
@@ -433,7 +433,7 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
                   msg_header.sender_id, msg_header.sender_id2, msg_header.send_count,
                   msg_header.forward_count, msg_header.user_data);
 
-        const u32 bytes_written =
+        [[maybe_unused]] const u32 bytes_written =
             static_cast<u32>(message->Write(0, buffer_size, true, buffer.data()).Unwrap());
         message->Close();
 
@@ -520,7 +520,7 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         hmac.CalculateDigest(hmac_digest.data(), message_body.data(), msg_header.body_size);
         std::memcpy(buffer.data() + hmac_offset, hmac_digest.data(), hmac_size);
 
-        const u32 bytes_written =
+        [[maybe_unused]] const u32 bytes_written =
             static_cast<u32>(message->Write(0, buffer_size, true, buffer.data()).Unwrap());
         message->Close();
 
@@ -763,7 +763,7 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
                 cecd->CheckAndUpdateFile(path_type, ncch_program_id, buffer);
             }
 
-            const u32 bytes_written =
+            [[maybe_unused]] const u32 bytes_written =
                 static_cast<u32>(file->Write(0, buffer.size(), true, buffer.data()).Unwrap());
             file->Close();
 

@@ -58,7 +58,7 @@ void Module::Interface::GetStorageInfo(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::RegisterPrivateRootCa(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x05, 1, 2);
-    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
@@ -96,7 +96,7 @@ void Module::Interface::GetNewArrivalFlag(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::RegisterNewArrivalEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x08, 0, 2);
-    const auto event = rp.PopObject<Kernel::Event>();
+    [[maybe_unused]] const auto event = rp.PopObject<Kernel::Event>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -282,7 +282,7 @@ void Module::Interface::SendProperty(Kernel::HLERequestContext& ctx) {
 void Module::Interface::SendPropertyHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x15, 1, 2);
     const u16 property_id = rp.Pop<u16>();
-    const std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
+    [[maybe_unused]] const std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);

@@ -42,8 +42,8 @@ constexpr std::array<u8, 10> KeyTypes{{
 
 void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x4, 8, 4);
-    u32 src_size = rp.Pop<u32>();
-    u32 dest_size = rp.Pop<u32>();
+    auto src_size = rp.Pop<u32>();
+    [[maybe_unused]] const auto dest_size = rp.Pop<u32>();
 
     using CryptoPP::AES;
     std::array<u8, AES::BLOCKSIZE> iv;

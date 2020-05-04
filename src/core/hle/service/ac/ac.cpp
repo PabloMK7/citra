@@ -103,7 +103,7 @@ void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetInfraPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x27, 0, 2);
-    const std::vector<u8>& ac_config = rp.PopStaticBuffer();
+    [[maybe_unused]] const std::vector<u8>& ac_config = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);

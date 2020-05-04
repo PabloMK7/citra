@@ -1219,8 +1219,8 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
 void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1E, 2, 4);
 
-    u8 connection_type = rp.Pop<u8>();
-    u32 passphrase_size = rp.Pop<u32>();
+    const auto connection_type = rp.Pop<u8>();
+    [[maybe_unused]] const auto passphrase_size = rp.Pop<u32>();
 
     const std::vector<u8> network_info_buffer = rp.PopStaticBuffer();
     ASSERT(network_info_buffer.size() == sizeof(NetworkInfo));
@@ -1240,8 +1240,8 @@ void NWM_UDS::ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx) {
     // info
     const auto network_info_buffer = rp.PopRaw<std::array<u8, 0x3C>>();
 
-    u8 connection_type = rp.Pop<u8>();
-    u32 passphrase_size = rp.Pop<u32>();
+    const auto connection_type = rp.Pop<u8>();
+    [[maybe_unused]] const auto passphrase_size = rp.Pop<u32>();
 
     std::vector<u8> passphrase = rp.PopStaticBuffer();
 

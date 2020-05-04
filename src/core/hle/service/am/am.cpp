@@ -1093,7 +1093,7 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
 
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0405, 0, 2); // 0x04050002
-    auto cia = rp.PopObject<Kernel::ClientSession>();
+    [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
 
     am->ScanForAllTitles();
 
@@ -1104,7 +1104,7 @@ void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0406, 0, 2); // 0x04060002
-    auto cia = rp.PopObject<Kernel::ClientSession>();
+    [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
 
     // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
     // files to keep track of installed titles.
@@ -1117,10 +1117,10 @@ void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext&
 
 void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0407, 3, 2); // 0x040700C2
-    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
-    u32 title_count = rp.Pop<u32>();
-    u8 database = rp.Pop<u8>();
-    auto buffer = rp.PopMappedBuffer();
+    [[maybe_unused]] const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
+    [[maybe_unused]] const u32 title_count = rp.Pop<u32>();
+    [[maybe_unused]] const u8 database = rp.Pop<u8>();
+    const auto buffer = rp.PopMappedBuffer();
 
     // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
     // files to keep track of installed titles.
@@ -1204,7 +1204,7 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
 
 void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0408, 1, 2); // 0x04080042
-    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+    [[maybe_unused]] const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
     auto file_res = GetFileFromSession(cia);
@@ -1360,7 +1360,7 @@ void Module::Interface::GetCoreVersionFromCia(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x040D, 1, 2); // 0x040D0042
-    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+    [[maybe_unused]] const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
     auto file_res = GetFileFromSession(cia);
