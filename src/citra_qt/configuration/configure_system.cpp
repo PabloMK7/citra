@@ -439,9 +439,7 @@ void ConfigureSystem::RefreshConsoleID() {
         return;
     }
 
-    u32 random_number;
-    u64 console_id;
-    cfg->GenerateConsoleUniqueId(random_number, console_id);
+    const auto [random_number, console_id] = cfg->GenerateConsoleUniqueId();
     cfg->SetConsoleUniqueId(random_number, console_id);
     cfg->UpdateConfigNANDSavegame();
     ui->label_console_id->setText(

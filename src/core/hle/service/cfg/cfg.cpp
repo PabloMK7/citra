@@ -465,9 +465,7 @@ ResultCode Module::FormatConfig() {
     if (!res.IsSuccess())
         return res;
 
-    u32 random_number;
-    u64 console_id;
-    GenerateConsoleUniqueId(random_number, console_id);
+    const auto [random_number, console_id] = GenerateConsoleUniqueId();
 
     u64_le console_id_le = console_id;
     res = CreateConfigInfoBlk(ConsoleUniqueID1BlockID, sizeof(console_id_le), 0xE, &console_id_le);
@@ -727,13 +725,18 @@ u8 Module::GetCountryCode() {
     return block.country_code;
 }
 
-void Module::GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
+std::pair<u32, u64> Module::GenerateConsoleUniqueId() const {
     CryptoPP::AutoSeededRandomPool rng;
-    random_number = rng.GenerateWord32(0, 0xFFFF);
+    const u32 random_number = rng.GenerateWord32(0, 0xFFFF);
+
     u64_le local_friend_code_seed;
     rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(&local_friend_code_seed),
                       sizeof(local_friend_code_seed));
-    console_id = (local_friend_code_seed & 0x3FFFFFFFF) | (static_cast<u64>(random_number) << 48);
+
+    const u64 console_id =
+        (local_friend_code_seed & 0x3FFFFFFFF) | (static_cast<u64>(random_number) << 48);
+
+    return std::make_pair(random_number, console_id);
 }
 
 ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
