@@ -299,7 +299,7 @@ void GRenderWindow::mousePressEvent(QMouseEvent* event) {
     } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
     }
-    QWidget::mouseMoveEvent(event);
+    QWidget::mousePressEvent(event);
 }
 
 void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {

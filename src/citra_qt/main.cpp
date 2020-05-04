@@ -1013,7 +1013,6 @@ void GMainWindow::BootGame(const QString& filename) {
         mouse_hide_timer.start();
         setMouseTracking(true);
         ui.centralwidget->setMouseTracking(true);
-        ui.menubar->setMouseTracking(true);
     }
 
     // show and hide the render_window to create the context
@@ -1116,7 +1115,6 @@ void GMainWindow::ShutdownGame() {
 
     setMouseTracking(false);
     ui.centralwidget->setMouseTracking(false);
-    ui.menubar->setMouseTracking(false);
 
     // Disable status bar updates
     status_bar_update_timer.stop();
@@ -1713,12 +1711,10 @@ void GMainWindow::OnConfigure() {
         if (UISettings::values.hide_mouse && emulation_running) {
             setMouseTracking(true);
             ui.centralwidget->setMouseTracking(true);
-            ui.menubar->setMouseTracking(true);
             mouse_hide_timer.start();
         } else {
             setMouseTracking(false);
             ui.centralwidget->setMouseTracking(false);
-            ui.menubar->setMouseTracking(false);
         }
     } else {
         Settings::values.input_profiles = old_input_profiles;
