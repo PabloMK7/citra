@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <tuple>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/unique_ptr.hpp>
@@ -126,7 +127,7 @@ static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
 static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20,
               "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
 
-static const std::vector<u8> cfg_system_savedata_id = {
+constexpr std::array<u8, 8> cfg_system_savedata_id{
     0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00,
 };
 
