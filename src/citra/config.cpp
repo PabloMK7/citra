@@ -115,7 +115,8 @@ void Config::ReadValues() {
     // Separable shader is broken on macos with Intel GPU thanks to poor drivers.
     // We still want to provide this option for test/development purposes, but disable it by
     // default.
-    Settings::values.separable_shader = sdl2_config->GetBoolean("Renderer", "separable_shader", false);
+    Settings::values.separable_shader =
+        sdl2_config->GetBoolean("Renderer", "separable_shader", false);
 #endif
     Settings::values.shaders_accurate_mul =
         sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);

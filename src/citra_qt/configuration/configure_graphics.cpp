@@ -37,7 +37,8 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         if (state == Qt::Checked) {
             QMessageBox::warning(
                 this, tr("Hardware Shader Warning"),
-                tr("Separable Shader support is broken on macOS with Intel GPUs, and will cause graphical issues "
+                tr("Separable Shader support is broken on macOS with Intel GPUs, and will cause "
+                   "graphical issues "
                    "like showing a black screen.<br><br>The option is only there for "
                    "test/development purposes. If you experience graphical issues with Hardware "
                    "Shader, please turn it off."));
