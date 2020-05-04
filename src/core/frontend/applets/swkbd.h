@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -135,7 +134,7 @@ protected:
     KeyboardConfig config;
     KeyboardData data;
 
-    std::atomic_bool data_ready = false;
+    bool data_ready = false;
 };
 
 class DefaultKeyboard final : public SoftwareKeyboard {
