@@ -91,7 +91,7 @@ ArchiveManager::OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys:
     if (backend.Failed())
         return std::make_tuple(backend.Code(), open_timeout_ns);
 
-    auto file = std::shared_ptr<File>(new File(system.Kernel(), std::move(backend).Unwrap(), path));
+    auto file = std::make_shared<File>(system.Kernel(), std::move(backend).Unwrap(), path);
     return std::make_tuple(MakeResult<std::shared_ptr<File>>(std::move(file)), open_timeout_ns);
 }
 
@@ -184,7 +184,7 @@ ResultVal<std::shared_ptr<Directory>> ArchiveManager::OpenDirectoryFromArchive(
     if (backend.Failed())
         return backend.Code();
 
-    auto directory = std::shared_ptr<Directory>(new Directory(std::move(backend).Unwrap(), path));
+    auto directory = std::make_shared<Directory>(std::move(backend).Unwrap(), path);
     return MakeResult<std::shared_ptr<Directory>>(std::move(directory));
 }
 
