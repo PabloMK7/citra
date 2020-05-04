@@ -102,7 +102,7 @@ enum class Class : ClassType {
     Render_Software,   ///< Software renderer backend
     Render_OpenGL,     ///< OpenGL backend
     Audio,             ///< Audio emulation
-    Audio_DSP,         ///< The HLE implementation of the DSP
+    Audio_DSP,         ///< The HLE and LLE implementations of the DSP
     Audio_Sink,        ///< Emulator audio output backend
     Loader,            ///< ROM loader
     Input,             ///< Input emulation
