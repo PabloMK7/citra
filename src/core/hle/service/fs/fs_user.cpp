@@ -53,14 +53,14 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0802, 7, 2);
     rp.Skip(1, false); // Transaction.
 
-    ArchiveHandle archive_handle = rp.Pop<u64>();
-    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 filename_size = rp.Pop<u32>();
-    FileSys::Mode mode{rp.Pop<u32>()};
-    u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto filename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto filename_size = rp.Pop<u32>();
+    const FileSys::Mode mode{rp.Pop<u32>()};
+    const auto attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
     std::vector<u8> filename = rp.PopStaticBuffer();
     ASSERT(filename.size() == filename_size);
-    FileSys::Path file_path(filename_type, filename);
+    const FileSys::Path file_path(filename_type, std::move(filename));
 
     LOG_DEBUG(Service_FS, "path={}, mode={} attrs={}", file_path.DebugStr(), mode.hex, attributes);
 
@@ -83,19 +83,19 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x803, 8, 4);
     rp.Skip(1, false); // Transaction
 
-    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
-    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 archivename_size = rp.Pop<u32>();
-    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 filename_size = rp.Pop<u32>();
-    FileSys::Mode mode{rp.Pop<u32>()};
-    u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
+    const auto archive_id = rp.PopEnum<ArchiveIdCode>();
+    const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto archivename_size = rp.Pop<u32>();
+    const auto filename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto filename_size = rp.Pop<u32>();
+    const FileSys::Mode mode{rp.Pop<u32>()};
+    const auto attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
     std::vector<u8> archivename = rp.PopStaticBuffer();
     std::vector<u8> filename = rp.PopStaticBuffer();
     ASSERT(archivename.size() == archivename_size);
     ASSERT(filename.size() == filename_size);
-    FileSys::Path archive_path(archivename_type, archivename);
-    FileSys::Path file_path(filename_type, filename);
+    const FileSys::Path archive_path(archivename_type, std::move(archivename));
+    const FileSys::Path file_path(filename_type, std::move(filename));
 
     LOG_DEBUG(Service_FS, "archive_id=0x{:08X} archive_path={} file_path={}, mode={} attributes={}",
               static_cast<u32>(archive_id), archive_path.DebugStr(), file_path.DebugStr(), mode.hex,
@@ -135,13 +135,13 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
 void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x804, 5, 2);
     rp.Skip(1, false); // TransactionId
-    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 filename_size = rp.Pop<u32>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto filename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto filename_size = rp.Pop<u32>();
     std::vector<u8> filename = rp.PopStaticBuffer();
     ASSERT(filename.size() == filename_size);
 
-    FileSys::Path file_path(filename_type, filename);
+    const FileSys::Path file_path(filename_type, std::move(filename));
 
     LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(filename_type), filename_size,
               file_path.DebugStr());
@@ -154,19 +154,19 @@ void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x805, 9, 4);
     rp.Skip(1, false); // TransactionId
 
-    ArchiveHandle src_archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto src_filename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 src_filename_size = rp.Pop<u32>();
-    ArchiveHandle dest_archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto dest_filename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 dest_filename_size = rp.Pop<u32>();
+    const auto src_archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto src_filename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto src_filename_size = rp.Pop<u32>();
+    const auto dest_archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto dest_filename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto dest_filename_size = rp.Pop<u32>();
     std::vector<u8> src_filename = rp.PopStaticBuffer();
     std::vector<u8> dest_filename = rp.PopStaticBuffer();
     ASSERT(src_filename.size() == src_filename_size);
     ASSERT(dest_filename.size() == dest_filename_size);
 
-    FileSys::Path src_file_path(src_filename_type, src_filename);
-    FileSys::Path dest_file_path(dest_filename_type, dest_filename);
+    const FileSys::Path src_file_path(src_filename_type, std::move(src_filename));
+    const FileSys::Path dest_file_path(dest_filename_type, std::move(dest_filename));
 
     LOG_DEBUG(Service_FS,
               "src_type={} src_size={} src_data={} dest_type={} dest_size={} dest_data={}",
@@ -182,13 +182,13 @@ void FS_USER::DeleteDirectory(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x806, 5, 2);
 
     rp.Skip(1, false); // TransactionId
-    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 dirname_size = rp.Pop<u32>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto dirname_size = rp.Pop<u32>();
     std::vector<u8> dirname = rp.PopStaticBuffer();
     ASSERT(dirname.size() == dirname_size);
 
-    FileSys::Path dir_path(dirname_type, dirname);
+    const FileSys::Path dir_path(dirname_type, std::move(dirname));
 
     LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr());
@@ -201,13 +201,13 @@ void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x807, 5, 2);
 
     rp.Skip(1, false); // TransactionId
-    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 dirname_size = rp.Pop<u32>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto dirname_size = rp.Pop<u32>();
     std::vector<u8> dirname = rp.PopStaticBuffer();
     ASSERT(dirname.size() == dirname_size);
 
-    FileSys::Path dir_path(dirname_type, dirname);
+    const FileSys::Path dir_path(dirname_type, std::move(dirname));
 
     LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr());
@@ -258,19 +258,19 @@ void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
 void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x80A, 9, 4);
     rp.Skip(1, false); // TransactionId
-    ArchiveHandle src_archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto src_dirname_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 src_dirname_size = rp.Pop<u32>();
-    ArchiveHandle dest_archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto dest_dirname_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 dest_dirname_size = rp.Pop<u32>();
+    const auto src_archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto src_dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto src_dirname_size = rp.Pop<u32>();
+    const auto dest_archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto dest_dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto dest_dirname_size = rp.Pop<u32>();
     std::vector<u8> src_dirname = rp.PopStaticBuffer();
     std::vector<u8> dest_dirname = rp.PopStaticBuffer();
     ASSERT(src_dirname.size() == src_dirname_size);
     ASSERT(dest_dirname.size() == dest_dirname_size);
 
-    FileSys::Path src_dir_path(src_dirname_type, src_dirname);
-    FileSys::Path dest_dir_path(dest_dirname_type, dest_dirname);
+    const FileSys::Path src_dir_path(src_dirname_type, std::move(src_dirname));
+    const FileSys::Path dest_dir_path(dest_dirname_type, std::move(dest_dirname));
 
     LOG_DEBUG(Service_FS,
               "src_type={} src_size={} src_data={} dest_type={} dest_size={} dest_data={}",
@@ -284,13 +284,13 @@ void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x80B, 4, 2);
-    auto archive_handle = rp.PopRaw<ArchiveHandle>();
-    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 dirname_size = rp.Pop<u32>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto dirname_size = rp.Pop<u32>();
     std::vector<u8> dirname = rp.PopStaticBuffer();
     ASSERT(dirname.size() == dirname_size);
 
-    FileSys::Path dir_path(dirname_type, dirname);
+    const FileSys::Path dir_path(dirname_type, std::move(dirname));
 
     LOG_DEBUG(Service_FS, "type={} size={} data={}", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr());
@@ -313,19 +313,19 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x80C, 3, 2);
-    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
-    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 archivename_size = rp.Pop<u32>();
+    const auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
+    const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto archivename_size = rp.Pop<u32>();
     std::vector<u8> archivename = rp.PopStaticBuffer();
     ASSERT(archivename.size() == archivename_size);
-    FileSys::Path archive_path(archivename_type, archivename);
+    const FileSys::Path archive_path(archivename_type, std::move(archivename));
 
     LOG_DEBUG(Service_FS, "archive_id=0x{:08X} archive_path={}", static_cast<u32>(archive_id),
               archive_path.DebugStr());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     ClientSlot* slot = GetSessionData(ctx.Session());
-    ResultVal<ArchiveHandle> handle =
+    const ResultVal<ArchiveHandle> handle =
         archives.OpenArchive(archive_id, archive_path, slot->program_id);
     rb.Push(handle.Code());
     if (handle.Succeeded()) {
@@ -340,7 +340,7 @@ void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x80E, 2, 0);
-    auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(archives.CloseArchive(archive_handle));
@@ -432,7 +432,7 @@ void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x812, 2, 0);
-    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
+    const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     ResultVal<u64> bytes_res = archives.GetFreeBytesInArchive(archive_handle);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
@@ -649,13 +649,13 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x845, 3, 2);
-    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
-    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
-    u32 archivename_size = rp.Pop<u32>();
+    const auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
+    const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    const auto archivename_size = rp.Pop<u32>();
     std::vector<u8> archivename = rp.PopStaticBuffer();
     ASSERT(archivename.size() == archivename_size);
 
-    FileSys::Path archive_path(archivename_type, archivename);
+    const FileSys::Path archive_path(archivename_type, std::move(archivename));
 
     LOG_DEBUG(Service_FS, "archive_path={}", archive_path.DebugStr());
 

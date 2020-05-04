@@ -56,8 +56,8 @@ Path MakeNCCHArchivePath(u64 tid, Service::FS::MediaType media_type) {
     path.media_type = static_cast<u32_le>(media_type);
     path.unknown = 0;
     std::vector<u8> archive(sizeof(path));
-    std::memcpy(&archive[0], &path, sizeof(path));
-    return FileSys::Path(archive);
+    std::memcpy(archive.data(), &path, sizeof(path));
+    return FileSys::Path(std::move(archive));
 }
 
 Path MakeNCCHFilePath(NCCHFileOpenType open_type, u32 content_index, NCCHFilePathType filepath_type,
@@ -68,8 +68,8 @@ Path MakeNCCHFilePath(NCCHFileOpenType open_type, u32 content_index, NCCHFilePat
     path.filepath_type = filepath_type;
     path.exefs_filepath = exefs_filepath;
     std::vector<u8> file(sizeof(path));
-    std::memcpy(&file[0], &path, sizeof(path));
-    return FileSys::Path(file);
+    std::memcpy(file.data(), &path, sizeof(path));
+    return FileSys::Path(std::move(file));
 }
 
 ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,

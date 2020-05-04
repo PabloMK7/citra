@@ -45,7 +45,7 @@ public:
     template <std::size_t size>
     Path(const std::array<u8, size>& binary_data)
         : type(LowPathType::Binary), binary(binary_data.begin(), binary_data.end()) {}
-    Path(LowPathType type, const std::vector<u8>& data);
+    Path(LowPathType type, std::vector<u8> data);
 
     LowPathType GetType() const {
         return type;

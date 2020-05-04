@@ -149,8 +149,8 @@ bool Module::LoadSharedFont() {
     const u64_le shared_font_archive_id_low = 0x0004009b00014002 | ((font_region_code - 1) << 8);
 
     FileSys::NCCHArchive archive(shared_font_archive_id_low, Service::FS::MediaType::NAND);
-    std::vector<u8> romfs_path(20, 0); // 20-byte all zero path for opening RomFS
-    FileSys::Path file_path(romfs_path);
+    // 20-byte all zero path for opening RomFS
+    const FileSys::Path file_path(std::vector<u8>(20, 0));
     FileSys::Mode open_mode = {};
     open_mode.read_flag.Assign(1);
     auto file_result = archive.OpenFile(file_path, open_mode);

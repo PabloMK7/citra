@@ -49,7 +49,7 @@ Path ConstructSystemSaveDataBinaryPath(u32 high, u32 low) {
     for (unsigned i = 0; i < 4; ++i)
         binary_path.push_back((low >> (8 * i)) & 0xFF);
 
-    return {binary_path};
+    return {std::move(binary_path)};
 }
 
 ArchiveFactory_SystemSaveData::ArchiveFactory_SystemSaveData(const std::string& nand_path)

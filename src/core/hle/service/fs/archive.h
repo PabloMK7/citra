@@ -72,7 +72,7 @@ public:
      * @param program_id the program ID of the client that requests the operation
      * @return Handle to the opened archive
      */
-    ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path,
+    ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, const FileSys::Path& archive_path,
                                          u64 program_id);
 
     /**
@@ -197,7 +197,7 @@ public:
      * @return The format info of the archive, or the corresponding error code if failed.
      */
     ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code,
-                                                               FileSys::Path& archive_path,
+                                                               const FileSys::Path& archive_path,
                                                                u64 program_id);
 
     /**
