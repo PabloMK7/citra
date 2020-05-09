@@ -140,6 +140,10 @@ void ColorConsoleBackend::Write(const Entry& entry) {
     PrintColoredMessage(entry);
 }
 
+void LogcatBackend::Write(const Entry& entry) {
+    PrintMessageToLogcat(entry);
+}
+
 FileBackend::FileBackend(const std::string& filename) : bytes_written(0) {
     if (FileUtil::Exists(filename + ".old.txt")) {
         FileUtil::Delete(filename + ".old.txt");

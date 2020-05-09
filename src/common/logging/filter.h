@@ -9,6 +9,4 @@
 #include <string_view>
 #include "common/logging/log.h"
 
-namespace Log {
-
-} // namespace Log
+namespace Log {} // namespace Log

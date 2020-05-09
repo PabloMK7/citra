@@ -82,6 +82,21 @@ public:
 };
 
 /**
+ * Backend that writes to the Android logcat
+ */
+class LogcatBackend : public Backend {
+public:
+    static const char* Name() {
+        return "logcat";
+    }
+
+    const char* GetName() const override {
+        return Name();
+    }
+    void Write(const Entry& entry) override;
+};
+
+/**
  * Backend that writes to a file passed into the constructor
  */
 class FileBackend : public Backend {
