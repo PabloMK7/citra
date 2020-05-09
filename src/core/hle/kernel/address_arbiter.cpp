@@ -16,8 +16,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
 
-SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
-
 namespace Kernel {
 
 void AddressArbiter::WaitThread(std::shared_ptr<Thread> thread, VAddr wait_address) {
@@ -69,7 +67,8 @@ std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr addres
     return thread;
 }
 
-AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+AddressArbiter::AddressArbiter(KernelSystem& kernel)
+    : Object(kernel), kernel(kernel), timeout_callback(std::make_shared<Callback>(*this)) {}
 AddressArbiter::~AddressArbiter() {}
 
 std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
@@ -79,6 +78,24 @@ std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string n
 
     return address_arbiter;
 }
+
+class AddressArbiter::Callback : public WakeupCallback {
+public:
+    explicit Callback(AddressArbiter& _parent) : parent(_parent) {}
+    AddressArbiter& parent;
+
+    void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                std::shared_ptr<WaitObject> object) override {
+        parent.WakeUp(reason, std::move(thread), std::move(object));
+    }
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<WakeupCallback>(*this);
+    }
+    friend class boost::serialization::access;
+};
 
 void AddressArbiter::WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                             std::shared_ptr<WaitObject> object) {
@@ -90,9 +107,6 @@ void AddressArbiter::WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> t
 
 ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type,
                                             VAddr address, s32 value, u64 nanoseconds) {
-
-    auto timeout_callback = std::dynamic_pointer_cast<WakeupCallback>(shared_from_this());
-
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
@@ -157,3 +171,23 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
 }
 
 } // namespace Kernel
+
+namespace boost::serialization {
+
+template <class Archive>
+void save_construct_data(Archive& ar, const Kernel::AddressArbiter::Callback* t,
+                         const unsigned int) {
+    ar << Kernel::SharedFrom(&t->parent);
+}
+
+template <class Archive>
+void load_construct_data(Archive& ar, Kernel::AddressArbiter::Callback* t, const unsigned int) {
+    std::shared_ptr<Kernel::AddressArbiter> parent;
+    ar >> parent;
+    ::new (t) Kernel::AddressArbiter::Callback(*parent);
+}
+
+} // namespace boost::serialization
+
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter::Callback)
