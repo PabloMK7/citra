@@ -226,7 +226,7 @@ public:
             result = CodeGenerator(config, separable);
             cached_shader.Create(result->code.c_str(), ShaderType);
         }
-        return {cached_shader.GetHandle(), result};
+        return {cached_shader.GetHandle(), std::move(result)};
     }
 
     void Inject(const KeyConfigType& key, OGLProgram&& program) {
@@ -260,7 +260,7 @@ public:
             auto program_opt = CodeGenerator(setup, key, separable);
             if (!program_opt) {
                 shader_map[key] = nullptr;
-                return {0, {}};
+                return {0, std::nullopt};
             }
 
             std::string& program = program_opt->code;
@@ -271,14 +271,14 @@ public:
                 cached_shader.Create(program.c_str(), ShaderType);
             }
             shader_map[key] = &cached_shader;
-            return {cached_shader.GetHandle(), result};
+            return {cached_shader.GetHandle(), std::move(result)};
         }
 
         if (map_it->second == nullptr) {
-            return {0, {}};
+            return {0, std::nullopt};
         }
 
-        return {map_it->second->GetHandle(), {}};
+        return {map_it->second->GetHandle(), std::nullopt};
     }
 
     void Inject(const KeyConfigType& key, std::string decomp, OGLProgram&& program) {
@@ -371,8 +371,9 @@ bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::Regs& regs,
         ProgramCode program_code{setup.program_code.begin(), setup.program_code.end()};
         program_code.insert(program_code.end(), setup.swizzle_data.begin(),
                             setup.swizzle_data.end());
-        u64 unique_identifier = GetUniqueIdentifier(regs, program_code);
-        ShaderDiskCacheRaw raw{unique_identifier, ProgramType::VS, regs, program_code};
+        const u64 unique_identifier = GetUniqueIdentifier(regs, program_code);
+        const ShaderDiskCacheRaw raw{unique_identifier, ProgramType::VS, regs,
+                                     std::move(program_code)};
         disk_cache.SaveRaw(raw);
     }
     return true;
@@ -573,14 +574,14 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 std::scoped_lock lock(mutex);
                 auto [h, r] = impl->programmable_vertex_shaders.Get(conf, setup);
                 handle = h;
-                result = r;
+                result = std::move(r);
                 sanitize_mul = conf.state.sanitize_mul;
             } else if (raw.GetProgramType() == ProgramType::FS) {
                 PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig());
                 std::scoped_lock lock(mutex);
                 auto [h, r] = impl->fragment_shaders.Get(conf);
                 handle = h;
-                result = r;
+                result = std::move(r);
             } else {
                 // Unsupported shader type got stored somehow so nuke the cache
                 LOG_ERROR(Frontend, "failed to load raw programtype {}",
