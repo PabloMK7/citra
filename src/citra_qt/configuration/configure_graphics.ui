@@ -77,6 +77,13 @@
              <number>0</number>
             </property>
             <item>
+             <widget class="QCheckBox" name="toggle_separable_shader">
+              <property name="text">
+               <string>Separable Shader (Intel GPUs only)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="toggle_accurate_mul">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some games requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most games.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

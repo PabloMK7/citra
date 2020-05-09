@@ -110,13 +110,13 @@ void Config::ReadValues() {
     // Renderer
     Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", false);
     Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", true);
+    Settings::values.use_hw_shader = sdl2_config->GetBoolean("Renderer", "use_hw_shader", true);
 #ifdef __APPLE__
-    // Hardware shader is broken on macos thanks to poor drivers.
+    // Separable shader is broken on macos with Intel GPU thanks to poor drivers.
     // We still want to provide this option for test/development purposes, but disable it by
     // default.
-    Settings::values.use_hw_shader = sdl2_config->GetBoolean("Renderer", "use_hw_shader", false);
-#else
-    Settings::values.use_hw_shader = sdl2_config->GetBoolean("Renderer", "use_hw_shader", true);
+    Settings::values.separable_shader =
+        sdl2_config->GetBoolean("Renderer", "separable_shader", false);
 #endif
     Settings::values.shaders_accurate_mul =
         sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);

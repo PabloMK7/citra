@@ -23,6 +23,7 @@ std::unique_ptr<RendererBase> g_renderer; ///< Renderer plugin
 std::atomic<bool> g_hw_renderer_enabled;
 std::atomic<bool> g_shader_jit_enabled;
 std::atomic<bool> g_hw_shader_enabled;
+std::atomic<bool> g_separable_shader_enabled;
 std::atomic<bool> g_hw_shader_accurate_mul;
 std::atomic<bool> g_use_disk_shader_cache;
 std::atomic<bool> g_renderer_bg_color_update_requested;
