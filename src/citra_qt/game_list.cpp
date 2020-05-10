@@ -545,7 +545,8 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
 };
 
 void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
-    UISettings::GameDir& game_dir = UISettings::values.game_dirs[selected.data(GameListDir::GameDirRole).toInt()];
+    UISettings::GameDir& game_dir =
+        UISettings::values.game_dirs[selected.data(GameListDir::GameDirRole).toInt()];
 
     QAction* deep_scan = context_menu.addAction(tr("Scan Subfolders"));
     QAction* delete_dir = context_menu.addAction(tr("Remove Game Directory"));
@@ -564,7 +565,7 @@ void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
 }
 
 void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
-    int game_dir_index = selected.data(GameListDir::GameDirRole).toInt();
+    const int game_dir_index = selected.data(GameListDir::GameDirRole).toInt();
 
     QAction* move_up = context_menu.addAction(tr(u8"\U000025b2 Move Up"));
     QAction* move_down = context_menu.addAction(tr(u8"\U000025bc Move Down "));
@@ -576,12 +577,14 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
     move_down->setEnabled(row < item_model->rowCount() - 2);
 
     connect(move_up, &QAction::triggered, [this, selected, row, game_dir_index] {
-        // find the indices of the items in settings and swap them
+        const int other_index = selected.sibling(row - 1, 0).data(GameListDir::GameDirRole).toInt();
+        // swap the items in the settings
         std::swap(UISettings::values.game_dirs[game_dir_index],
-                  UISettings::values.game_dirs[selected.sibling(row - 1, 0)
-                           .data(GameListDir::GameDirRole).toInt()]);
-        GetModel()->setData(selected, QVariant::fromValue(selected.sibling(row-1,0).data(GameListDir::GameDirRole).toInt()), GameListDir::GameDirRole);
-        GetModel()->setData(selected.sibling(row-1,0), QVariant::fromValue(game_dir_index), GameListDir::GameDirRole);
+                  UISettings::values.game_dirs[other_index]);
+        // swap the indexes held by the QVariants
+        GetModel()->setData(selected, QVariant(other_index), GameListDir::GameDirRole);
+        GetModel()->setData(selected.sibling(row - 1, 0), QVariant(game_dir_index),
+                            GameListDir::GameDirRole);
         // move the treeview items
         QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row - 1, item);
@@ -589,12 +592,14 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
     });
 
     connect(move_down, &QAction::triggered, [this, selected, row, game_dir_index] {
-        // find the indices of the items in settings and swap them
+        const int other_index = selected.sibling(row + 1, 0).data(GameListDir::GameDirRole).toInt();
+        // swap the items in the settings
         std::swap(UISettings::values.game_dirs[game_dir_index],
-                  UISettings::values.game_dirs[selected.sibling(row + 1, 0)
-                             .data(GameListDir::GameDirRole).toInt()]);
-        GetModel()->setData(selected, QVariant::fromValue(selected.sibling(row+1,0).data(GameListDir::GameDirRole).toInt()), GameListDir::GameDirRole);
-        GetModel()->setData(selected.sibling(row+1,0), QVariant::fromValue(game_dir_index), GameListDir::GameDirRole);
+                  UISettings::values.game_dirs[other_index]);
+        // swap the indexes held by the QVariants
+        GetModel()->setData(selected, QVariant(other_index), GameListDir::GameDirRole);
+        GetModel()->setData(selected.sibling(row + 1, 0), QVariant(game_dir_index),
+                            GameListDir::GameDirRole);
         // move the treeview items
         const QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row + 1, item);
