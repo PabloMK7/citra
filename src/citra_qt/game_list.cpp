@@ -178,7 +178,7 @@ void GameList::onItemExpanded(const QModelIndex& item) {
     const auto type = item.data(GameListItem::TypeRole).value<GameListItemType>();
     if (type == GameListItemType::CustomDir || type == GameListItemType::InstalledDir ||
         type == GameListItemType::SystemDir)
-        item.data(GameListDir::GameDirRole).value<UISettings::GameDir*>()->expanded =
+        UISettings::values.game_dirs[item.data(GameListDir::GameDirRole).toInt()].expanded =
             tree_view->isExpanded(item);
 }
 
@@ -252,9 +252,9 @@ void GameList::onUpdateThemedIcons() {
             child->setData(QIcon::fromTheme(QStringLiteral("chip")).pixmap(48), Qt::DecorationRole);
             break;
         case GameListItemType::CustomDir: {
-            const UISettings::GameDir* game_dir =
-                child->data(GameListDir::GameDirRole).value<UISettings::GameDir*>();
-            const QString icon_name = QFileInfo::exists(game_dir->path)
+            const UISettings::GameDir& game_dir =
+                UISettings::values.game_dirs[child->data(GameListDir::GameDirRole).toInt()];
+            const QString icon_name = QFileInfo::exists(game_dir.path)
                                           ? QStringLiteral("folder")
                                           : QStringLiteral("bad_folder");
             child->setData(QIcon::fromTheme(icon_name).pixmap(48), Qt::DecorationRole);
@@ -352,7 +352,7 @@ void GameList::AddDirEntry(GameListDir* entry_items) {
     item_model->invisibleRootItem()->appendRow(entry_items);
     tree_view->setExpanded(
         entry_items->index(),
-        entry_items->data(GameListDir::GameDirRole).value<UISettings::GameDir*>()->expanded);
+        UISettings::values.game_dirs[entry_items->data(GameListDir::GameDirRole).toInt()].expanded);
 }
 
 void GameList::AddEntry(const QList<QStandardItem*>& entry_items, GameListDir* parent) {
@@ -545,8 +545,7 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
 };
 
 void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
-    UISettings::GameDir& game_dir =
-        *selected.data(GameListDir::GameDirRole).value<UISettings::GameDir*>();
+    UISettings::GameDir& game_dir = UISettings::values.game_dirs[selected.data(GameListDir::GameDirRole).toInt()];
 
     QAction* deep_scan = context_menu.addAction(tr("Scan Subfolders"));
     QAction* delete_dir = context_menu.addAction(tr("Remove Game Directory"));
@@ -565,8 +564,7 @@ void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
 }
 
 void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
-    UISettings::GameDir& game_dir =
-        *selected.data(GameListDir::GameDirRole).value<UISettings::GameDir*>();
+    int game_dir_index = selected.data(GameListDir::GameDirRole).toInt();
 
     QAction* move_up = context_menu.addAction(tr(u8"\U000025b2 Move Up"));
     QAction* move_down = context_menu.addAction(tr(u8"\U000025bc Move Down "));
@@ -577,34 +575,31 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
     move_up->setEnabled(row > 0);
     move_down->setEnabled(row < item_model->rowCount() - 2);
 
-    connect(move_up, &QAction::triggered, [this, selected, row, &game_dir] {
+    connect(move_up, &QAction::triggered, [this, selected, row, game_dir_index] {
         // find the indices of the items in settings and swap them
-        std::swap(UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(game_dir)],
-                  UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(
-                      *selected.sibling(row - 1, 0)
-                           .data(GameListDir::GameDirRole)
-                           .value<UISettings::GameDir*>())]);
+        std::swap(UISettings::values.game_dirs[game_dir_index],
+                  UISettings::values.game_dirs[selected.sibling(row - 1, 0)
+                           .data(GameListDir::GameDirRole).toInt()]);
         // move the treeview items
         QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row - 1, item);
-        tree_view->setExpanded(selected, game_dir.expanded);
+        tree_view->setExpanded(selected, UISettings::values.game_dirs[game_dir_index].expanded);
     });
 
-    connect(move_down, &QAction::triggered, [this, selected, row, &game_dir] {
+    connect(move_down, &QAction::triggered, [this, selected, row, game_dir_index] {
         // find the indices of the items in settings and swap them
-        std::swap(UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(game_dir)],
-                  UISettings::values.game_dirs[UISettings::values.game_dirs.indexOf(
-                      *selected.sibling(row + 1, 0)
-                           .data(GameListDir::GameDirRole)
-                           .value<UISettings::GameDir*>())]);
+        std::swap(UISettings::values.game_dirs[game_dir_index],
+                  UISettings::values.game_dirs[selected.sibling(row + 1, 0)
+                             .data(GameListDir::GameDirRole).toInt()]);
         // move the treeview items
         const QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row + 1, item);
-        tree_view->setExpanded(selected, game_dir.expanded);
+        tree_view->setExpanded(selected, UISettings::values.game_dirs[game_dir_index].expanded);
     });
 
-    connect(open_directory_location, &QAction::triggered,
-            [this, game_dir] { emit OpenDirectory(game_dir.path); });
+    connect(open_directory_location, &QAction::triggered, [this, game_dir_index] {
+        emit OpenDirectory(UISettings::values.game_dirs[game_dir_index].path);
+    });
 }
 
 void GameList::LoadCompatibilityList() {
