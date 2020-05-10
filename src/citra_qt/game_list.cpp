@@ -580,6 +580,8 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
         std::swap(UISettings::values.game_dirs[game_dir_index],
                   UISettings::values.game_dirs[selected.sibling(row - 1, 0)
                            .data(GameListDir::GameDirRole).toInt()]);
+        GetModel()->setData(selected, QVariant::fromValue(selected.sibling(row-1,0).data(GameListDir::GameDirRole).toInt()), GameListDir::GameDirRole);
+        GetModel()->setData(selected.sibling(row-1,0), QVariant::fromValue(game_dir_index), GameListDir::GameDirRole);
         // move the treeview items
         QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row - 1, item);
@@ -591,6 +593,8 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
         std::swap(UISettings::values.game_dirs[game_dir_index],
                   UISettings::values.game_dirs[selected.sibling(row + 1, 0)
                              .data(GameListDir::GameDirRole).toInt()]);
+        GetModel()->setData(selected, QVariant::fromValue(selected.sibling(row+1,0).data(GameListDir::GameDirRole).toInt()), GameListDir::GameDirRole);
+        GetModel()->setData(selected.sibling(row+1,0), QVariant::fromValue(game_dir_index), GameListDir::GameDirRole);
         // move the treeview items
         const QList<QStandardItem*> item = item_model->takeRow(row);
         item_model->invisibleRootItem()->insertRow(row + 1, item);
