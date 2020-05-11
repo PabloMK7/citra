@@ -273,12 +273,7 @@ public:
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
-        if (!IsOpen()) {
-            m_good = false;
-            return std::numeric_limits<std::size_t>::max();
-        }
-
-        std::size_t items_read = std::fread(data, sizeof(T), length, m_file);
+        std::size_t items_read = ReadImpl(data, length, sizeof(T));
         if (items_read != length)
             m_good = false;
 
@@ -290,12 +285,7 @@ public:
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
-        if (!IsOpen()) {
-            m_good = false;
-            return std::numeric_limits<std::size_t>::max();
-        }
-
-        std::size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
+        std::size_t items_written = WriteImpl(data, length, sizeof(T));
         if (items_written != length)
             m_good = false;
 
@@ -349,6 +339,9 @@ public:
     }
 
 private:
+    std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size);
+    std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size);
+
     bool Open();
 
     std::FILE* m_file = nullptr;
