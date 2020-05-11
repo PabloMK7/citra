@@ -37,7 +37,7 @@ class ConfigureTouchFromButton : public QDialog {
 public:
     explicit ConfigureTouchFromButton(QWidget* parent,
                                       const std::vector<Settings::TouchFromButtonMap>& touch_maps,
-                                      const int default_index = 0);
+                                      int default_index = 0);
     ~ConfigureTouchFromButton() override;
 
     int GetSelectedIndex() const;
@@ -46,8 +46,8 @@ public:
 public slots:
     void ApplyConfiguration();
     void NewBinding(const QPoint& pos);
-    void SetActiveBinding(const int dot_id);
-    void SetCoordinates(const int dot_id, const QPoint& pos);
+    void SetActiveBinding(int dot_id);
+    void SetCoordinates(int dot_id, const QPoint& pos);
 
 protected:
     virtual void showEvent(QShowEvent* ev) override;
@@ -67,8 +67,8 @@ private:
     void SetConfiguration();
     void UpdateUiDisplay();
     void ConnectEvents();
-    void GetButtonInput(const int row_index, const bool is_new);
-    void SetPollingResult(const Common::ParamPackage& params, const bool cancel);
+    void GetButtonInput(int row_index, bool is_new);
+    void SetPollingResult(const Common::ParamPackage& params, bool cancel);
     void SaveCurrentMapping();
 
     std::unique_ptr<Ui::ConfigureTouchFromButton> ui;
@@ -79,7 +79,7 @@ private:
     std::unique_ptr<QTimer> timeout_timer;
     std::unique_ptr<QTimer> poll_timer;
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
-    std::optional<std::function<void(const Common::ParamPackage&, const bool)>> input_setter;
+    std::optional<std::function<void(const Common::ParamPackage&, bool)>> input_setter;
 
-    static constexpr int data_role_dot = Qt::ItemDataRole::UserRole + 2;
+    static constexpr int DataRoleDot = Qt::ItemDataRole::UserRole + 2;
 };

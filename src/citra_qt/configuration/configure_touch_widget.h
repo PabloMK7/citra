@@ -18,19 +18,19 @@ class TouchScreenPreview : public QFrame {
     Q_PROPERTY(QColor dotHighlightColor MEMBER dot_highlight_color)
 
 public:
-    TouchScreenPreview(QWidget* parent);
+    explicit TouchScreenPreview(QWidget* parent);
     ~TouchScreenPreview() override;
 
-    void SetCoordLabel(QLabel* const);
-    int AddDot(const int device_x, const int device_y);
-    void RemoveDot(const int id);
-    void HighlightDot(const int id, const bool active = true) const;
-    void MoveDot(const int id, const int device_x, const int device_y) const;
+    void SetCoordLabel(QLabel*);
+    int AddDot(int device_x, int device_y);
+    void RemoveDot(int id);
+    void HighlightDot(int id, bool active = true) const;
+    void MoveDot(int id, int device_x, int device_y) const;
 
 signals:
     void DotAdded(const QPoint& pos);
-    void DotSelected(const int dot_id);
-    void DotMoved(const int dot_id, const QPoint& pos);
+    void DotSelected(int dot_id);
+    void DotMoved(int dot_id, const QPoint& pos);
 
 protected:
     virtual void resizeEvent(QResizeEvent*) override;
@@ -40,8 +40,8 @@ protected:
     virtual bool eventFilter(QObject*, QEvent*) override;
 
 private:
-    std::optional<QPoint> MapToDeviceCoords(const int screen_x, const int screen_y) const;
-    void PositionDot(QLabel* const dot, const int device_x = -1, const int device_y = -1) const;
+    std::optional<QPoint> MapToDeviceCoords(int screen_x, int screen_y) const;
+    void PositionDot(QLabel* dot, int device_x = -1, int device_y = -1) const;
 
     bool ignore_resize = false;
     QPointer<QLabel> coord_label;
@@ -49,9 +49,9 @@ private:
     std::vector<std::pair<int, QLabel*>> dots;
     int max_dot_id = 0;
     QColor dot_highlight_color;
-    static constexpr char prop_id[] = "dot_id";
-    static constexpr char prop_x[] = "device_x";
-    static constexpr char prop_y[] = "device_y";
+    static constexpr char PropId[] = "dot_id";
+    static constexpr char PropX[] = "device_x";
+    static constexpr char PropY[] = "device_y";
 
     struct {
         bool active = false;

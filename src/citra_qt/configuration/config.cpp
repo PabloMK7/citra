@@ -168,12 +168,12 @@ void Config::ReadControlValues() {
         qt_config->beginReadArray(QStringLiteral("touch_from_button_maps"));
 
     if (num_touch_from_button_maps > 0) {
-        const auto& append_touch_from_button_map = [this] {
+        const auto append_touch_from_button_map = [this] {
             Settings::TouchFromButtonMap map;
             map.name = ReadSetting(QStringLiteral("name"), QStringLiteral("default"))
                            .toString()
                            .toStdString();
-            const std::size_t num_touch_maps = qt_config->beginReadArray(QStringLiteral("entries"));
+            const int num_touch_maps = qt_config->beginReadArray(QStringLiteral("entries"));
             map.buttons.reserve(num_touch_maps);
             for (int i = 0; i < num_touch_maps; i++) {
                 qt_config->setArrayIndex(i);

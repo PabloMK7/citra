@@ -113,7 +113,7 @@ Drag points to change position, or double-click table cells to edit values.</str
      <item>
       <widget class="QPushButton" name="button_delete_bind">
        <property name="text">
-        <string>Delete point</string>
+        <string>Delete Point</string>
        </property>
       </widget>
      </item>
