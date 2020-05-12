@@ -111,11 +111,15 @@ s64 Timing::GetTicks() const {
 }
 
 s64 Timing::GetGlobalTicks() const {
-    return global_timer;
+    const auto& timer =
+        std::max_element(timers.cbegin(), timers.cend(), [](const auto& a, const auto& b) {
+            return a->GetTicks() < b->GetTicks();
+        });
+    return (*timer)->GetTicks();
 }
 
 std::chrono::microseconds Timing::GetGlobalTimeUs() const {
-    return std::chrono::microseconds{GetTicks() * 1000000 / BASE_CLOCK_RATE_ARM11};
+    return std::chrono::microseconds{GetGlobalTicks() * 1000000 / BASE_CLOCK_RATE_ARM11};
 }
 
 std::shared_ptr<Timing::Timer> Timing::GetTimer(std::size_t cpu_id) {
@@ -161,21 +165,22 @@ void Timing::Timer::MoveEvents() {
 }
 
 s64 Timing::Timer::GetMaxSliceLength() const {
-    auto next_event = std::find_if(event_queue.begin(), event_queue.end(),
-                                   [&](const Event& e) { return e.time - executed_ticks > 0; });
+    const auto& next_event = event_queue.begin();
     if (next_event != event_queue.end()) {
+        ASSERT(next_event->time - executed_ticks > 0);
         return next_event->time - executed_ticks;
     }
     return MAX_SLICE_LENGTH;
 }
 
-void Timing::Timer::Advance(s64 max_slice_length) {
+void Timing::Timer::Advance() {
     MoveEvents();
 
     s64 cycles_executed = slice_length - downcount;
     idled_cycles = 0;
     executed_ticks += cycles_executed;
-    slice_length = max_slice_length;
+    slice_length = 0;
+    downcount = 0;
 
     is_timer_sane = true;
 
@@ -191,6 +196,10 @@ void Timing::Timer::Advance(s64 max_slice_length) {
     }
 
     is_timer_sane = false;
+}
+
+void Timing::Timer::SetNextSlice(s64 max_slice_length) {
+    slice_length = max_slice_length;
 
     // Still events left (scheduled in the future)
     if (!event_queue.empty()) {

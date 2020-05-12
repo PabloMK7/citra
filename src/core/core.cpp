@@ -148,7 +148,11 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     for (auto& cpu_core : cpu_cores) {
         if (cpu_core->GetTimer().GetTicks() < global_ticks) {
             s64 delay = global_ticks - cpu_core->GetTimer().GetTicks();
-            cpu_core->GetTimer().Advance(delay);
+            kernel->SetRunningCPU(cpu_core.get());
+            cpu_core->GetTimer().Advance();
+            cpu_core->PrepareReschedule();
+            kernel->GetThreadManager(cpu_core->GetID()).Reschedule();
+            cpu_core->GetTimer().SetNextSlice(delay);
             if (max_delay < delay) {
                 max_delay = delay;
                 current_core_to_execute = cpu_core.get();
@@ -156,10 +160,14 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         }
     }
 
-    if (max_delay > 0) {
+    // jit sometimes overshoot by a few ticks which might lead to a minimal desync in the cores.
+    // This small difference shouldn't make it necessary to sync the cores and would only cost
+    // performance. Thus we don't sync delays below min_delay
+    static constexpr s64 min_delay = 100;
+    if (max_delay > min_delay) {
         LOG_TRACE(Core_ARM11, "Core {} running (delayed) for {} ticks",
-                  current_core_to_execute->GetID(),
-                  current_core_to_execute->GetTimer().GetDowncount());
+                     current_core_to_execute->GetID(),
+                     current_core_to_execute->GetTimer().GetDowncount());
         if (running_core != current_core_to_execute) {
             running_core = current_core_to_execute;
             kernel->SetRunningCPU(running_core);
@@ -181,12 +189,15 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         // TODO: Make special check for idle since we can easily revert the time of idle cores
         s64 max_slice = Timing::MAX_SLICE_LENGTH;
         for (const auto& cpu_core : cpu_cores) {
+            kernel->SetRunningCPU(cpu_core.get());
+            cpu_core->GetTimer().Advance();
+            cpu_core->PrepareReschedule();
+            kernel->GetThreadManager(cpu_core->GetID()).Reschedule();
             max_slice = std::min(max_slice, cpu_core->GetTimer().GetMaxSliceLength());
         }
         for (auto& cpu_core : cpu_cores) {
-            cpu_core->GetTimer().Advance(max_slice);
-        }
-        for (auto& cpu_core : cpu_cores) {
+            cpu_core->GetTimer().SetNextSlice(max_slice);
+            auto start_ticks = cpu_core->GetTimer().GetTicks();
             LOG_TRACE(Core_ARM11, "Core {} running for {} ticks", cpu_core->GetID(),
                       cpu_core->GetTimer().GetDowncount());
             running_core = cpu_core.get();
@@ -204,8 +215,8 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                     cpu_core->Step();
                 }
             }
+            max_slice = cpu_core->GetTimer().GetTicks() - start_ticks;
         }
-        timing->AddToGlobalTicks(max_slice);
     }
 
     if (GDBStub::IsServerEnabled()) {
