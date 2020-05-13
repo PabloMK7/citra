@@ -902,7 +902,14 @@ std::string SanitizePath(std::string_view path_, DirectorySeparator directory_se
     }
 
     std::replace(path.begin(), path.end(), type1, type2);
-    path.erase(std::unique(path.begin(), path.end(),
+
+    auto start = path.begin();
+#ifdef _WIN32
+    // allow network paths which start with a double backslash (e.g. \\server\share)
+    if (start != path.end())
+        ++start;
+#endif
+    path.erase(std::unique(start, path.end(),
                            [type2](char c1, char c2) { return c1 == type2 && c2 == type2; }),
                path.end());
     return std::string(RemoveTrailingSlash(path));
