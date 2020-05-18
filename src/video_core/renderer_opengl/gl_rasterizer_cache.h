@@ -61,7 +61,7 @@ struct TextureCubeConfig {
 namespace std {
 template <>
 struct hash<OpenGL::TextureCubeConfig> {
-    std::size_t operator()(const OpenGL::TextureCubeConfig& config) const {
+    std::size_t operator()(const OpenGL::TextureCubeConfig& config) const noexcept {
         std::size_t hash = 0;
         boost::hash_combine(hash, config.px);
         boost::hash_combine(hash, config.nx);
