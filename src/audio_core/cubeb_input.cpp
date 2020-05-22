@@ -37,8 +37,12 @@ CubebInput::~CubebInput() {
     if (!impl->ctx)
         return;
 
-    if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
-        LOG_ERROR(Audio, "Error stopping cubeb input stream.");
+    if (impl->stream) {
+        if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
+            LOG_ERROR(Audio, "Error stopping cubeb input stream.");
+        }
+
+        cubeb_stream_destroy(impl->stream);
     }
 
     cubeb_destroy(impl->ctx);
@@ -103,8 +107,12 @@ void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
 }
 
 void CubebInput::StopSampling() {
+    // TODO(xperia64): Destroy the stream for now to avoid a leak because StartSampling
+    // reinitializes the stream every time
     if (impl->stream) {
         cubeb_stream_stop(impl->stream);
+        cubeb_stream_destroy(impl->stream);
+        impl->stream = nullptr;
     }
     is_sampling = false;
 }
