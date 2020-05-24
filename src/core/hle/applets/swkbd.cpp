@@ -201,8 +201,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
                      });
     if (frontend_config.has_custom_button_text) {
         for (const auto& text : config.button_text) {
-            if (text.front() != 0)
-                frontend_config.button_text.push_back(Common::UTF16BufferToUTF8(text));
+            frontend_config.button_text.push_back(Common::UTF16BufferToUTF8(text));
         }
     }
     frontend_config.filters.prevent_digit =
