@@ -1556,8 +1556,8 @@ vec4 secondary_fragment_color = vec4(0.0);
     if (state.shadow_rendering) {
         out += R"(
 #if ALLOW_SHADOW
-uint d = uint(clamp(depth, 0.0, 1.0) * 0xFFFFFF);
-uint s = uint(last_tex_env_out.g * 0xFF);
+uint d = uint(clamp(depth, 0.0, 1.0) * float(0xFFFFFF));
+uint s = uint(last_tex_env_out.g * float(0xFF));
 ivec2 image_coord = ivec2(gl_FragCoord.xy);
 
 uint old = imageLoad(shadow_buffer, image_coord).x;
