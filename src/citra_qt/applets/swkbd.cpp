@@ -49,7 +49,7 @@ QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
         break;
     case ButtonConfig::Dual:
         buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[1])
+                               ? QString::fromStdString(config.button_text[2])
                                : tr(SWKBD_BUTTON_OKAY),
                            QDialogButtonBox::ButtonRole::AcceptRole);
         buttons->addButton(config.has_custom_button_text
@@ -59,7 +59,7 @@ QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
         break;
     case ButtonConfig::Single:
         buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[0])
+                               ? QString::fromStdString(config.button_text[2])
                                : tr(SWKBD_BUTTON_OKAY),
                            QDialogButtonBox::ButtonRole::AcceptRole);
         break;
