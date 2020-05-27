@@ -33,10 +33,13 @@ static MemoryInfo Detect() {
 #elif defined(__APPLE__)
     u64 ramsize;
     struct xsw_usage vmusage;
+    std::size_t sizeof_ramsize = sizeof(ramsize);
+    std::size_t sizeof_vmusage = sizeof(vmusage);
     // hw and vm are defined in sysctl.h
     // https://github.com/apple/darwin-xnu/blob/master/bsd/sys/sysctl.h#L471
-    sysctlbyname(hw.memsize, &ramsize, sizeof(ramsize), NULL, 0);
-    sysctlbyname(vm.swapusage, &vmusage, sizeof(vmusage), NULL, 0);
+    // sysctlbyname(const char *, void *, size_t *, void *, size_t);
+    sysctlbyname("hw.memsize", &ramsize, &sizeof_ramsize, NULL, 0);
+    sysctlbyname("vm.swapusage", &vmusage, &sizeof_vmusage, NULL, 0);
     mem_info.TotalPhysicalMemory = ramsize;
     mem_info.TotalSwapMemory = vmusage.xsu_total;
 #else
