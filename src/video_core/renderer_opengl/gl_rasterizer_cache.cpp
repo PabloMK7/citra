@@ -311,7 +311,7 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl
 };
 
 // Allocate an uninitialized texture of appropriate size and format for the surface
-static void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tuple, u32 width,
+void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tuple, u32 width,
                                    u32 height) {
     OpenGLState cur_state = OpenGLState::GetCurState();
 

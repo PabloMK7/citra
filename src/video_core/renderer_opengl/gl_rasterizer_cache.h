@@ -339,4 +339,7 @@ struct FormatTuple {
 constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 
 const FormatTuple& GetFormatTuple(SurfaceParams::PixelFormat pixel_format);
+
+void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tuple, u32 width,
+                            u32 height);
 } // namespace OpenGL

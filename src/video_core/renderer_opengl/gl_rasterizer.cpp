@@ -776,6 +776,20 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         }
     }
 
+    OGLTexture temp_tex;
+    if (need_texture_barrier && GLES) {
+        temp_tex.Create();
+        AllocateSurfaceTexture(temp_tex.handle, GetFormatTuple(color_surface->pixel_format),
+                               color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
+        glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, 0, 0, 0, 0,
+                           temp_tex.handle, GL_TEXTURE_2D, 0, 0, 0, 0, color_surface->GetScaledWidth(),
+                           color_surface->GetScaledHeight(), 1);
+        for (auto& unit : state.texture_units) {
+            if (unit.texture_2d == color_surface->texture.handle)
+                unit.texture_2d = temp_tex.handle;
+        }
+    }
+
     // Sync and bind the shader
     if (shader_dirty) {
         SetShader();
