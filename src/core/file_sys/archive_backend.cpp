@@ -12,10 +12,10 @@
 
 namespace FileSys {
 
-Path::Path(LowPathType type, const std::vector<u8>& data) : type(type) {
+Path::Path(LowPathType type, std::vector<u8> data) : type(type) {
     switch (type) {
     case LowPathType::Binary: {
-        binary = data;
+        binary = std::move(data);
         break;
     }
 

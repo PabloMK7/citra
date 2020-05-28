@@ -37,7 +37,8 @@ ArchiveBackend* ArchiveManager::GetArchive(ArchiveHandle handle) {
 }
 
 ResultVal<ArchiveHandle> ArchiveManager::OpenArchive(ArchiveIdCode id_code,
-                                                     FileSys::Path& archive_path, u64 program_id) {
+                                                     const FileSys::Path& archive_path,
+                                                     u64 program_id) {
     LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
 
     auto itr = id_code_map.find(id_code);
@@ -207,7 +208,7 @@ ResultCode ArchiveManager::FormatArchive(ArchiveIdCode id_code,
 }
 
 ResultVal<FileSys::ArchiveFormatInfo> ArchiveManager::GetArchiveFormatInfo(
-    ArchiveIdCode id_code, FileSys::Path& archive_path, u64 program_id) {
+    ArchiveIdCode id_code, const FileSys::Path& archive_path, u64 program_id) {
     auto archive = id_code_map.find(id_code);
     if (archive == id_code_map.end()) {
         return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
