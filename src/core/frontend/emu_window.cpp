@@ -111,9 +111,9 @@ std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsi
     return std::make_tuple(new_x, new_y);
 }
 
-void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
+bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
-        return;
+        return false;
 
     if (framebuffer_x >= framebuffer_layout.width / 2) {
         if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide)
@@ -143,6 +143,7 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     }
 
     touch_state->touch_pressed = true;
+    return true;
 }
 
 void EmuWindow::TouchReleased() {
