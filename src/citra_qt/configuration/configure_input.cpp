@@ -367,6 +367,9 @@ void ConfigureInput::RestoreDefaults() {
         }
     }
     UpdateButtonLabels();
+
+    ApplyConfiguration();
+    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::ClearAll() {
@@ -378,6 +381,9 @@ void ConfigureInput::ClearAll() {
         analogs_param[analog_id].Clear();
     }
     UpdateButtonLabels();
+
+    ApplyConfiguration();
+    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::UpdateButtonLabels() {
