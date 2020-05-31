@@ -194,15 +194,8 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;
     frontend_config.hint_text = Common::UTF16BufferToUTF8(config.hint_text);
-    frontend_config.has_custom_button_text =
-        !std::all_of(config.button_text.begin(), config.button_text.end(),
-                     [](std::array<u16, HLE::Applets::MAX_BUTTON_TEXT_LEN + 1> x) {
-                         return std::all_of(x.begin(), x.end(), [](u16 x) { return x == 0; });
-                     });
-    if (frontend_config.has_custom_button_text) {
-        for (const auto& text : config.button_text) {
-            frontend_config.button_text.push_back(Common::UTF16BufferToUTF8(text));
-        }
+    for (const auto& text : config.button_text) {
+        frontend_config.button_text.push_back(Common::UTF16BufferToUTF8(text));
     }
     frontend_config.filters.prevent_digit =
         static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Digits);
