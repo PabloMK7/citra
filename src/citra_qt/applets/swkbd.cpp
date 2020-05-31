@@ -38,13 +38,13 @@ QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
                                ? tr(SWKBD_BUTTON_FORGOT)
                                : QString::fromStdString(config.button_text[1]),
                            QDialogButtonBox::ButtonRole::HelpRole);
-    // fallthrough
+        [[fallthrough]];
     case ButtonConfig::Dual:
         buttons->addButton(config.button_text[0].empty()
                                ? tr(SWKBD_BUTTON_CANCEL)
                                : QString::fromStdString(config.button_text[0]),
                            QDialogButtonBox::ButtonRole::RejectRole);
-    // fallthrough
+        [[fallthrough]];
     case ButtonConfig::Single:
         buttons->addButton(config.button_text[2].empty()
                                ? tr(SWKBD_BUTTON_OKAY)
