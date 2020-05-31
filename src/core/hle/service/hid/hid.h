@@ -336,6 +336,7 @@ private:
     std::unique_ptr<Input::AnalogDevice> circle_pad;
     std::unique_ptr<Input::MotionDevice> motion_device;
     std::unique_ptr<Input::TouchDevice> touch_device;
+    std::unique_ptr<Input::TouchDevice> touch_btn_device;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

@@ -1693,6 +1693,7 @@ void GMainWindow::OnConfigure() {
     auto old_theme = UISettings::values.theme;
     const int old_input_profile_index = Settings::values.current_input_profile_index;
     const auto old_input_profiles = Settings::values.input_profiles;
+    const auto old_touch_from_button_maps = Settings::values.touch_from_button_maps;
     const bool old_discord_presence = UISettings::values.enable_discord_presence;
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
@@ -1718,6 +1719,7 @@ void GMainWindow::OnConfigure() {
         }
     } else {
         Settings::values.input_profiles = old_input_profiles;
+        Settings::values.touch_from_button_maps = old_touch_from_button_maps;
         Settings::LoadProfile(old_input_profile_index);
     }
 }

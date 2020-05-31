@@ -9,7 +9,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include "citra_qt/configuration/configure_motion_touch.h"
-#include "core/settings.h"
+#include "citra_qt/configuration/configure_touch_from_button.h"
 #include "input_common/main.h"
 #include "ui_configure_motion_touch.h"
 
@@ -111,6 +111,14 @@ void ConfigureMotionTouch::SetConfiguration() {
         ui->motion_provider->findData(QString::fromStdString(motion_engine)));
     ui->touch_provider->setCurrentIndex(
         ui->touch_provider->findData(QString::fromStdString(touch_engine)));
+    ui->touch_from_button_checkbox->setChecked(
+        Settings::values.current_input_profile.use_touch_from_button);
+    touch_from_button_maps = Settings::values.touch_from_button_maps;
+    for (const auto& touch_map : touch_from_button_maps) {
+        ui->touch_from_button_map->addItem(QString::fromStdString(touch_map.name));
+    }
+    ui->touch_from_button_map->setCurrentIndex(
+        Settings::values.current_input_profile.touch_from_button_map_index);
     ui->motion_sensitivity->setValue(motion_param.Get("sensitivity", 0.01f));
 
     min_x = touch_param.Get("min_x", 100);
@@ -166,6 +174,8 @@ void ConfigureMotionTouch::ConnectEvents() {
     connect(ui->udp_test, &QPushButton::clicked, this, &ConfigureMotionTouch::OnCemuhookUDPTest);
     connect(ui->touch_calibration_config, &QPushButton::clicked, this,
             &ConfigureMotionTouch::OnConfigureTouchCalibration);
+    connect(ui->touch_from_button_config_btn, &QPushButton::clicked, this,
+            &ConfigureMotionTouch::OnConfigureTouchFromButton);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, [this] {
         if (CanCloseDialog())
             reject();
@@ -234,6 +244,23 @@ void ConfigureMotionTouch::ShowUDPTestResult(bool result) {
     ui->udp_test->setText(tr("Test"));
 }
 
+void ConfigureMotionTouch::OnConfigureTouchFromButton() {
+    ConfigureTouchFromButton dialog{this, touch_from_button_maps,
+                                    ui->touch_from_button_map->currentIndex()};
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    touch_from_button_maps = dialog.GetMaps();
+
+    while (ui->touch_from_button_map->count() > 0) {
+        ui->touch_from_button_map->removeItem(0);
+    }
+    for (const auto& touch_map : touch_from_button_maps) {
+        ui->touch_from_button_map->addItem(QString::fromStdString(touch_map.name));
+    }
+    ui->touch_from_button_map->setCurrentIndex(dialog.GetSelectedIndex());
+}
+
 bool ConfigureMotionTouch::CanCloseDialog() {
     if (udp_test_in_progress) {
         QMessageBox::warning(this, tr("Citra"),
@@ -268,6 +295,11 @@ void ConfigureMotionTouch::ApplyConfiguration() {
 
     Settings::values.current_input_profile.motion_device = motion_param.Serialize();
     Settings::values.current_input_profile.touch_device = touch_param.Serialize();
+    Settings::values.current_input_profile.use_touch_from_button =
+        ui->touch_from_button_checkbox->isChecked();
+    Settings::values.current_input_profile.touch_from_button_map_index =
+        ui->touch_from_button_map->currentIndex();
+    Settings::values.touch_from_button_maps = touch_from_button_maps;
     Settings::values.current_input_profile.udp_input_address = ui->udp_server->text().toStdString();
     Settings::values.current_input_profile.udp_input_port =
         static_cast<u16>(ui->udp_port->text().toInt());

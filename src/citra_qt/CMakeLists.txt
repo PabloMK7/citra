@@ -69,6 +69,10 @@ add_executable(citra-qt
     configuration/configure_system.cpp
     configuration/configure_system.h
     configuration/configure_system.ui
+    configuration/configure_touch_from_button.cpp
+    configuration/configure_touch_from_button.h
+    configuration/configure_touch_from_button.ui
+    configuration/configure_touch_widget.h
     configuration/configure_ui.cpp
     configuration/configure_ui.h
     configuration/configure_ui.ui

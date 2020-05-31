@@ -112,9 +112,16 @@ struct InputProfile {
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
     std::string motion_device;
     std::string touch_device;
+    bool use_touch_from_button;
+    int touch_from_button_map_index;
     std::string udp_input_address;
     u16 udp_input_port;
     u8 udp_pad_index;
+};
+
+struct TouchFromButtonMap {
+    std::string name;
+    std::vector<std::string> buttons;
 };
 
 struct Values {
@@ -125,6 +132,7 @@ struct Values {
     InputProfile current_input_profile;       ///< The current input profile
     int current_input_profile_index;          ///< The current input profile index
     std::vector<InputProfile> input_profiles; ///< The list of input profiles
+    std::vector<TouchFromButtonMap> touch_from_button_maps;
 
     // Core
     bool use_cpu_jit;

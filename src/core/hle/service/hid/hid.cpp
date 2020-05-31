@@ -103,6 +103,11 @@ void Module::LoadInputDevices() {
         Settings::values.current_input_profile.motion_device);
     touch_device = Input::CreateDevice<Input::TouchDevice>(
         Settings::values.current_input_profile.touch_device);
+    if (Settings::values.current_input_profile.use_touch_from_button) {
+        touch_btn_device = Input::CreateDevice<Input::TouchDevice>("engine:touch_from_button");
+    } else {
+        touch_btn_device.reset();
+    }
 }
 
 void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
@@ -177,6 +182,9 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     bool pressed = false;
     float x, y;
     std::tie(x, y, pressed) = touch_device->GetStatus();
+    if (!pressed && touch_btn_device) {
+        std::tie(x, y, pressed) = touch_btn_device->GetStatus();
+    }
     touch_entry.x = static_cast<u16>(x * Core::kScreenBottomWidth);
     touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
     touch_entry.valid.Assign(pressed ? 1 : 0);

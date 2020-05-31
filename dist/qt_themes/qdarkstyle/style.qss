@@ -673,10 +673,6 @@ QTabWidget::pane {
     border-bottom-left-radius: 2px;
 }
 
-QTabWidget::tab-bar {
-    overflow: visible;
-}
-
 QTabBar {
     qproperty-drawBase: 0;
     border-radius: 3px;
@@ -1235,4 +1231,9 @@ QTextEdit:disabled,
 QToolButton:disabled,
 QPlainTextEdit:disabled {
     background-color: #2b2e31;
+}
+
+/* touchscreen mapping widget */
+TouchScreenPreview {
+    qproperty-dotHighlightColor: #3daee9;
 }
