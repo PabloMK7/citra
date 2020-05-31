@@ -226,9 +226,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_status.nodes[node_id - 1] = node.network_node_id;
         connection_status.total_nodes++;
 
-        u8 current_nodes = network_info.total_nodes;
-        node_info[current_nodes] = node;
-
+        node_info[node_id - 1] = node;
         network_info.total_nodes++;
 
         node_map[packet.transmitter_address].node_id = node.network_node_id;
