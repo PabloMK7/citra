@@ -266,13 +266,18 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_status.max_nodes = logoff.max_nodes;
 
         node_info.clear();
-        node_info.reserve(network_info.max_nodes);
-        for (std::size_t index = 0; index < logoff.connected_nodes; ++index) {
-            connection_status.node_bitmask |= 1 << index;
-            connection_status.changed_nodes |= 1 << index;
-            connection_status.nodes[index] = logoff.nodes[index].network_node_id;
+        node_info.resize(network_info.max_nodes);
+        for (const auto& node : logoff.nodes) {
+            const u16 index = node.network_node_id;
+            if (!index) {
+                continue;
+            }
 
-            node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
+            connection_status.node_bitmask |= 1 << (index - 1);
+            connection_status.changed_nodes |= 1 << (index - 1);
+            connection_status.nodes[index - 1] = index;
+
+            node_info[index - 1] = DeserializeNodeInfo(node);
         }
 
         // We're now connected, signal the application
@@ -291,17 +296,26 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         network_info.total_nodes = logoff.connected_nodes;
         connection_status.total_nodes = logoff.connected_nodes;
+        std::memset(connection_status.nodes, 0, sizeof(connection_status.nodes));
+
+        const auto old_bitmask = connection_status.node_bitmask;
+        connection_status.node_bitmask = 0;
 
         node_info.clear();
-        node_info.reserve(network_info.max_nodes);
-        for (std::size_t index = 0; index < logoff.connected_nodes; ++index) {
-            if ((connection_status.node_bitmask & (1 << index)) == 0) {
-                connection_status.changed_nodes |= 1 << index;
+        node_info.resize(network_info.max_nodes);
+        for (const auto& node : logoff.nodes) {
+            const u16 index = node.network_node_id;
+            if (!index) {
+                continue;
             }
-            connection_status.nodes[index] = logoff.nodes[index].network_node_id;
-            connection_status.node_bitmask |= 1 << index;
-            node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
+
+            connection_status.node_bitmask |= 1 << (index - 1);
+            connection_status.nodes[index - 1] = index;
+
+            node_info[index - 1] = DeserializeNodeInfo(node);
         }
+        connection_status.changed_nodes = old_bitmask ^ connection_status.node_bitmask;
+
         connection_status_event->Signal();
     }
 }
