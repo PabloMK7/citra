@@ -123,6 +123,7 @@ static void SetShaderSamplerBindings(GLuint shader) {
     SetShaderSamplerBinding(shader, "tex_cube", TextureUnits::TextureCube);
 
     // Set the texture samplers to correspond to different lookup table texture units
+    SetShaderSamplerBinding(shader, "texture_buffer_lut_lf", TextureUnits::TextureBufferLUT_LF);
     SetShaderSamplerBinding(shader, "texture_buffer_lut_rg", TextureUnits::TextureBufferLUT_RG);
     SetShaderSamplerBinding(shader, "texture_buffer_lut_rgba", TextureUnits::TextureBufferLUT_RGBA);
 

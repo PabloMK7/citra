@@ -1244,6 +1244,7 @@ uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
 uniform samplerCube tex_cube;
+uniform samplerBuffer texture_buffer_lut_lf;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
 
@@ -1267,7 +1268,7 @@ vec3 quaternion_rotate(vec4 q, vec3 v) {
 }
 
 float LookupLightingLUT(int lut_index, int index, float delta) {
-    vec2 entry = texelFetch(texture_buffer_lut_rg, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
+    vec2 entry = texelFetch(texture_buffer_lut_lf, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
     return entry.r + entry.g * delta;
 }
 
@@ -1519,7 +1520,7 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Generate clamped fog factor from LUT for given fog index
         out += "float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n"
                "float fog_f = fog_index - fog_i;\n"
-               "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_rg, int(fog_i) + "
+               "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_lf, int(fog_i) + "
                "fog_lut_offset).rg;\n"
                "float fog_factor = fog_lut_entry.r + fog_lut_entry.g * fog_f;\n"
                "fog_factor = clamp(fog_factor, 0.0, 1.0);\n";

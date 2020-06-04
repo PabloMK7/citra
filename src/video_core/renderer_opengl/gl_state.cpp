@@ -58,6 +58,7 @@ OpenGLState::OpenGLState() {
     texture_cube_unit.texture_cube = 0;
     texture_cube_unit.sampler = 0;
 
+    texture_buffer_lut_lf.texture_buffer = 0;
     texture_buffer_lut_rg.texture_buffer = 0;
     texture_buffer_lut_rgba.texture_buffer = 0;
 
@@ -225,6 +226,12 @@ void OpenGLState::Apply() const {
     }
 
     // Texture buffer LUTs
+    if (texture_buffer_lut_lf.texture_buffer != cur_state.texture_buffer_lut_lf.texture_buffer) {
+        glActiveTexture(TextureUnits::TextureBufferLUT_LF.Enum());
+        glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_lf.texture_buffer);
+    }
+
+    // Texture buffer LUTs
     if (texture_buffer_lut_rg.texture_buffer != cur_state.texture_buffer_lut_rg.texture_buffer) {
         glActiveTexture(TextureUnits::TextureBufferLUT_RG.Enum());
         glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_rg.texture_buffer);
@@ -354,6 +361,8 @@ OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
     }
     if (texture_cube_unit.texture_cube == handle)
         texture_cube_unit.texture_cube = 0;
+    if (texture_buffer_lut_lf.texture_buffer == handle)
+        texture_buffer_lut_lf.texture_buffer = 0;
     if (texture_buffer_lut_rg.texture_buffer == handle)
         texture_buffer_lut_rg.texture_buffer = 0;
     if (texture_buffer_lut_rgba.texture_buffer == handle)

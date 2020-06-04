@@ -22,7 +22,8 @@ constexpr TextureUnit PicaTexture(int unit) {
     return TextureUnit{unit};
 }
 
-constexpr TextureUnit TextureCube{3};
+constexpr TextureUnit TextureCube{6};
+constexpr TextureUnit TextureBufferLUT_LF{3};
 constexpr TextureUnit TextureBufferLUT_RG{4};
 constexpr TextureUnit TextureBufferLUT_RGBA{5};
 
@@ -100,6 +101,10 @@ public:
         GLuint texture_cube; // GL_TEXTURE_BINDING_CUBE_MAP
         GLuint sampler;      // GL_SAMPLER_BINDING
     } texture_cube_unit;
+
+    struct {
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
+    } texture_buffer_lut_lf;
 
     struct {
         GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
