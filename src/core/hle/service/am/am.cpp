@@ -447,7 +447,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
         Common::SplitPath(entry.virtualName, nullptr, &filename_filename, &filename_extension);
 
         if (filename_extension == ".tmd") {
-            u32 id = std::stoul(filename_filename.c_str(), nullptr, 16);
+            const u32 id = std::stoul(filename_filename, nullptr, 16);
             base_id = std::min(base_id, id);
             update_id = std::max(update_id, id);
         }
@@ -548,7 +548,7 @@ void Module::ScanForTitles(Service::FS::MediaType media_type) {
             std::string tid_string = tid_high.virtualName + tid_low.virtualName;
 
             if (tid_string.length() == TITLE_ID_VALID_LENGTH) {
-                u64 tid = std::stoull(tid_string.c_str(), nullptr, 16);
+                const u64 tid = std::stoull(tid_string, nullptr, 16);
 
                 FileSys::NCCHContainer container(GetTitleContentPath(media_type, tid));
                 if (container.Load() == Loader::ResultStatus::Success)
