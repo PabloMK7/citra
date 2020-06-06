@@ -78,7 +78,7 @@ static PAddr VirtualToPhysicalAddress(VAddr addr) {
     return addr | 0x80000000;
 }
 
-u32 GSP_GPU::GetUnusedThreadId() {
+u32 GSP_GPU::GetUnusedThreadId() const {
     for (u32 id = 0; id < MaxGSPThreads; ++id) {
         if (!used_thread_ids[id])
             return id;

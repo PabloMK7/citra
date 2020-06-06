@@ -424,7 +424,7 @@ private:
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 
-    u32 GetUnusedThreadId();
+    u32 GetUnusedThreadId() const;
 
     std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
 
