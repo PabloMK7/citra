@@ -219,7 +219,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
-    FileSessionSlot* slot = GetSessionData(server);
+    FileSessionSlot* slot = GetSessionData(std::move(server));
     const FileSessionSlot* original_file = GetSessionData(ctx.Session());
 
     slot->priority = original_file->priority;
@@ -265,7 +265,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
     auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
-    FileSessionSlot* slot = GetSessionData(server);
+    FileSessionSlot* slot = GetSessionData(std::move(server));
     slot->priority = original_file->priority;
     slot->offset = offset;
     slot->size = size;
@@ -279,7 +279,7 @@ std::shared_ptr<Kernel::ClientSession> File::Connect() {
     auto [server, client] = kernel.CreateSessionPair(GetName());
     ClientConnected(server);
 
-    FileSessionSlot* slot = GetSessionData(server);
+    FileSessionSlot* slot = GetSessionData(std::move(server));
     slot->priority = 0;
     slot->offset = 0;
     slot->size = backend->GetSize();
@@ -289,13 +289,13 @@ std::shared_ptr<Kernel::ClientSession> File::Connect() {
 }
 
 std::size_t File::GetSessionFileOffset(std::shared_ptr<Kernel::ServerSession> session) {
-    const FileSessionSlot* slot = GetSessionData(session);
+    const FileSessionSlot* slot = GetSessionData(std::move(session));
     ASSERT(slot);
     return slot->offset;
 }
 
 std::size_t File::GetSessionFileSize(std::shared_ptr<Kernel::ServerSession> session) {
-    const FileSessionSlot* slot = GetSessionData(session);
+    const FileSessionSlot* slot = GetSessionData(std::move(session));
     ASSERT(slot);
     return slot->size;
 }
