@@ -32,7 +32,7 @@ GraphicsDebugger g_debugger;
 namespace Service::GSP {
 
 // Beginning address of HW regs
-const u32 REGS_BEGIN = 0x1EB00000;
+constexpr u32 REGS_BEGIN = 0x1EB00000;
 
 namespace ErrCodes {
 enum {
