@@ -1314,23 +1314,23 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx, u16 command_id) 
 
     // TODO(Subv): Verify the MD5 hash of the data and return 0xE1211005 if invalid.
 
-    u8 num_nodes = net_info.max_nodes;
+    const std::size_t num_nodes = net_info.max_nodes;
 
     std::vector<NodeInfo> nodes;
+    nodes.reserve(num_nodes);
 
-    for (int i = 0; i < num_nodes; ++i) {
+    for (std::size_t i = 0; i < num_nodes; ++i) {
         BeaconNodeInfo info;
         std::memcpy(&info, beacon_data.data() + sizeof(beacon_header) + i * sizeof(info),
                     sizeof(info));
 
         // Deserialize the node information.
-        NodeInfo node{};
+        auto& node = nodes.emplace_back();
         node.friend_code_seed = info.friend_code_seed;
         node.network_node_id = info.network_node_id;
-        for (int i = 0; i < info.username.size(); ++i)
+        for (std::size_t i = 0; i < info.username.size(); ++i) {
             node.username[i] = info.username[i];
-
-        nodes.push_back(node);
+        }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
