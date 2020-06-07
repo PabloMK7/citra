@@ -1257,7 +1257,7 @@ ResultCode CROHelper::Link(VAddr crs_address, bool link_on_load_bug_fix) {
     ResultCode result = RESULT_SUCCESS;
 
     {
-        VAddr data_segment_address;
+        VAddr data_segment_address = 0;
         if (link_on_load_bug_fix) {
             // this is a bug fix introduced by 7.2.0-17's LoadCRO_New
             // The bug itself is:
