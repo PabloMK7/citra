@@ -1583,22 +1583,19 @@ ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shade
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
-    out += fmt::format("layout(location = {}) in vec4 vert_position;\n",
-                       static_cast<int>(ATTRIBUTE_POSITION));
-    out += fmt::format("layout(location = {}) in vec4 vert_color;\n",
-                       static_cast<int>(ATTRIBUTE_COLOR));
-    out += fmt::format("layout(location = {}) in vec2 vert_texcoord0;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD0));
-    out += fmt::format("layout(location = {}) in vec2 vert_texcoord1;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD1));
-    out += fmt::format("layout(location = {}) in vec2 vert_texcoord2;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD2));
-    out += fmt::format("layout(location = {}) in float vert_texcoord0_w;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD0_W));
-    out += fmt::format("layout(location = {}) in vec4 vert_normquat;\n",
-                       static_cast<int>(ATTRIBUTE_NORMQUAT));
     out +=
-        fmt::format("layout(location = {}) in vec3 vert_view;\n", static_cast<int>(ATTRIBUTE_VIEW));
+        fmt::format("layout(location = {}) in vec4 vert_position;\n"
+                    "layout(location = {}) in vec4 vert_color;\n"
+                    "layout(location = {}) in vec2 vert_texcoord0;\n"
+                    "layout(location = {}) in vec2 vert_texcoord1;\n"
+                    "layout(location = {}) in vec2 vert_texcoord2;\n"
+                    "layout(location = {}) in float vert_texcoord0_w;\n"
+                    "layout(location = {}) in vec4 vert_normquat;\n"
+                    "layout(location = {}) in vec3 vert_view;\n",
+                    static_cast<int>(ATTRIBUTE_POSITION), static_cast<int>(ATTRIBUTE_COLOR),
+                    static_cast<int>(ATTRIBUTE_TEXCOORD0), static_cast<int>(ATTRIBUTE_TEXCOORD1),
+                    static_cast<int>(ATTRIBUTE_TEXCOORD2), static_cast<int>(ATTRIBUTE_TEXCOORD0_W),
+                    static_cast<int>(ATTRIBUTE_NORMQUAT), static_cast<int>(ATTRIBUTE_VIEW));
 
     out += GetVertexInterfaceDeclaration(true, separable_shader);
 
