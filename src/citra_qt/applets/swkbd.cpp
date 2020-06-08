@@ -34,33 +34,21 @@ QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
     // Initialize buttons
     switch (config.button_config) {
     case ButtonConfig::Triple:
-        buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[2])
-                               : tr(SWKBD_BUTTON_OKAY),
-                           QDialogButtonBox::ButtonRole::AcceptRole);
-        buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[1])
-                               : tr(SWKBD_BUTTON_FORGOT),
+        buttons->addButton(config.button_text[1].empty()
+                               ? tr(SWKBD_BUTTON_FORGOT)
+                               : QString::fromStdString(config.button_text[1]),
                            QDialogButtonBox::ButtonRole::HelpRole);
-        buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[0])
-                               : tr(SWKBD_BUTTON_CANCEL),
-                           QDialogButtonBox::ButtonRole::RejectRole);
-        break;
+        [[fallthrough]];
     case ButtonConfig::Dual:
-        buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[2])
-                               : tr(SWKBD_BUTTON_OKAY),
-                           QDialogButtonBox::ButtonRole::AcceptRole);
-        buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[0])
-                               : tr(SWKBD_BUTTON_CANCEL),
+        buttons->addButton(config.button_text[0].empty()
+                               ? tr(SWKBD_BUTTON_CANCEL)
+                               : QString::fromStdString(config.button_text[0]),
                            QDialogButtonBox::ButtonRole::RejectRole);
-        break;
+        [[fallthrough]];
     case ButtonConfig::Single:
-        buttons->addButton(config.has_custom_button_text
-                               ? QString::fromStdString(config.button_text[2])
-                               : tr(SWKBD_BUTTON_OKAY),
+        buttons->addButton(config.button_text[2].empty()
+                               ? tr(SWKBD_BUTTON_OKAY)
+                               : QString::fromStdString(config.button_text[2]),
                            QDialogButtonBox::ButtonRole::AcceptRole);
         break;
     case ButtonConfig::None:
