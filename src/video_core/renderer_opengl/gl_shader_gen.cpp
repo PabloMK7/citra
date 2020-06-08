@@ -1470,7 +1470,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (state.alpha_test_func == FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
-        return {out};
+        return {std::move(out)};
     }
 
     // Append the scissor test
@@ -1536,7 +1536,7 @@ vec4 secondary_fragment_color = vec4(0.0);
                                                                 "VideoCore_Pica_UseGasMode", true);
         LOG_CRITICAL(Render_OpenGL, "Unimplemented gas mode");
         out += "discard; }";
-        return {out};
+        return {std::move(out)};
     }
 
     if (state.shadow_rendering) {
@@ -1574,7 +1574,7 @@ do {
 
     out += '}';
 
-    return {out};
+    return {std::move(out)};
 }
 
 ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shader) {
@@ -1619,7 +1619,7 @@ void main() {
 }
 )";
 
-    return {out};
+    return {std::move(out)};
 }
 
 std::optional<ShaderDecompiler::ProgramResult> GenerateVertexShader(
@@ -1684,7 +1684,7 @@ layout (std140) uniform vs_config {
 
     out += program_source;
 
-    return {{out}};
+    return {{std::move(out)}};
 }
 
 static std::string GetGSCommonSource(const PicaGSConfigCommonRaw& config, bool separable_shader) {
@@ -1802,6 +1802,6 @@ void main() {
     out += "    EmitPrim(prim_buffer[0], prim_buffer[1], prim_buffer[2]);\n";
     out += "}\n";
 
-    return {out};
+    return {std::move(out)};
 }
 } // namespace OpenGL
