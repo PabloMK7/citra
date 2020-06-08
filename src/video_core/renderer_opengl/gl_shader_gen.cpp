@@ -971,8 +971,8 @@ using ProcTexShift = TexturingRegs::ProcTexShift;
 using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
 using ProcTexFilter = TexturingRegs::ProcTexFilter;
 
-void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcTexShift mode,
-                              ProcTexClamp clamp_mode) {
+static void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcTexShift mode,
+                                     ProcTexClamp clamp_mode) {
     const std::string_view offset = (clamp_mode == ProcTexClamp::MirroredRepeat) ? "1.0" : "0.5";
     switch (mode) {
     case ProcTexShift::None:
@@ -991,7 +991,7 @@ void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcTexShift
     }
 }
 
-void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mode) {
+static void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mode) {
     switch (mode) {
     case ProcTexClamp::ToZero:
         out += fmt::format("{0} = {0} > 1.0 ? 0 : {0};\n", var);
@@ -1016,8 +1016,8 @@ void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mod
     }
 }
 
-void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
-                                std::string_view offset) {
+static void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
+                                       std::string_view offset) {
     const auto combined = [combiner]() -> std::string_view {
         switch (combiner) {
         case ProcTexCombiner::U:
@@ -1049,7 +1049,7 @@ void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
     out += fmt::format("ProcTexLookupLUT({}, {})", offset, combined);
 }
 
-void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
+static void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
     // LUT sampling uitlity
     // For NoiseLUT/ColorMap/AlphaMap, coord=0.0 is lut[0], coord=127.0/128.0 is lut[127] and
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
