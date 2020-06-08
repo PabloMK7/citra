@@ -1018,43 +1018,34 @@ void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mod
 
 void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
                                 std::string_view offset) {
-    std::string combined;
-    switch (combiner) {
-    case ProcTexCombiner::U:
-        combined = "u";
-        break;
-    case ProcTexCombiner::U2:
-        combined = "(u * u)";
-        break;
-    case TexturingRegs::ProcTexCombiner::V:
-        combined = "v";
-        break;
-    case TexturingRegs::ProcTexCombiner::V2:
-        combined = "(v * v)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Add:
-        combined = "((u + v) * 0.5)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Add2:
-        combined = "((u * u + v * v) * 0.5)";
-        break;
-    case TexturingRegs::ProcTexCombiner::SqrtAdd2:
-        combined = "min(sqrt(u * u + v * v), 1.0)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Min:
-        combined = "min(u, v)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Max:
-        combined = "max(u, v)";
-        break;
-    case TexturingRegs::ProcTexCombiner::RMax:
-        combined = "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
-        break;
-    default:
-        LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
-        combined = "0.0";
-        break;
-    }
+    const auto combined = [combiner]() -> std::string_view {
+        switch (combiner) {
+        case ProcTexCombiner::U:
+            return "u";
+        case ProcTexCombiner::U2:
+            return "(u * u)";
+        case TexturingRegs::ProcTexCombiner::V:
+            return "v";
+        case TexturingRegs::ProcTexCombiner::V2:
+            return "(v * v)";
+        case TexturingRegs::ProcTexCombiner::Add:
+            return "((u + v) * 0.5)";
+        case TexturingRegs::ProcTexCombiner::Add2:
+            return "((u * u + v * v) * 0.5)";
+        case TexturingRegs::ProcTexCombiner::SqrtAdd2:
+            return "min(sqrt(u * u + v * v), 1.0)";
+        case TexturingRegs::ProcTexCombiner::Min:
+            return "min(u, v)";
+        case TexturingRegs::ProcTexCombiner::Max:
+            return "max(u, v)";
+        case TexturingRegs::ProcTexCombiner::RMax:
+            return "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
+            return "0.0";
+        }
+    }();
+
     out += fmt::format("ProcTexLookupLUT({}, {})", offset, combined);
 }
 
