@@ -9,6 +9,7 @@
 #include "common/param_package.h"
 #include "common/string_util.h"
 #include "core/dumping/ffmpeg_backend.h"
+#include "core/hw/gpu.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -127,8 +128,8 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     // TODO(xperia64): Replace with the core timing derived refresh rate
     //                 Verify that an FPS of 59.83... can actually be requested
     //                 (this doesn't seem to be working currently)
-    codec_context->time_base.num = 1000000;
-    codec_context->time_base.den = 59833997;
+    codec_context->time_base.num = static_cast<int>(GPU::frame_ticks);
+    codec_context->time_base.den = static_cast<int>(BASE_CLOCK_RATE_ARM11);
     codec_context->gop_size = 12;
     codec_context->pix_fmt = codec->pix_fmts ? codec->pix_fmts[0] : AV_PIX_FMT_YUV420P;
     if (format_context->oformat->flags & AVFMT_GLOBALHEADER)
