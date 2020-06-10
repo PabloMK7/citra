@@ -125,9 +125,11 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     codec_context->bit_rate = Settings::values.video_bitrate;
     codec_context->width = layout.width;
     codec_context->height = layout.height;
-    // TODO(xperia64): Replace with the core timing derived refresh rate
-    //                 Verify that an FPS of 59.83... can actually be requested
-    //                 (this doesn't seem to be working currently)
+    // TODO(xperia64): While these numbers from core timing work fine, certain video codecs do not
+    // support the strange resulting timebase (280071/16756991); Addressing this issue would require
+    // resampling the video
+    // Known working: mjpeg, libx264
+    // Known not working: mpeg2, mpeg4
     codec_context->time_base.num = static_cast<int>(GPU::frame_ticks);
     codec_context->time_base.den = static_cast<int>(BASE_CLOCK_RATE_ARM11);
     codec_context->gop_size = 12;
