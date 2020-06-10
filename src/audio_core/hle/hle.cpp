@@ -54,7 +54,7 @@ SERIALIZE_IMPL(DspHle)
 //
 // As per merry, it may be useful to verify this on hardware with the more recently
 // discovered "correct" ARM11 frequency of 268111856 as opposed to 268123480
-static constexpr u64 audio_frame_ticks = 160 * 4096 * 2ull; ///< Units: ARM11 cycles
+static constexpr u64 audio_frame_ticks = samples_per_frame * 4096 * 2ull; ///< Units: ARM11 cycles
 
 struct DspHle::Impl final {
 public:
