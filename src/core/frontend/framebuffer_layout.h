@@ -9,6 +9,13 @@
 
 namespace Layout {
 
+/// Describes the horizontal coordinates for the right eye screen when using Cardboard VR
+struct CardboardSettings {
+    float top_screen_right_eye;
+    float bottom_screen_right_eye;
+    float user_x_shift;
+};
+
 /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
 struct FramebufferLayout {
     u32 width;
@@ -18,6 +25,8 @@ struct FramebufferLayout {
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bottom_screen;
     bool is_rotated = true;
+
+    CardboardSettings cardboard;
 
     /**
      * Returns the ration of pixel size of the top screen, compared to the native size of the 3DS
@@ -103,6 +112,13 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height);
  * @param res_scale resolution scale factor
  */
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale);
+
+/**
+ * Convenience method for transforming a frame layout when using Cardboard VR
+ * @param layout frame layout to transform
+ * @return layout transformed with the user cardboard settings
+ */
+FramebufferLayout GetCardboardSettings(FramebufferLayout layout);
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
                                                        bool upright_screen);

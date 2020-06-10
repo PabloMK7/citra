@@ -452,7 +452,90 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale) {
             break;
         }
     }
+    if (Settings::values.render_3d == Settings::StereoRenderOption::CardboardVR) {
+        layout = Layout::GetCardboardSettings(layout);
+    }
     return layout;
+}
+
+FramebufferLayout GetCardboardSettings(FramebufferLayout layout) {
+    FramebufferLayout newLayout = layout;
+    float top_screen_left = 0;
+    float top_screen_top = 0;
+    float bottom_screen_left = 0;
+    float bottom_screen_top = 0;
+
+    float cardboardScreenScale = Settings::values.cardboard_screen_size / 100.0f;
+    float top_screen_width = layout.top_screen.GetWidth() / 2.0f * cardboardScreenScale;
+    float top_screen_height = layout.top_screen.GetHeight() / 2.0f * cardboardScreenScale;
+    float bottom_screen_width = layout.bottom_screen.GetWidth() / 2.0f * cardboardScreenScale;
+    float bottom_screen_height = layout.bottom_screen.GetHeight() / 2.0f * cardboardScreenScale;
+    bool is_swapped = Settings::values.swap_screen;
+    bool is_portrait = layout.height > layout.width;
+
+    float cardboardScreenWidth;
+    float cardboardScreenHeight;
+    switch (Settings::values.layout_option) {
+    case Settings::LayoutOption::MobileLandscape:
+    case Settings::LayoutOption::SideScreen:
+        // If orientation is portrait, only use MobilePortrait
+        if (!is_portrait) {
+            cardboardScreenWidth = top_screen_width + bottom_screen_width;
+            cardboardScreenHeight = is_swapped ? bottom_screen_height : top_screen_height;
+            if (is_swapped)
+                top_screen_left += bottom_screen_width;
+            else
+                bottom_screen_left += top_screen_width;
+            break;
+        } else {
+            [[fallthrough]];
+        }
+    case Settings::LayoutOption::SingleScreen:
+    default:
+        if (!is_portrait) {
+            // Default values when using LayoutOption::SingleScreen
+            cardboardScreenWidth = is_swapped ? bottom_screen_width : top_screen_width;
+            cardboardScreenHeight = is_swapped ? bottom_screen_height : top_screen_height;
+            break;
+        } else {
+            [[fallthrough]];
+        }
+    case Settings::LayoutOption::MobilePortrait:
+        cardboardScreenWidth = top_screen_width;
+        cardboardScreenHeight = top_screen_height + bottom_screen_height;
+        bottom_screen_left += (top_screen_width - bottom_screen_width) / 2.0f;
+        if (is_swapped)
+            top_screen_top += bottom_screen_height;
+        else
+            bottom_screen_top += top_screen_height;
+        break;
+    }
+    float cardboardMaxXShift = (layout.width / 2.0f - cardboardScreenWidth) / 2.0f;
+    float cardboardUserXShift = (Settings::values.cardboard_x_shift / 100.0f) * cardboardMaxXShift;
+    float cardboardMaxYShift = ((float)layout.height - cardboardScreenHeight) / 2.0f;
+    float cardboardUserYShift = (Settings::values.cardboard_y_shift / 100.0f) * cardboardMaxYShift;
+
+    // Center the screens and apply user Y shift
+    newLayout.top_screen.left = top_screen_left + cardboardMaxXShift;
+    newLayout.top_screen.top = top_screen_top + cardboardMaxYShift + cardboardUserYShift;
+    newLayout.bottom_screen.left = bottom_screen_left + cardboardMaxXShift;
+    newLayout.bottom_screen.top = bottom_screen_top + cardboardMaxYShift + cardboardUserYShift;
+
+    // Set the X coordinates for the right eye and apply user X shift
+    newLayout.cardboard.top_screen_right_eye = newLayout.top_screen.left - cardboardUserXShift;
+    newLayout.top_screen.left += cardboardUserXShift;
+    newLayout.cardboard.bottom_screen_right_eye =
+        newLayout.bottom_screen.left - cardboardUserXShift;
+    newLayout.bottom_screen.left += cardboardUserXShift;
+    newLayout.cardboard.user_x_shift = cardboardUserXShift;
+
+    // Update right/bottom instead of passing new variables for width/height
+    newLayout.top_screen.right = newLayout.top_screen.left + top_screen_width;
+    newLayout.top_screen.bottom = newLayout.top_screen.top + top_screen_height;
+    newLayout.bottom_screen.right = newLayout.bottom_screen.left + bottom_screen_width;
+    newLayout.bottom_screen.bottom = newLayout.bottom_screen.top + bottom_screen_height;
+
+    return newLayout;
 }
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,

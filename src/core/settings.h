@@ -40,7 +40,14 @@ enum class MicInputType {
     Static,
 };
 
-enum class StereoRenderOption { Off, SideBySide, Anaglyph, Interlaced, ReverseInterlaced };
+enum class StereoRenderOption {
+    Off,
+    SideBySide,
+    Anaglyph,
+    Interlaced,
+    ReverseInterlaced,
+    CardboardVR
+};
 
 namespace NativeButton {
 enum Values {
@@ -189,6 +196,10 @@ struct Values {
 
     StereoRenderOption render_3d;
     std::atomic<u8> factor_3d;
+
+    int cardboard_screen_size;
+    int cardboard_x_shift;
+    int cardboard_y_shift;
 
     bool filter_mode;
     std::string pp_shader_name;
