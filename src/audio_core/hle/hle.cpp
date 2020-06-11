@@ -47,7 +47,12 @@ void DspHle::serialize(Archive& ar, const unsigned int) {
 }
 SERIALIZE_IMPL(DspHle)
 
-static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
+// The value below is the "perfect" mathematical ratio of ARM11 cycles per audio frame, samples per
+// frame * teaklite cycles per sample * 2 ARM11 cycles/teaklite cycle
+// (160 * 4096 * 2) = (1310720)
+//
+// This value has been verified against a rough hardware test with hardware and LLE
+static constexpr u64 audio_frame_ticks = samples_per_frame * 4096 * 2ull; ///< Units: ARM11 cycles
 
 struct DspHle::Impl final {
 public:
