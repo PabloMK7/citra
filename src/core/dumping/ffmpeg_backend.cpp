@@ -9,6 +9,7 @@
 #include "common/param_package.h"
 #include "common/string_util.h"
 #include "core/dumping/ffmpeg_backend.h"
+#include "core/hw/gpu.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -124,8 +125,13 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     codec_context->bit_rate = Settings::values.video_bitrate;
     codec_context->width = layout.width;
     codec_context->height = layout.height;
-    codec_context->time_base.num = 1;
-    codec_context->time_base.den = 60;
+    // TODO(xperia64): While these numbers from core timing work fine, certain video codecs do not
+    // support the strange resulting timebase (280071/16756991); Addressing this issue would require
+    // resampling the video
+    // List of codecs known broken by this change: mpeg1, mpeg2, mpeg4, libxvid
+    // See https://github.com/citra-emu/citra/pull/5273#issuecomment-643023325 for more information
+    codec_context->time_base.num = static_cast<int>(GPU::frame_ticks);
+    codec_context->time_base.den = static_cast<int>(BASE_CLOCK_RATE_ARM11);
     codec_context->gop_size = 12;
     codec_context->pix_fmt = codec->pix_fmts ? codec->pix_fmts[0] : AV_PIX_FMT_YUV420P;
     if (format_context->oformat->flags & AVFMT_GLOBALHEADER)

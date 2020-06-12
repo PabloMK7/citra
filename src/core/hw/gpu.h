@@ -12,6 +12,7 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "core/core_timing.h"
 
 namespace Memory {
 class MemorySystem;
@@ -19,7 +20,12 @@ class MemorySystem;
 
 namespace GPU {
 
-constexpr float SCREEN_REFRESH_RATE = 60;
+// Measured on hardware to be 2240568 timer cycles or 4481136 ARM11 cycles
+constexpr u64 frame_ticks = 4481136ull;
+
+// Refresh rate defined by ratio of ARM11 frequency to ARM11 ticks per frame
+// (268,111,856) / (4,481,136) = 59.83122493939037Hz
+constexpr double SCREEN_REFRESH_RATE = BASE_CLOCK_RATE_ARM11 / static_cast<double>(frame_ticks);
 
 // Returns index corresponding to the Regs member labeled by field_name
 #define GPU_REG_INDEX(field_name) (offsetof(GPU::Regs, field_name) / sizeof(u32))
