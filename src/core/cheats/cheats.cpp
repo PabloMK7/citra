@@ -11,10 +11,11 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/process.h"
+#include "core/hw/gpu.h"
 
 namespace Cheats {
 
-constexpr u64 run_interval_ticks = BASE_CLOCK_RATE_ARM11 / 60;
+constexpr u64 run_interval_ticks = GPU::frame_ticks;
 
 CheatEngine::CheatEngine(Core::System& system_) : system(system_) {
     LoadCheatFile();
