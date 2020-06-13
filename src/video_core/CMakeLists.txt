@@ -124,7 +124,7 @@ endforeach()
 
 add_custom_target(shaders
     BYPRODUCTS ${SHADER_HEADERS}
-    COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shaders.cmake
+    COMMAND "${CMAKE_COMMAND}" -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shaders.cmake
     SOURCES ${SHADER_FILES}
 )
 add_dependencies(video_core shaders)
