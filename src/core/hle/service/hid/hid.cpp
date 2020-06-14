@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unique_ptr.hpp>
@@ -135,9 +136,25 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     // Get current circle pad position and update circle pad direction
     float circle_pad_x_f, circle_pad_y_f;
     std::tie(circle_pad_x_f, circle_pad_y_f) = circle_pad->GetStatus();
-    constexpr int MAX_CIRCLEPAD_POS = 0x9C; // Max value for a circle pad position
-    s16 circle_pad_x = static_cast<s16>(circle_pad_x_f * MAX_CIRCLEPAD_POS);
-    s16 circle_pad_y = static_cast<s16>(circle_pad_y_f * MAX_CIRCLEPAD_POS);
+
+    // xperia64: 0x9A seems to be the calibrated limit of the circle pad
+    // Verified by using Input Redirector with very large-value digital inputs
+    // on the circle pad and calibrating using the system settings application
+    constexpr int MAX_CIRCLEPAD_POS = 0x9A; // Max value for a circle pad position
+
+    // These are rounded rather than truncated on actual hardware
+    s16 circle_pad_new_x = static_cast<s16>(std::roundf(circle_pad_x_f * MAX_CIRCLEPAD_POS));
+    s16 circle_pad_new_y = static_cast<s16>(std::roundf(circle_pad_y_f * MAX_CIRCLEPAD_POS));
+    s16 circle_pad_x =
+        (circle_pad_new_x + std::accumulate(circle_pad_old_x.begin(), circle_pad_old_x.end(), 0)) /
+        CIRCLE_PAD_AVERAGING;
+    s16 circle_pad_y =
+        (circle_pad_new_y + std::accumulate(circle_pad_old_y.begin(), circle_pad_old_y.end(), 0)) /
+        CIRCLE_PAD_AVERAGING;
+    circle_pad_old_x.erase(circle_pad_old_x.begin());
+    circle_pad_old_x.push_back(circle_pad_new_x);
+    circle_pad_old_y.erase(circle_pad_old_y.begin());
+    circle_pad_old_y.push_back(circle_pad_new_y);
 
     Core::Movie::GetInstance().HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
 
