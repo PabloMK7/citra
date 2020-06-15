@@ -151,9 +151,13 @@ constexpr std::size_t ABI_SHADOW_SPACE = 0;
 
 #endif
 
-inline void ABI_CalculateFrameSize(BitSet32 regs, std::size_t rsp_alignment,
-                                   std::size_t needed_frame_size, s32* out_subtraction,
-                                   s32* out_xmm_offset) {
+struct ABIFrameInfo {
+    s32 subtraction;
+    s32 xmm_offset;
+};
+
+inline ABIFrameInfo ABI_CalculateFrameSize(BitSet32 regs, std::size_t rsp_alignment,
+                                           std::size_t needed_frame_size) {
     int count = (regs & ABI_ALL_GPRS).Count();
     rsp_alignment -= count * 8;
     std::size_t subtraction = 0;
@@ -170,27 +174,26 @@ inline void ABI_CalculateFrameSize(BitSet32 regs, std::size_t rsp_alignment,
     rsp_alignment -= subtraction;
     subtraction += rsp_alignment & 0xF;
 
-    *out_subtraction = (s32)subtraction;
-    *out_xmm_offset = (s32)(subtraction - xmm_base_subtraction);
+    return ABIFrameInfo{static_cast<s32>(subtraction),
+                        static_cast<s32>(subtraction - xmm_base_subtraction)};
 }
 
 inline std::size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
                                                    std::size_t rsp_alignment,
                                                    std::size_t needed_frame_size = 0) {
-    s32 subtraction, xmm_offset;
-    ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size, &subtraction, &xmm_offset);
+    auto frame_info = ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size);
 
     for (int reg_index : (regs & ABI_ALL_GPRS)) {
         code.push(IndexToReg64(reg_index));
     }
 
-    if (subtraction != 0) {
-        code.sub(code.rsp, subtraction);
+    if (frame_info.subtraction != 0) {
+        code.sub(code.rsp, frame_info.subtraction);
     }
 
     for (int reg_index : (regs & ABI_ALL_XMMS)) {
-        code.movaps(code.xword[code.rsp + xmm_offset], IndexToXmm(reg_index));
-        xmm_offset += 0x10;
+        code.movaps(code.xword[code.rsp + frame_info.xmm_offset], IndexToXmm(reg_index));
+        frame_info.xmm_offset += 0x10;
     }
 
     return ABI_SHADOW_SPACE;
@@ -199,16 +202,15 @@ inline std::size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, B
 inline void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
                                            std::size_t rsp_alignment,
                                            std::size_t needed_frame_size = 0) {
-    s32 subtraction, xmm_offset;
-    ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size, &subtraction, &xmm_offset);
+    auto frame_info = ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size);
 
     for (int reg_index : (regs & ABI_ALL_XMMS)) {
-        code.movaps(IndexToXmm(reg_index), code.xword[code.rsp + xmm_offset]);
-        xmm_offset += 0x10;
+        code.movaps(IndexToXmm(reg_index), code.xword[code.rsp + frame_info.xmm_offset]);
+        frame_info.xmm_offset += 0x10;
     }
 
-    if (subtraction != 0) {
-        code.add(code.rsp, subtraction);
+    if (frame_info.subtraction != 0) {
+        code.add(code.rsp, frame_info.subtraction);
     }
 
     // GPRs need to be popped in reverse order
