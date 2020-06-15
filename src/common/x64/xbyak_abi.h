@@ -11,7 +11,7 @@
 
 namespace Common::X64 {
 
-inline int RegToIndex(const Xbyak::Reg& reg) {
+inline std::size_t RegToIndex(const Xbyak::Reg& reg) {
     using Kind = Xbyak::Reg::Kind;
     ASSERT_MSG((reg.getKind() & (Kind::REG | Kind::XMM)) != 0,
                "RegSet only support GPRs and XMM registers.");
@@ -19,17 +19,17 @@ inline int RegToIndex(const Xbyak::Reg& reg) {
     return reg.getIdx() + (reg.getKind() == Kind::REG ? 0 : 16);
 }
 
-inline Xbyak::Reg64 IndexToReg64(int reg_index) {
+inline Xbyak::Reg64 IndexToReg64(std::size_t reg_index) {
     ASSERT(reg_index < 16);
-    return Xbyak::Reg64(reg_index);
+    return Xbyak::Reg64(static_cast<int>(reg_index));
 }
 
-inline Xbyak::Xmm IndexToXmm(int reg_index) {
+inline Xbyak::Xmm IndexToXmm(std::size_t reg_index) {
     ASSERT(reg_index >= 16 && reg_index < 32);
-    return Xbyak::Xmm(reg_index - 16);
+    return Xbyak::Xmm(static_cast<int>(reg_index - 16));
 }
 
-inline Xbyak::Reg IndexToReg(int reg_index) {
+inline Xbyak::Reg IndexToReg(std::size_t reg_index) {
     if (reg_index < 16) {
         return IndexToReg64(reg_index);
     } else {
