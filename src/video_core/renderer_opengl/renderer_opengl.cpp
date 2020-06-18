@@ -41,6 +41,11 @@ namespace OpenGL {
 // number but 9 swap textures at 60FPS presentation allows for 800% speed so thats probably fine
 constexpr std::size_t SWAP_CHAIN_SIZE = 9;
 
+class OGLTextureMailboxException : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
 class OGLTextureMailbox : public Frontend::TextureMailbox {
 public:
     std::mutex swap_chain_lock;
@@ -168,17 +173,22 @@ public:
 /// This mailbox is different in that it will never discard rendered frames
 class OGLVideoDumpingMailbox : public OGLTextureMailbox {
 public:
+    bool quit = false;
+
     Frontend::Frame* GetRenderFrame() override {
         std::unique_lock<std::mutex> lock(swap_chain_lock);
 
         // If theres no free frames, we will wait until one shows up
         if (free_queue.empty()) {
-            free_cv.wait(lock, [&] { return !free_queue.empty(); });
-        }
+            free_cv.wait(lock, [&] { return (!free_queue.empty() || quit); });
+            if (quit) {
+                throw OGLTextureMailboxException("VideoDumpingMailbox quitting");
+            }
 
-        if (free_queue.empty()) {
-            LOG_CRITICAL(Render_OpenGL, "Could not get free frame");
-            return nullptr;
+            if (free_queue.empty()) {
+                LOG_CRITICAL(Render_OpenGL, "Could not get free frame");
+                return nullptr;
+            }
         }
 
         Frontend::Frame* frame = free_queue.front();
@@ -372,7 +382,11 @@ void RendererOpenGL::SwapBuffers() {
     RenderToMailbox(layout, render_window.mailbox, false);
 
     if (frame_dumper.IsDumping()) {
-        RenderToMailbox(frame_dumper.GetLayout(), frame_dumper.mailbox, true);
+        try {
+            RenderToMailbox(frame_dumper.GetLayout(), frame_dumper.mailbox, true);
+        } catch(const OGLTextureMailboxException& exception) {
+            LOG_DEBUG(Render_OpenGL, "Frame dumper exception caught: {}", exception.what());
+        }
     }
 
     m_current_frame++;
@@ -1090,11 +1104,22 @@ void RendererOpenGL::TryPresent(int timeout_ms) {
 void RendererOpenGL::UpdateFramerate() {}
 
 void RendererOpenGL::PrepareVideoDumping() {
+    auto* mailbox = static_cast<OGLVideoDumpingMailbox*>(frame_dumper.mailbox.get());
+    {
+        std::unique_lock lock(mailbox->swap_chain_lock);
+        mailbox->quit = false;
+    }
     frame_dumper.StartDumping();
 }
 
 void RendererOpenGL::CleanupVideoDumping() {
     frame_dumper.StopDumping();
+    auto* mailbox = static_cast<OGLVideoDumpingMailbox*>(frame_dumper.mailbox.get());
+    {
+        std::unique_lock lock(mailbox->swap_chain_lock);
+        mailbox->quit = true;
+    }
+    mailbox->free_cv.notify_one();
 }
 
 static const char* GetSource(GLenum source) {
