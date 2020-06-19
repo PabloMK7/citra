@@ -86,10 +86,10 @@ public:
      * @param archive_handle Handle to an open Archive object
      * @param path Path to the File inside of the Archive
      * @param mode Mode under which to open the File
-     * @return Tuple of the opened File object and the open delay
+     * @return Pair containing the opened File object and the open delay
      */
-    std::tuple<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds> OpenFileFromArchive(
-        ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
+    std::pair<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds> OpenFileFromArchive(
+        ArchiveHandle archive_handle, const FileSys::Path& path, FileSys::Mode mode);
 
     /**
      * Delete a File from an Archive

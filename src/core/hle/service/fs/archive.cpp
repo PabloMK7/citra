@@ -54,7 +54,7 @@ ResultVal<ArchiveHandle> ArchiveManager::OpenArchive(ArchiveIdCode id_code,
         ++next_handle;
     }
     handle_map.emplace(next_handle, std::move(res));
-    return MakeResult<ArchiveHandle>(next_handle++);
+    return MakeResult(next_handle++);
 }
 
 ResultCode ArchiveManager::CloseArchive(ArchiveHandle handle) {
@@ -79,21 +79,22 @@ ResultCode ArchiveManager::RegisterArchiveType(std::unique_ptr<FileSys::ArchiveF
     return RESULT_SUCCESS;
 }
 
-std::tuple<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds>
+std::pair<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds>
 ArchiveManager::OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
                                     const FileSys::Mode mode) {
     ArchiveBackend* archive = GetArchive(archive_handle);
-    if (archive == nullptr)
-        return std::make_tuple(FileSys::ERR_INVALID_ARCHIVE_HANDLE,
-                               static_cast<std::chrono::nanoseconds>(0));
+    if (archive == nullptr) {
+        return std::make_pair(FileSys::ERR_INVALID_ARCHIVE_HANDLE, std::chrono::nanoseconds{0});
+    }
 
-    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
+    const std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
     auto backend = archive->OpenFile(path, mode);
-    if (backend.Failed())
-        return std::make_tuple(backend.Code(), open_timeout_ns);
+    if (backend.Failed()) {
+        return std::make_pair(backend.Code(), open_timeout_ns);
+    }
 
     auto file = std::make_shared<File>(system.Kernel(), std::move(backend).Unwrap(), path);
-    return std::make_tuple(MakeResult<std::shared_ptr<File>>(std::move(file)), open_timeout_ns);
+    return std::make_pair(MakeResult(std::move(file)), open_timeout_ns);
 }
 
 ResultCode ArchiveManager::DeleteFileFromArchive(ArchiveHandle archive_handle,
@@ -178,22 +179,25 @@ ResultCode ArchiveManager::RenameDirectoryBetweenArchives(ArchiveHandle src_arch
 ResultVal<std::shared_ptr<Directory>> ArchiveManager::OpenDirectoryFromArchive(
     ArchiveHandle archive_handle, const FileSys::Path& path) {
     ArchiveBackend* archive = GetArchive(archive_handle);
-    if (archive == nullptr)
+    if (archive == nullptr) {
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
+    }
 
     auto backend = archive->OpenDirectory(path);
-    if (backend.Failed())
+    if (backend.Failed()) {
         return backend.Code();
+    }
 
     auto directory = std::make_shared<Directory>(std::move(backend).Unwrap(), path);
-    return MakeResult<std::shared_ptr<Directory>>(std::move(directory));
+    return MakeResult(std::move(directory));
 }
 
 ResultVal<u64> ArchiveManager::GetFreeBytesInArchive(ArchiveHandle archive_handle) {
-    ArchiveBackend* archive = GetArchive(archive_handle);
-    if (archive == nullptr)
+    const ArchiveBackend* archive = GetArchive(archive_handle);
+    if (archive == nullptr) {
         return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
-    return MakeResult<u64>(archive->GetFreeBytes());
+    }
+    return MakeResult(archive->GetFreeBytes());
 }
 
 ResultCode ArchiveManager::FormatArchive(ArchiveIdCode id_code,
