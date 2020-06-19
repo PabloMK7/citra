@@ -206,7 +206,7 @@ void OpenGLState::Apply() const {
     }
 
     // Textures
-    for (unsigned i = 0; i < ARRAY_SIZE(texture_units); ++i) {
+    for (u32 i = 0; i < texture_units.size(); ++i) {
         if (texture_units[i].texture_2d != cur_state.texture_units[i].texture_2d) {
             glActiveTexture(TextureUnits::PicaTexture(i).Enum());
             glBindTexture(GL_TEXTURE_2D, texture_units[i].texture_2d);

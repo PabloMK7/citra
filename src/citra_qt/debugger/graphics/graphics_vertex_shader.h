@@ -67,13 +67,14 @@ private:
     QTreeView* binary_list;
     GraphicsVertexShaderModel* model;
 
-    /// TODO: Move these into a single struct
-    std::array<QLineEdit*, 4 * 16>
-        input_data; // A text box for each of the 4 components of up to 16 vertex attributes
-    std::array<QWidget*, 16>
-        input_data_container; // QWidget containing the QLayout containing each vertex attribute
-    std::array<QLabel*, 16> input_data_mapping; // A QLabel denoting the shader input attribute
-                                                // which the vertex attribute maps to
+    // TODO: Move these into a single struct
+
+    // A text box for each of the 4 components of up to 16 vertex attributes
+    std::array<QLineEdit*, 4 * 16> input_data;
+    // QWidget containing the QLayout containing each vertex attribute
+    std::array<QWidget*, 16> input_data_container;
+    // A QLabel denoting the shader input attribute which the vertex attribute maps to
+    std::array<QLabel*, 16> input_data_mapping;
 
     // Text to be shown when input vertex data is not retrievable
     QLabel* breakpoint_warning;

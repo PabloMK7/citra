@@ -675,7 +675,7 @@ std::u16string Module::GetUsername() {
 
     // the username string in the block isn't null-terminated,
     // so we need to find the end manually.
-    std::u16string username(block.username, ARRAY_SIZE(block.username));
+    std::u16string username(block.username, std::size(block.username));
     const std::size_t pos = username.find(u'\0');
     if (pos != std::u16string::npos)
         username.erase(pos);

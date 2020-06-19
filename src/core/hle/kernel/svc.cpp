@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <cinttypes>
 #include <map>
 #include <fmt/format.h>
@@ -182,7 +183,7 @@ private:
         const char* name;
     };
 
-    static const FunctionDef SVC_Table[];
+    static const std::array<FunctionDef, 126> SVC_Table;
     static const FunctionDef* GetSVCInfo(u32 func_num);
 };
 
@@ -1458,7 +1459,7 @@ ResultCode SVC::GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     return RESULT_SUCCESS;
 }
 
-const SVC::FunctionDef SVC::SVC_Table[] = {
+const std::array<SVC::FunctionDef, 126> SVC::SVC_Table{{
     {0x00, nullptr, "Unknown"},
     {0x01, &SVC::Wrap<&SVC::ControlMemory>, "ControlMemory"},
     {0x02, &SVC::Wrap<&SVC::QueryMemory>, "QueryMemory"},
@@ -1585,10 +1586,10 @@ const SVC::FunctionDef SVC::SVC_Table[] = {
     {0x7B, nullptr, "Backdoor"},
     {0x7C, nullptr, "KernelSetState"},
     {0x7D, &SVC::Wrap<&SVC::QueryProcessMemory>, "QueryProcessMemory"},
-};
+}};
 
 const SVC::FunctionDef* SVC::GetSVCInfo(u32 func_num) {
-    if (func_num >= ARRAY_SIZE(SVC_Table)) {
+    if (func_num >= SVC_Table.size()) {
         LOG_ERROR(Kernel_SVC, "unknown svc=0x{:02X}", func_num);
         return nullptr;
     }

@@ -373,7 +373,7 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
     auto input_data_mapper = new QSignalMapper(this);
 
     // TODO: Support inputting data in hexadecimal raw format
-    for (unsigned i = 0; i < ARRAY_SIZE(input_data); ++i) {
+    for (std::size_t i = 0; i < input_data.size(); ++i) {
         input_data[i] = new QLineEdit;
         input_data[i]->setValidator(new QDoubleValidator(input_data[i]));
     }
@@ -401,7 +401,7 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
     connect(cycle_index, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
             &GraphicsVertexShaderWidget::OnCycleIndexChanged);
 
-    for (unsigned i = 0; i < ARRAY_SIZE(input_data); ++i) {
+    for (u32 i = 0; i < input_data.size(); ++i) {
         connect(input_data[i], &QLineEdit::textEdited, input_data_mapper,
                 static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
         input_data_mapper->setMapping(input_data[i], i);

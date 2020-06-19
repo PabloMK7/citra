@@ -167,12 +167,16 @@ struct ExHeader_ARM11_SystemLocalCaps {
 };
 
 struct ExHeader_ARM11_KernelCaps {
-    u32_le descriptors[28];
+    static constexpr std::size_t NUM_DESCRIPTORS = 28;
+
+    u32_le descriptors[NUM_DESCRIPTORS];
     u8 reserved[0x10];
 };
 
 struct ExHeader_ARM9_AccessControl {
-    u8 descriptors[15];
+    static constexpr std::size_t NUM_DESCRIPTORS = 15;
+
+    u8 descriptors[NUM_DESCRIPTORS];
     u8 descversion;
 };
 

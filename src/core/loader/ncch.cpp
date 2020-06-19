@@ -134,8 +134,8 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
             overlay_ncch->exheader_header.arm11_system_local_caps.ideal_processor;
 
         // Copy data while converting endianness
-        std::array<u32, ARRAY_SIZE(overlay_ncch->exheader_header.arm11_kernel_caps.descriptors)>
-            kernel_caps;
+        using KernelCaps = std::array<u32, ExHeader_ARM11_KernelCaps::NUM_DESCRIPTORS>;
+        KernelCaps kernel_caps;
         std::copy_n(overlay_ncch->exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(),
                     begin(kernel_caps));
         process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
