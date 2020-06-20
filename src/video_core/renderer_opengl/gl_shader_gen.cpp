@@ -971,8 +971,8 @@ using ProcTexShift = TexturingRegs::ProcTexShift;
 using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
 using ProcTexFilter = TexturingRegs::ProcTexFilter;
 
-void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcTexShift mode,
-                              ProcTexClamp clamp_mode) {
+static void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcTexShift mode,
+                                     ProcTexClamp clamp_mode) {
     const std::string_view offset = (clamp_mode == ProcTexClamp::MirroredRepeat) ? "1.0" : "0.5";
     switch (mode) {
     case ProcTexShift::None:
@@ -991,7 +991,7 @@ void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcTexShift
     }
 }
 
-void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mode) {
+static void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mode) {
     switch (mode) {
     case ProcTexClamp::ToZero:
         out += fmt::format("{0} = {0} > 1.0 ? 0 : {0};\n", var);
@@ -1016,49 +1016,40 @@ void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexClamp mod
     }
 }
 
-void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
-                                std::string_view offset) {
-    std::string combined;
-    switch (combiner) {
-    case ProcTexCombiner::U:
-        combined = "u";
-        break;
-    case ProcTexCombiner::U2:
-        combined = "(u * u)";
-        break;
-    case TexturingRegs::ProcTexCombiner::V:
-        combined = "v";
-        break;
-    case TexturingRegs::ProcTexCombiner::V2:
-        combined = "(v * v)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Add:
-        combined = "((u + v) * 0.5)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Add2:
-        combined = "((u * u + v * v) * 0.5)";
-        break;
-    case TexturingRegs::ProcTexCombiner::SqrtAdd2:
-        combined = "min(sqrt(u * u + v * v), 1.0)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Min:
-        combined = "min(u, v)";
-        break;
-    case TexturingRegs::ProcTexCombiner::Max:
-        combined = "max(u, v)";
-        break;
-    case TexturingRegs::ProcTexCombiner::RMax:
-        combined = "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
-        break;
-    default:
-        LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
-        combined = "0.0";
-        break;
-    }
+static void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
+                                       std::string_view offset) {
+    const auto combined = [combiner]() -> std::string_view {
+        switch (combiner) {
+        case ProcTexCombiner::U:
+            return "u";
+        case ProcTexCombiner::U2:
+            return "(u * u)";
+        case TexturingRegs::ProcTexCombiner::V:
+            return "v";
+        case TexturingRegs::ProcTexCombiner::V2:
+            return "(v * v)";
+        case TexturingRegs::ProcTexCombiner::Add:
+            return "((u + v) * 0.5)";
+        case TexturingRegs::ProcTexCombiner::Add2:
+            return "((u * u + v * v) * 0.5)";
+        case TexturingRegs::ProcTexCombiner::SqrtAdd2:
+            return "min(sqrt(u * u + v * v), 1.0)";
+        case TexturingRegs::ProcTexCombiner::Min:
+            return "min(u, v)";
+        case TexturingRegs::ProcTexCombiner::Max:
+            return "max(u, v)";
+        case TexturingRegs::ProcTexCombiner::RMax:
+            return "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
+            return "0.0";
+        }
+    }();
+
     out += fmt::format("ProcTexLookupLUT({}, {})", offset, combined);
 }
 
-void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
+static void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
     // LUT sampling uitlity
     // For NoiseLUT/ColorMap/AlphaMap, coord=0.0 is lut[0], coord=127.0/128.0 is lut[127] and
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
@@ -1479,7 +1470,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (state.alpha_test_func == FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
-        return {out};
+        return {std::move(out)};
     }
 
     // Append the scissor test
@@ -1545,7 +1536,7 @@ vec4 secondary_fragment_color = vec4(0.0);
                                                                 "VideoCore_Pica_UseGasMode", true);
         LOG_CRITICAL(Render_OpenGL, "Unimplemented gas mode");
         out += "discard; }";
-        return {out};
+        return {std::move(out)};
     }
 
     if (state.shadow_rendering) {
@@ -1583,7 +1574,7 @@ do {
 
     out += '}';
 
-    return {out};
+    return {std::move(out)};
 }
 
 ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shader) {
@@ -1592,22 +1583,19 @@ ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shade
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
-    out += fmt::format("layout(location = {}) in vec4 vert_position;\n",
-                       static_cast<int>(ATTRIBUTE_POSITION));
-    out += fmt::format("layout(location = {}) in vec4 vert_color;\n",
-                       static_cast<int>(ATTRIBUTE_COLOR));
-    out += fmt::format("layout(location = {}) in vec2 vert_texcoord0;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD0));
-    out += fmt::format("layout(location = {}) in vec2 vert_texcoord1;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD1));
-    out += fmt::format("layout(location = {}) in vec2 vert_texcoord2;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD2));
-    out += fmt::format("layout(location = {}) in float vert_texcoord0_w;\n",
-                       static_cast<int>(ATTRIBUTE_TEXCOORD0_W));
-    out += fmt::format("layout(location = {}) in vec4 vert_normquat;\n",
-                       static_cast<int>(ATTRIBUTE_NORMQUAT));
     out +=
-        fmt::format("layout(location = {}) in vec3 vert_view;\n", static_cast<int>(ATTRIBUTE_VIEW));
+        fmt::format("layout(location = {}) in vec4 vert_position;\n"
+                    "layout(location = {}) in vec4 vert_color;\n"
+                    "layout(location = {}) in vec2 vert_texcoord0;\n"
+                    "layout(location = {}) in vec2 vert_texcoord1;\n"
+                    "layout(location = {}) in vec2 vert_texcoord2;\n"
+                    "layout(location = {}) in float vert_texcoord0_w;\n"
+                    "layout(location = {}) in vec4 vert_normquat;\n"
+                    "layout(location = {}) in vec3 vert_view;\n",
+                    static_cast<int>(ATTRIBUTE_POSITION), static_cast<int>(ATTRIBUTE_COLOR),
+                    static_cast<int>(ATTRIBUTE_TEXCOORD0), static_cast<int>(ATTRIBUTE_TEXCOORD1),
+                    static_cast<int>(ATTRIBUTE_TEXCOORD2), static_cast<int>(ATTRIBUTE_TEXCOORD0_W),
+                    static_cast<int>(ATTRIBUTE_NORMQUAT), static_cast<int>(ATTRIBUTE_VIEW));
 
     out += GetVertexInterfaceDeclaration(true, separable_shader);
 
@@ -1631,7 +1619,7 @@ void main() {
 }
 )";
 
-    return {out};
+    return {std::move(out)};
 }
 
 std::optional<ShaderDecompiler::ProgramResult> GenerateVertexShader(
@@ -1696,7 +1684,7 @@ layout (std140) uniform vs_config {
 
     out += program_source;
 
-    return {{out}};
+    return {{std::move(out)}};
 }
 
 static std::string GetGSCommonSource(const PicaGSConfigCommonRaw& config, bool separable_shader) {
@@ -1814,6 +1802,6 @@ void main() {
     out += "    EmitPrim(prim_buffer[0], prim_buffer[1], prim_buffer[2]);\n";
     out += "}\n";
 
-    return {out};
+    return {std::move(out)};
 }
 } // namespace OpenGL
