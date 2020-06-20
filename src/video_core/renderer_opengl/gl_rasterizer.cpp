@@ -777,16 +777,27 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     }
 
     OGLTexture temp_tex;
-    if (need_texture_barrier && GLES) {
+    if (need_texture_barrier) {
         temp_tex.Create();
         AllocateSurfaceTexture(temp_tex.handle, GetFormatTuple(color_surface->pixel_format),
                                color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
-        glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, 0, 0, 0, 0,
-                           temp_tex.handle, GL_TEXTURE_2D, 0, 0, 0, 0, color_surface->GetScaledWidth(),
-                           color_surface->GetScaledHeight(), 1);
+        for (std::size_t mip{0}; mip <= color_surface->max_level; ++mip) {
+            glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, mip, 0, 0, 0,
+                               temp_tex.handle, GL_TEXTURE_2D, mip, 0, 0, 0,
+                               color_surface->GetScaledWidth() >> mip,
+                               color_surface->GetScaledHeight() >> mip, 1);
+        }
         for (auto& unit : state.texture_units) {
-            if (unit.texture_2d == color_surface->texture.handle)
+            if (unit.texture_2d == color_surface->texture.handle) {
                 unit.texture_2d = temp_tex.handle;
+            }
+        }
+        for (auto shadow_unit : {&state.image_shadow_texture_nx, &state.image_shadow_texture_ny,
+                                 &state.image_shadow_texture_nz, &state.image_shadow_texture_px,
+                                 &state.image_shadow_texture_py, &state.image_shadow_texture_pz}) {
+            if (*shadow_unit == color_surface->texture.handle) {
+                *shadow_unit = temp_tex.handle;
+            }
         }
     }
 
@@ -862,10 +873,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     if (shadow_rendering) {
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
                         GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
-    }
-
-    if (need_texture_barrier && GLAD_GL_ARB_texture_barrier) {
-        glTextureBarrier();
     }
 
     // Mark framebuffer surfaces as dirty
