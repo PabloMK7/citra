@@ -16,4 +16,4 @@ IDI_ICON1               ICON                    "../../dist/citra.ico"
 // RT_MANIFEST
 //
 
-1                       RT_MANIFEST             "../../dist/citra.manifest"
+0                       RT_MANIFEST             "../../dist/citra.manifest"
