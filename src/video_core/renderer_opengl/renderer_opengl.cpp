@@ -384,7 +384,7 @@ void RendererOpenGL::SwapBuffers() {
     if (frame_dumper.IsDumping()) {
         try {
             RenderToMailbox(frame_dumper.GetLayout(), frame_dumper.mailbox, true);
-        } catch(const OGLTextureMailboxException& exception) {
+        } catch (const OGLTextureMailboxException& exception) {
             LOG_DEBUG(Render_OpenGL, "Frame dumper exception caught: {}", exception.what());
         }
     }
