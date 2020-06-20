@@ -28,14 +28,18 @@ struct State {
     bool loop_flag = false;
 };
 
-template <typename T, typename WriteFunction>
+template <typename T, typename ReadFunction, typename WriteFunction>
 static inline std::enable_if_t<std::is_integral_v<T>> WriteOp(const GatewayCheat::CheatLine& line,
                                                               const State& state,
+                                                              ReadFunction read_func,
                                                               WriteFunction write_func,
                                                               Core::System& system) {
     u32 addr = line.address + state.offset;
-    write_func(addr, static_cast<T>(line.value));
-    system.InvalidateCacheRange(addr, sizeof(T));
+    T val = read_func(addr);
+    if (val != static_cast<T>(line.value)) {
+        write_func(addr, static_cast<T>(line.value));
+        system.InvalidateCacheRange(addr, sizeof(T));
+    }
 }
 
 template <typename T, typename ReadFunction, typename CompareFunc>
@@ -99,13 +103,16 @@ static inline void SetValueOp(const GatewayCheat::CheatLine& line, State& state)
     state.reg = line.value;
 }
 
-template <typename T, typename WriteFunction>
+template <typename T, typename ReadFunction, typename WriteFunction>
 static inline std::enable_if_t<std::is_integral_v<T>> IncrementiveWriteOp(
-    const GatewayCheat::CheatLine& line, State& state, WriteFunction write_func,
-    Core::System& system) {
+    const GatewayCheat::CheatLine& line, State& state, ReadFunction read_func,
+    WriteFunction write_func, Core::System& system) {
     u32 addr = line.value + state.offset;
-    write_func(addr, static_cast<T>(state.reg));
-    system.InvalidateCacheRange(addr, sizeof(T));
+    T val = read_func(addr);
+    if (val != static_cast<T>(state.reg)) {
+        write_func(addr, static_cast<T>(state.reg));
+        system.InvalidateCacheRange(addr, sizeof(T));
+    }
     state.offset += sizeof(T);
 }
 
@@ -273,15 +280,15 @@ void GatewayCheat::Execute(Core::System& system) const {
             break;
         case CheatType::Write32:
             // 0XXXXXXX YYYYYYYY - word[XXXXXXX+offset] = YYYYYYYY
-            WriteOp<u32>(line, state, Write32, system);
+            WriteOp<u32>(line, state, Read32, Write32, system);
             break;
         case CheatType::Write16:
             // 1XXXXXXX 0000YYYY - half[XXXXXXX+offset] = YYYY
-            WriteOp<u16>(line, state, Write16, system);
+            WriteOp<u16>(line, state, Read16, Write16, system);
             break;
         case CheatType::Write8:
             // 2XXXXXXX 000000YY - byte[XXXXXXX+offset] = YY
-            WriteOp<u8>(line, state, Write8, system);
+            WriteOp<u8>(line, state, Read8, Write8, system);
             break;
         case CheatType::GreaterThan32:
             // 3XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY > word[XXXXXXX]   ;unsigned
@@ -367,17 +374,17 @@ void GatewayCheat::Execute(Core::System& system) const {
         }
         case CheatType::IncrementiveWrite32: {
             // D6000000 XXXXXXXX – (32bit) [XXXXXXXX+offset] = reg ; offset += 4
-            IncrementiveWriteOp<u32>(line, state, Write32, system);
+            IncrementiveWriteOp<u32>(line, state, Read32, Write32, system);
             break;
         }
         case CheatType::IncrementiveWrite16: {
             // D7000000 XXXXXXXX – (16bit) [XXXXXXXX+offset] = reg & 0xffff ; offset += 2
-            IncrementiveWriteOp<u16>(line, state, Write16, system);
+            IncrementiveWriteOp<u16>(line, state, Read16, Write16, system);
             break;
         }
         case CheatType::IncrementiveWrite8: {
             // D8000000 XXXXXXXX – (16bit) [XXXXXXXX+offset] = reg & 0xff ; offset++
-            IncrementiveWriteOp<u8>(line, state, Write8, system);
+            IncrementiveWriteOp<u8>(line, state, Read8, Write8, system);
             break;
         }
         case CheatType::Load32: {
