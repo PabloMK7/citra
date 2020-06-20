@@ -491,9 +491,10 @@ void GMainWindow::InitializeHotkeys() {
                     ToggleFullscreen();
                 }
             });
-    connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Toggle Speed Limit"), this),
+    connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Toggle Alternate Speed"), this),
             &QShortcut::activated, this, [&] {
-                Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
+                Settings::values.use_frame_limit_alternate =
+                    !Settings::values.use_frame_limit_alternate;
                 UpdateStatusBar();
             });
     connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Toggle Texture Dumping"), this),
@@ -504,17 +505,44 @@ void GMainWindow::InitializeHotkeys() {
     static constexpr u16 SPEED_LIMIT_STEP = 5;
     connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Increase Speed Limit"), this),
             &QShortcut::activated, this, [&] {
-                if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
-                    Settings::values.frame_limit += SPEED_LIMIT_STEP;
-                    UpdateStatusBar();
+                if (Settings::values.use_frame_limit_alternate) {
+                    if (Settings::values.frame_limit_alternate == 0) {
+                        return;
+                    }
+                    if (Settings::values.frame_limit_alternate < 995 - SPEED_LIMIT_STEP) {
+                        Settings::values.frame_limit_alternate += SPEED_LIMIT_STEP;
+                    } else {
+                        Settings::values.frame_limit_alternate = 0;
+                    }
+                } else {
+                    if (Settings::values.frame_limit == 0) {
+                        return;
+                    }
+                    if (Settings::values.frame_limit < 995 - SPEED_LIMIT_STEP) {
+                        Settings::values.frame_limit += SPEED_LIMIT_STEP;
+                    } else {
+                        Settings::values.frame_limit = 0;
+                    }
                 }
+                UpdateStatusBar();
             });
     connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Decrease Speed Limit"), this),
             &QShortcut::activated, this, [&] {
-                if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
-                    Settings::values.frame_limit -= SPEED_LIMIT_STEP;
-                    UpdateStatusBar();
+                if (Settings::values.use_frame_limit_alternate) {
+                    if (Settings::values.frame_limit_alternate == 0) {
+                        Settings::values.frame_limit_alternate = 995;
+                    } else if (Settings::values.frame_limit_alternate > SPEED_LIMIT_STEP) {
+                        Settings::values.frame_limit_alternate -= SPEED_LIMIT_STEP;
+                    }
+                } else {
+                    if (Settings::values.frame_limit == 0) {
+                        Settings::values.frame_limit = 995;
+                    } else if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
+                        Settings::values.frame_limit -= SPEED_LIMIT_STEP;
+                        UpdateStatusBar();
+                    }
                 }
+                UpdateStatusBar();
             });
     connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Toggle Frame Advancing"), this),
             &QShortcut::activated, ui.action_Enable_Frame_Advancing, &QAction::trigger);
@@ -2019,12 +2047,22 @@ void GMainWindow::UpdateStatusBar() {
 
     auto results = Core::System::GetInstance().GetAndResetPerfStats();
 
-    if (Settings::values.use_frame_limit) {
+    if (Settings::values.use_frame_limit_alternate) {
+        if (Settings::values.frame_limit_alternate == 0) {
+            emu_speed_label->setText(
+                tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
+
+        } else {
+            emu_speed_label->setText(tr("Speed: %1% / %2%")
+                                         .arg(results.emulation_speed * 100.0, 0, 'f', 0)
+                                         .arg(Settings::values.frame_limit_alternate));
+        }
+    } else if (Settings::values.frame_limit == 0) {
+        emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
+    } else {
         emu_speed_label->setText(tr("Speed: %1% / %2%")
                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
                                      .arg(Settings::values.frame_limit));
-    } else {
-        emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
     }
     game_fps_label->setText(tr("Game: %1 FPS").arg(results.game_fps, 0, 'f', 0));
     emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));

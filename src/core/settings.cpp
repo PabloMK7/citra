@@ -83,8 +83,9 @@ void LogSettings() {
     LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
     LogSetting("Renderer_UseShaderJit", Settings::values.use_shader_jit);
     LogSetting("Renderer_UseResolutionFactor", Settings::values.resolution_factor);
-    LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
     LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
+    LogSetting("Renderer_UseFrameLimitAlternate", Settings::values.use_frame_limit_alternate);
+    LogSetting("Renderer_FrameLimitAlternate", Settings::values.frame_limit_alternate);
     LogSetting("Renderer_PostProcessingShader", Settings::values.pp_shader_name);
     LogSetting("Renderer_FilterMode", Settings::values.filter_mode);
     LogSetting("Renderer_TextureFilterName", Settings::values.texture_filter_name);

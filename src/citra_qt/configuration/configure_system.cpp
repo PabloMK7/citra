@@ -244,6 +244,10 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
         }
     }
 
+    // Set a minimum width for the label to prevent the slider from changing size.
+    // This scales across DPIs. (This value should be enough for "xxx%")
+    ui->clock_display_label->setMinimumWidth(40);
+
     connect(ui->slider_clock_speed, &QSlider::valueChanged, [&](int value) {
         ui->clock_display_label->setText(QStringLiteral("%1%").arg(SliderToSettings(value)));
     });

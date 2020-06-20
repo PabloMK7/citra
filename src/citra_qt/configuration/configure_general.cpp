@@ -9,17 +9,53 @@
 #include "core/settings.h"
 #include "ui_configure_general.h"
 
+// The QSlider doesn't have an easy way to set a custom step amount,
+// so we can just convert from the sliders range (0 - 198) to the expected
+// settings range (5 - 995) with simple math.
+static constexpr int SliderToSettings(int value) {
+    return 5 * value + 5;
+}
+
+static constexpr int SettingsToSlider(int value) {
+    return (value - 5) / 5;
+}
+
 ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGeneral) {
 
     ui->setupUi(this);
-    SetConfiguration();
 
-    connect(ui->toggle_frame_limit, &QCheckBox::toggled, ui->frame_limit, &QSpinBox::setEnabled);
+    // Set a minimum width for the label to prevent the slider from changing size.
+    // This scales across DPIs, and is acceptable for uncapitalized strings.
+    ui->emulation_speed_display_label->setMinimumWidth(tr("unthrottled").size() * 6);
+
+    SetConfiguration();
 
     ui->updateBox->setVisible(UISettings::values.updater_found);
     connect(ui->button_reset_defaults, &QPushButton::clicked, this,
             &ConfigureGeneral::ResetDefaults);
+
+    connect(ui->frame_limit, &QSlider::valueChanged, [&](int value) {
+        if (value == ui->frame_limit->maximum()) {
+            ui->emulation_speed_display_label->setText(tr("unthrottled"));
+        } else {
+            ui->emulation_speed_display_label->setText(
+                QStringLiteral("%1%")
+                    .arg(SliderToSettings(value))
+                    .rightJustified(tr("unthrottled").size()));
+        }
+    });
+
+    connect(ui->frame_limit_alternate, &QSlider::valueChanged, [&](int value) {
+        if (value == ui->frame_limit_alternate->maximum()) {
+            ui->emulation_speed_alternate_display_label->setText(tr("unthrottled"));
+        } else {
+            ui->emulation_speed_alternate_display_label->setText(
+                QStringLiteral("%1%")
+                    .arg(SliderToSettings(value))
+                    .rightJustified(tr("unthrottled").size()));
+        }
+    });
 }
 
 ConfigureGeneral::~ConfigureGeneral() = default;
@@ -35,9 +71,36 @@ void ConfigureGeneral::SetConfiguration() {
     // The first item is "auto-select" with actual value -1, so plus one here will do the trick
     ui->region_combobox->setCurrentIndex(Settings::values.region_value + 1);
 
-    ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
-    ui->frame_limit->setEnabled(ui->toggle_frame_limit->isChecked());
-    ui->frame_limit->setValue(Settings::values.frame_limit);
+    if (Settings::values.frame_limit == 0) {
+        ui->frame_limit->setValue(ui->frame_limit->maximum());
+    } else {
+        ui->frame_limit->setValue(SettingsToSlider(Settings::values.frame_limit));
+    }
+    if (ui->frame_limit->value() == ui->frame_limit->maximum()) {
+        ui->emulation_speed_display_label->setText(tr("unthrottled"));
+    } else {
+        ui->emulation_speed_display_label->setText(
+            QStringLiteral("%1%")
+                .arg(SliderToSettings(ui->frame_limit->value()))
+                .rightJustified(tr("unthrottled").size()));
+    }
+
+    ui->toggle_alternate_speed->setChecked(Settings::values.use_frame_limit_alternate);
+
+    if (Settings::values.frame_limit_alternate == 0) {
+        ui->frame_limit_alternate->setValue(ui->frame_limit_alternate->maximum());
+    } else {
+        ui->frame_limit_alternate->setValue(
+            SettingsToSlider(Settings::values.frame_limit_alternate));
+    }
+    if (ui->frame_limit_alternate->value() == ui->frame_limit_alternate->maximum()) {
+        ui->emulation_speed_alternate_display_label->setText(tr("unthrottled"));
+    } else {
+        ui->emulation_speed_alternate_display_label->setText(
+            QStringLiteral("%1%")
+                .arg(SliderToSettings(ui->frame_limit_alternate->value()))
+                .rightJustified(tr("unthrottled").size()));
+    }
 }
 
 void ConfigureGeneral::ResetDefaults() {
@@ -63,8 +126,18 @@ void ConfigureGeneral::ApplyConfiguration() {
 
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
 
-    Settings::values.use_frame_limit = ui->toggle_frame_limit->isChecked();
-    Settings::values.frame_limit = ui->frame_limit->value();
+    if (ui->frame_limit->value() == ui->frame_limit->maximum()) {
+        Settings::values.frame_limit = 0;
+    } else {
+        Settings::values.frame_limit = SliderToSettings(ui->frame_limit->value());
+    }
+    Settings::values.use_frame_limit_alternate = ui->toggle_alternate_speed->isChecked();
+    if (ui->frame_limit_alternate->value() == ui->frame_limit_alternate->maximum()) {
+        Settings::values.frame_limit_alternate = 0;
+    } else {
+        Settings::values.frame_limit_alternate =
+            SliderToSettings(ui->frame_limit_alternate->value());
+    }
 }
 
 void ConfigureGeneral::RetranslateUI() {
