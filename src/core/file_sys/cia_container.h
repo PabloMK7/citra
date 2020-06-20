@@ -58,14 +58,14 @@ public:
     u64 GetTicketOffset() const;
     u64 GetTitleMetadataOffset() const;
     u64 GetMetadataOffset() const;
-    u64 GetContentOffset(u16 index = 0) const;
+    u64 GetContentOffset(std::size_t index = 0) const;
 
     u32 GetCertificateSize() const;
     u32 GetTicketSize() const;
     u32 GetTitleMetadataSize() const;
     u32 GetMetadataSize() const;
     u64 GetTotalContentSize() const;
-    u64 GetContentSize(u16 index = 0) const;
+    u64 GetContentSize(std::size_t index = 0) const;
 
     void Print() const;
 
@@ -81,11 +81,11 @@ private:
         u64_le content_size;
         std::array<u8, CIA_CONTENT_BITS_SIZE> content_present;
 
-        bool isContentPresent(u16 index) const {
+        bool IsContentPresent(std::size_t index) const {
             // The content_present is a bit array which defines which content in the TMD
             // is included in the CIA, so check the bit for this index and add if set.
             // The bits in the content index are arranged w/ index 0 as the MSB, 7 as the LSB, etc.
-            return (content_present[index >> 3] & (0x80 >> (index & 7)));
+            return (content_present[index >> 3] & (0x80 >> (index & 7))) != 0;
         }
     };
 

@@ -206,10 +206,10 @@ u64 CIAContainer::GetMetadataOffset() const {
     return offset;
 }
 
-u64 CIAContainer::GetContentOffset(u16 index) const {
+u64 CIAContainer::GetContentOffset(std::size_t index) const {
     u64 offset =
         Common::AlignUp(GetTitleMetadataOffset() + cia_header.tmd_size, CIA_SECTION_ALIGNMENT);
-    for (u16 i = 0; i < index; i++) {
+    for (std::size_t i = 0; i < index; i++) {
         offset += GetContentSize(i);
     }
     return offset;
@@ -235,10 +235,11 @@ u64 CIAContainer::GetTotalContentSize() const {
     return cia_header.content_size;
 }
 
-u64 CIAContainer::GetContentSize(u16 index) const {
+u64 CIAContainer::GetContentSize(std::size_t index) const {
     // If the content doesn't exist in the CIA, it doesn't have a size.
-    if (!cia_header.isContentPresent(index))
+    if (!cia_header.IsContentPresent(index)) {
         return 0;
+    }
 
     return cia_tmd.GetContentSizeByIndex(index);
 }

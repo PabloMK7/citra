@@ -134,7 +134,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
  * @param update set true if the incoming TMD should be used instead of the current TMD
  * @returns string path to the .app file
  */
-std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index = 0,
+std::string GetTitleContentPath(FS::MediaType media_type, u64 tid, std::size_t index = 0,
                                 bool update = false);
 
 /**

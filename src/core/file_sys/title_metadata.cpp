@@ -165,19 +165,19 @@ u32 TitleMetadata::GetDLPContentID() const {
     return tmd_chunks[TMDContentIndex::DLP].id;
 }
 
-u32 TitleMetadata::GetContentIDByIndex(u16 index) const {
+u32 TitleMetadata::GetContentIDByIndex(std::size_t index) const {
     return tmd_chunks[index].id;
 }
 
-u16 TitleMetadata::GetContentTypeByIndex(u16 index) const {
+u16 TitleMetadata::GetContentTypeByIndex(std::size_t index) const {
     return tmd_chunks[index].type;
 }
 
-u64 TitleMetadata::GetContentSizeByIndex(u16 index) const {
+u64 TitleMetadata::GetContentSizeByIndex(std::size_t index) const {
     return tmd_chunks[index].size;
 }
 
-std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(u16 index) const {
+std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(std::size_t index) const {
     std::array<u8, 16> ctr{};
     std::memcpy(ctr.data(), &tmd_chunks[index].index, sizeof(u16));
     return ctr;

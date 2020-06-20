@@ -151,21 +151,22 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
     // Data is not being buffered, so we have to keep track of how much of each <ID>.app
     // has been written since we might get a written buffer which contains multiple .app
     // contents or only part of a larger .app's contents.
-    u64 offset_max = offset + length;
-    for (int i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+    const u64 offset_max = offset + length;
+    for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
         if (content_written[i] < container.GetContentSize(i)) {
             // The size, minimum unwritten offset, and maximum unwritten offset of this content
-            u64 size = container.GetContentSize(i);
-            u64 range_min = container.GetContentOffset(i) + content_written[i];
-            u64 range_max = container.GetContentOffset(i) + size;
+            const u64 size = container.GetContentSize(i);
+            const u64 range_min = container.GetContentOffset(i) + content_written[i];
+            const u64 range_max = container.GetContentOffset(i) + size;
 
             // The unwritten range for this content is beyond the buffered data we have
             // or comes before the buffered data we have, so skip this content ID.
-            if (range_min > offset_max || range_max < offset)
+            if (range_min > offset_max || range_max < offset) {
                 continue;
+            }
 
             // Figure out how much of this content ID we have just recieved/can write out
-            u64 available_to_write = std::min(offset_max, range_max) - range_min;
+            const u64 available_to_write = std::min(offset_max, range_max) - range_min;
 
             // Since the incoming TMD has already been written, we can use GetTitleContentPath
             // to get the content paths to write to.
@@ -173,14 +174,14 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             FileUtil::IOFile file(GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update),
                                   content_written[i] ? "ab" : "wb");
 
-            if (!file.IsOpen())
+            if (!file.IsOpen()) {
                 return FileSys::ERROR_INSUFFICIENT_SPACE;
+            }
 
             std::vector<u8> temp(buffer + (range_min - offset),
                                  buffer + (range_min - offset) + available_to_write);
 
-            if (tmd.GetContentTypeByIndex(static_cast<u16>(i)) &
-                FileSys::TMDContentTypeFlag::Encrypted) {
+            if ((tmd.GetContentTypeByIndex(i) & FileSys::TMDContentTypeFlag::Encrypted) != 0) {
                 decryption_state->content[i].ProcessData(temp.data(), temp.data(), temp.size());
             }
 
@@ -194,7 +195,7 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
         }
     }
 
-    return MakeResult<std::size_t>(length);
+    return MakeResult(length);
 }
 
 ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush,
@@ -464,11 +465,10 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
     return content_path + fmt::format("{:08x}.tmd", (update ? update_id : base_id));
 }
 
-std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index,
-                                bool update) {
+std::string GetTitleContentPath(FS::MediaType media_type, u64 tid, std::size_t index, bool update) {
     std::string content_path = GetTitlePath(media_type, tid) + "content/";
 
-    if (media_type == Service::FS::MediaType::GameCard) {
+    if (media_type == FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app file if TID matches?
         LOG_ERROR(Service_AM, "Request for gamecard partition {} content path unimplemented!",
                   static_cast<u32>(index));
