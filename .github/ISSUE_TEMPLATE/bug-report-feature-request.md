@@ -1,3 +1,12 @@
+---
+name: Bug Report / Feature Request
+about: Tech support does not belong here. You should only file an issue here if you think you have experienced an actual bug with Citra or you are requesting a feature you believe would make Citra better.
+title: ''
+labels: ''
+assignees: ''
+
+---
+
 <!---
 
 Please read the FAQ:

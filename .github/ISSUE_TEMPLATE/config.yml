@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Citra Discord
+    url: https://citra-emu.org/discord/
+    about: If you are experiencing an issue with Citra, and you need tech support, or if you have a general question, try asking in the official Citra Discord linked here. Piracy is not allowed.
+  - name: Community forums
+    url: https://community.citra-emu.org
+    about: This is an alternative place for tech support, however helpers there are not as active.
+  - name: Citra Android
+    url: https://github.com/citra-emu/citra-android
+    about: If you need tech support on Citra Android, you should use either of the above two options. If you want to file an issue, you should go to the Android repo linked here.
