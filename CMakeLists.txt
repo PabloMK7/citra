@@ -344,7 +344,7 @@ add_subdirectory(externals)
 
 # Boost
 if (USE_SYSTEM_BOOST)
-    find_package(Boost 1.70.0 QUIET REQUIRED)
+    find_package(Boost 1.70.0 COMPONENTS serialization REQUIRED)
 else()
     add_library(Boost::boost ALIAS boost)
     add_library(Boost::serialization ALIAS boost_serialization)
