@@ -61,11 +61,6 @@ RasterizerOpenGL::RasterizerOpenGL()
                     "Shadow might not be able to render because of unsupported OpenGL extensions.");
     }
 
-    if (!GLAD_GL_ARB_texture_barrier) {
-        LOG_WARNING(Render_OpenGL,
-                    "ARB_texture_barrier not supported. Some games might produce artifacts.");
-    }
-
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
 
@@ -643,10 +638,10 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         uniform_block_data.dirty = true;
     }
 
-    bool need_texture_barrier = false;
-    auto CheckBarrier = [&need_texture_barrier, &color_surface](GLuint handle) {
+    bool need_duplicate_texture = false;
+    auto CheckBarrier = [&need_duplicate_texture, &color_surface](GLuint handle) {
         if (color_surface && color_surface->texture.handle == handle) {
-            need_texture_barrier = true;
+            need_duplicate_texture = true;
         }
     };
 
@@ -777,16 +772,28 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     }
 
     OGLTexture temp_tex;
-    if (need_texture_barrier) {
+    if (need_duplicate_texture) {
+        // The game is trying to use a surface as a texture and framebuffer at the same time
+        // which causes unpredictable behavior on the host.
+        // Making a copy to sample from eliminates this issue and seems to be fairly cheap.
         temp_tex.Create();
-        AllocateSurfaceTexture(temp_tex.handle, GetFormatTuple(color_surface->pixel_format),
-                               color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, temp_tex.handle);
+        auto [internal_format, format, type] = GetFormatTuple(color_surface->pixel_format);
+        ASSERT_MSG(GLAD_GL_ARB_texture_storage, "ARB_texture_storage not supported");
+        glTexStorage2D(GL_TEXTURE_2D, color_surface->max_level + 1, internal_format,
+                       color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, state.texture_units[0].texture_2d);
+
         for (std::size_t mip{0}; mip <= color_surface->max_level; ++mip) {
             glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, mip, 0, 0, 0,
                                temp_tex.handle, GL_TEXTURE_2D, mip, 0, 0, 0,
                                color_surface->GetScaledWidth() >> mip,
                                color_surface->GetScaledHeight() >> mip, 1);
         }
+
         for (auto& unit : state.texture_units) {
             if (unit.texture_2d == color_surface->texture.handle) {
                 unit.texture_2d = temp_tex.handle;
