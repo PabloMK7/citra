@@ -64,8 +64,8 @@ void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat,
             glTexStorage1D(target, levels, internalformat, width);
         } else {
             for (GLsizei level{0}; level < levels; ++level) {
-                width >>= 1;
                 glTexImage1D(target, level, internalformat, width, 0, format, type, nullptr);
+                width >>= 1;
             }
         }
         break;
@@ -77,11 +77,11 @@ void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat,
             glTexStorage2D(target, levels, internalformat, width, height);
         } else {
             for (GLsizei level{0}; level < levels; ++level) {
+                glTexImage2D(target, level, internalformat, width, height, 0, format, type,
+                             nullptr);
                 width >>= 1;
                 if (target != GL_TEXTURE_1D_ARRAY)
                     height >>= 1;
-                glTexImage2D(target, level, internalformat, width, height, 0, format, type,
-                             nullptr);
             }
         }
         break;
