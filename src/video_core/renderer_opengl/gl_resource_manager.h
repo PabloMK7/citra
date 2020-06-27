@@ -59,6 +59,8 @@ public:
     /// Deletes the internal OpenGL resource
     void Release();
 
+    static void Allocate(GLenum target, GLsizei levels, GLenum internalformat, GLenum format, GLenum type, GLsizei width, GLsizei height = 1, GLsizei depth = 1);
+
     GLuint handle = 0;
 };
 

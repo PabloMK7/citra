@@ -777,21 +777,20 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         // which causes unpredictable behavior on the host.
         // Making a copy to sample from eliminates this issue and seems to be fairly cheap.
         temp_tex.Create();
-        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, temp_tex.handle);
         auto [internal_format, format, type] = GetFormatTuple(color_surface->pixel_format);
-        ASSERT_MSG(GLAD_GL_ARB_texture_storage, "ARB_texture_storage not supported");
-        glTexStorage2D(GL_TEXTURE_2D, color_surface->max_level + 1, internal_format,
-                       color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        OGLTexture::Allocate(GL_TEXTURE_2D, color_surface->max_level, internal_format, format, type,
+                             color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, state.texture_units[0].texture_2d);
 
-        for (std::size_t mip{0}; mip <= color_surface->max_level; ++mip) {
-            glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, mip, 0, 0, 0,
-                               temp_tex.handle, GL_TEXTURE_2D, mip, 0, 0, 0,
-                               color_surface->GetScaledWidth() >> mip,
-                               color_surface->GetScaledHeight() >> mip, 1);
+        for (std::size_t level{0}; level <= color_surface->max_level; ++level) {
+            glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, level, 0, 0, 0,
+                               temp_tex.handle, GL_TEXTURE_2D, level, 0, 0, 0,
+                               color_surface->GetScaledWidth() >> level,
+                               color_surface->GetScaledHeight() >> level, 1);
         }
 
         for (auto& unit : state.texture_units) {
