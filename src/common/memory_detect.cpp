@@ -9,10 +9,12 @@
 // clang-format on
 #else
 #include <sys/types.h>
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/sysctl.h>
-#else
+#elif defined(__linux__)
 #include <sys/sysinfo.h>
+#else
+#include <unistd.h>
 #endif
 #endif
 
@@ -42,11 +44,22 @@ static MemoryInfo Detect() {
     sysctlbyname("vm.swapusage", &vmusage, &sizeof_vmusage, NULL, 0);
     mem_info.TotalPhysicalMemory = ramsize;
     mem_info.TotalSwapMemory = vmusage.xsu_total;
-#else
+#elif defined(__FreeBSD__)
+    u_long physmem, swap_total;
+    std::size_t sizeof_u_long = sizeof(u_long);
+    // sysctlbyname(const char *, void *, size_t *, const void *, size_t);
+    sysctlbyname("hw.physmem", &physmem, &sizeof_u_long, NULL, 0);
+    sysctlbyname("vm.swap_total", &swap_total, &sizeof_u_long, NULL, 0);
+    mem_info.TotalPhysicalMemory = physmem;
+    mem_info.TotalSwapMemory = swap_total;
+#elif defined(__linux__)
     struct sysinfo meminfo;
     sysinfo(&meminfo);
     mem_info.TotalPhysicalMemory = meminfo.totalram;
     mem_info.TotalSwapMemory = meminfo.totalswap;
+#else
+    mem_info.TotalPhysicalMemory = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGE_SIZE);
+    mem_info.TotalSwapMemory = 0;
 #endif
 
     return mem_info;
