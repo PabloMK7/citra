@@ -3,10 +3,12 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
 #include <cryptopp/hex.h>
+#include <cryptopp/osrng.h>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -117,11 +119,60 @@ struct CTMHeader {
     u64_le program_id;           /// ID of the ROM being executed. Also called title_id
     std::array<u8, 20> revision; /// Git hash of the revision this movie was created with
     u64_le clock_init_time;      /// The init time of the system clock
+    // Unique identifier of the movie, used to support separate savestate slots for TASing
+    u64_le id;
 
-    std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size
+    std::array<u8, 208> reserved; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
+
+template <class Archive>
+void Movie::serialize(Archive& ar, const unsigned int file_version) {
+    // Only serialize what's needed to make savestates useful for TAS:
+    u64 _current_byte = static_cast<u64>(current_byte);
+    ar& _current_byte;
+    current_byte = static_cast<std::size_t>(_current_byte);
+
+    std::vector<u8> recorded_input_ = recorded_input;
+    ar& recorded_input_;
+
+    ar& init_time;
+
+    if (file_version > 0) {
+        if (Archive::is_loading::value) {
+            u64 savestate_movie_id;
+            ar& savestate_movie_id;
+            if (id != savestate_movie_id) {
+                if (savestate_movie_id == 0) {
+                    throw std::runtime_error("You must close your movie to load this state");
+                } else {
+                    throw std::runtime_error("You must load the same movie to load this state");
+                }
+            }
+        } else {
+            ar& id;
+        }
+    }
+
+    if (Archive::is_loading::value && id != 0) {
+        if (read_only) { // Do not replace the previously recorded input.
+            if (play_mode == PlayMode::Recording) {
+                SaveMovie();
+            }
+            if (current_byte >= recorded_input.size()) {
+                throw std::runtime_error(
+                    "This savestate was created at a later point and must be loaded in R+W mode");
+            }
+            play_mode = PlayMode::Playing;
+        } else {
+            recorded_input = std::move(recorded_input_);
+            play_mode = PlayMode::Recording;
+        }
+    }
+}
+
+SERIALIZE_IMPL(Movie)
 
 bool Movie::IsPlayingInput() const {
     return play_mode == PlayMode::Playing;
@@ -135,6 +186,7 @@ void Movie::CheckInputEnd() {
         LOG_INFO(Movie, "Playback finished");
         play_mode = PlayMode::None;
         init_time = 0;
+        id = 0;
         playback_completion_callback();
     }
 }
@@ -394,6 +446,7 @@ void Movie::SaveMovie() {
     CTMHeader header = {};
     header.filetype = header_magic_bytes;
     header.clock_init_time = init_time;
+    header.id = id;
 
     Core::System::GetInstance().GetAppLoader().ReadProgramId(header.program_id);
 
@@ -421,10 +474,14 @@ void Movie::StartPlayback(const std::string& movie_file,
         save_record.ReadArray(&header, 1);
         if (ValidateHeader(header) != ValidationResult::Invalid) {
             play_mode = PlayMode::Playing;
+            record_movie_file = movie_file;
             recorded_input.resize(size - sizeof(CTMHeader));
             save_record.ReadArray(recorded_input.data(), recorded_input.size());
             current_byte = 0;
+            id = header.id;
             playback_completion_callback = completion_callback;
+
+            LOG_INFO(Movie, "Loaded Movie, ID: {:016X}", id);
         }
     } else {
         LOG_ERROR(Movie, "Failed to playback movie: Unable to open '{}'", movie_file);
@@ -432,9 +489,18 @@ void Movie::StartPlayback(const std::string& movie_file,
 }
 
 void Movie::StartRecording(const std::string& movie_file) {
-    LOG_INFO(Movie, "Enabling Movie recording");
     play_mode = PlayMode::Recording;
     record_movie_file = movie_file;
+
+    // Generate a random ID
+    CryptoPP::AutoSeededRandomPool rng;
+    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(&id), sizeof(id));
+
+    LOG_INFO(Movie, "Enabling Movie recording, ID: {:016X}", id);
+}
+
+void Movie::SetReadOnly(bool read_only_) {
+    read_only = read_only_;
 }
 
 static boost::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
@@ -496,6 +562,7 @@ void Movie::Shutdown() {
     record_movie_file.clear();
     current_byte = 0;
     init_time = 0;
+    id = 0;
 }
 
 template <typename... Targs>

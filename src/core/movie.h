@@ -46,6 +46,18 @@ public:
         const std::string& movie_file, std::function<void()> completion_callback = [] {});
     void StartRecording(const std::string& movie_file);
 
+    /**
+     * Sets the read-only status.
+     * When true, movies will be opened in read-only mode. Loading a state will resume playback
+     * from that state.
+     * When false, movies will be opened in read/write mode. Loading a state will start recording
+     * from that state (rerecording). To start rerecording without loading a state, one can save
+     * and then immediately load while in R/W.
+     *
+     * The default is true.
+     */
+    void SetReadOnly(bool read_only);
+
     /// Prepare to override the clock before playing back movies
     void PrepareForPlayback(const std::string& movie_file);
 
@@ -57,6 +69,11 @@ public:
     /// Get the init time that would override the one in the settings
     u64 GetOverrideInitTime() const;
     u64 GetMovieProgramID(const std::string& movie_file) const;
+
+    /// Get the current movie's unique ID. Used to provide separate savestate slots for movies.
+    u64 GetCurrentMovieID() const {
+        return id;
+    }
 
     void Shutdown();
 
@@ -133,16 +150,13 @@ private:
     u64 init_time;
     std::function<void()> playback_completion_callback;
     std::size_t current_byte = 0;
+    u64 id = 0; // ID of the current movie loaded
+    bool read_only = true;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        // Only serialize what's needed to make savestates useful for TAS:
-        u64 _current_byte = static_cast<u64>(current_byte);
-        ar& _current_byte;
-        current_byte = static_cast<std::size_t>(_current_byte);
-        ar& recorded_input;
-        ar& init_time;
-    }
+    void serialize(Archive& ar, const unsigned int file_version);
     friend class boost::serialization::access;
 };
 } // namespace Core
+
+BOOST_CLASS_VERSION(Core::Movie, 1)
