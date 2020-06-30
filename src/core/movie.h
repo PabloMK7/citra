@@ -32,6 +32,7 @@ public:
         OK,
         RevisionDismatch,
         GameDismatch,
+        InputCountDismatch,
         Invalid,
     };
     /**
@@ -42,9 +43,9 @@ public:
         return s_instance;
     }
 
-    void StartPlayback(
-        const std::string& movie_file, std::function<void()> completion_callback = [] {});
-    void StartRecording(const std::string& movie_file);
+    void StartPlayback(const std::string& movie_file,
+                       std::function<void()> completion_callback = [] {});
+    void StartRecording(const std::string& movie_file, const std::string& author);
 
     /**
      * Sets the read-only status.
@@ -68,7 +69,14 @@ public:
 
     /// Get the init time that would override the one in the settings
     u64 GetOverrideInitTime() const;
-    u64 GetMovieProgramID(const std::string& movie_file) const;
+
+    struct MovieMetadata {
+        u64 program_id;
+        std::string author;
+        u32 rerecord_count;
+        u64 input_count;
+    };
+    MovieMetadata GetMovieMetadata(const std::string& movie_file) const;
 
     /// Get the current movie's unique ID. Used to provide separate savestate slots for movies.
     u64 GetCurrentMovieID() const {
@@ -141,17 +149,24 @@ private:
     void Record(const Service::IR::ExtraHIDResponse& extra_hid_response);
 
     ValidationResult ValidateHeader(const CTMHeader& header, u64 program_id = 0) const;
+    ValidationResult ValidateInput(const std::vector<u8>& input, u64 expected_count) const;
 
     void SaveMovie();
 
     PlayMode play_mode;
+
     std::string record_movie_file;
+    std::string record_movie_author;
+
     std::vector<u8> recorded_input;
-    u64 init_time;
-    std::function<void()> playback_completion_callback;
     std::size_t current_byte = 0;
+
     u64 id = 0; // ID of the current movie loaded
+    u64 init_time;
+    u32 rerecord_count = 1;
     bool read_only = true;
+
+    std::function<void()> playback_completion_callback;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version);

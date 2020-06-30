@@ -119,10 +119,12 @@ struct CTMHeader {
     u64_le program_id;           /// ID of the ROM being executed. Also called title_id
     std::array<u8, 20> revision; /// Git hash of the revision this movie was created with
     u64_le clock_init_time;      /// The init time of the system clock
-    // Unique identifier of the movie, used to support separate savestate slots for TASing
-    u64_le id;
+    u64_le id; /// Unique identifier of the movie, used to support separate savestate slots
+    std::array<char, 32> author; /// Author of the movie
+    u32_le rerecord_count;       /// Number of rerecords when making the movie
+    u64_le input_count;          /// Number of inputs (button and pad states) when making the movie
 
-    std::array<u8, 208> reserved; /// Make heading 256 bytes so it has consistent size
+    std::array<u8, 164> reserved; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
@@ -168,6 +170,7 @@ void Movie::serialize(Archive& ar, const unsigned int file_version) {
         } else {
             recorded_input = std::move(recorded_input_);
             play_mode = PlayMode::Recording;
+            rerecord_count++;
         }
     }
 }
@@ -434,6 +437,28 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
     return ValidationResult::OK;
 }
 
+static u64 GetInputCount(const std::vector<u8>& input) {
+    u64 input_count = 0;
+    for (std::size_t pos = 0; pos < input.size(); pos += sizeof(ControllerState)) {
+        if (input.size() < pos + sizeof(ControllerState)) {
+            break;
+        }
+
+        ControllerState state;
+        std::memcpy(&state, input.data() + pos, sizeof(ControllerState));
+        if (state.type == ControllerStateType::PadAndCircle) {
+            input_count++;
+        }
+    }
+    return input_count;
+}
+
+Movie::ValidationResult Movie::ValidateInput(const std::vector<u8>& input,
+                                             u64 expected_count) const {
+    return GetInputCount(input) == expected_count ? ValidationResult::OK
+                                                  : ValidationResult::InputCountDismatch;
+}
+
 void Movie::SaveMovie() {
     LOG_INFO(Movie, "Saving recorded movie to '{}'", record_movie_file);
     FileUtil::IOFile save_record(record_movie_file, "wb");
@@ -447,6 +472,12 @@ void Movie::SaveMovie() {
     header.filetype = header_magic_bytes;
     header.clock_init_time = init_time;
     header.id = id;
+
+    std::memcpy(header.author.data(), record_movie_author.data(),
+                std::min(header.author.size(), record_movie_author.size()));
+
+    header.rerecord_count = rerecord_count;
+    header.input_count = GetInputCount(recorded_input);
 
     Core::System::GetInstance().GetAppLoader().ReadProgramId(header.program_id);
 
@@ -475,8 +506,16 @@ void Movie::StartPlayback(const std::string& movie_file,
         if (ValidateHeader(header) != ValidationResult::Invalid) {
             play_mode = PlayMode::Playing;
             record_movie_file = movie_file;
+
+            std::array<char, 33> author{}; // Add a null terminator
+            std::memcpy(author.data(), header.author.data(), header.author.size());
+            record_movie_author = author.data();
+
+            rerecord_count = header.rerecord_count;
+
             recorded_input.resize(size - sizeof(CTMHeader));
             save_record.ReadArray(recorded_input.data(), recorded_input.size());
+
             current_byte = 0;
             id = header.id;
             playback_completion_callback = completion_callback;
@@ -488,9 +527,11 @@ void Movie::StartPlayback(const std::string& movie_file,
     }
 }
 
-void Movie::StartRecording(const std::string& movie_file) {
+void Movie::StartRecording(const std::string& movie_file, const std::string& author) {
     play_mode = PlayMode::Recording;
     record_movie_file = movie_file;
+    record_movie_author = author;
+    rerecord_count = 1;
 
     // Generate a random ID
     CryptoPP::AutoSeededRandomPool rng;
@@ -537,19 +578,41 @@ void Movie::PrepareForRecording() {
 
 Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 program_id) const {
     LOG_INFO(Movie, "Validating Movie file '{}'", movie_file);
-    auto header = ReadHeader(movie_file);
-    if (header == boost::none)
-        return ValidationResult::Invalid;
 
-    return ValidateHeader(header.value(), program_id);
+    FileUtil::IOFile save_record(movie_file, "rb");
+    const u64 size = save_record.GetSize();
+
+    if (!save_record || size <= sizeof(CTMHeader)) {
+        return ValidationResult::Invalid;
+    }
+
+    CTMHeader header;
+    save_record.ReadArray(&header, 1);
+
+    if (header_magic_bytes != header.filetype) {
+        return ValidationResult::Invalid;
+    }
+
+    auto result = ValidateHeader(header, program_id);
+    if (result != ValidationResult::OK) {
+        return result;
+    }
+
+    std::vector<u8> input(size - sizeof(header));
+    save_record.ReadArray(input.data(), input.size());
+    return ValidateInput(input, header.input_count);
 }
 
-u64 Movie::GetMovieProgramID(const std::string& movie_file) const {
+Movie::MovieMetadata Movie::GetMovieMetadata(const std::string& movie_file) const {
     auto header = ReadHeader(movie_file);
     if (header == boost::none)
-        return 0;
+        return {};
 
-    return static_cast<u64>(header.value().program_id);
+    std::array<char, 33> author{}; // Add a null terminator
+    std::memcpy(author.data(), header->author.data(), header->author.size());
+
+    return {header->program_id, std::string{author.data()}, header->rerecord_count,
+            header->input_count};
 }
 
 void Movie::Shutdown() {
