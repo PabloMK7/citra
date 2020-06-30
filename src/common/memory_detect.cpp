@@ -40,16 +40,16 @@ static MemoryInfo Detect() {
     // hw and vm are defined in sysctl.h
     // https://github.com/apple/darwin-xnu/blob/master/bsd/sys/sysctl.h#L471
     // sysctlbyname(const char *, void *, size_t *, void *, size_t);
-    sysctlbyname("hw.memsize", &ramsize, &sizeof_ramsize, NULL, 0);
-    sysctlbyname("vm.swapusage", &vmusage, &sizeof_vmusage, NULL, 0);
+    sysctlbyname("hw.memsize", &ramsize, &sizeof_ramsize, nullptr, 0);
+    sysctlbyname("vm.swapusage", &vmusage, &sizeof_vmusage, nullptr, 0);
     mem_info.TotalPhysicalMemory = ramsize;
     mem_info.TotalSwapMemory = vmusage.xsu_total;
 #elif defined(__FreeBSD__)
     u_long physmem, swap_total;
     std::size_t sizeof_u_long = sizeof(u_long);
     // sysctlbyname(const char *, void *, size_t *, const void *, size_t);
-    sysctlbyname("hw.physmem", &physmem, &sizeof_u_long, NULL, 0);
-    sysctlbyname("vm.swap_total", &swap_total, &sizeof_u_long, NULL, 0);
+    sysctlbyname("hw.physmem", &physmem, &sizeof_u_long, nullptr, 0);
+    sysctlbyname("vm.swap_total", &swap_total, &sizeof_u_long, nullptr, 0);
     mem_info.TotalPhysicalMemory = physmem;
     mem_info.TotalSwapMemory = swap_total;
 #elif defined(__linux__)
