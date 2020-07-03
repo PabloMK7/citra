@@ -413,21 +413,13 @@ u64 Movie::GetOverrideInitTime() const {
     return init_time;
 }
 
-Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 program_id) const {
+Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
     if (header_magic_bytes != header.filetype) {
         LOG_ERROR(Movie, "Playback file does not have valid header");
         return ValidationResult::Invalid;
     }
 
     std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
-
-    if (!program_id)
-        Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
-    if (program_id != header.program_id) {
-        LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
-        return ValidationResult::GameDismatch;
-    }
-
     if (revision != Common::g_scm_rev) {
         LOG_WARNING(Movie,
                     "This movie was created on a different version of Citra, playback may desync");
@@ -576,7 +568,7 @@ void Movie::PrepareForRecording() {
                      : Settings::values.init_time);
 }
 
-Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 program_id) const {
+Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file) const {
     LOG_INFO(Movie, "Validating Movie file '{}'", movie_file);
 
     FileUtil::IOFile save_record(movie_file, "rb");
@@ -593,9 +585,13 @@ Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 
         return ValidationResult::Invalid;
     }
 
-    auto result = ValidateHeader(header, program_id);
+    auto result = ValidateHeader(header);
     if (result != ValidationResult::OK) {
         return result;
+    }
+
+    if (!header.input_count) { // Probably created by an older version.
+        return ValidationResult::OK;
     }
 
     std::vector<u8> input(size - sizeof(header));

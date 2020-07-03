@@ -31,7 +31,6 @@ public:
     enum class ValidationResult {
         OK,
         RevisionDismatch,
-        GameDismatch,
         InputCountDismatch,
         Invalid,
     };
@@ -65,7 +64,7 @@ public:
     /// Prepare to override the clock before recording movies
     void PrepareForRecording();
 
-    ValidationResult ValidateMovie(const std::string& movie_file, u64 program_id = 0) const;
+    ValidationResult ValidateMovie(const std::string& movie_file) const;
 
     /// Get the init time that would override the one in the settings
     u64 GetOverrideInitTime() const;
@@ -148,7 +147,7 @@ private:
     void Record(const Service::IR::PadState& pad_state, const s16& c_stick_x, const s16& c_stick_y);
     void Record(const Service::IR::ExtraHIDResponse& extra_hid_response);
 
-    ValidationResult ValidateHeader(const CTMHeader& header, u64 program_id = 0) const;
+    ValidationResult ValidateHeader(const CTMHeader& header) const;
     ValidationResult ValidateInput(const std::vector<u8>& input, u64 expected_count) const;
 
     void SaveMovie();
