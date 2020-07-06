@@ -722,17 +722,17 @@ void GameList::RefreshGameDirectory() {
     }
 }
 
-QString GameList::FindGameByProgramID(u64 program_id) {
-    return FindGameByProgramID(item_model->invisibleRootItem(), program_id);
+QString GameList::FindGameByProgramID(u64 program_id, int role) {
+    return FindGameByProgramID(item_model->invisibleRootItem(), program_id, role);
 }
 
-QString GameList::FindGameByProgramID(QStandardItem* current_item, u64 program_id) {
+QString GameList::FindGameByProgramID(QStandardItem* current_item, u64 program_id, int role) {
     if (current_item->type() == static_cast<int>(GameListItemType::Game) &&
         current_item->data(GameListItemPath::ProgramIdRole).toULongLong() == program_id) {
-        return current_item->data(GameListItemPath::FullPathRole).toString();
+        return current_item->data(role).toString();
     } else if (current_item->hasChildren()) {
         for (int child_id = 0; child_id < current_item->rowCount(); child_id++) {
-            QString path = FindGameByProgramID(current_item->child(child_id, 0), program_id);
+            QString path = FindGameByProgramID(current_item->child(child_id, 0), program_id, role);
             if (!path.isEmpty())
                 return path;
         }

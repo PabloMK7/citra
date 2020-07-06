@@ -208,7 +208,7 @@ private slots:
     void OnCreateGraphicsSurfaceViewer();
     void OnRecordMovie();
     void OnPlayMovie();
-    void OnStopRecordingPlayback();
+    void OnCloseMovie(bool shutting_down = false);
     void OnCaptureScreenshot();
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     void OnStartVideoDumping();
@@ -224,7 +224,6 @@ private slots:
     void OnMouseActivity();
 
 private:
-    bool ValidateMovie(const QString& path, u64 program_id = 0);
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
     void LoadTranslation();
@@ -267,6 +266,7 @@ private:
     // Movie
     bool movie_record_on_start = false;
     QString movie_record_path;
+    QString movie_record_author;
 
     // Video dumping
     bool video_dumping_on_start = false;

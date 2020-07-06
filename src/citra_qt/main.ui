@@ -163,7 +163,9 @@
      </property>
      <addaction name="action_Record_Movie"/>
      <addaction name="action_Play_Movie"/>
-     <addaction name="action_Stop_Recording_Playback"/>
+     <addaction name="action_Close_Movie"/>
+     <addaction name="separator"/>
+     <addaction name="action_Movie_Read_Only_Mode"/>
     </widget>
     <widget class="QMenu" name="menu_Frame_Advance">
      <property name="title">
@@ -318,27 +320,29 @@
    </property>
   </action>
   <action name="action_Record_Movie">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
    <property name="text">
-    <string>Record Movie</string>
+    <string>Record...</string>
    </property>
   </action>
   <action name="action_Play_Movie">
-   <property name="enabled">
+   <property name="text">
+    <string>Play...</string>
+   </property>
+  </action>
+  <action name="action_Close_Movie">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="action_Movie_Read_Only_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Play Movie</string>
-   </property>
-  </action>
-  <action name="action_Stop_Recording_Playback">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Stop Recording / Playback</string>
+    <string>Read-Only Mode</string>
    </property>
   </action>
   <action name="action_Enable_Frame_Advancing">

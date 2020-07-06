@@ -12,7 +12,6 @@
 #include "common/logging/log.h"
 #include "core/3ds.h"
 #include "core/core.h"
-#include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
@@ -54,11 +53,6 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
     // Devices are set from the implementation (and are stateless afaik)
 }
 SERIALIZE_IMPL(Module)
-
-// Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
-constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
-constexpr u64 accelerometer_update_ticks = BASE_CLOCK_RATE_ARM11 / 104;
-constexpr u64 gyroscope_update_ticks = BASE_CLOCK_RATE_ARM11 / 101;
 
 constexpr float accelerometer_coef = 512.0f; // measured from hw test result
 constexpr float gyroscope_coef = 14.375f; // got from hwtest GetGyroscopeLowRawToDpsCoefficient call
