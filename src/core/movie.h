@@ -123,6 +123,9 @@ public:
     bool IsPlayingInput() const;
     bool IsRecordingInput() const;
 
+    u64 GetCurrentInputIndex() const;
+    u64 GetTotalInputCount() const;
+
 private:
     static Movie s_instance;
 
@@ -159,6 +162,9 @@ private:
 
     std::vector<u8> recorded_input;
     std::size_t current_byte = 0;
+    u64 current_input = 0;
+    // Total input count of the current movie being played. Not used for recording.
+    u64 total_input = 0;
 
     u64 id = 0; // ID of the current movie loaded
     u64 init_time;

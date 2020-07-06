@@ -129,12 +129,32 @@ struct CTMHeader {
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
 
+static u64 GetInputCount(const std::vector<u8>& input) {
+    u64 input_count = 0;
+    for (std::size_t pos = 0; pos < input.size(); pos += sizeof(ControllerState)) {
+        if (input.size() < pos + sizeof(ControllerState)) {
+            break;
+        }
+
+        ControllerState state;
+        std::memcpy(&state, input.data() + pos, sizeof(ControllerState));
+        if (state.type == ControllerStateType::PadAndCircle) {
+            input_count++;
+        }
+    }
+    return input_count;
+}
+
 template <class Archive>
 void Movie::serialize(Archive& ar, const unsigned int file_version) {
     // Only serialize what's needed to make savestates useful for TAS:
     u64 _current_byte = static_cast<u64>(current_byte);
     ar& _current_byte;
     current_byte = static_cast<std::size_t>(_current_byte);
+
+    if (file_version > 0) {
+        ar& current_input;
+    }
 
     std::vector<u8> recorded_input_ = recorded_input;
     ar& recorded_input_;
@@ -167,6 +187,7 @@ void Movie::serialize(Archive& ar, const unsigned int file_version) {
                     "This savestate was created at a later point and must be loaded in R+W mode");
             }
             play_mode = PlayMode::Playing;
+            total_input = GetInputCount(recorded_input);
         } else {
             recorded_input = std::move(recorded_input_);
             play_mode = PlayMode::Recording;
@@ -184,6 +205,13 @@ bool Movie::IsRecordingInput() const {
     return play_mode == PlayMode::Recording;
 }
 
+u64 Movie::GetCurrentInputIndex() const {
+    return current_input;
+}
+u64 Movie::GetTotalInputCount() const {
+    return total_input;
+}
+
 void Movie::CheckInputEnd() {
     if (current_byte + sizeof(ControllerState) > recorded_input.size()) {
         LOG_INFO(Movie, "Playback finished");
@@ -198,6 +226,7 @@ void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
+    current_input++;
 
     if (s.type != ControllerStateType::PadAndCircle) {
         LOG_ERROR(Movie,
@@ -325,6 +354,8 @@ void Movie::Record(const ControllerState& controller_state) {
 
 void Movie::Record(const Service::HID::PadState& pad_state, const s16& circle_pad_x,
                    const s16& circle_pad_y) {
+    current_input++;
+
     ControllerState s;
     s.type = ControllerStateType::PadAndCircle;
 
@@ -429,22 +460,6 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
     return ValidationResult::OK;
 }
 
-static u64 GetInputCount(const std::vector<u8>& input) {
-    u64 input_count = 0;
-    for (std::size_t pos = 0; pos < input.size(); pos += sizeof(ControllerState)) {
-        if (input.size() < pos + sizeof(ControllerState)) {
-            break;
-        }
-
-        ControllerState state;
-        std::memcpy(&state, input.data() + pos, sizeof(ControllerState));
-        if (state.type == ControllerStateType::PadAndCircle) {
-            input_count++;
-        }
-    }
-    return input_count;
-}
-
 Movie::ValidationResult Movie::ValidateInput(const std::vector<u8>& input,
                                              u64 expected_count) const {
     return GetInputCount(input) == expected_count ? ValidationResult::OK
@@ -507,11 +522,13 @@ void Movie::StartPlayback(const std::string& movie_file) {
             record_movie_author = author.data();
 
             rerecord_count = header.rerecord_count;
+            total_input = header.input_count;
 
             recorded_input.resize(size - sizeof(CTMHeader));
             save_record.ReadArray(recorded_input.data(), recorded_input.size());
 
             current_byte = 0;
+            current_input = 0;
             id = header.id;
 
             LOG_INFO(Movie, "Loaded Movie, ID: {:016X}", id);
@@ -622,6 +639,7 @@ void Movie::Shutdown() {
     recorded_input.resize(0);
     record_movie_file.clear();
     current_byte = 0;
+    current_input = 0;
     init_time = 0;
     id = 0;
 }

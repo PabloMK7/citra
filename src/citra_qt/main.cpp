@@ -1055,7 +1055,7 @@ void GMainWindow::BootGame(const QString& filename) {
         game_list->hide();
         game_list_placeholder->hide();
     }
-    status_bar_update_timer.start(2000);
+    status_bar_update_timer.start(1000);
 
     if (UISettings::values.hide_mouse) {
         mouse_hide_timer.start();
@@ -1165,6 +1165,7 @@ void GMainWindow::ShutdownGame() {
     // Disable status bar updates
     status_bar_update_timer.stop();
     message_label->setVisible(false);
+    message_label_used_for_movie = false;
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
     emu_frametime_label->setVisible(false);
@@ -1982,6 +1983,23 @@ void GMainWindow::UpdateStatusBar() {
         return;
     }
 
+    // Update movie status
+    const u64 current = Core::Movie::GetInstance().GetCurrentInputIndex();
+    const u64 total = Core::Movie::GetInstance().GetTotalInputCount();
+    if (Core::Movie::GetInstance().IsRecordingInput()) {
+        message_label->setText(tr("Recording %1").arg(current));
+        message_label->setVisible(true);
+        message_label_used_for_movie = true;
+    } else if (Core::Movie::GetInstance().IsPlayingInput()) {
+        message_label->setText(tr("Playing %1 / %2").arg(current).arg(total));
+        message_label->setVisible(true);
+        message_label_used_for_movie = true;
+    } else if (message_label_used_for_movie) { // Clear the label if movie was just closed
+        message_label->setText(QString{});
+        message_label->setVisible(false);
+        message_label_used_for_movie = false;
+    }
+
     auto results = Core::System::GetInstance().GetAndResetPerfStats();
 
     if (Settings::values.use_frame_limit_alternate) {
@@ -2093,6 +2111,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
             emu_thread->SetRunning(true);
             message_label->setText(status_message);
             message_label->setVisible(true);
+            message_label_used_for_movie = false;
         }
     }
 }
