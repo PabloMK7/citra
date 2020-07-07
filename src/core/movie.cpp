@@ -486,8 +486,11 @@ void Movie::SaveMovie() {
     }
 }
 
-void Movie::StartPlayback(const std::string& movie_file,
-                          std::function<void()> completion_callback) {
+void Movie::SetPlaybackCompletionCallback(std::function<void()> completion_callback) {
+    playback_completion_callback = completion_callback;
+}
+
+void Movie::StartPlayback(const std::string& movie_file) {
     LOG_INFO(Movie, "Loading Movie for playback");
     FileUtil::IOFile save_record(movie_file, "rb");
     const u64 size = save_record.GetSize();
@@ -510,7 +513,6 @@ void Movie::StartPlayback(const std::string& movie_file,
 
             current_byte = 0;
             id = header.id;
-            playback_completion_callback = completion_callback;
 
             LOG_INFO(Movie, "Loaded Movie, ID: {:016X}", id);
         }

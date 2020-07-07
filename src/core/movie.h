@@ -42,8 +42,8 @@ public:
         return s_instance;
     }
 
-    void StartPlayback(const std::string& movie_file,
-                       std::function<void()> completion_callback = [] {});
+    void SetPlaybackCompletionCallback(std::function<void()> completion_callback);
+    void StartPlayback(const std::string& movie_file);
     void StartRecording(const std::string& movie_file, const std::string& author);
 
     /**
@@ -165,7 +165,7 @@ private:
     u32 rerecord_count = 1;
     bool read_only = true;
 
-    std::function<void()> playback_completion_callback;
+    std::function<void()> playback_completion_callback = [] {};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version);
