@@ -61,11 +61,6 @@ RasterizerOpenGL::RasterizerOpenGL()
                     "Shadow might not be able to render because of unsupported OpenGL extensions.");
     }
 
-    if (!GLAD_GL_ARB_texture_barrier) {
-        LOG_WARNING(Render_OpenGL,
-                    "ARB_texture_barrier not supported. Some games might produce artifacts.");
-    }
-
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
 
@@ -643,10 +638,10 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         uniform_block_data.dirty = true;
     }
 
-    bool need_texture_barrier = false;
-    auto CheckBarrier = [&need_texture_barrier, &color_surface](GLuint handle) {
+    bool need_duplicate_texture = false;
+    auto CheckBarrier = [&need_duplicate_texture, &color_surface](GLuint handle) {
         if (color_surface && color_surface->texture.handle == handle) {
-            need_texture_barrier = true;
+            need_duplicate_texture = true;
         }
     };
 
@@ -776,6 +771,43 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         }
     }
 
+    OGLTexture temp_tex;
+    if (need_duplicate_texture) {
+        // The game is trying to use a surface as a texture and framebuffer at the same time
+        // which causes unpredictable behavior on the host.
+        // Making a copy to sample from eliminates this issue and seems to be fairly cheap.
+        temp_tex.Create();
+        glBindTexture(GL_TEXTURE_2D, temp_tex.handle);
+        auto [internal_format, format, type] = GetFormatTuple(color_surface->pixel_format);
+        OGLTexture::Allocate(GL_TEXTURE_2D, color_surface->max_level + 1, internal_format, format,
+                             type, color_surface->GetScaledWidth(),
+                             color_surface->GetScaledHeight());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, state.texture_units[0].texture_2d);
+
+        for (std::size_t level{0}; level <= color_surface->max_level; ++level) {
+            glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, level, 0, 0, 0,
+                               temp_tex.handle, GL_TEXTURE_2D, level, 0, 0, 0,
+                               color_surface->GetScaledWidth() >> level,
+                               color_surface->GetScaledHeight() >> level, 1);
+        }
+
+        for (auto& unit : state.texture_units) {
+            if (unit.texture_2d == color_surface->texture.handle) {
+                unit.texture_2d = temp_tex.handle;
+            }
+        }
+        for (auto shadow_unit : {&state.image_shadow_texture_nx, &state.image_shadow_texture_ny,
+                                 &state.image_shadow_texture_nz, &state.image_shadow_texture_px,
+                                 &state.image_shadow_texture_py, &state.image_shadow_texture_pz}) {
+            if (*shadow_unit == color_surface->texture.handle) {
+                *shadow_unit = temp_tex.handle;
+            }
+        }
+    }
+
     // Sync and bind the shader
     if (shader_dirty) {
         SetShader();
@@ -848,10 +880,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     if (shadow_rendering) {
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
                         GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
-    }
-
-    if (need_texture_barrier && GLAD_GL_ARB_texture_barrier) {
-        glTextureBarrier();
     }
 
     // Mark framebuffer surfaces as dirty

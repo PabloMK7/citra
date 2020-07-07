@@ -9,6 +9,7 @@
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 
 MICROPROFILE_DEFINE(OpenGL_ResourceCreation, "OpenGL", "Resource Creation", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_ResourceDeletion, "OpenGL", "Resource Deletion", MP_RGB(128, 128, 192));
@@ -49,6 +50,61 @@ void OGLTexture::Release() {
     glDeleteTextures(1, &handle);
     OpenGLState::GetCurState().ResetTexture(handle).Apply();
     handle = 0;
+}
+
+void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat, GLenum format,
+                          GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
+    const bool tex_storage = GLAD_GL_ARB_texture_storage || GLES;
+
+    switch (target) {
+    case GL_TEXTURE_1D:
+    case GL_TEXTURE:
+        if (tex_storage) {
+            glTexStorage1D(target, levels, internalformat, width);
+        } else {
+            for (GLsizei level{0}; level < levels; ++level) {
+                glTexImage1D(target, level, internalformat, width, 0, format, type, nullptr);
+                width >>= 1;
+            }
+        }
+        break;
+    case GL_TEXTURE_2D:
+    case GL_TEXTURE_1D_ARRAY:
+    case GL_TEXTURE_RECTANGLE:
+    case GL_TEXTURE_CUBE_MAP:
+        if (tex_storage) {
+            glTexStorage2D(target, levels, internalformat, width, height);
+        } else {
+            for (GLsizei level{0}; level < levels; ++level) {
+                glTexImage2D(target, level, internalformat, width, height, 0, format, type,
+                             nullptr);
+                width >>= 1;
+                if (target != GL_TEXTURE_1D_ARRAY)
+                    height >>= 1;
+            }
+        }
+        break;
+    case GL_TEXTURE_3D:
+    case GL_TEXTURE_2D_ARRAY:
+    case GL_TEXTURE_CUBE_MAP_ARRAY:
+        if (tex_storage) {
+            glTexStorage3D(target, levels, internalformat, width, height, depth);
+        } else {
+            for (GLsizei level{0}; level < levels; ++level) {
+                glTexImage3D(target, level, internalformat, width, height, depth, 0, format, type,
+                             nullptr);
+            }
+            width >>= 1;
+            height >>= 1;
+            if (target == GL_TEXTURE_3D)
+                depth >>= 1;
+        }
+        break;
+    }
+
+    if (!tex_storage) {
+        glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, levels - 1);
+    }
 }
 
 void OGLSampler::Create() {
