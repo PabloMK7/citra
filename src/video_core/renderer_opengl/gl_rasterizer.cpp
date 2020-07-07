@@ -779,8 +779,9 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         temp_tex.Create();
         glBindTexture(GL_TEXTURE_2D, temp_tex.handle);
         auto [internal_format, format, type] = GetFormatTuple(color_surface->pixel_format);
-        OGLTexture::Allocate(GL_TEXTURE_2D, color_surface->max_level + 1, internal_format, format, type,
-                             color_surface->GetScaledWidth(), color_surface->GetScaledHeight());
+        OGLTexture::Allocate(GL_TEXTURE_2D, color_surface->max_level + 1, internal_format, format,
+                             type, color_surface->GetScaledWidth(),
+                             color_surface->GetScaledHeight());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

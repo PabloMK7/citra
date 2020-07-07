@@ -52,9 +52,8 @@ void OGLTexture::Release() {
     handle = 0;
 }
 
-void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat,
-                                 GLenum format, GLenum type, GLsizei width, GLsizei height,
-                                 GLsizei depth) {
+void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat, GLenum format,
+                          GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
     const bool tex_storage = GLAD_GL_ARB_texture_storage || GLES;
 
     switch (target) {
