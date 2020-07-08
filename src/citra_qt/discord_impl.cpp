@@ -17,7 +17,7 @@ DiscordImpl::DiscordImpl() {
 
     // The number is the client ID for Citra, it's used for images and the
     // application name
-    Discord_Initialize("461729900748079114", &handlers, 1, nullptr);
+    Discord_Initialize("719647875465871400", &handlers, 1, nullptr);
 }
 
 DiscordImpl::~DiscordImpl() {
@@ -37,7 +37,7 @@ void DiscordImpl::Update() {
     if (Core::System::GetInstance().IsPoweredOn())
         Core::System::GetInstance().GetAppLoader().ReadTitle(title);
     DiscordRichPresence presence{};
-    presence.largeImageKey = "citra_logo";
+    presence.largeImageKey = "citra";
     presence.largeImageText = "Citra is an emulator for the Nintendo 3DS";
     if (Core::System::GetInstance().IsPoweredOn()) {
         presence.state = title.c_str();
