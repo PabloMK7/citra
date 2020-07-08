@@ -24,10 +24,10 @@ union PadState;
 namespace Core {
 struct CTMHeader;
 struct ControllerState;
-enum class PlayMode;
 
 class Movie {
 public:
+    enum class PlayMode { None, Recording, Playing, MovieFinished };
     enum class ValidationResult {
         OK,
         RevisionDismatch,
@@ -120,8 +120,7 @@ public:
      * When playing: Replaces the given input states with the ones stored in the playback file
      */
     void HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response);
-    bool IsPlayingInput() const;
-    bool IsRecordingInput() const;
+    PlayMode GetPlayMode() const;
 
     u64 GetCurrentInputIndex() const;
     u64 GetTotalInputCount() const;

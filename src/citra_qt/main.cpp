@@ -1892,7 +1892,8 @@ void GMainWindow::OnCloseMovie(bool shutting_down) {
             OnPauseGame();
         }
 
-        const bool was_recording = Core::Movie::GetInstance().IsRecordingInput();
+        const bool was_recording =
+            Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording;
         Core::Movie::GetInstance().Shutdown();
         if (was_recording) {
             QMessageBox::information(this, tr("Movie Saved"),
@@ -1986,12 +1987,17 @@ void GMainWindow::UpdateStatusBar() {
     // Update movie status
     const u64 current = Core::Movie::GetInstance().GetCurrentInputIndex();
     const u64 total = Core::Movie::GetInstance().GetTotalInputCount();
-    if (Core::Movie::GetInstance().IsRecordingInput()) {
+    const auto play_mode = Core::Movie::GetInstance().GetPlayMode();
+    if (play_mode == Core::Movie::PlayMode::Recording) {
         message_label->setText(tr("Recording %1").arg(current));
         message_label->setVisible(true);
         message_label_used_for_movie = true;
-    } else if (Core::Movie::GetInstance().IsPlayingInput()) {
+    } else if (play_mode == Core::Movie::PlayMode::Playing) {
         message_label->setText(tr("Playing %1 / %2").arg(current).arg(total));
+        message_label->setVisible(true);
+        message_label_used_for_movie = true;
+    } else if (play_mode == Core::Movie::PlayMode::MovieFinished) {
+        message_label->setText(tr("Movie Finished"));
         message_label->setVisible(true);
         message_label_used_for_movie = true;
     } else if (message_label_used_for_movie) { // Clear the label if movie was just closed
@@ -2291,7 +2297,6 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 
 void GMainWindow::OnMoviePlaybackCompleted() {
     QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
-    ui->action_Close_Movie->setEnabled(false);
 }
 
 void GMainWindow::UpdateWindowTitle() {

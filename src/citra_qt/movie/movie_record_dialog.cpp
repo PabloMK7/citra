@@ -25,7 +25,7 @@ MovieRecordDialog::MovieRecordDialog(QWidget* parent)
     QString note_text;
     if (Core::System::GetInstance().IsPoweredOn()) {
         note_text = tr("Current running game will be restarted.");
-        if (Core::Movie::GetInstance().IsRecordingInput()) {
+        if (Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording) {
             note_text.append(tr("<br>Current recording will be discarded."));
         }
     } else {

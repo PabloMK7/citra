@@ -29,7 +29,7 @@ MoviePlayDialog::MoviePlayDialog(QWidget* parent, GameList* game_list_)
     if (Core::System::GetInstance().IsPoweredOn()) {
         QString note_text;
         note_text = tr("Current running game will be stopped.");
-        if (Core::Movie::GetInstance().IsRecordingInput()) {
+        if (Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording) {
             note_text.append(tr("<br>Current recording will be discarded."));
         }
         ui->note2Label->setText(note_text);

@@ -28,8 +28,6 @@ namespace Core {
 
 /*static*/ Movie Movie::s_instance;
 
-enum class PlayMode { None, Recording, Playing };
-
 enum class ControllerStateType : u8 {
     PadAndCircle,
     Touch,
@@ -178,8 +176,23 @@ void Movie::serialize(Archive& ar, const unsigned int file_version) {
         }
     }
 
+    // Whether the state was made in MovieFinished state
+    bool post_movie = play_mode == PlayMode::MovieFinished;
+    if (file_version > 0) {
+        ar& post_movie;
+    }
+
     if (Archive::is_loading::value && id != 0) {
-        if (read_only) { // Do not replace the previously recorded input.
+        if (!read_only) {
+            recorded_input = std::move(recorded_input_);
+        }
+
+        if (post_movie) {
+            play_mode = PlayMode::MovieFinished;
+            return;
+        }
+
+        if (read_only) {
             if (play_mode == PlayMode::Recording) {
                 SaveMovie();
             }
@@ -196,7 +209,6 @@ void Movie::serialize(Archive& ar, const unsigned int file_version) {
             play_mode = PlayMode::Playing;
             total_input = GetInputCount(recorded_input);
         } else {
-            recorded_input = std::move(recorded_input_);
             play_mode = PlayMode::Recording;
             rerecord_count++;
         }
@@ -205,11 +217,8 @@ void Movie::serialize(Archive& ar, const unsigned int file_version) {
 
 SERIALIZE_IMPL(Movie)
 
-bool Movie::IsPlayingInput() const {
-    return play_mode == PlayMode::Playing;
-}
-bool Movie::IsRecordingInput() const {
-    return play_mode == PlayMode::Recording;
+Movie::PlayMode Movie::GetPlayMode() const {
+    return play_mode;
 }
 
 u64 Movie::GetCurrentInputIndex() const {
@@ -222,9 +231,7 @@ u64 Movie::GetTotalInputCount() const {
 void Movie::CheckInputEnd() {
     if (current_byte + sizeof(ControllerState) > recorded_input.size()) {
         LOG_INFO(Movie, "Playback finished");
-        play_mode = PlayMode::None;
-        init_time = 0;
-        id = 0;
+        play_mode = PlayMode::MovieFinished;
         playback_completion_callback();
     }
 }
@@ -638,7 +645,7 @@ Movie::MovieMetadata Movie::GetMovieMetadata(const std::string& movie_file) cons
 }
 
 void Movie::Shutdown() {
-    if (IsRecordingInput()) {
+    if (play_mode == PlayMode::Recording) {
         SaveMovie();
     }
 
@@ -653,11 +660,11 @@ void Movie::Shutdown() {
 
 template <typename... Targs>
 void Movie::Handle(Targs&... Fargs) {
-    if (IsPlayingInput()) {
+    if (play_mode == PlayMode::Playing) {
         ASSERT(current_byte + sizeof(ControllerState) <= recorded_input.size());
         Play(Fargs...);
         CheckInputEnd();
-    } else if (IsRecordingInput()) {
+    } else if (play_mode == PlayMode::Recording) {
         Record(Fargs...);
     }
 }
