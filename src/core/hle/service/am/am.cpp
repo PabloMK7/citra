@@ -31,6 +31,7 @@
 #include "core/hle/service/am/am_sys.h"
 #include "core/hle/service/am/am_u.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
 
@@ -465,15 +466,18 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
     return content_path + fmt::format("{:08x}.tmd", (update ? update_id : base_id));
 }
 
-std::string GetTitleContentPath(FS::MediaType media_type, u64 tid, std::size_t index, bool update) {
-    std::string content_path = GetTitlePath(media_type, tid) + "content/";
+std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, std::size_t index,
+                                bool update) {
 
-    if (media_type == FS::MediaType::GameCard) {
-        // TODO(shinyquagsire23): get current app file if TID matches?
-        LOG_ERROR(Service_AM, "Request for gamecard partition {} content path unimplemented!",
-                  static_cast<u32>(index));
-        return "";
+    if (media_type == Service::FS::MediaType::GameCard) {
+        // TODO(B3N30): check if TID matches
+        auto fs_user =
+            Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
+                "fs:USER");
+        return fs_user->GetCurrentGamecardPath();
     }
+
+    std::string content_path = GetTitlePath(media_type, tid) + "content/";
 
     std::string tmd_path = GetTitleMetadataPath(media_type, tid, update);
 
@@ -509,9 +513,11 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
         return fmt::format("{}{:08x}/{:08x}/", GetMediaTitlePath(media_type), high, low);
 
     if (media_type == Service::FS::MediaType::GameCard) {
-        // TODO(shinyquagsire23): get current app path if TID matches?
-        LOG_ERROR(Service_AM, "Request for gamecard title path unimplemented!");
-        return "";
+        // TODO(B3N30): check if TID matches
+        auto fs_user =
+            Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
+                "fs:USER");
+        return fs_user->GetCurrentGamecardPath();
     }
 
     return "";
@@ -528,9 +534,11 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
                            SDCARD_ID);
 
     if (media_type == Service::FS::MediaType::GameCard) {
-        // TODO(shinyquagsire23): get current app parent folder if TID matches?
-        LOG_ERROR(Service_AM, "Request for gamecard parent path unimplemented!");
-        return "";
+        // TODO(B3N30): check if TID matchess
+        auto fs_user =
+            Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
+                "fs:USER");
+        return fs_user->GetCurrentGamecardPath();
     }
 
     return "";

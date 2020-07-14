@@ -90,7 +90,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
 
     std::string file_path =
         Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
-    auto ncch_container = NCCHContainer(file_path);
+    auto ncch_container = NCCHContainer(file_path, 0, openfile_path.content_index);
 
     Loader::ResultStatus result;
     std::unique_ptr<FileBackend> file;

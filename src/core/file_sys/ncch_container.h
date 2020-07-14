@@ -15,6 +15,31 @@
 #include "core/core.h"
 #include "core/file_sys/romfs_reader.h"
 
+enum NCSDContentIndex { Main = 0, Manual = 1, DLP = 2, New3DSUpdate = 6, Update = 7 };
+
+struct NCSD_Partitions {
+    u32 offset;
+    u32 size;
+};
+
+struct NCSD_Header {
+    u8 signature[0x100];
+    u32_le magic;
+    u32_le media_size;
+    u8 media_id[8];
+    u8 partition_fs_type[8];
+    u8 partition_crypt_type[8];
+    NCSD_Partitions partitions[8];
+    u8 extended_header_hash[0x20];
+    u32_le additional_header_size;
+    u32_le sector_zero_offset;
+    u8 partition_flags[8];
+    u8 partition_id_table[0x40];
+    u8 reserved[0x30];
+};
+
+static_assert(sizeof(NCSD_Header) == 0x200, "NCCH header structure size is wrong");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// NCCH header (Note: "NCCH" appears to be a publicly unknown acronym)
 
@@ -209,10 +234,11 @@ namespace FileSys {
  */
 class NCCHContainer {
 public:
-    NCCHContainer(const std::string& filepath, u32 ncch_offset = 0);
+    NCCHContainer(const std::string& filepath, u32 ncch_offset = 0, u32 partition = 0);
     NCCHContainer() {}
 
-    Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0);
+    Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0,
+                                  u32 partition = 0);
 
     /**
      * Ensure NCCH header is loaded and ready for reading sections
@@ -339,6 +365,7 @@ private:
 
     u32 ncch_offset = 0; // Offset to NCCH header, can be 0 for NCCHs or non-zero for CIAs/NCSDs
     u32 exefs_offset = 0;
+    u32 partition = 0;
 
     std::string filepath;
     FileUtil::IOFile file;

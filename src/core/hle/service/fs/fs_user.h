@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <boost/serialization/base_object.hpp>
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
@@ -37,6 +38,12 @@ private:
 class FS_USER final : public ServiceFramework<FS_USER, ClientSlot> {
 public:
     explicit FS_USER(Core::System& system);
+
+    // On real HW this is part of FS:Reg. But since that module is only used by loader and pm, which
+    // we HLEed, we can just directly use it here
+    void Register(u32 process_id, u64 program_id, const std::string& filepath);
+
+    std::string GetCurrentGamecardPath() const;
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -526,6 +533,20 @@ private:
     void ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx);
 
     /**
+     * FS_User::GetSpecialContentIndex service function.
+     *  Inputs:
+     *      0 : 0x083A0100
+     *      1 : Media type
+     *    2-3 : Program ID
+     *      4 : Special content type
+     *  Outputs:
+     *      0 : 0x083A0080
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Special content index
+     */
+    void GetSpecialContentIndex(Kernel::HLERequestContext& ctx);
+
+    /**
      * FS_User::GetNumSeeds service function.
      *  Inputs:
      *      0 : 0x087D0000
@@ -576,6 +597,18 @@ private:
      *      3-4 : Secure Value
      */
     void GetSaveDataSecureValue(Kernel::HLERequestContext& ctx);
+
+    static ResultVal<u16> GetSpecialContentIndexFromGameCard(u64 title_id, SpecialContentType type);
+    static ResultVal<u16> GetSpecialContentIndexFromTMD(MediaType media_type, u64 title_id,
+                                                        SpecialContentType type);
+
+    struct ProgramInfo {
+        u64 program_id;
+        MediaType media_type;
+    };
+
+    std::unordered_map<u32, ProgramInfo> program_info_map;
+    std::string current_gamecard_path;
 
     u32 priority = -1; ///< For SetPriority and GetPriority service functions
 

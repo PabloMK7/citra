@@ -31,6 +31,16 @@
 
 namespace Service::FS {
 
+MediaType GetMediaTypeFromPath(std::string_view path) {
+    if (path.rfind(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir), 0) == 0) {
+        return MediaType::NAND;
+    }
+    if (path.rfind(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir), 0) == 0) {
+        return MediaType::SDMC;
+    }
+    return MediaType::GameCard;
+}
+
 ArchiveBackend* ArchiveManager::GetArchive(ArchiveHandle handle) {
     auto itr = handle_map.find(handle);
     return (itr == handle_map.end()) ? nullptr : itr->second.get();
