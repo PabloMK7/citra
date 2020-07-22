@@ -13,7 +13,7 @@ KNOWN_SYS_DLLS = ['WINMM.DLL', 'MSVCRT.DLL', 'VERSION.DLL', 'MPR.DLL',
 DLL_PATH = [
     '/usr/x86_64-w64-mingw32/bin/',
     '/usr/x86_64-w64-mingw32/lib/',
-    '/usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/'
+    '/usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/'
 ]
 
 missing = []
