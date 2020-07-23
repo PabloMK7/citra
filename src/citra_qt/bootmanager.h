@@ -122,6 +122,8 @@ signals:
     void ErrorThrown(Core::System::ResultStatus, std::string);
 
     void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total);
+
+    void HideLoadingScreen();
 };
 
 class OpenGLWindow : public QWindow {

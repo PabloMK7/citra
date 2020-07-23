@@ -1048,6 +1048,8 @@ void GMainWindow::BootGame(const QString& filename) {
 
     connect(emu_thread.get(), &EmuThread::LoadProgress, loading_screen,
             &LoadingScreen::OnLoadProgress, Qt::QueuedConnection);
+    connect(emu_thread.get(), &EmuThread::HideLoadingScreen, loading_screen,
+            &LoadingScreen::OnLoadComplete);
 
     // Update the GUI
     registersWidget->OnDebugModeEntered();
@@ -1080,6 +1082,13 @@ void GMainWindow::BootGame(const QString& filename) {
         movie_record_on_start = false;
         movie_record_path.clear();
         movie_record_author.clear();
+    }
+
+    if (ui->action_Enable_Frame_Advancing->isChecked()) {
+        ui->action_Advance_Frame->setEnabled(true);
+        Core::System::GetInstance().frame_limiter.SetFrameAdvancing(true);
+    } else {
+        ui->action_Advance_Frame->setEnabled(false);
     }
 
     if (video_dumping_on_start) {
@@ -1155,8 +1164,6 @@ void GMainWindow::ShutdownGame() {
     ui->action_Load_Amiibo->setEnabled(false);
     ui->action_Remove_Amiibo->setEnabled(false);
     ui->action_Report_Compatibility->setEnabled(false);
-    ui->action_Enable_Frame_Advancing->setEnabled(false);
-    ui->action_Enable_Frame_Advancing->setChecked(false);
     ui->action_Advance_Frame->setEnabled(false);
     ui->action_Capture_Screenshot->setEnabled(false);
     render_window->hide();
@@ -1564,7 +1571,6 @@ void GMainWindow::OnStartGame() {
     ui->action_Cheats->setEnabled(true);
     ui->action_Load_Amiibo->setEnabled(true);
     ui->action_Report_Compatibility->setEnabled(true);
-    ui->action_Enable_Frame_Advancing->setEnabled(true);
     ui->action_Capture_Screenshot->setEnabled(true);
 
     discord_rpc->Update();
