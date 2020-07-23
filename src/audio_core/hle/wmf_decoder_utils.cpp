@@ -446,6 +446,8 @@ bool InitMFDLL() {
         LOG_ERROR(Audio_DSP, "Cannot load function MFCreateMediaType");
         return false;
     }
+
+    return true;
 }
 
 Symbol<HRESULT(ULONG, DWORD)> MFStartup;
