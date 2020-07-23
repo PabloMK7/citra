@@ -10,9 +10,6 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_3_Core>
-#include <QOpenGLWindow>
-#include <QScreen>
-#include <QWindow>
 #include <fmt/format.h>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/main.h"

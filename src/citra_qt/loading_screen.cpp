@@ -3,21 +3,16 @@
 // Refer to the license.txt file included.
 
 #include <unordered_map>
-#include <QBuffer>
-#include <QByteArray>
 #include <QGraphicsOpacityEffect>
-#include <QHBoxLayout>
-#include <QIODevice>
 #include <QImage>
 #include <QLabel>
 #include <QPainter>
-#include <QPalette>
 #include <QPixmap>
 #include <QProgressBar>
 #include <QPropertyAnimation>
+#include <QString>
 #include <QStyleOption>
 #include <QTime>
-#include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/loading_screen.h"
 #include "common/logging/log.h"
 #include "core/loader/loader.h"
