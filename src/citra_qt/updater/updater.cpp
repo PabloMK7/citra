@@ -133,7 +133,7 @@ bool UpdaterPrivate::StartUpdateCheck() {
     connect(main_process,
             static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this,
             &UpdaterPrivate::UpdaterReady, Qt::QueuedConnection);
-    connect(main_process, static_cast<void (QProcess::*)(QProcess::ProcessError)>(&QProcess::error),
+    connect(main_process, static_cast<void (QProcess::*)(QProcess::ProcessError)>(&QProcess::errorOccurred),
             this, &UpdaterPrivate::UpdaterError, Qt::QueuedConnection);
 
     main_process->start(QIODevice::ReadOnly);

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QBrush>
 #include <QString>
 #include <QTreeWidgetItem>
 #include <fmt/format.h>
@@ -90,7 +91,7 @@ void IPCRecorderWidget::OnEntryUpdated(IPCDebugger::RequestRecord record) {
 
         auto* item = ui->main->invisibleRootItem()->child(row_id);
         for (int column = 0; column < item->columnCount(); ++column) {
-            item->setBackgroundColor(column, QColor::fromRgb(255, 0, 0));
+            item->setBackground(column, QBrush(QColor::fromRgb(255, 0, 0)));
         }
     }
 
