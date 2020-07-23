@@ -30,7 +30,7 @@ void from_json(const nlohmann::json& json, Room::Member& member) {
     try {
         member.username = json.at("username").get<std::string>();
         member.avatar_url = json.at("avatarUrl").get<std::string>();
-    } catch (const nlohmann::detail::out_of_range& e) {
+    } catch (const nlohmann::detail::out_of_range&) {
         member.username = member.avatar_url = "";
         LOG_DEBUG(Network, "Member \'{}\' isn't authenticated", member.nickname);
     }
@@ -59,7 +59,7 @@ void from_json(const nlohmann::json& json, Room& room) {
     room.name = json.at("name").get<std::string>();
     try {
         room.description = json.at("description").get<std::string>();
-    } catch (const nlohmann::detail::out_of_range& e) {
+    } catch (const nlohmann::detail::out_of_range&) {
         room.description = "";
         LOG_DEBUG(Network, "Room \'{}\' doesn't contain a description", room.name);
     }
