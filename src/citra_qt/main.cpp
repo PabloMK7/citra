@@ -1074,6 +1074,14 @@ void GMainWindow::BootGame(const QString& filename) {
         ShowFullscreen();
     }
 
+    if (movie_record_on_start) {
+        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString(),
+                                                  movie_record_author.toStdString());
+        movie_record_on_start = false;
+        movie_record_path.clear();
+        movie_record_author.clear();
+    }
+
     if (video_dumping_on_start) {
         Layout::FramebufferLayout layout{
             Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
@@ -1540,14 +1548,6 @@ void GMainWindow::OnMenuRecentFile() {
 void GMainWindow::OnStartGame() {
     Camera::QtMultimediaCameraHandler::ResumeCameras();
 
-    if (movie_record_on_start) {
-        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString(),
-                                                  movie_record_author.toStdString());
-        movie_record_on_start = false;
-        movie_record_path.clear();
-        movie_record_author.clear();
-    }
-
     PreventOSSleep();
 
     emu_thread->SetRunning(true);
@@ -1853,15 +1853,12 @@ void GMainWindow::OnRecordMovie() {
         return;
     }
 
-    if (emulation_running) {
-        // Restart game
+    movie_record_on_start = true;
+    movie_record_path = dialog.GetPath();
+    movie_record_author = dialog.GetAuthor();
+
+    if (emulation_running) { // Restart game
         BootGame(QString(game_path));
-        Core::Movie::GetInstance().StartRecording(dialog.GetPath().toStdString(),
-                                                  dialog.GetAuthor().toStdString());
-    } else {
-        movie_record_on_start = true;
-        movie_record_path = dialog.GetPath();
-        movie_record_author = dialog.GetAuthor();
     }
     ui->action_Close_Movie->setEnabled(true);
 }
