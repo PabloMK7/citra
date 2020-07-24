@@ -175,9 +175,9 @@ std::vector<u16> Rgb2Yuv(const QImage& source, int width, int height) {
     auto dest = buffer.begin();
     bool write = false;
     int py, pu, pv;
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            QRgb rgb = source.pixel(x, y);
+    for (int j = 0; j < height; ++j) {
+        for (int i = 0; i < width; ++i) {
+            QRgb rgb = source.pixel(i, j);
             int r = qRed(rgb);
             int g = qGreen(rgb);
             int b = qBlue(rgb);
