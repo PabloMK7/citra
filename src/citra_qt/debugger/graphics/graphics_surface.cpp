@@ -398,7 +398,6 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         default:
             return QStringLiteral("Unhandled format");
         }
-        return QString{};
     };
 
     QString nibbles;
