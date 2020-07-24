@@ -2097,14 +2097,17 @@ void GMainWindow::OnMouseActivity() {
 }
 
 void GMainWindow::mouseMoveEvent(QMouseEvent* event) {
+    Q_UNUSED(event);
     OnMouseActivity();
 }
 
 void GMainWindow::mousePressEvent(QMouseEvent* event) {
+    Q_UNUSED(event);
     OnMouseActivity();
 }
 
 void GMainWindow::mouseReleaseEvent(QMouseEvent* event) {
+    Q_UNUSED(event);
     OnMouseActivity();
 }
 

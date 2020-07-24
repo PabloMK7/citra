@@ -15,6 +15,7 @@ GPUCommandStreamItemModel::GPUCommandStreamItemModel(QObject* parent)
 }
 
 int GPUCommandStreamItemModel::rowCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return command_count;
 }
 

@@ -30,15 +30,18 @@ GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget*
     : QAbstractTableModel(parent), par(parent) {}
 
 int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return 3;
 }
 
 int GraphicsVertexShaderModel::rowCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return static_cast<int>(par->info.code.size());
 }
 
 QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orientation,
                                                int role) const {
+    Q_UNUSED(orientation);
     switch (role) {
     case Qt::DisplayRole: {
         if (section == 0) {

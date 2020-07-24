@@ -17,10 +17,12 @@ BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_conte
       active_breakpoint(debug_context->active_breakpoint) {}
 
 int BreakPointModel::columnCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return 1;
 }
 
 int BreakPointModel::rowCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return static_cast<int>(Pica::DebugContext::Event::NumEvents);
 }
 

@@ -113,6 +113,7 @@ MicroProfileWidget::MicroProfileWidget(QWidget* parent) : QWidget(parent) {
 }
 
 void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
+    Q_UNUSED(ev);
     QPainter painter(this);
 
     // The units used by Microprofile for drawing are based in pixels on a 96 dpi display.

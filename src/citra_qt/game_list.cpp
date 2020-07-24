@@ -755,5 +755,6 @@ void GameListPlaceholder::onUpdateThemedIcons() {
 }
 
 void GameListPlaceholder::mouseDoubleClickEvent(QMouseEvent* event) {
+    Q_UNUSED(event);
     emit GameListPlaceholder::AddDirectory();
 }

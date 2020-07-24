@@ -58,10 +58,12 @@ public:
 GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {}
 
 int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return static_cast<int>(pica_trace.writes.size());
 }
 
 int GPUCommandListModel::columnCount(const QModelIndex& parent) const {
+    Q_UNUSED(parent);
     return 4;
 }
 
@@ -90,6 +92,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
 }
 
 QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    Q_UNUSED(orientation);
     switch (role) {
     case Qt::DisplayRole: {
         switch (section) {
