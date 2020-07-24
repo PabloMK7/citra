@@ -256,7 +256,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             }
         });
         connect(analog_map_deadzone_and_modifier_slider[analog_id], &QSlider::valueChanged, [=] {
-            const float slider_value = analog_map_deadzone_and_modifier_slider[analog_id]->value();
+            const int slider_value = analog_map_deadzone_and_modifier_slider[analog_id]->value();
             if (analogs_param[analog_id].Get("engine", "") == "sdl") {
                 analog_map_deadzone_and_modifier_slider_label[analog_id]->setText(
                     tr("Deadzone: %1%").arg(slider_value));

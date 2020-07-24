@@ -184,7 +184,7 @@ void ConfigureCamera::StartPreviewing() {
     ui->preview_box->setHidden(false);
     ui->preview_button->setHidden(true);
     preview_width = ui->preview_box->size().width();
-    preview_height = preview_width * 0.75;
+    preview_height = static_cast<int>(preview_width * 0.75);
     ui->preview_box->setToolTip(
         tr("Resolution: %1*%2")
             .arg(QString::number(preview_width), QString::number(preview_height)));
@@ -232,7 +232,7 @@ void ConfigureCamera::timerEvent(QTimerEvent* event) {
     }
     std::vector<u16> frame = previewing_camera->ReceiveFrame();
     int width = ui->preview_box->size().width();
-    int height = width * 0.75;
+    int height = static_cast<int>(width * 0.75);
     if (width != preview_width || height != preview_height) {
         StopPreviewing();
         return;
