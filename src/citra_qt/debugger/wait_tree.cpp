@@ -2,9 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include "citra_qt/debugger/wait_tree.h"
+#include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
-
 #include "common/assert.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
@@ -14,10 +15,34 @@
 #include "core/hle/kernel/wait_object.h"
 #include "core/settings.h"
 
+namespace {
+
+constexpr std::array<std::array<Qt::GlobalColor, 2>, 8> WaitTreeColors{{
+    {Qt::GlobalColor::darkGreen, Qt::GlobalColor::green},
+    {Qt::GlobalColor::darkBlue, Qt::GlobalColor::cyan},
+    {Qt::GlobalColor::darkRed, Qt::GlobalColor::red},
+    {Qt::GlobalColor::darkYellow, Qt::GlobalColor::yellow},
+    {Qt::GlobalColor::darkCyan, Qt::GlobalColor::cyan},
+    {Qt::GlobalColor::red, Qt::GlobalColor::red},
+    {Qt::GlobalColor::darkCyan, Qt::GlobalColor::cyan},
+    {Qt::GlobalColor::gray, Qt::GlobalColor::gray},
+}};
+
+bool IsDarkTheme() {
+    const auto& theme = UISettings::values.theme;
+    return theme == QStringLiteral("qdarkstyle") || theme == QStringLiteral("colorful_dark");
+}
+
+} // namespace
+
 WaitTreeItem::~WaitTreeItem() = default;
 
 QColor WaitTreeItem::GetColor() const {
-    return QColor(Qt::GlobalColor::black);
+    if (IsDarkTheme()) {
+        return QColor(Qt::GlobalColor::white);
+    } else {
+        return QColor(Qt::GlobalColor::black);
+    }
 }
 
 std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeItem::GetChildren() const {
@@ -187,26 +212,28 @@ QString WaitTreeThread::GetText() const {
 }
 
 QColor WaitTreeThread::GetColor() const {
+    const std::size_t color_index = IsDarkTheme() ? 1 : 0;
+
     const auto& thread = static_cast<const Kernel::Thread&>(object);
     switch (thread.status) {
     case Kernel::ThreadStatus::Running:
-        return QColor(Qt::GlobalColor::darkGreen);
+        return QColor(WaitTreeColors[0][color_index]);
     case Kernel::ThreadStatus::Ready:
-        return QColor(Qt::GlobalColor::darkBlue);
+        return QColor(WaitTreeColors[1][color_index]);
     case Kernel::ThreadStatus::WaitArb:
-        return QColor(Qt::GlobalColor::darkRed);
+        return QColor(WaitTreeColors[2][color_index]);
     case Kernel::ThreadStatus::WaitSleep:
-        return QColor(Qt::GlobalColor::darkYellow);
+        return QColor(WaitTreeColors[3][color_index]);
     case Kernel::ThreadStatus::WaitIPC:
-        return QColor(Qt::GlobalColor::darkCyan);
+        return QColor(WaitTreeColors[4][color_index]);
     case Kernel::ThreadStatus::WaitSynchAll:
     case Kernel::ThreadStatus::WaitSynchAny:
     case Kernel::ThreadStatus::WaitHleEvent:
-        return QColor(Qt::GlobalColor::red);
+        return QColor(WaitTreeColors[5][color_index]);
     case Kernel::ThreadStatus::Dormant:
-        return QColor(Qt::GlobalColor::darkCyan);
+        return QColor(WaitTreeColors[6][color_index]);
     case Kernel::ThreadStatus::Dead:
-        return QColor(Qt::GlobalColor::gray);
+        return QColor(WaitTreeColors[7][color_index]);
     default:
         return WaitTreeItem::GetColor();
     }
