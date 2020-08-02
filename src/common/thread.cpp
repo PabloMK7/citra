@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/common_funcs.h"
+#include "common/logging/log.h"
 #include "common/thread.h"
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -18,6 +20,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#include <string>
 
 #ifdef __FreeBSD__
 #define cpu_set_t cpuset_t
@@ -64,6 +67,14 @@ void SetCurrentThreadName(const char* name) {
     pthread_set_name_np(pthread_self(), name);
 #elif defined(__NetBSD__)
     pthread_setname_np(pthread_self(), "%s", (void*)name);
+#elif defined(__linux__)
+    // Linux limits thread names to 15 characters and will outright reject any
+    // attempt to set a longer name with ERANGE.
+    std::string truncated(name, std::min(strlen(name), static_cast<size_t>(15)));
+    if (int e = pthread_setname_np(pthread_self(), truncated.c_str())) {
+        errno = e;
+        LOG_ERROR(Common, "Failed to set thread name to '{}': {}", truncated, GetLastErrorMsg());
+    }
 #else
     pthread_setname_np(pthread_self(), name);
 #endif
