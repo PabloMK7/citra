@@ -20,19 +20,13 @@ namespace Log {
  */
 struct Entry {
     std::chrono::microseconds timestamp;
-    Class log_class;
-    Level log_level;
-    const char* filename;
-    unsigned int line_num;
+    Class log_class{};
+    Level log_level{};
+    const char* filename = nullptr;
+    unsigned int line_num = 0;
     std::string function;
     std::string message;
     bool final_entry = false;
-
-    Entry() = default;
-    Entry(Entry&& o) = default;
-
-    Entry& operator=(Entry&& o) = default;
-    Entry& operator=(const Entry& o) = default;
 };
 
 /**

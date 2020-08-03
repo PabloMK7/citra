@@ -107,19 +107,19 @@ private:
     Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
                       const char* function, std::string message) const {
         using std::chrono::duration_cast;
+        using std::chrono::microseconds;
         using std::chrono::steady_clock;
 
-        Entry entry;
-        entry.timestamp =
-            duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
-        entry.log_class = log_class;
-        entry.log_level = log_level;
-        entry.filename = filename;
-        entry.line_num = line_nr;
-        entry.function = function;
-        entry.message = std::move(message);
-
-        return entry;
+        return {
+            .timestamp = duration_cast<microseconds>(steady_clock::now() - time_origin),
+            .log_class = log_class,
+            .log_level = log_level,
+            .filename = filename,
+            .line_num = line_nr,
+            .function = function,
+            .message = std::move(message),
+            .final_entry = false,
+        };
     }
 
     std::mutex writing_mutex;
