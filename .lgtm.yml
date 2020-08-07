@@ -1,0 +1,13 @@
+path_classifiers:
+  library: "externals"
+extraction:
+  cpp:
+    prepare:
+      packages:
+      - "libsdl2-dev"
+      - "qtmultimedia5-dev"
+      - "clang-format-6.0"
+      - "libtbb-dev"
+      - "libjack-jackd2-dev"
+      - "doxygen"
+      - "graphviz"
