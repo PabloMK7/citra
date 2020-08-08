@@ -18,6 +18,7 @@ struct CPUCaps {
     bool sse4_2;
     bool avx;
     bool avx2;
+    bool avx512;
     bool bmi1;
     bool bmi2;
     bool fma;

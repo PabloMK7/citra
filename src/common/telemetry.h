@@ -55,8 +55,8 @@ public:
     Field(FieldType type, std::string name, T value)
         : name(std::move(name)), type(type), value(std::move(value)) {}
 
-    Field(const Field& other) = default;
-    Field& operator=(const Field& other) = default;
+    Field(const Field&) = default;
+    Field& operator=(const Field&) = default;
 
     Field(Field&&) = default;
     Field& operator=(Field&& other) = default;

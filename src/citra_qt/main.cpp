@@ -190,7 +190,20 @@ GMainWindow::GMainWindow()
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
 #ifdef ARCHITECTURE_x86_64
-    LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
+    const auto& caps = Common::GetCPUCaps();
+    std::string cpu_string = caps.cpu_string;
+    if (caps.avx || caps.avx2 || caps.avx512) {
+        cpu_string += " | AVX";
+        if (caps.avx512) {
+            cpu_string += "512";
+        } else if (caps.avx2) {
+            cpu_string += '2';
+        }
+        if (caps.fma || caps.fma4) {
+            cpu_string += " | FMA";
+        }
+    }
+    LOG_INFO(Frontend, "Host CPU: {}", cpu_string);
 #endif
     LOG_INFO(Frontend, "Host OS: {}", QSysInfo::prettyProductName().toStdString());
     UpdateWindowTitle();
