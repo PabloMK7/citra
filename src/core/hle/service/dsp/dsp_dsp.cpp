@@ -202,8 +202,8 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x13, 2, 2);
-    const VAddr address = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] const VAddr address = rp.Pop<u32>();
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -215,8 +215,8 @@ void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
 
 void DSP_DSP::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x14, 2, 2);
-    const VAddr address = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] const VAddr address = rp.Pop<u32>();
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
