@@ -391,7 +391,7 @@ bool GameList::isEmpty() const {
             (type == GameListItemType::InstalledDir || type == GameListItemType::SystemDir)) {
             item_model->invisibleRootItem()->removeRow(child->row());
             i--;
-        };
+        }
     }
     return !item_model->invisibleRootItem()->hasChildren();
 }

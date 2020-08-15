@@ -30,14 +30,14 @@ extern const Themes themes;
 
 struct GameDir {
     QString path;
-    bool deep_scan;
-    bool expanded;
+    bool deep_scan = false;
+    bool expanded = false;
     bool operator==(const GameDir& rhs) const {
         return path == rhs.path;
-    };
+    }
     bool operator!=(const GameDir& rhs) const {
         return !operator==(rhs);
-    };
+    }
 };
 
 enum class GameListIconSize {
