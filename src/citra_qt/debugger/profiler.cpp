@@ -112,8 +112,7 @@ MicroProfileWidget::MicroProfileWidget(QWidget* parent) : QWidget(parent) {
     connect(&update_timer, &QTimer::timeout, this, qOverload<>(&MicroProfileWidget::update));
 }
 
-void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
-    Q_UNUSED(ev);
+void MicroProfileWidget::paintEvent([[maybe_unused]] QPaintEvent* ev) {
     QPainter painter(this);
 
     // The units used by Microprofile for drawing are based in pixels on a 96 dpi display.

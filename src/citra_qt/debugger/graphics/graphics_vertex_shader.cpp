@@ -29,19 +29,17 @@ using nihstro::SwizzlePattern;
 GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent)
     : QAbstractTableModel(parent), par(parent) {}
 
-int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
-    Q_UNUSED(parent);
+int GraphicsVertexShaderModel::columnCount([[maybe_unused]] const QModelIndex& parent) const {
     return 3;
 }
 
-int GraphicsVertexShaderModel::rowCount(const QModelIndex& parent) const {
-    Q_UNUSED(parent);
+int GraphicsVertexShaderModel::rowCount([[maybe_unused]] const QModelIndex& parent) const {
     return static_cast<int>(par->info.code.size());
 }
 
-QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orientation,
+QVariant GraphicsVertexShaderModel::headerData(int section,
+                                               [[maybe_unused]] Qt::Orientation orientation,
                                                int role) const {
-    Q_UNUSED(orientation);
     switch (role) {
     case Qt::DisplayRole: {
         if (section == 0) {

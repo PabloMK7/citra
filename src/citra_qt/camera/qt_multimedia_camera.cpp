@@ -12,9 +12,8 @@
 
 namespace Camera {
 
-QList<QVideoFrame::PixelFormat> QtCameraSurface::supportedPixelFormats(
-    QAbstractVideoBuffer::HandleType handleType) const {
-    Q_UNUSED(handleType);
+QList<QVideoFrame::PixelFormat> QtCameraSurface::supportedPixelFormats([
+    [maybe_unused]] QAbstractVideoBuffer::HandleType handleType) const {
     return QList<QVideoFrame::PixelFormat>()
            << QVideoFrame::Format_ARGB32 << QVideoFrame::Format_ARGB32_Premultiplied
            << QVideoFrame::Format_RGB32 << QVideoFrame::Format_RGB24 << QVideoFrame::Format_RGB565

@@ -326,8 +326,8 @@ void ConfigureTouchFromButton::OnBindingChanged(QStandardItem* item) {
     }
 }
 
-void ConfigureTouchFromButton::OnBindingDeleted(const QModelIndex& parent, int first, int last) {
-    Q_UNUSED(parent);
+void ConfigureTouchFromButton::OnBindingDeleted([[maybe_unused]] const QModelIndex& parent,
+                                                int first, int last) {
     for (int i = first; i <= last; ++i) {
         auto ix = binding_list_model->index(i, 0);
         if (!ix.isValid()) {
@@ -514,8 +514,7 @@ void TouchScreenPreview::mouseMoveEvent(QMouseEvent* event) {
     }
 }
 
-void TouchScreenPreview::leaveEvent(QEvent* event) {
-    Q_UNUSED(event);
+void TouchScreenPreview::leaveEvent([[maybe_unused]] QEvent* event) {
     if (coord_label) {
         coord_label->clear();
     }

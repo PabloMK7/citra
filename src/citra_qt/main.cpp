@@ -2096,18 +2096,15 @@ void GMainWindow::OnMouseActivity() {
     ShowMouseCursor();
 }
 
-void GMainWindow::mouseMoveEvent(QMouseEvent* event) {
-    Q_UNUSED(event);
+void GMainWindow::mouseMoveEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
 }
 
-void GMainWindow::mousePressEvent(QMouseEvent* event) {
-    Q_UNUSED(event);
+void GMainWindow::mousePressEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
 }
 
-void GMainWindow::mouseReleaseEvent(QMouseEvent* event) {
-    Q_UNUSED(event);
+void GMainWindow::mouseReleaseEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
 }
 
