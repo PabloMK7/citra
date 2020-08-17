@@ -6,7 +6,6 @@
 
 #include <array>
 #include <memory>
-#include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
 #include <QTranslator>
@@ -40,6 +39,7 @@ class MultiplayerState;
 class ProfilerWidget;
 template <typename>
 class QFutureWatcher;
+class QLabel;
 class QProgressBar;
 class RegistersWidget;
 class Updater;
