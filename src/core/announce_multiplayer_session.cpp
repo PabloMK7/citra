@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <future>
 #include <vector>
 #include "announce_multiplayer_session.h"
 #include "common/announce_multiplayer_room.h"

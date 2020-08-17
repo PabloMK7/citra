@@ -234,6 +234,7 @@ add_library(core STATIC
     hle/service/cam/cam.h
     hle/service/cam/cam_c.cpp
     hle/service/cam/cam_c.h
+    hle/service/cam/cam_params.h
     hle/service/cam/cam_q.cpp
     hle/service/cam/cam_q.h
     hle/service/cam/cam_s.cpp

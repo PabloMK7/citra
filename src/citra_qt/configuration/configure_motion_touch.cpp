@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include "citra_qt/configuration/configure_motion_touch.h"
 #include "citra_qt/configuration/configure_touch_from_button.h"
+#include "common/logging/log.h"
 #include "input_common/main.h"
 #include "ui_configure_motion_touch.h"
 
