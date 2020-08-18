@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <memory>
 #include <array>
+#include <memory>
 #include <string>
 
 namespace Camera {
