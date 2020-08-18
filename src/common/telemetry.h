@@ -10,7 +10,7 @@
 #include <string>
 #include "common/common_types.h"
 
-namespace Telemetry {
+namespace Common::Telemetry {
 
 /// Field type, used for grouping fields together in the final submitted telemetry log
 enum class FieldType : u8 {
@@ -196,4 +196,4 @@ void AppendCPUInfo(FieldCollection& fc);
 /// such as platform name, etc.
 void AppendOSInfo(FieldCollection& fc);
 
-} // namespace Telemetry
+} // namespace Common::Telemetry

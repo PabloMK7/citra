@@ -1002,7 +1002,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     game_path = filename;
 
-    system.TelemetrySession().AddField(Telemetry::FieldType::App, "Frontend", "Qt");
+    system.TelemetrySession().AddField(Common::Telemetry::FieldType::App, "Frontend", "Qt");
     return true;
 }
 

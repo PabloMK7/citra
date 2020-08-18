@@ -20,6 +20,8 @@
 
 namespace Core {
 
+namespace Telemetry = Common::Telemetry;
+
 static u64 GenerateTelemetryId() {
     u64 telemetry_id{};
     CryptoPP::AutoSeededRandomPool rng;

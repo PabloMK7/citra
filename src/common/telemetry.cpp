@@ -12,7 +12,7 @@
 #include "common/x64/cpu_detect.h"
 #endif
 
-namespace Telemetry {
+namespace Common::Telemetry {
 
 void FieldCollection::Accept(VisitorInterface& visitor) const {
     for (const auto& field : fields) {
@@ -88,4 +88,4 @@ void AppendOSInfo(FieldCollection& fc) {
 #endif
 }
 
-} // namespace Telemetry
+} // namespace Common::Telemetry

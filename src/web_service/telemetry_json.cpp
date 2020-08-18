@@ -10,6 +10,8 @@
 
 namespace WebService {
 
+namespace Telemetry = Common::Telemetry;
+
 struct TelemetryJson::Impl {
     Impl(std::string host, std::string username, std::string token)
         : host{std::move(host)}, username{std::move(username)}, token{std::move(token)} {}

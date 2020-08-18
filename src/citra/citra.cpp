@@ -382,7 +382,7 @@ int main(int argc, char** argv) {
         break; // Expected case
     }
 
-    system.TelemetrySession().AddField(Telemetry::FieldType::App, "Frontend", "SDL");
+    system.TelemetrySession().AddField(Common::Telemetry::FieldType::App, "Frontend", "SDL");
 
     if (use_multiplayer) {
         if (auto member = Network::GetRoomMember().lock()) {
