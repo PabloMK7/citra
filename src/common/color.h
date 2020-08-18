@@ -10,7 +10,7 @@
 #include "common/swap.h"
 #include "common/vector_math.h"
 
-namespace Color {
+namespace Common::Color {
 
 /// Convert a 1-bit color component to 8 bit
 [[nodiscard]] constexpr u8 Convert1To8(u8 value) {
@@ -268,4 +268,4 @@ inline void EncodeX24S8(u8 stencil, u8* bytes) {
     bytes[3] = stencil;
 }
 
-} // namespace Color
+} // namespace Common::Color
