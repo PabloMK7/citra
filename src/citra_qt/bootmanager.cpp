@@ -172,9 +172,7 @@ bool OpenGLWindow::event(QEvent* event) {
     case QEvent::Drop:
         GetMainWindow()->DropAction(static_cast<QDropEvent*>(event));
         return true;
-    case QEvent::DragResponse:
     case QEvent::DragEnter:
-    case QEvent::DragLeave:
     case QEvent::DragMove:
         GetMainWindow()->AcceptDropEvent(static_cast<QDropEvent*>(event));
         return true;
