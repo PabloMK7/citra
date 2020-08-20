@@ -26,7 +26,7 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
-#include "core/announce_multiplayer_session.h"
+#include "network/announce_multiplayer_session.h"
 #include "network/network.h"
 #include "network/network_settings.h"
 #include "network/room.h"
@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
             return -1;
         }
         std::cout << "Room is open. Close with Q+Enter...\n\n";
-        auto announce_session = std::make_unique<Core::AnnounceMultiplayerSession>();
+        auto announce_session = std::make_unique<Network::AnnounceMultiplayerSession>();
         if (announce) {
             announce_session->Start();
         }

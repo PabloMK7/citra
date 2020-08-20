@@ -15,10 +15,8 @@
 #include "common/thread.h"
 
 namespace Network {
-class Room;
-}
 
-namespace Core {
+class Room;
 
 /**
  * Instruments AnnounceMultiplayerRoom::Backend.
@@ -93,4 +91,4 @@ private:
     void AnnounceMultiplayerLoop();
 };
 
-} // namespace Core
+} // namespace Network

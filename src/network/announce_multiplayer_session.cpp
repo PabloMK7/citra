@@ -15,7 +15,7 @@
 #include "web_service/announce_room_json.h"
 #endif
 
-namespace Core {
+namespace Network {
 
 // Time between room is announced to web_service
 static constexpr std::chrono::seconds announce_time_interval(15);
@@ -161,4 +161,4 @@ void AnnounceMultiplayerSession::UpdateCredentials() {
 #endif
 }
 
-} // namespace Core
+} // namespace Network

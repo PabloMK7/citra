@@ -5,7 +5,7 @@
 #pragma once
 
 #include <QWidget>
-#include "core/announce_multiplayer_session.h"
+#include "network/announce_multiplayer_session.h"
 #include "network/network.h"
 
 class QStandardItemModel;
@@ -80,7 +80,7 @@ private:
     QStandardItemModel* game_list_model = nullptr;
     QAction* leave_room;
     QAction* show_room;
-    std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
+    std::shared_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
     Network::RoomMember::State current_state = Network::RoomMember::State::Uninitialized;
     bool has_mod_perms = false;
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;

@@ -19,8 +19,8 @@
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
-#include "core/announce_multiplayer_session.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "network/announce_multiplayer_session.h"
 #include "network/network_settings.h"
 #include "ui_host_room.h"
 #ifdef ENABLE_WEB_SERVICE
@@ -28,7 +28,7 @@
 #endif
 
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
-                               std::shared_ptr<Core::AnnounceMultiplayerSession> session)
+                               std::shared_ptr<Network::AnnounceMultiplayerSession> session)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
       ui(std::make_unique<Ui::HostRoom>()), announce_multiplayer_session(session) {
     ui->setupUi(this);
