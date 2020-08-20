@@ -230,12 +230,6 @@ struct Values {
     std::string log_filter;
     std::unordered_map<std::string, bool> lle_modules;
 
-    // WebService
-    bool enable_telemetry;
-    std::string web_api_url;
-    std::string citra_username;
-    std::string citra_token;
-
     // Video Dumping
     std::string output_format;
     std::string format_options;

@@ -7,8 +7,8 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/configuration/configure_web.h"
 #include "citra_qt/uisettings.h"
-#include "core/settings.h"
 #include "core/telemetry_session.h"
+#include "network/network_settings.h"
 #include "ui_configure_web.h"
 
 static constexpr char token_delimiter{':'};
@@ -70,16 +70,16 @@ void ConfigureWeb::SetConfiguration() {
         tr("<a href='https://citra-emu.org/wiki/citra-web-service/'><span style=\"text-decoration: "
            "underline; color:#039be5;\">What is my token?</span></a>"));
 
-    ui->toggle_telemetry->setChecked(Settings::values.enable_telemetry);
+    ui->toggle_telemetry->setChecked(NetSettings::values.enable_telemetry);
 
-    if (Settings::values.citra_username.empty()) {
+    if (NetSettings::values.citra_username.empty()) {
         ui->username->setText(tr("Unspecified"));
     } else {
-        ui->username->setText(QString::fromStdString(Settings::values.citra_username));
+        ui->username->setText(QString::fromStdString(NetSettings::values.citra_username));
     }
 
     ui->edit_token->setText(QString::fromStdString(
-        GenerateDisplayToken(Settings::values.citra_username, Settings::values.citra_token)));
+        GenerateDisplayToken(NetSettings::values.citra_username, NetSettings::values.citra_token)));
 
     // Connect after setting the values, to avoid calling OnLoginChanged now
     connect(ui->edit_token, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
@@ -91,12 +91,13 @@ void ConfigureWeb::SetConfiguration() {
 }
 
 void ConfigureWeb::ApplyConfiguration() {
-    Settings::values.enable_telemetry = ui->toggle_telemetry->isChecked();
+    NetSettings::values.enable_telemetry = ui->toggle_telemetry->isChecked();
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
     if (user_verified) {
-        Settings::values.citra_username =
+        NetSettings::values.citra_username =
             UsernameFromDisplayToken(ui->edit_token->text().toStdString());
-        Settings::values.citra_token = TokenFromDisplayToken(ui->edit_token->text().toStdString());
+        NetSettings::values.citra_token =
+            TokenFromDisplayToken(ui->edit_token->text().toStdString());
     } else {
         QMessageBox::warning(
             this, tr("Token not verified"),

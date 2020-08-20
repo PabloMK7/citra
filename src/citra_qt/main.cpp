@@ -85,6 +85,7 @@
 #include "core/savestate.h"
 #include "core/settings.h"
 #include "game_list_p.h"
+#include "network/network_settings.h"
 #include "ui_main.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -130,7 +131,7 @@ void GMainWindow::ShowTelemetryCallout() {
            "data is collected</a> to help improve Citra. "
            "<br/><br/>Would you like to share your usage data with us?");
     if (QMessageBox::question(this, tr("Telemetry"), telemetry_message) != QMessageBox::Yes) {
-        Settings::values.enable_telemetry = false;
+        NetSettings::values.enable_telemetry = false;
         Settings::Apply();
     }
 }
@@ -1623,7 +1624,7 @@ void GMainWindow::OnLoadComplete() {
 }
 
 void GMainWindow::OnMenuReportCompatibility() {
-    if (!Settings::values.citra_token.empty() && !Settings::values.citra_username.empty()) {
+    if (!NetSettings::values.citra_token.empty() && !NetSettings::values.citra_username.empty()) {
         CompatDB compatdb{this};
         compatdb.exec();
     } else {
