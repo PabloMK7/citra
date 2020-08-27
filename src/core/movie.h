@@ -159,6 +159,8 @@ private:
     std::string record_movie_file;
     std::string record_movie_author;
 
+    u64 init_time; // Clock init time override for RNG consistency
+
     std::vector<u8> recorded_input;
     std::size_t current_byte = 0;
     u64 current_input = 0;
@@ -166,7 +168,7 @@ private:
     u64 total_input = 0;
 
     u64 id = 0; // ID of the current movie loaded
-    u64 init_time;
+    u64 program_id = 0;
     u32 rerecord_count = 1;
     bool read_only = true;
 

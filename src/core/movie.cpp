@@ -491,6 +491,7 @@ void Movie::SaveMovie() {
 
     CTMHeader header = {};
     header.filetype = header_magic_bytes;
+    header.program_id = program_id;
     header.clock_init_time = init_time;
     header.id = id;
 
@@ -499,8 +500,6 @@ void Movie::SaveMovie() {
 
     header.rerecord_count = rerecord_count;
     header.input_count = GetInputCount(recorded_input);
-
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(header.program_id);
 
     std::string rev_bytes;
     CryptoPP::StringSource(Common::g_scm_rev, true,
@@ -561,6 +560,10 @@ void Movie::StartRecording(const std::string& movie_file, const std::string& aut
     // Generate a random ID
     CryptoPP::AutoSeededRandomPool rng;
     rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(&id), sizeof(id));
+
+    // Get program ID
+    program_id = 0;
+    Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
 
     LOG_INFO(Movie, "Enabling Movie recording, ID: {:016X}", id);
 }

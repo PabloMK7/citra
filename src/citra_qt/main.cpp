@@ -1018,6 +1018,9 @@ void GMainWindow::BootGame(const QString& filename) {
     if (movie_record_on_start) {
         Core::Movie::GetInstance().PrepareForRecording();
     }
+    if (movie_playback_on_start) {
+        Core::Movie::GetInstance().PrepareForPlayback(movie_playback_path.toStdString());
+    }
 
     // Save configurations
     UpdateUISettings();
@@ -1026,6 +1029,42 @@ void GMainWindow::BootGame(const QString& filename) {
 
     if (!LoadROM(filename))
         return;
+
+    // Set everything up
+    if (movie_record_on_start) {
+        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString(),
+                                                  movie_record_author.toStdString());
+        movie_record_on_start = false;
+        movie_record_path.clear();
+        movie_record_author.clear();
+    }
+    if (movie_playback_on_start) {
+        Core::Movie::GetInstance().StartPlayback(movie_playback_path.toStdString());
+        movie_playback_on_start = false;
+        movie_playback_path.clear();
+    }
+
+    if (ui->action_Enable_Frame_Advancing->isChecked()) {
+        ui->action_Advance_Frame->setEnabled(true);
+        Core::System::GetInstance().frame_limiter.SetFrameAdvancing(true);
+    } else {
+        ui->action_Advance_Frame->setEnabled(false);
+    }
+
+    if (video_dumping_on_start) {
+        Layout::FramebufferLayout layout{
+            Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
+        if (!Core::System::GetInstance().VideoDumper().StartDumping(
+                video_dumping_path.toStdString(), layout)) {
+
+            QMessageBox::critical(
+                this, tr("Citra"),
+                tr("Could not start video dumping.<br>Refer to the log for details."));
+            ui->action_Dump_Video->setChecked(false);
+        }
+        video_dumping_on_start = false;
+        video_dumping_path.clear();
+    }
 
     // Create and start the emulation thread
     emu_thread = std::make_unique<EmuThread>(*render_window);
@@ -1076,35 +1115,6 @@ void GMainWindow::BootGame(const QString& filename) {
         ShowFullscreen();
     }
 
-    if (movie_record_on_start) {
-        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString(),
-                                                  movie_record_author.toStdString());
-        movie_record_on_start = false;
-        movie_record_path.clear();
-        movie_record_author.clear();
-    }
-
-    if (ui->action_Enable_Frame_Advancing->isChecked()) {
-        ui->action_Advance_Frame->setEnabled(true);
-        Core::System::GetInstance().frame_limiter.SetFrameAdvancing(true);
-    } else {
-        ui->action_Advance_Frame->setEnabled(false);
-    }
-
-    if (video_dumping_on_start) {
-        Layout::FramebufferLayout layout{
-            Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
-        if (!Core::System::GetInstance().VideoDumper().StartDumping(
-                video_dumping_path.toStdString(), layout)) {
-
-            QMessageBox::critical(
-                this, tr("Citra"),
-                tr("Could not start video dumping.<br>Refer to the log for details."));
-            ui->action_Dump_Video->setChecked(false);
-        }
-        video_dumping_on_start = false;
-        video_dumping_path.clear();
-    }
     OnStartGame();
 }
 
@@ -1128,7 +1138,6 @@ void GMainWindow::ShutdownGame() {
     AllowOSSleep();
 
     discord_rpc->Pause();
-    OnCloseMovie(true);
     emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
@@ -1146,6 +1155,8 @@ void GMainWindow::ShutdownGame() {
     // Wait for emulation thread to complete and delete it
     emu_thread->wait();
     emu_thread = nullptr;
+
+    OnCloseMovie();
 
     discord_rpc->Update();
 
@@ -1875,22 +1886,21 @@ void GMainWindow::OnPlayMovie() {
         return;
     }
 
-    const auto movie_path = dialog.GetMoviePath().toStdString();
-    Core::Movie::GetInstance().PrepareForPlayback(movie_path);
+    movie_playback_on_start = true;
+    movie_playback_path = dialog.GetMoviePath();
     BootGame(dialog.GetGamePath());
 
-    Core::Movie::GetInstance().StartPlayback(movie_path);
     ui->action_Close_Movie->setEnabled(true);
 }
 
-void GMainWindow::OnCloseMovie(bool shutting_down) {
+void GMainWindow::OnCloseMovie() {
     if (movie_record_on_start) {
         QMessageBox::information(this, tr("Record Movie"), tr("Movie recording cancelled."));
         movie_record_on_start = false;
         movie_record_path.clear();
         movie_record_author.clear();
     } else {
-        const bool was_running = !shutting_down && emu_thread && emu_thread->IsRunning();
+        const bool was_running = emu_thread && emu_thread->IsRunning();
         if (was_running) {
             OnPauseGame();
         }
