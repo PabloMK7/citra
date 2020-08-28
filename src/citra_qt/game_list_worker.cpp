@@ -152,7 +152,8 @@ void GameListWorker::run() {
             AddFstEntriesToGameList(game_dir.path.toStdString(), game_dir.deep_scan ? 256 : 0,
                                     game_list_dir);
         }
-    };
+    }
+
     emit Finished(watch_list);
 }
 
