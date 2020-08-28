@@ -159,7 +159,7 @@ void CubebSink::Impl::LogCallback(char const* format, ...) {
 #endif
     va_end(args);
     buffer.back() = '\0';
-    LOG_INFO(Audio_Sink, "{}", buffer.data());
+    LOG_DEBUG(Audio_Sink, "{}", buffer.data());
 }
 
 std::vector<std::string> ListCubebSinkDevices() {
