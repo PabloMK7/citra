@@ -50,19 +50,19 @@ inline void Read(T& var, const u32 raw_addr) {
 static Common::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_pixel) {
     switch (input_format) {
     case Regs::PixelFormat::RGBA8:
-        return Color::DecodeRGBA8(src_pixel);
+        return Common::Color::DecodeRGBA8(src_pixel);
 
     case Regs::PixelFormat::RGB8:
-        return Color::DecodeRGB8(src_pixel);
+        return Common::Color::DecodeRGB8(src_pixel);
 
     case Regs::PixelFormat::RGB565:
-        return Color::DecodeRGB565(src_pixel);
+        return Common::Color::DecodeRGB565(src_pixel);
 
     case Regs::PixelFormat::RGB5A1:
-        return Color::DecodeRGB5A1(src_pixel);
+        return Common::Color::DecodeRGB5A1(src_pixel);
 
     case Regs::PixelFormat::RGBA4:
-        return Color::DecodeRGBA4(src_pixel);
+        return Common::Color::DecodeRGBA4(src_pixel);
 
     default:
         LOG_ERROR(HW_GPU, "Unknown source framebuffer format {:x}", input_format);
@@ -274,23 +274,23 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
             u8* dst_pixel = dst_pointer + dst_offset;
             switch (config.output_format) {
             case Regs::PixelFormat::RGBA8:
-                Color::EncodeRGBA8(src_color, dst_pixel);
+                Common::Color::EncodeRGBA8(src_color, dst_pixel);
                 break;
 
             case Regs::PixelFormat::RGB8:
-                Color::EncodeRGB8(src_color, dst_pixel);
+                Common::Color::EncodeRGB8(src_color, dst_pixel);
                 break;
 
             case Regs::PixelFormat::RGB565:
-                Color::EncodeRGB565(src_color, dst_pixel);
+                Common::Color::EncodeRGB565(src_color, dst_pixel);
                 break;
 
             case Regs::PixelFormat::RGB5A1:
-                Color::EncodeRGB5A1(src_color, dst_pixel);
+                Common::Color::EncodeRGB5A1(src_color, dst_pixel);
                 break;
 
             case Regs::PixelFormat::RGBA4:
-                Color::EncodeRGBA4(src_color, dst_pixel);
+                Common::Color::EncodeRGBA4(src_color, dst_pixel);
                 break;
 
             default:

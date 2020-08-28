@@ -35,23 +35,23 @@ void DrawPixel(int x, int y, const Common::Vec4<u8>& color) {
 
     switch (framebuffer.color_format) {
     case FramebufferRegs::ColorFormat::RGBA8:
-        Color::EncodeRGBA8(color, dst_pixel);
+        Common::Color::EncodeRGBA8(color, dst_pixel);
         break;
 
     case FramebufferRegs::ColorFormat::RGB8:
-        Color::EncodeRGB8(color, dst_pixel);
+        Common::Color::EncodeRGB8(color, dst_pixel);
         break;
 
     case FramebufferRegs::ColorFormat::RGB5A1:
-        Color::EncodeRGB5A1(color, dst_pixel);
+        Common::Color::EncodeRGB5A1(color, dst_pixel);
         break;
 
     case FramebufferRegs::ColorFormat::RGB565:
-        Color::EncodeRGB565(color, dst_pixel);
+        Common::Color::EncodeRGB565(color, dst_pixel);
         break;
 
     case FramebufferRegs::ColorFormat::RGBA4:
-        Color::EncodeRGBA4(color, dst_pixel);
+        Common::Color::EncodeRGBA4(color, dst_pixel);
         break;
 
     default:
@@ -76,19 +76,19 @@ const Common::Vec4<u8> GetPixel(int x, int y) {
 
     switch (framebuffer.color_format) {
     case FramebufferRegs::ColorFormat::RGBA8:
-        return Color::DecodeRGBA8(src_pixel);
+        return Common::Color::DecodeRGBA8(src_pixel);
 
     case FramebufferRegs::ColorFormat::RGB8:
-        return Color::DecodeRGB8(src_pixel);
+        return Common::Color::DecodeRGB8(src_pixel);
 
     case FramebufferRegs::ColorFormat::RGB5A1:
-        return Color::DecodeRGB5A1(src_pixel);
+        return Common::Color::DecodeRGB5A1(src_pixel);
 
     case FramebufferRegs::ColorFormat::RGB565:
-        return Color::DecodeRGB565(src_pixel);
+        return Common::Color::DecodeRGB565(src_pixel);
 
     case FramebufferRegs::ColorFormat::RGBA4:
-        return Color::DecodeRGBA4(src_pixel);
+        return Common::Color::DecodeRGBA4(src_pixel);
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
@@ -115,11 +115,11 @@ u32 GetDepth(int x, int y) {
 
     switch (framebuffer.depth_format) {
     case FramebufferRegs::DepthFormat::D16:
-        return Color::DecodeD16(src_pixel);
+        return Common::Color::DecodeD16(src_pixel);
     case FramebufferRegs::DepthFormat::D24:
-        return Color::DecodeD24(src_pixel);
+        return Common::Color::DecodeD24(src_pixel);
     case FramebufferRegs::DepthFormat::D24S8:
-        return Color::DecodeD24S8(src_pixel).x;
+        return Common::Color::DecodeD24S8(src_pixel).x;
     default:
         LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
                      static_cast<u32>(framebuffer.depth_format.Value()));
@@ -144,7 +144,7 @@ u8 GetStencil(int x, int y) {
 
     switch (framebuffer.depth_format) {
     case FramebufferRegs::DepthFormat::D24S8:
-        return Color::DecodeD24S8(src_pixel).y;
+        return Common::Color::DecodeD24S8(src_pixel).y;
 
     default:
         LOG_WARNING(
@@ -171,15 +171,15 @@ void SetDepth(int x, int y, u32 value) {
 
     switch (framebuffer.depth_format) {
     case FramebufferRegs::DepthFormat::D16:
-        Color::EncodeD16(value, dst_pixel);
+        Common::Color::EncodeD16(value, dst_pixel);
         break;
 
     case FramebufferRegs::DepthFormat::D24:
-        Color::EncodeD24(value, dst_pixel);
+        Common::Color::EncodeD24(value, dst_pixel);
         break;
 
     case FramebufferRegs::DepthFormat::D24S8:
-        Color::EncodeD24X8(value, dst_pixel);
+        Common::Color::EncodeD24X8(value, dst_pixel);
         break;
 
     default:
@@ -211,7 +211,7 @@ void SetStencil(int x, int y, u8 value) {
         break;
 
     case Pica::FramebufferRegs::DepthFormat::D24S8:
-        Color::EncodeX24S8(value, dst_pixel);
+        Common::Color::EncodeX24S8(value, dst_pixel);
         break;
 
     default:

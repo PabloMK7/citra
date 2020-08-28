@@ -315,31 +315,31 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
     auto GetText = [offset](Format format, const u8* pixel) {
         switch (format) {
         case Format::RGBA8: {
-            auto value = Color::DecodeRGBA8(pixel) / 255.0f;
+            auto value = Common::Color::DecodeRGBA8(pixel) / 255.0f;
             return QStringLiteral("Red: %1, Green: %2, Blue: %3, Alpha: %4")
                 .arg(QString::number(value.r(), 'f', 2), QString::number(value.g(), 'f', 2),
                      QString::number(value.b(), 'f', 2), QString::number(value.a(), 'f', 2));
         }
         case Format::RGB8: {
-            auto value = Color::DecodeRGB8(pixel) / 255.0f;
+            auto value = Common::Color::DecodeRGB8(pixel) / 255.0f;
             return QStringLiteral("Red: %1, Green: %2, Blue: %3")
                 .arg(QString::number(value.r(), 'f', 2), QString::number(value.g(), 'f', 2),
                      QString::number(value.b(), 'f', 2));
         }
         case Format::RGB5A1: {
-            auto value = Color::DecodeRGB5A1(pixel) / 255.0f;
+            auto value = Common::Color::DecodeRGB5A1(pixel) / 255.0f;
             return QStringLiteral("Red: %1, Green: %2, Blue: %3, Alpha: %4")
                 .arg(QString::number(value.r(), 'f', 2), QString::number(value.g(), 'f', 2),
                      QString::number(value.b(), 'f', 2), QString::number(value.a(), 'f', 2));
         }
         case Format::RGB565: {
-            auto value = Color::DecodeRGB565(pixel) / 255.0f;
+            auto value = Common::Color::DecodeRGB565(pixel) / 255.0f;
             return QStringLiteral("Red: %1, Green: %2, Blue: %3")
                 .arg(QString::number(value.r(), 'f', 2), QString::number(value.g(), 'f', 2),
                      QString::number(value.b(), 'f', 2));
         }
         case Format::RGBA4: {
-            auto value = Color::DecodeRGBA4(pixel) / 255.0f;
+            auto value = Common::Color::DecodeRGBA4(pixel) / 255.0f;
             return QStringLiteral("Red: %1, Green: %2, Blue: %3, Alpha: %4")
                 .arg(QString::number(value.r(), 'f', 2), QString::number(value.g(), 'f', 2),
                      QString::number(value.b(), 'f', 2), QString::number(value.a(), 'f', 2));
@@ -347,7 +347,7 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         case Format::IA8:
             return QStringLiteral("Index: %1, Alpha: %2").arg(pixel[0], pixel[1]);
         case Format::RG8: {
-            auto value = Color::DecodeRG8(pixel) / 255.0f;
+            auto value = Common::Color::DecodeRG8(pixel) / 255.0f;
             return QStringLiteral("Red: %1, Green: %2")
                 .arg(QString::number(value.r(), 'f', 2), QString::number(value.g(), 'f', 2));
         }
@@ -370,17 +370,17 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
             // TODO: Display block information or channel values?
             return QStringLiteral("Compressed data");
         case Format::D16: {
-            auto value = Color::DecodeD16(pixel);
+            auto value = Common::Color::DecodeD16(pixel);
             return QStringLiteral("Depth: %1").arg(QString::number(value / (float)0xFFFF, 'f', 4));
         }
         case Format::D24: {
-            auto value = Color::DecodeD24(pixel);
+            auto value = Common::Color::DecodeD24(pixel);
             return QStringLiteral("Depth: %1")
                 .arg(QString::number(value / (float)0xFFFFFF, 'f', 4));
         }
         case Format::D24X8:
         case Format::X24S8: {
-            auto values = Color::DecodeD24S8(pixel);
+            auto values = Common::Color::DecodeD24S8(pixel);
             return QStringLiteral("Depth: %1, Stencil: %2")
                 .arg(QString::number(values[0] / (float)0xFFFFFF, 'f', 4), values[1]);
         }
@@ -604,27 +604,27 @@ void GraphicsSurfaceWidget::OnUpdate() {
 
                 switch (surface_format) {
                 case Format::D16: {
-                    u32 data = Color::DecodeD16(pixel);
+                    u32 data = Common::Color::DecodeD16(pixel);
                     color.r() = data & 0xFF;
                     color.g() = (data >> 8) & 0xFF;
                     break;
                 }
                 case Format::D24: {
-                    u32 data = Color::DecodeD24(pixel);
+                    u32 data = Common::Color::DecodeD24(pixel);
                     color.r() = data & 0xFF;
                     color.g() = (data >> 8) & 0xFF;
                     color.b() = (data >> 16) & 0xFF;
                     break;
                 }
                 case Format::D24X8: {
-                    Common::Vec2<u32> data = Color::DecodeD24S8(pixel);
+                    Common::Vec2<u32> data = Common::Color::DecodeD24S8(pixel);
                     color.r() = data.x & 0xFF;
                     color.g() = (data.x >> 8) & 0xFF;
                     color.b() = (data.x >> 16) & 0xFF;
                     break;
                 }
                 case Format::X24S8: {
-                    Common::Vec2<u32> data = Color::DecodeD24S8(pixel);
+                    Common::Vec2<u32> data = Common::Color::DecodeD24S8(pixel);
                     color.r() = color.g() = color.b() = data.y;
                     break;
                 }
