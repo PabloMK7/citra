@@ -21,7 +21,6 @@ namespace Core {
 class PerfStats {
 public:
     explicit PerfStats(u64 title_id);
-
     ~PerfStats();
 
     using Clock = std::chrono::high_resolution_clock;
@@ -44,18 +43,18 @@ public:
     Results GetAndResetStats(std::chrono::microseconds current_system_time_us);
 
     /**
-     * Returns the Arthimetic Mean of all frametime values stored in the performance history.
+     * Returns the arithmetic mean of all frametime values stored in the performance history.
      */
-    double GetMeanFrametime();
+    double GetMeanFrametime() const;
 
     /**
      * Gets the ratio between walltime and the emulated time of the previous system frame. This is
      * useful for scaling inputs or outputs moving between the two time domains.
      */
-    double GetLastFrameTimeScale();
+    double GetLastFrameTimeScale() const;
 
 private:
-    std::mutex object_mutex{};
+    mutable std::mutex object_mutex;
 
     /// Title ID for the game that is running. 0 if there is no game running yet
     u64 title_id{0};
@@ -63,7 +62,7 @@ private:
     std::size_t current_index{0};
     /// Stores an hour of historical frametime data useful for processing and tracking performance
     /// regressions with code changes.
-    std::array<double, 216000> perf_history = {};
+    std::array<double, 216000> perf_history{};
 
     /// Point when the cumulative counters were reset
     Clock::time_point reset_point = Clock::now();
