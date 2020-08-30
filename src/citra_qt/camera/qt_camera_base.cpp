@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include "citra_qt/camera/camera_util.h"
 #include "citra_qt/camera/qt_camera_base.h"
+#include "common/logging/log.h"
+#include "core/hle/service/cam/cam.h"
 
 namespace Camera {
 

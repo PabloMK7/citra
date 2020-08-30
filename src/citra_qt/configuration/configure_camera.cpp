@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <memory>
 #include <QCameraInfo>
 #include <QDirIterator>
 #include <QFileDialog>
@@ -12,6 +11,9 @@
 #include "citra_qt/configuration/configure_camera.h"
 #include "citra_qt/uisettings.h"
 #include "core/core.h"
+#include "core/frontend/camera/factory.h"
+#include "core/frontend/camera/interface.h"
+#include "core/hle/service/cam/cam.h"
 #include "core/settings.h"
 #include "ui_configure_camera.h"
 

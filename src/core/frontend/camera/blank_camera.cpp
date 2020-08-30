@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/frontend/camera/blank_camera.h"
+#include "core/hle/service/cam/cam.h"
 
 namespace Camera {
 

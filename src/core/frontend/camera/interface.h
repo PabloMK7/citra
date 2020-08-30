@@ -6,7 +6,11 @@
 
 #include <vector>
 #include "common/common_types.h"
-#include "core/hle/service/cam/cam.h"
+#include "core/hle/service/cam/cam_params.h"
+
+namespace Service::CAM {
+struct Resolution;
+} // namespace Service::CAM
 
 namespace Camera {
 

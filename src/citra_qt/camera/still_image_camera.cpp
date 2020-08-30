@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QThread>
 #include "citra_qt/camera/still_image_camera.h"
+#include "common/logging/log.h"
 
 namespace Camera {
 

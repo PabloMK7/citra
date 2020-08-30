@@ -4,8 +4,13 @@
 
 #pragma once
 
-#include "core/frontend/camera/factory.h"
-#include "core/frontend/camera/interface.h"
+#include <array>
+#include <memory>
+#include <string>
+
+namespace Camera {
+class CameraInterface;
+}
 
 namespace Ui {
 class ConfigureCamera;

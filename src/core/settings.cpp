@@ -8,6 +8,7 @@
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/shared_page.h"
+#include "core/hle/service/cam/cam.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_user.h"

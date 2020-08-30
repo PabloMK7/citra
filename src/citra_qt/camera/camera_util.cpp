@@ -3,11 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <QImage>
 #include "citra_qt/camera/camera_util.h"
-#include "core/frontend/camera/factory.h"
-#include "core/frontend/camera/interface.h"
 
 namespace CameraUtil {
 

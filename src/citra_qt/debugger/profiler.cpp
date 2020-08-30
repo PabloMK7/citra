@@ -7,6 +7,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QString>
+#include <QTimer>
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/util/util.h"
 #include "common/common_types.h"

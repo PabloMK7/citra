@@ -9,6 +9,7 @@
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
+#include <QLabel>
 #include <QMessageBox>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QSysInfo>
