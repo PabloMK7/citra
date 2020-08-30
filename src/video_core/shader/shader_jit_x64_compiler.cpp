@@ -102,40 +102,40 @@ const JitFunction instr_table[64] = {
 // purposes, as documented below:
 
 /// Pointer to the uniform memory
-static const Reg64 UNIFORMS = r9;
+constexpr Reg64 UNIFORMS = r9;
 /// The two 32-bit VS address offset registers set by the MOVA instruction
-static const Reg64 ADDROFFS_REG_0 = r10;
-static const Reg64 ADDROFFS_REG_1 = r11;
+constexpr Reg64 ADDROFFS_REG_0 = r10;
+constexpr Reg64 ADDROFFS_REG_1 = r11;
 /// VS loop count register (Multiplied by 16)
-static const Reg32 LOOPCOUNT_REG = r12d;
+constexpr Reg32 LOOPCOUNT_REG = r12d;
 /// Current VS loop iteration number (we could probably use LOOPCOUNT_REG, but this quicker)
-static const Reg32 LOOPCOUNT = esi;
+constexpr Reg32 LOOPCOUNT = esi;
 /// Number to increment LOOPCOUNT_REG by on each loop iteration (Multiplied by 16)
-static const Reg32 LOOPINC = edi;
+constexpr Reg32 LOOPINC = edi;
 /// Result of the previous CMP instruction for the X-component comparison
-static const Reg64 COND0 = r13;
+constexpr Reg64 COND0 = r13;
 /// Result of the previous CMP instruction for the Y-component comparison
-static const Reg64 COND1 = r14;
+constexpr Reg64 COND1 = r14;
 /// Pointer to the UnitState instance for the current VS unit
-static const Reg64 STATE = r15;
+constexpr Reg64 STATE = r15;
 /// SIMD scratch register
-static const Xmm SCRATCH = xmm0;
+constexpr Xmm SCRATCH = xmm0;
 /// Loaded with the first swizzled source register, otherwise can be used as a scratch register
-static const Xmm SRC1 = xmm1;
+constexpr Xmm SRC1 = xmm1;
 /// Loaded with the second swizzled source register, otherwise can be used as a scratch register
-static const Xmm SRC2 = xmm2;
+constexpr Xmm SRC2 = xmm2;
 /// Loaded with the third swizzled source register, otherwise can be used as a scratch register
-static const Xmm SRC3 = xmm3;
+constexpr Xmm SRC3 = xmm3;
 /// Additional scratch register
-static const Xmm SCRATCH2 = xmm4;
+constexpr Xmm SCRATCH2 = xmm4;
 /// Constant vector of [1.0f, 1.0f, 1.0f, 1.0f], used to efficiently set a vector to one
-static const Xmm ONE = xmm14;
+constexpr Xmm ONE = xmm14;
 /// Constant vector of [-0.f, -0.f, -0.f, -0.f], used to efficiently negate a vector with XOR
-static const Xmm NEGBIT = xmm15;
+constexpr Xmm NEGBIT = xmm15;
 
 // State registers that must not be modified by external functions calls
 // Scratch registers, e.g., SRC1 and SCRATCH, have to be saved on the side if needed
-static const BitSet32 persistent_regs = BuildRegSet({
+static const std::bitset<32> persistent_regs = BuildRegSet({
     // Pointers to register blocks
     UNIFORMS,
     STATE,
@@ -356,7 +356,7 @@ void JitShader::Compile_UniformCondition(Instruction instr) {
     cmp(byte[UNIFORMS + offset], 0);
 }
 
-BitSet32 JitShader::PersistentCallerSavedRegs() {
+std::bitset<32> JitShader::PersistentCallerSavedRegs() {
     return persistent_regs & ABI_ALL_CALLER_SAVED;
 }
 
