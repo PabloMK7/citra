@@ -63,30 +63,30 @@ public:
 
     void Accept(VisitorInterface& visitor) const override;
 
-    const std::string& GetName() const override {
+    [[nodiscard]] const std::string& GetName() const override {
         return name;
     }
 
     /**
      * Returns the type of the field.
      */
-    FieldType GetType() const {
+    [[nodiscard]] FieldType GetType() const {
         return type;
     }
 
     /**
      * Returns the value of the field.
      */
-    const T& GetValue() const {
+    [[nodiscard]] const T& GetValue() const {
         return value;
     }
 
-    bool operator==(const Field& other) const {
+    [[nodiscard]] bool operator==(const Field& other) const {
         return (type == other.type) && (name == other.name) && (value == other.value);
     }
 
-    bool operator!=(const Field& other) const {
-        return !(*this == other);
+    [[nodiscard]] bool operator!=(const Field& other) const {
+        return !operator==(other);
     }
 
 private:

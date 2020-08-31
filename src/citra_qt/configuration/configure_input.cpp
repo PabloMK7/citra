@@ -164,15 +164,16 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             continue;
         button_map[button_id]->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(button_map[button_id], &QPushButton::clicked, [=]() {
-            HandleClick(button_map[button_id],
-                        [=](const Common::ParamPackage& params) {
-                            buttons_param[button_id] = params;
-                            // If the user closes the dialog, the changes are reverted in
-                            // `GMainWindow::OnConfigure()`
-                            ApplyConfiguration();
-                            Settings::SaveProfile(ui->profile->currentIndex());
-                        },
-                        InputCommon::Polling::DeviceType::Button);
+            HandleClick(
+                button_map[button_id],
+                [=](const Common::ParamPackage& params) {
+                    buttons_param[button_id] = params;
+                    // If the user closes the dialog, the changes are reverted in
+                    // `GMainWindow::OnConfigure()`
+                    ApplyConfiguration();
+                    Settings::SaveProfile(ui->profile->currentIndex());
+                },
+                InputCommon::Polling::DeviceType::Button);
         });
         connect(button_map[button_id], &QPushButton::customContextMenuRequested,
                 [=](const QPoint& menu_location) {
@@ -201,14 +202,15 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             analog_map_buttons[analog_id][sub_button_id]->setContextMenuPolicy(
                 Qt::CustomContextMenu);
             connect(analog_map_buttons[analog_id][sub_button_id], &QPushButton::clicked, [=]() {
-                HandleClick(analog_map_buttons[analog_id][sub_button_id],
-                            [=](const Common::ParamPackage& params) {
-                                SetAnalogButton(params, analogs_param[analog_id],
-                                                analog_sub_buttons[sub_button_id]);
-                                ApplyConfiguration();
-                                Settings::SaveProfile(ui->profile->currentIndex());
-                            },
-                            InputCommon::Polling::DeviceType::Button);
+                HandleClick(
+                    analog_map_buttons[analog_id][sub_button_id],
+                    [=](const Common::ParamPackage& params) {
+                        SetAnalogButton(params, analogs_param[analog_id],
+                                        analog_sub_buttons[sub_button_id]);
+                        ApplyConfiguration();
+                        Settings::SaveProfile(ui->profile->currentIndex());
+                    },
+                    InputCommon::Polling::DeviceType::Button);
             });
             connect(analog_map_buttons[analog_id][sub_button_id],
                     &QPushButton::customContextMenuRequested, [=](const QPoint& menu_location) {
@@ -239,13 +241,14 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                     tr("After pressing OK, first move your joystick horizontally, "
                        "and then vertically."),
                     QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok) {
-                HandleClick(analog_map_stick[analog_id],
-                            [=](const Common::ParamPackage& params) {
-                                analogs_param[analog_id] = params;
-                                ApplyConfiguration();
-                                Settings::SaveProfile(ui->profile->currentIndex());
-                            },
-                            InputCommon::Polling::DeviceType::Analog);
+                HandleClick(
+                    analog_map_stick[analog_id],
+                    [=](const Common::ParamPackage& params) {
+                        analogs_param[analog_id] = params;
+                        ApplyConfiguration();
+                        Settings::SaveProfile(ui->profile->currentIndex());
+                    },
+                    InputCommon::Polling::DeviceType::Analog);
             }
         });
         connect(analog_map_deadzone_and_modifier_slider[analog_id], &QSlider::valueChanged, [=] {

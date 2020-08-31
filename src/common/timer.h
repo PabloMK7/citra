@@ -19,18 +19,18 @@ public:
 
     // The time difference is always returned in milliseconds, regardless of alternative internal
     // representation
-    std::chrono::milliseconds GetTimeDifference();
+    [[nodiscard]] std::chrono::milliseconds GetTimeDifference();
     void AddTimeDifference();
 
-    static std::chrono::seconds GetTimeSinceJan1970();
-    static std::chrono::seconds GetLocalTimeSinceJan1970();
-    static double GetDoubleTime();
+    [[nodiscard]] static std::chrono::seconds GetTimeSinceJan1970();
+    [[nodiscard]] static std::chrono::seconds GetLocalTimeSinceJan1970();
+    [[nodiscard]] static double GetDoubleTime();
 
-    static std::string GetTimeFormatted();
-    std::string GetTimeElapsedFormatted() const;
-    std::chrono::milliseconds GetTimeElapsed();
+    [[nodiscard]] static std::string GetTimeFormatted();
+    [[nodiscard]] std::string GetTimeElapsedFormatted() const;
+    [[nodiscard]] std::chrono::milliseconds GetTimeElapsed();
 
-    static std::chrono::milliseconds GetTimeMs();
+    [[nodiscard]] static std::chrono::milliseconds GetTimeMs();
 
 private:
     std::chrono::milliseconds m_LastTime;

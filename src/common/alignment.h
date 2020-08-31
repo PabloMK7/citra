@@ -8,7 +8,7 @@
 namespace Common {
 
 template <typename T>
-constexpr T AlignUp(T value, std::size_t size) {
+[[nodiscard]] constexpr T AlignUp(T value, std::size_t size) {
     static_assert(std::is_unsigned_v<T>, "T must be an unsigned value.");
     auto mod{value % size};
     value -= mod;
@@ -16,7 +16,7 @@ constexpr T AlignUp(T value, std::size_t size) {
 }
 
 template <typename T>
-constexpr T AlignDown(T value, std::size_t size) {
+[[nodiscard]] constexpr T AlignDown(T value, std::size_t size) {
     static_assert(std::is_unsigned_v<T>, "T must be an unsigned value.");
     return static_cast<T>(value - value % size);
 }

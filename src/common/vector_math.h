@@ -64,15 +64,15 @@ public:
     constexpr Vec2(const T& x_, const T& y_) : x(x_), y(y_) {}
 
     template <typename T2>
-    constexpr Vec2<T2> Cast() const {
+    [[nodiscard]] constexpr Vec2<T2> Cast() const {
         return Vec2<T2>(static_cast<T2>(x), static_cast<T2>(y));
     }
 
-    static constexpr Vec2 AssignToAll(const T& f) {
+    [[nodiscard]] static constexpr Vec2 AssignToAll(const T& f) {
         return Vec2{f, f};
     }
 
-    constexpr Vec2<decltype(T{} + T{})> operator+(const Vec2& other) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} + T{})> operator+(const Vec2& other) const {
         return {x + other.x, y + other.y};
     }
     constexpr Vec2& operator+=(const Vec2& other) {
@@ -80,7 +80,7 @@ public:
         y += other.y;
         return *this;
     }
-    constexpr Vec2<decltype(T{} - T{})> operator-(const Vec2& other) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} - T{})> operator-(const Vec2& other) const {
         return {x - other.x, y - other.y};
     }
     constexpr Vec2& operator-=(const Vec2& other) {
@@ -90,15 +90,15 @@ public:
     }
 
     template <typename U = T>
-    constexpr Vec2<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
+    [[nodiscard]] constexpr Vec2<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
         return {-x, -y};
     }
-    constexpr Vec2<decltype(T{} * T{})> operator*(const Vec2& other) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} * T{})> operator*(const Vec2& other) const {
         return {x * other.x, y * other.y};
     }
 
     template <typename V>
-    constexpr Vec2<decltype(T{} * V{})> operator*(const V& f) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} * V{})> operator*(const V& f) const {
         return {x * f, y * f};
     }
 
@@ -109,7 +109,7 @@ public:
     }
 
     template <typename V>
-    constexpr Vec2<decltype(T{} / V{})> operator/(const V& f) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} / V{})> operator/(const V& f) const {
         return {x / f, y / f};
     }
 
@@ -119,18 +119,18 @@ public:
         return *this;
     }
 
-    constexpr T Length2() const {
+    [[nodiscard]] constexpr T Length2() const {
         return x * x + y * y;
     }
 
     // Only implemented for T=float
-    float Length() const;
-    float Normalize(); // returns the previous length, which is often useful
+    [[nodiscard]] float Length() const;
+    [[nodiscard]] float Normalize(); // returns the previous length, which is often useful
 
-    constexpr T& operator[](std::size_t i) {
+    [[nodiscard]] constexpr T& operator[](std::size_t i) {
         return *((&x) + i);
     }
-    constexpr const T& operator[](std::size_t i) const {
+    [[nodiscard]] constexpr const T& operator[](std::size_t i) const {
         return *((&x) + i);
     }
 
@@ -140,46 +140,46 @@ public:
     }
 
     // Common aliases: UV (texel coordinates), ST (texture coordinates)
-    constexpr T& u() {
+    [[nodiscard]] constexpr T& u() {
         return x;
     }
-    constexpr T& v() {
+    [[nodiscard]] constexpr T& v() {
         return y;
     }
-    constexpr T& s() {
+    [[nodiscard]] constexpr T& s() {
         return x;
     }
-    constexpr T& t() {
+    [[nodiscard]] constexpr T& t() {
         return y;
     }
 
-    constexpr const T& u() const {
+    [[nodiscard]] constexpr const T& u() const {
         return x;
     }
-    constexpr const T& v() const {
+    [[nodiscard]] constexpr const T& v() const {
         return y;
     }
-    constexpr const T& s() const {
+    [[nodiscard]] constexpr const T& s() const {
         return x;
     }
-    constexpr const T& t() const {
+    [[nodiscard]] constexpr const T& t() const {
         return y;
     }
 
     // swizzlers - create a subvector of specific components
-    constexpr Vec2 yx() const {
+    [[nodiscard]] constexpr Vec2 yx() const {
         return Vec2(y, x);
     }
-    constexpr Vec2 vu() const {
+    [[nodiscard]] constexpr Vec2 vu() const {
         return Vec2(y, x);
     }
-    constexpr Vec2 ts() const {
+    [[nodiscard]] constexpr Vec2 ts() const {
         return Vec2(y, x);
     }
 };
 
 template <typename T, typename V>
-constexpr Vec2<T> operator*(const V& f, const Vec2<T>& vec) {
+[[nodiscard]] constexpr Vec2<T> operator*(const V& f, const Vec2<T>& vec) {
     return Vec2<T>(f * vec.x, f * vec.y);
 }
 
@@ -220,15 +220,15 @@ public:
     constexpr Vec3(const T& x_, const T& y_, const T& z_) : x(x_), y(y_), z(z_) {}
 
     template <typename T2>
-    constexpr Vec3<T2> Cast() const {
+    [[nodiscard]] constexpr Vec3<T2> Cast() const {
         return Vec3<T2>(static_cast<T2>(x), static_cast<T2>(y), static_cast<T2>(z));
     }
 
-    static constexpr Vec3 AssignToAll(const T& f) {
+    [[nodiscard]] static constexpr Vec3 AssignToAll(const T& f) {
         return Vec3(f, f, f);
     }
 
-    constexpr Vec3<decltype(T{} + T{})> operator+(const Vec3& other) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} + T{})> operator+(const Vec3& other) const {
         return {x + other.x, y + other.y, z + other.z};
     }
 
@@ -239,7 +239,7 @@ public:
         return *this;
     }
 
-    constexpr Vec3<decltype(T{} - T{})> operator-(const Vec3& other) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} - T{})> operator-(const Vec3& other) const {
         return {x - other.x, y - other.y, z - other.z};
     }
 
@@ -251,16 +251,16 @@ public:
     }
 
     template <typename U = T>
-    constexpr Vec3<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
+    [[nodiscard]] constexpr Vec3<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
         return {-x, -y, -z};
     }
 
-    constexpr Vec3<decltype(T{} * T{})> operator*(const Vec3& other) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} * T{})> operator*(const Vec3& other) const {
         return {x * other.x, y * other.y, z * other.z};
     }
 
     template <typename V>
-    constexpr Vec3<decltype(T{} * V{})> operator*(const V& f) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} * V{})> operator*(const V& f) const {
         return {x * f, y * f, z * f};
     }
 
@@ -270,7 +270,7 @@ public:
         return *this;
     }
     template <typename V>
-    constexpr Vec3<decltype(T{} / V{})> operator/(const V& f) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} / V{})> operator/(const V& f) const {
         return {x / f, y / f, z / f};
     }
 
@@ -280,20 +280,20 @@ public:
         return *this;
     }
 
-    constexpr T Length2() const {
+    [[nodiscard]] constexpr T Length2() const {
         return x * x + y * y + z * z;
     }
 
     // Only implemented for T=float
-    float Length() const;
-    Vec3 Normalized() const;
-    float Normalize(); // returns the previous length, which is often useful
+    [[nodiscard]] float Length() const;
+    [[nodiscard]] Vec3 Normalized() const;
+    [[nodiscard]] float Normalize(); // returns the previous length, which is often useful
 
-    constexpr T& operator[](std::size_t i) {
+    [[nodiscard]] constexpr T& operator[](std::size_t i) {
         return *((&x) + i);
     }
 
-    constexpr const T& operator[](std::size_t i) const {
+    [[nodiscard]] constexpr const T& operator[](std::size_t i) const {
         return *((&x) + i);
     }
 
@@ -304,63 +304,63 @@ public:
     }
 
     // Common aliases: UVW (texel coordinates), RGB (colors), STQ (texture coordinates)
-    constexpr T& u() {
+    [[nodiscard]] constexpr T& u() {
         return x;
     }
-    constexpr T& v() {
+    [[nodiscard]] constexpr T& v() {
         return y;
     }
-    constexpr T& w() {
+    [[nodiscard]] constexpr T& w() {
         return z;
     }
 
-    constexpr T& r() {
+    [[nodiscard]] constexpr T& r() {
         return x;
     }
-    constexpr T& g() {
+    [[nodiscard]] constexpr T& g() {
         return y;
     }
-    constexpr T& b() {
+    [[nodiscard]] constexpr T& b() {
         return z;
     }
 
-    constexpr T& s() {
+    [[nodiscard]] constexpr T& s() {
         return x;
     }
-    constexpr T& t() {
+    [[nodiscard]] constexpr T& t() {
         return y;
     }
-    constexpr T& q() {
+    [[nodiscard]] constexpr T& q() {
         return z;
     }
 
-    constexpr const T& u() const {
+    [[nodiscard]] constexpr const T& u() const {
         return x;
     }
-    constexpr const T& v() const {
+    [[nodiscard]] constexpr const T& v() const {
         return y;
     }
-    constexpr const T& w() const {
+    [[nodiscard]] constexpr const T& w() const {
         return z;
     }
 
-    constexpr const T& r() const {
+    [[nodiscard]] constexpr const T& r() const {
         return x;
     }
-    constexpr const T& g() const {
+    [[nodiscard]] constexpr const T& g() const {
         return y;
     }
-    constexpr const T& b() const {
+    [[nodiscard]] constexpr const T& b() const {
         return z;
     }
 
-    constexpr const T& s() const {
+    [[nodiscard]] constexpr const T& s() const {
         return x;
     }
-    constexpr const T& t() const {
+    [[nodiscard]] constexpr const T& t() const {
         return y;
     }
-    constexpr const T& q() const {
+    [[nodiscard]] constexpr const T& q() const {
         return z;
     }
 
@@ -369,7 +369,7 @@ public:
 // _DEFINE_SWIZZLER2 defines a single such function, DEFINE_SWIZZLER2 defines all of them for all
 // component names (x<->r) and permutations (xy<->yx)
 #define _DEFINE_SWIZZLER2(a, b, name)                                                              \
-    constexpr Vec2<T> name() const {                                                               \
+    [[nodiscard]] constexpr Vec2<T> name() const {                                                 \
         return Vec2<T>(a, b);                                                                      \
     }
 #define DEFINE_SWIZZLER2(a, b, a2, b2, a3, b3, a4, b4)                                             \
@@ -390,7 +390,7 @@ public:
 };
 
 template <typename T, typename V>
-constexpr Vec3<T> operator*(const V& f, const Vec3<T>& vec) {
+[[nodiscard]] constexpr Vec3<T> operator*(const V& f, const Vec3<T>& vec) {
     return Vec3<T>(f * vec.x, f * vec.y, f * vec.z);
 }
 
@@ -439,16 +439,16 @@ public:
         : x(x_), y(y_), z(z_), w(w_) {}
 
     template <typename T2>
-    constexpr Vec4<T2> Cast() const {
+    [[nodiscard]] constexpr Vec4<T2> Cast() const {
         return Vec4<T2>(static_cast<T2>(x), static_cast<T2>(y), static_cast<T2>(z),
                         static_cast<T2>(w));
     }
 
-    static constexpr Vec4 AssignToAll(const T& f) {
+    [[nodiscard]] static constexpr Vec4 AssignToAll(const T& f) {
         return Vec4(f, f, f, f);
     }
 
-    constexpr Vec4<decltype(T{} + T{})> operator+(const Vec4& other) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} + T{})> operator+(const Vec4& other) const {
         return {x + other.x, y + other.y, z + other.z, w + other.w};
     }
 
@@ -460,7 +460,7 @@ public:
         return *this;
     }
 
-    constexpr Vec4<decltype(T{} - T{})> operator-(const Vec4& other) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} - T{})> operator-(const Vec4& other) const {
         return {x - other.x, y - other.y, z - other.z, w - other.w};
     }
 
@@ -473,16 +473,16 @@ public:
     }
 
     template <typename U = T>
-    constexpr Vec4<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
+    [[nodiscard]] constexpr Vec4<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
         return {-x, -y, -z, -w};
     }
 
-    constexpr Vec4<decltype(T{} * T{})> operator*(const Vec4& other) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} * T{})> operator*(const Vec4& other) const {
         return {x * other.x, y * other.y, z * other.z, w * other.w};
     }
 
     template <typename V>
-    constexpr Vec4<decltype(T{} * V{})> operator*(const V& f) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} * V{})> operator*(const V& f) const {
         return {x * f, y * f, z * f, w * f};
     }
 
@@ -493,7 +493,7 @@ public:
     }
 
     template <typename V>
-    constexpr Vec4<decltype(T{} / V{})> operator/(const V& f) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} / V{})> operator/(const V& f) const {
         return {x / f, y / f, z / f, w / f};
     }
 
@@ -503,15 +503,15 @@ public:
         return *this;
     }
 
-    constexpr T Length2() const {
+    [[nodiscard]] constexpr T Length2() const {
         return x * x + y * y + z * z + w * w;
     }
 
-    constexpr T& operator[](std::size_t i) {
+    [[nodiscard]] constexpr T& operator[](std::size_t i) {
         return *((&x) + i);
     }
 
-    constexpr const T& operator[](std::size_t i) const {
+    [[nodiscard]] constexpr const T& operator[](std::size_t i) const {
         return *((&x) + i);
     }
 
@@ -523,29 +523,29 @@ public:
     }
 
     // Common alias: RGBA (colors)
-    constexpr T& r() {
+    [[nodiscard]] constexpr T& r() {
         return x;
     }
-    constexpr T& g() {
+    [[nodiscard]] constexpr T& g() {
         return y;
     }
-    constexpr T& b() {
+    [[nodiscard]] constexpr T& b() {
         return z;
     }
-    constexpr T& a() {
+    [[nodiscard]] constexpr T& a() {
         return w;
     }
 
-    constexpr const T& r() const {
+    [[nodiscard]] constexpr const T& r() const {
         return x;
     }
-    constexpr const T& g() const {
+    [[nodiscard]] constexpr const T& g() const {
         return y;
     }
-    constexpr const T& b() const {
+    [[nodiscard]] constexpr const T& b() const {
         return z;
     }
-    constexpr const T& a() const {
+    [[nodiscard]] constexpr const T& a() const {
         return w;
     }
 
@@ -557,7 +557,7 @@ public:
 // DEFINE_SWIZZLER2_COMP2 defines two component functions for all component names (x<->r) and
 // permutations (xy<->yx)
 #define _DEFINE_SWIZZLER2(a, b, name)                                                              \
-    constexpr Vec2<T> name() const {                                                               \
+    [[nodiscard]] constexpr Vec2<T> name() const {                                                 \
         return Vec2<T>(a, b);                                                                      \
     }
 #define DEFINE_SWIZZLER2_COMP1(a, a2)                                                              \
@@ -584,7 +584,7 @@ public:
 #undef _DEFINE_SWIZZLER2
 
 #define _DEFINE_SWIZZLER3(a, b, c, name)                                                           \
-    constexpr Vec3<T> name() const {                                                               \
+    [[nodiscard]] constexpr Vec3<T> name() const {                                                 \
         return Vec3<T>(a, b, c);                                                                   \
     }
 #define DEFINE_SWIZZLER3_COMP1(a, a2)                                                              \
@@ -618,7 +618,7 @@ public:
 };
 
 template <typename T, typename V>
-constexpr Vec4<decltype(V{} * T{})> operator*(const V& f, const Vec4<T>& vec) {
+[[nodiscard]] constexpr Vec4<decltype(V{} * T{})> operator*(const V& f, const Vec4<T>& vec) {
     return {f * vec.x, f * vec.y, f * vec.z, f * vec.w};
 }
 
@@ -630,39 +630,41 @@ constexpr decltype(T{} * T{} + T{} * T{}) Dot(const Vec2<T>& a, const Vec2<T>& b
 }
 
 template <typename T>
-constexpr decltype(T{} * T{} + T{} * T{}) Dot(const Vec3<T>& a, const Vec3<T>& b) {
+[[nodiscard]] constexpr decltype(T{} * T{} + T{} * T{}) Dot(const Vec3<T>& a, const Vec3<T>& b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 template <typename T>
-constexpr decltype(T{} * T{} + T{} * T{}) Dot(const Vec4<T>& a, const Vec4<T>& b) {
+[[nodiscard]] constexpr decltype(T{} * T{} + T{} * T{}) Dot(const Vec4<T>& a, const Vec4<T>& b) {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
 template <typename T>
-constexpr Vec3<decltype(T{} * T{} - T{} * T{})> Cross(const Vec3<T>& a, const Vec3<T>& b) {
+[[nodiscard]] constexpr Vec3<decltype(T{} * T{} - T{} * T{})> Cross(const Vec3<T>& a,
+                                                                    const Vec3<T>& b) {
     return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
 
 // linear interpolation via float: 0.0=begin, 1.0=end
 template <typename X>
-constexpr decltype(X{} * float{} + X{} * float{}) Lerp(const X& begin, const X& end,
-                                                       const float t) {
+[[nodiscard]] constexpr decltype(X{} * float{} + X{} * float{}) Lerp(const X& begin, const X& end,
+                                                                     const float t) {
     return begin * (1.f - t) + end * t;
 }
 
 // linear interpolation via int: 0=begin, base=end
 template <typename X, int base>
-constexpr decltype((X{} * int{} + X{} * int{}) / base) LerpInt(const X& begin, const X& end,
-                                                               const int t) {
+[[nodiscard]] constexpr decltype((X{} * int{} + X{} * int{}) / base) LerpInt(const X& begin,
+                                                                             const X& end,
+                                                                             const int t) {
     return (begin * (base - t) + end * t) / base;
 }
 
 // bilinear interpolation. s is for interpolating x00-x01 and x10-x11, and t is for the second
 // interpolation.
 template <typename X>
-constexpr auto BilinearInterp(const X& x00, const X& x01, const X& x10, const X& x11, const float s,
-                              const float t) {
+[[nodiscard]] constexpr auto BilinearInterp(const X& x00, const X& x01, const X& x10, const X& x11,
+                                            const float s, const float t) {
     auto y0 = Lerp(x00, x01, s);
     auto y1 = Lerp(x10, x11, s);
     return Lerp(y0, y1, t);
@@ -670,42 +672,42 @@ constexpr auto BilinearInterp(const X& x00, const X& x01, const X& x10, const X&
 
 // Utility vector factories
 template <typename T>
-constexpr Vec2<T> MakeVec(const T& x, const T& y) {
+[[nodiscard]] constexpr Vec2<T> MakeVec(const T& x, const T& y) {
     return Vec2<T>{x, y};
 }
 
 template <typename T>
-constexpr Vec3<T> MakeVec(const T& x, const T& y, const T& z) {
+[[nodiscard]] constexpr Vec3<T> MakeVec(const T& x, const T& y, const T& z) {
     return Vec3<T>{x, y, z};
 }
 
 template <typename T>
-constexpr Vec4<T> MakeVec(const T& x, const T& y, const Vec2<T>& zw) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const T& x, const T& y, const Vec2<T>& zw) {
     return MakeVec(x, y, zw[0], zw[1]);
 }
 
 template <typename T>
-constexpr Vec3<T> MakeVec(const Vec2<T>& xy, const T& z) {
+[[nodiscard]] constexpr Vec3<T> MakeVec(const Vec2<T>& xy, const T& z) {
     return MakeVec(xy[0], xy[1], z);
 }
 
 template <typename T>
-constexpr Vec3<T> MakeVec(const T& x, const Vec2<T>& yz) {
+[[nodiscard]] constexpr Vec3<T> MakeVec(const T& x, const Vec2<T>& yz) {
     return MakeVec(x, yz[0], yz[1]);
 }
 
 template <typename T>
-constexpr Vec4<T> MakeVec(const T& x, const T& y, const T& z, const T& w) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const T& x, const T& y, const T& z, const T& w) {
     return Vec4<T>{x, y, z, w};
 }
 
 template <typename T>
-constexpr Vec4<T> MakeVec(const Vec2<T>& xy, const T& z, const T& w) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const Vec2<T>& xy, const T& z, const T& w) {
     return MakeVec(xy[0], xy[1], z, w);
 }
 
 template <typename T>
-constexpr Vec4<T> MakeVec(const T& x, const Vec2<T>& yz, const T& w) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const T& x, const Vec2<T>& yz, const T& w) {
     return MakeVec(x, yz[0], yz[1], w);
 }
 
@@ -713,17 +715,17 @@ constexpr Vec4<T> MakeVec(const T& x, const Vec2<T>& yz, const T& w) {
 //       Even if someone wanted to use an odd object like Vec2<Vec2<T>>, the compiler would error
 //       out soon enough due to misuse of the returned structure.
 template <typename T>
-constexpr Vec4<T> MakeVec(const Vec2<T>& xy, const Vec2<T>& zw) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const Vec2<T>& xy, const Vec2<T>& zw) {
     return MakeVec(xy[0], xy[1], zw[0], zw[1]);
 }
 
 template <typename T>
-constexpr Vec4<T> MakeVec(const Vec3<T>& xyz, const T& w) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const Vec3<T>& xyz, const T& w) {
     return MakeVec(xyz[0], xyz[1], xyz[2], w);
 }
 
 template <typename T>
-constexpr Vec4<T> MakeVec(const T& x, const Vec3<T>& yzw) {
+[[nodiscard]] constexpr Vec4<T> MakeVec(const T& x, const Vec3<T>& yzw) {
     return MakeVec(x, yzw[0], yzw[1], yzw[2]);
 }
 

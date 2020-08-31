@@ -23,25 +23,25 @@ struct Rectangle {
     constexpr Rectangle(T left, T top, T right, T bottom)
         : left(left), top(top), right(right), bottom(bottom) {}
 
-    T GetWidth() const {
+    [[nodiscard]] T GetWidth() const {
         return std::abs(static_cast<std::make_signed_t<T>>(right - left));
     }
-    T GetHeight() const {
+    [[nodiscard]] T GetHeight() const {
         return std::abs(static_cast<std::make_signed_t<T>>(bottom - top));
     }
-    Rectangle<T> TranslateX(const T x) const {
+    [[nodiscard]] Rectangle<T> TranslateX(const T x) const {
         return Rectangle{left + x, top, right + x, bottom};
     }
-    Rectangle<T> TranslateY(const T y) const {
+    [[nodiscard]] Rectangle<T> TranslateY(const T y) const {
         return Rectangle{left, top + y, right, bottom + y};
     }
-    Rectangle<T> Scale(const float s) const {
+    [[nodiscard]] Rectangle<T> Scale(const float s) const {
         return Rectangle{left, top, static_cast<T>(left + GetWidth() * s),
                          static_cast<T>(top + GetHeight() * s)};
     }
 };
 
 template <typename T>
-Rectangle(T, T, T, T)->Rectangle<T>;
+Rectangle(T, T, T, T) -> Rectangle<T>;
 
 } // namespace Common

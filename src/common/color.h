@@ -13,42 +13,42 @@
 namespace Color {
 
 /// Convert a 1-bit color component to 8 bit
-constexpr u8 Convert1To8(u8 value) {
+[[nodiscard]] constexpr u8 Convert1To8(u8 value) {
     return value * 255;
 }
 
 /// Convert a 4-bit color component to 8 bit
-constexpr u8 Convert4To8(u8 value) {
+[[nodiscard]] constexpr u8 Convert4To8(u8 value) {
     return (value << 4) | value;
 }
 
 /// Convert a 5-bit color component to 8 bit
-constexpr u8 Convert5To8(u8 value) {
+[[nodiscard]] constexpr u8 Convert5To8(u8 value) {
     return (value << 3) | (value >> 2);
 }
 
 /// Convert a 6-bit color component to 8 bit
-constexpr u8 Convert6To8(u8 value) {
+[[nodiscard]] constexpr u8 Convert6To8(u8 value) {
     return (value << 2) | (value >> 4);
 }
 
 /// Convert a 8-bit color component to 1 bit
-constexpr u8 Convert8To1(u8 value) {
+[[nodiscard]] constexpr u8 Convert8To1(u8 value) {
     return value >> 7;
 }
 
 /// Convert a 8-bit color component to 4 bit
-constexpr u8 Convert8To4(u8 value) {
+[[nodiscard]] constexpr u8 Convert8To4(u8 value) {
     return value >> 4;
 }
 
 /// Convert a 8-bit color component to 5 bit
-constexpr u8 Convert8To5(u8 value) {
+[[nodiscard]] constexpr u8 Convert8To5(u8 value) {
     return value >> 3;
 }
 
 /// Convert a 8-bit color component to 6 bit
-constexpr u8 Convert8To6(u8 value) {
+[[nodiscard]] constexpr u8 Convert8To6(u8 value) {
     return value >> 2;
 }
 
@@ -57,7 +57,7 @@ constexpr u8 Convert8To6(u8 value) {
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Common::Vec4<u8>
  */
-inline Common::Vec4<u8> DecodeRGBA8(const u8* bytes) {
+[[nodiscard]] inline Common::Vec4<u8> DecodeRGBA8(const u8* bytes) {
     return {bytes[3], bytes[2], bytes[1], bytes[0]};
 }
 
@@ -66,7 +66,7 @@ inline Common::Vec4<u8> DecodeRGBA8(const u8* bytes) {
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Common::Vec4<u8>
  */
-inline Common::Vec4<u8> DecodeRGB8(const u8* bytes) {
+[[nodiscard]] inline Common::Vec4<u8> DecodeRGB8(const u8* bytes) {
     return {bytes[2], bytes[1], bytes[0], 255};
 }
 
@@ -75,7 +75,7 @@ inline Common::Vec4<u8> DecodeRGB8(const u8* bytes) {
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Common::Vec4<u8>
  */
-inline Common::Vec4<u8> DecodeRG8(const u8* bytes) {
+[[nodiscard]] inline Common::Vec4<u8> DecodeRG8(const u8* bytes) {
     return {bytes[1], bytes[0], 0, 255};
 }
 
@@ -84,7 +84,7 @@ inline Common::Vec4<u8> DecodeRG8(const u8* bytes) {
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Common::Vec4<u8>
  */
-inline Common::Vec4<u8> DecodeRGB565(const u8* bytes) {
+[[nodiscard]] inline Common::Vec4<u8> DecodeRGB565(const u8* bytes) {
     u16_le pixel;
     std::memcpy(&pixel, bytes, sizeof(pixel));
     return {Convert5To8((pixel >> 11) & 0x1F), Convert6To8((pixel >> 5) & 0x3F),
@@ -96,7 +96,7 @@ inline Common::Vec4<u8> DecodeRGB565(const u8* bytes) {
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Common::Vec4<u8>
  */
-inline Common::Vec4<u8> DecodeRGB5A1(const u8* bytes) {
+[[nodiscard]] inline Common::Vec4<u8> DecodeRGB5A1(const u8* bytes) {
     u16_le pixel;
     std::memcpy(&pixel, bytes, sizeof(pixel));
     return {Convert5To8((pixel >> 11) & 0x1F), Convert5To8((pixel >> 6) & 0x1F),
@@ -108,7 +108,7 @@ inline Common::Vec4<u8> DecodeRGB5A1(const u8* bytes) {
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Common::Vec4<u8>
  */
-inline Common::Vec4<u8> DecodeRGBA4(const u8* bytes) {
+[[nodiscard]] inline Common::Vec4<u8> DecodeRGBA4(const u8* bytes) {
     u16_le pixel;
     std::memcpy(&pixel, bytes, sizeof(pixel));
     return {Convert4To8((pixel >> 12) & 0xF), Convert4To8((pixel >> 8) & 0xF),
@@ -120,7 +120,7 @@ inline Common::Vec4<u8> DecodeRGBA4(const u8* bytes) {
  * @param bytes Pointer to encoded source value
  * @return Depth value as an u32
  */
-inline u32 DecodeD16(const u8* bytes) {
+[[nodiscard]] inline u32 DecodeD16(const u8* bytes) {
     u16_le data;
     std::memcpy(&data, bytes, sizeof(data));
     return data;
@@ -131,7 +131,7 @@ inline u32 DecodeD16(const u8* bytes) {
  * @param bytes Pointer to encoded source value
  * @return Depth value as an u32
  */
-inline u32 DecodeD24(const u8* bytes) {
+[[nodiscard]] inline u32 DecodeD24(const u8* bytes) {
     return (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
 }
 
@@ -140,7 +140,7 @@ inline u32 DecodeD24(const u8* bytes) {
  * @param bytes Pointer to encoded source values
  * @return Resulting values stored as a Common::Vec2
  */
-inline Common::Vec2<u32> DecodeD24S8(const u8* bytes) {
+[[nodiscard]] inline Common::Vec2<u32> DecodeD24S8(const u8* bytes) {
     return {static_cast<u32>((bytes[2] << 16) | (bytes[1] << 8) | bytes[0]), bytes[3]};
 }
 

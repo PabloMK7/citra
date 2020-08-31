@@ -25,15 +25,15 @@ public:
         delete read_ptr;
     }
 
-    std::size_t Size() const {
+    [[nodiscard]] std::size_t Size() const {
         return size.load();
     }
 
-    bool Empty() const {
+    [[nodiscard]] bool Empty() const {
         return Size() == 0;
     }
 
-    T& Front() const {
+    [[nodiscard]] T& Front() const {
         return read_ptr->current;
     }
 
@@ -130,15 +130,15 @@ private:
 template <typename T>
 class MPSCQueue {
 public:
-    std::size_t Size() const {
+    [[nodiscard]] std::size_t Size() const {
         return spsc_queue.Size();
     }
 
-    bool Empty() const {
+    [[nodiscard]] bool Empty() const {
         return spsc_queue.Empty();
     }
 
-    T& Front() const {
+    [[nodiscard]] T& Front() const {
         return spsc_queue.Front();
     }
 

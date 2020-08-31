@@ -91,12 +91,12 @@ public:
     }
 
     /// @returns Number of slots used
-    std::size_t Size() const {
+    [[nodiscard]] std::size_t Size() const {
         return m_write_index.load() - m_read_index.load();
     }
 
     /// @returns Maximum size of ring buffer
-    constexpr std::size_t Capacity() const {
+    [[nodiscard]] constexpr std::size_t Capacity() const {
         return capacity;
     }
 
