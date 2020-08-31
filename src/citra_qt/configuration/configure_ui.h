@@ -18,6 +18,7 @@ public:
     explicit ConfigureUi(QWidget* parent = nullptr);
     ~ConfigureUi() override;
 
+    void InitializeLanguageComboBox();
     void ApplyConfiguration();
     void RetranslateUI();
     void SetConfiguration();
