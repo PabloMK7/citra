@@ -26,11 +26,16 @@ SERVICE_CONSTRUCT_IMPL(Service::CAM::Module)
 namespace Service::CAM {
 
 template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
+void Module::serialize(Archive& ar, const unsigned int file_version) {
     ar& cameras;
     ar& ports;
     ar& is_camera_reload_pending;
-    if (Archive::is_loading::value) {
+    if (file_version > 0) {
+        ar& initialized;
+    } else {
+        initialized = true;
+    }
+    if (Archive::is_loading::value && initialized) {
         for (int i = 0; i < NumCameras; i++) {
             LoadCameraImplementation(cameras[i], i);
         }
@@ -1077,6 +1082,8 @@ void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
         port.Clear();
     }
 
+    cam->initialized = true;
+
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_CAM, "called");
@@ -1092,6 +1099,8 @@ void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
     for (CameraConfig& camera : cam->cameras) {
         camera.impl = nullptr;
     }
+
+    cam->initialized = false;
 
     rb.Push(RESULT_SUCCESS);
 

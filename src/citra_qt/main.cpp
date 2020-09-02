@@ -413,10 +413,16 @@ void GMainWindow::InitializeSaveStateMenuActions() {
         ui.menu_Save_State->addAction(actions_save_state[i]);
     }
 
-    connect(ui.action_Load_from_Newest_Slot, &QAction::triggered,
-            [this] { actions_load_state[newest_slot - 1]->trigger(); });
-    connect(ui.action_Save_to_Oldest_Slot, &QAction::triggered,
-            [this] { actions_save_state[oldest_slot - 1]->trigger(); });
+    connect(ui.action_Load_from_Newest_Slot, &QAction::triggered, [this] {
+        UpdateSaveStates();
+        if (newest_slot != 0) {
+            actions_load_state[newest_slot - 1]->trigger();
+        }
+    });
+    connect(ui.action_Save_to_Oldest_Slot, &QAction::triggered, [this] {
+        UpdateSaveStates();
+        actions_save_state[oldest_slot - 1]->trigger();
+    });
 
     connect(ui.menu_Load_State->menuAction(), &QAction::hovered, this,
             &GMainWindow::UpdateSaveStates);
