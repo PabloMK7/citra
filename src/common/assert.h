@@ -17,11 +17,12 @@
 // enough for our purposes.
 template <typename Fn>
 #if defined(_MSC_VER)
-__declspec(noinline, noreturn)
+[[msvc::noinline, noreturn]]
 #elif defined(__GNUC__)
-    __attribute__((noinline, noreturn, cold))
+[[gnu::cold, gnu::noinline, noreturn]]
 #endif
-    static void assert_noinline_call(const Fn& fn) {
+static void
+assert_noinline_call(const Fn& fn) {
     fn();
     Crash();
     exit(1); // Keeps GCC's mouth shut about this actually returning
