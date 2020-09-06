@@ -277,6 +277,8 @@ private:
             case VFP_FPSCR:
             case VFP_FPEXC:
                 r = GetVFPSystemReg(reg);
+            default:
+                break;
             }
             ar << r;
         }
@@ -287,6 +289,8 @@ private:
             case CP15_THREAD_UPRW:
             case CP15_THREAD_URO:
                 r = GetCP15Register(reg);
+            default:
+                break;
             }
             ar << r;
         }
@@ -321,6 +325,8 @@ private:
             case VFP_FPSCR:
             case VFP_FPEXC:
                 SetVFPSystemReg(reg, r);
+            default:
+                break;
             }
         }
         for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
@@ -330,6 +336,8 @@ private:
             case CP15_THREAD_UPRW:
             case CP15_THREAD_URO:
                 SetCP15Register(reg, r);
+            default:
+                break;
             }
         }
     }

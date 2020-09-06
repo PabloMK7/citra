@@ -189,6 +189,8 @@ private:
                          labels);
                 return exit_method = SeriesExit(both, after_call);
             }
+            default:
+                break;
             }
         }
         return exit_method = ExitMethod::AlwaysReturn;
