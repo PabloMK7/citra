@@ -123,8 +123,8 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
 class GameListItem : public QStandardItem {
 public:
     // used to access type from item index
-    static const int TypeRole = Qt::UserRole + 1;
-    static const int SortRole = Qt::UserRole + 2;
+    static constexpr int TypeRole = Qt::UserRole + 1;
+    static constexpr int SortRole = Qt::UserRole + 2;
     GameListItem() = default;
     explicit GameListItem(const QString& string) : QStandardItem(string) {
         setData(string, SortRole);
@@ -146,11 +146,11 @@ static const std::unordered_map<UISettings::GameListIconSize, int> IconSizes{
  */
 class GameListItemPath : public GameListItem {
 public:
-    static const int TitleRole = SortRole + 1;
-    static const int FullPathRole = SortRole + 2;
-    static const int ProgramIdRole = SortRole + 3;
-    static const int ExtdataIdRole = SortRole + 4;
-    static const int LongTitleRole = SortRole + 5;
+    static constexpr int TitleRole = SortRole + 1;
+    static constexpr int FullPathRole = SortRole + 2;
+    static constexpr int ProgramIdRole = SortRole + 3;
+    static constexpr int ExtdataIdRole = SortRole + 4;
+    static constexpr int LongTitleRole = SortRole + 5;
 
     GameListItemPath() = default;
     GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id,
@@ -179,8 +179,9 @@ public:
         memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
         // Get icon from SMDH
-        if (UISettings::values.game_list_icon_size != UISettings::GameListIconSize::NoIcon)
+        if (UISettings::values.game_list_icon_size != UISettings::GameListIconSize::NoIcon) {
             setData(GetQPixmapFromSMDH(smdh, large), Qt::DecorationRole);
+        }
 
         // Get title from SMDH
         setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English),
@@ -235,7 +236,7 @@ public:
 class GameListItemCompat : public GameListItem {
     Q_DECLARE_TR_FUNCTIONS(GameListItemCompat)
 public:
-    static const int CompatNumberRole = SortRole;
+    static constexpr int CompatNumberRole = SortRole;
     GameListItemCompat() = default;
     explicit GameListItemCompat(const QString& compatibility) {
         setData(type(), TypeRole);
@@ -307,7 +308,7 @@ public:
  */
 class GameListItemSize : public GameListItem {
 public:
-    static const int SizeRole = SortRole;
+    static constexpr int SizeRole = SortRole;
 
     GameListItemSize() = default;
     explicit GameListItemSize(const qulonglong size_bytes) {
@@ -343,7 +344,7 @@ public:
 
 class GameListDir : public GameListItem {
 public:
-    static const int GameDirRole = Qt::UserRole + 2;
+    static constexpr int GameDirRole = Qt::UserRole + 2;
 
     explicit GameListDir(UISettings::GameDir& directory,
                          GameListItemType dir_type = GameListItemType::CustomDir)
