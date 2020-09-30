@@ -82,7 +82,7 @@ void LayeredFS::Load() {
 
 LayeredFS::~LayeredFS() = default;
 
-void LayeredFS::LoadDirectory(Directory& current, u32 offset) {
+u32 LayeredFS::LoadDirectory(Directory& current, u32 offset) {
     DirectoryMetadata metadata;
     romfs->ReadFile(header.directory_metadata_table.offset + offset, sizeof(metadata),
                     reinterpret_cast<u8*>(&metadata));
@@ -92,28 +92,24 @@ void LayeredFS::LoadDirectory(Directory& current, u32 offset) {
     current.path = current.parent->path + current.name + DIR_SEP;
     directory_path_map.emplace(current.path, &current);
 
-    if (metadata.first_file_offset != 0xFFFFFFFF) {
-        LoadFile(current, metadata.first_file_offset);
+    u32 file_offset = metadata.first_file_offset;
+    while (file_offset != 0xFFFFFFFF) {
+        file_offset = LoadFile(current, file_offset);
     }
 
-    if (metadata.first_child_directory_offset != 0xFFFFFFFF) {
+    u32 child_directory_offset = metadata.first_child_directory_offset;
+    while (child_directory_offset != 0xFFFFFFFF) {
         auto child = std::make_unique<Directory>();
         auto& directory = *child;
         directory.parent = &current;
         current.directories.emplace_back(std::move(child));
-        LoadDirectory(directory, metadata.first_child_directory_offset);
+        child_directory_offset = LoadDirectory(directory, child_directory_offset);
     }
 
-    if (metadata.next_sibling_offset != 0xFFFFFFFF) {
-        auto sibling = std::make_unique<Directory>();
-        auto& directory = *sibling;
-        directory.parent = current.parent;
-        current.parent->directories.emplace_back(std::move(sibling));
-        LoadDirectory(directory, metadata.next_sibling_offset);
-    }
+    return metadata.next_sibling_offset;
 }
 
-void LayeredFS::LoadFile(Directory& parent, u32 offset) {
+u32 LayeredFS::LoadFile(Directory& parent, u32 offset) {
     FileMetadata metadata;
     romfs->ReadFile(header.file_metadata_table.offset + offset, sizeof(metadata),
                     reinterpret_cast<u8*>(&metadata));
@@ -129,9 +125,7 @@ void LayeredFS::LoadFile(Directory& parent, u32 offset) {
     file_path_map.emplace(file->path, file.get());
     parent.files.emplace_back(std::move(file));
 
-    if (metadata.next_sibling_offset != 0xFFFFFFFF) {
-        LoadFile(parent, metadata.next_sibling_offset);
-    }
+    return metadata.next_sibling_offset;
 }
 
 std::string LayeredFS::ReadName(u32 offset, u32 name_length) {
