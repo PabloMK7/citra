@@ -77,6 +77,7 @@ void LogSettings() {
 
     LOG_INFO(Config, "Citra Configuration:");
     log_setting("Core_UseCpuJit", values.use_cpu_jit);
+    log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage);
     log_setting("Renderer_UseGLES", values.use_gles);
     log_setting("Renderer_UseHwRenderer", values.use_hw_renderer);
     log_setting("Renderer_UseHwShader", values.use_hw_shader);
@@ -87,6 +88,7 @@ void LogSettings() {
     log_setting("Renderer_FrameLimit", values.frame_limit);
     log_setting("Renderer_UseFrameLimitAlternate", values.use_frame_limit_alternate);
     log_setting("Renderer_FrameLimitAlternate", values.frame_limit_alternate);
+    log_setting("Renderer_VSyncNew", values.use_vsync_new);
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name);
     log_setting("Renderer_FilterMode", values.filter_mode);
     log_setting("Renderer_TextureFilterName", values.texture_filter_name);
