@@ -7,11 +7,13 @@
 #include "citra_qt/util/util.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#include "ui_registers.h"
 
-RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
-    cpu_regs_ui.setupUi(this);
+RegistersWidget::RegistersWidget(QWidget* parent)
+    : QDockWidget(parent), cpu_regs_ui(std::make_unique<Ui::ARMRegisters>()) {
+    cpu_regs_ui->setupUi(this);
 
-    tree = cpu_regs_ui.treeWidget;
+    tree = cpu_regs_ui->treeWidget;
     tree->addTopLevelItem(core_registers = new QTreeWidgetItem(QStringList(tr("Registers"))));
     tree->addTopLevelItem(vfp_registers = new QTreeWidgetItem(QStringList(tr("VFP Registers"))));
     tree->addTopLevelItem(vfp_system_registers =
@@ -56,6 +58,8 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
     }
     setEnabled(false);
 }
+
+RegistersWidget::~RegistersWidget() = default;
 
 void RegistersWidget::OnDebugModeEntered() {
     if (!Core::System::GetInstance().IsPoweredOn())

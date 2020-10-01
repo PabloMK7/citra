@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <QWidget>
 
 namespace Settings {
@@ -29,6 +30,6 @@ private:
     void updateShaders(Settings::StereoRenderOption stereo_option);
     void updateTextureFilter(int index);
 
-    Ui::ConfigureEnhancements* ui;
+    std::unique_ptr<Ui::ConfigureEnhancements> ui;
     QColor bg_color;
 };

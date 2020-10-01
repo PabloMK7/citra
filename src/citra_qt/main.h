@@ -15,7 +15,6 @@
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
 #include "core/savestate.h"
-#include "ui_main.h"
 
 class AboutDialog;
 class Config;
@@ -47,6 +46,10 @@ class WaitTreeWidget;
 
 namespace DiscordRPC {
 class DiscordInterface;
+}
+
+namespace Ui {
+class MainWindow;
 }
 
 class GMainWindow : public QMainWindow {
@@ -230,7 +233,7 @@ private:
     void HideMouseCursor();
     void ShowMouseCursor();
 
-    Ui::MainWindow ui;
+    std::unique_ptr<Ui::MainWindow> ui;
 
     GRenderWindow* render_window;
 

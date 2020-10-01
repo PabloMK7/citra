@@ -228,7 +228,8 @@ static constexpr int SettingsToSlider(int value) {
     return (value - 5) / 5;
 }
 
-ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureSystem) {
+ConfigureSystem::ConfigureSystem(QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureSystem>()) {
     ui->setupUi(this);
     connect(ui->combo_birthmonth,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,

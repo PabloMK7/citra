@@ -4,18 +4,23 @@
 
 #pragma once
 
+#include <memory>
 #include <QDockWidget>
-#include "ui_registers.h"
 
 class QTreeWidget;
 class QTreeWidgetItem;
 class EmuThread;
+
+namespace Ui {
+class ARMRegisters;
+}
 
 class RegistersWidget : public QDockWidget {
     Q_OBJECT
 
 public:
     explicit RegistersWidget(QWidget* parent = nullptr);
+    ~RegistersWidget();
 
 public slots:
     void OnDebugModeEntered();
@@ -31,7 +36,7 @@ private:
     void CreateVFPSystemRegisterChildren();
     void UpdateVFPSystemRegisterValues();
 
-    Ui::ARMRegisters cpu_regs_ui;
+    std::unique_ptr<Ui::ARMRegisters> cpu_regs_ui;
 
     QTreeWidget* tree;
 

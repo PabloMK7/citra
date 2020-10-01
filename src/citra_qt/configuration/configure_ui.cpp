@@ -7,7 +7,8 @@
 #include "citra_qt/uisettings.h"
 #include "ui_configure_ui.h"
 
-ConfigureUi::ConfigureUi(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureUi) {
+ConfigureUi::ConfigureUi(QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureUi>()) {
     ui->setupUi(this);
     InitializeLanguageComboBox();
 

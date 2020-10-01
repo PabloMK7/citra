@@ -11,7 +11,7 @@
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 
 ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
-    : QWidget(parent), ui(new Ui::ConfigureEnhancements) {
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureEnhancements>()) {
     ui->setupUi(this);
 
     for (const auto& filter : OpenGL::TextureFilterer::GetFilterNames())
@@ -128,6 +128,4 @@ void ConfigureEnhancements::ApplyConfiguration() {
     Settings::values.bg_blue = static_cast<float>(bg_color.blueF());
 }
 
-ConfigureEnhancements::~ConfigureEnhancements() {
-    delete ui;
-}
+ConfigureEnhancements::~ConfigureEnhancements() {}

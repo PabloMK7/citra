@@ -13,7 +13,10 @@
 #include "common/announce_multiplayer_room.h"
 #include "core/announce_multiplayer_session.h"
 #include "network/network.h"
-#include "ui_lobby.h"
+
+namespace Ui {
+class Lobby;
+}
 
 class LobbyModel;
 class LobbyFilterProxyModel;
@@ -28,7 +31,7 @@ class Lobby : public QDialog {
 public:
     explicit Lobby(QWidget* parent, QStandardItemModel* list,
                    std::shared_ptr<Core::AnnounceMultiplayerSession> session);
-    ~Lobby() = default;
+    ~Lobby() override;
 
     /**
      * Updates the lobby with a new game list model.

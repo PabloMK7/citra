@@ -18,6 +18,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/network.h"
+#include "ui_lobby.h"
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/web_backend.h"
 #endif
@@ -80,6 +81,8 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     // refreshroomlist signal from places that open the lobby
     RefreshLobby();
 }
+
+Lobby::~Lobby() = default;
 
 void Lobby::UpdateGameList(QStandardItemModel* list) {
     game_list->clear();

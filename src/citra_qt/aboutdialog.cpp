@@ -9,7 +9,7 @@
 
 AboutDialog::AboutDialog(QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(new Ui::AboutDialog) {
+      ui(std::make_unique<Ui::AboutDialog>()) {
     ui->setupUi(this);
     ui->labelLogo->setPixmap(QIcon::fromTheme(QStringLiteral("citra")).pixmap(200));
     ui->labelBuildInfo->setText(ui->labelBuildInfo->text().arg(

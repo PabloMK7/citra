@@ -13,7 +13,7 @@
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
-    : QWidget(parent), ui(new Ui::ConfigureGraphics) {
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureGraphics>()) {
     ui->setupUi(this);
     SetConfiguration();
 
