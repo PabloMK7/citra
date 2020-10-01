@@ -5,7 +5,6 @@
 #pragma once
 
 #include <algorithm>
-#include <initializer_list>
 #include <memory>
 #include <optional>
 #include <string>
@@ -236,12 +235,6 @@ protected:
     FileUtil::IOFile file;
     bool is_loaded = false;
 };
-
-/**
- * Common address mappings found in most games, used for binary formats that don't have this
- * information.
- */
-extern const std::initializer_list<Kernel::AddressMapping> default_address_mappings;
 
 /**
  * Identifies a bootable file and return a suitable loader

@@ -145,6 +145,22 @@ void Process::ParseKernelCaps(const u32* kernel_caps, std::size_t len) {
     }
 }
 
+void Process::Set3dsxKernelCaps() {
+    svc_access_mask.set();
+
+    address_mappings = {
+        {0x1FF50000, 0x8000, true},    // part of DSP RAM
+        {0x1FF70000, 0x8000, true},    // part of DSP RAM
+        {0x1F000000, 0x600000, false}, // entire VRAM
+    };
+
+    // Similar to Rosalina, we set kernel version to a recent one.
+    // This is 11.2.0, to be consistent with core/hle/kernel/config_mem.cpp
+    // TODO: refactor kernel version out so it is configurable and consistent
+    // among all relevant places.
+    kernel_version = 0x234;
+}
+
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
     memory_region = kernel.GetMemoryRegion(flags.memory_region);
 

@@ -191,6 +191,11 @@ public:
     void ParseKernelCaps(const u32* kernel_caps, std::size_t len);
 
     /**
+     * Set up the default kernel capability for 3DSX.
+     */
+    void Set3dsxKernelCaps();
+
+    /**
      * Applies address space changes and launches the process main thread.
      */
     void Run(s32 main_thread_priority, u32 stack_size);
