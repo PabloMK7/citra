@@ -36,5 +36,9 @@
 	<string>NSApplication</string>
 	<key>NSHighResolutionCapable</key>
 	<string>True</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires camera access to emulate the 3DS's cameras.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires microphone access to emulate the 3DS's microphone.</string>
 </dict>
 </plist>
