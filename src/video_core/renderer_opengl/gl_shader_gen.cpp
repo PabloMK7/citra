@@ -1651,7 +1651,7 @@ std::optional<ShaderDecompiler::ProgramResult> GenerateVertexShader(
         get_output_reg, config.state.sanitize_mul);
 
     if (!program_source_opt)
-        return {};
+        return std::nullopt;
 
     std::string& program_source = program_source_opt->code;
 

@@ -104,7 +104,7 @@ WMFDecoder::Impl::~Impl() {
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
     if (request.codec != DecoderCodec::AAC) {
         LOG_ERROR(Audio_DSP, "Got unknown codec {}", static_cast<u16>(request.codec));
-        return {};
+        return std::nullopt;
     }
 
     switch (request.cmd) {
@@ -123,7 +123,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryReque
     }
     default:
         LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
-        return {};
+        return std::nullopt;
     }
 }
 
@@ -205,7 +205,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     if (request.src_addr < Memory::FCRAM_PADDR ||
         request.src_addr + request.size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
         LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}", request.src_addr);
-        return {};
+        return std::nullopt;
     }
     u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
 
@@ -269,7 +269,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
             request.dst_addr_ch0 + out_streams[0].size() >
                 Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
             LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
-            return {};
+            return std::nullopt;
         }
         std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
                     out_streams[0].data(), out_streams[0].size());
@@ -280,7 +280,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
             request.dst_addr_ch1 + out_streams[1].size() >
                 Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
             LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
-            return {};
+            return std::nullopt;
         }
         std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch1 - Memory::FCRAM_PADDR),
                     out_streams[1].data(), out_streams[1].size());
