@@ -234,7 +234,7 @@ std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
     }
 
     // No sufficient block found
-    return {};
+    return std::nullopt;
 }
 
 void MemoryRegionInfo::Free(u32 offset, u32 size) {

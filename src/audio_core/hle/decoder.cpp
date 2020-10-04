@@ -55,7 +55,7 @@ std::optional<BinaryResponse> NullDecoder::ProcessRequest(const BinaryRequest& r
         return response;
     default:
         LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
-        return {};
+        return std::nullopt;
     }
 };
 } // namespace AudioCore::HLE
