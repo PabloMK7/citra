@@ -166,6 +166,7 @@
      <addaction name="action_Close_Movie"/>
      <addaction name="separator"/>
      <addaction name="action_Movie_Read_Only_Mode"/>
+     <addaction name="action_Save_Movie"/>
     </widget>
     <widget class="QMenu" name="menu_Frame_Advance">
      <property name="title">
@@ -332,6 +333,14 @@
   <action name="action_Close_Movie">
    <property name="text">
     <string>Close</string>
+   </property>
+  </action>
+  <action name="action_Save_Movie">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save without Closing</string>
    </property>
   </action>
   <action name="action_Movie_Read_Only_Mode">

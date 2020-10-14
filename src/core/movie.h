@@ -125,6 +125,12 @@ public:
     u64 GetCurrentInputIndex() const;
     u64 GetTotalInputCount() const;
 
+    /**
+     * Saves the movie immediately, in its current state.
+     * This is called in Shutdown.
+     */
+    void SaveMovie();
+
 private:
     static Movie s_instance;
 
@@ -151,8 +157,6 @@ private:
 
     ValidationResult ValidateHeader(const CTMHeader& header) const;
     ValidationResult ValidateInput(const std::vector<u8>& input, u64 expected_count) const;
-
-    void SaveMovie();
 
     PlayMode play_mode;
 

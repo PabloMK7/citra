@@ -176,8 +176,9 @@ GMainWindow::GMainWindow()
 
     Network::Init();
 
-    Core::Movie::GetInstance().SetPlaybackCompletionCallback(
-        [this] { QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted"); });
+    Core::Movie::GetInstance().SetPlaybackCompletionCallback([this] {
+        QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted", Qt::BlockingQueuedConnection);
+    });
 
     InitializeWidgets();
     InitializeDebugWidgets();
@@ -748,6 +749,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui->action_Record_Movie, &QAction::triggered, this, &GMainWindow::OnRecordMovie);
     connect(ui->action_Play_Movie, &QAction::triggered, this, &GMainWindow::OnPlayMovie);
     connect(ui->action_Close_Movie, &QAction::triggered, this, &GMainWindow::OnCloseMovie);
+    connect(ui->action_Save_Movie, &QAction::triggered, this, &GMainWindow::OnSaveMovie);
     connect(ui->action_Movie_Read_Only_Mode, &QAction::toggled, this,
             [this](bool checked) { Core::Movie::GetInstance().SetReadOnly(checked); });
     connect(ui->action_Enable_Frame_Advancing, &QAction::triggered, this, [this] {
@@ -1878,6 +1880,7 @@ void GMainWindow::OnRecordMovie() {
         BootGame(QString(game_path));
     }
     ui->action_Close_Movie->setEnabled(true);
+    ui->action_Save_Movie->setEnabled(true);
 }
 
 void GMainWindow::OnPlayMovie() {
@@ -1891,6 +1894,7 @@ void GMainWindow::OnPlayMovie() {
     BootGame(dialog.GetGamePath());
 
     ui->action_Close_Movie->setEnabled(true);
+    ui->action_Save_Movie->setEnabled(false);
 }
 
 void GMainWindow::OnCloseMovie() {
@@ -1919,6 +1923,25 @@ void GMainWindow::OnCloseMovie() {
     }
 
     ui->action_Close_Movie->setEnabled(false);
+    ui->action_Save_Movie->setEnabled(false);
+}
+
+void GMainWindow::OnSaveMovie() {
+    const bool was_running = emu_thread && emu_thread->IsRunning();
+    if (was_running) {
+        OnPauseGame();
+    }
+
+    if (Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording) {
+        Core::Movie::GetInstance().SaveMovie();
+        QMessageBox::information(this, tr("Movie Saved"), tr("The movie is successfully saved."));
+    } else {
+        LOG_ERROR(Frontend, "Tried to save movie while movie is not being recorded");
+    }
+
+    if (was_running) {
+        OnStartGame();
+    }
 }
 
 void GMainWindow::OnCaptureScreenshot() {
@@ -2005,18 +2028,22 @@ void GMainWindow::UpdateStatusBar() {
         message_label->setText(tr("Recording %1").arg(current));
         message_label->setVisible(true);
         message_label_used_for_movie = true;
+        ui->action_Save_Movie->setEnabled(true);
     } else if (play_mode == Core::Movie::PlayMode::Playing) {
         message_label->setText(tr("Playing %1 / %2").arg(current).arg(total));
         message_label->setVisible(true);
         message_label_used_for_movie = true;
+        ui->action_Save_Movie->setEnabled(false);
     } else if (play_mode == Core::Movie::PlayMode::MovieFinished) {
         message_label->setText(tr("Movie Finished"));
         message_label->setVisible(true);
         message_label_used_for_movie = true;
+        ui->action_Save_Movie->setEnabled(false);
     } else if (message_label_used_for_movie) { // Clear the label if movie was just closed
         message_label->setText(QString{});
         message_label->setVisible(false);
         message_label_used_for_movie = false;
+        ui->action_Save_Movie->setEnabled(false);
     }
 
     auto results = Core::System::GetInstance().GetAndResetPerfStats();
@@ -2309,6 +2336,7 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 }
 
 void GMainWindow::OnMoviePlaybackCompleted() {
+    OnPauseGame();
     QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
 }
 

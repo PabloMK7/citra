@@ -543,6 +543,7 @@ void Movie::StartPlayback(const std::string& movie_file) {
             current_byte = 0;
             current_input = 0;
             id = header.id;
+            program_id = header.program_id;
 
             LOG_INFO(Movie, "Loaded Movie, ID: {:016X}", id);
         }
