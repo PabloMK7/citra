@@ -432,7 +432,7 @@ public:
 private:
     class KeyReleaseEater : public QObject {
     public:
-        explicit KeyReleaseEater(GameList* gamelist);
+        explicit KeyReleaseEater(GameList* gamelist, QObject* parent = nullptr);
 
     private:
         GameList* gamelist = nullptr;

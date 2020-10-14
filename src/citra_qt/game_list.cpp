@@ -32,7 +32,8 @@
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/hle/service/fs/archive.h"
 
-GameListSearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist) : gamelist{gamelist} {}
+GameListSearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist, QObject* parent)
+    : QObject(parent), gamelist{gamelist} {}
 
 // EventFilter in order to process systemkeys while editing the searchfield
 bool GameListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
@@ -128,7 +129,7 @@ void GameListSearchField::setFocus() {
 }
 
 GameListSearchField::GameListSearchField(GameList* parent) : QWidget{parent} {
-    auto* const key_release_eater = new KeyReleaseEater(parent);
+    auto* const key_release_eater = new KeyReleaseEater(parent, this);
     layout_filter = new QHBoxLayout;
     layout_filter->setMargin(8);
     label_filter = new QLabel;
