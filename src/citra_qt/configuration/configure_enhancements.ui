@@ -171,6 +171,11 @@
             <string>Interlaced</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Reverse Interlaced</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>

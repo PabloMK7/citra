@@ -32,7 +32,7 @@ enum class MicInputType {
     Static,
 };
 
-enum class StereoRenderOption { Off, SideBySide, Anaglyph, Interlaced };
+enum class StereoRenderOption { Off, SideBySide, Anaglyph, Interlaced, ReverseInterlaced };
 
 namespace NativeButton {
 enum Values {
