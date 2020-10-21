@@ -302,28 +302,11 @@ uniform vec4 o_resolution;
 uniform sampler2D color_texture;
 uniform sampler2D color_texture_r;
 
-void main() {
-    float screen_row = o_resolution.x * frag_tex_coord.x;
-    if (int(screen_row) % 2 == 0)
-        color = texture(color_texture, frag_tex_coord);
-    else
-        color = texture(color_texture_r, frag_tex_coord);
-}
-)";
-
-static const char fragment_shader_reverse_interlaced[] = R"(
-
-in vec2 frag_tex_coord;
-out vec4 color;
-
-uniform vec4 o_resolution;
-
-uniform sampler2D color_texture;
-uniform sampler2D color_texture_r;
+uniform int reverse_interlaced;
 
 void main() {
     float screen_row = o_resolution.x * frag_tex_coord.x;
-    if (int(screen_row) % 2 == 1)
+    if (int(screen_row) % 2 == reverse_interlaced)
         color = texture(color_texture, frag_tex_coord);
     else
         color = texture(color_texture_r, frag_tex_coord);
@@ -711,7 +694,8 @@ void RendererOpenGL::ReloadShader() {
                 shader_data += shader_text;
             }
         }
-    } else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced) {
+    } else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
+               Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         if (Settings::values.pp_shader_name == "horizontal (builtin)") {
             shader_data += fragment_shader_interlaced;
         } else {
@@ -720,19 +704,6 @@ void RendererOpenGL::ReloadShader() {
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += fragment_shader_interlaced;
-            } else {
-                shader_data += shader_text;
-            }
-        }
-    } else if (Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
-        if (Settings::values.pp_shader_name == "horizontal (builtin)") {
-            shader_data += fragment_shader_reverse_interlaced;
-        } else {
-            std::string shader_text =
-                OpenGL::GetPostProcessingShaderCode(true, Settings::values.pp_shader_name);
-            if (shader_text.empty()) {
-                // Should probably provide some information that the shader couldn't load
-                shader_data += fragment_shader_reverse_interlaced;
             } else {
                 shader_data += shader_text;
             }
@@ -760,6 +731,15 @@ void RendererOpenGL::ReloadShader() {
         Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
         Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
+    }
+    if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
+        Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
+        GLuint uniform_reverse_interlaced =
+            glGetUniformLocation(shader.handle, "reverse_interlaced");
+        if (Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced)
+            glUniform1i(uniform_reverse_interlaced, 1);
+        else
+            glUniform1i(uniform_reverse_interlaced, 0);
     }
     uniform_i_resolution = glGetUniformLocation(shader.handle, "i_resolution");
     uniform_o_resolution = glGetUniformLocation(shader.handle, "o_resolution");
