@@ -118,6 +118,16 @@
       <string>Advanced</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+         <widget class="QCheckBox" name="toggle_disk_shader_cache">
+           <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;p&gt;It cannot be used without Enable Hardware Shader or Accurate Multiplication.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+             <string>Use Disk Shader Cache</string>
+           </property>
+         </widget>
+       </item>
       <item>
        <widget class="QCheckBox" name="toggle_vsync_new">
         <property name="toolTip">

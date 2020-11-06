@@ -47,8 +47,6 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
         if (!ui->toggle_preload_textures->isEnabled())
             ui->toggle_preload_textures->setChecked(false);
     });
-
-    ui->toggle_disk_shader_cache->setEnabled(Settings::values.use_hw_shader);
 }
 
 void ConfigureEnhancements::SetConfiguration() {
@@ -66,8 +64,6 @@ void ConfigureEnhancements::SetConfiguration() {
     }
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
     ui->swap_screen->setChecked(Settings::values.swap_screen);
-    ui->toggle_disk_shader_cache->setChecked(Settings::values.use_hw_shader &&
-                                             Settings::values.use_disk_shader_cache);
     ui->upright_screen->setChecked(Settings::values.upright_screen);
     ui->toggle_dump_textures->setChecked(Settings::values.dump_textures);
     ui->toggle_custom_textures->setChecked(Settings::values.custom_textures);
@@ -117,8 +113,6 @@ void ConfigureEnhancements::ApplyConfiguration() {
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();
-    Settings::values.use_disk_shader_cache =
-        Settings::values.use_hw_shader && ui->toggle_disk_shader_cache->isChecked();
     Settings::values.upright_screen = ui->upright_screen->isChecked();
     Settings::values.dump_textures = ui->toggle_dump_textures->isChecked();
     Settings::values.custom_textures = ui->toggle_custom_textures->isChecked();

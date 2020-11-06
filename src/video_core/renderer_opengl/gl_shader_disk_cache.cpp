@@ -106,8 +106,8 @@ ShaderDiskCache::ShaderDiskCache(bool separable) : separable{separable} {}
 
 std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable() {
     const bool has_title_id = GetProgramID() != 0;
-    if (!Settings::values.use_hw_shader || !Settings::values.use_disk_shader_cache ||
-        !has_title_id) {
+    if (!Settings::values.use_hw_shader || !Settings::values.shaders_accurate_mul ||
+        !Settings::values.use_disk_shader_cache || !has_title_id) {
         return std::nullopt;
     }
     tried_to_load = true;
