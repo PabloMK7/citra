@@ -1,4 +1,7 @@
-import pefile
+try:
+    import lief
+except ImportError:
+    import pefile
 import sys
 import re
 import os
@@ -19,7 +22,20 @@ DLL_PATH = [
 missing = []
 
 
+def parse_imports_lief(filename):
+    results = []
+    pe = lief.parse(filename)
+    for entry in pe.imports:
+        name = entry.name
+        if name.upper() not in KNOWN_SYS_DLLS and not re.match(string=name, pattern=r'.*32\.DLL'):
+            results.append(name)
+    return results
+
+
 def parse_imports(file_name):
+    if globals().get('lief'):
+        return parse_imports_lief(file_name)
+
     results = []
     pe = pefile.PE(file_name, fast_load=True)
     pe.parse_data_directories()

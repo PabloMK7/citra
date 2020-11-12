@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
-cd /citra
-# override Travis CI unreasonable ccache size
+# override CI ccache size
+mkdir -p "$HOME/.ccache/"
 echo 'max_size = 3.0G' > "$HOME/.ccache/ccache.conf"
 
 mkdir build && cd build
@@ -27,4 +27,4 @@ cp -rv "${QT_PLATFORM_DLL_PATH}/../mediaservice/" package/
 cp -rv "${QT_PLATFORM_DLL_PATH}/../imageformats/" package/
 rm -f package/mediaservice/*d.dll
 
-python3 .travis/linux-mingw/scan_dll.py package/*.exe package/imageformats/*.dll "package/"
+python3 .ci/linux-mingw/scan_dll.py package/*.exe package/imageformats/*.dll "package/"

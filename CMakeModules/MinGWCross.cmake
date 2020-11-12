@@ -47,7 +47,7 @@ IF(NOT DEFINED ENV{MINGW_DEBUG_INFO})
 	MESSAGE("* WINDRES                              : ${WINDRES}")
 	MESSAGE("* ENV{PKG_CONFIG}                      : $ENV{PKG_CONFIG}")
 	MESSAGE("* STRIP                                : ${STRIP}")
-  MESSAGE("* USE_CCACHE                           : ${USE_CCACHE}")
+	MESSAGE("* USE_CCACHE                           : ${USE_CCACHE}")
 	MESSAGE("")
 	# So that the debug info only appears once
 	SET(ENV{MINGW_DEBUG_INFO} SHOWN)

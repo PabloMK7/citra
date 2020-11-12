@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-. .travis/common/pre-upload.sh
+. .ci/common/pre-upload.sh
 
 REV_NAME="citra-linux-${GITDATE}-${GITREV}"
 ARCHIVE_NAME="${REV_NAME}.tar.xz"
@@ -16,4 +16,4 @@ cp build/bin/Release/citra-qt "$REV_NAME"
 mkdir "$REV_NAME/dist"
 cp dist/icon.png "$REV_NAME/dist/citra.png"
 
-. .travis/common/post-upload.sh
+. .ci/common/post-upload.sh

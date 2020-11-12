@@ -1,0 +1,130 @@
+name: citra-ci
+
+on:
+  push:
+    branches: [ "*" ]
+    tags: [ "*" ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ["linux-clang-format", "linux-fresh", "linux-frozen", "linux-mingw"]
+    container: citraemu/build-environments:${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-${{ matrix.image }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.image }}-
+      - name: Query tag name
+        uses: olegtarasov/get-tag@v2
+        id: tagName
+      - name: Build
+        run: ./.ci/${{ matrix.image }}/docker.sh
+        env:
+          ENABLE_COMPATIBILITY_REPORTING: "ON"
+      - name: Pack
+        run: ./.ci/${{ matrix.image }}/upload.sh
+        if: ${{ matrix.image != 'linux-frozen' && matrix.image != 'linux-clang-format' }}
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.image != 'linux-frozen' && matrix.image != 'linux-clang-format' }}
+        with:
+          name: ${{ matrix.image }}
+          path: artifacts/
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: ~/Library/Caches/ccache
+          key: ${{ runner.os }}-macos-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-macos-
+      - name: Query tag name
+        uses: olegtarasov/get-tag@v2
+        id: tagName
+      - name: Install dependencies
+        run: ./.ci/macos/deps.sh
+      - name: Build
+        run: ./.ci/macos/build.sh
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.13"
+          ENABLE_COMPATIBILITY_REPORTING: "ON"
+      - name: Pack
+        run: ./.ci/macos/upload.sh
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos
+          path: artifacts/
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.buildcache
+          key: ${{ runner.os }}-win-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-win-
+      - name: Install dependencies
+        run: ./.ci/windows-msvc/deps.sh
+        shell: bash
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Build
+        run: ./.ci/windows-msvc/build.sh
+        shell: bash
+        env:
+          ENABLE_COMPATIBILITY_REPORTING: "ON"
+  transifex:
+    runs-on: ubuntu-latest
+    container: citraemu/build-environments:linux-transifex
+    if: ${{ github.repository == 'citra-emu/citra' && !github.head_ref }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update Translation
+        run: ./.ci/transifex/docker.sh
+        env:
+          TRANSIFEX_API_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}
+  release:
+    runs-on: ubuntu-latest
+    needs: [build, macos]
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - uses: actions/download-artifact@v2
+      - name: Query tag name
+        uses: olegtarasov/get-tag@v2
+        id: tagName
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tagName.outputs.tag }}
+          release_name: ${{ steps.tagName.outputs.tag }}
+          draft: false
+          prerelease: false
+      - name: Upload artifacts
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_paths: '["./**/*.tar.*","./**/*.7z","./**/*.zip"]'
