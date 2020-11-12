@@ -14,7 +14,7 @@ if [ -z $GIT_TAG_NAME ]; then
     RELEASE_NAME=head
 else
     RELEASE_NAME=$(echo $GIT_TAG_NAME | cut -d- -f1)
-    if [ "$NAME" = "MinGW build" ]; then
+    if [ "$NAME" = "linux-mingw" ]; then
         RELEASE_NAME="${RELEASE_NAME}-mingw"
     fi
 fi

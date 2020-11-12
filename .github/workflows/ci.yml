@@ -35,6 +35,8 @@ jobs:
       - name: Pack
         run: ./.ci/${{ matrix.image }}/upload.sh
         if: ${{ matrix.image != 'linux-frozen' && matrix.image != 'linux-clang-format' }}
+        env:
+          NAME: ${{ matrix.image }}
       - name: Upload
         uses: actions/upload-artifact@v2
         if: ${{ matrix.image != 'linux-frozen' && matrix.image != 'linux-clang-format' }}
