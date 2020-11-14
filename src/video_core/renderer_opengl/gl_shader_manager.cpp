@@ -254,7 +254,7 @@ public:
     explicit ShaderDoubleCache(bool separable) : separable(separable) {}
     std::tuple<GLuint, std::optional<ShaderDecompiler::ProgramResult>> Get(
         const KeyConfigType& key, const Pica::Shader::ShaderSetup& setup) {
-        std::optional<ShaderDecompiler::ProgramResult> result{};
+        ShaderDecompiler::ProgramResult result{};
         auto map_it = shader_map.find(key);
         if (map_it == shader_map.end()) {
             auto program_opt = CodeGenerator(setup, key, separable);
@@ -267,7 +267,7 @@ public:
             auto [iter, new_shader] = shader_cache.emplace(program, OGLShaderStage{separable});
             OGLShaderStage& cached_shader = iter->second;
             if (new_shader) {
-                result->code = program;
+                result.code = program;
                 cached_shader.Create(program.c_str(), ShaderType);
             }
             shader_map[key] = &cached_shader;
