@@ -39,14 +39,6 @@ FDKDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
         LOG_ERROR(Audio_DSP, "Failed to retrieve fdk_aac library information!");
         return;
     }
-    // This segment: identify the broken fdk_aac implementation
-    // and refuse to initialize if identified as broken (check for module IDs)
-    // although our AAC samples do not contain SBC feature, this is a way to detect
-    // watered down version of fdk_aac implementations
-    if (FDKlibInfo_getCapabilities(decoder_info, FDK_SBRDEC) == 0) {
-        LOG_ERROR(Audio_DSP, "Bad fdk_aac library found! Initialization aborted!");
-        return;
-    }
 
     LOG_INFO(Audio_DSP, "Using fdk_aac version {} (build date: {})", decoder_info[0].versionStr,
              decoder_info[0].build_date);
