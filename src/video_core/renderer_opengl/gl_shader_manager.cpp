@@ -267,6 +267,7 @@ public:
             auto [iter, new_shader] = shader_cache.emplace(program, OGLShaderStage{separable});
             OGLShaderStage& cached_shader = iter->second;
             if (new_shader) {
+                result.emplace();
                 result->code = program;
                 cached_shader.Create(program.c_str(), ShaderType);
             }
