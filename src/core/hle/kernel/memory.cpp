@@ -174,6 +174,8 @@ void KernelSystem::MapSharedPages(VMManager& address_space) {
 }
 
 void MemoryRegionInfo::Reset(u32 base, u32 size) {
+    ASSERT(!is_locked);
+
     this->base = base;
     this->size = size;
     used = 0;
@@ -184,6 +186,8 @@ void MemoryRegionInfo::Reset(u32 base, u32 size) {
 }
 
 MemoryRegionInfo::IntervalSet MemoryRegionInfo::HeapAllocate(u32 size) {
+    ASSERT(!is_locked);
+
     IntervalSet result;
     u32 rest = size;
 
@@ -211,6 +215,8 @@ MemoryRegionInfo::IntervalSet MemoryRegionInfo::HeapAllocate(u32 size) {
 }
 
 bool MemoryRegionInfo::LinearAllocate(u32 offset, u32 size) {
+    ASSERT(!is_locked);
+
     Interval interval(offset, offset + size);
     if (!boost::icl::contains(free_blocks, interval)) {
         // The requested range is already allocated
@@ -222,6 +228,8 @@ bool MemoryRegionInfo::LinearAllocate(u32 offset, u32 size) {
 }
 
 std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
+    ASSERT(!is_locked);
+
     // Find the first sufficient continuous block from the lower address
     for (const auto& interval : free_blocks) {
         ASSERT(interval.bounds() == boost::icl::interval_bounds::right_open());
@@ -238,10 +246,18 @@ std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
 }
 
 void MemoryRegionInfo::Free(u32 offset, u32 size) {
+    if (is_locked) {
+        return;
+    }
+
     Interval interval(offset, offset + size);
     ASSERT(!boost::icl::intersects(free_blocks, interval)); // must be allocated blocks
     free_blocks += interval;
     used -= size;
+}
+
+void MemoryRegionInfo::Unlock() {
+    is_locked = false;
 }
 
 } // namespace Kernel

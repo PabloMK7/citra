@@ -24,8 +24,9 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
                                   VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,
                                   bool reply) {
-    auto& src_process = src_thread->owner_process;
-    auto& dst_process = dst_thread->owner_process;
+    auto src_process = src_thread->owner_process.lock();
+    auto dst_process = dst_thread->owner_process.lock();
+    ASSERT(src_process && dst_process);
 
     IPC::Header header;
     // TODO(Subv): Replace by Memory::Read32 when possible.

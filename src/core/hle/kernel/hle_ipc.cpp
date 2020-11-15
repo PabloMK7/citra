@@ -29,7 +29,9 @@ public:
             callback->WakeUp(thread, *context, reason);
         }
 
-        auto& process = thread->owner_process;
+        auto process = thread->owner_process.lock();
+        ASSERT(process);
+
         // We must copy the entire command buffer *plus* the entire static buffers area, since
         // the translation might need to read from it in order to retrieve the StaticBuffer
         // target addresses.

@@ -45,6 +45,8 @@ VMManager::VMManager(Memory::MemorySystem& memory)
 VMManager::~VMManager() = default;
 
 void VMManager::Reset() {
+    ASSERT(!is_locked);
+
     vma_map.clear();
 
     // Initialize the map with a single free region covering the entire managed space.
@@ -67,6 +69,7 @@ VMManager::VMAHandle VMManager::FindVMA(VAddr target) const {
 
 ResultVal<VAddr> VMManager::MapBackingMemoryToBase(VAddr base, u32 region_size, MemoryRef memory,
                                                    u32 size, MemoryState state) {
+    ASSERT(!is_locked);
 
     // Find the first Free VMA.
     VMAHandle vma_handle = std::find_if(vma_map.begin(), vma_map.end(), [&](const auto& vma) {
@@ -96,6 +99,7 @@ ResultVal<VAddr> VMManager::MapBackingMemoryToBase(VAddr base, u32 region_size, 
 
 ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, MemoryRef memory,
                                                             u32 size, MemoryState state) {
+    ASSERT(!is_locked);
     ASSERT(memory.GetPtr() != nullptr);
 
     // This is the appropriately sized VMA that will turn into our allocation.
@@ -115,6 +119,8 @@ ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, Memory
 ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size,
                                                    MemoryState state,
                                                    Memory::MMIORegionPointer mmio_handler) {
+    ASSERT(!is_locked);
+
     // This is the appropriately sized VMA that will turn into our allocation.
     CASCADE_RESULT(VMAIter vma_handle, CarveVMA(target, size));
     VirtualMemoryArea& final_vma = vma_handle->second;
@@ -133,6 +139,10 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u3
 ResultCode VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
                                         VMAPermission expected_perms, MemoryState new_state,
                                         VMAPermission new_perms) {
+    if (is_locked) {
+        return RESULT_SUCCESS;
+    }
+
     VAddr target_end = target + size;
     VMAIter begin_vma = StripIterConstness(FindVMA(target));
     VMAIter i_end = vma_map.lower_bound(target_end);
@@ -167,6 +177,8 @@ ResultCode VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expe
 }
 
 VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
+    ASSERT(!is_locked);
+
     VirtualMemoryArea& vma = vma_handle->second;
     vma.type = VMAType::Free;
     vma.permissions = VMAPermission::None;
@@ -181,6 +193,8 @@ VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
 }
 
 ResultCode VMManager::UnmapRange(VAddr target, u32 size) {
+    ASSERT(!is_locked);
+
     CASCADE_RESULT(VMAIter vma, CarveVMARange(target, size));
     const VAddr target_end = target + size;
 
@@ -196,6 +210,8 @@ ResultCode VMManager::UnmapRange(VAddr target, u32 size) {
 }
 
 VMManager::VMAHandle VMManager::Reprotect(VMAHandle vma_handle, VMAPermission new_perms) {
+    ASSERT(!is_locked);
+
     VMAIter iter = StripIterConstness(vma_handle);
 
     VirtualMemoryArea& vma = iter->second;
@@ -206,6 +222,8 @@ VMManager::VMAHandle VMManager::Reprotect(VMAHandle vma_handle, VMAPermission ne
 }
 
 ResultCode VMManager::ReprotectRange(VAddr target, u32 size, VMAPermission new_perms) {
+    ASSERT(!is_locked);
+
     CASCADE_RESULT(VMAIter vma, CarveVMARange(target, size));
     const VAddr target_end = target + size;
 
@@ -229,6 +247,10 @@ void VMManager::LogLayout(Log::Level log_level) const {
                     (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-',
                     GetMemoryStateName(vma.meminfo_state));
     }
+}
+
+void VMManager::Unlock() {
+    is_locked = false;
 }
 
 VMManager::VMAIter VMManager::StripIterConstness(const VMAHandle& iter) {

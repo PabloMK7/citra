@@ -308,7 +308,7 @@ public:
     /// Mutexes that this thread is currently waiting for.
     boost::container::flat_set<std::shared_ptr<Mutex>> pending_mutexes{};
 
-    std::shared_ptr<Process> owner_process{}; ///< Process that owns this thread
+    std::weak_ptr<Process> owner_process{}; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on, in the same order as they were
     // passed to WaitSynchronization1/N.

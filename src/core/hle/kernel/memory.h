@@ -26,6 +26,10 @@ struct MemoryRegionInfo {
 
     IntervalSet free_blocks;
 
+    // When locked, Free calls will be ignored, while Allocate calls will hit an assert. A memory
+    // region locks itself after deserialization.
+    bool is_locked{};
+
     /**
      * Reset the allocator state
      * @param base The base offset the beginning of FCRAM.
@@ -63,6 +67,11 @@ struct MemoryRegionInfo {
      */
     void Free(u32 offset, u32 size);
 
+    /**
+     * Unlock the MemoryRegion. Used after loading is completed.
+     */
+    void Unlock();
+
 private:
     friend class boost::serialization::access;
     template <class Archive>
@@ -71,6 +80,9 @@ private:
         ar& size;
         ar& used;
         ar& free_blocks;
+        if (Archive::is_loading::value) {
+            is_locked = true;
+        }
     }
 };
 

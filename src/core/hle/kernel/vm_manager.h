@@ -212,6 +212,11 @@ public:
     /// is scheduled.
     std::shared_ptr<Memory::PageTable> page_table;
 
+    /**
+     * Unlock the VMManager. Used after loading is completed.
+     */
+    void Unlock();
+
 private:
     using VMAIter = decltype(vma_map)::iterator;
 
@@ -250,10 +255,17 @@ private:
 
     Memory::MemorySystem& memory;
 
+    // When locked, ChangeMemoryState calls will be ignored, other modification calls will hit an
+    // assert. VMManager locks itself after deserialization.
+    bool is_locked{};
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& vma_map;
         ar& page_table;
+        if (Archive::is_loading::value) {
+            is_locked = true;
+        }
     }
     friend class boost::serialization::access;
 };

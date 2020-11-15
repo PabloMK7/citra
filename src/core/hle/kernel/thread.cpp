@@ -45,7 +45,16 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar& tls_address;
     ar& held_mutexes;
     ar& pending_mutexes;
-    ar& owner_process;
+
+    // Note: this is equivalent of what is done in boost/serialization/weak_ptr.hpp, but it's
+    // compatible with previous versions of savestates.
+    // TODO(SaveStates): When the savestate version is bumped, simplify this again.
+    std::shared_ptr<Process> shared_owner_process = owner_process.lock();
+    ar& shared_owner_process;
+    if (Archive::is_loading::value) {
+        owner_process = shared_owner_process;
+    }
+
     ar& wait_objects;
     ar& wait_address;
     ar& name;
@@ -99,7 +108,8 @@ void Thread::Stop() {
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
     u32 tls_slot =
         ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
-    owner_process->tls_slots[tls_page].reset(tls_slot);
+    ASSERT(owner_process.lock());
+    owner_process.lock()->tls_slots[tls_page].reset(tls_slot);
 }
 
 void ThreadManager::SwitchContext(Thread* new_thread) {
@@ -110,7 +120,7 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
 
     // Save context for previous thread
     if (previous_thread) {
-        previous_process = previous_thread->owner_process;
+        previous_process = previous_thread->owner_process.lock();
         previous_thread->last_running_ticks = cpu->GetTimer().GetTicks();
         cpu->SaveContext(previous_thread->context);
 
@@ -135,8 +145,9 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = ThreadStatus::Running;
 
-        if (previous_process != current_thread->owner_process) {
-            kernel.SetCurrentProcessForCPU(current_thread->owner_process, cpu->GetID());
+        ASSERT(current_thread->owner_process.lock());
+        if (previous_process != current_thread->owner_process.lock()) {
+            kernel.SetCurrentProcessForCPU(current_thread->owner_process.lock(), cpu->GetID());
         }
 
         cpu->LoadContext(new_thread->context);

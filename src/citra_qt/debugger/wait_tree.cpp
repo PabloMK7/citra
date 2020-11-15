@@ -243,7 +243,6 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeThread::GetChildren() const {
     std::vector<std::unique_ptr<WaitTreeItem>> list(WaitTreeWaitObject::GetChildren());
 
     const auto& thread = static_cast<const Kernel::Thread&>(object);
-    const auto& process = thread.owner_process;
 
     QString processor;
     switch (thread.processor_id) {
@@ -267,10 +266,12 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeThread::GetChildren() const {
     list.push_back(std::make_unique<WaitTreeText>(tr("object id = %1").arg(thread.GetObjectId())));
     list.push_back(std::make_unique<WaitTreeText>(tr("processor = %1").arg(processor)));
     list.push_back(std::make_unique<WaitTreeText>(tr("thread id = %1").arg(thread.GetThreadId())));
-    list.push_back(
-        std::make_unique<WaitTreeText>(tr("process = %1 (%2)")
-                                           .arg(QString::fromStdString(process->GetName()))
-                                           .arg(process->process_id)));
+    if (auto process = thread.owner_process.lock()) {
+        list.push_back(
+            std::make_unique<WaitTreeText>(tr("process = %1 (%2)")
+                                               .arg(QString::fromStdString(process->GetName()))
+                                               .arg(process->process_id)));
+    }
     list.push_back(std::make_unique<WaitTreeText>(tr("priority = %1(current) / %2(normal)")
                                                       .arg(thread.current_priority)
                                                       .arg(thread.nominal_priority)));

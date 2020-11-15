@@ -50,19 +50,21 @@ void Recorder::RegisterRequest(const std::shared_ptr<Kernel::ClientSession>& cli
                                const std::shared_ptr<Kernel::Thread>& client_thread) {
     const u32 thread_id = client_thread->GetThreadId();
 
-    RequestRecord record = {/* id */ ++record_count,
-                            /* status */ RequestStatus::Sent,
-                            /* client_process */ GetObjectInfo(client_thread->owner_process.get()),
-                            /* client_thread */ GetObjectInfo(client_thread.get()),
-                            /* client_session */ GetObjectInfo(client_session.get()),
-                            /* client_port */ GetObjectInfo(client_session->parent->port.get()),
-                            /* server_process */ {},
-                            /* server_thread */ {},
-                            /* server_session */ GetObjectInfo(client_session->parent->server)};
-    record_map.insert_or_assign(thread_id, std::make_unique<RequestRecord>(record));
-    client_session_map.insert_or_assign(thread_id, client_session);
+    if (auto owner_process = client_thread->owner_process.lock()) {
+        RequestRecord record = {/* id */ ++record_count,
+                                /* status */ RequestStatus::Sent,
+                                /* client_process */ GetObjectInfo(owner_process.get()),
+                                /* client_thread */ GetObjectInfo(client_thread.get()),
+                                /* client_session */ GetObjectInfo(client_session.get()),
+                                /* client_port */ GetObjectInfo(client_session->parent->port.get()),
+                                /* server_process */ {},
+                                /* server_thread */ {},
+                                /* server_session */ GetObjectInfo(client_session->parent->server)};
+        record_map.insert_or_assign(thread_id, std::make_unique<RequestRecord>(record));
+        client_session_map.insert_or_assign(thread_id, client_session);
 
-    InvokeCallbacks(record);
+        InvokeCallbacks(record);
+    }
 }
 
 void Recorder::SetRequestInfo(const std::shared_ptr<Kernel::Thread>& client_thread,
@@ -82,7 +84,9 @@ void Recorder::SetRequestInfo(const std::shared_ptr<Kernel::Thread>& client_thre
     record.translated_request_cmdbuf = std::move(translated_cmdbuf);
 
     if (server_thread) {
-        record.server_process = GetObjectInfo(server_thread->owner_process.get());
+        if (auto owner_process = server_thread->owner_process.lock()) {
+            record.server_process = GetObjectInfo(owner_process.get());
+        }
         record.server_thread = GetObjectInfo(server_thread.get());
     } else {
         record.is_hle = true;

@@ -177,6 +177,15 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
     ar& stored_processes;
     ar& next_thread_id;
     // Deliberately don't include debugger info to allow debugging through loads
+
+    if (Archive::is_loading::value) {
+        for (auto& memory_region : memory_regions) {
+            memory_region->Unlock();
+        }
+        for (auto& process : process_list) {
+            process->vm_manager.Unlock();
+        }
+    }
 }
 
 SERIALIZE_IMPL(KernelSystem)

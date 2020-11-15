@@ -85,7 +85,8 @@ ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
         std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buf;
-        auto current_process = thread->owner_process;
+        auto current_process = thread->owner_process.lock();
+        ASSERT(current_process);
         kernel.memory.ReadBlock(*current_process, thread->GetCommandBufferAddress(), cmd_buf.data(),
                                 cmd_buf.size() * sizeof(u32));
 
