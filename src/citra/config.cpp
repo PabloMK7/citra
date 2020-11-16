@@ -143,7 +143,8 @@ void Config::ReadValues() {
     std::string default_shader = "none (builtin)";
     if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
         default_shader = "dubois (builtin)";
-    else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced)
+    else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
+             Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced)
         default_shader = "horizontal (builtin)";
     Settings::values.pp_shader_name =
         sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);

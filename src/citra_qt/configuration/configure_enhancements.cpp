@@ -81,7 +81,8 @@ void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_op
 
     if (stereo_option == Settings::StereoRenderOption::Anaglyph)
         ui->shader_combobox->addItem(QStringLiteral("dubois (builtin)"));
-    else if (stereo_option == Settings::StereoRenderOption::Interlaced)
+    else if (stereo_option == Settings::StereoRenderOption::Interlaced ||
+             stereo_option == Settings::StereoRenderOption::ReverseInterlaced)
         ui->shader_combobox->addItem(QStringLiteral("horizontal (builtin)"));
     else
         ui->shader_combobox->addItem(QStringLiteral("none (builtin)"));
