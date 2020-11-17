@@ -65,11 +65,13 @@ private:
 
     std::string ReadName(u32 offset, u32 name_length);
 
-    // Loads the current directory, then its siblings, and then its children.
-    void LoadDirectory(Directory& current, u32 offset);
+    // Loads the current directory, then its children.
+    // Returns offset of the next sibling directory to load (0xFFFFFFFF if the last directory)
+    u32 LoadDirectory(Directory& current, u32 offset);
 
-    // Load the file at offset, and then its siblings.
-    void LoadFile(Directory& parent, u32 offset);
+    // Load the file at offset.
+    // Returns offset of the next sibling file to load (0xFFFFFFFF if the last file)
+    u32 LoadFile(Directory& parent, u32 offset);
 
     // Load replace/create relocations
     void LoadRelocations();
