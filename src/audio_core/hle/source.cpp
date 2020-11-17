@@ -169,6 +169,71 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         // This will be the starting sample for the first time the buffer is played.
     }
 
+    // TODO(xperia64): Is this in the correct spot in terms of the bit handling order?
+    if (config.partial_embedded_buffer_dirty) {
+        config.partial_embedded_buffer_dirty.Assign(0);
+
+        // As this bit is set by the game, three config options are also updated:
+        // buffer_id (after a check comparing the buffer_id to something, probably to make sure it's
+        // the same buffer?), flags2_raw.is_looping, and length.
+
+        // A quick and dirty way of extending the current buffer is to just read the whole thing
+        // again with the new length. Note that this uses the latched physical address instead of
+        // whatever is in config, because that may be invalid.
+        const u8* const memory =
+            memory_system->GetPhysicalPointer(state.current_buffer_physical_address & 0xFFFFFFFC);
+
+        // TODO(xperia64): This could potentially be optimized by only decoding the new data and
+        // appending that to the buffer.
+        if (memory) {
+            const unsigned num_channels = state.mono_or_stereo == MonoOrStereo::Stereo ? 2 : 1;
+            bool valid = false;
+            switch (state.format) {
+            case Format::PCM8:
+                // TODO(xperia64): This may just work fine like PCM16, but I haven't tested and
+                // couldn't find any test case games
+                UNIMPLEMENTED_MSG("{} not handled for partial buffer updates", "PCM8");
+                // state.current_buffer = Codec::DecodePCM8(num_channels, memory, config.length);
+                break;
+            case Format::PCM16:
+                state.current_buffer = Codec::DecodePCM16(num_channels, memory, config.length);
+                valid = true;
+                break;
+            case Format::ADPCM:
+                // TODO(xperia64): Are partial embedded buffer updates even valid for ADPCM? What
+                // about the adpcm state?
+                UNIMPLEMENTED_MSG("{} not handled for partial buffer updates", "ADPCM");
+                /* state.current_buffer =
+                    Codec::DecodeADPCM(memory, config.length, state.adpcm_coeffs,
+                   state.adpcm_state); */
+                break;
+            default:
+                UNIMPLEMENTED();
+                break;
+            }
+
+            // Again, because our interpolation consumes samples instead of using an index, let's
+            // just re-consume the samples up to the current sample number. There may be some
+            // imprecision here with the current sample number, as Detective Pikachu sounds a little
+            // rough at times.
+            if (valid) {
+
+                // TODO(xperia64): Tomodachi life apparently can decrease config.length when the
+                // user skips dialog. I don't know the correct behavior, but to avoid crashing, just
+                // reset the current sample number to 0 and don't try to truncate the buffer
+                if (state.current_buffer.size() < state.current_sample_number) {
+                    state.current_sample_number = 0;
+                } else {
+                    state.current_buffer.erase(
+                        state.current_buffer.begin(),
+                        std::next(state.current_buffer.begin(), state.current_sample_number));
+                }
+            }
+        }
+        LOG_TRACE(Audio_DSP, "partially updating embedded buffer addr={:#010x} len={} id={}",
+                  state.current_buffer_physical_address, config.length, config.buffer_id);
+    }
+
     if (config.embedded_buffer_dirty) {
         config.embedded_buffer_dirty.Assign(0);
         // HACK
@@ -343,6 +408,7 @@ bool Source::DequeueBuffer() {
     // the first playthrough starts at play_position, loops start at the beginning of the buffer
     state.current_sample_number = (!buf.has_played) ? buf.play_position : 0;
     state.next_sample_number = state.current_sample_number;
+    state.current_buffer_physical_address = buf.physical_address;
     state.current_buffer_id = buf.buffer_id;
     state.buffer_update = buf.from_queue && !buf.has_played;
 
