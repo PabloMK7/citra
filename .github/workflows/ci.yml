@@ -102,6 +102,8 @@ jobs:
     if: ${{ github.repository == 'citra-emu/citra' && !github.head_ref }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Update Translation
         run: ./.ci/transifex/docker.sh
         env:
