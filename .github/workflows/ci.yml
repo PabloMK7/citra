@@ -26,7 +26,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.image }}-
       - name: Query tag name
-        uses: olegtarasov/get-tag@v2
+        uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
       - name: Build
         run: ./.ci/${{ matrix.image }}/docker.sh
@@ -57,7 +57,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-macos-
       - name: Query tag name
-        uses: olegtarasov/get-tag@v2
+        uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
       - name: Install dependencies
         run: ./.ci/macos/deps.sh
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
       - name: Query tag name
-        uses: olegtarasov/get-tag@v2
+        uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
       - name: Create release
         uses: actions/create-release@v1
