@@ -1210,9 +1210,12 @@ VideoCore::ResultStatus RendererOpenGL::Init() {
     LOG_INFO(Render_OpenGL, "GL_RENDERER: {}", gpu_model);
 
     auto& telemetry_session = Core::System::GetInstance().TelemetrySession();
-    telemetry_session.AddField(Telemetry::FieldType::UserSystem, "GPU_Vendor", gpu_vendor);
-    telemetry_session.AddField(Telemetry::FieldType::UserSystem, "GPU_Model", gpu_model);
-    telemetry_session.AddField(Telemetry::FieldType::UserSystem, "GPU_OpenGL_Version", gl_version);
+    telemetry_session.AddField(Telemetry::FieldType::UserSystem, "GPU_Vendor",
+                               std::string(gpu_vendor));
+    telemetry_session.AddField(Telemetry::FieldType::UserSystem, "GPU_Model",
+                               std::string(gpu_model));
+    telemetry_session.AddField(Telemetry::FieldType::UserSystem, "GPU_OpenGL_Version",
+                               std::string(gl_version));
 
     if (!strcmp(gpu_vendor, "GDI Generic")) {
         return VideoCore::ResultStatus::ErrorGenericDrivers;
