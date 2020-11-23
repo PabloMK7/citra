@@ -289,9 +289,10 @@ void EmuWindow_SDL2::PollEvents() {
     const u32 current_time = SDL_GetTicks();
     if (current_time > last_time + 2000) {
         const auto results = Core::System::GetInstance().GetAndResetPerfStats();
-        const auto title = fmt::format(
-            "Citra {} | {}-{} | FPS: {:.0f} ({:.0%})", Common::g_build_fullname,
-            Common::g_scm_branch, Common::g_scm_desc, results.game_fps, results.emulation_speed);
+        const auto title =
+            fmt::format("Citra {} | {}-{} | FPS: {:.0f} ({:.0f}%)", Common::g_build_fullname,
+                        Common::g_scm_branch, Common::g_scm_desc, results.game_fps,
+                        results.emulation_speed * 100.0f);
         SDL_SetWindowTitle(render_window, title.c_str());
         last_time = current_time;
     }
