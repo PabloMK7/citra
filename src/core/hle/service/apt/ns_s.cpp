@@ -15,7 +15,7 @@ NS_S::NS_S(std::shared_ptr<Service::APT::Module> apt)
         {0x00030000, nullptr, "TerminateApplication"},
         {0x00040040, nullptr, "TerminateProcess"},
         {0x000500C0, nullptr, "LaunchApplicationFIRM"},
-        {0x00060042, nullptr, "SetFIRMParams4A0"},
+        {0x00060042, &NS_S::SetWirelessRebootInfo, "SetWirelessRebootInfo"},
         {0x00070042, nullptr, "CardUpdateInitialize"},
         {0x00080000, nullptr, "CardUpdateShutdown"},
         {0x000D0140, nullptr, "SetTWLBannerHMAC"},

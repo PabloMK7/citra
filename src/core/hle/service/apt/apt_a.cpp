@@ -78,7 +78,7 @@ APT_A::APT_A(std::shared_ptr<Module> apt)
         {0x00420080, nullptr, "SleepSystem"},
         {0x00430040, &APT_A::NotifyToWait, "NotifyToWait"},
         {0x00440000, &APT_A::GetSharedFont, "GetSharedFont"},
-        {0x00450040, nullptr, "GetWirelessRebootInfo"},
+        {0x00450040, &APT_A::GetWirelessRebootInfo, "GetWirelessRebootInfo"},
         {0x00460104, &APT_A::Wrap, "Wrap"},
         {0x00470104, &APT_A::Unwrap, "Unwrap"},
         {0x00480100, nullptr, "GetProgramInfo"},
