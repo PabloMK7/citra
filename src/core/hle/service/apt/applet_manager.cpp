@@ -498,6 +498,7 @@ ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType
     app_jump_parameters.current_media_type = FS::MediaType::NAND;
     app_jump_parameters.next_title_id = title_id;
     app_jump_parameters.next_media_type = media_type;
+    app_jump_parameters.flags = flags;
 
     // Note: The real console uses the Home Menu to perform the application jump, therefore the menu
     // needs to be running. The real APT module starts the Home Menu here if it's not already
@@ -505,16 +506,23 @@ ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType
     return RESULT_SUCCESS;
 }
 
-ResultCode AppletManager::DoApplicationJump() {
+ResultCode AppletManager::DoApplicationJump(DeliverArg arg) {
     // Note: The real console uses the Home Menu to perform the application jump, it goes
     // OldApplication->Home Menu->NewApplication. We do not need to use the Home Menu to do this so
     // we launch the new application directly. In the real APT service, the Home Menu must be
     // running to do this, otherwise error 0xC8A0CFF0 is returned.
 
     auto& application_slot = applet_slots[static_cast<size_t>(AppletSlot::Application)];
+
+    if (app_jump_parameters.flags != ApplicationJumpFlags::UseCurrentParameters) {
+        // The source program ID is not updated when using flags 0x2.
+        arg.source_program_id = application_slot.title_id;
+    }
+
     application_slot.Reset();
 
-    // TODO(Subv): Set the delivery parameters.
+    // Set the delivery parameters.
+    deliver_arg = std::move(arg);
 
     // TODO(Subv): Terminate the current Application.
 

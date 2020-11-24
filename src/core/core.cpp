@@ -31,6 +31,8 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/service/apt/applet_manager.h"
+#include "core/hle/service/apt/apt.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/pm/pm_app.h"
@@ -561,9 +563,20 @@ void System::Reset() {
     // reloading.
     // TODO: Properly implement the reset
 
+    // Since the system is completely reinitialized, we'll have to store the deliver arg manually.
+    boost::optional<Service::APT::AppletManager::DeliverArg> deliver_arg;
+    if (auto apt = Service::APT::GetModule(*this)) {
+        deliver_arg = apt->GetAppletManager()->ReceiveDeliverArg();
+    }
+
     Shutdown();
     // Reload the system with the same setting
     Load(*m_emu_window, m_filepath);
+
+    // Restore the deliver arg.
+    if (auto apt = Service::APT::GetModule(*this)) {
+        apt->GetAppletManager()->SetDeliverArg(std::move(deliver_arg));
+    }
 }
 
 template <class Archive>

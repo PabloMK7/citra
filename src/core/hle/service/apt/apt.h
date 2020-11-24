@@ -65,10 +65,14 @@ public:
     explicit Module(Core::System& system);
     ~Module();
 
+    std::shared_ptr<AppletManager> GetAppletManager() const;
+
     class NSInterface : public ServiceFramework<NSInterface> {
     public:
         NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
         ~NSInterface();
+
+        std::shared_ptr<Module> GetModule() const;
 
     protected:
         std::shared_ptr<Module> apt;
@@ -89,6 +93,8 @@ public:
     public:
         APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
         ~APTInterface();
+
+        std::shared_ptr<Module> GetModule() const;
 
     protected:
         /**
@@ -506,6 +512,23 @@ public:
         void GetProgramIdOnApplicationJump(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::ReceiveDeliverArg service function
+         *  Inputs:
+         *      0 : Command header [0x00350080]
+         *      1 : Parameter Size (capped to 0x300)
+         *      2 : HMAC Size (capped to 0x20)
+         *     64 : (Parameter Size << 14) | 2
+         *     65 : Output buffer for Parameter
+         *     66 : (HMAC Size << 14) | 0x802
+         *     67 : Output buffer for HMAC
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *    2-3 : Source program id
+         *      4 : u8, whether the arg is received (0 = not received, 1 = received)
+         */
+        void ReceiveDeliverArg(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::CancelLibraryApplet service function
          *  Inputs:
          *      0 : Command header [0x003B0040]
@@ -724,6 +747,8 @@ private:
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
+
+std::shared_ptr<Module> GetModule(Core::System& system);
 
 void InstallInterfaces(Core::System& system);
 
