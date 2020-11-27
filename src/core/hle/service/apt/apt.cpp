@@ -532,7 +532,7 @@ void Module::APTInterface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
 
     auto arg = apt->applet_manager->ReceiveDeliverArg().value_or(AppletManager::DeliverArg{});
     arg.param.resize(param_size);
-    arg.hmac.resize(std::max<std::size_t>(hmac_size, 0x20));
+    arg.hmac.resize(std::min<std::size_t>(hmac_size, 0x20));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
     rb.Push(RESULT_SUCCESS);
