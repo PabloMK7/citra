@@ -297,7 +297,7 @@ void GRenderWindow::mousePressEvent(QMouseEvent* event) {
     } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
     }
-    QWidget::mousePressEvent(event);
+    emit MouseActivity();
 }
 
 void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
@@ -308,7 +308,7 @@ void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
     const auto [x, y] = ScaleTouch(pos);
     this->TouchMoved(x, y);
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
-    QWidget::mouseMoveEvent(event);
+    emit MouseActivity();
 }
 
 void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
@@ -319,6 +319,7 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
         this->TouchReleased();
     else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->EndTilt();
+    emit MouseActivity();
 }
 
 void GRenderWindow::TouchBeginEvent(const QTouchEvent* event) {

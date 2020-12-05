@@ -199,6 +199,9 @@ signals:
      */
     void FirstFrameDisplayed();
 
+    /// Emitted on mouse activity. Used to signal that the mouse should be shown if it's hidden
+    void MouseActivity();
+
 private:
     std::pair<u32, u32> ScaleTouch(QPointF pos) const;
     void TouchBeginEvent(const QTouchEvent* event);

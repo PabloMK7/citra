@@ -221,6 +221,7 @@ private slots:
     void OnCheckForUpdates();
     void OnOpenUpdater();
     void OnLanguageChanged(const QString& locale);
+    void OnMouseActivity();
 
 private:
     bool ValidateMovie(const QString& path, u64 program_id = 0);
@@ -313,6 +314,7 @@ protected:
     void dragMoveEvent(QDragMoveEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 };
 
 Q_DECLARE_METATYPE(std::size_t);
