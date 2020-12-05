@@ -68,7 +68,7 @@ TEST_CASE("BitField", "[common]") {
                    }});
 
     // bit fields: 01101100111101'10101110'1011'101100
-    REQUIRE(be_bitfield.raw == 0b01101100'11110110'10111010'11101100);
+    REQUIRE(be_bitfield.raw == 0b01101100'11110110'10111010'11101100U);
     REQUIRE(be_bitfield.a == 0b101100);
     REQUIRE(be_bitfield.b == -5); // 1011 as two's complement
     REQUIRE(be_bitfield.c == TestEnum::B);
@@ -80,7 +80,7 @@ TEST_CASE("BitField", "[common]") {
     be_bitfield.d.Assign(0b01010101010101);
     std::memcpy(&raw, &be_bitfield, sizeof(raw));
     // bit fields: 01010101010101'00001111'1111'000111
-    REQUIRE(be_bitfield.raw == 0b01010101'01010100'00111111'11000111);
+    REQUIRE(be_bitfield.raw == 0b01010101'01010100'00111111'11000111U);
     REQUIRE(raw == std::array<u8, 4>{{
                        0b01010101,
                        0b01010100,
