@@ -274,7 +274,8 @@ public:
     }
 
     bool operator<(const QStandardItem& other) const override {
-        return data(CompatNumberRole) < other.data(CompatNumberRole);
+        return data(CompatNumberRole).value<QString>() <
+               other.data(CompatNumberRole).value<QString>();
     }
 };
 
