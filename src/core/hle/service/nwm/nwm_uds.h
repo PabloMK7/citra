@@ -230,6 +230,18 @@ private:
     void SetApplicationData(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::GetApplicationData service function.
+     * Loads the application data from the current beacon.
+     *  Inputs:
+     *      1 : Data size.
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, always 0
+     *      2 : Actual data size
+     */
+    void GetApplicationData(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::Bind service function.
      * Binds a BindNodeId to a data channel and retrieves a data event.
      *  Inputs:
