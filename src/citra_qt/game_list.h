@@ -55,12 +55,12 @@ public:
     explicit GameList(GMainWindow* parent = nullptr);
     ~GameList() override;
 
-    QString getLastFilterResultItem() const;
-    void clearFilter();
-    void setFilterFocus();
-    void setFilterVisible(bool visibility);
-    void setDirectoryWatcherEnabled(bool enabled);
-    bool isEmpty() const;
+    QString GetLastFilterResultItem() const;
+    void ClearFilter();
+    void SetFilterFocus();
+    void SetFilterVisible(bool visibility);
+    void SetDirectoryWatcherEnabled(bool enabled);
+    bool IsEmpty() const;
 
     void LoadCompatibilityList();
     void PopulateAsync(QVector<UISettings::GameDir>& game_dirs);
@@ -77,7 +77,7 @@ public:
     static const QStringList supported_file_extensions;
 
 signals:
-    void GameChosen(QString game_path);
+    void GameChosen(const QString& game_path);
     void ShouldCancelWorker();
     void OpenFolderRequested(u64 program_id, GameListOpenTarget target);
     void NavigateToGamedbEntryRequested(u64 program_id,
@@ -89,16 +89,16 @@ signals:
     void PopulatingCompleted();
 
 private slots:
-    void onItemExpanded(const QModelIndex& item);
-    void onTextChanged(const QString& new_text);
-    void onFilterCloseClicked();
-    void onUpdateThemedIcons();
+    void OnItemExpanded(const QModelIndex& item);
+    void OnTextChanged(const QString& new_text);
+    void OnFilterCloseClicked();
+    void OnUpdateThemedIcons();
 
 private:
     void AddDirEntry(GameListDir* entry_items);
     void AddEntry(const QList<QStandardItem*>& entry_items, GameListDir* parent);
     void ValidateEntry(const QModelIndex& item);
-    void DonePopulating(QStringList watch_list);
+    void DonePopulating(const QStringList& watch_list);
 
     void PopupContextMenu(const QPoint& menu_location);
     void AddGamePopup(QMenu& context_menu, const QString& path, u64 program_id, u64 extdata_id);
