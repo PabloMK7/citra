@@ -21,8 +21,9 @@ StereoBuffer16 DecodeADPCM(const u8* const data, const std::size_t sample_count,
 
     constexpr std::size_t FRAME_LEN = 8;
     constexpr std::size_t SAMPLES_PER_FRAME = 14;
-    constexpr std::array<int, 16> SIGNED_NIBBLES = {
-        {0, 1, 2, 3, 4, 5, 6, 7, -8, -7, -6, -5, -4, -3, -2, -1}};
+    static constexpr std::array<int, 16> SIGNED_NIBBLES{
+        0, 1, 2, 3, 4, 5, 6, 7, -8, -7, -6, -5, -4, -3, -2, -1,
+    };
 
     const std::size_t ret_size =
         sample_count % 2 == 0 ? sample_count : sample_count + 1; // Ensure multiple of two.
