@@ -104,7 +104,7 @@ void EmuThread::run() {
 }
 
 OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context)
-    : QWindow(parent), context(new QOpenGLContext(shared_context->parent())),
+    : QWindow(parent), context(std::make_unique<QOpenGLContext>(shared_context->parent())),
       event_handler(event_handler) {
 
     // disable vsync for any shared contexts
@@ -447,8 +447,8 @@ std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() 
 }
 
 GLContext::GLContext(QOpenGLContext* shared_context)
-    : context(new QOpenGLContext(shared_context->parent())),
-      surface(new QOffscreenSurface(nullptr)) {
+    : context(std::make_unique<QOpenGLContext>(shared_context->parent())),
+      surface(std::make_unique<QOffscreenSurface>(nullptr)) {
 
     // disable vsync for any shared contexts
     auto format = shared_context->format();
@@ -463,7 +463,7 @@ GLContext::GLContext(QOpenGLContext* shared_context)
 }
 
 void GLContext::MakeCurrent() {
-    context->makeCurrent(surface);
+    context->makeCurrent(surface.get());
 }
 
 void GLContext::DoneCurrent() {
