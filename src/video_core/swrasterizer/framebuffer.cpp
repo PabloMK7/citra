@@ -297,7 +297,7 @@ Common::Vec4<u8> EvaluateBlendEquation(const Common::Vec4<u8>& src,
         break;
 
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation 0x{:x}", static_cast<u8>(equation));
+        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation 0x{:x}", equation);
         UNIMPLEMENTED();
     }
 

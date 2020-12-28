@@ -161,7 +161,7 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
         }
         default:
             LOG_ERROR(Render_OpenGL, "Unknown transferable shader cache entry kind={} - skipping",
-                      static_cast<u32>(kind));
+                      kind);
             return std::nullopt;
         }
     }

@@ -847,7 +847,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                         return std::min(combiner_output.a(), static_cast<u8>(255 - dest.a()));
 
                     default:
-                        LOG_CRITICAL(HW_GPU, "Unknown blend factor {:x}", static_cast<u32>(factor));
+                        LOG_CRITICAL(HW_GPU, "Unknown blend factor {:x}", factor);
                         UNIMPLEMENTED();
                         break;
                     }

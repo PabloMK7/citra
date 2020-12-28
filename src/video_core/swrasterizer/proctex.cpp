@@ -76,7 +76,7 @@ static float GetShiftOffset(float v, ProcTexShift mode, ProcTexClamp clamp_mode)
     case ProcTexShift::Even:
         return offset * ((((int)v + 1) / 2) % 2);
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", static_cast<u32>(mode));
+        LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", mode);
         return 0;
     }
 };
@@ -106,7 +106,7 @@ static void ClampCoord(float& coord, ProcTexClamp mode) {
             coord = 1.0f;
         break;
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", static_cast<u32>(mode));
+        LOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", mode);
         coord = std::min(coord, 1.0f);
         break;
     }
@@ -147,7 +147,7 @@ static float CombineAndMap(float u, float v, ProcTexCombiner combiner,
         f = std::min(((u + v) * 0.5f + std::sqrt(u * u + v * v)) * 0.5f, 1.0f);
         break;
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
+        LOG_CRITICAL(HW_GPU, "Unknown combiner {}", combiner);
         f = 0.0f;
         break;
     }

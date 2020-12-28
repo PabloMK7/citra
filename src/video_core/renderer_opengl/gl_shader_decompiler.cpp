@@ -561,9 +561,9 @@ private:
                 const CompareOp op_y = instr.common.compare_op.y.Value();
 
                 if (cmp_ops.find(op_x) == cmp_ops.end()) {
-                    LOG_ERROR(HW_GPU, "Unknown compare mode {:x}", static_cast<int>(op_x));
+                    LOG_ERROR(HW_GPU, "Unknown compare mode {:x}", op_x);
                 } else if (cmp_ops.find(op_y) == cmp_ops.end()) {
-                    LOG_ERROR(HW_GPU, "Unknown compare mode {:x}", static_cast<int>(op_y));
+                    LOG_ERROR(HW_GPU, "Unknown compare mode {:x}", op_y);
                 } else if (op_x != op_y) {
                     shader.AddLine("conditional_code.x = {}.x {} {}.x;", src1,
                                    cmp_ops.find(op_x)->second.first, src2);

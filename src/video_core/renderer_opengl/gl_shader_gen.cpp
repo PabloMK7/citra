@@ -278,8 +278,7 @@ void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
             if (static_cast<std::size_t>(semantic) < 24) {
                 semantic_maps[static_cast<std::size_t>(semantic)] = {attrib, comp};
             } else if (semantic != VSOutputAttributes::INVALID) {
-                LOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}",
-                          static_cast<u32>(semantic));
+                LOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}", semantic);
             }
         }
     }
@@ -316,8 +315,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         case TexturingRegs::TextureConfig::Disabled:
             return "vec4(0.0)";
         default:
-            LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}",
-                         static_cast<int>(state.texture0_type));
+            LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}", state.texture0_type);
             UNIMPLEMENTED();
             return "texture(tex0, texcoord0)";
         }
@@ -380,7 +378,7 @@ static void AppendSource(std::string& out, const PicaFSConfig& config,
         break;
     default:
         out += "vec4(0.0)";
-        LOG_CRITICAL(Render_OpenGL, "Unknown source op {}", static_cast<u32>(source));
+        LOG_CRITICAL(Render_OpenGL, "Unknown source op {}", source);
         break;
     }
 }
@@ -438,7 +436,7 @@ static void AppendColorModifier(std::string& out, const PicaFSConfig& config,
         break;
     default:
         out += "vec3(0.0)";
-        LOG_CRITICAL(Render_OpenGL, "Unknown color modifier op {}", static_cast<u32>(modifier));
+        LOG_CRITICAL(Render_OpenGL, "Unknown color modifier op {}", modifier);
         break;
     }
 }
@@ -487,7 +485,7 @@ static void AppendAlphaModifier(std::string& out, const PicaFSConfig& config,
         break;
     default:
         out += "0.0";
-        LOG_CRITICAL(Render_OpenGL, "Unknown alpha modifier op {}", static_cast<u32>(modifier));
+        LOG_CRITICAL(Render_OpenGL, "Unknown alpha modifier op {}", modifier);
         break;
     }
 }
@@ -529,8 +527,7 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
         break;
     default:
         out += "vec3(0.0)";
-        LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: {}",
-                     static_cast<u32>(operation));
+        LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: {}", operation);
         break;
     }
     out += ", vec3(0.0), vec3(1.0))"; // Clamp result to 0.0, 1.0
@@ -568,8 +565,7 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
         break;
     default:
         out += "0.0";
-        LOG_CRITICAL(Render_OpenGL, "Unknown alpha combiner operation: {}",
-                     static_cast<u32>(operation));
+        LOG_CRITICAL(Render_OpenGL, "Unknown alpha combiner operation: {}", operation);
         break;
     }
     out += ", 0.0, 1.0)";
@@ -599,7 +595,7 @@ static void AppendAlphaTestCondition(std::string& out, FramebufferRegs::CompareF
 
     default:
         out += "false";
-        LOG_CRITICAL(Render_OpenGL, "Unknown alpha test condition {}", static_cast<u32>(func));
+        LOG_CRITICAL(Render_OpenGL, "Unknown alpha test condition {}", func);
         break;
     }
 }
@@ -831,8 +827,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
                                                   "{}.position) + {}.dist_atten_bias, 0.0, 1.0)",
                                                   light_src, light_src, light_src);
             const auto sampler = LightingRegs::DistanceAttenuationSampler(light_config.num);
-            dist_atten =
-                fmt::format("LookupLightingLUTUnsigned({}, {})", static_cast<u32>(sampler), index);
+            dist_atten = fmt::format("LookupLightingLUTUnsigned({}, {})", sampler, index);
         }
 
         if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
@@ -985,7 +980,7 @@ static void AppendProcTexShiftOffset(std::string& out, std::string_view v, ProcT
         out += fmt::format("{} * float(((int({}) + 1) / 2) % 2)", offset, v);
         break;
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", static_cast<u32>(mode));
+        LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", mode);
         out += "0.0";
         break;
     }
@@ -1010,7 +1005,7 @@ static void AppendProcTexClamp(std::string& out, std::string_view var, ProcTexCl
         out += fmt::format("{0} = {0} > 0.5 ? 1.0 : 0.0;\n", var);
         break;
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", static_cast<u32>(mode));
+        LOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", mode);
         out += fmt::format("{0} = min({0}, 1.0);\n", var);
         break;
     }
@@ -1041,7 +1036,7 @@ static void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combine
         case TexturingRegs::ProcTexCombiner::RMax:
             return "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
         default:
-            LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
+            LOG_CRITICAL(HW_GPU, "Unknown combiner {}", combiner);
             return "0.0";
         }
     }();
@@ -1592,10 +1587,8 @@ ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shade
                     "layout(location = {}) in float vert_texcoord0_w;\n"
                     "layout(location = {}) in vec4 vert_normquat;\n"
                     "layout(location = {}) in vec3 vert_view;\n",
-                    static_cast<int>(ATTRIBUTE_POSITION), static_cast<int>(ATTRIBUTE_COLOR),
-                    static_cast<int>(ATTRIBUTE_TEXCOORD0), static_cast<int>(ATTRIBUTE_TEXCOORD1),
-                    static_cast<int>(ATTRIBUTE_TEXCOORD2), static_cast<int>(ATTRIBUTE_TEXCOORD0_W),
-                    static_cast<int>(ATTRIBUTE_NORMQUAT), static_cast<int>(ATTRIBUTE_VIEW));
+                    ATTRIBUTE_POSITION, ATTRIBUTE_COLOR, ATTRIBUTE_TEXCOORD0, ATTRIBUTE_TEXCOORD1,
+                    ATTRIBUTE_TEXCOORD2, ATTRIBUTE_TEXCOORD0_W, ATTRIBUTE_NORMQUAT, ATTRIBUTE_VIEW);
 
     out += GetVertexInterfaceDeclaration(true, separable_shader);
 

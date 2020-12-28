@@ -747,8 +747,7 @@ void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
         return;
     }
 
-    dump_path += fmt::format("tex1_{}x{}_{:016X}_{}.png", width, height, tex_hash,
-                             static_cast<u32>(pixel_format));
+    dump_path += fmt::format("tex1_{}x{}_{:016X}_{}.png", width, height, tex_hash, pixel_format);
     if (!custom_tex_cache.IsTextureDumped(tex_hash) && !FileUtil::Exists(dump_path)) {
         custom_tex_cache.SetTextureDumped(tex_hash);
 

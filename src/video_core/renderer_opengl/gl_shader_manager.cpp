@@ -524,7 +524,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                         // Unsupported shader type got stored somehow so nuke the cache
 
                         LOG_CRITICAL(Frontend, "failed to load raw programtype {}",
-                                     static_cast<u32>(raw.GetProgramType()));
+                                     raw.GetProgramType());
                         compilation_failed = true;
                         return;
                     }
@@ -585,8 +585,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 result = std::move(r);
             } else {
                 // Unsupported shader type got stored somehow so nuke the cache
-                LOG_ERROR(Frontend, "failed to load raw programtype {}",
-                          static_cast<u32>(raw.GetProgramType()));
+                LOG_ERROR(Frontend, "failed to load raw programtype {}", raw.GetProgramType());
                 compilation_failed = true;
                 return;
             }
