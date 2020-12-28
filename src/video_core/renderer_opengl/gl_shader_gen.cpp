@@ -821,7 +821,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             const std::string value =
                 GetLutValue(LightingRegs::SpotlightAttenuationSampler(light_config.num),
                             light_config.num, lighting.lut_sp.type, lighting.lut_sp.abs_input);
-            spot_atten = fmt::format("({} * {})", lighting.lut_sp.scale, value);
+            spot_atten = fmt::format("({:#} * {})", lighting.lut_sp.scale, value);
         }
 
         // If enabled, compute distance attenuation value
@@ -850,7 +850,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             const std::string value =
                 GetLutValue(LightingRegs::LightingSampler::Distribution0, light_config.num,
                             lighting.lut_d0.type, lighting.lut_d0.abs_input);
-            d0_lut_value = fmt::format("({} * {})", lighting.lut_d0.scale, value);
+            d0_lut_value = fmt::format("({:#} * {})", lighting.lut_d0.scale, value);
         }
         std::string specular_0 = fmt::format("({} * {}.specular_0)", d0_lut_value, light_src);
         if (light_config.geometric_factor_0) {
@@ -864,7 +864,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             std::string value =
                 GetLutValue(LightingRegs::LightingSampler::ReflectRed, light_config.num,
                             lighting.lut_rr.type, lighting.lut_rr.abs_input);
-            value = fmt::format("({} * {})", lighting.lut_rr.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_rr.scale, value);
             out += fmt::format("refl_value.r = {};\n", value);
         } else {
             out += "refl_value.r = 1.0;\n";
@@ -877,7 +877,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             std::string value =
                 GetLutValue(LightingRegs::LightingSampler::ReflectGreen, light_config.num,
                             lighting.lut_rg.type, lighting.lut_rg.abs_input);
-            value = fmt::format("({} * {})", lighting.lut_rg.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_rg.scale, value);
             out += fmt::format("refl_value.g = {};\n", value);
         } else {
             out += "refl_value.g = refl_value.r;\n";
@@ -890,7 +890,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             std::string value =
                 GetLutValue(LightingRegs::LightingSampler::ReflectBlue, light_config.num,
                             lighting.lut_rb.type, lighting.lut_rb.abs_input);
-            value = fmt::format("({} * {})", lighting.lut_rb.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_rb.scale, value);
             out += fmt::format("refl_value.b = {};\n", value);
         } else {
             out += "refl_value.b = refl_value.r;\n";
@@ -905,7 +905,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             const std::string value =
                 GetLutValue(LightingRegs::LightingSampler::Distribution1, light_config.num,
                             lighting.lut_d1.type, lighting.lut_d1.abs_input);
-            d1_lut_value = fmt::format("({} * {})", lighting.lut_d1.scale, value);
+            d1_lut_value = fmt::format("({:#} * {})", lighting.lut_d1.scale, value);
         }
         std::string specular_1 =
             fmt::format("({} * refl_value * {}.specular_1)", d1_lut_value, light_src);
@@ -922,7 +922,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             std::string value =
                 GetLutValue(LightingRegs::LightingSampler::Fresnel, light_config.num,
                             lighting.lut_fr.type, lighting.lut_fr.abs_input);
-            value = fmt::format("({} * {})", lighting.lut_fr.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_fr.scale, value);
 
             // Enabled for diffuse lighting alpha component
             if (lighting.enable_primary_alpha) {
@@ -1154,7 +1154,7 @@ float ProcTexNoiseCoef(vec2 x) {
     out += fmt::format("float lod = log2(abs(float({}) * proctex_bias) * (duv.x + duv.y));\n",
                        config.state.proctex.lut_width);
     out += "if (proctex_bias == 0.0) lod = 0.0;\n";
-    out += fmt::format("lod = clamp(lod, {}, {});\n",
+    out += fmt::format("lod = clamp(lod, {:#}, {:#});\n",
                        std::max(0.0f, static_cast<float>(config.state.proctex.lod_min)),
                        std::min(7.0f, static_cast<float>(config.state.proctex.lod_max)));
     // Get shift offset before noise generation
