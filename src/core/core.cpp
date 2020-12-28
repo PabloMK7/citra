@@ -13,7 +13,7 @@
 #include "common/logging/log.h"
 #include "common/texture.h"
 #include "core/arm/arm_interface.h"
-#ifdef ARCHITECTURE_x86_64
+#if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_ARM64)
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
 #include "core/arm/dyncom/arm_dyncom.h"
@@ -365,7 +365,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
         *memory, *timing, [this] { PrepareReschedule(); }, system_mode, num_cores, n3ds_mode);
 
     if (Settings::values.use_cpu_jit) {
-#ifdef ARCHITECTURE_x86_64
+#if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_ARM64)
         for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
                 std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i)));

@@ -30,11 +30,16 @@ target_include_directories(catch-single-include INTERFACE catch/single_include)
 # Crypto++
 add_subdirectory(cryptopp)
 
-# Dynarmic
+# Xbyak
 if (ARCHITECTURE_x86_64)
-    # Dynarmic will skip defining xbyak if it's already defined, we then define it below
     add_library(xbyak INTERFACE)
-    option(DYNARMIC_TESTS OFF)
+    target_include_directories(xbyak SYSTEM INTERFACE ./xbyak/xbyak)
+    target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
+endif()
+
+# Dynarmic
+if (ARCHITECTURE_x86_64 OR ARCHITECTURE_ARM64)
+    set(DYNARMIC_TESTS OFF)
     set(DYNARMIC_NO_BUNDLED_FMT ON)
     set(DYNARMIC_FRONTENDS "A32")
     add_subdirectory(dynarmic)
@@ -73,14 +78,6 @@ target_include_directories(SoundTouch INTERFACE ./soundtouch/include)
 
 # Teakra
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
-
-# Xbyak
-if (ARCHITECTURE_x86_64)
-    # Defined before "dynarmic" above
-    # add_library(xbyak INTERFACE)
-    target_include_directories(xbyak INTERFACE ./xbyak/xbyak)
-    target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
-endif()
 
 # Zstandard
 add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
