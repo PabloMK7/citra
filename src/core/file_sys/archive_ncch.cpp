@@ -111,8 +111,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExeFSDelayGenerator>();
         file = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
     } else {
-        LOG_ERROR(Service_FS, "Unknown NCCH archive type {}!",
-                  static_cast<u32>(openfile_path.filepath_type));
+        LOG_ERROR(Service_FS, "Unknown NCCH archive type {}!", openfile_path.filepath_type);
         result = Loader::ResultStatus::Error;
     }
 

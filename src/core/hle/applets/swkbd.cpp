@@ -84,7 +84,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     }
 
     default: {
-        LOG_ERROR(Service_APT, "unsupported signal {}", static_cast<u32>(parameter.signal));
+        LOG_ERROR(Service_APT, "unsupported signal {}", parameter.signal);
         UNIMPLEMENTED();
         // TODO(Subv): Find the right error code
         return ResultCode(-1);
@@ -143,8 +143,7 @@ void SoftwareKeyboard::Update() {
         config.return_code = SoftwareKeyboardResult::None;
         break;
     default:
-        LOG_CRITICAL(Applet_SWKBD, "Unknown button config {}",
-                     static_cast<u32>(config.num_buttons_m1));
+        LOG_CRITICAL(Applet_SWKBD, "Unknown button config {}", config.num_buttons_m1);
         UNREACHABLE();
     }
 

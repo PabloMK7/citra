@@ -413,7 +413,7 @@ static void RemoveBreakpoint(BreakpointType type, VAddr addr) {
     }
 
     LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
-              bp->second.len, bp->second.addr, static_cast<int>(type));
+              bp->second.len, bp->second.addr, type);
 
     if (type == BreakpointType::Execute) {
         Core::System::GetInstance().Memory().WriteBlock(
@@ -473,7 +473,7 @@ bool CheckBreakpoint(VAddr addr, BreakpointType type) {
         LOG_DEBUG(Debug_GDBStub,
                   "Found breakpoint type {} @ {:08x}, range: {:08x}"
                   " - {:08x} ({:x} bytes)",
-                  static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
+                  type, addr, bp->second.addr, bp->second.addr + len, len);
         return true;
     }
 
@@ -948,8 +948,8 @@ static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
     }
     p.insert({addr, breakpoint});
 
-    LOG_DEBUG(Debug_GDBStub, "gdb: added {} breakpoint: {:08x} bytes at {:08x}\n",
-              static_cast<int>(type), breakpoint.len, breakpoint.addr);
+    LOG_DEBUG(Debug_GDBStub, "gdb: added {} breakpoint: {:08x} bytes at {:08x}\n", type,
+              breakpoint.len, breakpoint.addr);
 
     return true;
 }

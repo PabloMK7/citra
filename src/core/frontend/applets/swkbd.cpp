@@ -87,7 +87,7 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) const 
     default:
         // TODO(jroweboy): What does hardware do in this case?
         LOG_CRITICAL(Frontend, "Application requested unknown validation method. Method: {}",
-                     static_cast<u32>(config.accept_mode));
+                     config.accept_mode);
         UNREACHABLE();
     }
 

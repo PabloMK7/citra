@@ -54,7 +54,7 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     auto source = rp.PopMappedBuffer();
     auto destination = rp.PopMappedBuffer();
 
-    LOG_DEBUG(Service_PS, "called algorithm={} key_type={}", static_cast<u8>(algorithm), key_type);
+    LOG_DEBUG(Service_PS, "called algorithm={} key_type={}", algorithm, key_type);
 
     // TODO(zhaowenlan1779): Tests on a real 3DS shows that no error is returned in this case
     // and encrypted data is actually returned, but the key used is unknown.

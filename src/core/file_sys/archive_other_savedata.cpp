@@ -27,7 +27,7 @@ namespace {
 template <typename T>
 ResultVal<std::tuple<MediaType, u64>> ParsePath(const Path& path, T program_id_reader) {
     if (path.GetType() != LowPathType::Binary) {
-        LOG_ERROR(Service_FS, "Wrong path type {}", static_cast<int>(path.GetType()));
+        LOG_ERROR(Service_FS, "Wrong path type {}", path.GetType());
         return ERROR_INVALID_PATH;
     }
 
@@ -42,7 +42,7 @@ ResultVal<std::tuple<MediaType, u64>> ParsePath(const Path& path, T program_id_r
     auto media_type = static_cast<MediaType>(data[0]);
 
     if (media_type != MediaType::SDMC && media_type != MediaType::GameCard) {
-        LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
+        LOG_ERROR(Service_FS, "Unsupported media type {}", media_type);
 
         // Note: this is strange, but the error code was verified with a real 3DS
         return ERROR_UNSUPPORTED_OPEN_FLAGS;

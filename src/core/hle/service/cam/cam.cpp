@@ -763,7 +763,7 @@ void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, flip={}, context_select={}",
-              camera_select.m_val, static_cast<int>(flip), context_select.m_val);
+              camera_select.m_val, flip, context_select.m_val);
 }
 
 void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
@@ -847,7 +847,7 @@ void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select={}, frame_rate={}",
-                camera_select.m_val, static_cast<int>(frame_rate));
+                camera_select.m_val, frame_rate);
 }
 
 void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
@@ -874,7 +874,7 @@ void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, effect={}, context_select={}",
-              camera_select.m_val, static_cast<int>(effect), context_select.m_val);
+              camera_select.m_val, effect, context_select.m_val);
 }
 
 void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -901,7 +901,7 @@ void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, format={}, context_select={}",
-              camera_select.m_val, static_cast<int>(format), context_select.m_val);
+              camera_select.m_val, format, context_select.m_val);
 }
 
 void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {

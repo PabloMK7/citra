@@ -147,7 +147,7 @@ void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
     if (s.type != ControllerStateType::PadAndCircle) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
-                  static_cast<int>(ControllerStateType::PadAndCircle), static_cast<int>(s.type));
+                  static_cast<int>(ControllerStateType::PadAndCircle), s.type);
         return;
     }
 
@@ -178,7 +178,7 @@ void Movie::Play(Service::HID::TouchDataEntry& touch_data) {
     if (s.type != ControllerStateType::Touch) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
-                  static_cast<int>(ControllerStateType::Touch), static_cast<int>(s.type));
+                  static_cast<int>(ControllerStateType::Touch), s.type);
         return;
     }
 
@@ -195,7 +195,7 @@ void Movie::Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
     if (s.type != ControllerStateType::Accelerometer) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
-                  static_cast<int>(ControllerStateType::Accelerometer), static_cast<int>(s.type));
+                  static_cast<int>(ControllerStateType::Accelerometer), s.type);
         return;
     }
 
@@ -212,7 +212,7 @@ void Movie::Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
     if (s.type != ControllerStateType::Gyroscope) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
-                  static_cast<int>(ControllerStateType::Gyroscope), static_cast<int>(s.type));
+                  static_cast<int>(ControllerStateType::Gyroscope), s.type);
         return;
     }
 
@@ -229,7 +229,7 @@ void Movie::Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_
     if (s.type != ControllerStateType::IrRst) {
         LOG_ERROR(Movie,
                   "Expected to read type {}, but found {}. Your playback will be out of sync",
-                  static_cast<int>(ControllerStateType::IrRst), static_cast<int>(s.type));
+                  static_cast<int>(ControllerStateType::IrRst), s.type);
         return;
     }
 
@@ -245,9 +245,9 @@ void Movie::Play(Service::IR::ExtraHIDResponse& extra_hid_response) {
     current_byte += sizeof(ControllerState);
 
     if (s.type != ControllerStateType::ExtraHidResponse) {
-        LOG_ERROR(
-            Movie, "Expected to read type {}, but found {}. Your playback will be out of sync",
-            static_cast<int>(ControllerStateType::ExtraHidResponse), static_cast<int>(s.type));
+        LOG_ERROR(Movie,
+                  "Expected to read type {}, but found {}. Your playback will be out of sync",
+                  static_cast<int>(ControllerStateType::ExtraHidResponse), s.type);
         return;
     }
 

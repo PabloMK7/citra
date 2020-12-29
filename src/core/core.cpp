@@ -290,7 +290,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     const Loader::ResultStatus load_result{app_loader->Load(process)};
     kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
+        LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", load_result);
         System::Shutdown();
 
         switch (load_result) {

@@ -73,8 +73,7 @@ private:
             LOG_WARNING(RPC_Server, "Failed to send reply: {}", error.message());
         } else {
             LOG_INFO(RPC_Server, "Sent reply version({}) id=({}) type=({}) size=({})",
-                     reply_packet.GetVersion(), reply_packet.GetId(),
-                     static_cast<u32>(reply_packet.GetPacketType()),
+                     reply_packet.GetVersion(), reply_packet.GetId(), reply_packet.GetPacketType(),
                      reply_packet.GetPacketDataSize());
         }
     }

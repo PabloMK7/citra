@@ -62,7 +62,7 @@ ResultCode Applet::Create(Service::APT::AppletId id,
         applets[id] = std::make_shared<Mint>(id, std::move(manager));
         break;
     default:
-        LOG_ERROR(Service_APT, "Could not create applet {}", static_cast<u32>(id));
+        LOG_ERROR(Service_APT, "Could not create applet {}", id);
         // TODO(Subv): Find the right error code
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
                           ErrorSummary::NotSupported, ErrorLevel::Permanent);
@@ -82,7 +82,7 @@ std::shared_ptr<Applet> Applet::Get(Service::APT::AppletId id) {
 static void AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
     Service::APT::AppletId id = static_cast<Service::APT::AppletId>(applet_id);
     std::shared_ptr<Applet> applet = Applet::Get(id);
-    ASSERT_MSG(applet != nullptr, "Applet doesn't exist! applet_id={:08X}", static_cast<u32>(id));
+    ASSERT_MSG(applet != nullptr, "Applet doesn't exist! applet_id={:08X}", id);
 
     applet->Update();
 

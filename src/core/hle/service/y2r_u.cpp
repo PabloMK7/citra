@@ -85,7 +85,7 @@ void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called input_format={}", static_cast<u8>(conversion.input_format));
+    LOG_DEBUG(Service_Y2R, "called input_format={}", conversion.input_format);
 }
 
 void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
@@ -95,7 +95,7 @@ void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.input_format);
 
-    LOG_DEBUG(Service_Y2R, "called input_format={}", static_cast<u8>(conversion.input_format));
+    LOG_DEBUG(Service_Y2R, "called input_format={}", conversion.input_format);
 }
 
 void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -106,7 +106,7 @@ void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called output_format={}", static_cast<u8>(conversion.output_format));
+    LOG_DEBUG(Service_Y2R, "called output_format={}", conversion.output_format);
 }
 
 void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -116,7 +116,7 @@ void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.output_format);
 
-    LOG_DEBUG(Service_Y2R, "called output_format={}", static_cast<u8>(conversion.output_format));
+    LOG_DEBUG(Service_Y2R, "called output_format={}", conversion.output_format);
 }
 
 void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
@@ -127,7 +127,7 @@ void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called rotation={}", static_cast<u8>(conversion.rotation));
+    LOG_DEBUG(Service_Y2R, "called rotation={}", conversion.rotation);
 }
 
 void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
@@ -137,7 +137,7 @@ void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.rotation);
 
-    LOG_DEBUG(Service_Y2R, "called rotation={}", static_cast<u8>(conversion.rotation));
+    LOG_DEBUG(Service_Y2R, "called rotation={}", conversion.rotation);
 }
 
 void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
@@ -148,8 +148,7 @@ void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called block_alignment={}",
-              static_cast<u8>(conversion.block_alignment));
+    LOG_DEBUG(Service_Y2R, "called block_alignment={}", conversion.block_alignment);
 }
 
 void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
@@ -159,8 +158,7 @@ void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.block_alignment);
 
-    LOG_DEBUG(Service_Y2R, "called block_alignment={}",
-              static_cast<u8>(conversion.block_alignment));
+    LOG_DEBUG(Service_Y2R, "called block_alignment={}", conversion.block_alignment);
 }
 
 void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
@@ -586,10 +584,9 @@ cleanup:
     LOG_DEBUG(Service_Y2R,
               "called input_format={} output_format={} rotation={} block_alignment={} "
               "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
-              static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
-              static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
-              params.input_line_width, params.input_lines,
-              static_cast<u8>(params.standard_coefficient), params.padding, params.alpha);
+              params.input_format, params.output_format, params.rotation, params.block_alignment,
+              params.input_line_width, params.input_lines, params.standard_coefficient,
+              params.padding, params.alpha);
 }
 
 void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {

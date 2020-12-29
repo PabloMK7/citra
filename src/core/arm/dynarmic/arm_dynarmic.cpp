@@ -132,8 +132,8 @@ public:
         case Dynarmic::A32::Exception::PreloadDataWithIntentToWrite:
             return;
         }
-        ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})",
-                   static_cast<std::size_t>(exception), pc, MemoryReadCode(pc));
+        ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})", exception,
+                   pc, MemoryReadCode(pc));
     }
 
     void AddTicks(std::uint64_t ticks) override {
@@ -206,7 +206,7 @@ u32 ARM_Dynarmic::GetVFPSystemReg(VFPSystemRegister reg) const {
     case VFP_FPEXC:
         return fpexc;
     default:
-        UNREACHABLE_MSG("Unknown VFP system register: {}", static_cast<size_t>(reg));
+        UNREACHABLE_MSG("Unknown VFP system register: {}", reg);
     }
 }
 
@@ -219,7 +219,7 @@ void ARM_Dynarmic::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
         fpexc = value;
         return;
     default:
-        UNREACHABLE_MSG("Unknown VFP system register: {}", static_cast<size_t>(reg));
+        UNREACHABLE_MSG("Unknown VFP system register: {}", reg);
     }
 }
 
@@ -238,7 +238,7 @@ u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) const {
     case CP15_THREAD_URO:
         return cp15_state.cp15_thread_uro;
     default:
-        UNREACHABLE_MSG("Unknown CP15 register: {}", static_cast<size_t>(reg));
+        UNREACHABLE_MSG("Unknown CP15 register: {}", reg);
     }
 }
 
@@ -251,7 +251,7 @@ void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {
         cp15_state.cp15_thread_uro = value;
         return;
     default:
-        UNREACHABLE_MSG("Unknown CP15 register: {}", static_cast<size_t>(reg));
+        UNREACHABLE_MSG("Unknown CP15 register: {}", reg);
     }
 }
 
