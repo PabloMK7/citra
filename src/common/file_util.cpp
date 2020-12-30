@@ -919,7 +919,7 @@ IOFile::IOFile() = default;
 
 IOFile::IOFile(const std::string& filename, const char openmode[], int flags)
     : filename(filename), openmode(openmode), flags(flags) {
-    void(Open());
+    Open();
 }
 
 IOFile::~IOFile() {
