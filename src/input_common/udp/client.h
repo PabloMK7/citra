@@ -89,7 +89,7 @@ private:
 };
 
 void TestCommunication(const std::string& host, u16 port, u8 pad_index, u32 client_id,
-                       std::function<void()> success_callback,
-                       std::function<void()> failure_callback);
+                       const std::function<void()>& success_callback,
+                       const std::function<void()>& failure_callback);
 
 } // namespace InputCommon::CemuhookUDP
