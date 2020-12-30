@@ -87,7 +87,8 @@ cat > /tmp/org.citra.$REPO_NAME.json <<EOF
                 "-DENABLE_QT_TRANSLATION=ON",
                 "-DCITRA_ENABLE_COMPATIBILITY_REPORTING=ON",
                 "-DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON",
-                "-DENABLE_FFMPEG_VIDEO_DUMPER=ON"
+                "-DENABLE_FFMPEG_VIDEO_DUMPER=ON",
+                "-DENABLE_FDK=ON"
             ],
             "cleanup": [
               "/bin/citra",
