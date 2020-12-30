@@ -42,8 +42,8 @@ workflows:
 
       The next change in your repository that matches any of your trigger map event will start **deploy** workflow.
     steps:
-    - cache-pull@2.0.1: {}
-    - script@1.1.5:
+    - cache-pull@2.4.0: {}
+    - script@1.1.6:
         title: Install newer cmake
         inputs:
             - content: |-
@@ -52,7 +52,7 @@ workflows:
                 sudo apt remove cmake -y
                 sudo apt purge --auto-remove cmake -y
                 sudo apt install ninja-build -y
-                version=3.10
+                version=3.19
                 build=2
                 mkdir ~/temp
                 cd ~/temp
@@ -60,13 +60,13 @@ workflows:
                 sudo mkdir /opt/cmake
                 sudo sh cmake-$version.$build-Linux-x86_64.sh --prefix=/opt/cmake --skip-license --exclude-subdir
                 envman add --key PATH --value "/opt/cmake/bin:$PATH"
-    - install-missing-android-tools@2.3.3:
+    - install-missing-android-tools@2.3.8:
         inputs:
         - gradlew_path: "$PROJECT_LOCATION/gradlew"
     - change-android-versioncode-and-versionname@1.1.1:
         inputs:
         - build_gradle_path: "$PROJECT_LOCATION/$MODULE/build.gradle"
-    - android-lint@0.9.5:
+    - android-lint@0.9.8:
         inputs:
         - project_location: "$PROJECT_LOCATION"
         - module: "$MODULE"
@@ -76,19 +76,19 @@ workflows:
         - project_location: "$PROJECT_LOCATION"
         - module: "$MODULE"
         - variant: "$TEST_VARIANT"
-    - android-build@0.9.5:
+    - android-build@0.10.3:
         inputs:
         - project_location: "$PROJECT_LOCATION"
         - module: "$MODULE"
         - variant: "$BUILD_VARIANT"
     - sign-apk@1.2.3:
         run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
-    - deploy-to-bitrise-io@1.3.18: {}
-    - cache-push@2.0.5: {}
+    - deploy-to-bitrise-io@1.11.1: {}
+    - cache-push@2.4.1: {}
   primary:
     steps:
-    - cache-pull@2.0.1: {}
-    - script@1.1.5:
+    - cache-pull@2.4.0: {}
+    - script@1.1.6:
         title: Install newer cmake
         inputs:
             - content: |-
@@ -97,7 +97,7 @@ workflows:
                 sudo apt remove cmake -y
                 sudo apt purge --auto-remove cmake -y
                 sudo apt install ninja-build -y
-                version=3.10
+                version=3.19
                 build=2
                 mkdir ~/temp
                 cd ~/temp
@@ -105,20 +105,20 @@ workflows:
                 sudo mkdir /opt/cmake
                 sudo sh cmake-$version.$build-Linux-x86_64.sh --prefix=/opt/cmake --skip-license --exclude-subdir
                 envman add --key PATH --value "/opt/cmake/bin:$PATH"
-    - install-missing-android-tools@2.3.3:
+    - install-missing-android-tools@2.3.8:
         inputs:
             - gradlew_path: "$PROJECT_LOCATION/gradlew"
-    - android-lint@0.9.5:
+    - android-lint@0.9.8:
         inputs:
         - project_location: "$PROJECT_LOCATION"
         - module: "$MODULE"
         - variant: "$TEST_VARIANT"
-    - android-build@0.9.5:
+    - android-build@0.10.3:
         inputs:
         - variant: Debug
         - project_location: "$PROJECT_LOCATION"
-    - deploy-to-bitrise-io@1.3.18: {}
-    - cache-push@2.0.5: {}
+    - deploy-to-bitrise-io@1.11.1: {}
+    - cache-push@2.4.1: {}
 app:
   envs:
   - opts:
