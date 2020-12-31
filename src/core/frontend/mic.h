@@ -115,4 +115,23 @@ private:
     std::vector<u8> CACHE_16_BIT;
 };
 
+/// Factory for creating a real Mic input device;
+class RealMicFactory {
+public:
+    virtual ~RealMicFactory();
+
+    virtual std::unique_ptr<Interface> Create(std::string mic_device_name) = 0;
+};
+
+class NullFactory final : public RealMicFactory {
+public:
+    ~NullFactory() override;
+
+    std::unique_ptr<Interface> Create(std::string mic_device_name) override;
+};
+
+void RegisterRealMicFactory(std::unique_ptr<RealMicFactory> factory);
+
+std::unique_ptr<Interface> CreateRealMic(std::string mic_device_name);
+
 } // namespace Frontend::Mic

@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <boost/serialization/weak_ptr.hpp>
-#ifdef HAVE_CUBEB
-#include "audio_core/cubeb_input.h"
-#endif
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -359,11 +356,7 @@ struct MIC_U::Impl {
             new_mic = std::make_unique<Frontend::Mic::NullMic>();
             break;
         case Settings::MicInputType::Real:
-#if HAVE_CUBEB
-            new_mic = std::make_unique<AudioCore::CubebInput>(Settings::values.mic_input_device);
-#else
-            new_mic = std::make_unique<Frontend::Mic::NullMic>();
-#endif
+            new_mic = Frontend::Mic::CreateRealMic(Settings::values.mic_input_device);
             break;
         case Settings::MicInputType::Static:
             new_mic = std::make_unique<Frontend::Mic::StaticMic>();

@@ -5,6 +5,10 @@
 #include <array>
 #include "core/frontend/mic.h"
 
+#ifdef HAVE_CUBEB
+#include "audio_core/cubeb_input.h"
+#endif
+
 namespace Frontend::Mic {
 
 constexpr std::array<u8, 16> NOISE_SAMPLE_8_BIT = {0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -55,6 +59,28 @@ void StaticMic::AdjustSampleRate(u32 sample_rate) {}
 
 Samples StaticMic::Read() {
     return (sample_size == 8) ? CACHE_8_BIT : CACHE_16_BIT;
+}
+
+RealMicFactory::~RealMicFactory() = default;
+
+NullFactory::~NullFactory() = default;
+
+std::unique_ptr<Interface> NullFactory::Create([[maybe_unused]] std::string mic_device_name) {
+    return std::make_unique<NullMic>();
+}
+
+#ifdef HAVE_CUBEB
+static std::unique_ptr<RealMicFactory> g_factory = std::make_unique<AudioCore::CubebFactory>();
+#else
+static std::unique_ptr<RealMicFactory> g_factory = std::make_unique<NullFactory>();
+#endif
+
+void RegisterRealMicFactory(std::unique_ptr<RealMicFactory> factory) {
+    g_factory = std::move(factory);
+}
+
+std::unique_ptr<Interface> CreateRealMic(std::string mic_device_name) {
+    return g_factory->Create(std::move(mic_device_name));
 }
 
 } // namespace Frontend::Mic

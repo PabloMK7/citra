@@ -31,4 +31,11 @@ private:
 
 std::vector<std::string> ListCubebInputDevices();
 
+class CubebFactory final : public Frontend::Mic::RealMicFactory {
+public:
+    ~CubebFactory() override;
+
+    std::unique_ptr<Frontend::Mic::Interface> Create(std::string mic_device_name) override;
+};
+
 } // namespace AudioCore
