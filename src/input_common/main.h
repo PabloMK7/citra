@@ -37,6 +37,11 @@ std::string GenerateKeyboardParam(int key_code);
 std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, int key_right,
                                         int key_modifier, float modifier_scale);
 
+Common::ParamPackage GetSDLControllerButtonBindByGUID(const std::string& guid, int port,
+                                                      int button);
+Common::ParamPackage GetSDLControllerAnalogBindByGUID(const std::string& guid, int port,
+                                                      int analog);
+
 /// Reloads the input devices
 void ReloadInputDevices();
 

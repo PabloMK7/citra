@@ -8,15 +8,18 @@
 #include <memory>
 #include <thread>
 #include "common/threadsafe_queue.h"
+#include "core/settings.h"
 #include "input_common/sdl/sdl.h"
 
 union SDL_Event;
 using SDL_Joystick = struct _SDL_Joystick;
 using SDL_JoystickID = s32;
+using SDL_GameController = struct _SDL_GameController;
 
 namespace InputCommon::SDL {
 
 class SDLJoystick;
+class SDLGameController;
 class SDLButtonFactory;
 class SDLAnalogFactory;
 
@@ -34,6 +37,14 @@ public:
     std::shared_ptr<SDLJoystick> GetSDLJoystickBySDLID(SDL_JoystickID sdl_id);
     std::shared_ptr<SDLJoystick> GetSDLJoystickByGUID(const std::string& guid, int port);
 
+    std::shared_ptr<SDLGameController> GetSDLGameControllerByGUID(const std::string& guid,
+                                                                  int port);
+
+    Common::ParamPackage GetSDLControllerButtonBindByGUID(const std::string& guid, int port,
+                                                          Settings::NativeButton::Values button);
+    Common::ParamPackage GetSDLControllerAnalogBindByGUID(const std::string& guid, int port,
+                                                          Settings::NativeAnalog::Values analog);
+
     /// Get all DevicePoller that use the SDL backend for a specific device type
     Pollers GetPollers(Polling::DeviceType type) override;
 
@@ -45,12 +56,20 @@ private:
     void InitJoystick(int joystick_index);
     void CloseJoystick(SDL_Joystick* sdl_joystick);
 
+    void InitGameController(int joystick_index);
+    void CloseGameController(SDL_GameController* sdl_controller);
+
     /// Needs to be called before SDL_QuitSubSystem.
     void CloseJoysticks();
+    void CloseGameControllers();
 
     /// Map of GUID of a list of corresponding virtual Joysticks
     std::unordered_map<std::string, std::vector<std::shared_ptr<SDLJoystick>>> joystick_map;
     std::mutex joystick_map_mutex;
+
+    /// Map of GUID of a list of corresponding virtual Controllers
+    std::unordered_map<std::string, std::vector<std::shared_ptr<SDLGameController>>> controller_map;
+    std::mutex controller_map_mutex;
 
     std::shared_ptr<SDLButtonFactory> button_factory;
     std::shared_ptr<SDLAnalogFactory> analog_factory;

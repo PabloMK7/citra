@@ -98,6 +98,9 @@ private:
     /// Generates list of all used keys
     QList<QKeySequence> GetUsedKeyboardKeys();
 
+    void MapFromButton(const Common::ParamPackage& params);
+    void AutoMap();
+
     /// Restore all buttons to their default values.
     void RestoreDefaults();
     /// Clear all input configuration
