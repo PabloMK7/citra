@@ -17,7 +17,7 @@ CheatDialog::CheatDialog(QWidget* parent)
     : QDialog(parent), ui(std::make_unique<Ui::CheatDialog>()) {
     // Setup gui control settings
     ui->setupUi(this);
-    setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     ui->tableCheats->setColumnWidth(0, 30);
     ui->tableCheats->setColumnWidth(2, 85);
     ui->tableCheats->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
