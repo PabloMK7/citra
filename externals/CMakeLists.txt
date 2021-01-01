@@ -81,6 +81,7 @@ add_subdirectory(teakra EXCLUDE_FROM_ALL)
 
 # Zstandard
 add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
+target_include_directories(libzstd_static INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib>)
 
 # ENet
 add_subdirectory(enet)
