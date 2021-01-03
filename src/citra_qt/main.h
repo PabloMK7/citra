@@ -229,6 +229,7 @@ private:
     void UpdateStatusBar();
     void LoadTranslation();
     void UpdateWindowTitle();
+    void UpdateUISettings();
     void RetranslateStatusBar();
     void InstallCIA(QStringList filepaths);
     void HideMouseCursor();
