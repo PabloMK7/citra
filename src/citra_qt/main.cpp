@@ -111,7 +111,7 @@ constexpr int default_mouse_timeout = 2500;
 /**
  * "Callouts" are one-time instructional messages shown to the user. In the config settings, there
  * is a bitfield "callout_flags" options, used to track if a message has already been shown to the
- * user. This is 32-bits - if we have more than 32 callouts, we should retire and recyle old ones.
+ * user. This is 32-bits - if we have more than 32 callouts, we should retire and recycle old ones.
  */
 enum class CalloutFlag : uint32_t {
     Telemetry = 0x1,
@@ -954,7 +954,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
         case Core::System::ResultStatus::ErrorVideoCore:
             QMessageBox::critical(
                 this, tr("Video Core Error"),
-                tr("An error has occured. Please <a "
+                tr("An error has occurred. Please <a "
                    "href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>see "
                    "the "
                    "log</a> for more details. "
@@ -976,7 +976,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
         default:
             QMessageBox::critical(
                 this, tr("Error while loading ROM!"),
-                tr("An unknown error occured. Please see the log for more details."));
+                tr("An unknown error occurred. Please see the log for more details."));
             break;
         }
         return false;
@@ -2134,7 +2134,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     } else {
         title = tr("Fatal Error");
         message =
-            tr("A fatal error occured. "
+            tr("A fatal error occurred. "
                "<a href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>Check "
                "the log</a> for details."
                "<br/>Continuing emulation may result in crashes and bugs.");

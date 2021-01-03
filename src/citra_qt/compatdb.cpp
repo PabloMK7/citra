@@ -69,7 +69,7 @@ void CompatDB::Submit() {
 void CompatDB::OnTestcaseSubmitted() {
     if (!testcase_watcher.result()) {
         QMessageBox::critical(this, tr("Communication error"),
-                              tr("An error occured while sending the Testcase"));
+                              tr("An error occurred while sending the Testcase"));
         button(NextButton)->setEnabled(true);
         button(NextButton)->setText(tr("Next"));
         button(CancelButton)->setVisible(true);
