@@ -145,6 +145,9 @@ void ColorConsoleBackend::Write(const Entry& entry) {
 }
 
 FileBackend::FileBackend(const std::string& filename) : bytes_written(0) {
+    if (FileUtil::Exists(filename + ".old.txt")) {
+        FileUtil::Delete(filename + ".old.txt");
+    }
     if (FileUtil::Exists(filename)) {
         FileUtil::Rename(filename, filename + ".old.txt");
     }
