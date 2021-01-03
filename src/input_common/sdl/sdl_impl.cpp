@@ -904,8 +904,41 @@ public:
         while (state.event_queue.Pop(event)) {
             switch (event.type) {
             case SDL_JOYAXISMOTION:
-                if (std::abs(event.jaxis.value / 32767.0) < 0.5) {
+                if (!axis_memory.count(event.jaxis.which) ||
+                    !axis_memory[event.jaxis.which].count(event.jaxis.axis)) {
+                    axis_memory[event.jaxis.which][event.jaxis.axis] = event.jaxis.value;
+                    axis_event_count[event.jaxis.which][event.jaxis.axis] = 1;
                     break;
+                } else {
+                    axis_event_count[event.jaxis.which][event.jaxis.axis]++;
+                    // The joystick and axis exist in our map if we take this branch, so no checks
+                    // needed
+                    if (std::abs(
+                            (event.jaxis.value - axis_memory[event.jaxis.which][event.jaxis.axis]) /
+                            32767.0) < 0.5) {
+                        break;
+                    } else {
+                        if (axis_event_count[event.jaxis.which][event.jaxis.axis] == 2 &&
+                            IsAxisAtPole(event.jaxis.value) &&
+                            IsAxisAtPole(axis_memory[event.jaxis.which][event.jaxis.axis])) {
+                            // If we have exactly two events and both are near a pole, this is
+                            // likely a digital input masquerading as an analog axis; Instead of
+                            // trying to look at the direction the axis travelled, assume the first
+                            // event was press and the second was release; This should handle most
+                            // digital axes while deferring to the direction of travel for analog
+                            // axes
+                            event.jaxis.value = std::copysign(
+                                32767, axis_memory[event.jaxis.which][event.jaxis.axis]);
+                        } else {
+                            // There are more than two events, so this is likely a true analog axis,
+                            // check the direction it travelled
+                            event.jaxis.value = std::copysign(
+                                32767, event.jaxis.value -
+                                           axis_memory[event.jaxis.which][event.jaxis.axis]);
+                        }
+                        axis_memory.clear();
+                        axis_event_count.clear();
+                    }
                 }
             case SDL_JOYBUTTONUP:
             case SDL_JOYHATMOTION:
@@ -914,6 +947,16 @@ public:
         }
         return {};
     }
+
+private:
+    // Determine whether an axis value is close to an extreme or center
+    // Some controllers have a digital D-Pad as a pair of analog sticks, with 3 possible values per
+    // axis, which is why the center must be considered a pole
+    bool IsAxisAtPole(int16_t value) {
+        return std::abs(value) >= 32767 || std::abs(value) < 327;
+    }
+    std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, int16_t>> axis_memory;
+    std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, uint32_t>> axis_event_count;
 };
 
 class SDLAnalogPoller final : public SDLPoller {
