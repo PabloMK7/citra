@@ -110,7 +110,9 @@ struct SharedMem {
         s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
         u32 index;                      ///< Index of the last updated pad state entry
 
-        INSERT_PADDING_WORDS(0x2);
+        INSERT_PADDING_WORDS(0x1);
+
+        f32 sliderstate_3d;
 
         PadState current_state; ///< Current state of the pad buttons
 
