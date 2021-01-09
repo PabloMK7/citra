@@ -38,8 +38,8 @@ const ConnectionError ErrorManager::WRONG_VERSION(
     QT_TR_NOOP("Version mismatch! Please update to the latest version of Citra. If the problem "
                "persists, contact the room host and ask them to update the server."));
 const ConnectionError ErrorManager::WRONG_PASSWORD(QT_TR_NOOP("Incorrect password."));
-const ConnectionError ErrorManager::GENERIC_ERROR(
-    QT_TR_NOOP("An unknown error occured. If this error continues to occur, please open an issue"));
+const ConnectionError ErrorManager::GENERIC_ERROR(QT_TR_NOOP(
+    "An unknown error occurred. If this error continues to occur, please open an issue"));
 const ConnectionError ErrorManager::LOST_CONNECTION(
     QT_TR_NOOP("Connection to room lost. Try to reconnect."));
 const ConnectionError ErrorManager::HOST_KICKED(
