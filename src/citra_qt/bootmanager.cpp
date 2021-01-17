@@ -195,7 +195,7 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread)
                             QString::fromUtf8(Common::g_scm_desc)));
     setAttribute(Qt::WA_AcceptTouchEvents);
     auto layout = new QHBoxLayout(this);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
     InputCommon::Init();
 
