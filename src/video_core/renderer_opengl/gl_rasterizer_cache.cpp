@@ -495,7 +495,9 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
 }
 
 CachedSurface::~CachedSurface() {
-    owner.host_texture_recycler.emplace(*this, std::move(texture));
+    if (texture.handle) {
+        owner.host_texture_recycler.emplace(*this, std::move(texture));
+    }
 }
 
 bool CachedSurface::CanFill(const SurfaceParams& dest_surface,
