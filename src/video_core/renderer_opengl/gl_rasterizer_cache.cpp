@@ -494,6 +494,10 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
     return true;
 }
 
+CachedSurface::~CachedSurface() {
+    owner.host_texture_recycler.emplace(*this, std::move(texture));
+}
+
 bool CachedSurface::CanFill(const SurfaceParams& dest_surface,
                             SurfaceInterval fill_interval) const {
     if (type == SurfaceType::Fill && IsRegionValid(fill_interval) &&
@@ -1893,12 +1897,17 @@ Surface RasterizerCacheOpenGL::CreateSurface(const SurfaceParams& params) {
     Surface surface = std::make_shared<CachedSurface>(*this);
     static_cast<SurfaceParams&>(*surface) = params;
 
-    surface->texture.Create();
-
-    surface->gl_buffer.resize(0);
     surface->invalid_regions.insert(surface->GetInterval());
-    AllocateSurfaceTexture(surface->texture.handle, GetFormatTuple(surface->pixel_format),
-                           surface->GetScaledWidth(), surface->GetScaledHeight());
+
+    auto recycled_texture = host_texture_recycler.find(params);
+    if (recycled_texture == host_texture_recycler.end()) {
+        surface->texture.Create();
+        AllocateSurfaceTexture(surface->texture.handle, GetFormatTuple(surface->pixel_format),
+                               surface->GetScaledWidth(), surface->GetScaledHeight());
+    } else {
+        surface->texture = std::move(recycled_texture->second);
+        host_texture_recycler.erase(recycled_texture);
+    }
 
     return surface;
 }

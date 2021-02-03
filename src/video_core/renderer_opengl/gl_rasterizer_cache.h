@@ -36,6 +36,36 @@ class RasterizerCacheOpenGL;
 class TextureFilterer;
 class FormatReinterpreterOpenGL;
 
+struct FormatTuple {
+    GLint internal_format;
+    GLenum format;
+    GLenum type;
+};
+
+constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
+
+const FormatTuple& GetFormatTuple(SurfaceParams::PixelFormat pixel_format);
+
+struct HostTextureTag {
+    GLint internal_format;
+    GLenum format;
+    u32 width;
+    u32 height;
+    HostTextureTag(const SurfaceParams& params) noexcept {
+        auto format_tuple = GetFormatTuple(params.pixel_format);
+        internal_format = format_tuple.internal_format;
+        format = format_tuple.format;
+        // The type in the format tuple is irrelevant for the tag since the type is only for
+        // interpreting data on upload/download
+        width = params.GetScaledWidth();
+        height = params.GetScaledHeight();
+    }
+    bool operator==(const HostTextureTag& rhs) const noexcept {
+        return std::tie(internal_format, format, width, height) ==
+               std::tie(rhs.internal_format, rhs.format, rhs.width, rhs.height);
+    };
+};
+
 struct TextureCubeConfig {
     PAddr px;
     PAddr nx;
@@ -59,6 +89,18 @@ struct TextureCubeConfig {
 } // namespace OpenGL
 
 namespace std {
+template <>
+struct hash<OpenGL::HostTextureTag> {
+    std::size_t operator()(const OpenGL::HostTextureTag& tag) const noexcept {
+        std::size_t hash = 0;
+        boost::hash_combine(hash, tag.format);
+        boost::hash_combine(hash, tag.internal_format);
+        boost::hash_combine(hash, tag.width);
+        boost::hash_combine(hash, tag.height);
+        return hash;
+    }
+};
+
 template <>
 struct hash<OpenGL::TextureCubeConfig> {
     std::size_t operator()(const OpenGL::TextureCubeConfig& config) const noexcept {
@@ -139,6 +181,7 @@ private:
 
 struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface> {
     CachedSurface(RasterizerCacheOpenGL& owner) : owner{owner} {}
+    ~CachedSurface();
 
     bool CanFill(const SurfaceParams& dest_surface, SurfaceInterval fill_interval) const;
     bool CanCopy(const SurfaceParams& dest_surface, SurfaceInterval copy_interval) const;
@@ -326,17 +369,12 @@ private:
     std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
 
 public:
+    // Textures from destroyed surfaces are stored here to be recyled to reduce allocation overhead
+    // in the driver
+    std::unordered_multimap<HostTextureTag, OGLTexture> host_texture_recycler;
+
     std::unique_ptr<TextureFilterer> texture_filterer;
     std::unique_ptr<FormatReinterpreterOpenGL> format_reinterpreter;
 };
 
-struct FormatTuple {
-    GLint internal_format;
-    GLenum format;
-    GLenum type;
-};
-
-constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
-
-const FormatTuple& GetFormatTuple(SurfaceParams::PixelFormat pixel_format);
 } // namespace OpenGL
