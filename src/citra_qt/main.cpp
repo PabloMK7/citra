@@ -1013,6 +1013,11 @@ void GMainWindow::BootGame(const QString& filename) {
         Core::Movie::GetInstance().PrepareForRecording();
     }
 
+    // Save configurations
+    UpdateUISettings();
+    game_list->SaveInterfaceLayout();
+    config->Save();
+
     if (!LoadROM(filename))
         return;
 
@@ -2186,22 +2191,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
         return;
     }
 
-    if (!ui->action_Fullscreen->isChecked()) {
-        UISettings::values.geometry = saveGeometry();
-        UISettings::values.renderwindow_geometry = render_window->saveGeometry();
-    }
-    UISettings::values.state = saveState();
-#if MICROPROFILE_ENABLED
-    UISettings::values.microprofile_geometry = microProfileDialog->saveGeometry();
-    UISettings::values.microprofile_visible = microProfileDialog->isVisible();
-#endif
-    UISettings::values.single_window_mode = ui->action_Single_Window_Mode->isChecked();
-    UISettings::values.fullscreen = ui->action_Fullscreen->isChecked();
-    UISettings::values.display_titlebar = ui->action_Display_Dock_Widget_Headers->isChecked();
-    UISettings::values.show_filter_bar = ui->action_Show_Filter_Bar->isChecked();
-    UISettings::values.show_status_bar = ui->action_Show_Status_Bar->isChecked();
-    UISettings::values.first_start = false;
-
+    UpdateUISettings();
     game_list->SaveInterfaceLayout();
     hotkey_registry.SaveHotkeys();
 
@@ -2368,6 +2358,24 @@ void GMainWindow::UpdateWindowTitle() {
     } else {
         setWindowTitle(tr("Citra %1| %2").arg(full_name, game_title));
     }
+}
+
+void GMainWindow::UpdateUISettings() {
+    if (!ui->action_Fullscreen->isChecked()) {
+        UISettings::values.geometry = saveGeometry();
+        UISettings::values.renderwindow_geometry = render_window->saveGeometry();
+    }
+    UISettings::values.state = saveState();
+#if MICROPROFILE_ENABLED
+    UISettings::values.microprofile_geometry = microProfileDialog->saveGeometry();
+    UISettings::values.microprofile_visible = microProfileDialog->isVisible();
+#endif
+    UISettings::values.single_window_mode = ui->action_Single_Window_Mode->isChecked();
+    UISettings::values.fullscreen = ui->action_Fullscreen->isChecked();
+    UISettings::values.display_titlebar = ui->action_Display_Dock_Widget_Headers->isChecked();
+    UISettings::values.show_filter_bar = ui->action_Show_Filter_Bar->isChecked();
+    UISettings::values.show_status_bar = ui->action_Show_Status_Bar->isChecked();
+    UISettings::values.first_start = false;
 }
 
 void GMainWindow::SyncMenuUISettings() {
