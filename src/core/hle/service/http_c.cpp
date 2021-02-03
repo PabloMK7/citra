@@ -314,8 +314,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     std::string url(url_size, '\0');
     buffer.Read(&url[0], 0, url_size - 1);
 
-    LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url,
-              static_cast<u32>(method));
+    LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url, method);
 
     auto* session_data = GetSessionData(ctx.Session());
     ASSERT(session_data);
@@ -352,7 +351,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     }
 
     if (method == RequestMethod::None || static_cast<u32>(method) >= TotalRequestMethods) {
-        LOG_ERROR(Service_HTTP, "invalid request method={}", static_cast<u32>(method));
+        LOG_ERROR(Service_HTTP, "invalid request method={}", method);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ResultCode(ErrCodes::InvalidRequestMethod, ErrorModule::HTTP,

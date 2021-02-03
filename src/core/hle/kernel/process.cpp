@@ -354,7 +354,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
 ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perms,
                         bool privileged) {
     LOG_DEBUG(Kernel, "Map memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
-              source, size, static_cast<u8>(perms));
+              source, size, perms);
     if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
         source + size < source) {
         LOG_ERROR(Kernel, "Invalid source address");
@@ -409,7 +409,7 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
 ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
                           bool privileged) {
     LOG_DEBUG(Kernel, "Unmap memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}",
-              target, source, size, static_cast<u8>(perms));
+              target, source, size, perms);
     if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
         source + size < source) {
         LOG_ERROR(Kernel, "Invalid source address");

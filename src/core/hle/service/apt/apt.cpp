@@ -79,8 +79,7 @@ void Module::APTInterface::Initialize(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 attributes = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}", static_cast<u32>(app_id),
-              attributes);
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}", app_id, attributes);
 
     auto result = apt->applet_manager->Initialize(app_id, attributes);
     if (result.Failed()) {
@@ -348,7 +347,7 @@ void Module::APTInterface::IsRegistered(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->applet_manager->IsRegistered(app_id));
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}", static_cast<u32>(app_id));
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}", app_id);
 }
 
 void Module::APTInterface::InquireNotification(Kernel::HLERequestContext& ctx) {
@@ -372,8 +371,7 @@ void Module::APTInterface::SendParameter(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT,
               "called src_app_id={:#010X}, dst_app_id={:#010X}, signal_type={:#010X},"
               "buffer_size={:#010X}",
-              static_cast<u32>(src_app_id), static_cast<u32>(dst_app_id),
-              static_cast<u32>(signal_type), buffer_size);
+              src_app_id, dst_app_id, signal_type, buffer_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -392,8 +390,7 @@ void Module::APTInterface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     const auto app_id = rp.PopEnum<AppletId>();
     const u32 buffer_size = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
-              buffer_size);
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", app_id, buffer_size);
 
     auto next_parameter = apt->applet_manager->ReceiveParameter(app_id);
 
@@ -420,8 +417,7 @@ void Module::APTInterface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     const auto app_id = rp.PopEnum<AppletId>();
     const u32 buffer_size = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
-              buffer_size);
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", app_id, buffer_size);
 
     auto next_parameter = apt->applet_manager->GlanceParameter(app_id);
 
@@ -459,8 +455,7 @@ void Module::APTInterface::CancelParameter(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT,
               "called check_sender={}, sender_appid={:#010X}, "
               "check_receiver={}, receiver_appid={:#010X}",
-              check_sender, static_cast<u32>(sender_appid), check_receiver,
-              static_cast<u32>(receiver_appid));
+              check_sender, sender_appid, check_receiver, receiver_appid);
 }
 
 void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
@@ -470,7 +465,7 @@ void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext&
     u8 media_type = rp.Pop<u8>();
 
     LOG_WARNING(Service_APT, "(STUBBED) called title_id={:016X}, media_type={:#01X}, flags={:#08X}",
-                title_id, media_type, static_cast<u8>(flags));
+                title_id, media_type, flags);
 
     ResultCode result = apt->applet_manager->PrepareToDoApplicationJump(
         title_id, static_cast<FS::MediaType>(media_type), flags);
@@ -631,7 +626,7 @@ void Module::APTInterface::PrepareToStartLibraryApplet(Kernel::HLERequestContext
     IPC::RequestParser rp(ctx, 0x18, 1, 0); // 0x180040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
+    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", applet_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->PrepareToStartLibraryApplet(applet_id));
@@ -655,7 +650,7 @@ void Module::APTInterface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) 
     IPC::RequestParser rp(ctx, 0x16, 1, 0); // 0x160040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
+    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", applet_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->PreloadLibraryApplet(applet_id));
@@ -668,7 +663,7 @@ void Module::APTInterface::FinishPreloadingLibraryApplet(Kernel::HLERequestConte
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->FinishPreloadingLibraryApplet(applet_id));
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, applet_id={:#05X}", static_cast<u32>(applet_id));
+    LOG_WARNING(Service_APT, "(STUBBED) called, applet_id={:#05X}", applet_id);
 }
 
 void Module::APTInterface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -679,7 +674,7 @@ void Module::APTInterface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
     const std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
+    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", applet_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, std::move(object), buffer));
@@ -806,7 +801,7 @@ void Module::APTInterface::SetScreenCapPostPermission(Kernel::HLERequestContext&
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
-                static_cast<u32>(apt->screen_capture_post_permission));
+                apt->screen_capture_post_permission);
 }
 
 void Module::APTInterface::GetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
@@ -816,14 +811,14 @@ void Module::APTInterface::GetScreenCapPostPermission(Kernel::HLERequestContext&
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
     LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
-                static_cast<u32>(apt->screen_capture_post_permission));
+                apt->screen_capture_post_permission);
 }
 
 void Module::APTInterface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x6, 1, 0); // 0x60040
     auto app_id = rp.PopEnum<AppletId>();
 
-    LOG_DEBUG(Service_APT, "called, app_id={}", static_cast<u32>(app_id));
+    LOG_DEBUG(Service_APT, "called, app_id={}", app_id);
 
     auto info = apt->applet_manager->GetAppletInfo(app_id);
     if (info.Failed()) {
@@ -847,7 +842,7 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     const auto startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
 
     LOG_WARNING(Service_APT, "called, startup_argument_type={}, parameter_size={:#010X}",
-                static_cast<u32>(startup_argument_type), parameter_size);
+                startup_argument_type, parameter_size);
 
     if (parameter_size > max_parameter_size) {
         LOG_ERROR(Service_APT,
@@ -1029,8 +1024,7 @@ void Module::APTInterface::IsTitleAllowed(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(true);
 
-    LOG_DEBUG(Service_APT, "called, title_id={:016X} media_type={}", program_id,
-              static_cast<u32>(media_type));
+    LOG_DEBUG(Service_APT, "called, title_id={:016X} media_type={}", program_id, media_type);
 }
 
 Module::APTInterface::APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)

@@ -218,8 +218,7 @@ struct MIC_U::Impl {
         LOG_TRACE(Service_MIC,
                   "called, encoding={}, sample_rate={}, "
                   "audio_buffer_offset={}, audio_buffer_size={}, audio_buffer_loop={}",
-                  static_cast<u32>(encoding), static_cast<u32>(sample_rate), audio_buffer_offset,
-                  audio_buffer_size, audio_buffer_loop);
+                  encoding, sample_rate, audio_buffer_offset, audio_buffer_size, audio_buffer_loop);
     }
 
     void AdjustSampling(Kernel::HLERequestContext& ctx) {
@@ -229,7 +228,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "sample_rate={}", static_cast<u32>(sample_rate));
+        LOG_TRACE(Service_MIC, "sample_rate={}", sample_rate);
     }
 
     void StopSampling(Kernel::HLERequestContext& ctx) {

@@ -656,7 +656,7 @@ void Module::SetPreferredRegionCodes(const std::vector<u32>& region_codes) {
     if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
         if (current_language != adjusted_language) {
             LOG_WARNING(Service_CFG, "System language {} does not fit the region. Adjusted to {}",
-                        static_cast<int>(current_language), static_cast<int>(adjusted_language));
+                        current_language, adjusted_language);
             SetSystemLanguage(adjusted_language);
         }
     }

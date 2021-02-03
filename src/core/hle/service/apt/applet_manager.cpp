@@ -79,7 +79,7 @@ static u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
                                 return data.applet_ids[0] == id || data.applet_ids[1] == id;
                             });
 
-    ASSERT_MSG(itr != applet_titleids.end(), "Unknown applet id 0x{:#05X}", static_cast<u32>(id));
+    ASSERT_MSG(itr != applet_titleids.end(), "Unknown applet id 0x{:#05X}", id);
 
     return itr->title_ids[region_value];
 }
@@ -173,7 +173,7 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
     auto* const slot_data = GetAppletSlotData(static_cast<AppletId>(parameter.destination_id));
     if (slot_data == nullptr) {
         LOG_DEBUG(Service_APT, "No applet was registered with the id {:03X}",
-                  static_cast<u32>(parameter.destination_id));
+                  parameter.destination_id);
         return;
     }
 
@@ -338,8 +338,7 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
-        LOG_WARNING(Service_APT, "applet has already been started id={:08X}",
-                    static_cast<u32>(applet_id));
+        LOG_WARNING(Service_APT, "applet has already been started id={:08X}", applet_id);
         return RESULT_SUCCESS;
     } else {
         return HLE::Applets::Applet::Create(applet_id, shared_from_this());
@@ -365,8 +364,7 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
-        LOG_WARNING(Service_APT, "applet has already been started id={:08X}",
-                    static_cast<u32>(applet_id));
+        LOG_WARNING(Service_APT, "applet has already been started id={:08X}", applet_id);
         return RESULT_SUCCESS;
     } else {
         return HLE::Applets::Applet::Create(applet_id, shared_from_this());
@@ -455,8 +453,7 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
             return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
                               ErrorSummary::NotFound, ErrorLevel::Status);
         }
-        LOG_WARNING(Service_APT, "Using HLE applet info for applet {:03X}",
-                    static_cast<u32>(app_id));
+        LOG_WARNING(Service_APT, "Using HLE applet info for applet {:03X}", app_id);
         // TODO(Subv): Get the title id for the current applet and write it in the response[2-3]
         return MakeResult<AppletInfo>({0, Service::FS::MediaType::NAND, true, true, 0});
     }

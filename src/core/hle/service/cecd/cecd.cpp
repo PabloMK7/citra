@@ -124,9 +124,8 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, "
               "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-              ncch_program_id, static_cast<u32>(path_type), path.AsString(), open_mode.raw,
-              open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
-              open_mode.check);
+              ncch_program_id, path_type, path.AsString(), open_mode.raw, open_mode.unknown,
+              open_mode.read, open_mode.write, open_mode.create, open_mode.check);
 }
 
 void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
@@ -138,7 +137,7 @@ void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
               "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-              session_data->ncch_program_id, static_cast<u32>(session_data->data_path_type),
+              session_data->ncch_program_id, session_data->data_path_type,
               session_data->path.AsString(), session_data->open_mode.raw,
               session_data->open_mode.unknown, session_data->open_mode.read,
               session_data->open_mode.write, session_data->open_mode.create,
@@ -343,7 +342,7 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
               "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-              session_data->ncch_program_id, static_cast<u32>(session_data->data_path_type),
+              session_data->ncch_program_id, session_data->data_path_type,
               session_data->path.AsString(), session_data->open_mode.raw,
               session_data->open_mode.unknown, session_data->open_mode.read,
               session_data->open_mode.write, session_data->open_mode.create,
@@ -581,8 +580,7 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, "
               "is_outbox={}, message_id_size={:#x}",
-              ncch_program_id, static_cast<u32>(path_type), path.AsString(), is_outbox,
-              message_id_size);
+              ncch_program_id, path_type, path.AsString(), is_outbox, message_id_size);
 }
 
 void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
@@ -647,7 +645,7 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
         dest_buffer.Write(buffer.data(), 0, buffer.size());
         break;
     default:
-        LOG_ERROR(Service_CECD, "Unknown system info type={:#x}", static_cast<u32>(info_type));
+        LOG_ERROR(Service_CECD, "Unknown system info type={:#x}", info_type);
     }
 
     rb.Push(RESULT_SUCCESS);
@@ -656,7 +654,7 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_CECD,
               "called, dest_buffer_size={:#x}, info_type={:#x}, param_buffer_size={:#x}",
-              dest_buffer_size, static_cast<u32>(info_type), param_buffer_size);
+              dest_buffer_size, info_type, param_buffer_size);
 }
 
 void Module::Interface::Start(Kernel::HLERequestContext& ctx) {
@@ -778,8 +776,8 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, buffer_size={:#x} "
               "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-              ncch_program_id, static_cast<u32>(path_type), path.AsString(), buffer_size,
-              open_mode.raw, open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
+              ncch_program_id, path_type, path.AsString(), buffer_size, open_mode.raw,
+              open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
               open_mode.check);
 }
 
@@ -831,8 +829,8 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, buffer_size={:#x} "
               "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-              ncch_program_id, static_cast<u32>(path_type), path.AsString(), buffer_size,
-              open_mode.raw, open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
+              ncch_program_id, path_type, path.AsString(), buffer_size, open_mode.raw,
+              open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
               open_mode.check);
 }
 

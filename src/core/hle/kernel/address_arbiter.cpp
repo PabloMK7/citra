@@ -156,7 +156,7 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
     }
 
     default:
-        LOG_ERROR(Kernel, "unknown type={}", static_cast<u32>(type));
+        LOG_ERROR(Kernel, "unknown type={}", type);
         return ERR_INVALID_ENUM_VALUE_FND;
     }
 

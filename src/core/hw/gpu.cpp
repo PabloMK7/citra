@@ -65,7 +65,7 @@ static Common::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* sr
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        LOG_ERROR(HW_GPU, "Unknown source framebuffer format {:x}", static_cast<u32>(input_format));
+        LOG_ERROR(HW_GPU, "Unknown source framebuffer format {:x}", input_format);
         return {0, 0, 0, 0};
     }
 }

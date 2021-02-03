@@ -18,8 +18,7 @@ void NDM_U::EnterExclusiveState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_NDM, "(STUBBED) exclusive_state=0x{:08X}",
-                static_cast<u32>(exclusive_state));
+    LOG_WARNING(Service_NDM, "(STUBBED) exclusive_state=0x{:08X}", exclusive_state);
 }
 
 void NDM_U::LeaveExclusiveState(Kernel::HLERequestContext& ctx) {

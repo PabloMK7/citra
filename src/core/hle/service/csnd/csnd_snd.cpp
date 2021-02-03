@@ -387,8 +387,7 @@ void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
             break;
         }
         default:
-            LOG_ERROR(Service_CSND, "Unimplemented command ID 0x{:X}",
-                      static_cast<u16>(command.command_id));
+            LOG_ERROR(Service_CSND, "Unimplemented command ID 0x{:X}", command.command_id);
         }
     }
 

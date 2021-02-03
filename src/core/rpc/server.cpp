@@ -31,8 +31,8 @@ void Server::Stop() {
 void Server::NewRequestCallback(std::unique_ptr<RPC::Packet> new_request) {
     if (new_request) {
         LOG_INFO(RPC_Server, "Received request version={} id={} type={} size={}",
-                 new_request->GetVersion(), new_request->GetId(),
-                 static_cast<u32>(new_request->GetPacketType()), new_request->GetPacketDataSize());
+                 new_request->GetVersion(), new_request->GetId(), new_request->GetPacketType(),
+                 new_request->GetPacketDataSize());
     } else {
         LOG_INFO(RPC_Server, "Received end packet");
     }

@@ -92,9 +92,9 @@ void LogSettings() {
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name);
     log_setting("Renderer_FilterMode", values.filter_mode);
     log_setting("Renderer_TextureFilterName", values.texture_filter_name);
-    log_setting("Stereoscopy_Render3d", static_cast<int>(values.render_3d));
+    log_setting("Stereoscopy_Render3d", values.render_3d);
     log_setting("Stereoscopy_Factor3d", values.factor_3d);
-    log_setting("Layout_LayoutOption", static_cast<int>(values.layout_option));
+    log_setting("Layout_LayoutOption", values.layout_option);
     log_setting("Layout_SwapScreen", values.swap_screen);
     log_setting("Layout_UprightScreen", values.upright_screen);
     log_setting("Utility_DumpTextures", values.dump_textures);
@@ -105,7 +105,7 @@ void LogSettings() {
     log_setting("Audio_OutputEngine", values.sink_id);
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching);
     log_setting("Audio_OutputDevice", values.audio_device_id);
-    log_setting("Audio_InputDeviceType", static_cast<int>(values.mic_input_type));
+    log_setting("Audio_InputDeviceType", values.mic_input_type);
     log_setting("Audio_InputDevice", values.mic_input_device);
     using namespace Service::CAM;
     log_setting("Camera_OuterRightName", values.camera_name[OuterRightCamera]);

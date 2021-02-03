@@ -49,7 +49,7 @@ ArchiveBackend* ArchiveManager::GetArchive(ArchiveHandle handle) {
 ResultVal<ArchiveHandle> ArchiveManager::OpenArchive(ArchiveIdCode id_code,
                                                      const FileSys::Path& archive_path,
                                                      u64 program_id) {
-    LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
+    LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", id_code);
 
     auto itr = id_code_map.find(id_code);
     if (itr == id_code_map.end()) {
@@ -85,7 +85,7 @@ ResultCode ArchiveManager::RegisterArchiveType(std::unique_ptr<FileSys::ArchiveF
 
     auto& archive = result.first->second;
     LOG_DEBUG(Service_FS, "Registered archive {} with id code 0x{:08X}", archive->GetName(),
-              static_cast<u32>(id_code));
+              id_code);
     return RESULT_SUCCESS;
 }
 
@@ -267,7 +267,7 @@ ResultCode ArchiveManager::DeleteExtSaveData(MediaType media_type, u32 high, u32
     } else if (media_type == MediaType::SDMC) {
         media_type_directory = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
     } else {
-        LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
+        LOG_ERROR(Service_FS, "Unsupported media type {}", media_type);
         return ResultCode(-1); // TODO(Subv): Find the right error code
     }
 

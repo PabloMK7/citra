@@ -133,7 +133,7 @@ public:
             return OpenExeFS(filename);
         }
         default:
-            LOG_ERROR(Service_FS, "Unknown file type {}!", static_cast<u32>(file_path.type));
+            LOG_ERROR(Service_FS, "Unknown file type {}!", file_path.type);
             return ERROR_INVALID_PATH;
         }
     }
