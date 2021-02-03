@@ -1858,9 +1858,9 @@ void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface
             cached_surface->invalid_regions.insert(interval);
             cached_surface->InvalidateAllWatcher();
 
-            // Remove only "empty" fill surfaces to avoid destroying and recreating OGL textures
-            if (cached_surface->type == SurfaceType::Fill &&
-                cached_surface->IsSurfaceFullyInvalid()) {
+            // If the surface has no salvageable data it should be removed from the cache to avoid
+            // clogging the data structure
+            if (cached_surface->IsSurfaceFullyInvalid()) {
                 remove_surfaces.emplace(cached_surface);
             }
         }
