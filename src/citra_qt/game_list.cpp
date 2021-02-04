@@ -134,7 +134,7 @@ void GameListSearchField::setFocus() {
 GameListSearchField::GameListSearchField(GameList* parent) : QWidget{parent} {
     auto* const key_release_eater = new KeyReleaseEater(parent, this);
     layout_filter = new QHBoxLayout;
-    layout_filter->setMargin(8);
+    layout_filter->setContentsMargins(8, 8, 8, 8);
     label_filter = new QLabel;
     label_filter->setText(tr("Filter:"));
     edit_filter = new QLineEdit;
