@@ -375,9 +375,7 @@ void ConfigureInput::RestoreDefaults() {
                 Config::default_analogs[analog_id][sub_button_id])};
             SetAnalogButton(params, analogs_param[analog_id], analog_sub_buttons[sub_button_id]);
         }
-        if (analogs_param[analog_id].Get("modifier_scale", 0.5f) != 0.5f) {
-            analogs_param[analog_id].Set("modifier_scale", 0.5f);
-        }
+        analogs_param[analog_id].Set("modifier_scale", 0.5f);
     }
     UpdateButtonLabels();
 
