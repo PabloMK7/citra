@@ -38,7 +38,7 @@ inline GLenum TextureMagFilterMode(TextureFilter mode) {
     if (mode == TextureFilter::Nearest) {
         return GL_NEAREST;
     }
-    LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode {}", static_cast<u32>(mode));
+    LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode {}", mode);
     UNIMPLEMENTED();
     return GL_LINEAR;
 }
@@ -59,8 +59,7 @@ inline GLenum TextureMinFilterMode(TextureFilter min, TextureFilter mip) {
             return GL_NEAREST_MIPMAP_NEAREST;
         }
     }
-    LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode {} and {}", static_cast<u32>(min),
-                 static_cast<u32>(mip));
+    LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode {} and {}", min, mip);
     UNIMPLEMENTED();
     return GL_LINEAR_MIPMAP_LINEAR;
 }

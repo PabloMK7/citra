@@ -127,7 +127,7 @@ struct LightingRegs {
                             "sampler should be one of Distribution0, Distribution1, "
                             "SpotlightAttenuation, Fresnel, ReflectRed, ReflectGreen or "
                             "ReflectBlue, instead got %i",
-                            static_cast<int>(config));
+                            config);
         }
     }
 
