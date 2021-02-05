@@ -63,7 +63,7 @@ struct HostTextureTag {
     bool operator==(const HostTextureTag& rhs) const noexcept {
         return std::tie(internal_format, format, width, height) ==
                std::tie(rhs.internal_format, rhs.format, rhs.width, rhs.height);
-    };
+    }
 };
 
 struct TextureCubeConfig {
