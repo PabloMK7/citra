@@ -266,6 +266,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                     tr("Modifier Scale: %1%").arg(slider_value));
                 analogs_param[analog_id].Set("modifier_scale", slider_value / 100.0f);
             }
+            ApplyConfiguration();
+            Settings::SaveProfile(ui->profile->currentIndex());
         });
     }
 
@@ -373,6 +375,7 @@ void ConfigureInput::RestoreDefaults() {
                 Config::default_analogs[analog_id][sub_button_id])};
             SetAnalogButton(params, analogs_param[analog_id], analog_sub_buttons[sub_button_id]);
         }
+        analogs_param[analog_id].Set("modifier_scale", 0.5f);
     }
     UpdateButtonLabels();
 
