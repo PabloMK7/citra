@@ -47,23 +47,14 @@ constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 const FormatTuple& GetFormatTuple(SurfaceParams::PixelFormat pixel_format);
 
 struct HostTextureTag {
-    GLint internal_format;
-    GLenum format;
+    FormatTuple format_tuple;
     u32 width;
     u32 height;
-    HostTextureTag(const SurfaceParams& params) noexcept {
-        auto format_tuple = GetFormatTuple(params.pixel_format);
-        internal_format = format_tuple.internal_format;
-        format = format_tuple.format;
-        // The type in the format tuple is irrelevant for the tag since the type is only for
-        // interpreting data on upload/download
-        width = params.GetScaledWidth();
-        height = params.GetScaledHeight();
-    }
     bool operator==(const HostTextureTag& rhs) const noexcept {
-        return std::tie(internal_format, format, width, height) ==
-               std::tie(rhs.internal_format, rhs.format, rhs.width, rhs.height);
-    }
+        return std::tie(format_tuple.format, format_tuple.internal_format, width, height) ==
+               std::tie(rhs.format_tuple.format, rhs.format_tuple.internal_format, rhs.width,
+                        rhs.height);
+    };
 };
 
 struct TextureCubeConfig {
@@ -93,8 +84,8 @@ template <>
 struct hash<OpenGL::HostTextureTag> {
     std::size_t operator()(const OpenGL::HostTextureTag& tag) const noexcept {
         std::size_t hash = 0;
-        boost::hash_combine(hash, tag.format);
-        boost::hash_combine(hash, tag.internal_format);
+        boost::hash_combine(hash, tag.format_tuple.format);
+        boost::hash_combine(hash, tag.format_tuple.internal_format);
         boost::hash_combine(hash, tag.width);
         boost::hash_combine(hash, tag.height);
         return hash;
@@ -369,6 +360,8 @@ private:
     std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
 
 public:
+    OGLTexture AllocateSurfaceTexture(const FormatTuple& format_tuple, u32 width, u32 height);
+
     // Textures from destroyed surfaces are stored here to be recyled to reduce allocation overhead
     // in the driver
     std::unordered_multimap<HostTextureTag, OGLTexture> host_texture_recycler;
