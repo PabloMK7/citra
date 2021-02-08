@@ -4,14 +4,14 @@
 
 #pragma once
 
+#include <bitset>
 #include <initializer_list>
 #include <xbyak.h>
 #include "common/assert.h"
-#include "common/bit_set.h"
 
 namespace Common::X64 {
 
-inline int RegToIndex(const Xbyak::Reg& reg) {
+constexpr std::size_t RegToIndex(const Xbyak::Reg& reg) {
     using Kind = Xbyak::Reg::Kind;
     ASSERT_MSG((reg.getKind() & (Kind::REG | Kind::XMM)) != 0,
                "RegSet only support GPRs and XMM registers.");
@@ -19,17 +19,17 @@ inline int RegToIndex(const Xbyak::Reg& reg) {
     return reg.getIdx() + (reg.getKind() == Kind::REG ? 0 : 16);
 }
 
-inline Xbyak::Reg64 IndexToReg64(int reg_index) {
+constexpr Xbyak::Reg64 IndexToReg64(std::size_t reg_index) {
     ASSERT(reg_index < 16);
-    return Xbyak::Reg64(reg_index);
+    return Xbyak::Reg64(static_cast<int>(reg_index));
 }
 
-inline Xbyak::Xmm IndexToXmm(int reg_index) {
+constexpr Xbyak::Xmm IndexToXmm(std::size_t reg_index) {
     ASSERT(reg_index >= 16 && reg_index < 32);
-    return Xbyak::Xmm(reg_index - 16);
+    return Xbyak::Xmm(static_cast<int>(reg_index - 16));
 }
 
-inline Xbyak::Reg IndexToReg(int reg_index) {
+constexpr Xbyak::Reg IndexToReg(std::size_t reg_index) {
     if (reg_index < 16) {
         return IndexToReg64(reg_index);
     } else {
@@ -37,27 +37,27 @@ inline Xbyak::Reg IndexToReg(int reg_index) {
     }
 }
 
-inline BitSet32 BuildRegSet(std::initializer_list<Xbyak::Reg> regs) {
-    BitSet32 bits;
+inline std::bitset<32> BuildRegSet(std::initializer_list<Xbyak::Reg> regs) {
+    std::bitset<32> bits;
     for (const Xbyak::Reg& reg : regs) {
         bits[RegToIndex(reg)] = true;
     }
     return bits;
 }
 
-const BitSet32 ABI_ALL_GPRS(0x0000FFFF);
-const BitSet32 ABI_ALL_XMMS(0xFFFF0000);
+constexpr inline std::bitset<32> ABI_ALL_GPRS(0x0000FFFF);
+constexpr inline std::bitset<32> ABI_ALL_XMMS(0xFFFF0000);
 
 #ifdef _WIN32
 
 // Microsoft x64 ABI
-const Xbyak::Reg ABI_RETURN = Xbyak::util::rax;
-const Xbyak::Reg ABI_PARAM1 = Xbyak::util::rcx;
-const Xbyak::Reg ABI_PARAM2 = Xbyak::util::rdx;
-const Xbyak::Reg ABI_PARAM3 = Xbyak::util::r8;
-const Xbyak::Reg ABI_PARAM4 = Xbyak::util::r9;
+constexpr inline Xbyak::Reg ABI_RETURN = Xbyak::util::rax;
+constexpr inline Xbyak::Reg ABI_PARAM1 = Xbyak::util::rcx;
+constexpr inline Xbyak::Reg ABI_PARAM2 = Xbyak::util::rdx;
+constexpr inline Xbyak::Reg ABI_PARAM3 = Xbyak::util::r8;
+constexpr inline Xbyak::Reg ABI_PARAM4 = Xbyak::util::r9;
 
-const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
+const std::bitset<32> ABI_ALL_CALLER_SAVED = BuildRegSet({
     // GPRs
     Xbyak::util::rcx,
     Xbyak::util::rdx,
@@ -74,7 +74,7 @@ const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
     Xbyak::util::xmm5,
 });
 
-const BitSet32 ABI_ALL_CALLEE_SAVED = BuildRegSet({
+const std::bitset<32> ABI_ALL_CALLEE_SAVED = BuildRegSet({
     // GPRs
     Xbyak::util::rbx,
     Xbyak::util::rsi,
@@ -102,13 +102,13 @@ constexpr std::size_t ABI_SHADOW_SPACE = 0x20;
 #else
 
 // System V x86-64 ABI
-const Xbyak::Reg ABI_RETURN = Xbyak::util::rax;
-const Xbyak::Reg ABI_PARAM1 = Xbyak::util::rdi;
-const Xbyak::Reg ABI_PARAM2 = Xbyak::util::rsi;
-const Xbyak::Reg ABI_PARAM3 = Xbyak::util::rdx;
-const Xbyak::Reg ABI_PARAM4 = Xbyak::util::rcx;
+constexpr inline Xbyak::Reg ABI_RETURN = Xbyak::util::rax;
+constexpr inline Xbyak::Reg ABI_PARAM1 = Xbyak::util::rdi;
+constexpr inline Xbyak::Reg ABI_PARAM2 = Xbyak::util::rsi;
+constexpr inline Xbyak::Reg ABI_PARAM3 = Xbyak::util::rdx;
+constexpr inline Xbyak::Reg ABI_PARAM4 = Xbyak::util::rcx;
 
-const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
+const std::bitset<32> ABI_ALL_CALLER_SAVED = BuildRegSet({
     // GPRs
     Xbyak::util::rcx,
     Xbyak::util::rdx,
@@ -137,7 +137,7 @@ const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
     Xbyak::util::xmm15,
 });
 
-const BitSet32 ABI_ALL_CALLEE_SAVED = BuildRegSet({
+const std::bitset<32> ABI_ALL_CALLEE_SAVED = BuildRegSet({
     // GPRs
     Xbyak::util::rbx,
     Xbyak::util::rbp,
@@ -151,13 +151,17 @@ constexpr std::size_t ABI_SHADOW_SPACE = 0;
 
 #endif
 
-inline void ABI_CalculateFrameSize(BitSet32 regs, std::size_t rsp_alignment,
-                                   std::size_t needed_frame_size, s32* out_subtraction,
-                                   s32* out_xmm_offset) {
-    int count = (regs & ABI_ALL_GPRS).Count();
+struct ABIFrameInfo {
+    s32 subtraction;
+    s32 xmm_offset;
+};
+
+inline ABIFrameInfo ABI_CalculateFrameSize(std::bitset<32> regs, std::size_t rsp_alignment,
+                                           std::size_t needed_frame_size) {
+    int count = (regs & ABI_ALL_GPRS).count();
     rsp_alignment -= count * 8;
     std::size_t subtraction = 0;
-    int xmm_count = (regs & ABI_ALL_XMMS).Count();
+    int xmm_count = (regs & ABI_ALL_XMMS).count();
     if (xmm_count) {
         // If we have any XMMs to save, we must align the stack here.
         subtraction = rsp_alignment & 0xF;
@@ -170,45 +174,49 @@ inline void ABI_CalculateFrameSize(BitSet32 regs, std::size_t rsp_alignment,
     rsp_alignment -= subtraction;
     subtraction += rsp_alignment & 0xF;
 
-    *out_subtraction = (s32)subtraction;
-    *out_xmm_offset = (s32)(subtraction - xmm_base_subtraction);
+    return ABIFrameInfo{static_cast<s32>(subtraction),
+                        static_cast<s32>(subtraction - xmm_base_subtraction)};
 }
 
-inline std::size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
+inline std::size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, std::bitset<32> regs,
                                                    std::size_t rsp_alignment,
                                                    std::size_t needed_frame_size = 0) {
-    s32 subtraction, xmm_offset;
-    ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size, &subtraction, &xmm_offset);
+    auto frame_info = ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size);
 
-    for (int reg_index : (regs & ABI_ALL_GPRS)) {
-        code.push(IndexToReg64(reg_index));
+    for (std::size_t i = 0; i < regs.size(); ++i) {
+        if (regs[i] && ABI_ALL_GPRS[i]) {
+            code.push(IndexToReg64(i));
+        }
     }
 
-    if (subtraction != 0) {
-        code.sub(code.rsp, subtraction);
+    if (frame_info.subtraction != 0) {
+        code.sub(code.rsp, frame_info.subtraction);
     }
 
-    for (int reg_index : (regs & ABI_ALL_XMMS)) {
-        code.movaps(code.xword[code.rsp + xmm_offset], IndexToXmm(reg_index));
-        xmm_offset += 0x10;
+    for (std::size_t i = 0; i < regs.size(); ++i) {
+        if (regs[i] && ABI_ALL_XMMS[i]) {
+            code.movaps(code.xword[code.rsp + frame_info.xmm_offset], IndexToXmm(i));
+            frame_info.xmm_offset += 0x10;
+        }
     }
 
     return ABI_SHADOW_SPACE;
 }
 
-inline void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
+inline void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, std::bitset<32> regs,
                                            std::size_t rsp_alignment,
                                            std::size_t needed_frame_size = 0) {
-    s32 subtraction, xmm_offset;
-    ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size, &subtraction, &xmm_offset);
+    auto frame_info = ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size);
 
-    for (int reg_index : (regs & ABI_ALL_XMMS)) {
-        code.movaps(IndexToXmm(reg_index), code.xword[code.rsp + xmm_offset]);
-        xmm_offset += 0x10;
+    for (std::size_t i = 0; i < regs.size(); ++i) {
+        if (regs[i] && ABI_ALL_XMMS[i]) {
+            code.movaps(IndexToXmm(i), code.xword[code.rsp + frame_info.xmm_offset]);
+            frame_info.xmm_offset += 0x10;
+        }
     }
 
-    if (subtraction != 0) {
-        code.add(code.rsp, subtraction);
+    if (frame_info.subtraction != 0) {
+        code.add(code.rsp, frame_info.subtraction);
     }
 
     // GPRs need to be popped in reverse order

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <bitset>
 #include <cstddef>
 #include <optional>
 #include <utility>
@@ -91,7 +92,7 @@ private:
      */
     void Compile_Return();
 
-    BitSet32 PersistentCallerSavedRegs();
+    std::bitset<32> PersistentCallerSavedRegs();
 
     /**
      * Assertion evaluated at compile-time, but only triggered if executed at runtime.
