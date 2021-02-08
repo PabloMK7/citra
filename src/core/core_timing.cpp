@@ -49,6 +49,10 @@ TimingEventType* Timing::RegisterEvent(const std::string& name, TimedCallback ca
 
 void Timing::ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type, u64 userdata,
                            std::size_t core_id) {
+    if (event_queue_locked) {
+        return;
+    }
+
     ASSERT(event_type != nullptr);
     Timing::Timer* timer = nullptr;
     if (core_id == std::numeric_limits<std::size_t>::max()) {
@@ -74,6 +78,9 @@ void Timing::ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_
 }
 
 void Timing::UnscheduleEvent(const TimingEventType* event_type, u64 userdata) {
+    if (event_queue_locked) {
+        return;
+    }
     for (auto timer : timers) {
         auto itr = std::remove_if(
             timer->event_queue.begin(), timer->event_queue.end(),
@@ -89,6 +96,9 @@ void Timing::UnscheduleEvent(const TimingEventType* event_type, u64 userdata) {
 }
 
 void Timing::RemoveEvent(const TimingEventType* event_type) {
+    if (event_queue_locked) {
+        return;
+    }
     for (auto timer : timers) {
         auto itr = std::remove_if(timer->event_queue.begin(), timer->event_queue.end(),
                                   [&](const Event& e) { return e.type == event_type; });
