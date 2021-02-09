@@ -1107,6 +1107,11 @@ void RendererOpenGL::TryPresent(int timeout_ms) {
     glBlitFramebuffer(0, 0, frame->width, frame->height, 0, 0, layout.width, layout.height,
                       GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
+    // Delete the fence if we're re-presenting to avoid leaking fences
+    if (frame->present_fence) {
+        glDeleteSync(frame->present_fence);
+    }
+
     /* insert fence for the main thread to block on */
     frame->present_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     glFlush();
