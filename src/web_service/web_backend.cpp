@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <mutex>
 #include <string>
-#include <LUrlParser.h>
 #include <fmt/format.h>
 #if defined(__ANDROID__)
 #include <ifaddrs.h>
@@ -21,9 +20,6 @@ namespace WebService {
 
 constexpr std::array<const char, 1> API_VERSION{'1'};
 
-constexpr int HTTP_PORT = 80;
-constexpr int HTTPS_PORT = 443;
-
 constexpr std::size_t TIMEOUT_SECONDS = 30;
 
 struct Client::Impl {
@@ -32,6 +28,10 @@ struct Client::Impl {
         std::lock_guard lock{jwt_cache.mutex};
         if (this->username == jwt_cache.username && this->token == jwt_cache.token) {
             jwt = jwt_cache.jwt;
+        }
+        // normalize host expression
+        if (this->host.back() == '/') {
+            static_cast<void>(this->host.pop_back());
         }
     }
 
@@ -70,29 +70,16 @@ struct Client::Impl {
                                      const std::string& jwt = "", const std::string& username = "",
                                      const std::string& token = "") {
         if (cli == nullptr) {
-            auto parsedUrl = LUrlParser::clParseURL::ParseURL(host);
-            int port;
-            if (parsedUrl.m_Scheme == "http") {
-                if (!parsedUrl.GetPort(&port)) {
-                    port = HTTP_PORT;
-                }
-                cli = std::make_unique<httplib::Client>(parsedUrl.m_Host.c_str(), port);
-                cli->set_timeout_sec(TIMEOUT_SECONDS);
-            } else if (parsedUrl.m_Scheme == "https") {
-                if (!parsedUrl.GetPort(&port)) {
-                    port = HTTPS_PORT;
-                }
-                cli = std::make_unique<httplib::SSLClient>(parsedUrl.m_Host.c_str(), port);
-                cli->set_timeout_sec(TIMEOUT_SECONDS);
-            } else {
-                LOG_ERROR(WebService, "Bad URL scheme {}", parsedUrl.m_Scheme);
-                return Common::WebResult{Common::WebResult::Code::InvalidURL, "Bad URL scheme"};
-            }
+            cli = std::make_unique<httplib::Client>(host.c_str());
+            cli->set_connection_timeout(TIMEOUT_SECONDS);
+            cli->set_read_timeout(TIMEOUT_SECONDS);
+            cli->set_write_timeout(TIMEOUT_SECONDS);
         }
-        if (cli == nullptr) {
+        if (!cli->is_valid()) {
             LOG_ERROR(WebService, "Invalid URL {}", host + path);
             return Common::WebResult{Common::WebResult::Code::InvalidURL, "Invalid URL"};
         }
+        LOG_ERROR(WebService, "{}", host);
 
         httplib::Headers params;
         if (!jwt.empty()) {
@@ -118,12 +105,14 @@ struct Client::Impl {
         request.headers = params;
         request.body = data;
 
-        httplib::Response response;
+        httplib::Result result = cli->send(request);
 
-        if (!cli->send(request, response)) {
+        if (!result) {
             LOG_ERROR(WebService, "{} to {} returned null", method, host + path);
             return Common::WebResult{Common::WebResult::Code::LibError, "Null response"};
         }
+
+        httplib::Response response = result.value();
 
         if (response.status >= 400) {
             LOG_ERROR(WebService, "{} to {} returned error status code: {}", method, host + path,
