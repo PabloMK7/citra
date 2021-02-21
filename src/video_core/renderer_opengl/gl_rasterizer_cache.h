@@ -317,6 +317,12 @@ public:
     /// Clear all cached resources tracked by this cache manager
     void ClearAll(bool flush);
 
+    // Textures from destroyed surfaces are stored here to be recyled to reduce allocation overhead
+    // in the driver
+    // this must be placed above the surface_cache to ensure all cached surfaces are destroyed
+    // before destroying the recycler
+    std::unordered_multimap<HostTextureTag, OGLTexture> host_texture_recycler;
+
 private:
     void DuplicateSurface(const Surface& src_surface, const Surface& dest_surface);
 
@@ -361,10 +367,6 @@ private:
 
 public:
     OGLTexture AllocateSurfaceTexture(const FormatTuple& format_tuple, u32 width, u32 height);
-
-    // Textures from destroyed surfaces are stored here to be recyled to reduce allocation overhead
-    // in the driver
-    std::unordered_multimap<HostTextureTag, OGLTexture> host_texture_recycler;
 
     std::unique_ptr<TextureFilterer> texture_filterer;
     std::unique_ptr<FormatReinterpreterOpenGL> format_reinterpreter;
