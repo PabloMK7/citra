@@ -17,26 +17,29 @@ struct libusb_context;
 struct libusb_device;
 struct libusb_device_handle;
 
+namespace Common {
+class ParamPackage;
+}
+
 namespace GCAdapter {
 
 enum class PadButton {
-    PAD_BUTTON_LEFT = 0x0001,
-    PAD_BUTTON_RIGHT = 0x0002,
-    PAD_BUTTON_DOWN = 0x0004,
-    PAD_BUTTON_UP = 0x0008,
-    PAD_TRIGGER_Z = 0x0010,
-    PAD_TRIGGER_R = 0x0020,
-    PAD_TRIGGER_L = 0x0040,
-    PAD_BUTTON_A = 0x0100,
-    PAD_BUTTON_B = 0x0200,
-    PAD_BUTTON_X = 0x0400,
-    PAD_BUTTON_Y = 0x0800,
-    PAD_BUTTON_START = 0x1000,
+    Undefined = 0x0000,
+    ButtonLeft = 0x0001,
+    ButtonRight = 0x0002,
+    ButtonDown = 0x0004,
+    ButtonUp = 0x0008,
+    TriggerZ = 0x0010,
+    TriggerR = 0x0020,
+    TriggerL = 0x0040,
+    ButtonA = 0x0100,
+    ButtonB = 0x0200,
+    ButtonX = 0x0400,
+    ButtonY = 0x0800,
+    ButtonStart = 0x1000,
     // Below is for compatibility with "AxisButton" type
-    PAD_STICK = 0x2000,
+    Stick = 0x2000,
 };
-
-extern const std::array<PadButton, 12> PadButtonArray;
 
 enum class PadAxes : u8 {
     StickX,
@@ -48,85 +51,103 @@ enum class PadAxes : u8 {
     Undefined,
 };
 
+enum class ControllerTypes {
+    None,
+    Wired,
+    Wireless,
+};
+
 struct GCPadStatus {
-    u16 button{}; // Or-ed PAD_BUTTON_* and PAD_TRIGGER_* bits
+    std::size_t port{};
 
-    std::array<u8, 6> axis_values{};    // Triggers and sticks, following indices defined in PadAxes
-    static constexpr u8 THRESHOLD = 50; // Threshold for axis press for polling
+    PadButton button{PadButton::Undefined}; // Or-ed PAD_BUTTON_* and PAD_TRIGGER_* bits
 
-    u8 port{};
     PadAxes axis{PadAxes::Undefined};
-    u8 axis_value{255};
+    s16 axis_value{};
+    u8 axis_threshold{50};
 };
 
-struct GCState {
-    std::unordered_map<int, bool> buttons;
-    std::unordered_map<int, u16> axes;
+struct GCController {
+    ControllerTypes type{};
+    u16 buttons{};
+    PadButton last_button{};
+    std::array<s16, 6> axis_values{};
+    std::array<u8, 6> axis_origin{};
 };
-
-enum class ControllerTypes { None, Wired, Wireless };
 
 class Adapter {
 public:
-    /// Initialize the GC Adapter capture and read sequence
     Adapter();
-
-    /// Close the adapter read thread and release the adapter
     ~Adapter();
+
     /// Used for polling
     void BeginConfiguration();
     void EndConfiguration();
 
+    Common::SPSCQueue<GCPadStatus>& GetPadQueue();
+    const Common::SPSCQueue<GCPadStatus>& GetPadQueue() const;
+
+    GCController& GetPadState(std::size_t port);
+    const GCController& GetPadState(std::size_t port) const;
+
     /// Returns true if there is a device connected to port
-    bool DeviceConnected(std::size_t port);
+    bool DeviceConnected(std::size_t port) const;
 
-    std::array<Common::SPSCQueue<GCPadStatus>, 4>& GetPadQueue();
-    const std::array<Common::SPSCQueue<GCPadStatus>, 4>& GetPadQueue() const;
-
-    std::array<GCState, 4>& GetPadState();
-    const std::array<GCState, 4>& GetPadState() const;
-
-    int GetOriginValue(int port, int axis) const;
+    std::vector<Common::ParamPackage> GetInputDevices() const;
 
 private:
-    GCPadStatus GetPadStatus(std::size_t port, const std::array<u8, 37>& adapter_payload);
+    using AdapterPayload = std::array<u8, 37>;
 
-    void PadToState(const GCPadStatus& pad, GCState& state);
+    void UpdatePadType(std::size_t port, ControllerTypes pad_type);
+    void UpdateControllers(const AdapterPayload& adapter_payload);
+    void UpdateSettings(std::size_t port);
+    void UpdateStateButtons(std::size_t port, u8 b1, u8 b2);
+    void UpdateStateAxes(std::size_t port, const AdapterPayload& adapter_payload);
 
-    void Read();
+    void AdapterInputThread();
 
-    /// Resets status of device connected to port
-    void ResetDeviceType(std::size_t port);
+    void AdapterScanThread();
 
-    /// Returns true if we successfully gain access to GC Adapter
-    bool CheckDeviceAccess(libusb_device* device);
-
-    /// Captures GC Adapter endpoint address,
-    void GetGCEndpoint(libusb_device* device);
-
-    /// For shutting down, clear all data, join all threads, release usb
-    void Reset();
+    bool IsPayloadCorrect(const AdapterPayload& adapter_payload, s32 payload_size);
 
     /// For use in initialization, querying devices to find the adapter
     void Setup();
 
+    /// Resets status of all GC controller devices to a disconnected state
+    void ResetDevices();
+
+    /// Resets status of device connected to a disconnected state
+    void ResetDevice(std::size_t port);
+
+    /// Returns true if we successfully gain access to GC Adapter
+    bool CheckDeviceAccess();
+
+    /// Captures GC Adapter endpoint address
+    /// Returns true if the endpoint was set correctly
+    bool GetGCEndpoint(libusb_device* device);
+
+    // Join all threads
+    void JoinThreads();
+
+    // Release usb handles
+    void ClearLibusbHandle();
+
     libusb_device_handle* usb_adapter_handle = nullptr;
+    std::array<GCController, 4> pads;
+    Common::SPSCQueue<GCPadStatus> pad_queue;
 
     std::thread adapter_input_thread;
-    bool adapter_thread_running;
+    std::thread adapter_scan_thread;
+    bool adapter_input_thread_running;
+    bool adapter_scan_thread_running;
+    bool restart_scan_thread;
 
     libusb_context* libusb_ctx;
 
-    u8 input_endpoint = 0;
-    u8 output_endpoint = 0;
+    u8 input_endpoint{0};
+    u8 output_endpoint{0};
+    u8 input_error_counter{0};
 
-    bool configuring = false;
-
-    std::array<GCState, 4> state;
-    std::array<bool, 4> get_origin;
-    std::array<GCPadStatus, 4> origin_status;
-    std::array<Common::SPSCQueue<GCPadStatus>, 4> pad_queue;
-    std::array<ControllerTypes, 4> adapter_controllers_status{};
+    bool configuring{false};
 };
-
 } // namespace GCAdapter
