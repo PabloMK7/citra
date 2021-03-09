@@ -56,12 +56,12 @@ static QString ButtonToText(const Common::ParamPackage& param) {
     if (!param.Has("engine")) {
         return QObject::tr("[not set]");
     }
-
-    if (param.Get("engine", "") == "keyboard") {
+    const auto engine_str = param.Get("engine", "");
+    if (engine_str == "keyboard") {
         return GetKeyName(param.Get("code", 0));
     }
 
-    if (param.Get("engine", "") == "sdl") {
+    if (engine_str == "sdl") {
         if (param.Has("hat")) {
             const QString hat_str = QString::fromStdString(param.Get("hat", ""));
             const QString direction_str = QString::fromStdString(param.Get("direction", ""));
@@ -85,7 +85,7 @@ static QString ButtonToText(const Common::ParamPackage& param) {
         return {};
     }
 
-    if (param.Get("engine", "") == "gcpad") {
+    if (engine_str == "gcpad") {
         if (param.Has("axis")) {
             const QString axis_str = QString::fromStdString(param.Get("axis", ""));
             const QString direction_str = QString::fromStdString(param.Get("direction", ""));
@@ -107,47 +107,31 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
         return QObject::tr("[not set]");
     }
 
-    if (param.Get("engine", "") == "analog_from_button") {
+    const auto engine_str = param.Get("engine", "");
+    if (engine_str == "analog_from_button") {
         return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
     }
 
-    if (param.Get("engine", "") == "sdl") {
+    const QString axis_x_str{QString::fromStdString(param.Get("axis_x", ""))};
+    const QString axis_y_str{QString::fromStdString(param.Get("axis_y", ""))};
+    static const QString plus_str{QString::fromStdString("+")};
+    static const QString minus_str{QString::fromStdString("-")};
+    if (engine_str == "sdl" || engine_str == "gcpad") {
         if (dir == "modifier") {
             return QObject::tr("[unused]");
         }
-
-        if (dir == "left" || dir == "right") {
-            const QString axis_x_str = QString::fromStdString(param.Get("axis_x", ""));
-
-            return QObject::tr("Axis %1").arg(axis_x_str);
+        if (dir == "left") {
+            return QObject::tr("Axis %1%2").arg(axis_x_str, minus_str);
         }
-
-        if (dir == "up" || dir == "down") {
-            const QString axis_y_str = QString::fromStdString(param.Get("axis_y", ""));
-
-            return QObject::tr("Axis %1").arg(axis_y_str);
+        if (dir == "right") {
+            return QObject::tr("Axis %1%2").arg(axis_x_str, plus_str);
         }
-
-        return {};
-    }
-
-    if (param.Get("engine", "") == "gcpad") {
-        if (dir == "modifier") {
-            return QObject::tr("[unused]");
+        if (dir == "up") {
+            return QObject::tr("Axis %1%2").arg(axis_y_str, plus_str);
         }
-
-        if (dir == "left" || dir == "right") {
-            const QString axis_x_str = QString::fromStdString(param.Get("axis_x", ""));
-
-            return QObject::tr("GC Axis %1").arg(axis_x_str);
+        if (dir == "down") {
+            return QObject::tr("Axis %1%2").arg(axis_y_str, minus_str);
         }
-
-        if (dir == "up" || dir == "down") {
-            const QString axis_y_str = QString::fromStdString(param.Get("axis_y", ""));
-
-            return QObject::tr("GC Axis %1").arg(axis_y_str);
-        }
-
         return {};
     }
     return QObject::tr("[unknown]");
@@ -456,21 +440,16 @@ void ConfigureInput::UpdateButtonLabels() {
                 if (!param.Has("deadzone")) {
                     param.Set("deadzone", 0.1f);
                 }
-
-                analog_stick_slider->setValue(static_cast<int>(param.Get("deadzone", 0.1f) * 100));
-                if (analog_stick_slider->value() == 0) {
-                    analog_stick_slider_label->setText(tr("Deadzone: 0%"));
-                }
+                const auto slider_value = static_cast<int>(param.Get("deadzone", 0.1f) * 100);
+                analog_stick_slider_label->setText(tr("Deadzone: %1%").arg(slider_value));
+                analog_stick_slider->setValue(slider_value);
             } else {
                 if (!param.Has("modifier_scale")) {
                     param.Set("modifier_scale", 0.5f);
                 }
-
-                analog_stick_slider->setValue(
-                    static_cast<int>(param.Get("modifier_scale", 0.5f) * 100));
-                if (analog_stick_slider->value() == 0) {
-                    analog_stick_slider_label->setText(tr("Modifier Scale: 0%"));
-                }
+                const auto slider_value = static_cast<int>(param.Get("modifier_scale", 0.5f) * 100);
+                analog_stick_slider_label->setText(tr("Modifier Scale: %1%").arg(slider_value));
+                analog_stick_slider->setValue(slider_value);
             }
         }
     }
