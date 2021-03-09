@@ -1,6 +1,10 @@
 add_library(input_common STATIC
     analog_from_button.cpp
     analog_from_button.h
+    gcadapter/gc_adapter.cpp
+    gcadapter/gc_adapter.h
+    gcadapter/gc_poller.cpp
+    gcadapter/gc_poller.h
     keyboard.cpp
     keyboard.h
     main.cpp
@@ -30,3 +34,4 @@ endif()
 
 create_target_directory_groups(input_common)
 target_link_libraries(input_common PUBLIC core PRIVATE common ${Boost_LIBRARIES})
+target_link_libraries(input_common PUBLIC ${LIBUSB_LIBRARIES})

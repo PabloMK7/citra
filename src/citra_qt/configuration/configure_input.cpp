@@ -85,6 +85,20 @@ static QString ButtonToText(const Common::ParamPackage& param) {
         return {};
     }
 
+    if (param.Get("engine", "") == "gcpad") {
+        if (param.Has("axis")) {
+            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
+            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
+
+            return QObject::tr("GC Axis %1%2").arg(axis_str, direction_str);
+        }
+        if (param.Has("button")) {
+            const QString button_str = QString::number(int(std::log2(param.Get("button", 0))));
+            return QObject::tr("GC Button %1").arg(button_str);
+        }
+        return GetKeyName(param.Get("code", 0));
+    }
+
     return QObject::tr("[unknown]");
 }
 
@@ -117,6 +131,25 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
         return {};
     }
 
+    if (param.Get("engine", "") == "gcpad") {
+        if (dir == "modifier") {
+            return QObject::tr("[unused]");
+        }
+
+        if (dir == "left" || dir == "right") {
+            const QString axis_x_str = QString::fromStdString(param.Get("axis_x", ""));
+
+            return QObject::tr("GC Axis %1").arg(axis_x_str);
+        }
+
+        if (dir == "up" || dir == "down") {
+            const QString axis_y_str = QString::fromStdString(param.Get("axis_y", ""));
+
+            return QObject::tr("GC Axis %1").arg(axis_y_str);
+        }
+
+        return {};
+    }
     return QObject::tr("[unknown]");
 }
 
@@ -418,7 +451,8 @@ void ConfigureInput::UpdateButtonLabels() {
             analog_map_deadzone_and_modifier_slider_label[analog_id];
 
         if (param.Has("engine")) {
-            if (param.Get("engine", "") == "sdl") {
+            const auto engine{param.Get("engine", "")};
+            if (engine == "sdl" || engine == "gcpad") {
                 if (!param.Has("deadzone")) {
                     param.Set("deadzone", 0.1f);
                 }
