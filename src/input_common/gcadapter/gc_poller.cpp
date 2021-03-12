@@ -12,7 +12,27 @@
 #include "input_common/gcadapter/gc_poller.h"
 
 namespace InputCommon {
-
+namespace {
+constexpr std::array<GCAdapter::PadButton, Settings::NativeButton::NumButtons> gc_to_3ds_mapping{{
+    GCAdapter::PadButton::ButtonA,
+    GCAdapter::PadButton::ButtonB,
+    GCAdapter::PadButton::ButtonX,
+    GCAdapter::PadButton::ButtonY,
+    GCAdapter::PadButton::ButtonUp,
+    GCAdapter::PadButton::ButtonDown,
+    GCAdapter::PadButton::ButtonLeft,
+    GCAdapter::PadButton::ButtonRight,
+    GCAdapter::PadButton::TriggerL,
+    GCAdapter::PadButton::TriggerR,
+    GCAdapter::PadButton::ButtonStart,
+    GCAdapter::PadButton::TriggerZ,
+    GCAdapter::PadButton::Undefined,
+    GCAdapter::PadButton::Undefined,
+    GCAdapter::PadButton::Undefined,
+    GCAdapter::PadButton::Undefined,
+    GCAdapter::PadButton::Undefined,
+}};
+}
 class GCButton final : public Input::ButtonDevice {
 public:
     explicit GCButton(int port_, int button_, GCAdapter::Adapter* adapter)
@@ -122,6 +142,17 @@ Common::ParamPackage GCButtonFactory::GetNextInput() {
             }
             break;
         }
+    }
+    return params;
+}
+
+Common::ParamPackage GCButtonFactory::GetGcTo3DSMappedButton(
+    int port, Settings::NativeButton::Values button) {
+    Common::ParamPackage params({{"engine", "gcpad"}});
+    params.Set("port", port);
+    auto mapped_button = gc_to_3ds_mapping[static_cast<int>(button)];
+    if (mapped_button != GCAdapter::PadButton::Undefined) {
+        params.Set("button", static_cast<u16>(mapped_button));
     }
     return params;
 }
@@ -266,6 +297,26 @@ Common::ParamPackage GCAnalogFactory::GetNextInput() {
         controller_number = -1;
         return params;
     }
+    return params;
+}
+
+Common::ParamPackage GCAnalogFactory::GetGcTo3DSMappedAnalog(
+    int port, Settings::NativeAnalog::Values analog) {
+    int x_axis, y_axis;
+    Common::ParamPackage params({{"engine", "gcpad"}});
+    params.Set("port", port);
+    if (analog == Settings::NativeAnalog::Values::CirclePad) {
+        x_axis = static_cast<s32>(GCAdapter::PadAxes::StickX);
+        y_axis = static_cast<s32>(GCAdapter::PadAxes::StickY);
+    } else if (analog == Settings::NativeAnalog::Values::CStick) {
+        x_axis = static_cast<s32>(GCAdapter::PadAxes::SubstickX);
+        y_axis = static_cast<s32>(GCAdapter::PadAxes::SubstickY);
+    } else {
+        LOG_WARNING(Input, "analog value out of range {}", analog);
+        return {{}};
+    }
+    params.Set("axis_x", x_axis);
+    params.Set("axis_y", y_axis);
     return params;
 }
 

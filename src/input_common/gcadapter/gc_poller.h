@@ -6,6 +6,7 @@
 
 #include <memory>
 #include "core/frontend/input.h"
+#include "core/settings.h"
 #include "input_common/gcadapter/gc_adapter.h"
 #include "input_common/main.h"
 
@@ -24,6 +25,7 @@ public:
     std::unique_ptr<Input::ButtonDevice> Create(const Common::ParamPackage& params) override;
 
     Common::ParamPackage GetNextInput() override;
+    Common::ParamPackage GetGcTo3DSMappedButton(int port, Settings::NativeButton::Values button);
 
     /// For device input configuration/polling
     void Start() override;
@@ -47,6 +49,7 @@ public:
     std::unique_ptr<Input::AnalogDevice> Create(const Common::ParamPackage& params) override;
 
     Common::ParamPackage GetNextInput() override;
+    Common::ParamPackage GetGcTo3DSMappedAnalog(int port, Settings::NativeAnalog::Values analog);
 
     /// For device input configuration/polling
     void Start() override;

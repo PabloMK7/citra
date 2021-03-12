@@ -274,7 +274,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         });
         connect(analog_map_deadzone_and_modifier_slider[analog_id], &QSlider::valueChanged, [=] {
             const int slider_value = analog_map_deadzone_and_modifier_slider[analog_id]->value();
-            if (analogs_param[analog_id].Get("engine", "") == "sdl") {
+            const auto engine = analogs_param[analog_id].Get("engine", "");
+            if (engine == "sdl" || engine == "gcpad") {
                 analog_map_deadzone_and_modifier_slider_label[analog_id]->setText(
                     tr("Deadzone: %1%").arg(slider_value));
                 analogs_param[analog_id].Set("deadzone", slider_value / 100.0f);
@@ -461,16 +462,14 @@ void ConfigureInput::MapFromButton(const Common::ParamPackage& params) {
     Common::ParamPackage aux_param;
     bool mapped = false;
     for (int button_id = 0; button_id < Settings::NativeButton::NumButtons; button_id++) {
-        aux_param = InputCommon::GetSDLControllerButtonBindByGUID(params.Get("guid", "0"),
-                                                                  params.Get("port", 0), button_id);
+        aux_param = InputCommon::GetControllerButtonBinds(params, button_id);
         if (aux_param.Has("engine")) {
             buttons_param[button_id] = aux_param;
             mapped = true;
         }
     }
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
-        aux_param = InputCommon::GetSDLControllerAnalogBindByGUID(params.Get("guid", "0"),
-                                                                  params.Get("port", 0), analog_id);
+        aux_param = InputCommon::GetControllerAnalogBinds(params, analog_id);
         if (aux_param.Has("engine")) {
             analogs_param[analog_id] = aux_param;
             mapped = true;
