@@ -1,3 +1,8 @@
+# Ensure libusb compiles with UTF-8 encoding on MSVC
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 add_library(usb STATIC EXCLUDE_FROM_ALL
     libusb/libusb/core.c
     libusb/libusb/core.c
