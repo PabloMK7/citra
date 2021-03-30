@@ -912,7 +912,7 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     }
 
     // Limit the size of chat messages to MaxMessageSize
-    message.resize(MaxMessageSize);
+    message.resize(std::min(static_cast<u32>(message.size()), MaxMessageSize));
 
     Packet out_packet;
     out_packet << static_cast<u8>(IdChatMessage);
