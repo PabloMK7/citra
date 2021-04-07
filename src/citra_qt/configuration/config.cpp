@@ -302,6 +302,14 @@ void Config::ReadDataStorageValues() {
     qt_config->beginGroup(QStringLiteral("Data Storage"));
 
     Settings::values.use_virtual_sd = ReadSetting(QStringLiteral("use_virtual_sd"), true).toBool();
+    std::string nan_dir = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    Settings::values.nand_dir = ReadSetting(QStringLiteral("nand_directory"), QString::fromStdString(nan_dir))
+                                    .toString()
+                                    .toStdString();
+        std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
+    Settings::values.sdmc_dir = ReadSetting(QStringLiteral("sdmc_directory"), QString::fromStdString(sdmc_dir))
+                                    .toString()
+                                    .toStdString();
 
     qt_config->endGroup();
 }
@@ -852,6 +860,10 @@ void Config::SaveDataStorageValues() {
     qt_config->beginGroup(QStringLiteral("Data Storage"));
 
     WriteSetting(QStringLiteral("use_virtual_sd"), Settings::values.use_virtual_sd, true);
+    WriteSetting(QStringLiteral("nand_directory"),
+                                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)));
+    WriteSetting(QStringLiteral("sdmc_directory"),
+                                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)));
 
     qt_config->endGroup();
 }
