@@ -306,7 +306,7 @@ void Config::ReadDataStorageValues() {
     Settings::values.nand_dir = ReadSetting(QStringLiteral("nand_directory"), QString::fromStdString(nan_dir))
                                     .toString()
                                     .toStdString();
-        std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
+    std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
     Settings::values.sdmc_dir = ReadSetting(QStringLiteral("sdmc_directory"), QString::fromStdString(sdmc_dir))
                                     .toString()
                                     .toStdString();

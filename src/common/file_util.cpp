@@ -12,6 +12,7 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "core/settings.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -716,8 +717,13 @@ void SetUserPath(const std::string& path) {
         }
 #endif
     }
-    g_paths.emplace(UserPath::SDMCDir, user_path + SDMC_DIR DIR_SEP);
-    g_paths.emplace(UserPath::NANDDir, user_path + NAND_DIR DIR_SEP);
+
+    g_paths.emplace(UserPath::SDMCDir, !Settings::values.sdmc_dir.empty()
+                                           ? Settings::values.sdmc_dir
+                                           : user_path + SDMC_DIR DIR_SEP);
+    g_paths.emplace(UserPath::NANDDir, !Settings::values.nand_dir.empty()
+                                           ? Settings::values.nand_dir
+                                           : user_path + NAND_DIR DIR_SEP);
     g_paths.emplace(UserPath::SysDataDir, user_path + SYSDATA_DIR DIR_SEP);
     // TODO: Put the logs in a better location for each OS
     g_paths.emplace(UserPath::LogDir, user_path + LOG_DIR DIR_SEP);
@@ -762,6 +768,11 @@ const std::string& GetUserPath(UserPath path) {
         SetUserPath();
     return g_paths[path];
 }
+
+const void UpdateUserPath(UserPath path, const std::string& filename) {
+    g_paths[path] = filename + DIR_SEP;
+}
+
 std::size_t WriteStringToFile(bool text_file, const std::string& filename, std::string_view str) {
     return IOFile(filename, text_file ? "w" : "wb").WriteString(str);
 }
