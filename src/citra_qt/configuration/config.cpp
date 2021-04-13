@@ -302,9 +302,9 @@ void Config::ReadDataStorageValues() {
     qt_config->beginGroup(QStringLiteral("Data Storage"));
 
     Settings::values.use_virtual_sd = ReadSetting(QStringLiteral("use_virtual_sd"), true).toBool();
-    std::string nan_dir = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    std::string nand_dir = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     Settings::values.nand_dir =
-        ReadSetting(QStringLiteral("nand_directory"), QString::fromStdString(nan_dir))
+        ReadSetting(QStringLiteral("nand_directory"), QString::fromStdString(nand_dir))
             .toString()
             .toStdString();
     std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
