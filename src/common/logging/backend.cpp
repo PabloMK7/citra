@@ -38,8 +38,11 @@ public:
         return backend;
     }
 
-    Impl(Impl const&) = delete;
-    const Impl& operator=(Impl const&) = delete;
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    Impl(Impl&&) = delete;
+    Impl& operator=(Impl&&) = delete;
 
     void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                    const char* function, std::string message) {
