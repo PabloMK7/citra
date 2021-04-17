@@ -863,8 +863,10 @@ void Config::SaveDataStorageValues() {
 
     WriteSetting(QStringLiteral("use_virtual_sd"), Settings::values.use_virtual_sd, true);
     WriteSetting(QStringLiteral("nand_directory"),
+                 QString::fromStdString(Settings::values.nand_dir),
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)));
     WriteSetting(QStringLiteral("sdmc_directory"),
+                 QString::fromStdString(Settings::values.sdmc_dir),
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)));
 
     qt_config->endGroup();

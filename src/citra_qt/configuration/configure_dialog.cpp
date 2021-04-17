@@ -51,6 +51,7 @@ void ConfigureDialog::SetConfiguration() {
     ui->debugTab->SetConfiguration();
     ui->webTab->SetConfiguration();
     ui->uiTab->SetConfiguration();
+    ui->storageTab->SetConfiguration();
 }
 
 void ConfigureDialog::ApplyConfiguration() {
@@ -66,6 +67,7 @@ void ConfigureDialog::ApplyConfiguration() {
     ui->debugTab->ApplyConfiguration();
     ui->webTab->ApplyConfiguration();
     ui->uiTab->ApplyConfiguration();
+    ui->storageTab->ApplyConfiguration();
     Settings::Apply();
     Settings::LogSettings();
 }
@@ -77,7 +79,7 @@ void ConfigureDialog::PopulateSelectionList() {
 
     const std::array<std::pair<QString, QList<QWidget*>>, 5> items{
         {{tr("General"), {ui->generalTab, ui->webTab, ui->debugTab, ui->uiTab}},
-         {tr("System"), {ui->systemTab, ui->cameraTab}},
+         {tr("System"), {ui->systemTab, ui->cameraTab, ui->storageTab}},
          {tr("Graphics"), {ui->enhancementsTab, ui->graphicsTab}},
          {tr("Audio"), {ui->audioTab}},
          {tr("Controls"), {ui->inputTab, ui->hotkeysTab}}}};
@@ -118,6 +120,7 @@ void ConfigureDialog::RetranslateUI() {
     ui->debugTab->RetranslateUI();
     ui->webTab->RetranslateUI();
     ui->uiTab->RetranslateUI();
+    ui->storageTab->RetranslateUI();
 }
 
 void ConfigureDialog::UpdateVisibleTabs() {
@@ -134,6 +137,7 @@ void ConfigureDialog::UpdateVisibleTabs() {
                                                  {ui->audioTab, tr("Audio")},
                                                  {ui->cameraTab, tr("Camera")},
                                                  {ui->debugTab, tr("Debug")},
+                                                 {ui->storageTab, tr("Storage")},
                                                  {ui->webTab, tr("Web")},
                                                  {ui->uiTab, tr("UI")}};
 

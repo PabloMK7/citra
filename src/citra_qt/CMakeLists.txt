@@ -66,6 +66,9 @@ add_executable(citra-qt
     configuration/configure_motion_touch.cpp
     configuration/configure_motion_touch.h
     configuration/configure_motion_touch.ui
+    configuration/configure_storage.cpp
+    configuration/configure_storage.h
+    configuration/configure_storage.ui
     configuration/configure_system.cpp
     configuration/configure_system.h
     configuration/configure_system.ui
