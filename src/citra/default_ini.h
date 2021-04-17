@@ -250,6 +250,14 @@ volume =
 # 1 (default): Yes, 0: No
 use_virtual_sd =
 
+# The path of the virtual SD card directory.
+# empty (default) will use the user_path
+sdmc_directory =
+
+# The path of NAND directory.
+# empty (default) will use the user_path
+nand_directory =
+
 [System]
 # The system model that Citra will try to emulate
 # 0: Old 3DS, 1: New 3DS (default)
