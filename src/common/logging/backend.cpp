@@ -145,12 +145,14 @@ void LogcatBackend::Write(const Entry& entry) {
     PrintMessageToLogcat(entry);
 }
 
-FileBackend::FileBackend(const std::string& filename) : bytes_written(0) {
-    if (FileUtil::Exists(filename + ".old.txt")) {
-        FileUtil::Delete(filename + ".old.txt");
+FileBackend::FileBackend(const std::string& filename) {
+    const auto old_filename = filename + ".old.txt";
+
+    if (FileUtil::Exists(old_filename)) {
+        FileUtil::Delete(old_filename);
     }
     if (FileUtil::Exists(filename)) {
-        FileUtil::Rename(filename, filename + ".old.txt");
+        FileUtil::Rename(filename, old_filename);
     }
 
     // _SH_DENYWR allows read only access to the file for other programs.

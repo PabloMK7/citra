@@ -109,7 +109,7 @@ public:
 
 private:
     FileUtil::IOFile file;
-    std::size_t bytes_written;
+    std::size_t bytes_written = 0;
 };
 
 /**
