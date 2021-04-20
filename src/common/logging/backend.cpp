@@ -57,10 +57,10 @@ public:
 
     void RemoveBackend(std::string_view backend_name) {
         std::lock_guard lock{writing_mutex};
-        const auto it =
-            std::remove_if(backends.begin(), backends.end(),
-                           [&backend_name](const auto& i) { return backend_name == i->GetName(); });
-        backends.erase(it, backends.end());
+
+        std::erase_if(backends, [&backend_name](const auto& backend) {
+            return backend_name == backend->GetName();
+        });
     }
 
     Backend* GetBackend(std::string_view backend_name) {
