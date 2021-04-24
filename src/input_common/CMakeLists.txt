@@ -34,4 +34,5 @@ endif()
 
 create_target_directory_groups(input_common)
 target_link_libraries(input_common PUBLIC core PRIVATE common ${Boost_LIBRARIES})
+target_include_directories(input_common PRIVATE ${LIBUSB_INCLUDE_DIR})
 target_link_libraries(input_common PUBLIC ${LIBUSB_LIBRARIES})
