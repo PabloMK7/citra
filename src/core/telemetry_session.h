@@ -53,7 +53,7 @@ public:
      * @param value Value for the field to add.
      */
     template <typename T>
-    void AddField(Telemetry::FieldType type, const char* name, T value) {
+    void AddField(Common::Telemetry::FieldType type, const char* name, T value) {
         field_collection.AddField(type, name, std::move(value));
     }
 
@@ -64,7 +64,8 @@ public:
     bool SubmitTestcase();
 
 private:
-    Telemetry::FieldCollection field_collection; ///< Tracks all added fields for the session
+    /// Tracks all added fields for the session
+    Common::Telemetry::FieldCollection field_collection;
 };
 
 /**

@@ -10,7 +10,7 @@
 #include <string>
 #include "common/common_types.h"
 
-namespace Telemetry {
+namespace Common::Telemetry {
 
 /// Field type, used for grouping fields together in the final submitted telemetry log
 enum class FieldType : u8 {
@@ -55,8 +55,8 @@ public:
     Field(FieldType type, std::string name, T value)
         : name(std::move(name)), type(type), value(std::move(value)) {}
 
-    Field(const Field& other) = default;
-    Field& operator=(const Field& other) = default;
+    Field(const Field&) = default;
+    Field& operator=(const Field&) = default;
 
     Field(Field&&) = default;
     Field& operator=(Field&& other) = default;
@@ -184,4 +184,16 @@ struct NullVisitor : public VisitorInterface {
     }
 };
 
-} // namespace Telemetry
+/// Appends build-specific information to the given FieldCollection,
+/// such as branch name, revision hash, etc.
+void AppendBuildInfo(FieldCollection& fc);
+
+/// Appends CPU-specific information to the given FieldCollection,
+/// such as instruction set extensions, etc.
+void AppendCPUInfo(FieldCollection& fc);
+
+/// Appends OS-specific information to the given FieldCollection,
+/// such as platform name, etc.
+void AppendOSInfo(FieldCollection& fc);
+
+} // namespace Common::Telemetry

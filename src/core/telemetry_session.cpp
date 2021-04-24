@@ -2,16 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cstring>
 #include <cryptopp/osrng.h>
 
 #include "common/assert.h"
+#include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
-#ifdef ARCHITECTURE_x86_64
-#include "common/x64/cpu_detect.h"
-#endif
 #include "core/core.h"
 #include "core/settings.h"
 #include "core/telemetry_session.h"
@@ -22,6 +19,8 @@
 #endif
 
 namespace Core {
+
+namespace Telemetry = Common::Telemetry;
 
 static u64 GenerateTelemetryId() {
     u64 telemetry_id{};
@@ -117,46 +116,11 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
     }
 
     // Log application information
-    const bool is_git_dirty{std::strstr(Common::g_scm_desc, "dirty") != nullptr};
-    AddField(Telemetry::FieldType::App, "Git_IsDirty", is_git_dirty);
-    AddField(Telemetry::FieldType::App, "Git_Branch", Common::g_scm_branch);
-    AddField(Telemetry::FieldType::App, "Git_Revision", Common::g_scm_rev);
-    AddField(Telemetry::FieldType::App, "BuildDate", Common::g_build_date);
-    AddField(Telemetry::FieldType::App, "BuildName", Common::g_build_name);
+    Telemetry::AppendBuildInfo(field_collection);
 
-// Log user system information
-#ifdef ARCHITECTURE_x86_64
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_BrandString",
-             Common::GetCPUCaps().brand_string);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AES", Common::GetCPUCaps().aes);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AVX", Common::GetCPUCaps().avx);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AVX2", Common::GetCPUCaps().avx2);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_BMI1", Common::GetCPUCaps().bmi1);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_BMI2", Common::GetCPUCaps().bmi2);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_FMA", Common::GetCPUCaps().fma);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_FMA4", Common::GetCPUCaps().fma4);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE", Common::GetCPUCaps().sse);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE2", Common::GetCPUCaps().sse2);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE3", Common::GetCPUCaps().sse3);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSSE3",
-             Common::GetCPUCaps().ssse3);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE41",
-             Common::GetCPUCaps().sse4_1);
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE42",
-             Common::GetCPUCaps().sse4_2);
-#else
-    AddField(Telemetry::FieldType::UserSystem, "CPU_Model", "Other");
-#endif
-#ifdef __APPLE__
-    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Apple");
-#elif defined(_WIN32)
-    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Windows");
-#elif defined(__linux__) || defined(linux) || defined(__linux)
-    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Linux");
-#else
-    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Unknown");
-#endif
+    // Log user system information
+    Telemetry::AppendCPUInfo(field_collection);
+    Telemetry::AppendOSInfo(field_collection);
 
     // Log user configuration information
     AddField(Telemetry::FieldType::UserConfig, "Audio_SinkId", Settings::values.sink_id);

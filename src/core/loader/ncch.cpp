@@ -199,7 +199,8 @@ ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
     }
 
     auto& system = Core::System::GetInstance();
-    system.TelemetrySession().AddField(Telemetry::FieldType::Session, "ProgramId", program_id);
+    system.TelemetrySession().AddField(Common::Telemetry::FieldType::Session, "ProgramId",
+                                       program_id);
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         Network::GameInfo game_info;

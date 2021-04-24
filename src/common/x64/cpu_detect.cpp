@@ -110,6 +110,11 @@ static CPUCaps Detect() {
                 caps.bmi1 = true;
             if ((cpu_id[1] >> 8) & 1)
                 caps.bmi2 = true;
+            // Checks for AVX512F, AVX512CD, AVX512VL, AVX512DQ, AVX512BW (Intel Skylake-X/SP)
+            if ((cpu_id[1] >> 16) & 1 && (cpu_id[1] >> 28) & 1 && (cpu_id[1] >> 31) & 1 &&
+                (cpu_id[1] >> 17) & 1 && (cpu_id[1] >> 30) & 1) {
+                caps.avx512 = caps.avx2;
+            }
         }
     }
 
