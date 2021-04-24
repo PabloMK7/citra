@@ -83,9 +83,9 @@ std::vector<std::unique_ptr<WaitTreeThread>> WaitTreeItem::MakeThreadItemList() 
         const auto& threads =
             Core::System::GetInstance().Kernel().GetThreadManager(i).GetThreadList();
         item_list.reserve(item_list.size() + threads.size());
-        for (std::size_t i = 0; i < threads.size(); ++i) {
-            item_list.push_back(std::make_unique<WaitTreeThread>(*threads[i]));
-            item_list.back()->row = i;
+        for (std::size_t j = 0; j < threads.size(); ++j) {
+            item_list.push_back(std::make_unique<WaitTreeThread>(*threads[j]));
+            item_list.back()->row = j;
         }
     }
     return item_list;

@@ -16,7 +16,6 @@
 #include "core/frontend/emu_window.h"
 
 class QKeyEvent;
-class QScreen;
 class QTouchEvent;
 class QOffscreenSurface;
 class QOpenGLContext;

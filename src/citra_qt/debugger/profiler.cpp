@@ -24,17 +24,17 @@ public:
     MicroProfileWidget(QWidget* parent = nullptr);
 
 protected:
-    void paintEvent(QPaintEvent* ev) override;
-    void showEvent(QShowEvent* ev) override;
-    void hideEvent(QHideEvent* ev) override;
+    void paintEvent(QPaintEvent* event) override;
+    void showEvent(QShowEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
 
-    void mouseMoveEvent(QMouseEvent* ev) override;
-    void mousePressEvent(QMouseEvent* ev) override;
-    void mouseReleaseEvent(QMouseEvent* ev) override;
-    void wheelEvent(QWheelEvent* ev) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
-    void keyPressEvent(QKeyEvent* ev) override;
-    void keyReleaseEvent(QKeyEvent* ev) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
 
 private:
     /// This timer is used to redraw the widget's contents continuously. To save resources, it only
@@ -82,18 +82,18 @@ QAction* MicroProfileDialog::toggleViewAction() {
     return toggle_view_action;
 }
 
-void MicroProfileDialog::showEvent(QShowEvent* ev) {
+void MicroProfileDialog::showEvent(QShowEvent* event) {
     if (toggle_view_action) {
         toggle_view_action->setChecked(isVisible());
     }
-    QWidget::showEvent(ev);
+    QWidget::showEvent(event);
 }
 
-void MicroProfileDialog::hideEvent(QHideEvent* ev) {
+void MicroProfileDialog::hideEvent(QHideEvent* event) {
     if (toggle_view_action) {
         toggle_view_action->setChecked(isVisible());
     }
-    QWidget::hideEvent(ev);
+    QWidget::hideEvent(event);
 }
 
 #if MICROPROFILE_ENABLED
@@ -112,7 +112,7 @@ MicroProfileWidget::MicroProfileWidget(QWidget* parent) : QWidget(parent) {
     connect(&update_timer, &QTimer::timeout, this, qOverload<>(&MicroProfileWidget::update));
 }
 
-void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
+void MicroProfileWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     QPainter painter(this);
 
     // The units used by Microprofile for drawing are based in pixels on a 96 dpi display.
@@ -132,51 +132,51 @@ void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
     mp_painter = nullptr;
 }
 
-void MicroProfileWidget::showEvent(QShowEvent* ev) {
+void MicroProfileWidget::showEvent(QShowEvent* event) {
     update_timer.start(15); // ~60 Hz
-    QWidget::showEvent(ev);
+    QWidget::showEvent(event);
 }
 
-void MicroProfileWidget::hideEvent(QHideEvent* ev) {
+void MicroProfileWidget::hideEvent(QHideEvent* event) {
     update_timer.stop();
-    QWidget::hideEvent(ev);
+    QWidget::hideEvent(event);
 }
 
-void MicroProfileWidget::mouseMoveEvent(QMouseEvent* ev) {
-    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, 0);
-    ev->accept();
+void MicroProfileWidget::mouseMoveEvent(QMouseEvent* event) {
+    MicroProfileMousePosition(event->x() / x_scale, event->y() / y_scale, 0);
+    event->accept();
 }
 
-void MicroProfileWidget::mousePressEvent(QMouseEvent* ev) {
-    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, 0);
-    MicroProfileMouseButton(ev->buttons() & Qt::LeftButton, ev->buttons() & Qt::RightButton);
-    ev->accept();
+void MicroProfileWidget::mousePressEvent(QMouseEvent* event) {
+    MicroProfileMousePosition(event->x() / x_scale, event->y() / y_scale, 0);
+    MicroProfileMouseButton(event->buttons() & Qt::LeftButton, event->buttons() & Qt::RightButton);
+    event->accept();
 }
 
-void MicroProfileWidget::mouseReleaseEvent(QMouseEvent* ev) {
-    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, 0);
-    MicroProfileMouseButton(ev->buttons() & Qt::LeftButton, ev->buttons() & Qt::RightButton);
-    ev->accept();
+void MicroProfileWidget::mouseReleaseEvent(QMouseEvent* event) {
+    MicroProfileMousePosition(event->x() / x_scale, event->y() / y_scale, 0);
+    MicroProfileMouseButton(event->buttons() & Qt::LeftButton, event->buttons() & Qt::RightButton);
+    event->accept();
 }
 
-void MicroProfileWidget::wheelEvent(QWheelEvent* ev) {
-    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, ev->delta() / 120);
-    ev->accept();
+void MicroProfileWidget::wheelEvent(QWheelEvent* event) {
+    MicroProfileMousePosition(event->x() / x_scale, event->y() / y_scale, event->delta() / 120);
+    event->accept();
 }
 
-void MicroProfileWidget::keyPressEvent(QKeyEvent* ev) {
-    if (ev->key() == Qt::Key_Control) {
+void MicroProfileWidget::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Control) {
         // Inform MicroProfile that the user is holding Ctrl.
         MicroProfileModKey(1);
     }
-    QWidget::keyPressEvent(ev);
+    QWidget::keyPressEvent(event);
 }
 
-void MicroProfileWidget::keyReleaseEvent(QKeyEvent* ev) {
-    if (ev->key() == Qt::Key_Control) {
+void MicroProfileWidget::keyReleaseEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Control) {
         MicroProfileModKey(0);
     }
-    QWidget::keyReleaseEvent(ev);
+    QWidget::keyReleaseEvent(event);
 }
 
 // These functions are called by MicroProfileDraw to draw the interface elements on the screen.

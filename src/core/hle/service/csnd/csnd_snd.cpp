@@ -459,8 +459,8 @@ void CSND_SND::ReleaseCapUnit(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x9, 2, 2);
-    const VAddr address = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] const VAddr address = rp.Pop<u32>();
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -472,8 +472,8 @@ void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xA, 2, 2);
-    const VAddr address = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] const VAddr address = rp.Pop<u32>();
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -485,8 +485,8 @@ void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xB, 2, 2);
-    const VAddr address = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] const VAddr address = rp.Pop<u32>();
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QBrush>
 #include <QString>
 #include <QTreeWidgetItem>
 #include <fmt/format.h>
@@ -72,16 +73,16 @@ void IPCRecorderWidget::OnEntryUpdated(IPCDebugger::RequestRecord record) {
         service = QStringLiteral("%1 (%2)").arg(service, record.is_hle ? tr("HLE") : tr("LLE"));
     }
 
-    QTreeWidgetItem item{
+    QTreeWidgetItem entry{
         {QString::number(record.id), GetStatusStr(record), service, GetFunctionName(record)}};
 
     const int row_id = record.id - id_offset;
     if (ui->main->invisibleRootItem()->childCount() > row_id) {
         records[row_id] = record;
-        (*ui->main->invisibleRootItem()->child(row_id)) = item;
+        (*ui->main->invisibleRootItem()->child(row_id)) = entry;
     } else {
         records.emplace_back(record);
-        ui->main->invisibleRootItem()->addChild(new QTreeWidgetItem(item));
+        ui->main->invisibleRootItem()->addChild(new QTreeWidgetItem(entry));
     }
 
     if (record.status == IPCDebugger::RequestStatus::HLEUnimplemented ||
@@ -90,7 +91,7 @@ void IPCRecorderWidget::OnEntryUpdated(IPCDebugger::RequestRecord record) {
 
         auto* item = ui->main->invisibleRootItem()->child(row_id);
         for (int column = 0; column < item->columnCount(); ++column) {
-            item->setBackgroundColor(column, QColor::fromRgb(255, 0, 0));
+            item->setBackground(column, QBrush(QColor::fromRgb(255, 0, 0)));
         }
     }
 

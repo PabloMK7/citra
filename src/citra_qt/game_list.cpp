@@ -768,6 +768,6 @@ void GameListPlaceholder::onUpdateThemedIcons() {
     image->setPixmap(QIcon::fromTheme(QStringLiteral("plus_folder")).pixmap(200));
 }
 
-void GameListPlaceholder::mouseDoubleClickEvent(QMouseEvent* event) {
+void GameListPlaceholder::mouseDoubleClickEvent([[maybe_unused]] QMouseEvent* event) {
     emit GameListPlaceholder::AddDirectory();
 }

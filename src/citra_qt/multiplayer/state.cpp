@@ -232,9 +232,8 @@ bool MultiplayerState::OnCloseRoom() {
             return true;
         }
         // Save ban list
-        if (auto room = Network::GetRoom().lock()) {
-            UISettings::values.ban_list = std::move(room->GetBanList());
-        }
+        UISettings::values.ban_list = std::move(room->GetBanList());
+
         room->Destroy();
         announce_multiplayer_session->Stop();
         LOG_DEBUG(Frontend, "Closed the room (as a server)");

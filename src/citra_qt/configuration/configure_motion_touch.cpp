@@ -168,10 +168,10 @@ void ConfigureMotionTouch::UpdateUiDisplay() {
 void ConfigureMotionTouch::ConnectEvents() {
     connect(ui->motion_provider,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            [this](int index) { UpdateUiDisplay(); });
+            [this]([[maybe_unused]] int index) { UpdateUiDisplay(); });
     connect(ui->touch_provider,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            [this](int index) { UpdateUiDisplay(); });
+            [this]([[maybe_unused]] int index) { UpdateUiDisplay(); });
     connect(ui->udp_test, &QPushButton::clicked, this, &ConfigureMotionTouch::OnCemuhookUDPTest);
     connect(ui->touch_calibration_config, &QPushButton::clicked, this,
             &ConfigureMotionTouch::OnConfigureTouchCalibration);

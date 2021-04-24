@@ -35,7 +35,7 @@ public:
 
 private:
     void LoadCheatFile();
-    void RunCallback(u64 userdata, int cycles_late);
+    void RunCallback(u64 userdata, s64 cycles_late);
     std::vector<std::shared_ptr<CheatBase>> cheats_list;
     mutable std::shared_mutex cheats_list_mutex;
     Core::TimingEventType* event;

@@ -10,9 +10,6 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_3_Core>
-#include <QOpenGLWindow>
-#include <QScreen>
-#include <QWindow>
 #include <fmt/format.h>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/main.h"
@@ -233,8 +230,8 @@ void GRenderWindow::OnFramebufferSizeChanged() {
     // Screen changes potentially incur a change in screen DPI, hence we should update the
     // framebuffer size
     const qreal pixel_ratio = windowPixelRatio();
-    const u32 width = this->width() * pixel_ratio;
-    const u32 height = this->height() * pixel_ratio;
+    const u32 width = static_cast<u32>(this->width() * pixel_ratio);
+    const u32 height = static_cast<u32>(this->height() * pixel_ratio);
     UpdateCurrentFramebufferLayout(width, height);
 }
 

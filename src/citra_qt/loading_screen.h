@@ -6,7 +6,6 @@
 
 #include <chrono>
 #include <memory>
-#include <QString>
 #include <QWidget>
 
 namespace Loader {

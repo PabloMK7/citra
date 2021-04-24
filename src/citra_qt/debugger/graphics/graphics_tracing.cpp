@@ -12,12 +12,12 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <boost/range/algorithm/copy.hpp>
+#include <nihstro/float24.h>
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "common/common_types.h"
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
 #include "core/tracer/recorder.h"
-#include "nihstro/float24.h"
 #include "video_core/pica_state.h"
 
 GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context,

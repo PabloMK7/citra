@@ -198,7 +198,7 @@ GatewayCheat::CheatLine::CheatLine(const std::string& line) {
         address = first & 0x0FFFFFFF;
         value = std::stoul(line.substr(9, 8), 0, 16);
         cheat_line = line;
-    } catch (const std::logic_error& e) {
+    } catch (const std::logic_error&) {
         type = CheatType::Null;
         cheat_line = line;
         LOG_ERROR(Core_Cheats, "Cheat contains invalid line: {}", line);

@@ -1459,7 +1459,6 @@ void GMainWindow::InstallCIA(QStringList filepaths) {
     progress_bar->setMaximum(INT_MAX);
 
     QtConcurrent::run([&, filepaths] {
-        QString current_path;
         Service::AM::InstallStatus status;
         const auto cia_progress = [&](std::size_t written, std::size_t total) {
             emit UpdateProgress(written, total);
@@ -2102,15 +2101,15 @@ void GMainWindow::OnMouseActivity() {
     ShowMouseCursor();
 }
 
-void GMainWindow::mouseMoveEvent(QMouseEvent* event) {
+void GMainWindow::mouseMoveEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
 }
 
-void GMainWindow::mousePressEvent(QMouseEvent* event) {
+void GMainWindow::mousePressEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
 }
 
-void GMainWindow::mouseReleaseEvent(QMouseEvent* event) {
+void GMainWindow::mouseReleaseEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
 }
 

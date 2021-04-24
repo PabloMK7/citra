@@ -4,8 +4,9 @@
 
 #include "citra_qt/util/clickable_label.h"
 
-ClickableLabel::ClickableLabel(QWidget* parent, Qt::WindowFlags f) : QLabel(parent) {}
+ClickableLabel::ClickableLabel(QWidget* parent, [[maybe_unused]] Qt::WindowFlags f)
+    : QLabel(parent) {}
 
-void ClickableLabel::mouseReleaseEvent(QMouseEvent* event) {
+void ClickableLabel::mouseReleaseEvent([[maybe_unused]] QMouseEvent* event) {
     emit clicked();
 }

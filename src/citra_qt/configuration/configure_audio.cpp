@@ -61,7 +61,8 @@ void ConfigureAudio::SetConfiguration() {
     SetAudioDeviceFromDeviceID();
 
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
-    ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
+    ui->volume_slider->setValue(
+        static_cast<int>(Settings::values.volume * ui->volume_slider->maximum()));
     SetVolumeIndicatorText(ui->volume_slider->sliderPosition());
 
     int selection;

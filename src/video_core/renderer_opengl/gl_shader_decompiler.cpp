@@ -236,7 +236,7 @@ private:
 template <SwizzlePattern::Selector (SwizzlePattern::*getter)(int) const>
 std::string GetSelectorSrc(const SwizzlePattern& pattern) {
     std::string out;
-    for (std::size_t i = 0; i < 4; ++i) {
+    for (int i = 0; i < 4; ++i) {
         switch ((pattern.*getter)(i)) {
         case SwizzlePattern::Selector::x:
             out += 'x';
