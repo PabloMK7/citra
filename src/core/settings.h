@@ -140,6 +140,8 @@ struct Values {
 
     // Data Storage
     bool use_virtual_sd;
+    std::string nand_dir;
+    std::string sdmc_dir;
 
     // System
     int region_value;

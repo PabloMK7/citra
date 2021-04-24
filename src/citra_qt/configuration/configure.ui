@@ -68,6 +68,11 @@
          <string>Debug</string>
         </attribute>
        </widget>
+       <widget class="ConfigureStorage" name="storageTab">
+        <attribute name="title">
+         <string>Storage</string>
+        </attribute>
+       </widget>
        <widget class="ConfigureWeb" name="webTab">
         <attribute name="title">
          <string>Web</string>
@@ -120,6 +125,12 @@
    <class>ConfigureDebug</class>
    <extends>QWidget</extends>
    <header>configuration/configure_debug.h</header>
+   <container>1</container>
+  </customwidget>
+    <customwidget>
+   <class>ConfigureStorage</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_storage.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
