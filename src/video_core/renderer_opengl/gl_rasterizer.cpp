@@ -62,7 +62,7 @@ RasterizerOpenGL::RasterizerOpenGL()
                     "Shadow might not be able to render because of unsupported OpenGL extensions.");
     }
 
-    if (!GLAD_GL_ARB_copy_image) {
+    if (!GLAD_GL_ARB_copy_image && !GLES) {
         LOG_WARNING(Render_OpenGL,
                     "ARB_copy_image not supported. Some games might produce artifacts.");
     }
@@ -782,7 +782,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     }
 
     OGLTexture temp_tex;
-    if (need_duplicate_texture && GLAD_GL_ARB_copy_image) {
+    if (need_duplicate_texture && (GLAD_GL_ARB_copy_image || GLES)) {
         // The game is trying to use a surface as a texture and framebuffer at the same time
         // which causes unpredictable behavior on the host.
         // Making a copy to sample from eliminates this issue and seems to be fairly cheap.
