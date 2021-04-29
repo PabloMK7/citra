@@ -6,6 +6,8 @@
 #include <thread>
 #include "common/param_package.h"
 #include "input_common/analog_from_button.h"
+#include "input_common/gcadapter/gc_adapter.h"
+#include "input_common/gcadapter/gc_poller.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
@@ -16,12 +18,20 @@
 
 namespace InputCommon {
 
+std::shared_ptr<GCButtonFactory> gcbuttons;
+std::shared_ptr<GCAnalogFactory> gcanalog;
+std::shared_ptr<GCAdapter::Adapter> gcadapter;
 static std::shared_ptr<Keyboard> keyboard;
 static std::shared_ptr<MotionEmu> motion_emu;
 static std::unique_ptr<CemuhookUDP::State> udp;
 static std::unique_ptr<SDL::State> sdl;
 
 void Init() {
+    gcadapter = std::make_shared<GCAdapter::Adapter>();
+    gcbuttons = std::make_shared<GCButtonFactory>(gcadapter);
+    Input::RegisterFactory<Input::ButtonDevice>("gcpad", gcbuttons);
+    gcanalog = std::make_shared<GCAnalogFactory>(gcadapter);
+    Input::RegisterFactory<Input::AnalogDevice>("gcpad", gcanalog);
     keyboard = std::make_shared<Keyboard>();
     Input::RegisterFactory<Input::ButtonDevice>("keyboard", keyboard);
     Input::RegisterFactory<Input::AnalogDevice>("analog_from_button",
@@ -37,6 +47,10 @@ void Init() {
 }
 
 void Shutdown() {
+    Input::UnregisterFactory<Input::ButtonDevice>("gcpad");
+    Input::UnregisterFactory<Input::AnalogDevice>("gcpad");
+    gcbuttons.reset();
+    gcanalog.reset();
     Input::UnregisterFactory<Input::ButtonDevice>("keyboard");
     keyboard.reset();
     Input::UnregisterFactory<Input::AnalogDevice>("analog_from_button");
@@ -77,16 +91,30 @@ std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, 
     return circle_pad_param.Serialize();
 }
 
-Common::ParamPackage GetSDLControllerButtonBindByGUID(const std::string& guid, int port,
-                                                      int button) {
-    return dynamic_cast<SDL::SDLState*>(sdl.get())->GetSDLControllerButtonBindByGUID(
-        guid, port, static_cast<Settings::NativeButton::Values>(button));
+Common::ParamPackage GetControllerButtonBinds(const Common::ParamPackage& params, int button) {
+    const auto native_button{static_cast<Settings::NativeButton::Values>(button)};
+    const auto engine{params.Get("engine", "")};
+    if (engine == "sdl") {
+        return dynamic_cast<SDL::SDLState*>(sdl.get())->GetSDLControllerButtonBindByGUID(
+            params.Get("guid", "0"), params.Get("port", 0), native_button);
+    }
+    if (engine == "gcpad") {
+        return gcbuttons->GetGcTo3DSMappedButton(params.Get("port", 0), native_button);
+    }
+    return {};
 }
 
-Common::ParamPackage GetSDLControllerAnalogBindByGUID(const std::string& guid, int port,
-                                                      int analog) {
-    return dynamic_cast<SDL::SDLState*>(sdl.get())->GetSDLControllerAnalogBindByGUID(
-        guid, port, static_cast<Settings::NativeAnalog::Values>(analog));
+Common::ParamPackage GetControllerAnalogBinds(const Common::ParamPackage& params, int analog) {
+    const auto native_analog{static_cast<Settings::NativeAnalog::Values>(analog)};
+    const auto engine{params.Get("engine", "")};
+    if (engine == "sdl") {
+        return dynamic_cast<SDL::SDLState*>(sdl.get())->GetSDLControllerAnalogBindByGUID(
+            params.Get("guid", "0"), params.Get("port", 0), native_analog);
+    }
+    if (engine == "gcpad") {
+        return gcanalog->GetGcTo3DSMappedAnalog(params.Get("port", 0), native_analog);
+    }
+    return {};
 }
 
 void ReloadInputDevices() {
@@ -102,6 +130,16 @@ std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type) {
 #ifdef HAVE_SDL2
     pollers = sdl->GetPollers(type);
 #endif
+    switch (type) {
+    case DeviceType::Analog:
+        pollers.push_back(std::make_unique<GCAnalogFactory>(*gcanalog));
+        break;
+    case DeviceType::Button:
+        pollers.push_back(std::make_unique<GCButtonFactory>(*gcbuttons));
+        break;
+    default:
+        break;
+    }
 
     return pollers;
 }
