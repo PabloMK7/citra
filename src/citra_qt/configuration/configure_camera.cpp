@@ -17,6 +17,10 @@
 #include "core/settings.h"
 #include "ui_configure_camera.h"
 
+#if defined(__APPLE__)
+#include "citra_qt/usage_authorization.h"
+#endif
+
 const std::array<std::string, 3> ConfigureCamera::Implementations = {
     "blank", /* Blank */
     "image", /* Image */
@@ -46,9 +50,15 @@ ConfigureCamera::~ConfigureCamera() {
 
 void ConfigureCamera::ConnectEvents() {
     connect(ui->image_source,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
                 StopPreviewing();
                 UpdateImageSourceUI();
+#if defined(__APPLE__)
+                if (index == 2) {
+                    AppleAuthorization::CheckAuthorizationForCamera();
+                }
+#endif
             });
     connect(ui->camera_selection,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this] {
