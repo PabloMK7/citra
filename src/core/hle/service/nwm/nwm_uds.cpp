@@ -279,6 +279,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         // We're now connected, signal the application
         connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsClient);
+        connection_status.disconnect_reason = static_cast<u32>(DisconnectStatus::Connected);
         // Some games require ConnectToNetwork to block, for now it doesn't
         // If blocking is implemented this lock needs to be changed,
         // otherwise it might cause deadlocks
@@ -648,6 +649,7 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
         // Reset the connection status, it contains all zeros after initialization,
         // except for the actual status value.
         connection_status = {};
+        connection_status.disconnect_reason = static_cast<u32>(DisconnectStatus::NotConnected);
         connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
         node_info.clear();
         node_info.push_back(current_node);
@@ -837,6 +839,7 @@ ResultCode NWM_UDS::BeginHostingNetwork(const u8* network_info_buffer,
         ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
 
         connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
+        connection_status.disconnect_reason = static_cast<u32>(DisconnectStatus::Connected);
 
         // Ensure the application data size is less than the maximum value.
         ASSERT_MSG(network_info.application_data_size <= ApplicationDataSize,
@@ -926,6 +929,57 @@ void NWM_UDS::BeginHostingNetworkDeprecated(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
+}
+
+void NWM_UDS::EjectClient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x05, 1, 0);
+    const u16 network_node_id = rp.Pop<u16>();
+
+    LOG_WARNING(Service_NWM, "(stubbed) called");
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    // The host can not be kicked.
+    if (network_node_id == 1) {
+        rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Usage));
+        return;
+    }
+
+    std::lock_guard lock(connection_status_mutex);
+    if (connection_status.status != static_cast<u8>(NetworkStatus::ConnectedAsHost)) {
+        // Only the host can kick people.
+        rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                           ErrorSummary::InvalidState, ErrorLevel::Usage));
+        LOG_WARNING(Service_NWM, "called with status {}", connection_status.status);
+        return;
+    }
+
+    // This function always returns success if the status is valid.
+    rb.Push(RESULT_SUCCESS);
+
+    using Network::WifiPacket;
+    Network::MacAddress dest_address = Network::BroadcastMac;
+
+    if (network_node_id != BroadcastNetworkNodeId) {
+        auto address = GetNodeMacAddress(network_node_id, 0);
+
+        if (!address) {
+            // There is no error if the network node id was not found.
+            return;
+        }
+        dest_address = *address;
+    }
+
+    WifiPacket deauth;
+    deauth.channel = network_channel;
+    deauth.destination_address = dest_address;
+    deauth.type = WifiPacket::PacketType::Deauthentication;
+    SendPacket(deauth);
+    if (network_node_id == BroadcastNetworkNodeId) {
+        SendPacket(deauth);
+        SendPacket(deauth);
+    }
 }
 
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
@@ -1394,7 +1448,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
         {0x00020000, nullptr, "Scrap"},
         {0x00030000, &NWM_UDS::Shutdown, "Shutdown"},
         {0x00040402, &NWM_UDS::BeginHostingNetworkDeprecated, "BeginHostingNetwork (deprecated)"},
-        {0x00050040, nullptr, "EjectClient"},
+        {0x00050040, &NWM_UDS::EjectClient, "EjectClient"},
         {0x00060000, nullptr, "EjectSpectator"},
         {0x00070080, &NWM_UDS::UpdateNetworkAttribute, "UpdateNetworkAttribute"},
         {0x00080000, &NWM_UDS::DestroyNetwork, "DestroyNetwork"},
