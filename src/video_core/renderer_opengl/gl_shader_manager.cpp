@@ -496,7 +496,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
 
                 if (dump != dump_map.end() && decomp != decompiled_map.end()) {
                     // Only load this shader if its sanitize_mul setting matches
-                    if (decomp->second.sanitize_mul == VideoCore::g_hw_shader_accurate_mul) {
+                    if (raw.GetProgramType() == ProgramType::VS &&
+                        decomp->second.sanitize_mul != VideoCore::g_hw_shader_accurate_mul) {
                         continue;
                     }
 
@@ -617,6 +618,6 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     if (precompiled_cache_altered) {
         disk_cache.SaveVirtualPrecompiledFile();
     }
-} // namespace OpenGL
+}
 
 } // namespace OpenGL

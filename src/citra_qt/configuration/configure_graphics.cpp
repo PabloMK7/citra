@@ -23,25 +23,19 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     connect(ui->toggle_hw_renderer, &QCheckBox::toggled, this, [this] {
         auto checked = ui->toggle_hw_renderer->isChecked();
         ui->hw_renderer_group->setEnabled(checked);
+        ui->toggle_disk_shader_cache->setEnabled(checked && ui->toggle_hw_shader->isChecked());
     });
 
     ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());
-    connect(ui->toggle_hw_shader, &QCheckBox::toggled, ui->hw_shader_group, &QWidget::setEnabled);
+    ui->toggle_disk_shader_cache->setEnabled(ui->toggle_hw_renderer->isChecked() &&
+                                             ui->toggle_hw_shader->isChecked());
 
-    ui->toggle_disk_shader_cache->setEnabled(ui->toggle_hw_shader->isChecked() &&
-                                             ui->toggle_accurate_mul->isChecked());
     connect(ui->toggle_hw_shader, &QCheckBox::toggled, this, [this] {
-        ui->toggle_disk_shader_cache->setEnabled(ui->toggle_hw_shader->isChecked() &&
-                                                 ui->toggle_accurate_mul->isChecked());
-        if (!ui->toggle_disk_shader_cache->isEnabled())
-            ui->toggle_disk_shader_cache->setChecked(false);
+        auto checked = ui->toggle_hw_shader->isChecked();
+        ui->hw_shader_group->setEnabled(checked);
+        ui->toggle_disk_shader_cache->setEnabled(checked);
     });
 
-    connect(ui->toggle_accurate_mul, &QCheckBox::toggled, this, [this] {
-        ui->toggle_disk_shader_cache->setEnabled(ui->toggle_accurate_mul->isChecked());
-        if (!ui->toggle_disk_shader_cache->isEnabled())
-            ui->toggle_disk_shader_cache->setChecked(false);
-    });
 #ifdef __APPLE__
     connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, this, [this](int state) {
         if (state == Qt::Checked) {
