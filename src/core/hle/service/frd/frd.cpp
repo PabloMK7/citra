@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <cstring>
 #include <vector>
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -10,6 +11,7 @@
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
@@ -93,16 +95,21 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
 
     struct ScreenName {
-        std::array<char16_t, 12> name;
+        // 20 bytes according to 3dbrew
+        char16_t name[10];
     };
 
-    // TODO: (mailwl) get the name from config
-    ScreenName screen_name{u"Citra"};
+    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    ASSERT_MSG(cfg, "CFG Module missing!");
+    auto username = cfg->GetUsername();
+    ASSERT_MSG(username.length() <= 10, "Username longer than expected!");
+    ScreenName screen_name{0};
+    std::memcpy(screen_name.name, username.data(), username.length() * sizeof(char16_t));
 
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
 
-    LOG_WARNING(Service_FRD, "(STUBBED) called");
+    LOG_INFO(Service_FRD, "returning the username defined in cfg");
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
