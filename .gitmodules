@@ -39,7 +39,7 @@
     url = https://github.com/kinetiknz/cubeb.git
 [submodule "discord-rpc"]
     path = externals/discord-rpc
-    url = https://github.com/discordapp/discord-rpc.git
+    url = https://github.com/discord/discord-rpc.git
 [submodule "cpp-jwt"]
     path = externals/cpp-jwt
     url = https://github.com/arun11299/cpp-jwt.git
