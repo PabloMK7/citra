@@ -111,7 +111,7 @@ out gl_PerVertex {
 }
 
 PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
-    PicaFSConfig res;
+    PicaFSConfig res{};
 
     auto& state = res.state;
 
