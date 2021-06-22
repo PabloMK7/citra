@@ -226,9 +226,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_status.nodes[node_id - 1] = node.network_node_id;
         connection_status.total_nodes++;
 
-        u8 current_nodes = network_info.total_nodes;
-        node_info[current_nodes] = node;
-
+        node_info[node_id - 1] = node;
         network_info.total_nodes++;
 
         node_map[packet.transmitter_address].node_id = node.network_node_id;
@@ -268,13 +266,18 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_status.max_nodes = logoff.max_nodes;
 
         node_info.clear();
-        node_info.reserve(network_info.max_nodes);
-        for (std::size_t index = 0; index < logoff.connected_nodes; ++index) {
-            connection_status.node_bitmask |= 1 << index;
-            connection_status.changed_nodes |= 1 << index;
-            connection_status.nodes[index] = logoff.nodes[index].network_node_id;
+        node_info.resize(network_info.max_nodes);
+        for (const auto& node : logoff.nodes) {
+            const u16 index = node.network_node_id;
+            if (!index) {
+                continue;
+            }
 
-            node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
+            connection_status.node_bitmask |= 1 << (index - 1);
+            connection_status.changed_nodes |= 1 << (index - 1);
+            connection_status.nodes[index - 1] = index;
+
+            node_info[index - 1] = DeserializeNodeInfo(node);
         }
 
         // We're now connected, signal the application
@@ -294,17 +297,26 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         network_info.total_nodes = logoff.connected_nodes;
         connection_status.total_nodes = logoff.connected_nodes;
+        std::memset(connection_status.nodes, 0, sizeof(connection_status.nodes));
+
+        const auto old_bitmask = connection_status.node_bitmask;
+        connection_status.node_bitmask = 0;
 
         node_info.clear();
-        node_info.reserve(network_info.max_nodes);
-        for (std::size_t index = 0; index < logoff.connected_nodes; ++index) {
-            if ((connection_status.node_bitmask & (1 << index)) == 0) {
-                connection_status.changed_nodes |= 1 << index;
+        node_info.resize(network_info.max_nodes);
+        for (const auto& node : logoff.nodes) {
+            const u16 index = node.network_node_id;
+            if (!index) {
+                continue;
             }
-            connection_status.nodes[index] = logoff.nodes[index].network_node_id;
-            connection_status.node_bitmask |= 1 << index;
-            node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
+
+            connection_status.node_bitmask |= 1 << (index - 1);
+            connection_status.nodes[index - 1] = index;
+
+            node_info[index - 1] = DeserializeNodeInfo(node);
         }
+        connection_status.changed_nodes = old_bitmask ^ connection_status.node_bitmask;
+
         connection_status_event->Signal();
     }
 }
@@ -333,9 +345,11 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
         // The packet wasn't addressed to us, we can only act as a router if we're the host.
         // However, we might have received this packet due to a broadcast from the host, in that
         // case just ignore it.
-        ASSERT_MSG(packet.destination_address == Network::BroadcastMac ||
-                       connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
-                   "Can't be a router if we're not a host");
+        if (packet.destination_address != Network::BroadcastMac &&
+            connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+            LOG_ERROR(Service_NWM, "Received packet addressed to others but we're not a host");
+            return;
+        }
 
         if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
             secure_data.dest_node_id != BroadcastNetworkNodeId) {
