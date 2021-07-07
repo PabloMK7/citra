@@ -16,6 +16,8 @@
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::FRD::Module)
+
 namespace Service::FRD {
 
 Module::Interface::Interface(std::shared_ptr<Module> frd, const char* name, u32 max_session)
@@ -96,15 +98,15 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
 
     struct ScreenName {
         // 20 bytes according to 3dbrew
-        char16_t name[10];
+        std::array<char16_t, 10> name;
     };
 
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    auto cfg = Service::CFG::GetModule(frd->system);
     ASSERT_MSG(cfg, "CFG Module missing!");
     auto username = cfg->GetUsername();
     ASSERT_MSG(username.length() <= 10, "Username longer than expected!");
-    ScreenName screen_name{0};
-    std::memcpy(screen_name.name, username.data(), username.length() * sizeof(char16_t));
+    ScreenName screen_name{};
+    std::memcpy(screen_name.name.data(), username.data(), username.length() * sizeof(char16_t));
 
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
@@ -154,12 +156,12 @@ void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
 }
 
-Module::Module() = default;
+Module::Module(Core::System& system) : system(system){};
 Module::~Module() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto frd = std::make_shared<Module>();
+    auto frd = std::make_shared<Module>(system);
     std::make_shared<FRD_U>(frd)->InstallAsService(service_manager);
     std::make_shared<FRD_A>(frd)->InstallAsService(service_manager);
 }
