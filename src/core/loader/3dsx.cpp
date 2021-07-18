@@ -342,7 +342,7 @@ ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {
         file.Seek(hdr.smdh_offset, SEEK_SET);
         buffer.resize(hdr.smdh_size);
 
-        if (file.ReadBytes(&buffer[0], hdr.smdh_size) != hdr.smdh_size)
+        if (file.ReadBytes(buffer.data(), hdr.smdh_size) != hdr.smdh_size)
             return ResultStatus::Error;
 
         return ResultStatus::Success;

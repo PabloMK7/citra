@@ -784,7 +784,7 @@ std::size_t ReadFileToString(bool text_file, const std::string& filename, std::s
         return 0;
 
     str.resize(static_cast<u32>(file.GetSize()));
-    return file.ReadArray(&str[0], str.size());
+    return file.ReadArray(str.data(), str.size());
 }
 
 void SplitFilename83(const std::string& filename, std::array<char, 9>& short_name,
