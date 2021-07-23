@@ -102,7 +102,9 @@ static std::string GetVertexInterfaceDeclaration(bool is_output, bool separable_
         out += R"(
 out gl_PerVertex {
     vec4 gl_Position;
+#if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
     float gl_ClipDistance[2];
+#endif // !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
 };
 )";
     }
