@@ -967,6 +967,20 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
             glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
                                    texture.handle, 0);
         }
+        switch (glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            LOG_WARNING(Render_OpenGL, "Framebuffer incomplete attachment");
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+            LOG_WARNING(Render_OpenGL, "Framebuffer incomplete dimensions");
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            LOG_WARNING(Render_OpenGL, "Framebuffer incomplete missing attachment");
+            break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            LOG_WARNING(Render_OpenGL, "Framebuffer unsupported");
+            break;
+        }
         glReadPixels(static_cast<GLint>(rect.left), static_cast<GLint>(rect.bottom),
                      static_cast<GLsizei>(rect.GetWidth()), static_cast<GLsizei>(rect.GetHeight()),
                      tuple.format, tuple.type, &gl_buffer[buffer_offset]);
