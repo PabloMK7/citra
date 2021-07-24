@@ -90,6 +90,16 @@ float2 GetIInvResolution()
     return i_resolution.zw;
 }
 
+float2 GetWindowResolution()
+{
+  return o_resolution.xy;
+}
+
+float2 GetInvWindowResolution()
+{
+  return o_resolution.zw;
+}
+
 float2 GetOResolution()
 {
     return o_resolution.xy;
