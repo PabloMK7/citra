@@ -12,6 +12,15 @@
 #else
 #define _SH_DENYWR 0
 #endif
+
+#if defined(__linux__) && defined(__GNUG__) && !defined(__clang__)
+#define BOOST_STACKTRACE_USE_BACKTRACE
+#include <boost/stacktrace.hpp>
+#undef BOOST_STACKTRACE_USE_BACKTRACE
+#include <signal.h>
+#define CITRA_LINUX_GCC_BACKTRACE
+#endif
+
 #include "common/file_util.h"
 #include "common/literals.h"
 #include "common/settings.h"
@@ -170,6 +179,14 @@ public:
 
 bool initialization_in_progress_suppress_logging = false;
 
+#ifdef CITRA_LINUX_GCC_BACKTRACE
+[[noreturn]] void SleepForever() {
+    while (true) {
+        pause();
+    }
+}
+#endif
+
 /**
  * Static state as a singleton.
  */
@@ -240,9 +257,66 @@ private:
               while (max_logs_to_write-- && message_queue.Pop(entry)) {
                   write_logs();
               }
-          })} {}
+          })} {
+#ifdef CITRA_LINUX_GCC_BACKTRACE
+        int waker_pipefd[2];
+        int done_printing_pipefd[2];
+        if (pipe2(waker_pipefd, O_CLOEXEC) || pipe2(done_printing_pipefd, O_CLOEXEC)) {
+            abort();
+        }
+        backtrace_thread_waker_fd = waker_pipefd[1];
+        backtrace_done_printing_fd = done_printing_pipefd[0];
+        std::thread([this, wait_fd = waker_pipefd[0], done_fd = done_printing_pipefd[1]] {
+            Common::SetCurrentThreadName("citra:Crash");
+            for (u8 ignore = 0; read(wait_fd, &ignore, 1) != 1;)
+                ;
+            const int sig = received_signal;
+            if (sig <= 0) {
+                abort();
+            }
+            StopBackendThread();
+            const auto signal_entry =
+                CreateEntry(Class::Log, Level::Critical, "?", 0, "?",
+                            fmt::vformat("Received signal {}", fmt::make_format_args(sig)));
+            ForEachBackend([&signal_entry](Backend& backend) {
+                backend.EnableForStacktrace();
+                backend.Write(signal_entry);
+            });
+            const auto backtrace =
+                boost::stacktrace::stacktrace::from_dump(backtrace_storage.data(), 4096);
+            for (const auto& frame : backtrace.as_vector()) {
+                auto line = boost::stacktrace::detail::to_string(&frame, 1);
+                if (line.empty()) {
+                    abort();
+                }
+                line.pop_back(); // Remove newline
+                const auto frame_entry =
+                    CreateEntry(Class::Log, Level::Critical, "?", 0, "?", line);
+                ForEachBackend([&frame_entry](Backend& backend) { backend.Write(frame_entry); });
+            }
+            using namespace std::literals;
+            const auto rip_entry = CreateEntry(Class::Log, Level::Critical, "?", 0, "?", "RIP"s);
+            ForEachBackend([&rip_entry](Backend& backend) {
+                backend.Write(rip_entry);
+                backend.Flush();
+            });
+            for (const u8 anything = 0; write(done_fd, &anything, 1) != 1;)
+                ;
+            // Abort on original thread to help debugging
+            SleepForever();
+        }).detach();
+        signal(SIGSEGV, &HandleSignal);
+        signal(SIGABRT, &HandleSignal);
+#endif
+    }
 
     ~Impl() {
+#ifdef CITRA_LINUX_GCC_BACKTRACE
+        if (int zero_or_ignore = 0;
+            !received_signal.compare_exchange_strong(zero_or_ignore, SIGKILL)) {
+            SleepForever();
+        }
+#endif
         StopBackendThread();
     }
 
@@ -281,6 +355,36 @@ private:
         delete ptr;
     }
 
+#ifdef CITRA_LINUX_GCC_BACKTRACE
+    [[noreturn]] static void HandleSignal(int sig) {
+        signal(SIGABRT, SIG_DFL);
+        signal(SIGSEGV, SIG_DFL);
+        if (sig <= 0) {
+            abort();
+        }
+        instance->InstanceHandleSignal(sig);
+    }
+
+    [[noreturn]] void InstanceHandleSignal(int sig) {
+        if (int zero_or_ignore = 0; !received_signal.compare_exchange_strong(zero_or_ignore, sig)) {
+            if (received_signal == SIGKILL) {
+                abort();
+            }
+            SleepForever();
+        }
+        // Don't restart like boost suggests. We want to append to the log file and not lose dynamic
+        // symbols. This may segfault if it unwinds outside C/C++ code but we'll just have to fall
+        // back to core dumps.
+        boost::stacktrace::safe_dump_to(backtrace_storage.data(), 4096);
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+        for (const int anything = 0; write(backtrace_thread_waker_fd, &anything, 1) != 1;)
+            ;
+        for (u8 ignore = 0; read(backtrace_done_printing_fd, &ignore, 1) != 1;)
+            ;
+        abort();
+    }
+#endif
+
     static inline std::unique_ptr<Impl, decltype(&Deleter)> instance{nullptr, Deleter};
 
     Filter filter;
@@ -291,6 +395,13 @@ private:
     std::thread backend_thread;
     MPSCQueue<Entry> message_queue{};
     std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
+
+#ifdef CITRA_LINUX_GCC_BACKTRACE
+    std::atomic_int received_signal{0};
+    std::array<u8, 4096> backtrace_storage{};
+    int backtrace_thread_waker_fd;
+    int backtrace_done_printing_fd;
+#endif
 };
 } // namespace
 
