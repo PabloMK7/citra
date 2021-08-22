@@ -63,6 +63,7 @@ namespace Bps {
 // Realistically uint32s are more than enough for code patching.
 using Number = u32;
 
+constexpr std::size_t MagicSize = 4;
 constexpr std::size_t FooterSize = 12;
 
 // The BPS format uses CRC32 checksums.
@@ -149,7 +150,7 @@ public:
         : m_source{source}, m_target{target}, m_patch{patch} {}
 
     bool Apply() {
-        const auto magic = *m_patch.Read<std::array<char, 4>>();
+        const auto magic = *m_patch.Read<std::array<char, MagicSize>>();
         if (std::string_view(magic.data(), magic.size()) != "BPS1") {
             LOG_ERROR(Service_FS, "Invalid BPS magic");
             return false;
@@ -257,10 +258,24 @@ private:
 } // namespace Bps
 
 bool ApplyBpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer) {
+    Bps::Stream patch_stream{patch.data(), patch.size()};
+
+    // Move the offset past the file format marker (i.e. "BPS1")
+    patch_stream.Seek(Bps::MagicSize);
+
+    const Bps::Number source_size = patch_stream.ReadNumber();
+    const Bps::Number target_size = patch_stream.ReadNumber();
+
+    if (target_size > source_size) {
+        LOG_INFO(Service_FS, "Resizing target to {}", target_size);
+        buffer.resize(target_size);
+    }
+
+    patch_stream.Seek(0);
+
     const std::vector<u8> source = buffer;
     Bps::Stream source_stream{source.data(), source.size()};
     Bps::Stream target_stream{buffer.data(), buffer.size()};
-    Bps::Stream patch_stream{patch.data(), patch.size()};
     Bps::PatchApplier applier{source_stream, target_stream, patch_stream};
     return applier.Apply();
 }
