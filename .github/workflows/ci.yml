@@ -8,11 +8,22 @@ on:
     branches: [ master ]
 
 jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    container: citraemu/build-environments:linux-clang-format
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+      - name: Build
+        env:
+          COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: ./.ci/linux-clang-format/docker.sh
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["linux-clang-format", "linux-fresh", "linux-frozen", "linux-mingw"]
+        image: ["linux-fresh", "linux-frozen", "linux-mingw"]
     container: citraemu/build-environments:${{ matrix.image }}
     steps:
       - uses: actions/checkout@v2
@@ -34,12 +45,12 @@ jobs:
           ENABLE_COMPATIBILITY_REPORTING: "ON"
       - name: Pack
         run: ./.ci/${{ matrix.image }}/upload.sh
-        if: ${{ matrix.image != 'linux-frozen' && matrix.image != 'linux-clang-format' }}
+        if: ${{ matrix.image != 'linux-frozen' }}
         env:
           NAME: ${{ matrix.image }}
       - name: Upload
         uses: actions/upload-artifact@v2
-        if: ${{ matrix.image != 'linux-frozen' && matrix.image != 'linux-clang-format' }}
+        if: ${{ matrix.image != 'linux-frozen' }}
         with:
           name: ${{ matrix.image }}
           path: artifacts/
