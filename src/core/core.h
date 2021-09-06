@@ -122,7 +122,7 @@ public:
 
     enum class Signal : u32 { None, Shutdown, Reset, Save, Load };
 
-    [[nodiscard]] bool SendSignal(Signal signal, u32 param = 0);
+    bool SendSignal(Signal signal, u32 param = 0);
 
     /// Request reset of the system
     void RequestReset() {
