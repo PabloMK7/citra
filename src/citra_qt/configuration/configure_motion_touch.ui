@@ -67,6 +67,24 @@
         </item>
        </layout>
       </item>
+      <item>
+       <layout class="QHBoxLayout">
+        <item>
+         <widget class="QLabel" name="motion_controller_label">
+          <property name="text">
+           <string>Controller:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="motion_controller_button">
+          <property name="text">
+           <string>Configure</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </item>

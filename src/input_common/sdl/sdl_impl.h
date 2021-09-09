@@ -22,6 +22,7 @@ class SDLJoystick;
 class SDLGameController;
 class SDLButtonFactory;
 class SDLAnalogFactory;
+class SDLMotionFactory;
 
 class SDLState : public State {
 public:
@@ -73,6 +74,7 @@ private:
 
     std::shared_ptr<SDLButtonFactory> button_factory;
     std::shared_ptr<SDLAnalogFactory> analog_factory;
+    std::shared_ptr<SDLMotionFactory> motion_factory;
 
     bool start_thread = false;
     std::atomic<bool> initialized = false;

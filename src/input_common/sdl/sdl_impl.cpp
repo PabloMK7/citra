@@ -173,6 +173,24 @@ public:
         std::lock_guard lock{mutex};
         return (state.hats.at(hat) & direction) != 0;
     }
+
+    void SetAccel(const float x, const float y, const float z) {
+        std::lock_guard lock{mutex};
+        state.accel.x = x;
+        state.accel.y = y;
+        state.accel.z = z;
+    }
+    void SetGyro(const float pitch, const float yaw, const float roll) {
+        std::lock_guard lock{mutex};
+        state.gyro.x = pitch;
+        state.gyro.y = yaw;
+        state.gyro.z = roll;
+    }
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetMotion() const {
+        std::lock_guard lock{mutex};
+        return std::make_tuple(state.accel, state.gyro);
+    }
+
     /**
      * The guid of the joystick
      */
@@ -204,6 +222,8 @@ private:
         std::unordered_map<int, bool> buttons;
         std::unordered_map<int, Sint16> axes;
         std::unordered_map<int, Uint8> hats;
+        Common::Vec3<float> accel;
+        Common::Vec3<float> gyro;
     } state;
     std::string guid;
     int port;
@@ -473,6 +493,14 @@ void SDLState::InitGameController(int controller_index) {
         LOG_WARNING(Input, "failed to open joystick {} as controller", controller_index);
         return;
     }
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    if (SDL_GameControllerHasSensor(sdl_controller, SDL_SENSOR_ACCEL)) {
+        SDL_GameControllerSetSensorEnabled(sdl_controller, SDL_SENSOR_ACCEL, SDL_TRUE);
+    }
+    if (SDL_GameControllerHasSensor(sdl_controller, SDL_SENSOR_GYRO)) {
+        SDL_GameControllerSetSensorEnabled(sdl_controller, SDL_SENSOR_GYRO, SDL_TRUE);
+    }
+#endif
     const std::string guid = GetGUID(SDL_GameControllerGetJoystick(sdl_controller));
 
     LOG_INFO(Input, "opened joystick {} as controller", controller_index);
@@ -557,6 +585,25 @@ void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
         }
         break;
     }
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    case SDL_CONTROLLERSENSORUPDATE: {
+        if (auto joystick = GetSDLJoystickBySDLID(event.csensor.which)) {
+            switch (event.csensor.sensor) {
+            case SDL_SENSOR_ACCEL:
+                joystick->SetAccel(event.csensor.data[0] / SDL_STANDARD_GRAVITY,
+                                   -event.csensor.data[1] / SDL_STANDARD_GRAVITY,
+                                   event.csensor.data[2] / SDL_STANDARD_GRAVITY);
+                break;
+            case SDL_SENSOR_GYRO:
+                joystick->SetGyro(-event.csensor.data[0] * (180.0f / Common::PI),
+                                  event.csensor.data[1] * (180.0f / Common::PI),
+                                  -event.csensor.data[2] * (180.0f / Common::PI));
+                break;
+            }
+        }
+        break;
+    }
+#endif
     case SDL_JOYDEVICEREMOVED:
         LOG_DEBUG(Input, "Joystick removed with Instance_ID {}", event.jdevice.which);
         CloseJoystick(SDL_JoystickFromInstanceID(event.jdevice.which));
@@ -656,6 +703,18 @@ private:
     const int axis_x;
     const int axis_y;
     const float deadzone;
+};
+
+class SDLMotion final : public Input::MotionDevice {
+public:
+    explicit SDLMotion(std::shared_ptr<SDLJoystick> joystick_) : joystick(std::move(joystick_)) {}
+
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() const override {
+        return joystick->GetMotion();
+    }
+
+private:
+    std::shared_ptr<SDLJoystick> joystick;
 };
 
 /// A button device factory that creates button devices from SDL joystick
@@ -764,10 +823,28 @@ private:
     SDLState& state;
 };
 
+class SDLMotionFactory final : public Input::Factory<Input::MotionDevice> {
+public:
+    explicit SDLMotionFactory(SDLState& state_) : state(state_) {}
+
+    std::unique_ptr<Input::MotionDevice> Create(const Common::ParamPackage& params) override {
+        const std::string guid = params.Get("guid", "0");
+        const int port = params.Get("port", 0);
+
+        auto joystick = state.GetSDLJoystickByGUID(guid, port);
+
+        return std::make_unique<SDLMotion>(joystick);
+    }
+
+private:
+    SDLState& state;
+};
+
 SDLState::SDLState() {
     using namespace Input;
     RegisterFactory<ButtonDevice>("sdl", std::make_shared<SDLButtonFactory>(*this));
     RegisterFactory<AnalogDevice>("sdl", std::make_shared<SDLAnalogFactory>(*this));
+    RegisterFactory<MotionDevice>("sdl", std::make_shared<SDLMotionFactory>(*this));
 
     // If the frontend is going to manage the event loop, then we dont start one here
     start_thread = !SDL_WasInit(SDL_INIT_GAMECONTROLLER);
@@ -812,6 +889,7 @@ SDLState::~SDLState() {
     using namespace Input;
     UnregisterFactory<ButtonDevice>("sdl");
     UnregisterFactory<AnalogDevice>("sdl");
+    UnregisterFactory<MotionDevice>("sdl");
 
     CloseJoysticks();
     CloseGameControllers();
