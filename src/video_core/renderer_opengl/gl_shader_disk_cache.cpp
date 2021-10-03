@@ -365,10 +365,6 @@ void ShaderDiskCache::SaveDecompiled(u64 unique_identifier,
 void ShaderDiskCache::SaveDump(u64 unique_identifier, GLuint program) {
     if (!IsUsable())
         return;
-    if (!GLAD_GL_ARB_get_program_binary) {
-        LOG_WARNING(Render_OpenGL, "ARB_get_program_binary is not supported. Problems may occur if "
-                                   "use_disk_shader_cache is ON.");
-    }
 
     GLint binary_length{};
     glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binary_length);

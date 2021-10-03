@@ -442,6 +442,12 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                   "Cannot load disk cache as separate shader programs are unsupported!");
         return;
     }
+    if (!GLAD_GL_ARB_get_program_binary) {
+        LOG_ERROR(Render_OpenGL,
+                  "Cannot load disk cache as ARB_get_program_binary is not supported!");
+        return;
+    }
+
     auto& disk_cache = impl->disk_cache;
     const auto transferable = disk_cache.LoadTransferable();
     if (!transferable) {
