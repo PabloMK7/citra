@@ -1,4 +1,6 @@
 //? #version 330
+precision mediump float;
+
 in vec2 tex_coord;
 
 out vec2 frag_color;
@@ -7,7 +9,7 @@ uniform sampler2D tex_input;
 
 const vec3 K = vec3(0.2627, 0.6780, 0.0593);
 // TODO: improve handling of alpha channel
-#define GetLum(xoffset) dot(K, textureOffset(tex_input, tex_coord, ivec2(xoffset, 0)).rgb)
+#define GetLum(xoffset) dot(K, textureLodOffset(tex_input, tex_coord, 0.0, ivec2(xoffset, 0)).rgb)
 
 void main() {
     float l = GetLum(-1);

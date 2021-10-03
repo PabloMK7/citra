@@ -102,7 +102,9 @@ static std::string GetVertexInterfaceDeclaration(bool is_output, bool separable_
         out += R"(
 out gl_PerVertex {
     vec4 gl_Position;
+#if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
     float gl_ClipDistance[2];
+#endif // !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
 };
 )";
     }
@@ -126,6 +128,17 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.texture0_type = regs.texturing.texture0.type;
 
     state.texture2_use_coord1 = regs.texturing.main_config.texture2_use_coord1 != 0;
+
+    if (GLES) {
+        // With GLES, we need this in the fragment shader to emulate logic operations
+        state.alphablend_enable =
+            Pica::g_state.regs.framebuffer.output_merger.alphablend_enable == 1;
+        state.logic_op = regs.framebuffer.output_merger.logic_op;
+    } else {
+        // We don't need these otherwise, reset them to avoid unnecessary shader generation
+        state.alphablend_enable = {};
+        state.logic_op = {};
+    }
 
     // Copy relevant tev stages fields.
     // We don't sync const_color here because of the high variance, it is a
@@ -607,13 +620,15 @@ static void WriteTevStage(std::string& out, const PicaFSConfig& config, unsigned
     if (!IsPassThroughTevStage(stage)) {
         const std::string index_name = std::to_string(index);
 
-        out += fmt::format("vec3 color_results_{}[3] = vec3[3](", index_name);
+        out += fmt::format("vec3 color_results_{}_1 = ", index_name);
         AppendColorModifier(out, config, stage.color_modifier1, stage.color_source1, index_name);
-        out += ", ";
+        out += fmt::format(";\nvec3 color_results_{}_2 = ", index_name);
         AppendColorModifier(out, config, stage.color_modifier2, stage.color_source2, index_name);
-        out += ", ";
+        out += fmt::format(";\nvec3 color_results_{}_3 = ", index_name);
         AppendColorModifier(out, config, stage.color_modifier3, stage.color_source3, index_name);
-        out += ");\n";
+        out += fmt::format(";\nvec3 color_results_{}[3] = vec3[3](color_results_{}_1, "
+                           "color_results_{}_2, color_results_{}_3);\n",
+                           index_name, index_name, index_name, index_name);
 
         // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
         out += fmt::format("vec3 color_output_{} = byteround(", index_name);
@@ -1216,14 +1231,21 @@ float ProcTexNoiseCoef(vec2 x) {
 ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& config,
                                                        bool separable_shader) {
     const auto& state = config.state;
+    std::string out;
 
-    std::string out = R"(
+    if (GLES) {
+        out += R"(
+#define ALLOW_SHADOW (defined(CITRA_GLES))
+)";
+    } else {
+        out += R"(
 #extension GL_ARB_shader_image_load_store : enable
 #extension GL_ARB_shader_image_size : enable
 #define ALLOW_SHADOW (defined(GL_ARB_shader_image_load_store) && defined(GL_ARB_shader_image_size))
 )";
+    }
 
-    if (separable_shader) {
+    if (separable_shader && !GLES) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
@@ -1244,6 +1266,7 @@ uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
 uniform samplerCube tex_cube;
+uniform samplerBuffer texture_buffer_lut_lf;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
 
@@ -1267,7 +1290,7 @@ vec3 quaternion_rotate(vec4 q, vec3 v) {
 }
 
 float LookupLightingLUT(int lut_index, int index, float delta) {
-    vec2 entry = texelFetch(texture_buffer_lut_rg, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
+    vec2 entry = texelFetch(texture_buffer_lut_lf, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
     return entry.r + entry.g * delta;
 }
 
@@ -1519,7 +1542,7 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Generate clamped fog factor from LUT for given fog index
         out += "float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n"
                "float fog_f = fog_index - fog_i;\n"
-               "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_rg, int(fog_i) + "
+               "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_lf, int(fog_i) + "
                "fog_lut_offset).rg;\n"
                "float fog_factor = fog_lut_entry.r + fog_lut_entry.g * fog_f;\n"
                "fog_factor = clamp(fog_factor, 0.0, 1.0);\n";
@@ -1537,8 +1560,8 @@ vec4 secondary_fragment_color = vec4(0.0);
     if (state.shadow_rendering) {
         out += R"(
 #if ALLOW_SHADOW
-uint d = uint(clamp(depth, 0.0, 1.0) * 0xFFFFFF);
-uint s = uint(last_tex_env_out.g * 0xFF);
+uint d = uint(clamp(depth, 0.0, 1.0) * float(0xFFFFFF));
+uint s = uint(last_tex_env_out.g * float(0xFF));
 ivec2 image_coord = ivec2(gl_FragCoord.xy);
 
 uint old = imageLoad(shadow_buffer, image_coord).x;
@@ -1567,6 +1590,32 @@ do {
         out += "color = byteround(last_tex_env_out);\n";
     }
 
+    if (GLES) {
+        if (!state.alphablend_enable) {
+            switch (state.logic_op) {
+            case FramebufferRegs::LogicOp::Clear:
+                out += "color = vec4(0);\n";
+                break;
+            case FramebufferRegs::LogicOp::Set:
+                out += "color = vec4(1);\n";
+                break;
+            case FramebufferRegs::LogicOp::Copy:
+                // Take the color output as-is
+                break;
+            case FramebufferRegs::LogicOp::CopyInverted:
+                out += "color = ~color;\n";
+                break;
+            case FramebufferRegs::LogicOp::NoOp:
+                // We need to discard the color, but not necessarily the depth. This is not possible
+                // with fragment shader alone, so we emulate this behavior on GLES with glColorMask.
+                break;
+            default:
+                LOG_CRITICAL(HW_GPU, "Unhandled logic_op {:x}", static_cast<int>(state.logic_op));
+                UNIMPLEMENTED();
+            }
+        }
+    }
+
     out += '}';
 
     return {std::move(out)};
@@ -1574,7 +1623,7 @@ do {
 
 ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shader) {
     std::string out;
-    if (separable_shader) {
+    if (separable_shader && !GLES) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
@@ -1617,8 +1666,8 @@ void main() {
 
 std::optional<ShaderDecompiler::ProgramResult> GenerateVertexShader(
     const Pica::Shader::ShaderSetup& setup, const PicaVSConfig& config, bool separable_shader) {
-    std::string out = "";
-    if (separable_shader) {
+    std::string out;
+    if (separable_shader && !GLES) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
@@ -1767,8 +1816,8 @@ void EmitPrim(Vertex vtx0, Vertex vtx1, Vertex vtx2) {
 
 ShaderDecompiler::ProgramResult GenerateFixedGeometryShader(const PicaFixedGSConfig& config,
                                                             bool separable_shader) {
-    std::string out = "";
-    if (separable_shader) {
+    std::string out;
+    if (separable_shader && !GLES) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n\n";
     }
 

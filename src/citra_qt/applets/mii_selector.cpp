@@ -8,11 +8,7 @@
 #include <QString>
 #include <QVBoxLayout>
 #include "citra_qt/applets/mii_selector.h"
-#include "common/file_util.h"
 #include "common/string_util.h"
-#include "core/file_sys/archive_extsavedata.h"
-#include "core/file_sys/file_backend.h"
-#include "core/hle/service/ptm/ptm.h"
 
 QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_selector_)
     : QDialog(parent), mii_selector(mii_selector_) {
@@ -33,37 +29,9 @@ QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_sel
 
     miis.push_back(HLE::Applets::MiiSelector::GetStandardMiiResult().selected_mii_data);
     combobox->addItem(tr("Standard Mii"));
-
-    std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
-    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
-
-    auto archive_result = extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id, 0);
-    if (archive_result.Succeeded()) {
-        auto archive = std::move(archive_result).Unwrap();
-
-        FileSys::Path file_path = "/CFL_DB.dat";
-        FileSys::Mode mode{};
-        mode.read_flag.Assign(1);
-
-        auto file_result = archive->OpenFile(file_path, mode);
-        if (file_result.Succeeded()) {
-            auto file = std::move(file_result).Unwrap();
-
-            u32 saved_miis_offset = 0x8;
-            // The Mii Maker has a 100 Mii limit on the 3ds
-            for (int i = 0; i < 100; ++i) {
-                HLE::Applets::MiiData mii;
-                std::array<u8, sizeof(mii)> mii_raw;
-                file->Read(saved_miis_offset, sizeof(mii), mii_raw.data());
-                std::memcpy(&mii, mii_raw.data(), sizeof(mii));
-                if (mii.mii_id != 0) {
-                    std::string name = Common::UTF16BufferToUTF8(mii.mii_name);
-                    miis.push_back(mii);
-                    combobox->addItem(QString::fromStdString(name));
-                }
-                saved_miis_offset += sizeof(mii);
-            }
-        }
+    for (const auto& mii : Frontend::LoadMiis()) {
+        miis.push_back(mii);
+        combobox->addItem(QString::fromStdString(Common::UTF16BufferToUTF8(mii.mii_name)));
     }
 
     if (combobox->count() > static_cast<int>(config.initially_selected_mii_index)) {

@@ -34,13 +34,7 @@ std::string FormatLogMessage(const Entry& entry) {
 
 void PrintMessage(const Entry& entry) {
     const auto str = FormatLogMessage(entry).append(1, '\n');
-#ifdef ANDROID
-    // Android's log level enum are offset by '2'
-    const int android_log_level = static_cast<int>(entry.log_level) + 2;
-    __android_log_print(android_log_level, "CitraNative", "%s", str.c_str());
-#else
     fputs(str.c_str(), stderr);
-#endif
 }
 
 void PrintColoredMessage(const Entry& entry) {
@@ -78,7 +72,7 @@ void PrintColoredMessage(const Entry& entry) {
     }
 
     SetConsoleTextAttribute(console_handle, color);
-#elif !defined(ANDROID)
+#else
 #define ESC "\x1b"
     const char* color = "";
     switch (entry.log_level) {
@@ -111,9 +105,40 @@ void PrintColoredMessage(const Entry& entry) {
 
 #ifdef _WIN32
     SetConsoleTextAttribute(console_handle, original_info.wAttributes);
-#elif !defined(ANDROID)
+#else
     fputs(ESC "[0m", stderr);
 #undef ESC
+#endif
+}
+
+void PrintMessageToLogcat(const Entry& entry) {
+#ifdef ANDROID
+    const auto str = FormatLogMessage(entry);
+
+    android_LogPriority android_log_priority;
+    switch (entry.log_level) {
+    case Level::Trace:
+        android_log_priority = ANDROID_LOG_VERBOSE;
+        break;
+    case Level::Debug:
+        android_log_priority = ANDROID_LOG_DEBUG;
+        break;
+    case Level::Info:
+        android_log_priority = ANDROID_LOG_INFO;
+        break;
+    case Level::Warning:
+        android_log_priority = ANDROID_LOG_WARN;
+        break;
+    case Level::Error:
+        android_log_priority = ANDROID_LOG_ERROR;
+        break;
+    case Level::Critical:
+        android_log_priority = ANDROID_LOG_FATAL;
+        break;
+    case Level::Count:
+        UNREACHABLE();
+    }
+    __android_log_print(android_log_priority, "CitraNative", "%s", str.c_str());
 #endif
 }
 } // namespace Log

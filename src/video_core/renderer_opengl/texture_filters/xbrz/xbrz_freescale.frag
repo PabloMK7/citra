@@ -1,4 +1,6 @@
 //? #version 330
+precision mediump float;
+
 in vec2 tex_coord;
 in vec2 source_size;
 in vec2 output_size;
@@ -6,7 +8,7 @@ in vec2 output_size;
 out vec4 frag_color;
 
 uniform sampler2D tex;
-uniform float scale;
+uniform lowp float scale;
 
 const int BLEND_NONE = 0;
 const int BLEND_NORMAL = 1;
@@ -42,12 +44,12 @@ float GetLeftRatio(vec2 center, vec2 origin, vec2 direction) {
     return smoothstep(-sqrt(2.0) / 2.0, sqrt(2.0) / 2.0, v);
 }
 
-vec2 pos = fract(tex_coord * source_size) - vec2(0.5, 0.5);
-vec2 coord = tex_coord - pos / source_size;
-
 #define P(x, y) textureOffset(tex, coord, ivec2(x, y))
 
 void main() {
+    vec2 pos = fract(tex_coord * source_size) - vec2(0.5, 0.5);
+    vec2 coord = tex_coord - pos / source_size;
+
     //---------------------------------------
     // Input Pixel Mapping:  -|x|x|x|-
     //                       x|A|B|C|x
@@ -142,15 +144,15 @@ void main() {
                               (IsPixEqual(G, H) && IsPixEqual(H, I) && IsPixEqual(I, F) &&
                                IsPixEqual(F, C) && !IsPixEqual(E, I))));
         vec2 origin = vec2(0.0, 1.0 / sqrt(2.0));
-        ivec2 direction = ivec2(1, -1);
+        vec2 direction = vec2(1.0, -1.0);
         if (doLineBlend) {
             bool haveShallowLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_F_G <= dist_H_C) && E != G && D != G;
             bool haveSteepLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_H_C <= dist_F_G) && E != C && B != C;
             origin = haveShallowLine ? vec2(0.0, 0.25) : vec2(0.0, 0.5);
-            direction.x += haveShallowLine ? 1 : 0;
-            direction.y -= haveSteepLine ? 1 : 0;
+            direction.x += haveShallowLine ? 1.0 : 0.0;
+            direction.y -= haveSteepLine ? 1.0 : 0.0;
         }
         vec4 blendPix = mix(H, F, step(ColorDist(E, F), ColorDist(E, H)));
         res = mix(res, blendPix, GetLeftRatio(pos, origin, direction));
@@ -169,15 +171,15 @@ void main() {
                               (IsPixEqual(A, D) && IsPixEqual(D, G) && IsPixEqual(G, H) &&
                                IsPixEqual(H, I) && !IsPixEqual(E, G))));
         vec2 origin = vec2(-1.0 / sqrt(2.0), 0.0);
-        ivec2 direction = ivec2(1, 1);
+        vec2 direction = vec2(1.0, 1.0);
         if (doLineBlend) {
             bool haveShallowLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_H_A <= dist_D_I) && E != A && B != A;
             bool haveSteepLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_D_I <= dist_H_A) && E != I && F != I;
             origin = haveShallowLine ? vec2(-0.25, 0.0) : vec2(-0.5, 0.0);
-            direction.y += haveShallowLine ? 1 : 0;
-            direction.x += haveSteepLine ? 1 : 0;
+            direction.y += haveShallowLine ? 1.0 : 0.0;
+            direction.x += haveSteepLine ? 1.0 : 0.0;
         }
         origin = origin;
         direction = direction;
@@ -198,15 +200,15 @@ void main() {
                               (IsPixEqual(I, F) && IsPixEqual(F, C) && IsPixEqual(C, B) &&
                                IsPixEqual(B, A) && !IsPixEqual(E, C))));
         vec2 origin = vec2(1.0 / sqrt(2.0), 0.0);
-        ivec2 direction = ivec2(-1, -1);
+        vec2 direction = vec2(-1.0, -1.0);
         if (doLineBlend) {
             bool haveShallowLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_B_I <= dist_F_A) && E != I && H != I;
             bool haveSteepLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_F_A <= dist_B_I) && E != A && D != A;
             origin = haveShallowLine ? vec2(0.25, 0.0) : vec2(0.5, 0.0);
-            direction.y -= haveShallowLine ? 1 : 0;
-            direction.x -= haveSteepLine ? 1 : 0;
+            direction.y -= haveShallowLine ? 1.0 : 0.0;
+            direction.x -= haveSteepLine ? 1.0 : 0.0;
         }
         vec4 blendPix = mix(F, B, step(ColorDist(E, B), ColorDist(E, F)));
         res = mix(res, blendPix, GetLeftRatio(pos, origin, direction));
@@ -225,15 +227,15 @@ void main() {
                               (IsPixEqual(C, B) && IsPixEqual(B, A) && IsPixEqual(A, D) &&
                                IsPixEqual(D, G) && !IsPixEqual(E, A))));
         vec2 origin = vec2(0.0, -1.0 / sqrt(2.0));
-        ivec2 direction = ivec2(-1, 1);
+        vec2 direction = vec2(-1.0, 1.0);
         if (doLineBlend) {
             bool haveShallowLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_D_C <= dist_B_G) && E != C && F != C;
             bool haveSteepLine =
                 (STEEP_DIRECTION_THRESHOLD * dist_B_G <= dist_D_C) && E != G && H != G;
             origin = haveShallowLine ? vec2(0.0, -0.25) : vec2(0.0, -0.5);
-            direction.x -= haveShallowLine ? 1 : 0;
-            direction.y += haveSteepLine ? 1 : 0;
+            direction.x -= haveShallowLine ? 1.0 : 0.0;
+            direction.y += haveSteepLine ? 1.0 : 0.0;
         }
         vec4 blendPix = mix(D, B, step(ColorDist(E, B), ColorDist(E, D)));
         res = mix(res, blendPix, GetLeftRatio(pos, origin, direction));

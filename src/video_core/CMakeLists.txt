@@ -54,6 +54,8 @@ add_library(video_core STATIC
     renderer_opengl/post_processing_opengl.h
     renderer_opengl/renderer_opengl.cpp
     renderer_opengl/renderer_opengl.h
+    renderer_opengl/texture_downloader_es.cpp
+    renderer_opengl/texture_downloader_es.h
     renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.cpp
     renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.h
     renderer_opengl/texture_filters/bicubic/bicubic.cpp
@@ -99,11 +101,12 @@ add_library(video_core STATIC
 )
 
 set(SHADER_FILES
+    renderer_opengl/depth_to_color.frag
+    renderer_opengl/depth_to_color.vert
+    renderer_opengl/ds_to_color.frag
     renderer_opengl/texture_filters/anime4k/refine.frag
-    renderer_opengl/texture_filters/anime4k/refine.vert
     renderer_opengl/texture_filters/anime4k/x_gradient.frag
     renderer_opengl/texture_filters/anime4k/y_gradient.frag
-    renderer_opengl/texture_filters/anime4k/y_gradient.vert
     renderer_opengl/texture_filters/bicubic/bicubic.frag
     renderer_opengl/texture_filters/scale_force/scale_force.frag
     renderer_opengl/texture_filters/tex_coord.vert
@@ -121,7 +124,7 @@ endforeach()
 
 add_custom_target(shaders
     BYPRODUCTS ${SHADER_HEADERS}
-    COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shaders.cmake
+    COMMAND "${CMAKE_COMMAND}" -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shaders.cmake
     SOURCES ${SHADER_FILES}
 )
 add_dependencies(video_core shaders)

@@ -34,30 +34,14 @@
 #include "video_core/renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.h"
 
 #include "shaders/refine.frag"
-#include "shaders/refine.vert"
 #include "shaders/tex_coord.vert"
 #include "shaders/x_gradient.frag"
 #include "shaders/y_gradient.frag"
-#include "shaders/y_gradient.vert"
 
 namespace OpenGL {
 
 Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterBase(scale_factor) {
     const OpenGLState cur_state = OpenGLState::GetCurState();
-    const auto setup_temp_tex = [this](TempTex& texture, GLint internal_format, GLint format) {
-        texture.fbo.Create();
-        texture.tex.Create();
-        state.draw.draw_framebuffer = texture.fbo.handle;
-        state.Apply();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_RECTANGLE, texture.tex.handle);
-        glTexImage2D(GL_TEXTURE_RECTANGLE, 0, internal_format, 1024 * internal_scale_factor,
-                     1024 * internal_scale_factor, 0, format, GL_HALF_FLOAT, nullptr);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE,
-                               texture.tex.handle, 0);
-    };
-    setup_temp_tex(LUMAD, GL_R16F, GL_RED);
-    setup_temp_tex(XY, GL_RG16F, GL_RG);
 
     vao.Create();
 
@@ -65,17 +49,17 @@ Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterBase(scale_f
         samplers[idx].Create();
         state.texture_units[idx].sampler = samplers[idx].handle;
         glSamplerParameteri(samplers[idx].handle, GL_TEXTURE_MIN_FILTER,
-                            idx == 0 ? GL_LINEAR : GL_NEAREST);
+                            idx != 2 ? GL_LINEAR : GL_NEAREST);
         glSamplerParameteri(samplers[idx].handle, GL_TEXTURE_MAG_FILTER,
-                            idx == 0 ? GL_LINEAR : GL_NEAREST);
+                            idx != 2 ? GL_LINEAR : GL_NEAREST);
         glSamplerParameteri(samplers[idx].handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glSamplerParameteri(samplers[idx].handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
     state.draw.vertex_array = vao.handle;
 
     gradient_x_program.Create(tex_coord_vert.data(), x_gradient_frag.data());
-    gradient_y_program.Create(y_gradient_vert.data(), y_gradient_frag.data());
-    refine_program.Create(refine_vert.data(), refine_frag.data());
+    gradient_y_program.Create(tex_coord_vert.data(), y_gradient_frag.data());
+    refine_program.Create(tex_coord_vert.data(), refine_frag.data());
 
     state.draw.shader_program = gradient_y_program.handle;
     state.Apply();
@@ -84,8 +68,6 @@ Anime4kUltrafast::Anime4kUltrafast(u16 scale_factor) : TextureFilterBase(scale_f
     state.draw.shader_program = refine_program.handle;
     state.Apply();
     glUniform1i(glGetUniformLocation(refine_program.handle, "LUMAD"), 1);
-    glUniform1f(glGetUniformLocation(refine_program.handle, "final_scale"),
-                static_cast<GLfloat>(internal_scale_factor) / scale_factor);
 
     cur_state.Apply();
 }
@@ -95,19 +77,47 @@ void Anime4kUltrafast::Filter(GLuint src_tex, const Common::Rectangle<u32>& src_
                               GLuint read_fb_handle, GLuint draw_fb_handle) {
     const OpenGLState cur_state = OpenGLState::GetCurState();
 
+    // These will have handles from the previous texture that was filtered, reset them to avoid
+    // binding invalid textures.
+    state.texture_units[0].texture_2d = 0;
+    state.texture_units[1].texture_2d = 0;
+    state.texture_units[2].texture_2d = 0;
+
+    const auto setup_temp_tex = [this, &src_rect](GLint internal_format, GLint format) {
+        TempTex texture;
+        texture.fbo.Create();
+        texture.tex.Create();
+        state.texture_units[0].texture_2d = texture.tex.handle;
+        state.draw.draw_framebuffer = texture.fbo.handle;
+        state.Apply();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture.tex.handle);
+        if (GL_ARB_texture_storage) {
+            glTexStorage2D(GL_TEXTURE_2D, 1, internal_format,
+                           src_rect.GetWidth() * internal_scale_factor,
+                           src_rect.GetHeight() * internal_scale_factor);
+        } else {
+            glTexImage2D(
+                GL_TEXTURE_2D, 0, internal_format, src_rect.GetWidth() * internal_scale_factor,
+                src_rect.GetHeight() * internal_scale_factor, 0, format, GL_HALF_FLOAT, nullptr);
+        }
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               texture.tex.handle, 0);
+        return texture;
+    };
+    auto XY = setup_temp_tex(GL_RG16F, GL_RG);
+    auto LUMAD = setup_temp_tex(GL_R16F, GL_RED);
+
     state.viewport = {static_cast<GLint>(src_rect.left * internal_scale_factor),
                       static_cast<GLint>(src_rect.bottom * internal_scale_factor),
                       static_cast<GLsizei>(src_rect.GetWidth() * internal_scale_factor),
                       static_cast<GLsizei>(src_rect.GetHeight() * internal_scale_factor)};
     state.texture_units[0].texture_2d = src_tex;
+    state.texture_units[1].texture_2d = LUMAD.tex.handle;
+    state.texture_units[2].texture_2d = XY.tex.handle;
     state.draw.draw_framebuffer = XY.fbo.handle;
     state.draw.shader_program = gradient_x_program.handle;
     state.Apply();
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_RECTANGLE, LUMAD.tex.handle);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_RECTANGLE, XY.tex.handle);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

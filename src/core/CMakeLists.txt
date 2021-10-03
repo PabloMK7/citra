@@ -108,8 +108,8 @@ add_library(core STATIC
     frontend/framebuffer_layout.h
     frontend/image_interface.h
     frontend/input.h
-    frontend/mic.h
     frontend/mic.cpp
+    frontend/mic.h
     frontend/scope_acquire_context.cpp
     frontend/scope_acquire_context.h
     gdbstub/gdbstub.cpp

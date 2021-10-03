@@ -58,6 +58,7 @@ OpenGLState::OpenGLState() {
     texture_cube_unit.texture_cube = 0;
     texture_cube_unit.sampler = 0;
 
+    texture_buffer_lut_lf.texture_buffer = 0;
     texture_buffer_lut_rg.texture_buffer = 0;
     texture_buffer_lut_rgba.texture_buffer = 0;
 
@@ -169,10 +170,17 @@ void OpenGLState::Apply() const {
     if (blend.enabled != cur_state.blend.enabled) {
         if (blend.enabled) {
             glEnable(GL_BLEND);
-            glDisable(GL_COLOR_LOGIC_OP);
         } else {
             glDisable(GL_BLEND);
-            glEnable(GL_COLOR_LOGIC_OP);
+        }
+
+        // GLES does not support glLogicOp
+        if (!GLES) {
+            if (blend.enabled) {
+                glDisable(GL_COLOR_LOGIC_OP);
+            } else {
+                glEnable(GL_COLOR_LOGIC_OP);
+            }
         }
     }
 
@@ -196,13 +204,11 @@ void OpenGLState::Apply() const {
         glBlendEquationSeparate(blend.rgb_equation, blend.a_equation);
     }
 
-    // GLES3 does not support glLogicOp
+    // GLES does not support glLogicOp
     if (!GLES) {
         if (logic_op != cur_state.logic_op) {
             glLogicOp(logic_op);
         }
-    } else {
-        LOG_TRACE(Render_OpenGL, "glLogicOps are unimplemented...");
     }
 
     // Textures
@@ -222,6 +228,12 @@ void OpenGLState::Apply() const {
     }
     if (texture_cube_unit.sampler != cur_state.texture_cube_unit.sampler) {
         glBindSampler(TextureUnits::TextureCube.id, texture_cube_unit.sampler);
+    }
+
+    // Texture buffer LUTs
+    if (texture_buffer_lut_lf.texture_buffer != cur_state.texture_buffer_lut_lf.texture_buffer) {
+        glActiveTexture(TextureUnits::TextureBufferLUT_LF.Enum());
+        glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_lf.texture_buffer);
     }
 
     // Texture buffer LUTs
@@ -354,6 +366,8 @@ OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
     }
     if (texture_cube_unit.texture_cube == handle)
         texture_cube_unit.texture_cube = 0;
+    if (texture_buffer_lut_lf.texture_buffer == handle)
+        texture_buffer_lut_lf.texture_buffer = 0;
     if (texture_buffer_lut_rg.texture_buffer == handle)
         texture_buffer_lut_rg.texture_buffer = 0;
     if (texture_buffer_lut_rgba.texture_buffer == handle)

@@ -1,14 +1,12 @@
 //? #version 330
+precision mediump float;
+
 in vec2 tex_coord;
-in vec2 input_max;
 
 out vec4 frag_color;
 
 uniform sampler2D HOOKED;
-uniform sampler2DRect LUMAD;
-uniform sampler2DRect LUMAG;
-
-uniform float final_scale;
+uniform sampler2D LUMAD;
 
 const float LINE_DETECT_THRESHOLD = 0.4;
 const float STRENGTH = 0.6;
@@ -21,12 +19,12 @@ struct RGBAL {
 };
 
 vec4 getAverage(vec4 cc, vec4 a, vec4 b, vec4 c) {
-    return cc * (1 - STRENGTH) + ((a + b + c) / 3) * STRENGTH;
+    return cc * (1.0 - STRENGTH) + ((a + b + c) / 3.0) * STRENGTH;
 }
 
-#define GetRGBAL(offset)                                                                           \
-    RGBAL(textureOffset(HOOKED, tex_coord, offset),                                                \
-          texture(LUMAD, clamp((gl_FragCoord.xy + offset) * final_scale, vec2(0.0), input_max)).x)
+#define GetRGBAL(x_offset, y_offset)                                                               \
+    RGBAL(textureLodOffset(HOOKED, tex_coord, 0.0, ivec2(x_offset, y_offset)),                     \
+          textureLodOffset(LUMAD, tex_coord, 0.0, ivec2(x_offset, y_offset)).x)
 
 float min3v(float a, float b, float c) {
     return min(min(a, b), c);
@@ -37,23 +35,23 @@ float max3v(float a, float b, float c) {
 }
 
 vec4 Compute() {
-    RGBAL cc = GetRGBAL(ivec2(0));
+    RGBAL cc = GetRGBAL(0, 0);
 
     if (cc.l > LINE_DETECT_THRESHOLD) {
         return cc.c;
     }
 
-    RGBAL tl = GetRGBAL(ivec2(-1, -1));
-    RGBAL t = GetRGBAL(ivec2(0, -1));
-    RGBAL tr = GetRGBAL(ivec2(1, -1));
+    RGBAL tl = GetRGBAL(-1, -1);
+    RGBAL t = GetRGBAL(0, -1);
+    RGBAL tr = GetRGBAL(1, -1);
 
-    RGBAL l = GetRGBAL(ivec2(-1, 0));
+    RGBAL l = GetRGBAL(-1, 0);
 
-    RGBAL r = GetRGBAL(ivec2(1, 0));
+    RGBAL r = GetRGBAL(1, 0);
 
-    RGBAL bl = GetRGBAL(ivec2(-1, 1));
-    RGBAL b = GetRGBAL(ivec2(0, 1));
-    RGBAL br = GetRGBAL(ivec2(1, 1));
+    RGBAL bl = GetRGBAL(-1, 1);
+    RGBAL b = GetRGBAL(0, 1);
+    RGBAL br = GetRGBAL(1, 1);
 
     // Kernel 0 and 4
     float maxDark = max3v(br.l, b.l, bl.l);
