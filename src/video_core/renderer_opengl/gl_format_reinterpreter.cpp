@@ -373,14 +373,19 @@ class CopyImageSubData final : public FormatReinterpreterBase {
 };
 
 FormatReinterpreterOpenGL::FormatReinterpreterOpenGL() {
-    std::string_view vendor{reinterpret_cast<const char*>(glGetString(GL_VENDOR))};
-    if (vendor.find("NVIDIA") != vendor.npos) {
+    // Older Nvidia GPUs don't seem to properly support using glCopyImageSubData to copy D24S8 to
+    // RGBA8. This is a heuristic check that relies on the newer drivers returning something similar
+    // to `3.3.0 NVIDIA 471.41`, and older, buggy ones returning just `3.3.0`.
+    std::string_view version{reinterpret_cast<const char*>(glGetString(GL_VERSION))};
+    if (version.find("NVIDIA") != version.npos) {
         reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
                                std::make_unique<CopyImageSubData>());
         // Nvidia bends the spec and allows direct copies between color and depth formats
         // might as well take advantage of it
         LOG_INFO(Render_OpenGL, "Using glCopyImageSubData for D24S8 to RGBA8 reinterpretation");
-    } else if ((GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage) || GLES) {
+    } else if ((GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage &&
+                GLAD_GL_ARB_copy_image) ||
+               GLES) {
         reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
                                std::make_unique<ShaderD24S8toRGBA8>());
         LOG_INFO(Render_OpenGL, "Using shader for D24S8 to RGBA8 reinterpretation");
