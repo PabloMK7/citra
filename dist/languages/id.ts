@@ -492,7 +492,7 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="73"/>
         <source>An error occurred while sending the Testcase</source>
-        <translation type="unfinished"/>
+        <translation>Galat terjadi saat mengirimkan Testcase</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="75"/>
@@ -924,7 +924,7 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="73"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="140"/>
         <source>Storage</source>
-        <translation type="unfinished"/>
+        <translation>Penyimpanan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="78"/>
@@ -1110,7 +1110,7 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="124"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mengurangi Stuttering dengan menyimpan dan memuat Shader yang telah dibuat ke penyimpanan&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="127"/>
@@ -1135,7 +1135,7 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.cpp" line="49"/>
         <source>Separable Shader support is broken on macOS with Intel GPUs, and will cause graphical issues like showing a black screen.&lt;br&gt;&lt;br&gt;The option is only there for test/development purposes. If you experience graphical issues with Hardware Shader, please turn it off.</source>
-        <translation type="unfinished"/>
+        <translation>Dukungan terhadap Separable Shader tidak maksimal di macOS dengan GPU Intel, dan dapat menyebabkan masalah grafis seperti menampilkan layar hitam&lt;br&gt;&lt;br&gt;Opsi ini hanya tersedia untuk tujuan pengembangan. Jika anda mengalami masalah grafis dengan Hardware Shader, silahkan matikan fitur ini</translation>
     </message>
 </context>
 <context>
@@ -1312,7 +1312,7 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="465"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="587"/>
         <source>Deadzone: 0</source>
-        <translation type="unfinished"/>
+        <translation>Deadzone : 0</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="489"/>
@@ -1352,7 +1352,7 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="753"/>
         <source>Auto Map</source>
-        <translation type="unfinished"/>
+        <translation>Auto Map</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="781"/>
@@ -1397,18 +1397,18 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="445"/>
         <source>Deadzone: %1%</source>
-        <translation type="unfinished"/>
+        <translation>Deadzone: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="284"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="452"/>
         <source>Modifier Scale: %1%</source>
-        <translation type="unfinished"/>
+        <translation>Pengubah Skala: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="480"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Peringatan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="481"/>
@@ -1653,28 +1653,28 @@ Maukah kau membiarkan eror ini dan melanjutkan?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="22"/>
         <source>Storage</source>
-        <translation type="unfinished"/>
+        <translation>Penyimpanan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="30"/>
         <source>Use Virtual SD</source>
-        <translation type="unfinished"/>
+        <translation>Gunakan Kartu SD virtual</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="47"/>
         <source>NAND Directory</source>
-        <translation type="unfinished"/>
+        <translation>Direktori NAND</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="61"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="126"/>
         <source>Open</source>
-        <translation type="unfinished"/>
+        <translation>Buka</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="72"/>
@@ -5266,12 +5266,12 @@ They may have left the room.</source>
 <context>
     <name>QtMiiSelectorDialog</name>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="27"/>
         <source>Mii Selector</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="35"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
         <source>Standard Mii</source>
         <translation type="unfinished"/>
     </message>

@@ -52,9 +52,9 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Citra é um emulador de 3DS livre e de código aberto sob licença GPLv2.0 ou qualquer versão posterior.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;O Citra é um emulador de 3DS livre e de código aberto sob a licença GPLv2.0 ou qualquer versão posterior.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Este programa não deve ser utilizado para jogar jogos que você não obteve legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Este programa não deve ser utilizado para jogar jogos não obtidos legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="118"/>
@@ -407,7 +407,7 @@ Deseja ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="36"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Should you choose to submit a test case to the &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Citra Compatibility List&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, The following information will be collected and displayed on the site:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Hardware Information (CPU / GPU / Operating System)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Which version of Citra you are running&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The connected Citra account&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Ao enviar um caso de teste à &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;lista de compatibilidade do Citra&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, as seguintes informações serão recolhidas e exibidas no site:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Informações de hardware (CPU / GPU / sistema operacional)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Qual versão do Citra você está utilizando&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A conta do Citra conectada&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Ao enviar um caso de teste à &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;lista de compatibilidade do Citra&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, as seguintes informações serão recolhidas e mostradas no site:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Informações de hardware (CPU / GPU/ sistema operacional)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Qual versão do Citra está utilizando&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A conta do Citra conectada&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="72"/>
@@ -1042,7 +1042,7 @@ Deseja ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="109"/>
         <source>Are you sure you want to &lt;b&gt;reset your settings&lt;/b&gt; and close Citra?</source>
-        <translation>Deseja mesmo &lt;b&gt;redefinir as suas configurações ao padrão&lt;/b&gt; e fechar o Citra?</translation>
+        <translation>Deseja mesmo &lt;b&gt;redefinir as configurações como padrão&lt;/b&gt; e fechar o Citra?</translation>
     </message>
 </context>
 <context>
@@ -1362,7 +1362,7 @@ Deseja ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="809"/>
         <source>Restore Defaults</source>
-        <translation>Restaurar padrões</translation>
+        <translation>Restaurar predefinições</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="202"/>
@@ -1380,7 +1380,7 @@ Deseja ignorar o erro e continuar?</translation>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="208"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="245"/>
         <source>Restore Default</source>
-        <translation>Restaurar padrão</translation>
+        <translation>Restaurar predefinição</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="261"/>
@@ -1391,7 +1391,7 @@ Deseja ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="262"/>
         <source>After pressing OK, first move your joystick horizontally, and then vertically.</source>
-        <translation>Após pressionar OK, mova o seu direcional analógico primeiro horizontalmente e depois verticalmente.</translation>
+        <translation>Após pressionar OK, mova o direcional analógico primeiro horizontalmente e depois verticalmente.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
@@ -1413,12 +1413,12 @@ Deseja ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="481"/>
         <source>Auto mapping failed. Your controller may not have a corresponding mapping</source>
-        <translation>O mapeamento automático falhou. O seu controle pode não ter um mapeamento correspondente.</translation>
+        <translation>O mapeamento automático falhou. O controle pode não ter um mapeamento correspondente.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="487"/>
         <source>After pressing OK, press any button on your joystick</source>
-        <translation>Após clicar em OK, pressione qualquer botão do seu controle.</translation>
+        <translation>Após clicar em OK, pressione qualquer botão do controle.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="509"/>
@@ -2923,7 +2923,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="58"/>
         <source>&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Learn more&lt;/span&gt;&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Saiba mais&lt;/span&gt;&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Saber mais&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="66"/>
@@ -2970,7 +2970,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="152"/>
         <source>Verification failed. Check that you have entered your token correctly, and that your internet connection is working.</source>
-        <translation>Falha na verificação. Verifique se a sua token foi inserida corretamente e se a sua conexão à internet está funcionando.</translation>
+        <translation>Falha na verificação. Verifique se a token foi inserida corretamente e se a conexão à internet está funcionando.</translation>
     </message>
 </context>
 <context>
@@ -3061,13 +3061,13 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
         <location filename="../../src/citra_qt/main.cpp" line="292"/>
         <location filename="../../src/citra_qt/main.cpp" line="2412"/>
         <source>How many frames per second the game is currently displaying. This will vary from game to game and scene to scene.</source>
-        <translation>Quantos quadros por segundo que o jogo está exibindo atualmente. Pode variar de jogo para jogo e cena para cena.</translation>
+        <translation>Quantos quadros por segundo que o jogo está mostrando atualmente. Pode variar de jogo para jogo e cena para cena.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="296"/>
         <location filename="../../src/citra_qt/main.cpp" line="2415"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
-        <translation>Tempo levado para emular um quadro do 3DS, sem considerar o limitador de taxa de quadros ou a sincronização vertical. Valores menores ou iguais a 16.67 ms indicam que a emulação está em velocidade plena.</translation>
+        <translation>Tempo levado para emular um quadro do 3DS, sem considerar o limitador de taxa de quadros ou a sincronização vertical. Valores menores ou iguais a 16,67 ms indicam que a emulação está em velocidade plena.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="405"/>
@@ -3082,7 +3082,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="871"/>
         <source>An update is available. Would you like to install it now?</source>
-        <translation>Há uma atualização disponível. Deseja instalá-la agora?</translation>
+        <translation>Está disponível uma atualização. Deseja instalá-la agora?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="881"/>
@@ -3114,7 +3114,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
         <location filename="../../src/citra_qt/main.cpp" line="929"/>
         <location filename="../../src/citra_qt/main.cpp" line="960"/>
         <source>Your ROM format is not supported.&lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
-        <translation>O formato da sua ROM é incompatível.&lt;br/&gt;Siga os guias para extrair jogos de seus &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartuchos de jogo&lt;/a&gt; ou &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;títulos instalados&lt;/a&gt;.</translation>
+        <translation>O formato da sua ROM é incompatível.&lt;br/&gt;Siga os guias para extrair jogos dos &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartuchos de jogo&lt;/a&gt; ou &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;títulos instalados&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="939"/>
@@ -3124,7 +3124,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="940"/>
         <source>Your ROM is corrupted. &lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
-        <translation>Sua ROM está corrompida.&lt;br/&gt;Siga os guias para extrair jogos de seus &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartuchos de jogo&lt;/a&gt; ou &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;títulos instalados&lt;/a&gt;.</translation>
+        <translation>A ROM está corrompida.&lt;br/&gt;Siga os guias para extrair jogos dos &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartuchos de jogo&lt;/a&gt; ou &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;títulos instalados&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="949"/>
@@ -3134,7 +3134,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="950"/>
         <source>Your ROM is encrypted. &lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
-        <translation>A sua ROM está criptografada.&lt;br/&gt;Siga os guias para extrair jogos dos seus &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartuchos de jogo&lt;/a&gt; ou &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;títulos instalados&lt;/a&gt;.</translation>
+        <translation>A ROM está criptografada.&lt;br/&gt;Siga os guias para extrair jogos dos &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartuchos de jogo&lt;/a&gt; ou &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;títulos instalados&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="969"/>
@@ -3150,7 +3150,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="980"/>
         <source>You are running default Windows drivers for your GPU. You need to install the proper drivers for your graphics card from the manufacturer&apos;s website.</source>
-        <translation>Você está usando os drivers padrão do Windows para a sua GPU. Você precisa instalar os drivers adequados para a sua placa de vídeo disponíveis na página da fabricante.</translation>
+        <translation>Você está usando os drivers padrão do Windows para a sua GPU. É necessário instalar os drivers adequados para a sua placa de vídeo disponíveis na página da fabricante.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="991"/>
@@ -3170,7 +3170,7 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1013"/>
         <source>Before using this CIA, you must install it. Do you want to install it now?</source>
-        <translation>Você precisa instalar este CIA antes de poder usá-lo. Deseja instalá-lo agora?</translation>
+        <translation>É necessário instalar este CIA antes de poder usá-lo. Deseja instalá-lo agora?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1091"/>
@@ -3338,7 +3338,7 @@ Consulte o registro para ver os detalhes.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1603"/>
         <source>You must link your Citra account to submit test cases.&lt;br/&gt;Go to Emulation &amp;gt; Configure... &amp;gt; Web to do so.</source>
-        <translation>Você precisa entrar com a sua conta do Citra para enviar casos de teste.&lt;br/&gt;Para isso, vá para Emulação &amp;gt; Configurar... &amp;gt; Rede.</translation>
+        <translation>É necessário entrar com a conta do Citra para enviar casos de teste.&lt;br/&gt;Para isso, vá para Emulação &amp;gt; Configurar... &amp;gt; Rede.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1779"/>
@@ -3368,7 +3368,7 @@ Consulte o registro para ver os detalhes.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1809"/>
         <source>Unable to fully read Amiibo data. Expected to read %1 bytes, but was only able to read %2 bytes.</source>
-        <translation>Não foi possível ler completamente os dados do Amiibo. O Citra esperava ler %1 bytes, mas foi capaz de ler apenas %2 bytes.</translation>
+        <translation>Não foi possível ler completamente os dados do Amiibo. O Citra esperava ler %1 bytes, mas foi possível ler apenas %2 bytes.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1856"/>
@@ -3381,7 +3381,7 @@ Consulte o registro para ver os detalhes.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1857"/>
         <source>To keep consistency with the RNG, it is recommended to record the movie from game start.&lt;br&gt;Are you sure you still want to record movies now?</source>
-        <translation>Para manter consistência com sistemas de geração de números aleatórios (RNG), recomendamos começar a gravar assim que o jogo iniciar.&lt;br&gt;Você ainda deseja iniciar uma gravação agora?</translation>
+        <translation>Para manter consistência com sistemas de geração de números aleatórios (RNG), recomendamos começar a gravar assim que o jogo iniciar.&lt;br&gt;Ainda deseja iniciar uma gravação agora?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1865"/>
@@ -3397,7 +3397,7 @@ Consulte o registro para ver os detalhes.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1887"/>
         <source>The movie file you are trying to load was created on a different revision of Citra.&lt;br/&gt;Citra has had some changes during the time, and the playback may desync or not work as expected.&lt;br/&gt;&lt;br/&gt;Are you sure you still want to load the movie file?</source>
-        <translation>A gravação que você está tentando carregar foi criada numa revisão diferente do Citra.&lt;br/&gt;O Citra sofreu algumas mudanças com o passar do tempo e, por causa disso, a reprodução pode dessincronizar ou não funcionar como o esperado.&lt;br/&gt;&lt;br/&gt;Você ainda deseja carregar esta gravação?</translation>
+        <translation>A gravação que você está tentando carregar foi criada numa revisão diferente do Citra.&lt;br/&gt;O Citra sofreu algumas mudanças com o passar do tempo e, por causa disso, a reprodução pode dessincronizar ou não funcionar corretamente.&lt;br/&gt;&lt;br/&gt;Ainda deseja carregar esta gravação?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1892"/>
@@ -3435,7 +3435,7 @@ Consulte o registro para ver os detalhes.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1927"/>
         <source>To keep consistency with the RNG, it is recommended to play the movie from game start.&lt;br&gt;Are you sure you still want to play movies now?</source>
-        <translation>Para manter consistência com sistemas de geração de números aleatórios (RNG), recomendamos começar a reproduzir a gravação assim que o jogo iniciar.&lt;br&gt;Você ainda deseja reproduzir uma gravação agora?</translation>
+        <translation>Para manter consistência com sistemas de geração de números aleatórios (RNG), recomendamos começar a reproduzir a gravação assim que o jogo iniciar.&lt;br&gt;Ainda deseja reproduzir uma gravação agora?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1957"/>
@@ -3724,7 +3724,7 @@ Consulte o registro para ver os detalhes.</translation>
         <location filename="../../src/citra_qt/game_list_p.h" line="251"/>
         <source>Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without
 any workarounds needed.</source>
-        <translation>O jogo funciona impecavelmente, sem nenhum problema de áudio ou nos gráficos. Todos os recursos testados
+        <translation>O jogo funciona impecavelmente, sem nenhum problema de áudio ou nos gráficos. Todas as funcionalidades
 do jogo funcionam como deveriam, sem nenhuma solução alternativa necessária.</translation>
     </message>
     <message>
@@ -3742,7 +3742,7 @@ algumas soluções alternativas.</translation>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="253"/>
         <source>Okay</source>
-        <translation>Razoável</translation>
+        <translation>Bom</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="253"/>
@@ -3783,7 +3783,7 @@ tela inicial do jogo.</translation>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="256"/>
         <source>The game crashes when attempting to startup.</source>
-        <translation>O jogo trava ou se fecha abruptamente ao se tentar iniciá-lo.</translation>
+        <translation>O jogo trava ou fecha-se abruptamente ao tentar iniciá-lo.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="257"/>
@@ -4319,7 +4319,7 @@ tela inicial do jogo.</translation>
         <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="165"/>
         <source>Failed to announce the room to the public lobby. In order to host a room publicly, you must have a valid Citra account configured in Emulation -&gt; Configure -&gt; Web. If you do not want to publish a room in the public lobby, then select Unlisted instead.
 Debug Message: </source>
-        <translation>Falha ao anunciar a sala no lobby público. Para poder hospedar uma sala publicamente, você precisa ter uma conta válida do Citra configurada em Emulação &gt; Configurar... &gt; Rede. Se você não quiser publicar uma sala no lobby público, deixe-a como &quot;não listada&quot;.
+        <translation>Falha ao anunciar a sala na sala de espera pública. Para poder hospedar uma sala publicamente, é necessário ter uma conta válida do Citra configurada em Emulação &gt; Configurar... &gt; Rede. Se não quiser publicar uma sala na sala de espera pública, deixe-a como &quot;não listada&quot;.
 Mensagem para depuração: </translation>
     </message>
 </context>
@@ -4503,7 +4503,7 @@ Mensagem para depuração: </translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="76"/>
         <source>Games I Own</source>
-        <translation>Jogos que eu tenho</translation>
+        <translation>Jogos que possuo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="83"/>
@@ -4513,7 +4513,7 @@ Mensagem para depuração: </translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="103"/>
         <source>Refresh Lobby</source>
-        <translation>Atualizar lobby</translation>
+        <translation>Atualizar sala de espera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="106"/>
@@ -4711,7 +4711,7 @@ Mensagem para depuração: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="296"/>
         <source>Display Dock Widget Headers</source>
-        <translation>Exibir títulos de widgets afixados</translation>
+        <translation>Mostrar títulos de widgets afixados</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="304"/>
@@ -5071,7 +5071,7 @@ Para resolver isto, vá para Emulação &gt; Configurar &gt; Sistema e clique em
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation>O usuário que você está tentando expulsar/banir não pôde ser encontrado.
+        <translation>Não foi possível encontrar o usuário que você está tentando expulsar/banir.
 Ele pode já ter saído da sala.</translation>
     </message>
     <message>
@@ -5274,12 +5274,12 @@ Ele pode já ter saído da sala.</translation>
 <context>
     <name>QtMiiSelectorDialog</name>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="27"/>
         <source>Mii Selector</source>
         <translation>Seletor de Mii</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="35"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
         <source>Standard Mii</source>
         <translation>Mii padrão</translation>
     </message>

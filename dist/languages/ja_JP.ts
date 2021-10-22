@@ -492,7 +492,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="73"/>
         <source>An error occurred while sending the Testcase</source>
-        <translation type="unfinished"/>
+        <translation>テストケースの送信中にエラーが発生しました</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="75"/>
@@ -924,7 +924,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="73"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="140"/>
         <source>Storage</source>
-        <translation type="unfinished"/>
+        <translation>ストレージ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="78"/>
@@ -1115,7 +1115,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="127"/>
         <source>Use Disk Shader Cache</source>
-        <translation type="unfinished"/>
+        <translation>ディスクシェーダキャッシュを使う</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="134"/>
@@ -1408,7 +1408,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="480"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>警告</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="481"/>
@@ -1653,28 +1653,28 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>フォーム</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="22"/>
         <source>Storage</source>
-        <translation type="unfinished"/>
+        <translation>ストレージ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="30"/>
         <source>Use Virtual SD</source>
-        <translation type="unfinished"/>
+        <translation>仮想SDを使う</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="47"/>
         <source>NAND Directory</source>
-        <translation type="unfinished"/>
+        <translation>NANDディレクトリ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="61"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="126"/>
         <source>Open</source>
-        <translation type="unfinished"/>
+        <translation>開く</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="72"/>
@@ -1686,22 +1686,22 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="92"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="157"/>
         <source>Change</source>
-        <translation type="unfinished"/>
+        <translation>変更</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="112"/>
         <source>SDMC Directory</source>
-        <translation type="unfinished"/>
+        <translation>SDMCディレクトリ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="25"/>
         <source>Select NAND Directory</source>
-        <translation type="unfinished"/>
+        <translation>NANDディレクトリを選択</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="40"/>
         <source>Select SDMC Directory</source>
-        <translation type="unfinished"/>
+        <translation>SDMCディレクトリを選択</translation>
     </message>
 </context>
 <context>
@@ -3162,7 +3162,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="992"/>
         <source>An unknown error occurred. Please see the log for more details.</source>
-        <translation type="unfinished"/>
+        <translation>不明なエラーが発生しました. 詳細はログを参照してください.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1012"/>
@@ -3528,7 +3528,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2154"/>
         <source>A fatal error occurred. &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Check the log&lt;/a&gt; for details.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"/>
+        <translation>致命的なエラーが発生しました. &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;詳細はログ&lt;/a&gt;を確認してください.&lt;br/&gt;エミュレーションを継続するとクラッシュやバグが発生するかもしれません.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2158"/>
@@ -5035,7 +5035,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="unfinished"/>
+        <translation> 不明なエラーが発生しました. このエラーが続くようなら, issueを登録してください</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="44"/>
@@ -5272,12 +5272,12 @@ They may have left the room.</source>
 <context>
     <name>QtMiiSelectorDialog</name>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="27"/>
         <source>Mii Selector</source>
         <translation>Mii Selector</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="35"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
         <source>Standard Mii</source>
         <translation>デフォルトの Mii</translation>
     </message>

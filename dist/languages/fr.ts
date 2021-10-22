@@ -1110,7 +1110,7 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="124"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Réduisez le décrochage en stockant et en chargeant les shaders générés sur le disque.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="127"/>
@@ -1663,7 +1663,7 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="30"/>
         <source>Use Virtual SD</source>
-        <translation type="unfinished"/>
+        <translation>Utiliser une carte SD virtuelle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="47"/>
@@ -1691,7 +1691,7 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="112"/>
         <source>SDMC Directory</source>
-        <translation type="unfinished"/>
+        <translation>Répertoire SDMC</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="25"/>
@@ -1701,7 +1701,7 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="40"/>
         <source>Select SDMC Directory</source>
-        <translation type="unfinished"/>
+        <translation>Sélectionner le Répertoire SDMC </translation>
     </message>
 </context>
 <context>
@@ -5268,12 +5268,12 @@ Il a du quitter le salon.</translation>
 <context>
     <name>QtMiiSelectorDialog</name>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="27"/>
         <source>Mii Selector</source>
         <translation>Sélectionneur de Mii</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="35"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
         <source>Standard Mii</source>
         <translation>Mii standard</translation>
     </message>

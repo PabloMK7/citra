@@ -341,7 +341,7 @@ Dies bannt sowohl den Forum-Nutzernamen, als auch die IP-Adresse.</translation>
         <source>Cheat code line %1 is not valid.
 Would you like to ignore the error and continue?</source>
         <translation>Der Cheat Code in Zeile %1 ist ungültig.
-Möchten Sie den Error ignorieren und fortfahren?</translation>
+Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/cheats.cpp" line="233"/>
@@ -492,7 +492,7 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="73"/>
         <source>An error occurred while sending the Testcase</source>
-        <translation type="unfinished"/>
+        <translation>Beim Senden des Testfalles ist ein Fehler aufgetreten</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="75"/>
@@ -924,7 +924,7 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="73"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="140"/>
         <source>Storage</source>
-        <translation type="unfinished"/>
+        <translation>Speicher</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="78"/>
@@ -1110,7 +1110,7 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="124"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt; Reduziere Sottern indem du die generierten Shader in die Disk speicherst und lädst.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="127"/>
@@ -1352,7 +1352,7 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="753"/>
         <source>Auto Map</source>
-        <translation type="unfinished"/>
+        <translation>Automatisch belegen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="781"/>
@@ -1403,22 +1403,22 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="284"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="452"/>
         <source>Modifier Scale: %1%</source>
-        <translation type="unfinished"/>
+        <translation>Modifikator Maßstab: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="480"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Warnung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="481"/>
         <source>Auto mapping failed. Your controller may not have a corresponding mapping</source>
-        <translation type="unfinished"/>
+        <translation>Automatische Belegung fehlgeschlagen. Dein Controller könnte keine übereinstimmende Belegung haben</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="487"/>
         <source>After pressing OK, press any button on your joystick</source>
-        <translation type="unfinished"/>
+        <translation>Nachdem du OK gedrückt hast, drücke eine beliebige Taste auf dem Joystick</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="509"/>
@@ -1528,7 +1528,7 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="138"/>
         <source>Use button mapping:</source>
-        <translation type="unfinished"/>
+        <translation>Tastenbelegung benutzen:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="166"/>
@@ -1653,7 +1653,7 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="22"/>
@@ -1663,45 +1663,45 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="30"/>
         <source>Use Virtual SD</source>
-        <translation type="unfinished"/>
+        <translation>Virtuelle SD benutzen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="47"/>
         <source>NAND Directory</source>
-        <translation type="unfinished"/>
+        <translation>NAND Verzeichnis</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="61"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="126"/>
         <source>Open</source>
-        <translation type="unfinished"/>
+        <translation>Öffnen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="72"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="137"/>
         <source>NOTE: this does not move the contents of the previous directory to the new one</source>
-        <translation type="unfinished"/>
+        <translation>HINWEIS: Die Inhalte des vorherigen Verzeichnis werden nicht ins neue verschoben</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="92"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="157"/>
         <source>Change</source>
-        <translation type="unfinished"/>
+        <translation>Ändern</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="112"/>
         <source>SDMC Directory</source>
-        <translation type="unfinished"/>
+        <translation>SDMC Verzeichnis</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="25"/>
         <source>Select NAND Directory</source>
-        <translation type="unfinished"/>
+        <translation>NAND Verzeichnis auswählen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="40"/>
         <source>Select SDMC Directory</source>
-        <translation type="unfinished"/>
+        <translation>SDMC Verzeichnis auswählen</translation>
     </message>
 </context>
 <context>
@@ -2638,12 +2638,12 @@ Möchten Sie den Error ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="14"/>
         <source>Configure Touchscreen Mappings</source>
-        <translation type="unfinished"/>
+        <translation>Touchscreen Belegung Konfigurieren</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="22"/>
         <source>Mapping:</source>
-        <translation type="unfinished"/>
+        <translation>Belegung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="48"/>
@@ -3145,7 +3145,7 @@ Ziehe Punkte, um ihre Position zu verändern, oder doppelklicke auf Zellen in de
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="970"/>
         <source>An error has occurred. Please &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;see the log&lt;/a&gt; for more details. Ensure that you have the latest graphics drivers for your GPU.</source>
-        <translation type="unfinished"/>
+        <translation>Ein Fehler ist aufgetreten. Bitte &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt; überprüfe den log &lt;/a&gt;für mehr Details. Stelle sicher, dass du die neuesten Grafiktreiber für deine GPU hast.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="980"/>
@@ -3160,7 +3160,7 @@ Ziehe Punkte, um ihre Position zu verändern, oder doppelklicke auf Zellen in de
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="992"/>
         <source>An unknown error occurred. Please see the log for more details.</source>
-        <translation type="unfinished"/>
+        <translation>Ein unbekannter Fehler ist aufgetreten. Mehr Details im log</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1012"/>
@@ -3526,7 +3526,7 @@ Sieh dir den Log für Details an.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2154"/>
         <source>A fatal error occurred. &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Check the log&lt;/a&gt; for details.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"/>
+        <translation>Ein fataler Fehler ist aufgetreten. &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt; Überprüfe den log&lt;/a&gt;für Details. &lt;br/&gt; Das Fortfahren der Emulation könnte zu Abstürzen und Bugs führen.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2158"/>
@@ -4688,12 +4688,12 @@ Debug Meldung:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="273"/>
         <source>Save to Oldest Slot</source>
-        <translation type="unfinished"/>
+        <translation>Im ältesten Slot speichern</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="278"/>
         <source>Load from Newest Slot</source>
-        <translation type="unfinished"/>
+        <translation>Vom neuesten Slot laden</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="283"/>
@@ -4758,7 +4758,7 @@ Debug Meldung:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="376"/>
         <source>Dump Video</source>
-        <translation type="unfinished"/>
+        <translation>Video dumpen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="384"/>
@@ -5193,12 +5193,12 @@ Er hat eventuell den Raum verlassen.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="93"/>
         <source>GC Axis %1%2</source>
-        <translation type="unfinished"/>
+        <translation>GC Achse %1%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="97"/>
         <source>GC Button %1</source>
-        <translation type="unfinished"/>
+        <translation>GC Taste %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="121"/>
@@ -5270,12 +5270,12 @@ Er hat eventuell den Raum verlassen.</translation>
 <context>
     <name>QtMiiSelectorDialog</name>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="27"/>
         <source>Mii Selector</source>
         <translation>Mii-Auswahl</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="35"/>
+        <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
         <source>Standard Mii</source>
         <translation>Standard Mii</translation>
     </message>
@@ -5285,7 +5285,7 @@ Er hat eventuell den Raum verlassen.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="6"/>
         <source>View Record</source>
-        <translation type="unfinished"/>
+        <translation>Rekord ansehen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="22"/>
