@@ -157,6 +157,7 @@ set(cryptopp_SOURCES
         cryptopp/neon-simd.cpp
         cryptopp/oaep.cpp
         cryptopp/osrng.cpp
+        cryptopp/ppc-simd.cpp
         cryptopp/pubkey.cpp
         cryptopp/queue.cpp
         cryptopp/randpool.cpp
