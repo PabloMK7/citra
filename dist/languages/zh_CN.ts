@@ -3856,7 +3856,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="97"/>
         <source>Korea</source>
-        <translation>朝鲜</translation>
+        <translation>韩国</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="98"/>

@@ -1312,7 +1312,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="465"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="587"/>
         <source>Deadzone: 0</source>
-        <translation type="unfinished"/>
+        <translation>遊び: 0</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="489"/>
@@ -1397,7 +1397,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="445"/>
         <source>Deadzone: %1%</source>
-        <translation type="unfinished"/>
+        <translation>遊び: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="284"/>
@@ -2722,7 +2722,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="231"/>
         <source>[press key]</source>
-        <translation type="unfinished"/>
+        <translation>[キーを押す]</translation>
     </message>
 </context>
 <context>
