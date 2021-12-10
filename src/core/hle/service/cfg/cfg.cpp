@@ -98,7 +98,8 @@ struct ConsoleModelInfo {
 static_assert(sizeof(ConsoleModelInfo) == 4, "ConsoleModelInfo must be exactly 4 bytes");
 
 struct ConsoleCountryInfo {
-    u8 unknown[3];   ///< Unknown data
+    u8 unknown[2];   ///< Unknown data
+    u8 state_code;   ///< The state or province code.
     u8 country_code; ///< The country code of the console
 };
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
@@ -112,8 +113,9 @@ constexpr UsernameBlock CONSOLE_USERNAME_BLOCK{u"CITRA", 0, 0};
 constexpr BirthdayBlock PROFILE_BIRTHDAY{3, 25}; // March 25th, 2014
 constexpr u8 SOUND_OUTPUT_MODE = SOUND_SURROUND;
 constexpr u8 UNITED_STATES_COUNTRY_ID = 49;
+constexpr u8 WASHINGTON_DC_STATE_ID = 2;
 /// TODO(Subv): Find what the other bytes are
-constexpr ConsoleCountryInfo COUNTRY_INFO{{0, 0, 0}, UNITED_STATES_COUNTRY_ID};
+constexpr ConsoleCountryInfo COUNTRY_INFO{{0, 0}, WASHINGTON_DC_STATE_ID, UNITED_STATES_COUNTRY_ID};
 
 /**
  * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
@@ -716,7 +718,7 @@ SoundOutputMode Module::GetSoundOutputMode() {
 }
 
 void Module::SetCountryCode(u8 country_code) {
-    ConsoleCountryInfo block = {{0, 0, 0}, country_code};
+    ConsoleCountryInfo block = {{0, 0}, default_subregion[country_code], country_code};
     SetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 4, &block);
 }
 
@@ -724,6 +726,17 @@ u8 Module::GetCountryCode() {
     ConsoleCountryInfo block;
     GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
     return block.country_code;
+}
+
+void Module::SetCountryInfo(u8 country_code, u8 state_code) {
+    ConsoleCountryInfo block = {{0, 0}, state_code, country_code};
+    SetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 4, &block);
+}
+
+u8 Module::GetStateCode() {
+    ConsoleCountryInfo block;
+    GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
+    return block.state_code;
 }
 
 std::pair<u32, u64> Module::GenerateConsoleUniqueId() const {

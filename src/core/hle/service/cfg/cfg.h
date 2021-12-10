@@ -93,6 +93,35 @@ static const std::array<u16, 187> country_codes = {{
     C("SM"), C("VA"), C("BM"),                                              // 184-186
 }};
 
+// Based on PKHeX's lists of subregions at
+// https://github.com/kwsch/PKHeX/tree/master/PKHeX.Core/Resources/text/locale3DS/subregions
+static const std::array<u8, 187> default_subregion = {{
+    0, 2, 0,  0, 0, 0, 0, 0, // 0-7
+    1, 2, 2,  1, 1, 1, 2, 2, // 8-15
+    2, 1, 2,  1, 2, 2, 2, 1, // 16-23
+    2, 2, 2,  1, 1, 1, 2, 2, // 24-31
+    2, 2, 2,  1, 2, 1, 1, 2, // 32-39
+    2, 2, 2,  2, 1, 1, 2, 2, // 40-47
+    1, 2, 2,  1, 2, 0, 0, 0, // 48-55
+    0, 0, 0,  0, 0, 0, 0, 0, // 56-63
+    2, 2, 2,  2, 2, 1, 2, 6, // 64-71
+    1, 2, 18, 1, 8, 2, 2, 2, // 72-79
+    2, 1, 2,  2, 1, 2, 1, 2, // 80-87
+    1, 1, 1,  1, 1, 1, 2, 2, // 88-95
+    7, 2, 2,  2, 9, 1, 2, 1, // 96-103
+    2, 2, 2,  2, 2, 2, 2, 1, // 104-111
+    1, 1, 1,  1, 1, 1, 1, 1, // 112-119
+    1, 1, 1,  1, 1, 1, 1, 1, // 120-127
+    2, 0, 0,  0, 0, 0, 0, 0, // 128-135
+    2, 0, 0,  0, 0, 0, 0, 0, // 136-143
+    1, 0, 0,  0, 0, 0, 0, 0, // 144-151
+    0, 1, 0,  0, 2, 0, 0, 0, // 152-159
+    2, 0, 0,  0, 0, 0, 0, 0, // 160-167
+    2, 2, 0,  0, 0, 0, 2, 0, // 168-175
+    0, 0, 0,  0, 0, 0, 0, 0, // 176-183
+    1, 1, 1,                 // 184-186
+}};
+
 class Module final {
 public:
     Module();
@@ -372,6 +401,7 @@ public:
 
     /**
      * Sets the country code in config savegame.
+     * The state code is set to a default value.
      * @param country_code the country code to set
      */
     void SetCountryCode(u8 country_code);
@@ -381,6 +411,19 @@ public:
      * @returns the country code
      */
     u8 GetCountryCode();
+
+    /**
+     * Sets the country and state codes in config savegame.
+     * @param country_code the country code to set
+     * @param state_code the state code to set
+     */
+    void SetCountryInfo(u8 country_code, u8 state_code);
+
+    /**
+     * Gets the state code from config savegame.
+     * @returns the state code
+     */
+    u8 GetStateCode();
 
     /**
      * Generates a new random console unique id.
