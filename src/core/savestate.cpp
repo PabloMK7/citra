@@ -76,11 +76,12 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
             LOG_WARNING(Core, "Save state file isn't for the current game {}", path);
             continue;
         }
-        std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
+        const std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
         if (revision == Common::g_scm_rev) {
             info.status = SaveStateInfo::ValidationStatus::OK;
         } else {
-            LOG_WARNING(Core, "Save state file created from a different revision {}", path);
+            LOG_WARNING(Core, "Save state file {} created from a different revision {}", path,
+                        revision);
             info.status = SaveStateInfo::ValidationStatus::RevisionDismatch;
         }
         result.emplace_back(std::move(info));
