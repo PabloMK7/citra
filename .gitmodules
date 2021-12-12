@@ -52,3 +52,6 @@
 [submodule "zstd"]
     path = externals/zstd
     url = https://github.com/facebook/zstd.git
+[submodule "libyuv"]
+    path = externals/libyuv
+    url = https://github.com/lemenkov/libyuv.git
