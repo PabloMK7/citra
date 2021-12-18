@@ -282,10 +282,11 @@ void main() {
         state.draw.shader_program = cur_program;
         state.Apply();
 
-        // OES_texture_view doesn't seem to support D24S8 views, at least on adreno
-        // so instead it will do an intermediate copy before running through the shader
-        if (GLAD_GL_ARB_texture_view) {
-            texture_view_func = glTextureView;
+        // Nvidia seem to be the only one to support D24S8 views, at least on windows
+        // so for everyone else it will do an intermediate copy before running through the shader
+        std::string_view vendor{reinterpret_cast<const char*>(glGetString(GL_VENDOR))};
+        if (vendor.find("NVIDIA") != vendor.npos) {
+            use_texture_view = true;
         } else {
             LOG_INFO(Render_OpenGL,
                      "Texture views are unsupported, reinterpretation will do intermediate copy");
@@ -302,11 +303,10 @@ void main() {
         OpenGLState state;
         state.texture_units[0].texture_2d = src_tex;
 
-        if (texture_view_func) {
+        if (use_texture_view) {
             temp_tex.Create();
             glActiveTexture(GL_TEXTURE1);
-            texture_view_func(temp_tex.handle, GL_TEXTURE_2D, src_tex, GL_DEPTH24_STENCIL8, 0, 1, 0,
-                              1);
+            glTextureView(temp_tex.handle, GL_TEXTURE_2D, src_tex, GL_DEPTH24_STENCIL8, 0, 1, 0, 1);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         } else if (src_rect.top > temp_rect.top || src_rect.right > temp_rect.right) {
@@ -331,7 +331,7 @@ void main() {
         state.Apply();
 
         glActiveTexture(GL_TEXTURE1);
-        if (!texture_view_func) {
+        if (!use_texture_view) {
             glCopyImageSubData(src_tex, GL_TEXTURE_2D, 0, src_rect.left, src_rect.bottom, 0,
                                temp_tex.handle, GL_TEXTURE_2D, 0, src_rect.left, src_rect.bottom, 0,
                                src_rect.GetWidth(), src_rect.GetHeight(), 1);
@@ -348,13 +348,13 @@ void main() {
         glUniform2i(src_offset_loc, src_rect.left, src_rect.bottom);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        if (texture_view_func) {
+        if (use_texture_view) {
             temp_tex.Release();
         }
     }
 
 private:
-    decltype(glTextureView) texture_view_func = nullptr;
+    bool use_texture_view{};
     OGLProgram program{};
     GLint dst_size_loc{-1}, src_size_loc{-1}, src_offset_loc{-1};
     OGLVertexArray vao{};
@@ -362,30 +362,9 @@ private:
     Common::Rectangle<u32> temp_rect{0, 0, 0, 0};
 };
 
-class CopyImageSubData final : public FormatReinterpreterBase {
-    void Reinterpret(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint read_fb_handle,
-                     GLuint dst_tex, const Common::Rectangle<u32>& dst_rect,
-                     GLuint draw_fb_handle) override {
-        glCopyImageSubData(src_tex, GL_TEXTURE_2D, 0, src_rect.left, src_rect.bottom, 0, dst_tex,
-                           GL_TEXTURE_2D, 0, dst_rect.left, dst_rect.bottom, 0, src_rect.GetWidth(),
-                           src_rect.GetHeight(), 1);
-    }
-};
-
 FormatReinterpreterOpenGL::FormatReinterpreterOpenGL() {
-    // Older Nvidia GPUs don't seem to properly support using glCopyImageSubData to copy D24S8 to
-    // RGBA8. This is a heuristic check that relies on the newer drivers returning something similar
-    // to `3.3.0 NVIDIA 471.41`, and older, buggy ones returning just `3.3.0`.
-    std::string_view version{reinterpret_cast<const char*>(glGetString(GL_VERSION))};
-    if (version.find("NVIDIA") != version.npos) {
-        reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
-                               std::make_unique<CopyImageSubData>());
-        // Nvidia bends the spec and allows direct copies between color and depth formats
-        // might as well take advantage of it
-        LOG_INFO(Render_OpenGL, "Using glCopyImageSubData for D24S8 to RGBA8 reinterpretation");
-    } else if ((GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage &&
-                GLAD_GL_ARB_copy_image) ||
-               GLES) {
+    if ((GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage && GLAD_GL_ARB_copy_image) ||
+        GLES) {
         reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
                                std::make_unique<ShaderD24S8toRGBA8>());
         LOG_INFO(Render_OpenGL, "Using shader for D24S8 to RGBA8 reinterpretation");
