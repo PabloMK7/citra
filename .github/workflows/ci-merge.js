@@ -2,10 +2,28 @@
 // It is not meant to be executed directly on your machine without modifications
 
 const fs = require("fs");
+// how far back in time should we consider the changes are "recent"? (default: 24 hours)
+const DETECTION_TIME_FRAME = (parseInt(process.env.DETECTION_TIME_FRAME)) || (24 * 3600 * 1000);
+
+async function checkBaseChanges(github, context) {
+    // a special robustness handling for when GHA did not pass the repository info
+    if (!context.payload.repository) {
+        const result = await github.rest.repos.get({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+        });
+        context.payload.repository = result.data;
+    }
+    const delta = new Date() - new Date(context.payload.repository.pushed_at);
+    if (delta <= DETECTION_TIME_FRAME) {
+        console.info('New changes detected, triggering a new build.');
+        return true;
+    }
+    return false;
+}
 
 async function checkCanaryChanges(github, context) {
-    const delta = new Date() - new Date(context.payload.repository.pushed_at);
-    if (delta <= 86400000) return true;
+    if (checkBaseChanges(github, context)) return true;
     const query = `query($owner:String!, $name:String!, $label:String!) {
         repository(name:$name, owner:$owner) {
             pullRequests(labels: [$label], states: OPEN, first: 100) {
@@ -22,7 +40,7 @@ async function checkCanaryChanges(github, context) {
     const pulls = result.repository.pullRequests.nodes;
     for (let i = 0; i < pulls.length; i++) {
         let pull = pulls[i];
-        if (new Date() - new Date(pull.headRepository.pushedAt) <= 86400000) {
+        if (new Date() - new Date(pull.headRepository.pushedAt) <= DETECTION_TIME_FRAME) {
             console.info(`${pull.number} updated at ${pull.headRepository.pushedAt}`);
             return true;
         }
@@ -180,3 +198,4 @@ async function mergebot(github, context, execa) {
 module.exports.mergebot = mergebot;
 module.exports.checkCanaryChanges = checkCanaryChanges;
 module.exports.tagAndPush = tagAndPush;
+module.exports.checkBaseChanges = checkBaseChanges;

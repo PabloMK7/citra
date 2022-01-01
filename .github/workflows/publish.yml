@@ -19,25 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.nightly != 'false' }}
     steps:
+      # this checkout is required to make sure the GitHub Actions scripts are available
+      - uses: actions/checkout@v2
+        name: Pre-checkout
+        with:
+          submodules: false
       - uses: actions/github-script@v5
         id: check-changes
         name: 'Check for new changes'
+        env:
+          # 24 hours
+          DETECTION_TIME_FRAME: 86400000
         with:
           result-encoding: string
           script: |
             if (context.payload.inputs && context.payload.inputs.nightly === 'true') return true;
-            const delta = new Date() - new Date(context.payload.repository.pushed_at);
-            if (delta <= 86400000) {
-              return true;
-            }
-            console.log('No new changes detected.');
-            return false;
-      # this checkout is required to make sure the GitHub Actions scripts are available
-      - uses: actions/checkout@v2
-        if: ${{ steps.check-changes.outputs.result == 'true' }}
-        name: Pre-checkout
-        with:
-          submodules: false
+            const checkBaseChanges = require('./.github/workflows/ci-merge.js').checkBaseChanges;
+            return checkBaseChanges(github, context);
       - run: npm install execa@5
         if: ${{ steps.check-changes.outputs.result == 'true' }}
       - uses: actions/checkout@v2
@@ -71,6 +69,9 @@ jobs:
       - uses: actions/github-script@v5
         id: check-changes
         name: 'Check for new changes'
+        env:
+          # 24 hours
+          DETECTION_TIME_FRAME: 86400000
         with:
           script: |
             if (context.payload.inputs && context.payload.inputs.canary === 'true') return true;
