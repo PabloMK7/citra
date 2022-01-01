@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       nightly:
-        description: 'Whether trigger a nightly build (true/false/auto)'
+        description: 'Whether to trigger a nightly build (true/false/auto)'
         required: false
         default: 'true'
       canary:
-        description: 'Whether trigger a canary build (true/false/auto)'
+        description: 'Whether to trigger a canary build (true/false/auto)'
         required: false
         default: 'true'
 
