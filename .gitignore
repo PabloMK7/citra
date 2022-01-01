@@ -11,6 +11,7 @@ src/common/scm_rev.cpp
 .idea/
 .vs/
 .vscode/
+.cache/
 CMakeLists.txt.user*
 
 # *nix related
@@ -37,3 +38,6 @@ Thumbs.db
 # Flatpak generated files
 .flatpak-builder/
 repo/
+
+# GitHub Actions generated files
+node_modules/
