@@ -115,8 +115,9 @@ public:
      * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
      * @param framebuffer_x Framebuffer x-coordinate that was pressed
      * @param framebuffer_y Framebuffer y-coordinate that was pressed
+     * @returns True if the coordinates are within the touchpad, otherwise false
      */
-    void TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
+    bool TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
 
     /// Signal that a touch released event has occurred (e.g. mouse click released)
     void TouchReleased();
@@ -159,7 +160,8 @@ public:
      * Convenience method to update the current frame layout
      * Read from the current settings to determine which layout to use.
      */
-    void UpdateCurrentFramebufferLayout(unsigned width, unsigned height);
+    void UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
+                                        bool is_portrait_mode = {});
 
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
 

@@ -38,7 +38,7 @@ public:
     virtual void CleanupVideoDumping() = 0;
 
     /// Updates the framebuffer layout of the contained render window handle.
-    void UpdateCurrentFramebufferLayout();
+    void UpdateCurrentFramebufferLayout(bool is_portrait_mode = {});
 
     // Getter/setter functions:
     // ------------------------

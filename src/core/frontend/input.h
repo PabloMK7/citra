@@ -76,7 +76,7 @@ void UnregisterFactory(const std::string& name) {
 }
 
 /**
- * Create an input device from given paramters.
+ * Create an input device from given parameters.
  * @tparam InputDeviceType the type of input devices to create
  * @param params a serialized ParamPackage string contains all parameters for creating the device
  */

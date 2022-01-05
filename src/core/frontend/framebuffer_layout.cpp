@@ -117,6 +117,82 @@ FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool swapped, bool u
     return res;
 }
 
+FramebufferLayout MobilePortraitFrameLayout(u32 width, u32 height, bool swapped) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+
+    FramebufferLayout res{width, height, true, true, {}, {}};
+    // Default layout gives equal screen sizes to the top and bottom screen
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height / 2};
+    Common::Rectangle<u32> top_screen = maxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
+    Common::Rectangle<u32> bot_screen = maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
+
+    float window_aspect_ratio = static_cast<float>(height) / width;
+    // both screens height are taken into account by multiplying by 2
+    float emulation_aspect_ratio = TOP_SCREEN_ASPECT_RATIO * 2;
+
+    if (window_aspect_ratio < emulation_aspect_ratio) {
+        // Apply borders to the left and right sides of the window.
+        top_screen =
+            top_screen.TranslateX((screen_window_area.GetWidth() - top_screen.GetWidth()) / 2);
+        bot_screen =
+            bot_screen.TranslateX((screen_window_area.GetWidth() - bot_screen.GetWidth()) / 2);
+    } else {
+        // Window is narrower than the emulation content
+        // Recalculate the bottom screen to account for the width difference between top and bottom
+
+        bot_screen = bot_screen.TranslateX((top_screen.GetWidth() - bot_screen.GetWidth()) / 2);
+    }
+
+    // Move the top screen to the bottom if we are swapped.
+    res.top_screen = swapped ? top_screen.TranslateY(bot_screen.GetHeight()) : top_screen;
+    res.bottom_screen = swapped ? bot_screen : bot_screen.TranslateY(top_screen.GetHeight());
+
+    return res;
+}
+
+FramebufferLayout MobileLandscapeFrameLayout(u32 width, u32 height, bool swapped,
+                                             float scale_factor, bool center_vertical) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+
+    FramebufferLayout res{width, height, true, true, {}, {}};
+    // Split the window into two parts. Give 4x width to the main screen and 1x width to the small
+    // To do that, find the total emulation box and maximize that based on window size
+    float window_aspect_ratio = static_cast<float>(height) / width;
+    float emulation_aspect_ratio =
+        swapped ? Core::kScreenBottomHeight * scale_factor /
+                      (Core::kScreenBottomWidth * scale_factor + Core::kScreenTopWidth)
+                : Core::kScreenTopHeight * scale_factor /
+                      (Core::kScreenTopWidth * scale_factor + Core::kScreenBottomWidth);
+    float large_screen_aspect_ratio = swapped ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
+    float small_screen_aspect_ratio = swapped ? TOP_SCREEN_ASPECT_RATIO : BOT_SCREEN_ASPECT_RATIO;
+
+    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
+    Common::Rectangle<u32> total_rect = maxRectangle(screen_window_area, emulation_aspect_ratio);
+    Common::Rectangle<u32> large_screen = maxRectangle(total_rect, large_screen_aspect_ratio);
+    Common::Rectangle<u32> fourth_size_rect = total_rect.Scale(1.f / scale_factor);
+    Common::Rectangle<u32> small_screen = maxRectangle(fourth_size_rect, small_screen_aspect_ratio);
+
+    if (window_aspect_ratio < emulation_aspect_ratio) {
+        large_screen =
+            large_screen.TranslateX((screen_window_area.GetWidth() - total_rect.GetWidth()) / 2);
+    } else if (center_vertical) {
+        large_screen = large_screen.TranslateY((height - total_rect.GetHeight()) / 2);
+    }
+
+    // Shift the small screen to the bottom right corner
+    small_screen = small_screen.TranslateX(large_screen.right);
+    if (center_vertical) {
+        small_screen.TranslateY(large_screen.GetHeight() + large_screen.top -
+                                small_screen.GetHeight());
+    }
+
+    res.top_screen = swapped ? small_screen : large_screen;
+    res.bottom_screen = swapped ? large_screen : small_screen;
+    return res;
+}
+
 FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
     ASSERT(width > 0);
     ASSERT(height > 0);
@@ -346,6 +422,22 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale) {
             layout = SideFrameLayout(width, height, Settings::values.swap_screen,
                                      Settings::values.upright_screen);
             break;
+        case Settings::LayoutOption::MobilePortrait:
+            width = Core::kScreenTopWidth * res_scale;
+            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            layout = MobilePortraitFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::MobileLandscape:
+            if (Settings::values.swap_screen) {
+                width = (Core::kScreenBottomWidth + Core::kScreenTopWidth / 2.25f) * res_scale;
+                height = Core::kScreenBottomHeight * res_scale;
+            } else {
+                width = (Core::kScreenTopWidth + Core::kScreenBottomWidth / 2.25f) * res_scale;
+                height = Core::kScreenTopHeight * res_scale;
+            }
+            layout = MobileLandscapeFrameLayout(width, height, Settings::values.swap_screen, 2.25f,
+                                                false);
+            break;
         case Settings::LayoutOption::Default:
         default:
             if (Settings::values.upright_screen) {
@@ -360,7 +452,90 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale) {
             break;
         }
     }
+    if (Settings::values.render_3d == Settings::StereoRenderOption::CardboardVR) {
+        layout = Layout::GetCardboardSettings(layout);
+    }
     return layout;
+}
+
+FramebufferLayout GetCardboardSettings(FramebufferLayout layout) {
+    FramebufferLayout newLayout = layout;
+    float top_screen_left = 0;
+    float top_screen_top = 0;
+    float bottom_screen_left = 0;
+    float bottom_screen_top = 0;
+
+    float cardboardScreenScale = Settings::values.cardboard_screen_size / 100.0f;
+    float top_screen_width = layout.top_screen.GetWidth() / 2.0f * cardboardScreenScale;
+    float top_screen_height = layout.top_screen.GetHeight() / 2.0f * cardboardScreenScale;
+    float bottom_screen_width = layout.bottom_screen.GetWidth() / 2.0f * cardboardScreenScale;
+    float bottom_screen_height = layout.bottom_screen.GetHeight() / 2.0f * cardboardScreenScale;
+    bool is_swapped = Settings::values.swap_screen;
+    bool is_portrait = layout.height > layout.width;
+
+    float cardboardScreenWidth;
+    float cardboardScreenHeight;
+    switch (Settings::values.layout_option) {
+    case Settings::LayoutOption::MobileLandscape:
+    case Settings::LayoutOption::SideScreen:
+        // If orientation is portrait, only use MobilePortrait
+        if (!is_portrait) {
+            cardboardScreenWidth = top_screen_width + bottom_screen_width;
+            cardboardScreenHeight = is_swapped ? bottom_screen_height : top_screen_height;
+            if (is_swapped)
+                top_screen_left += bottom_screen_width;
+            else
+                bottom_screen_left += top_screen_width;
+            break;
+        } else {
+            [[fallthrough]];
+        }
+    case Settings::LayoutOption::SingleScreen:
+    default:
+        if (!is_portrait) {
+            // Default values when using LayoutOption::SingleScreen
+            cardboardScreenWidth = is_swapped ? bottom_screen_width : top_screen_width;
+            cardboardScreenHeight = is_swapped ? bottom_screen_height : top_screen_height;
+            break;
+        } else {
+            [[fallthrough]];
+        }
+    case Settings::LayoutOption::MobilePortrait:
+        cardboardScreenWidth = top_screen_width;
+        cardboardScreenHeight = top_screen_height + bottom_screen_height;
+        bottom_screen_left += (top_screen_width - bottom_screen_width) / 2.0f;
+        if (is_swapped)
+            top_screen_top += bottom_screen_height;
+        else
+            bottom_screen_top += top_screen_height;
+        break;
+    }
+    float cardboardMaxXShift = (layout.width / 2.0f - cardboardScreenWidth) / 2.0f;
+    float cardboardUserXShift = (Settings::values.cardboard_x_shift / 100.0f) * cardboardMaxXShift;
+    float cardboardMaxYShift = ((float)layout.height - cardboardScreenHeight) / 2.0f;
+    float cardboardUserYShift = (Settings::values.cardboard_y_shift / 100.0f) * cardboardMaxYShift;
+
+    // Center the screens and apply user Y shift
+    newLayout.top_screen.left = top_screen_left + cardboardMaxXShift;
+    newLayout.top_screen.top = top_screen_top + cardboardMaxYShift + cardboardUserYShift;
+    newLayout.bottom_screen.left = bottom_screen_left + cardboardMaxXShift;
+    newLayout.bottom_screen.top = bottom_screen_top + cardboardMaxYShift + cardboardUserYShift;
+
+    // Set the X coordinates for the right eye and apply user X shift
+    newLayout.cardboard.top_screen_right_eye = newLayout.top_screen.left - cardboardUserXShift;
+    newLayout.top_screen.left += cardboardUserXShift;
+    newLayout.cardboard.bottom_screen_right_eye =
+        newLayout.bottom_screen.left - cardboardUserXShift;
+    newLayout.bottom_screen.left += cardboardUserXShift;
+    newLayout.cardboard.user_x_shift = cardboardUserXShift;
+
+    // Update right/bottom instead of passing new variables for width/height
+    newLayout.top_screen.right = newLayout.top_screen.left + top_screen_width;
+    newLayout.top_screen.bottom = newLayout.top_screen.top + top_screen_height;
+    newLayout.bottom_screen.right = newLayout.bottom_screen.left + bottom_screen_width;
+    newLayout.bottom_screen.bottom = newLayout.bottom_screen.top + bottom_screen_height;
+
+    return newLayout;
 }
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,

@@ -541,11 +541,11 @@ void System::Shutdown(bool is_deserializing) {
     archive_manager.reset();
     service_manager.reset();
     dsp_core.reset();
-    cpu_cores.clear();
     kernel.reset();
+    cpu_cores.clear();
     timing.reset();
 
-    if (video_dumper->IsDumping()) {
+    if (video_dumper && video_dumper->IsDumping()) {
         video_dumper->StopDumping();
     }
 
@@ -553,6 +553,8 @@ void System::Shutdown(bool is_deserializing) {
         Network::GameInfo game_info{};
         room_member->SendGameInfo(game_info);
     }
+
+    memory.reset();
 
     LOG_DEBUG(Core, "Shutdown OK");
 }

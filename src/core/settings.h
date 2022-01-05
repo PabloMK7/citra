@@ -24,6 +24,14 @@ enum class LayoutOption {
     SingleScreen,
     LargeScreen,
     SideScreen,
+
+    // Similiar to default, but better for mobile devices in portrait mode. Top screen in clamped to
+    // the top of the frame, and the bottom screen is enlarged to match the top screen.
+    MobilePortrait,
+
+    // Similiar to LargeScreen, but better for mobile devices in landscape mode. The screens are
+    // clamped to the top of the frame, and the bottom screen is a bit bigger.
+    MobileLandscape,
 };
 
 enum class MicInputType {
@@ -32,7 +40,14 @@ enum class MicInputType {
     Static,
 };
 
-enum class StereoRenderOption { Off, SideBySide, Anaglyph, Interlaced, ReverseInterlaced };
+enum class StereoRenderOption {
+    Off,
+    SideBySide,
+    Anaglyph,
+    Interlaced,
+    ReverseInterlaced,
+    CardboardVR
+};
 
 namespace NativeButton {
 enum Values {
@@ -181,6 +196,10 @@ struct Values {
 
     StereoRenderOption render_3d;
     std::atomic<u8> factor_3d;
+
+    int cardboard_screen_size;
+    int cardboard_x_shift;
+    int cardboard_y_shift;
 
     bool filter_mode;
     std::string pp_shader_name;
