@@ -17,7 +17,7 @@ on:
 jobs:
   nightly:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.nightly != 'false' }}
+    if: ${{ github.event.inputs.nightly != 'false' && github.repository == 'citra-emu/citra' }}
     steps:
       # this checkout is required to make sure the GitHub Actions scripts are available
       - uses: actions/checkout@v2
@@ -59,7 +59,7 @@ jobs:
             tagAndPush(github, context.repo.owner, `${context.repo.repo}-nightly`, execa);
   canary:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.canary != 'false' }}
+    if: ${{ github.event.inputs.canary != 'false' && github.repository == 'citra-emu/citra' }}
     steps:
       # this checkout is required to make sure the GitHub Actions scripts are available
       - uses: actions/checkout@v2
