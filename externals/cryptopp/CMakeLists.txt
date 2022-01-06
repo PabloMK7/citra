@@ -218,6 +218,7 @@ endfunction(DumpMachine)
 
 # Thansk to Anonimal for MinGW; see http://github.com/weidai11/cryptopp/issues/466
 DumpMachine(CRYPTOPP_AMD64 "(x86_64|AMD64|amd64)")
+DumpMachine(CRYPTOPP_I386 "(i.86)")
 DumpMachine(CRYPTOPP_MINGW64 "(w64-mingw32)|(mingw64)")
 DumpMachine(CRYPTOPP_ARMV8 "(armv8|aarch64)")
 
