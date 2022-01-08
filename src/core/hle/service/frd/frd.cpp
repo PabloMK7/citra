@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <cstring>
 #include <vector>
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -10,9 +11,12 @@
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
+
+SERVICE_CONSTRUCT_IMPL(Service::FRD::Module)
 
 namespace Service::FRD {
 
@@ -93,16 +97,21 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
 
     struct ScreenName {
-        std::array<char16_t, 12> name;
+        // 20 bytes according to 3dbrew
+        std::array<char16_t, 10> name;
     };
 
-    // TODO: (mailwl) get the name from config
-    ScreenName screen_name{u"Citra"};
+    auto cfg = Service::CFG::GetModule(frd->system);
+    ASSERT_MSG(cfg, "CFG Module missing!");
+    auto username = cfg->GetUsername();
+    ASSERT_MSG(username.length() <= 10, "Username longer than expected!");
+    ScreenName screen_name{};
+    std::memcpy(screen_name.name.data(), username.data(), username.length() * sizeof(char16_t));
 
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
 
-    LOG_WARNING(Service_FRD, "(STUBBED) called");
+    LOG_INFO(Service_FRD, "returning the username defined in cfg");
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
@@ -147,12 +156,12 @@ void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
 }
 
-Module::Module() = default;
+Module::Module(Core::System& system) : system(system){};
 Module::~Module() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto frd = std::make_shared<Module>();
+    auto frd = std::make_shared<Module>(system);
     std::make_shared<FRD_U>(frd)->InstallAsService(service_manager);
     std::make_shared<FRD_A>(frd)->InstallAsService(service_manager);
 }

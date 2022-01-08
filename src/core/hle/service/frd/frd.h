@@ -50,7 +50,7 @@ struct Profile {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -153,6 +153,7 @@ public:
 private:
     FriendKey my_friend_key = {0, 0, 0ull};
     MyPresence my_presence = {};
+    Core::System& system;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -165,3 +166,5 @@ private:
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::FRD
+
+SERVICE_CONSTRUCT(Service::FRD::Module)
