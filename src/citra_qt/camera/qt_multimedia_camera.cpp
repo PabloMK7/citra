@@ -9,7 +9,10 @@
 #include <QThread>
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/main.h"
-#include "citra_qt/usage_authorization.h"
+
+#if defined(__APPLE__)
+#include "citra_qt/macos_authorization.h"
+#endif
 
 namespace Camera {
 
@@ -189,8 +192,7 @@ void QtMultimediaCameraHandler::StopCamera() {
 
 void QtMultimediaCameraHandler::StartCamera() {
 #if defined(__APPLE__)
-    bool authorized = AppleAuthorization::CheckAuthorizationForCamera();
-    if (!authorized) {
+    if (!AppleAuthorization::CheckAuthorizationForCamera()) {
         LOG_ERROR(Service_CAM, "Unable to start camera due to lack of authorization");
         return;
     }

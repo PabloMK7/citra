@@ -237,8 +237,8 @@ if (APPLE)
     set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE TRUE)
     set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
     target_sources(citra-qt PRIVATE
-        usage_authorization.h
-        usage_authorization.mm
+        macos_authorization.h
+        macos_authorization.mm
     )
 elseif(WIN32)
     # compile as a win32 gui application instead of a console application

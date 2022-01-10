@@ -4,7 +4,7 @@
 
 #import <AVFoundation/AVFoundation.h>
 
-#include "citra_qt/usage_authorization.h"
+#include "citra_qt/macos_authorization.h"
 #include "common/logging/log.h"
 
 namespace AppleAuthorization {
@@ -33,8 +33,8 @@ void CheckAuthorization(AuthMediaType type) {
         case AVAuthorizationStatusNotDetermined: {
             // The app hasn't yet asked the user for camera access.
             [AVCaptureDevice requestAccessForMediaType:media_type
-                                     completionHandler:^(BOOL) {
-                                       authorized = true;
+                                     completionHandler:^(BOOL granted) {
+                                       authorized = granted;
                                      }];
             if (type == AuthMediaType::Camera) {
                 LOG_INFO(Frontend, "Camera access requested.");

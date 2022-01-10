@@ -18,7 +18,7 @@
 #include "ui_configure_camera.h"
 
 #if defined(__APPLE__)
-#include "citra_qt/usage_authorization.h"
+#include "citra_qt/macos_authorization.h"
 #endif
 
 const std::array<std::string, 3> ConfigureCamera::Implementations = {

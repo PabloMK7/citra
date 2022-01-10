@@ -16,7 +16,7 @@
 #include "ui_configure_audio.h"
 
 #if defined(__APPLE__)
-#include "citra_qt/usage_authorization.h"
+#include "citra_qt/macos_authorization.h"
 #endif
 
 constexpr int DEFAULT_INPUT_DEVICE_INDEX = 0;
