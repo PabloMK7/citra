@@ -7,6 +7,6 @@
 namespace AppleAuthorization {
 
 bool CheckAuthorizationForCamera();
-bool CheckAuthorizationForAudio();
+bool CheckAuthorizationForMicrophone();
 
 } // namespace AppleAuthorization

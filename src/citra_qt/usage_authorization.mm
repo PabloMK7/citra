@@ -38,6 +38,8 @@ void CheckAuthorization(AuthMediaType type) {
                                      }];
             if (type == AuthMediaType::Camera) {
                 LOG_INFO(Frontend, "Camera access requested.");
+            } else { // AuthMediaType::Microphone
+                LOG_INFO(Frontend, "Microphone access requested.");
             }
             break;
         }
@@ -45,10 +47,13 @@ void CheckAuthorization(AuthMediaType type) {
             // The user has previously denied access.
             authorized = false;
             if (type == AuthMediaType::Camera) {
-                LOG_WARNING(
-                    Frontend,
-                    "Camera access denied. To change this you may modify the macos system settings "
-                    "for Citra at 'System Preferences -> Security & Privacy -> Camera'");
+                LOG_WARNING(Frontend, "Camera access denied. To change this you may modify the "
+                                      "macOS system permission settings "
+                                      "for Citra at 'System Preferences -> Security & Privacy'");
+            } else { // AuthMediaType::Microphone
+                LOG_WARNING(Frontend, "Microphone access denied. To change this you may modify the "
+                                      "macOS system permission settings "
+                                      "for Citra at 'System Preferences -> Security & Privacy'");
             }
             return;
         }
