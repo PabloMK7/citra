@@ -117,6 +117,17 @@ static void MortonCopyTile(u32 stride, u8* tile_buffer, u8* gl_buffer) {
                 if constexpr (format == PixelFormat::D24S8) {
                     std::memcpy(tile_ptr, gl_ptr + 1, 3);
                     tile_ptr[3] = gl_ptr[0];
+                } else if (format == PixelFormat::RGBA8 && GLES) {
+                    // because GLES does not have ABGR format
+                    // so we will do byteswapping here
+                    tile_ptr[0] = gl_ptr[3];
+                    tile_ptr[1] = gl_ptr[2];
+                    tile_ptr[2] = gl_ptr[1];
+                    tile_ptr[3] = gl_ptr[0];
+                } else if (format == PixelFormat::RGB8 && GLES) {
+                    tile_ptr[0] = gl_ptr[2];
+                    tile_ptr[1] = gl_ptr[1];
+                    tile_ptr[2] = gl_ptr[0];
                 } else {
                     std::memcpy(tile_ptr, gl_ptr, bytes_per_pixel);
                 }
@@ -638,7 +649,23 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
             std::memcpy(&dst_buffer[coarse_start_offset], &backup_data[0], backup_bytes);
     } else if (!is_tiled) {
         ASSERT(type == SurfaceType::Color);
-        std::memcpy(dst_buffer + start_offset, &gl_buffer[start_offset], flush_end - flush_start);
+        if (pixel_format == PixelFormat::RGBA8 && GLES) {
+            for (std::size_t i = start_offset; i < flush_end - addr; i += 4) {
+                dst_buffer[i] = gl_buffer[i + 3];
+                dst_buffer[i + 1] = gl_buffer[i + 2];
+                dst_buffer[i + 2] = gl_buffer[i + 1];
+                dst_buffer[i + 3] = gl_buffer[i];
+            }
+        } else if (pixel_format == PixelFormat::RGB8 && GLES) {
+            for (std::size_t i = start_offset; i < flush_end - addr; i += 3) {
+                dst_buffer[i] = gl_buffer[i + 2];
+                dst_buffer[i + 1] = gl_buffer[i + 1];
+                dst_buffer[i + 2] = gl_buffer[i];
+            }
+        } else {
+            std::memcpy(dst_buffer + start_offset, &gl_buffer[start_offset],
+                        flush_end - flush_start);
+        }
     } else {
         gl_to_morton_fns[static_cast<std::size_t>(pixel_format)](stride, height, &gl_buffer[0],
                                                                  addr, flush_start, flush_end);
