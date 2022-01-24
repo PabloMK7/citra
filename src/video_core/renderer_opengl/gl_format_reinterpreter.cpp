@@ -363,7 +363,15 @@ private:
 };
 
 FormatReinterpreterOpenGL::FormatReinterpreterOpenGL() {
-    if ((GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage && GLAD_GL_ARB_copy_image) ||
+    const std::string_view vendor{reinterpret_cast<const char*>(glGetString(GL_VENDOR))};
+    const std::string_view version{reinterpret_cast<const char*>(glGetString(GL_VERSION))};
+    // Fallback to PBO path on obsolete intel drivers
+    // intel`s GL_VERSION string - `3.3.0 - Build 25.20.100.6373`
+    const bool intel_broken_drivers =
+        vendor.find("Intel") != vendor.npos && (std::atoi(version.substr(14, 2).data()) < 30);
+
+    if ((!intel_broken_drivers && GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage &&
+         GLAD_GL_ARB_copy_image) ||
         GLES) {
         reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
                                std::make_unique<ShaderD24S8toRGBA8>());
