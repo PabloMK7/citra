@@ -368,6 +368,18 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
             list << QKeySequence(button_param.Get("code", 0));
         }
     }
+
+    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; ++analog_id) {
+        auto analog_param = analogs_param[analog_id];
+        if (analog_param.Get("engine", "") == "analog_from_button") {
+            for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; ++sub_button_id) {
+                const Common::ParamPackage sub_button{
+                    analog_param.Get(analog_sub_buttons[sub_button_id], "")};
+                list << QKeySequence(sub_button.Get("code", 0));
+            }
+        }
+    }
+
     return list;
 }
 
