@@ -32,7 +32,7 @@ GraphicsDebugger g_debugger;
 namespace Service::GSP {
 
 // Beginning address of HW regs
-const u32 REGS_BEGIN = 0x1EB00000;
+constexpr u32 REGS_BEGIN = 0x1EB00000;
 
 namespace ErrCodes {
 enum {
@@ -78,7 +78,7 @@ static PAddr VirtualToPhysicalAddress(VAddr addr) {
     return addr | 0x80000000;
 }
 
-u32 GSP_GPU::GetUnusedThreadId() {
+u32 GSP_GPU::GetUnusedThreadId() const {
     for (u32 id = 0; id < MaxGSPThreads; ++id) {
         if (!used_thread_ids[id])
             return id;
@@ -109,9 +109,10 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(
 }
 
 void GSP_GPU::ClientDisconnected(std::shared_ptr<Kernel::ServerSession> server_session) {
-    SessionData* session_data = GetSessionData(server_session);
-    if (active_thread_id == session_data->thread_id)
+    const SessionData* session_data = GetSessionData(server_session);
+    if (active_thread_id == session_data->thread_id) {
         ReleaseRight(session_data);
+    }
     SessionRequestHandler::ClientDisconnected(server_session);
 }
 
@@ -470,8 +471,9 @@ void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
     }
 
     // For normal interrupts, don't do anything if no process has acquired the GPU right.
-    if (active_thread_id == -1)
+    if (active_thread_id == UINT32_MAX) {
         return;
+    }
 
     SignalInterruptForThread(interrupt_id, active_thread_id);
 }
@@ -712,23 +714,23 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     }
 
     // TODO(Subv): This case should put the caller thread to sleep until the right is released.
-    ASSERT_MSG(active_thread_id == -1, "GPU right has already been acquired");
+    ASSERT_MSG(active_thread_id == UINT32_MAX, "GPU right has already been acquired");
 
     active_thread_id = session_data->thread_id;
 
     rb.Push(RESULT_SUCCESS);
 }
 
-void GSP_GPU::ReleaseRight(SessionData* session_data) {
+void GSP_GPU::ReleaseRight(const SessionData* session_data) {
     ASSERT_MSG(active_thread_id == session_data->thread_id,
                "Wrong thread tried to release GPU right");
-    active_thread_id = -1;
+    active_thread_id = UINT32_MAX;
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x17, 0, 0);
 
-    SessionData* session_data = GetSessionData(ctx.Session());
+    const SessionData* session_data = GetSessionData(ctx.Session());
     ReleaseRight(session_data);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
