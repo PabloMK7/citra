@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="pt_BR" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS version="2.1" language="pt_BR">
 <context>
     <name>ARMRegisters</name>
     <message>
@@ -118,32 +118,32 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>CalibrationConfigurationDialog</name>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="22"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="23"/>
         <source>Communicating with the server...</source>
         <translation>Conectando-se ao servidor...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="23"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="24"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="40"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="41"/>
         <source>Touch the top left corner &lt;br&gt;of your touchpad.</source>
         <translation>Toque no canto superior esquerdo &lt;br&gt;do seu touchpad.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="43"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="44"/>
         <source>Now touch the bottom right corner &lt;br&gt;of your touchpad.</source>
         <translation>Agora toque no canto inferior direito &lt;br&gt;do seu touchpad.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="46"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="47"/>
         <source>Configuration completed!</source>
         <translation>Configuração concluída!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="51"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="52"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
@@ -1304,7 +1304,7 @@ Deseja ignorar o erro e continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="433"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="555"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="431"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="443"/>
         <source>Set Analog Stick</source>
         <translation>Definir direcional analógico</translation>
     </message>
@@ -1384,7 +1384,7 @@ Deseja ignorar o erro e continuar?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="261"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="486"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="498"/>
         <source>Information</source>
         <translation>Informação</translation>
     </message>
@@ -1395,83 +1395,83 @@ Deseja ignorar o erro e continuar?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="445"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="457"/>
         <source>Deadzone: %1%</source>
         <translation>Zona morta: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="284"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="452"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="464"/>
         <source>Modifier Scale: %1%</source>
         <translation>Escala do modificador: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="480"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="492"/>
         <source>Warning</source>
         <translation>Aviso</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="481"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="493"/>
         <source>Auto mapping failed. Your controller may not have a corresponding mapping</source>
         <translation>O mapeamento automático falhou. O controle pode não ter um mapeamento correspondente.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="487"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="499"/>
         <source>After pressing OK, press any button on your joystick</source>
         <translation>Após clicar em OK, pressione qualquer botão do controle.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="509"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="521"/>
         <source>[press key]</source>
         <translation>[pressione uma tecla]</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="556"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="568"/>
         <source>Error!</source>
         <translation>Erro!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="557"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="569"/>
         <source>You&apos;re using a key that&apos;s already bound.</source>
         <translation>Você está usando uma tecla que já está em uso por outro atalho.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="578"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="590"/>
         <source>New Profile</source>
         <translation>Novo perfil</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="578"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="590"/>
         <source>Enter the name for the new profile.</source>
         <translation>Insira o nome do novo perfil.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="598"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="610"/>
         <source>Delete Profile</source>
         <translation>Apagar perfil</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="598"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="610"/>
         <source>Delete profile %1?</source>
         <translation>Apagar perfil %1?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="611"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="623"/>
         <source>Rename Profile</source>
         <translation>Renomear perfil</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="611"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="623"/>
         <source>New name:</source>
         <translation>Novo nome:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="630"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="642"/>
         <source>Duplicate profile name</source>
         <translation>Duplicar nome do perfil</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="631"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="643"/>
         <source>Profile name already exists. Please choose a different name.</source>
         <translation>Esse nome de perfil já existe. Escolha outro nome.</translation>
     </message>
@@ -1499,151 +1499,178 @@ Deseja ignorar o erro e continuar?</translation>
         <translation>Sensibilidade:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="76"/>
-        <source>Touch</source>
-        <translation>Toque</translation>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="75"/>
+        <source>Controller:</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="84"/>
-        <source>Touch Provider:</source>
-        <translation>Fonte de toque:</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="98"/>
-        <source>Calibration:</source>
-        <translation>Calibração:</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="105"/>
-        <source>(100, 50) - (1800, 850)</source>
-        <translation>(100, 50) - (1800, 850)</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="121"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="154"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="223"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="82"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="139"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="172"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="251"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="292"/>
         <source>Configure</source>
         <translation>Configurar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="138"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="94"/>
+        <source>Touch</source>
+        <translation>Toque</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="102"/>
+        <source>Touch Provider:</source>
+        <translation>Fonte de toque:</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="116"/>
+        <source>Calibration:</source>
+        <translation>Calibração:</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="123"/>
+        <source>(100, 50) - (1800, 850)</source>
+        <translation>(100, 50) - (1800, 850)</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="156"/>
         <source>Use button mapping:</source>
         <translation>Usar mapeamento de botão:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="166"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="184"/>
         <source>CemuhookUDP Config</source>
         <translation>Configurações do CemuhookUDP</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="172"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="190"/>
         <source>You may use any Cemuhook compatible UDP input source to provide motion and touch input.</source>
         <translation>Você pode usar qualquer servidor de entrada UDP compatível com o Cemuhook para fornecer controles de toque e de movimento.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="187"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="205"/>
         <source>Server:</source>
         <translation>Servidor:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="208"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="226"/>
         <source>Port:</source>
         <translation>Porta:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="229"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="247"/>
         <source>Pad:</source>
         <translation>Pad:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="255"/>
         <source>Pad 1</source>
         <translation>Pad 1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="242"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="260"/>
         <source>Pad 2</source>
         <translation>Pad 2</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="247"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="265"/>
         <source>Pad 3</source>
         <translation>Pad 3</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="252"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="270"/>
         <source>Pad 4</source>
         <translation>Pad 4</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="264"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="282"/>
         <source>Learn More</source>
         <translation>Saiba mais</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="277"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="245"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="295"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="314"/>
         <source>Test</source>
         <translation>Testar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="74"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="75"/>
         <source>Mouse (Right Click)</source>
         <translation>Mouse (botão direito)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="75"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="79"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="76"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="81"/>
         <source>CemuhookUDP</source>
         <translation>CemuhookUDP</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="78"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="77"/>
+        <source>SDL</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="80"/>
         <source>Emulator Window</source>
         <translation>Janela do emulador</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="93"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="96"/>
         <source>&lt;a href=&apos;https://citra-emu.org/wiki/using-a-controller-or-android-phone-for-motion-or-touch-input&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Learn More&lt;/span&gt;&lt;/a&gt;</source>
         <translation>&lt;a href=&apos;https://citra-emu.org/wiki/using-a-controller-or-android-phone-for-motion-or-touch-input&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Saiba mais&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="188"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="206"/>
+        <source>Information</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="207"/>
+        <source>After pressing OK, press a button on the controller whose motion you want to track.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="210"/>
+        <source>[press button]</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="257"/>
         <source>Testing</source>
         <translation>Testando</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="205"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="274"/>
         <source>Configuring</source>
         <translation>Configurando</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="236"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="305"/>
         <source>Test Successful</source>
         <translation>Teste concluído com êxito</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="306"/>
         <source>Successfully received data from the server.</source>
         <translation>Dados recebidos do servidor com êxito.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="239"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="308"/>
         <source>Test Failed</source>
         <translation>Falha no teste</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="240"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="309"/>
         <source>Could not receive valid data from the server.&lt;br&gt;Please verify that the server is set up correctly and the address and port are correct.</source>
         <translation>Não foi possível receber dados válidos do servidor.&lt;br&gt;Verifique se o servidor foi configurado corretamente e o endereço e porta estão corretos.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="267"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="336"/>
         <source>Citra</source>
         <translation>Citra</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="268"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="337"/>
         <source>UDP Test or calibration configuration is in progress.&lt;br&gt;Please wait for them to finish.</source>
         <translation>O teste UDP ou configuração de calibração está em curso no momento.&lt;br&gt;Aguarde até a conclusão deles.</translation>
     </message>

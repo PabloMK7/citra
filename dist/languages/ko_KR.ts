@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ko_KR" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS version="2.1" language="ko_KR">
 <context>
     <name>ARMRegisters</name>
     <message>
@@ -118,32 +118,32 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>CalibrationConfigurationDialog</name>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="22"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="23"/>
         <source>Communicating with the server...</source>
         <translation>서버와 통신중...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="23"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="24"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="40"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="41"/>
         <source>Touch the top left corner &lt;br&gt;of your touchpad.</source>
         <translation>이제 터치 패드의 왼쪽 하단을 &lt;br&gt;터치하십시오.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="43"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="44"/>
         <source>Now touch the bottom right corner &lt;br&gt;of your touchpad.</source>
         <translation>이제 터치 패드의 오른쪽 하단을 &lt;br&gt;터치하십시오.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="46"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="47"/>
         <source>Configuration completed!</source>
         <translation>설정 완료!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="51"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="52"/>
         <source>OK</source>
         <translation>확인</translation>
     </message>
@@ -241,7 +241,7 @@ p, li { white-space: pre-wrap; }
         <source>Are you sure you would like to &lt;b&gt;kick and ban&lt;/b&gt; %1?
 
 This would ban both their forum username and their IP address.</source>
-        <translation> %1을 &lt;b&gt;추방하고 차단&lt;/b&gt;하시겠습니까?
+        <translation>%1을 &lt;b&gt;추방하고 차단&lt;/b&gt;하시겠습니까?
 
 포럼 사용자 이름과 IP 주소가 모두 차단됩니다.</translation>
     </message>
@@ -1304,7 +1304,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="433"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="555"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="431"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="443"/>
         <source>Set Analog Stick</source>
         <translation>아날로그 스틱 설정</translation>
     </message>
@@ -1384,7 +1384,7 @@ Would you like to ignore the error and continue?</source>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="261"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="486"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="498"/>
         <source>Information</source>
         <translation>정보</translation>
     </message>
@@ -1395,83 +1395,83 @@ Would you like to ignore the error and continue?</source>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="445"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="457"/>
         <source>Deadzone: %1%</source>
         <translation>데드존: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="284"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="452"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="464"/>
         <source>Modifier Scale: %1%</source>
         <translation>민감도: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="480"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="492"/>
         <source>Warning</source>
         <translation>경고</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="481"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="493"/>
         <source>Auto mapping failed. Your controller may not have a corresponding mapping</source>
         <translation>자동 매핑에 실패했습니다. 컨트롤러에 해당 매핑이 없을 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="487"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="499"/>
         <source>After pressing OK, press any button on your joystick</source>
         <translation>확인을 누른 후 조이스틱의 아무 버튼이나 누르십시오.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="509"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="521"/>
         <source>[press key]</source>
         <translation>[키 입력]</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="556"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="568"/>
         <source>Error!</source>
         <translation>오류!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="557"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="569"/>
         <source>You&apos;re using a key that&apos;s already bound.</source>
         <translation>이미 바인딩 된 키를 사용 중입니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="578"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="590"/>
         <source>New Profile</source>
         <translation>새 프로필</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="578"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="590"/>
         <source>Enter the name for the new profile.</source>
         <translation>새 프로파일의 이름을 입력하십시오.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="598"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="610"/>
         <source>Delete Profile</source>
         <translation>프로필 삭제</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="598"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="610"/>
         <source>Delete profile %1?</source>
         <translation>프로필 %1을 지우시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="611"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="623"/>
         <source>Rename Profile</source>
         <translation>프로필 이름 바꾸기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="611"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="623"/>
         <source>New name:</source>
         <translation>새 이름:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="630"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="642"/>
         <source>Duplicate profile name</source>
         <translation>중복된 프로필 이름</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="631"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="643"/>
         <source>Profile name already exists. Please choose a different name.</source>
         <translation>프로필 이름이 이미 있습니다. 다른 이름을 선택하십시오.</translation>
     </message>
@@ -1499,151 +1499,178 @@ Would you like to ignore the error and continue?</source>
         <translation>민감성:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="76"/>
-        <source>Touch</source>
-        <translation>터치</translation>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="75"/>
+        <source>Controller:</source>
+        <translation>컨트롤러:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="84"/>
-        <source>Touch Provider:</source>
-        <translation>터치 제공:</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="98"/>
-        <source>Calibration:</source>
-        <translation>캘리브레이션:</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="105"/>
-        <source>(100, 50) - (1800, 850)</source>
-        <translation>(100, 50) - (1800, 850)</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="121"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="154"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="223"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="82"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="139"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="172"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="251"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="292"/>
         <source>Configure</source>
         <translation>설정</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="138"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="94"/>
+        <source>Touch</source>
+        <translation>터치</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="102"/>
+        <source>Touch Provider:</source>
+        <translation>터치 제공:</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="116"/>
+        <source>Calibration:</source>
+        <translation>캘리브레이션:</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="123"/>
+        <source>(100, 50) - (1800, 850)</source>
+        <translation>(100, 50) - (1800, 850)</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="156"/>
         <source>Use button mapping:</source>
         <translation>버튼 매핑 사용 :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="166"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="184"/>
         <source>CemuhookUDP Config</source>
         <translation>CemuhookUDP 설정</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="172"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="190"/>
         <source>You may use any Cemuhook compatible UDP input source to provide motion and touch input.</source>
         <translation>Cemuhook 호환 UDP 입력 소스를 사용하여 동작 및 터치 입력을 제공 할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="187"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="205"/>
         <source>Server:</source>
         <translation>서버:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="208"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="226"/>
         <source>Port:</source>
         <translation>포트:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="229"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="247"/>
         <source>Pad:</source>
         <translation>패드:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="255"/>
         <source>Pad 1</source>
         <translation>패드 1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="242"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="260"/>
         <source>Pad 2</source>
         <translation>패드 2</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="247"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="265"/>
         <source>Pad 3</source>
         <translation>패드 3</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="252"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="270"/>
         <source>Pad 4</source>
         <translation>패드 4</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="264"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="282"/>
         <source>Learn More</source>
         <translation>자세히 알아보기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="277"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="245"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="295"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="314"/>
         <source>Test</source>
         <translation>테스트</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="74"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="75"/>
         <source>Mouse (Right Click)</source>
         <translation>마우스 (오른쪽 클릭)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="75"/>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="79"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="76"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="81"/>
         <source>CemuhookUDP</source>
         <translation>CemuhookUDP</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="78"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="77"/>
+        <source>SDL</source>
+        <translation>SDL</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="80"/>
         <source>Emulator Window</source>
         <translation>에뮬레이터 윈도우</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="93"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="96"/>
         <source>&lt;a href=&apos;https://citra-emu.org/wiki/using-a-controller-or-android-phone-for-motion-or-touch-input&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Learn More&lt;/span&gt;&lt;/a&gt;</source>
         <translation>&lt;a href=&apos;https://citra-emu.org/wiki/using-a-controller-or-android-phone-for-motion-or-touch-input&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;자세히 알아보기&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="188"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="206"/>
+        <source>Information</source>
+        <translation>정보</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="207"/>
+        <source>After pressing OK, press a button on the controller whose motion you want to track.</source>
+        <translation>확인을 누른 후 움직임을 추적하려는 컨트롤러의 버튼을 누릅니다.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="210"/>
+        <source>[press button]</source>
+        <translation>[버튼을 누르세요]</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="257"/>
         <source>Testing</source>
         <translation>테스팅</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="205"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="274"/>
         <source>Configuring</source>
         <translation>설정중</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="236"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="305"/>
         <source>Test Successful</source>
         <translation>테스트 성공</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="306"/>
         <source>Successfully received data from the server.</source>
         <translation>서버로 부터 데이터를 받은데 성공했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="239"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="308"/>
         <source>Test Failed</source>
         <translation>테스트 실패</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="240"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="309"/>
         <source>Could not receive valid data from the server.&lt;br&gt;Please verify that the server is set up correctly and the address and port are correct.</source>
         <translation>서버로 부터 유효한 정보를 받지 못했습니다.&lt;br&gt;서버가 올바르게 설정됐는지 주소와 포트가 정확한지 확인하세요.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="267"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="336"/>
         <source>Citra</source>
         <translation>Citra</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="268"/>
+        <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="337"/>
         <source>UDP Test or calibration configuration is in progress.&lt;br&gt;Please wait for them to finish.</source>
         <translation>UDP Test 또는 캘리브레이션 설정이 진행중입니다.&lt;br&gt;설정이 끝날때까지 기다려주세요.</translation>
     </message>
