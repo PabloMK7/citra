@@ -10,6 +10,10 @@
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/main.h"
 
+#if defined(__APPLE__)
+#include "citra_qt/macos_authorization.h"
+#endif
+
 namespace Camera {
 
 QList<QVideoFrame::PixelFormat> QtCameraSurface::supportedPixelFormats([
@@ -187,6 +191,12 @@ void QtMultimediaCameraHandler::StopCamera() {
 }
 
 void QtMultimediaCameraHandler::StartCamera() {
+#if defined(__APPLE__)
+    if (!AppleAuthorization::CheckAuthorizationForCamera()) {
+        LOG_ERROR(Service_CAM, "Unable to start camera due to lack of authorization");
+        return;
+    }
+#endif
     camera->setViewfinderSettings(settings);
     camera->start();
     started = true;

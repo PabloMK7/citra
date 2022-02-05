@@ -15,6 +15,10 @@
 #include "core/settings.h"
 #include "ui_configure_audio.h"
 
+#if defined(__APPLE__)
+#include "citra_qt/macos_authorization.h"
+#endif
+
 constexpr int DEFAULT_INPUT_DEVICE_INDEX = 0;
 
 ConfigureAudio::ConfigureAudio(QWidget* parent)
@@ -148,6 +152,11 @@ void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
 }
 
 void ConfigureAudio::UpdateAudioInputDevices(int index) {
+#if defined(__APPLE__)
+    if (index == 1) {
+        AppleAuthorization::CheckAuthorizationForMicrophone();
+    }
+#endif
     if (Settings::values.mic_input_device != Frontend::Mic::default_device_name) {
         ui->input_device_combo_box->setCurrentText(
             QString::fromStdString(Settings::values.mic_input_device));
