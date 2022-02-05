@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <atomic>
-#ifdef ENABLE_WEB_SERVICE
-#include <LUrlParser.h>
-#endif
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include "common/archives.h"
@@ -61,27 +58,9 @@ void Context::MakeRequest() {
     ASSERT(state == RequestState::NotStarted);
 
 #ifdef ENABLE_WEB_SERVICE
-    LUrlParser::clParseURL parsedUrl = LUrlParser::clParseURL::ParseURL(url);
-    int port;
-    std::unique_ptr<httplib::Client> client;
-    if (parsedUrl.m_Scheme == "http") {
-        if (!parsedUrl.GetPort(&port)) {
-            port = 80;
-        }
-        // TODO(B3N30): Support for setting timeout
-        // Figure out what the default timeout on 3DS is
-        client = std::make_unique<httplib::Client>(parsedUrl.m_Host.c_str(), port);
-    } else {
-        if (!parsedUrl.GetPort(&port)) {
-            port = 443;
-        }
-        // TODO(B3N30): Support for setting timeout
-        // Figure out what the default timeout on 3DS is
-
-        auto ssl_client = std::make_unique<httplib::SSLClient>(parsedUrl.m_Host, port);
-        SSL_CTX* ctx = ssl_client->ssl_context();
-        client = std::move(ssl_client);
-
+    std::unique_ptr<httplib::Client> client = std::make_unique<httplib::Client>(url.c_str());
+    SSL_CTX* ctx = client->ssl_context();
+    if (ctx) {
         if (auto client_cert = ssl_config.client_cert_ctx.lock()) {
             SSL_CTX_use_certificate_ASN1(ctx, static_cast<int>(client_cert->certificate.size()),
                                          client_cert->certificate.data());
@@ -105,6 +84,7 @@ void Context::MakeRequest() {
     };
 
     httplib::Request request;
+    httplib::Error error;
     request.method = request_method_strings.at(method);
     request.path = url;
     // TODO(B3N30): Add post data body
@@ -119,8 +99,8 @@ void Context::MakeRequest() {
         request.headers.emplace(header.name, header.value);
     }
 
-    if (!client->send(request, response)) {
-        LOG_ERROR(Service_HTTP, "Request failed");
+    if (!client->send(request, response, error)) {
+        LOG_ERROR(Service_HTTP, "Request failed: {}", error);
         state = RequestState::TimedOut;
     } else {
         LOG_DEBUG(Service_HTTP, "Request successful");
