@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <atomic>
 #include <list>
 #include <mutex>
@@ -380,6 +381,7 @@ void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
     packet >> chat_entry.nickname;
     packet >> chat_entry.username;
     packet >> chat_entry.message;
+    chat_entry.message.resize(std::min(chat_entry.message.find('\0'), chat_entry.message.size()));
     Invoke<ChatEntry>(chat_entry);
 }
 
