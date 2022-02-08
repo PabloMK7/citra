@@ -302,6 +302,9 @@ set(cryptopp_SOURCES
         ${SRC_DIR}/neon_simd.cpp
         ${SRC_DIR}/oaep.cpp
         ${SRC_DIR}/osrng.cpp
+        ${SRC_DIR}/ppc_power7.cpp
+        ${SRC_DIR}/ppc_power8.cpp
+        ${SRC_DIR}/ppc_power9.cpp
         ${SRC_DIR}/ppc_simd.cpp
         ${SRC_DIR}/pubkey.cpp
         ${SRC_DIR}/queue.cpp
