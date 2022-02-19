@@ -617,7 +617,7 @@ void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x863, 0, 0);
 
-    if (priority == -1) {
+    if (priority == UINT32_MAX) {
         LOG_INFO(Service_FS, "priority was not set, priority=0x{:X}", priority);
     }
 
