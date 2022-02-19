@@ -2,11 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cstring>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
 #include <cryptopp/hex.h>
+#include <cryptopp/osrng.h>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -24,8 +27,6 @@
 namespace Core {
 
 /*static*/ Movie Movie::s_instance;
-
-enum class PlayMode { None, Recording, Playing };
 
 enum class ControllerStateType : u8 {
     PadAndCircle,
@@ -117,24 +118,120 @@ struct CTMHeader {
     u64_le program_id;           /// ID of the ROM being executed. Also called title_id
     std::array<u8, 20> revision; /// Git hash of the revision this movie was created with
     u64_le clock_init_time;      /// The init time of the system clock
+    u64_le id; /// Unique identifier of the movie, used to support separate savestate slots
+    std::array<char, 32> author; /// Author of the movie
+    u32_le rerecord_count;       /// Number of rerecords when making the movie
+    u64_le input_count;          /// Number of inputs (button and pad states) when making the movie
 
-    std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size
+    std::array<u8, 164> reserved; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
 
-bool Movie::IsPlayingInput() const {
-    return play_mode == PlayMode::Playing;
+static u64 GetInputCount(const std::vector<u8>& input) {
+    u64 input_count = 0;
+    for (std::size_t pos = 0; pos < input.size(); pos += sizeof(ControllerState)) {
+        if (input.size() < pos + sizeof(ControllerState)) {
+            break;
+        }
+
+        ControllerState state;
+        std::memcpy(&state, input.data() + pos, sizeof(ControllerState));
+        if (state.type == ControllerStateType::PadAndCircle) {
+            input_count++;
+        }
+    }
+    return input_count;
 }
-bool Movie::IsRecordingInput() const {
-    return play_mode == PlayMode::Recording;
+
+template <class Archive>
+void Movie::serialize(Archive& ar, const unsigned int file_version) {
+    // Only serialize what's needed to make savestates useful for TAS:
+    u64 _current_byte = static_cast<u64>(current_byte);
+    ar& _current_byte;
+    current_byte = static_cast<std::size_t>(_current_byte);
+
+    if (file_version > 0) {
+        ar& current_input;
+    }
+
+    std::vector<u8> recorded_input_ = recorded_input;
+    ar& recorded_input_;
+
+    ar& init_time;
+
+    if (file_version > 0) {
+        if (Archive::is_loading::value) {
+            u64 savestate_movie_id;
+            ar& savestate_movie_id;
+            if (id != savestate_movie_id) {
+                if (savestate_movie_id == 0) {
+                    throw std::runtime_error("You must close your movie to load this state");
+                } else {
+                    throw std::runtime_error("You must load the same movie to load this state");
+                }
+            }
+        } else {
+            ar& id;
+        }
+    }
+
+    // Whether the state was made in MovieFinished state
+    bool post_movie = play_mode == PlayMode::MovieFinished;
+    if (file_version > 0) {
+        ar& post_movie;
+    }
+
+    if (Archive::is_loading::value && id != 0) {
+        if (!read_only) {
+            recorded_input = std::move(recorded_input_);
+        }
+
+        if (post_movie) {
+            play_mode = PlayMode::MovieFinished;
+            return;
+        }
+
+        if (read_only) {
+            if (play_mode == PlayMode::Recording) {
+                SaveMovie();
+            }
+            if (recorded_input_.size() >= recorded_input.size()) {
+                throw std::runtime_error("Future event savestate not allowed in R/O mode");
+            }
+            // Ensure that the current movie and savestate movie are in the same timeline
+            if (std::mismatch(recorded_input_.begin(), recorded_input_.end(),
+                              recorded_input.begin())
+                    .first != recorded_input_.end()) {
+                throw std::runtime_error("Timeline mismatch not allowed in R/O mode");
+            }
+
+            play_mode = PlayMode::Playing;
+            total_input = GetInputCount(recorded_input);
+        } else {
+            play_mode = PlayMode::Recording;
+            rerecord_count++;
+        }
+    }
+}
+
+SERIALIZE_IMPL(Movie)
+
+Movie::PlayMode Movie::GetPlayMode() const {
+    return play_mode;
+}
+
+u64 Movie::GetCurrentInputIndex() const {
+    return current_input;
+}
+u64 Movie::GetTotalInputCount() const {
+    return total_input;
 }
 
 void Movie::CheckInputEnd() {
     if (current_byte + sizeof(ControllerState) > recorded_input.size()) {
         LOG_INFO(Movie, "Playback finished");
-        play_mode = PlayMode::None;
-        init_time = 0;
+        play_mode = PlayMode::MovieFinished;
         playback_completion_callback();
     }
 }
@@ -143,6 +240,7 @@ void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
+    current_input++;
 
     if (s.type != ControllerStateType::PadAndCircle) {
         LOG_ERROR(Movie,
@@ -270,6 +368,8 @@ void Movie::Record(const ControllerState& controller_state) {
 
 void Movie::Record(const Service::HID::PadState& pad_state, const s16& circle_pad_x,
                    const s16& circle_pad_y) {
+    current_input++;
+
     ControllerState s;
     s.type = ControllerStateType::PadAndCircle;
 
@@ -358,21 +458,13 @@ u64 Movie::GetOverrideInitTime() const {
     return init_time;
 }
 
-Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 program_id) const {
+Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
     if (header_magic_bytes != header.filetype) {
         LOG_ERROR(Movie, "Playback file does not have valid header");
         return ValidationResult::Invalid;
     }
 
     std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
-
-    if (!program_id)
-        Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
-    if (program_id != header.program_id) {
-        LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
-        return ValidationResult::GameDismatch;
-    }
-
     if (revision != Common::g_scm_rev) {
         LOG_WARNING(Movie,
                     "This movie was created on a different version of Citra, playback may desync");
@@ -380,6 +472,12 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 progr
     }
 
     return ValidationResult::OK;
+}
+
+Movie::ValidationResult Movie::ValidateInput(const std::vector<u8>& input,
+                                             u64 expected_count) const {
+    return GetInputCount(input) == expected_count ? ValidationResult::OK
+                                                  : ValidationResult::InputCountDismatch;
 }
 
 void Movie::SaveMovie() {
@@ -393,9 +491,15 @@ void Movie::SaveMovie() {
 
     CTMHeader header = {};
     header.filetype = header_magic_bytes;
+    header.program_id = program_id;
     header.clock_init_time = init_time;
+    header.id = id;
 
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(header.program_id);
+    std::memcpy(header.author.data(), record_movie_author.data(),
+                std::min(header.author.size(), record_movie_author.size()));
+
+    header.rerecord_count = rerecord_count;
+    header.input_count = GetInputCount(recorded_input);
 
     std::string rev_bytes;
     CryptoPP::StringSource(Common::g_scm_rev, true,
@@ -410,8 +514,11 @@ void Movie::SaveMovie() {
     }
 }
 
-void Movie::StartPlayback(const std::string& movie_file,
-                          std::function<void()> completion_callback) {
+void Movie::SetPlaybackCompletionCallback(std::function<void()> completion_callback) {
+    playback_completion_callback = completion_callback;
+}
+
+void Movie::StartPlayback(const std::string& movie_file) {
     LOG_INFO(Movie, "Loading Movie for playback");
     FileUtil::IOFile save_record(movie_file, "rb");
     const u64 size = save_record.GetSize();
@@ -421,20 +528,49 @@ void Movie::StartPlayback(const std::string& movie_file,
         save_record.ReadArray(&header, 1);
         if (ValidateHeader(header) != ValidationResult::Invalid) {
             play_mode = PlayMode::Playing;
+            record_movie_file = movie_file;
+
+            std::array<char, 33> author{}; // Add a null terminator
+            std::memcpy(author.data(), header.author.data(), header.author.size());
+            record_movie_author = author.data();
+
+            rerecord_count = header.rerecord_count;
+            total_input = header.input_count;
+
             recorded_input.resize(size - sizeof(CTMHeader));
             save_record.ReadArray(recorded_input.data(), recorded_input.size());
+
             current_byte = 0;
-            playback_completion_callback = completion_callback;
+            current_input = 0;
+            id = header.id;
+            program_id = header.program_id;
+
+            LOG_INFO(Movie, "Loaded Movie, ID: {:016X}", id);
         }
     } else {
         LOG_ERROR(Movie, "Failed to playback movie: Unable to open '{}'", movie_file);
     }
 }
 
-void Movie::StartRecording(const std::string& movie_file) {
-    LOG_INFO(Movie, "Enabling Movie recording");
+void Movie::StartRecording(const std::string& movie_file, const std::string& author) {
     play_mode = PlayMode::Recording;
     record_movie_file = movie_file;
+    record_movie_author = author;
+    rerecord_count = 1;
+
+    // Generate a random ID
+    CryptoPP::AutoSeededRandomPool rng;
+    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(&id), sizeof(id));
+
+    // Get program ID
+    program_id = 0;
+    Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+
+    LOG_INFO(Movie, "Enabling Movie recording, ID: {:016X}", id);
+}
+
+void Movie::SetReadOnly(bool read_only_) {
+    read_only = read_only_;
 }
 
 static boost::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
@@ -469,25 +605,51 @@ void Movie::PrepareForRecording() {
                      : Settings::values.init_time);
 }
 
-Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 program_id) const {
+Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file) const {
     LOG_INFO(Movie, "Validating Movie file '{}'", movie_file);
-    auto header = ReadHeader(movie_file);
-    if (header == boost::none)
-        return ValidationResult::Invalid;
 
-    return ValidateHeader(header.value(), program_id);
+    FileUtil::IOFile save_record(movie_file, "rb");
+    const u64 size = save_record.GetSize();
+
+    if (!save_record || size <= sizeof(CTMHeader)) {
+        return ValidationResult::Invalid;
+    }
+
+    CTMHeader header;
+    save_record.ReadArray(&header, 1);
+
+    if (header_magic_bytes != header.filetype) {
+        return ValidationResult::Invalid;
+    }
+
+    auto result = ValidateHeader(header);
+    if (result != ValidationResult::OK) {
+        return result;
+    }
+
+    if (!header.input_count) { // Probably created by an older version.
+        return ValidationResult::OK;
+    }
+
+    std::vector<u8> input(size - sizeof(header));
+    save_record.ReadArray(input.data(), input.size());
+    return ValidateInput(input, header.input_count);
 }
 
-u64 Movie::GetMovieProgramID(const std::string& movie_file) const {
+Movie::MovieMetadata Movie::GetMovieMetadata(const std::string& movie_file) const {
     auto header = ReadHeader(movie_file);
     if (header == boost::none)
-        return 0;
+        return {};
 
-    return static_cast<u64>(header.value().program_id);
+    std::array<char, 33> author{}; // Add a null terminator
+    std::memcpy(author.data(), header->author.data(), header->author.size());
+
+    return {header->program_id, std::string{author.data()}, header->rerecord_count,
+            header->input_count};
 }
 
 void Movie::Shutdown() {
-    if (IsRecordingInput()) {
+    if (play_mode == PlayMode::Recording) {
         SaveMovie();
     }
 
@@ -495,16 +657,18 @@ void Movie::Shutdown() {
     recorded_input.resize(0);
     record_movie_file.clear();
     current_byte = 0;
+    current_input = 0;
     init_time = 0;
+    id = 0;
 }
 
 template <typename... Targs>
 void Movie::Handle(Targs&... Fargs) {
-    if (IsPlayingInput()) {
+    if (play_mode == PlayMode::Playing) {
         ASSERT(current_byte + sizeof(ControllerState) <= recorded_input.size());
         Play(Fargs...);
         CheckInputEnd();
-    } else if (IsRecordingInput()) {
+    } else if (play_mode == PlayMode::Recording) {
         Record(Fargs...);
     }
 }

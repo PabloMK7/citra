@@ -70,7 +70,7 @@ public:
 
     QStandardItemModel* GetModel() const;
 
-    QString FindGameByProgramID(u64 program_id);
+    QString FindGameByProgramID(u64 program_id, int role);
 
     void RefreshGameDirectory();
 
@@ -105,7 +105,7 @@ private:
     void AddCustomDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddPermDirPopup(QMenu& context_menu, QModelIndex selected);
 
-    QString FindGameByProgramID(QStandardItem* current_item, u64 program_id);
+    QString FindGameByProgramID(QStandardItem* current_item, u64 program_id, int role);
 
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;

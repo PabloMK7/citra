@@ -18,6 +18,7 @@
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/frontend/scope_acquire_context.h"
+#include "core/perf_stats.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
@@ -51,6 +52,13 @@ void EmuThread::run() {
         });
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
+
+    if (Core::System::GetInstance().frame_limiter.IsFrameAdvancing()) {
+        // Usually the loading screen is hidden after the first frame is drawn. In this case
+        // we hide it immediately as we need to wait for user input to start the emulation.
+        emit HideLoadingScreen();
+        Core::System::GetInstance().frame_limiter.WaitOnce();
+    }
 
     // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the

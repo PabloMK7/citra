@@ -90,6 +90,7 @@ public:
 
     void DoFrameLimiting(std::chrono::microseconds current_system_time_us);
 
+    bool IsFrameAdvancing() const;
     /**
      * Sets whether frame advancing is enabled or not.
      * Note: The frontend must cancel frame advancing before shutting down in order

@@ -128,6 +128,12 @@ add_executable(citra-qt
     main.cpp
     main.h
     main.ui
+    movie/movie_play_dialog.cpp
+    movie/movie_play_dialog.h
+    movie/movie_play_dialog.ui
+    movie/movie_record_dialog.cpp
+    movie/movie_record_dialog.h
+    movie/movie_record_dialog.ui
     multiplayer/chat_room.cpp
     multiplayer/chat_room.h
     multiplayer/chat_room.ui

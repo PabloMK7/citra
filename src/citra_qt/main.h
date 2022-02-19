@@ -208,7 +208,8 @@ private slots:
     void OnCreateGraphicsSurfaceViewer();
     void OnRecordMovie();
     void OnPlayMovie();
-    void OnStopRecordingPlayback();
+    void OnCloseMovie();
+    void OnSaveMovie();
     void OnCaptureScreenshot();
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
     void OnStartVideoDumping();
@@ -224,7 +225,6 @@ private slots:
     void OnMouseActivity();
 
 private:
-    bool ValidateMovie(const QString& path, u64 program_id = 0);
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
     void LoadTranslation();
@@ -249,6 +249,7 @@ private:
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
     QTimer status_bar_update_timer;
+    bool message_label_used_for_movie = false;
 
     MultiplayerState* multiplayer_state = nullptr;
     std::unique_ptr<Config> config;
@@ -267,6 +268,10 @@ private:
     // Movie
     bool movie_record_on_start = false;
     QString movie_record_path;
+    QString movie_record_author;
+
+    bool movie_playback_on_start = false;
+    QString movie_playback_path;
 
     // Video dumping
     bool video_dumping_on_start = false;

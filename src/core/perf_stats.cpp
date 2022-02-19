@@ -169,6 +169,10 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
     previous_walltime = now;
 }
 
+bool FrameLimiter::IsFrameAdvancing() const {
+    return frame_advancing_enabled;
+}
+
 void FrameLimiter::SetFrameAdvancing(bool value) {
     const bool was_enabled = frame_advancing_enabled.exchange(value);
     if (was_enabled && !value) {

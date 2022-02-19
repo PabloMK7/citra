@@ -280,6 +280,11 @@ public:
 
     std::shared_ptr<Timer> GetTimer(std::size_t cpu_id);
 
+    // Used after deserializing to unprotect the event queue.
+    void UnlockEventQueue() {
+        event_queue_locked = false;
+    }
+
 private:
     // unordered_map stores each element separately as a linked list node so pointers to
     // elements remain stable regardless of rehashes/resizing.
@@ -292,6 +297,10 @@ private:
     // under/overclocking the guest cpu
     double cpu_clock_scale = 1.0;
 
+    // When true, the event queue can't be modified. Used while deserializing to workaround
+    // destructor side effects.
+    bool event_queue_locked = false;
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
         // event_types set during initialization of other things
@@ -302,6 +311,9 @@ private:
             current_timer = x.get();
         } else {
             ar& current_timer;
+        }
+        if (Archive::is_loading::value) {
+            event_queue_locked = true;
         }
     }
     friend class boost::serialization::access;

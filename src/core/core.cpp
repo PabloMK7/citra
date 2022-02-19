@@ -630,6 +630,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
 
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {
+        timing->UnlockEventQueue();
         Service::GSP::SetGlobalModule(*this);
         memory->SetDSP(*dsp_core);
         cheat_engine->Connect();

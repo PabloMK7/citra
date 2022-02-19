@@ -66,6 +66,7 @@ static void PrintHelp(const char* argv0) {
                  "-m, --multiplayer=nick:password@address:port"
                  " Nickname, password, address and port for multiplayer\n"
                  "-r, --movie-record=[file]  Record a movie (game inputs) to the given file\n"
+                 "-a, --movie-record-author=AUTHOR Sets the author of the movie to be recorded\n"
                  "-p, --movie-play=[file]    Playback the movie (game inputs) from the given file\n"
                  "-d, --dump-video=[file]    Dumps audio and video to the given video file\n"
                  "-f, --fullscreen     Start in fullscreen mode\n"
@@ -192,6 +193,7 @@ int main(int argc, char** argv) {
     bool use_gdbstub = Settings::values.use_gdbstub;
     u32 gdb_port = static_cast<u32>(Settings::values.gdbstub_port);
     std::string movie_record;
+    std::string movie_record_author;
     std::string movie_play;
     std::string dump_video;
 
@@ -217,11 +219,17 @@ int main(int argc, char** argv) {
     u16 port = Network::DefaultRoomPort;
 
     static struct option long_options[] = {
-        {"gdbport", required_argument, 0, 'g'},     {"install", required_argument, 0, 'i'},
-        {"multiplayer", required_argument, 0, 'm'}, {"movie-record", required_argument, 0, 'r'},
-        {"movie-play", required_argument, 0, 'p'},  {"dump-video", required_argument, 0, 'd'},
-        {"fullscreen", no_argument, 0, 'f'},        {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},           {0, 0, 0, 0},
+        {"gdbport", required_argument, 0, 'g'},
+        {"install", required_argument, 0, 'i'},
+        {"multiplayer", required_argument, 0, 'm'},
+        {"movie-record", required_argument, 0, 'r'},
+        {"movie-record-author", required_argument, 0, 'a'},
+        {"movie-play", required_argument, 0, 'p'},
+        {"dump-video", required_argument, 0, 'd'},
+        {"fullscreen", no_argument, 0, 'f'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0},
     };
 
     while (optind < argc) {
@@ -284,6 +292,9 @@ int main(int argc, char** argv) {
             }
             case 'r':
                 movie_record = optarg;
+                break;
+            case 'a':
+                movie_record_author = optarg;
                 break;
             case 'p':
                 movie_play = optarg;
@@ -401,10 +412,14 @@ int main(int argc, char** argv) {
     }
 
     if (!movie_play.empty()) {
+        auto metadata = Core::Movie::GetInstance().GetMovieMetadata(movie_play);
+        LOG_INFO(Movie, "Author: {}", metadata.author);
+        LOG_INFO(Movie, "Rerecord count: {}", metadata.rerecord_count);
+        LOG_INFO(Movie, "Input count: {}", metadata.input_count);
         Core::Movie::GetInstance().StartPlayback(movie_play);
     }
     if (!movie_record.empty()) {
-        Core::Movie::GetInstance().StartRecording(movie_record);
+        Core::Movie::GetInstance().StartRecording(movie_record, movie_record_author);
     }
     if (!dump_video.empty()) {
         Layout::FramebufferLayout layout{

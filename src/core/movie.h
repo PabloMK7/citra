@@ -24,14 +24,14 @@ union PadState;
 namespace Core {
 struct CTMHeader;
 struct ControllerState;
-enum class PlayMode;
 
 class Movie {
 public:
+    enum class PlayMode { None, Recording, Playing, MovieFinished };
     enum class ValidationResult {
         OK,
         RevisionDismatch,
-        GameDismatch,
+        InputCountDismatch,
         Invalid,
     };
     /**
@@ -42,9 +42,21 @@ public:
         return s_instance;
     }
 
-    void StartPlayback(
-        const std::string& movie_file, std::function<void()> completion_callback = [] {});
-    void StartRecording(const std::string& movie_file);
+    void SetPlaybackCompletionCallback(std::function<void()> completion_callback);
+    void StartPlayback(const std::string& movie_file);
+    void StartRecording(const std::string& movie_file, const std::string& author);
+
+    /**
+     * Sets the read-only status.
+     * When true, movies will be opened in read-only mode. Loading a state will resume playback
+     * from that state.
+     * When false, movies will be opened in read/write mode. Loading a state will start recording
+     * from that state (rerecording). To start rerecording without loading a state, one can save
+     * and then immediately load while in R/W.
+     *
+     * The default is true.
+     */
+    void SetReadOnly(bool read_only);
 
     /// Prepare to override the clock before playing back movies
     void PrepareForPlayback(const std::string& movie_file);
@@ -52,11 +64,23 @@ public:
     /// Prepare to override the clock before recording movies
     void PrepareForRecording();
 
-    ValidationResult ValidateMovie(const std::string& movie_file, u64 program_id = 0) const;
+    ValidationResult ValidateMovie(const std::string& movie_file) const;
 
     /// Get the init time that would override the one in the settings
     u64 GetOverrideInitTime() const;
-    u64 GetMovieProgramID(const std::string& movie_file) const;
+
+    struct MovieMetadata {
+        u64 program_id;
+        std::string author;
+        u32 rerecord_count;
+        u64 input_count;
+    };
+    MovieMetadata GetMovieMetadata(const std::string& movie_file) const;
+
+    /// Get the current movie's unique ID. Used to provide separate savestate slots for movies.
+    u64 GetCurrentMovieID() const {
+        return id;
+    }
 
     void Shutdown();
 
@@ -96,8 +120,16 @@ public:
      * When playing: Replaces the given input states with the ones stored in the playback file
      */
     void HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response);
-    bool IsPlayingInput() const;
-    bool IsRecordingInput() const;
+    PlayMode GetPlayMode() const;
+
+    u64 GetCurrentInputIndex() const;
+    u64 GetTotalInputCount() const;
+
+    /**
+     * Saves the movie immediately, in its current state.
+     * This is called in Shutdown.
+     */
+    void SaveMovie();
 
 private:
     static Movie s_instance;
@@ -123,26 +155,33 @@ private:
     void Record(const Service::IR::PadState& pad_state, const s16& c_stick_x, const s16& c_stick_y);
     void Record(const Service::IR::ExtraHIDResponse& extra_hid_response);
 
-    ValidationResult ValidateHeader(const CTMHeader& header, u64 program_id = 0) const;
-
-    void SaveMovie();
+    ValidationResult ValidateHeader(const CTMHeader& header) const;
+    ValidationResult ValidateInput(const std::vector<u8>& input, u64 expected_count) const;
 
     PlayMode play_mode;
+
     std::string record_movie_file;
+    std::string record_movie_author;
+
+    u64 init_time; // Clock init time override for RNG consistency
+
     std::vector<u8> recorded_input;
-    u64 init_time;
-    std::function<void()> playback_completion_callback;
     std::size_t current_byte = 0;
+    u64 current_input = 0;
+    // Total input count of the current movie being played. Not used for recording.
+    u64 total_input = 0;
+
+    u64 id = 0; // ID of the current movie loaded
+    u64 program_id = 0;
+    u32 rerecord_count = 1;
+    bool read_only = true;
+
+    std::function<void()> playback_completion_callback = [] {};
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        // Only serialize what's needed to make savestates useful for TAS:
-        u64 _current_byte = static_cast<u64>(current_byte);
-        ar& _current_byte;
-        current_byte = static_cast<std::size_t>(_current_byte);
-        ar& recorded_input;
-        ar& init_time;
-    }
+    void serialize(Archive& ar, const unsigned int file_version);
     friend class boost::serialization::access;
 };
 } // namespace Core
+
+BOOST_CLASS_VERSION(Core::Movie, 1)
