@@ -758,7 +758,12 @@ void GetOptionList(std::vector<OptionInfo>& out, const AVClass* av_class, bool s
     }
 
     const AVClass* child_class = nullptr;
+#if LIBAVCODEC_VERSION_MAJOR >= 59
+    void* iter = nullptr;
+    while ((child_class = av_opt_child_class_iterate(av_class, &iter))) {
+#else
     while ((child_class = av_opt_child_class_next(av_class, child_class))) {
+#endif
         GetOptionListSingle(out, child_class);
     }
 }
