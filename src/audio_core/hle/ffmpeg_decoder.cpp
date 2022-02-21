@@ -52,7 +52,7 @@ private:
 
     Memory::MemorySystem& memory;
 
-    AVCodec* codec;
+    const AVCodec* codec;
     std::unique_ptr<AVCodecContext, AVCodecContextDeleter> av_context;
     std::unique_ptr<AVCodecParserContext, AVCodecParserContextDeleter> parser;
     std::unique_ptr<AVPacket, AVPacketDeleter> av_packet;
