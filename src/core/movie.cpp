@@ -22,6 +22,7 @@
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/hle/service/ir/ir_rst.h"
+#include "core/hw/gpu.h"
 #include "core/movie.h"
 
 namespace Core {
@@ -222,10 +223,10 @@ Movie::PlayMode Movie::GetPlayMode() const {
 }
 
 u64 Movie::GetCurrentInputIndex() const {
-    return current_input;
+    return nearbyint(current_input / 234.0 * GPU::SCREEN_REFRESH_RATE);
 }
 u64 Movie::GetTotalInputCount() const {
-    return total_input;
+    return nearbyint(total_input / 234.0 * GPU::SCREEN_REFRESH_RATE);
 }
 
 void Movie::CheckInputEnd() {
