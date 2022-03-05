@@ -482,6 +482,22 @@ DspLle::DspLle(Memory::MemorySystem& memory, bool multithread)
     ahbm.write8 = [&memory](u32 address, u8 value) {
         *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR) = value;
     };
+    ahbm.read16 = [&memory](u32 address) -> u16 {
+        u16 value;
+        std::memcpy(&value, memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR), sizeof(u16));
+        return value;
+    };
+    ahbm.write16 = [&memory](u32 address, u16 value) {
+        std::memcpy(memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR), &value, sizeof(u16));
+    };
+    ahbm.read32 = [&memory](u32 address) -> u32 {
+        u32 value;
+        std::memcpy(&value, memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR), sizeof(u32));
+        return value;
+    };
+    ahbm.write32 = [&memory](u32 address, u32 value) {
+        std::memcpy(memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR), &value, sizeof(u32));
+    };
     impl->teakra.SetAHBMCallback(ahbm);
     impl->teakra.SetAudioCallback(
         [this](std::array<s16, 2> sample) { OutputSample(std::move(sample)); });
