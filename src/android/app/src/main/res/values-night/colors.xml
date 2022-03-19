@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="citra_orange">#272727</color>
+    <color name="citra_orange_dark">#121212</color>
+    <color name="citra_accent">#FEC303</color>
+
+    <color name="card_view_background">#121212</color>
+    <color name="card_view_disabled">#3D3D3D</color>
+
+    <color name="gamelist_divider">#404040</color>
+
+    <color name="header_text">#E0E0E0</color>
+    <color name="header_subtext">#A0A0A0</color>
+
+    <color name="citra_logo_text_color">@color/citra_accent</color>
+</resources>

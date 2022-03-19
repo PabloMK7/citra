@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- All lists for ListPreference keys/values are placed here -->
+<resources>
+    <string-array name="systemClockNames" translatable="true">
+        <item>Device clock</item>
+        <item>Simulated clock</item>
+    </string-array>
+
+    <integer-array name="systemClockValues" translatable="false">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
+
+    <string-array name="designNames" translatable="true">
+        <item>Light</item>
+        <item>Dark</item>
+        <item>System default</item>
+    </string-array>
+
+    <integer-array name="designValues" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
+    <!-- Pre-Android 10 does not support System Default -->
+    <string-array name="designNamesOld" translatable="true">
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+
+    <!-- Pre-Android 10 does not support System Default -->
+    <integer-array name="designValuesOld" translatable="false">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
+
+    <string-array name="regionNames">
+        <item>Auto-select</item>
+        <item>Japan</item>
+        <item>USA</item>
+        <item>Europe</item>
+        <item>Australia</item>
+        <item>China</item>
+        <item>Korea</item>
+        <item>Taiwan</item>
+    </string-array>
+
+    <integer-array name="regionValues">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+    </integer-array>
+
+    <string-array name="languageNames">
+        <item>Japanese (日本語)</item>
+        <item>English</item>
+        <item>French (français)</item>
+        <item>German (Deutsch)</item>
+        <item>Italian (italiano)</item>
+        <item>Spanish (español)</item>
+        <item>Simplified Chinese (简体中文)</item>
+        <item>Korean (한국어)</item>
+        <item>Dutch (Nederlands)</item>
+        <item>Portuguese (português)</item>
+        <item>Russian (Русский)</item>
+        <item>Traditional Chinese (正體中文)</item>
+    </string-array>
+
+    <integer-array name="languageValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+    </integer-array>
+
+    <string-array name="n3dsButtons">
+        <item>a</item>
+        <item>b</item>
+        <item>x</item>
+        <item>y</item>
+        <item>L</item>
+        <item>R</item>
+        <item>ZL</item>
+        <item>ZR</item>
+        <item>Start</item>
+        <item>Select</item>
+        <item>D-Pad</item>
+        <item>Circle Pad</item>
+        <item>C Stick</item>
+    </string-array>
+
+    <string-array name="cameraImageSourceNames">
+        <item>Blank</item>
+        <item>Still Image</item>
+        <item>Device Camera</item>
+    </string-array>
+
+    <string-array name="cameraImageSourceValues">
+        <item>blank</item>
+        <item>image</item>
+        <item>ndk</item>
+    </string-array>
+
+    <string-array name="cameraDeviceNames">
+        <item>Default</item>
+        <item>Any Front Camera</item>
+        <item>Any Back Camera</item>
+    </string-array>
+
+    <string-array name="cameraDeviceValues">
+        <item />
+        <item>_front</item>
+        <item>_back</item>
+    </string-array>
+
+    <string-array name="cameraFlipNames">
+        <item>None</item>
+        <item>Horizontal</item>
+        <item>Vertical</item>
+        <item>Reverse</item>
+    </string-array>
+
+    <integer-array name="cameraFlipValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </integer-array>
+
+    <string-array name="audioInputTypeNames">
+        <item>None</item>
+        <item>Real Device</item>
+        <item>Static Noise</item>
+    </string-array>
+
+    <integer-array name="audioInputTypeValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
+    <string-array name="render3dModes">
+        <item>Off</item>
+        <item>Side by Side</item>
+        <item>Anaglyph</item>
+        <item>Interlaced</item>
+        <item>Reverse Interlaced</item>
+        <item>Cardboard VR</item>
+    </string-array>
+
+    <integer-array name="render3dValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </integer-array>
+</resources>

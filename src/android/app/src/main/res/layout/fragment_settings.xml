@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<org.citra.citra_emu.features.settings.ui.SettingsFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list_settings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/card_view_background" />
+
+</org.citra.citra_emu.features.settings.ui.SettingsFrameLayout>

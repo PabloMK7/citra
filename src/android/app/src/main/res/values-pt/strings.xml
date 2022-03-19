@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_disclaimer">Este software emulará jogos do console portátil Nintendo 3DS. Nenhum jogo está incluso.\n\nAntes de abri-lo, coloque os arquivos dos jogos de 3DS que você possui no armazenamento do dispositivo.</string>
+    <string name="app_notification_channel_description">Notificações do emulador de 3DS Citra</string>
+    <string name="app_notification_running">O Citra está em execução</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">Analógico</string>
+    <string name="controller_c">Direcional C-Stick</string>
+    <string name="controller_triggers">Gatilhos</string>
+    <string name="controller_dpad">Direcional D-Pad</string>
+    <string name="controller_axis_vertical">Eixo vertical</string>
+    <string name="controller_axis_horizontal">Eixo horizontal</string>
+    <string name="input_binding">Mapeamento de controles</string>
+    <string name="input_binding_description">Pressione ou mova um botão/alavanca para mapear para %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Mova o seu joystick para cima ou para baixo.</string>
+    <string name="input_binding_description_horizontal_axis">Mova o seu joystick para esquerda ou para direita.</string>
+    <string name="input_message_analog_only">Este controle precisa ser mapeado para um eixo analógico do gamepad ou um eixo de D-pad!</string>
+    <string name="input_message_button_only">Este controle deve ser mapeado para um botão do gamepad!</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Botões</string>
+
+    <!-- Premium settings strings -->
+    <string name="design">Alterar tema (claro, escuro)</string>
+    <string name="design_updated">O tema será atualizado ao sair das configurações</string>
+
+    <!-- Core settings strings -->
+    <string name="cpu_jit">Ativar CPU JIT</string>
+    <string name="cpu_jit_description">Utiliza um compilador Just-in-Time (JIT) para emulação da CPU. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
+    <string name="init_clock">Tipo do relógio do sistema</string>
+    <string name="init_clock_description">Configura o relógio emulado do 3DS para refletir o do seu dispositivo ou para começar numa data e hora simulados.</string>
+
+    <!-- System settings strings -->
+    <string name="init_time">Horário inicial do relógio do sistema</string>
+    <string name="init_time_description">Se a configuração \"Tipo de relógio do sistema\" estiver como \"Relógio simulado\", esta opção define a data e hora do sistema no início da emulação.</string>
+    <string name="emulated_region">Região emulada</string>
+    <string name="emulated_language">Idioma emulado</string>
+
+    <!-- Camera settings strings -->
+    <string name="inner_camera">Câmera frontal</string>
+    <string name="outer_left_camera">Câmera traseira esquerda</string>
+    <string name="outer_right_camera">Câmera traseira direita</string>
+    <string name="image_source">Origem da imagem</string>
+    <string name="image_source_description">Define a origem da imagem da câmera virtual. Você pode usar um arquivo de imagem ou uma câmera do dispositivo, quando compatível.</string>
+    <string name="camera_device">Câmera do dispositivo</string>
+    <string name="camera_device_description">Se a \"Origem da imagem\" for definida como \"Câmera do dispositivo\", esta opção define a câmera física a ser usada.</string>
+    <string name="camera_facing_front">Frontal</string>
+    <string name="camera_facing_back">Traseira</string>
+    <string name="camera_facing_external">Externa</string>
+    <string name="image_flip">Espelhar imagem</string>
+
+    <!-- Graphics settings strings -->
+    <string name="vsync">Ativar V-Sync</string>
+    <string name="vsync_description">Sincroniza a taxa de quadros do jogo com a taxa de atualização da tela do seu dispositivo.</string>
+    <string name="linear_filtering">Ativar filtragem linear</string>
+    <string name="linear_filtering_description">Ativa a filtragem linear, que suaviza o visual do jogo.</string>
+    <string name="texture_filter_name">Filtro de texturas</string>
+    <string name="texture_filter_description">Aprimora o visual dos jogos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce e xBRZ Freescale.</string>
+    <string name="hw_renderer">Ativar renderizador por hardware</string>
+    <string name="hw_renderer_description">Utiliza o hardware para emular os gráficos do 3DS. Quando ativado, o desempenho de jogo será consideravelmente melhorado.</string>
+    <string name="hw_shaders">Ativar shaders via hardware</string>
+    <string name="hw_shaders_description">Utiliza o hardware para emular os shaders do 3DS. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
+    <string name="shaders_accurate_mul">Ativar multiplicação precisa de shaders</string>
+    <string name="shaders_accurate_mul_description">Utiliza uma multiplicação mais precisa de shaders no hardware, o que pode corrigir problemas visuais. Quando ativada, pode haver redução no desempenho.</string>
+    <string name="asynchronous_gpu">Ativar emulação de GPU assíncrona</string>
+    <string name="asynchronous_gpu_description">Usa uma thread separada para emular a GPU de forma assíncrona. Esta opção aprimora o desempenho quando ativada.</string>
+    <string name="frame_limit_enable">Ativar limite de velocidade</string>
+    <string name="frame_limit_enable_description">Quando ativado, a velocidade da emulação será limitada a uma porcentagem da velocidade normal.</string>
+    <string name="frame_limit_slider">Porcentagem de limitação da velocidade</string>
+    <string name="frame_limit_slider_description">Especifica a porcentagem para limitar a velocidade. Com o padrão de 100% a emulação será limitada a velocidade normal. Valores maiores ou menores vão aumentar ou reduzir o limite de velocidade.</string>
+    <string name="internal_resolution">Resolução interna</string>
+    <string name="internal_resolution_description">Especifica a resolução utilizada para renderização. Uma resolução alta melhorará muito a qualidade visual, mas poderá também impactar muito no desempenho e causar problemas em certos jogos.</string>
+    <string name="performance_warning">Desativar esta opção reduzirá consideravelmente o desempenho da emulação! Para obter a melhor experiência, recomendamos deixá-la ativada.</string>
+    <string name="debug_warning">Aviso: modificar estas configurações tornará a emulação mais lenta</string>
+
+    <!-- Premium strings -->
+    <string name="premium_text">Premium</string>
+    <string name="premium_settings_upsell">Passe para o plano Premium e ajude o Citra!</string>
+    <string name="premium_settings_upsell_description">Com o Premium, você dará o seu apoio para que os desenvolvedores continuem a melhorar o Citra e também ganhará acesso a recursos exclusivos!</string>
+    <string name="premium_settings_welcome">Bem-vindo ao Premium.</string>
+    <string name="premium_settings_welcome_description">Agradecemos pelo seu apoio!</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_stretch">Ativar alongamento de áudio</string>
+    <string name="audio_stretch_description">Estica o áudio para reduzir engasgos. Quando ativado, aumenta a latência do áudio e reduz levemente o desempenho.</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">Limpar</string>
+    <string name="slider_default">Padrão</string>
+    <string name="ini_saved">As configurações foram salvas</string>
+    <string name="gameid_saved">As configurações de %1$s foram salvas</string>
+    <string name="error_saving">Erro ao salvar %1$s.ini: %2$s</string>
+
+    <!-- Game Grid Screen-->
+    <string name="grid_menu_core_settings">Configurações</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">Escolher pasta de jogos</string>
+    <string name="add_directory_title">Adicionar pasta à biblioteca</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Configurações</string>
+    <string name="preferences_premium">Premium</string>
+    <string name="preferences_general">Geral</string>
+    <string name="preferences_system">Sistema</string>
+    <string name="preferences_camera">Câmera</string>
+    <string name="preferences_controls">Controle</string>
+    <string name="preferences_graphics">Gráficos</string>
+    <string name="preferences_audio">Áudio</string>
+    <string name="preferences_debug">Depuração</string>
+
+    <!-- ROM loading errors -->
+    <string name="loader_error_encrypted">A sua ROM está criptografada</string>
+    <string name="loader_error_invalid_format">Formato inválido de ROM</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_show_fps">Mostrar FPS</string>
+    <string name="emulation_configure_controls">Configurar controles</string>
+    <string name="emulation_edit_layout">Editar esquema</string>
+    <string name="emulation_done">Pronto</string>
+    <string name="emulation_toggle_controls">Alternar controles</string>
+    <string name="emulation_control_scale">Ajustar escala</string>
+    <string name="emulation_open_settings">Abrir configurações</string>
+    <string name="emulation_switch_screen_layout">Layout de tela em paisagem</string>
+    <string name="emulation_screen_layout_landscape">Padrão</string>
+    <string name="emulation_screen_layout_portrait">Retrato</string>
+    <string name="emulation_screen_layout_single">Tela única</string>
+    <string name="emulation_screen_layout_sidebyside">Telas lado a lado</string>
+    <string name="emulation_swap_screens">Trocar telas</string>
+    <string name="emulation_touch_overlay_reset">Redefinir sobreposição</string>
+    <string name="emulation_show_overlay">Exibir sobreposição</string>
+    <string name="emulation_close_game">Fechar jogo</string>
+    <string name="emulation_close_game_message">Deseja mesmo fechar o jogo atual?</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
+    <string name="menu_emulation_amiibo_load">Carregar</string>
+    <string name="menu_emulation_amiibo_remove">Remover</string>
+    <string name="select_amiibo">Selecionar arquivo de Amiibo</string>
+    <string name="amiibo_load_error">Erro ao carregar Amiibo</string>
+    <string name="amiibo_load_error_message">Ocorreu um erro ao carregar o arquivo de Amiibo selecionado. Verifique se é o arquivo correto.</string>
+
+    <string name="write_permission_needed">Você precisa permitir o acesso de escrita no armazenamento externo para que o emulador funcione</string>
+    <string name="load_settings">Carregando configurações...</string>
+
+    <string name="external_storage_not_mounted">O armazenamento externo precisa estar disponível para que o Citra seja utilizado.</string>
+
+    <string name="select_dir">Selecionar esta pasta</string>
+    <string name="empty_gamelist">Nenhum arquivo foi encontrado ou nenhuma pasta de jogos foi selecionada ainda.</string>
+
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">Teclado virtual</string>
+    <string name="i_forgot">Esqueci</string>
+    <string name="fixed_length_required">O tamanho do texto não está correto (precisa ter %dcaracteres)</string>
+    <string name="max_length_exceeded">O texto é muito longo (não deve ter mais que %d caracteres)</string>
+    <string name="blank_input_not_allowed">Controle vazio não é permitido</string>
+    <string name="empty_input_not_allowed">Controle vazio não é permitido</string>
+
+    <!-- Mii Selector -->
+    <string name="mii_selector">Seletor de Mii</string>
+    <string name="standard_mii">Mii padrão</string>
+
+    <!-- Camera -->
+    <string name="camera_select_image">Selecionar imagem</string>
+    <string name="camera">Câmera</string>
+    <string name="camera_permission_needed">O Citra precisa de acesso à sua câmera para emular as câmeras do 3DS.\n\nVocê também tem a opção de definir a \"Origem da imagem\" como \"Imagem estática\" nas configurações de câmera.</string>
+</resources>
