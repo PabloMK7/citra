@@ -11,6 +11,7 @@ def abiFilter = "arm64-v8a" //, "x86"
 
 android {
     compileSdkVersion 29
+    ndkVersion "23.1.7779620"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -84,7 +85,7 @@ android {
 
     externalNativeBuild {
         cmake {
-            version "3.10.2"
+            version "3.18.1"
             path "../../../CMakeLists.txt"
         }
     }
@@ -131,7 +132,7 @@ def getVersion() {
         versionName = 'git describe --always --long'.execute([], project.rootDir).text
                 .trim()
                 .replaceAll(/(-0)?-[^-]+$/, "")
-    } catch (Exception e) {
+    } catch (Exception) {
         logger.error('Cannot find git, defaulting to dummy version number')
     }
 
