@@ -84,6 +84,7 @@ GLuint LoadProgram(bool separable_program, const std::vector<GLuint>& shaders) {
         glProgramParameteri(program_id, GL_PROGRAM_SEPARABLE, GL_TRUE);
     }
 
+    glProgramParameteri(program_id, GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL_TRUE);
     glLinkProgram(program_id);
 
     // Check the program

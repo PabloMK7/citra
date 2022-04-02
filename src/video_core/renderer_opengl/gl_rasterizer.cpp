@@ -48,7 +48,7 @@ static bool IsVendorIntel() {
     return gpu_vendor == "Intel Inc.";
 }
 
-RasterizerOpenGL::RasterizerOpenGL()
+RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
     : is_amd(IsVendorAmd()), vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE, is_amd),
       uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false),
       index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false),
@@ -172,15 +172,16 @@ RasterizerOpenGL::RasterizerOpenGL()
 #ifdef __APPLE__
     if (IsVendorIntel()) {
         shader_program_manager = std::make_unique<ShaderProgramManager>(
+            emu_window,
             VideoCore::g_separable_shader_enabled ? GLAD_GL_ARB_separate_shader_objects : false,
             is_amd);
     } else {
-        shader_program_manager =
-            std::make_unique<ShaderProgramManager>(GLAD_GL_ARB_separate_shader_objects, is_amd);
+        shader_program_manager = std::make_unique<ShaderProgramManager>(
+            emu_window, GLAD_GL_ARB_separate_shader_objects, is_amd);
     }
 #else
-    shader_program_manager =
-        std::make_unique<ShaderProgramManager>(GLAD_GL_ARB_separate_shader_objects, is_amd);
+    shader_program_manager = std::make_unique<ShaderProgramManager>(
+        emu_window, GLAD_GL_ARB_separate_shader_objects, is_amd);
 #endif
 
     glEnable(GL_BLEND);

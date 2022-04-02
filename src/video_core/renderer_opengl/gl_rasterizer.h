@@ -38,7 +38,7 @@ class ShaderProgramManager;
 
 class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:
-    explicit RasterizerOpenGL();
+    explicit RasterizerOpenGL(Frontend::EmuWindow& emu_window);
     ~RasterizerOpenGL() override;
 
     void LoadDiskResources(const std::atomic_bool& stop_loading,

@@ -97,7 +97,7 @@ public:
     std::optional<std::vector<ShaderDiskCacheRaw>> LoadTransferable();
 
     /// Loads current game's precompiled cache. Invalidates on failure.
-    std::pair<ShaderDecompiledMap, ShaderDumpsMap> LoadPrecompiled();
+    std::pair<ShaderDecompiledMap, ShaderDumpsMap> LoadPrecompiled(bool compressed);
 
     /// Removes the transferable (and precompiled) cache file.
     void InvalidateAll();
@@ -115,21 +115,28 @@ public:
     /// Saves a dump entry to the precompiled file. Does not check for collisions.
     void SaveDump(u64 unique_identifier, GLuint program);
 
+    /// Saves a dump entry to the precompiled file. Does not check for collisions.
+    void SaveDumpToFile(u64 unique_identifier, GLuint program, bool sanitize_mul);
+
     /// Serializes virtual precompiled shader cache file to real file
     void SaveVirtualPrecompiledFile();
 
 private:
     /// Loads the transferable cache. Returns empty on failure.
     std::optional<std::pair<ShaderDecompiledMap, ShaderDumpsMap>> LoadPrecompiledFile(
-        FileUtil::IOFile& file);
+        FileUtil::IOFile& file, bool compressed);
 
     /// Loads a decompiled cache entry from m_precompiled_cache_virtual_file. Returns empty on
     /// failure.
     std::optional<ShaderDiskCacheDecompiled> LoadDecompiledEntry();
 
-    /// Saves a decompiled entry to the passed file. Returns true on success.
-    bool SaveDecompiledFile(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code,
-                            bool sanitize_mul);
+    /// Saves a decompiled entry to the passed file. Does not check for collisions.
+    void SaveDecompiledToFile(FileUtil::IOFile& file, u64 unique_identifier,
+                              const ShaderDecompiler::ProgramResult& code, bool sanitize_mul);
+
+    /// Saves a decompiled entry to the virtual precompiled cache. Does not check for collisions.
+    bool SaveDecompiledToCache(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code,
+                               bool sanitize_mul);
 
     /// Returns if the cache can be used
     bool IsUsable() const;
@@ -154,6 +161,8 @@ private:
 
     /// Get user's precompiled directory path
     std::string GetPrecompiledDir() const;
+
+    std::string GetPrecompiledShaderDir() const;
 
     /// Get user's shader directory path
     std::string GetBaseDir() const;
@@ -197,7 +206,7 @@ private:
         return LoadArrayFromPrecompiled(&object, 1);
     }
 
-    // Stores whole precompiled cache which will be read from or saved to the precompiled chache
+    // Stores whole precompiled cache which will be read from or saved to the precompiled cache
     // file
     std::vector<u8> decompressed_precompiled_cache;
     // Stores the current offset of the precompiled cache file for IO purposes
@@ -213,6 +222,8 @@ private:
 
     u64 program_id{};
     std::string title_id;
+
+    FileUtil::IOFile AppendPrecompiledFile();
 };
 
 } // namespace OpenGL

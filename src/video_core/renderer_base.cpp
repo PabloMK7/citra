@@ -22,7 +22,7 @@ void RendererBase::RefreshRasterizerSetting() {
         opengl_rasterizer_active = hw_renderer_enabled;
 
         if (hw_renderer_enabled) {
-            rasterizer = std::make_unique<OpenGL::RasterizerOpenGL>();
+            rasterizer = std::make_unique<OpenGL::RasterizerOpenGL>(render_window);
         } else {
             rasterizer = std::make_unique<VideoCore::SWRasterizer>();
         }
