@@ -125,6 +125,12 @@ if(ARCHITECTURE_x86_64)
             x64/xbyak_abi.h
             x64/xbyak_util.h
     )
+elseif(ARCHITECTURE_ARM64)
+    target_sources(common
+        PRIVATE
+            aarch64/cpu_detect.cpp
+            aarch64/cpu_detect.h
+    )
 endif()
 
 create_target_directory_groups(common)
