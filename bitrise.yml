@@ -1,5 +1,5 @@
 ---
-format_version: '6'
+format_version: '11'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 project_type: android
 trigger_map:
@@ -7,118 +7,83 @@ trigger_map:
   workflow: primary
 - pull_request_source_branch: "*"
   workflow: primary
+- tag: "*"
+  workflow: deploy
 workflows:
   deploy:
-    description: |
-      ## How to get a signed APK
-
-      This workflow contains the **Sign APK** step. To sign your APK all you have to do is to:
-
-      1. Click on **Code Signing** tab
-      1. Find the **ANDROID KEYSTORE FILE** section
-      1. Click or drop your file on the upload file field
-      1. Fill the displayed 3 input fields:
-       1. **Keystore password**
-       1. **Keystore alias**
-       1. **Private key password**
-      1. Click on **[Save metadata]** button
-
-      That's it! From now on, **Sign APK** step will receive your uploaded files.
-
-      ## To run this workflow
-
-      If you want to run this workflow manually:
-
-      1. Open the app's build list page
-      2. Click on **[Start/Schedule a Build]** button
-      3. Select **deploy** in **Workflow** dropdown input
-      4. Click **[Start Build]** button
-
-      Or if you need this workflow to be started by a GIT event:
-
-      1. Click on **Triggers** tab
-      2. Setup your desired event (push/tag/pull) and select **deploy** workflow
-      3. Click on **[Done]** and then **[Save]** buttons
-
-      The next change in your repository that matches any of your trigger map event will start **deploy** workflow.
     steps:
-    - cache-pull@2.4.0: {}
-    - script@1.1.6:
+    - activate-ssh-key@4: {}
+    - git-clone@6: {}
+    - cache-pull@2: {}
+    - script@1:
         title: Install newer cmake
         inputs:
-            - content: |-
-                #!/bin/bash
-                set -ex
-                sudo apt remove cmake -y
-                sudo apt purge --auto-remove cmake -y
-                sudo apt install ninja-build -y
-                version=3.19
-                build=2
-                mkdir ~/temp
-                cd ~/temp
-                wget https://cmake.org/files/v$version/cmake-$version.$build-Linux-x86_64.sh
-                sudo mkdir /opt/cmake
-                sudo sh cmake-$version.$build-Linux-x86_64.sh --prefix=/opt/cmake --skip-license --exclude-subdir
-                envman add --key PATH --value "/opt/cmake/bin:$PATH"
-    - install-missing-android-tools@2.3.8:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            sdkmanager --install "cmake;3.18.1"
+    - install-missing-android-tools@2.3:
         inputs:
         - gradlew_path: "$PROJECT_LOCATION/gradlew"
-    - change-android-versioncode-and-versionname@1.1.1:
-        inputs:
-        - build_gradle_path: "$PROJECT_LOCATION/$MODULE/build.gradle"
-    - android-lint@0.9.8:
-        inputs:
-        - project_location: "$PROJECT_LOCATION"
-        - module: "$MODULE"
-        - variant: "$TEST_VARIANT"
-    - android-unit-test@0.9.3:
-        inputs:
-        - project_location: "$PROJECT_LOCATION"
-        - module: "$MODULE"
-        - variant: "$TEST_VARIANT"
-    - android-build@0.10.3:
+    - android-lint@0:
         inputs:
         - project_location: "$PROJECT_LOCATION"
         - module: "$MODULE"
         - variant: "$BUILD_VARIANT"
-    - sign-apk@1.2.3:
+    - android-build@0:
+        inputs:
+        - variant: "$BUILD_VARIANT"
+        - project_location: "$PROJECT_LOCATION"
+        - build_type: aab
+    - sign-apk@1:
         run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
-    - deploy-to-bitrise-io@1.11.1: {}
-    - cache-push@2.4.1: {}
+    - bitrise-step-export-universal-apk@0:
+        run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
+    - generate-changelog@0: {}
+    - github-release@0:
+        run_if: '{{getenv "GITHUB_API_TOKEN" | ne ""}}'
+        inputs:
+        - api_token: "$GITHUB_API_TOKEN"
+        - name: "$BITRISE_GIT_TAG"
+        - body: "$BITRISE_CHANGELOG"
+        - files_to_upload: |-
+            $BITRISE_AAB_PATH|citra-$BITRISE_GIT_TAG.aab
+            $BITRISE_APK_PATH|citra-$BITRISE_GIT_TAG.apk
+        - username: "$BITRISEIO_GIT_REPOSITORY_OWNER"
+    - deploy-to-bitrise-io@1.3:
+        run_if: '{{getenv "BITRISEIO_ANDROID_KEYSTORE_URL" | ne ""}}'
+    - cache-push@2: {}
+    - deploy-to-bitrise-io@2: {}
   primary:
     steps:
-    - cache-pull@2.4.0: {}
-    - script@1.1.6:
-        title: Install newer cmake
+    - activate-ssh-key@4: {}
+    - git-clone@6: {}
+    - cache-pull@2: {}
+    - script@1:
+        title: Deps
         inputs:
-            - content: |-
-                #!/bin/bash
-                set -ex
-                sudo apt remove cmake -y
-                sudo apt purge --auto-remove cmake -y
-                sudo apt install ninja-build -y
-                version=3.19
-                build=2
-                mkdir ~/temp
-                cd ~/temp
-                wget https://cmake.org/files/v$version/cmake-$version.$build-Linux-x86_64.sh
-                sudo mkdir /opt/cmake
-                sudo sh cmake-$version.$build-Linux-x86_64.sh --prefix=/opt/cmake --skip-license --exclude-subdir
-                envman add --key PATH --value "/opt/cmake/bin:$PATH"
-    - install-missing-android-tools@2.3.8:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            sdkmanager --install "cmake;3.18.1"
+    - install-missing-android-tools@3:
         inputs:
-            - gradlew_path: "$PROJECT_LOCATION/gradlew"
-    - android-lint@0.9.8:
+        - gradlew_path: "$PROJECT_LOCATION/gradlew"
+    - android-lint@0:
         inputs:
         - project_location: "$PROJECT_LOCATION"
         - module: "$MODULE"
-        - variant: "$TEST_VARIANT"
-    - android-build@0.10.3:
+        - variant: "$BUILD_VARIANT"
+    - android-build@1:
         inputs:
-        - variant: Debug
+        - variant: "$BUILD_VARIANT"
         - project_location: "$PROJECT_LOCATION"
-    - deploy-to-bitrise-io@1.11.1: {}
-    - cache-push@2.4.1: {}
+        - build_type: apk
+    - cache-push@2: {}
+    - deploy-to-bitrise-io@2: {}
+meta:
+  bitrise.io:
+    stack: linux-docker-android-20.04
 app:
   envs:
   - opts:
@@ -132,4 +97,3 @@ app:
     BUILD_VARIANT: Release
   - opts:
       is_expand: false
-    TEST_VARIANT: Debug
