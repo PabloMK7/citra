@@ -107,6 +107,52 @@ jobs:
         shell: bash
         env:
           ENABLE_COMPATIBILITY_REPORTING: "ON"
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.ccache
+          key: ${{ runner.os }}-android-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-android-
+      - name: Query tag name
+        uses: little-core-labs/get-git-tag@v3.0.2
+        id: tagName
+      - name: Deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install ccache -y
+      - name: Build
+        run: |
+          export NDK_CCACHE=$(which ccache)
+
+          ccache -s
+
+          cd src/android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
+          ./gradlew assembleRelease
+
+          ccache -s
+      - name: Copy artifacts
+        run: |
+          mkdir artifacts/
+          cp src/android/app/build/outputs/apk/release/*.apk \
+            src/android/app/build/outputs/bundle/release/*.aab \
+            artifacts/
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: android
+          path: artifacts/
   transifex:
     runs-on: ubuntu-latest
     container: citraemu/build-environments:linux-transifex
