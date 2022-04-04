@@ -118,8 +118,6 @@ void Config::ReadValues() {
     Settings::values.use_hw_shader = sdl2_config->GetBoolean("Renderer", "use_hw_shader", true);
     Settings::values.shaders_accurate_mul =
         sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
-    Settings::values.use_asynchronous_gpu_emulation =
-        sdl2_config->GetBoolean("Renderer", "use_asynchronous_gpu_emulation", true);
     Settings::values.use_shader_jit = sdl2_config->GetBoolean("Renderer", "use_shader_jit", true);
     Settings::values.resolution_factor =
         static_cast<u16>(sdl2_config->GetInteger("Renderer", "resolution_factor", 1));
