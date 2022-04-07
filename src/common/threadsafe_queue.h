@@ -54,7 +54,7 @@ public:
         // line before cv.wait
         // TODO(bunnei): This can be replaced with C++20 waitable atomics when properly supported.
         // See discussion on https://github.com/yuzu-emu/yuzu/pull/3173 for details.
-        std::lock_guard lock{cv_mutex};
+        std::scoped_lock lock{cv_mutex};
         cv.notify_one();
     }
 
@@ -157,7 +157,7 @@ public:
 
     template <typename Arg>
     void Push(Arg&& t) {
-        std::lock_guard lock{write_lock};
+        std::scoped_lock lock{write_lock};
         spsc_queue.Push(t);
     }
 
