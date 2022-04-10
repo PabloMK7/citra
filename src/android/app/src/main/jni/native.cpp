@@ -7,9 +7,11 @@
 #include <regex>
 #include <thread>
 
+#include <android/api-level.h>
 #include <android/native_window_jni.h>
 
 #include "audio_core/dsp_interface.h"
+#include "common/aarch64/cpu_detect.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
@@ -145,7 +147,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Citra core only supports a single running instance
     std::lock_guard<std::mutex> lock(running_mutex);
 
-    LOG_INFO(Frontend, "Citra is Starting");
+    LOG_INFO(Frontend, "Citra starting...");
 
     MicroProfileOnThreadCreate("EmuThread");
 
@@ -169,6 +171,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         GameSettings::LoadOverrides(program_id);
     }
     Settings::Apply();
+    Settings::LogSettings();
 
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImage::Factory>());
 
@@ -193,7 +196,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     }
 
     auto& telemetry_session = Core::System::GetInstance().TelemetrySession();
-    telemetry_session.AddField(Common::Telemetry::FieldType::App, "Frontend", "SDL");
+    telemetry_session.AddField(Common::Telemetry::FieldType::App, "Frontend", "Android");
 
     stop_run = false;
     pause_emulation = false;
@@ -723,6 +726,15 @@ void Java_org_citra_citra_1emu_NativeLibrary_SaveState(JNIEnv* env, jclass clazz
 
 void Java_org_citra_citra_1emu_NativeLibrary_LoadState(JNIEnv* env, jclass clazz, jint slot) {
     Core::System::GetInstance().SendSignal(Core::System::Signal::Load, slot);
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_LogDeviceInfo(JNIEnv* env, jclass clazz) {
+    // TODO: Log the Common::g_build_fullname once the CI is setup for android
+    LOG_INFO(Frontend, "Citra Version: Android Beta | {}-{}", Common::g_scm_branch,
+             Common::g_scm_desc);
+    LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
+    // There is no decent way to get the OS version, so we log the API level instead.
+    LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
 }
 
 } // extern "C"

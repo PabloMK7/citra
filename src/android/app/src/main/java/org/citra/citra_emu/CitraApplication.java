@@ -44,6 +44,7 @@ public class CitraApplication extends Application {
             DirectoryInitialization.start(getApplicationContext());
         }
 
+        NativeLibrary.LogDeviceInfo();
         createNotificationChannel();
 
         databaseHelper = new GameDatabase(this);

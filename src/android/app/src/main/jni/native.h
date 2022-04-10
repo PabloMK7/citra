@@ -155,6 +155,9 @@ JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_SaveState(JNIEnv*
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_LoadState(JNIEnv* env, jclass clazz,
                                                                          jint slot);
 
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_LogDeviceInfo(JNIEnv* env,
+                                                                             jclass clazz);
+
 #ifdef __cplusplus
 }
 #endif

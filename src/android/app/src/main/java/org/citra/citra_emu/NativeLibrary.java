@@ -618,6 +618,11 @@ public final class NativeLibrary {
     public static native void LoadState(int slot);
 
     /**
+     * Logs the Citra version, Android version and, CPU.
+     */
+    public static native void LogDeviceInfo();
+
+    /**
      * Button type for use in onTouchEvent
      */
     public static final class ButtonType {
