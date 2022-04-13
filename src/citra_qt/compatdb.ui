@@ -86,7 +86,7 @@
     <item row="4" column="0">
      <widget class="QRadioButton" name="radioButton_Great">
       <property name="text">
-       <string>Great </string>
+       <string>Great</string>
       </property>
      </widget>
     </item>

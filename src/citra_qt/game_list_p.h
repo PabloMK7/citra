@@ -264,8 +264,8 @@ public:
         }
         const CompatStatus& status = iterator->second;
         setData(compatibility, CompatNumberRole);
-        setText(QObject::tr(status.text));
-        setToolTip(QObject::tr(status.tooltip));
+        setText(tr(status.text));
+        setToolTip(tr(status.tooltip));
         setData(CreateCirclePixmapFromColor(status.color), Qt::DecorationRole);
     }
 
