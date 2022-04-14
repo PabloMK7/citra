@@ -124,9 +124,8 @@ std::unordered_map<std::string, std::shared_ptr<QtMultimediaCameraHandler>>
     QtMultimediaCameraHandler::loaded;
 
 void QtMultimediaCameraHandler::Init() {
-    for (auto& handler : handlers) {
-        handler = std::make_shared<QtMultimediaCameraHandler>();
-    }
+    std::generate(std::begin(handlers), std::end(handlers),
+                  std::make_shared<QtMultimediaCameraHandler>);
 }
 
 std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler(
