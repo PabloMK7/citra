@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include "common/logging/log.h"
 #include "common/microprofile.h"
+#include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
@@ -86,6 +87,11 @@ enum class SystemInfoType {
      * For the ARM11 NATIVE_FIRM kernel, this is 5, for processes sm, fs, pm, loader, and pxi."
      */
     KERNEL_SPAWNED_PIDS = 26,
+    /**
+     * Gets citra related information. This parameter is not available on real systems,
+     * but can be used by homebrew applications to get some emulator info.
+     */
+    CITRA_INFORMATION = 0x20000,
 };
 
 /**
@@ -97,6 +103,24 @@ enum class SystemInfoMemUsageRegion {
     APPLICATION = 1,
     SYSTEM = 2,
     BASE = 3,
+};
+
+/**
+ * Accepted by svcGetSystemInfo param with CITRA_INFORMATION type. Selects which information
+ * to fetch from Citra. Some string params don't fit in 7 bytes, so they are split.
+ */
+enum class SystemInfoCitraInformation {
+    IS_CITRA = 0,          // Always set the output to 1, signaling the app is running on Citra.
+    BUILD_NAME = 10,       // (ie: Nightly, Canary).
+    BUILD_VERSION = 11,    // Build version.
+    BUILD_DATE_PART1 = 20, // Build date first 7 characters.
+    BUILD_DATE_PART2 = 21, // Build date next 7 characters.
+    BUILD_DATE_PART3 = 22, // Build date next 7 characters.
+    BUILD_DATE_PART4 = 23, // Build date last 7 characters.
+    BUILD_GIT_BRANCH_PART1 = 30,      // Git branch first 7 characters.
+    BUILD_GIT_BRANCH_PART2 = 31,      // Git branch last 7 characters.
+    BUILD_GIT_DESCRIPTION_PART1 = 40, // Git description (commit) first 7 characters.
+    BUILD_GIT_DESCRIPTION_PART2 = 41, // Git description (commit) last 7 characters.
 };
 
 class SVC : public SVCWrapper<SVC> {
@@ -1369,6 +1393,16 @@ ResultCode SVC::AcceptSession(Handle* out_server_session, Handle server_port_han
     return RESULT_SUCCESS;
 }
 
+static void CopyStringPart(char* out, const char* in, int offset, int max_length) {
+    size_t str_size = strlen(in);
+    if (offset < str_size) {
+        strncpy(out, in + offset, max_length - 1);
+        out[max_length - 1] = '\0';
+    } else {
+        out[0] = '\0';
+    }
+}
+
 ResultCode SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
     LOG_TRACE(Kernel_SVC, "called type={} param={}", type, param);
 
@@ -1401,6 +1435,55 @@ ResultCode SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
         break;
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
         *out = 5;
+        break;
+    case SystemInfoType::CITRA_INFORMATION:
+        switch ((SystemInfoCitraInformation)param) {
+        case SystemInfoCitraInformation::IS_CITRA:
+            *out = 1;
+            break;
+        case SystemInfoCitraInformation::BUILD_NAME:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_name, 0, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_VERSION:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_version, 0, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_DATE_PART1:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
+                           (sizeof(s64) - 1) * 0, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_DATE_PART2:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
+                           (sizeof(s64) - 1) * 1, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_DATE_PART3:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
+                           (sizeof(s64) - 1) * 2, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_DATE_PART4:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_date,
+                           (sizeof(s64) - 1) * 3, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_GIT_BRANCH_PART1:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_branch,
+                           (sizeof(s64) - 1) * 0, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_GIT_BRANCH_PART2:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_branch,
+                           (sizeof(s64) - 1) * 1, sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_GIT_DESCRIPTION_PART1:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_desc, (sizeof(s64) - 1) * 0,
+                           sizeof(s64));
+            break;
+        case SystemInfoCitraInformation::BUILD_GIT_DESCRIPTION_PART2:
+            CopyStringPart(reinterpret_cast<char*>(out), Common::g_scm_desc, (sizeof(s64) - 1) * 1,
+                           sizeof(s64));
+            break;
+        default:
+            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo citra info param={}", param);
+            *out = 0;
+            break;
+        }
         break;
     default:
         LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type={} param={}", type, param);
