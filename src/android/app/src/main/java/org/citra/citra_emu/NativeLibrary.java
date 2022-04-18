@@ -60,7 +60,7 @@ public final class NativeLibrary {
 
     static {
         try {
-            System.loadLibrary("main");
+            System.loadLibrary("citra-android");
         } catch (UnsatisfiedLinkError ex) {
             Log.error("[NativeLibrary] " + ex.toString());
         }

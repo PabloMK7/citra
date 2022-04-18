@@ -120,7 +120,7 @@ endif()
 
 if (ANDROID)
     add_subdirectory(android/app/src/main/jni)
-    target_include_directories(main PRIVATE android/app/src/main)
+    target_include_directories(citra-android PRIVATE android/app/src/main)
 else()
     add_subdirectory(dedicated_room)
 endif()

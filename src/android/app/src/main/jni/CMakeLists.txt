@@ -1,4 +1,4 @@
-add_library(main SHARED
+add_library(citra-android SHARED
     applets/mii_selector.cpp
     applets/mii_selector.h
     applets/swkbd.cpp
@@ -28,7 +28,7 @@ add_library(main SHARED
     ndk_motion.h
 )
 
-target_link_libraries(main PRIVATE audio_core common core input_common network)
-target_link_libraries(main PRIVATE android camera2ndk mediandk jnigraphics EGL glad inih log yuv)
+target_link_libraries(citra-android PRIVATE audio_core common core input_common network)
+target_link_libraries(citra-android PRIVATE android camera2ndk mediandk jnigraphics EGL glad inih log yuv)
 
-set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} main)
+set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} citra-android)
