@@ -131,23 +131,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install ccache -y
       - name: Build
-        run: |
-          export NDK_CCACHE=$(which ccache)
-
-          ccache -s
-
-          cd src/android
-          chmod +x ./gradlew
-          ./gradlew bundleRelease
-          ./gradlew assembleRelease
-
-          ccache -s
+        run: ./.ci/android/build.sh
       - name: Copy artifacts
-        run: |
-          mkdir artifacts/
-          cp src/android/app/build/outputs/apk/release/*.apk \
-            src/android/app/build/outputs/bundle/release/*.aab \
-            artifacts/
+        run: ./.ci/android/upload.sh
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
