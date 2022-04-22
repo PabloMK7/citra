@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:transitionName="card_game"
+    tools:layout_width="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/image_game_screen"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:adjustViewBounds="false"
+            android:cropToPadding="false"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/text_game_title"
+            style="@android:style/TextAppearance.Material.Subhead"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:baselineAligned="false"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:lines="1"
+            android:maxLines="1"
+            android:textAlignment="viewStart"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/image_game_screen"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="The Legend of Zelda\nOcarina of Time 3D"
+            android:textColor="@color/header_text" />
+
+        <TextView
+            android:id="@+id/text_company"
+            style="@android:style/TextAppearance.Material.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:lines="1"
+            android:maxLines="1"
+            app:layout_constraintBottom_toBottomOf="@+id/image_game_screen"
+            app:layout_constraintStart_toStartOf="@+id/text_game_title"
+            app:layout_constraintTop_toBottomOf="@+id/text_game_title"
+            app:layout_constraintVertical_bias="0.842"
+            tools:text="Nintendo"
+            android:textColor="@color/header_subtext" />
+
+        <TextView
+            android:id="@+id/text_filename"
+            style="@android:style/TextAppearance.Material.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:lines="1"
+            android:maxLines="1"
+            app:layout_constraintBottom_toBottomOf="@+id/image_game_screen"
+            app:layout_constraintStart_toStartOf="@+id/text_game_title"
+            app:layout_constraintTop_toBottomOf="@+id/text_game_title"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="Pilotwings_Resort.cxi"
+            android:textColor="@color/header_subtext" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>
+

@@ -49,6 +49,14 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
         DESTINATION ${PROJECT_SOURCE_DIR}/.git/hooks)
 endif()
 
+# Use ccache for android if available
+# =======================================================================
+if (NOT $ENV{NDK_CCACHE} EQUAL "")
+    set(CCACHE_EXE $ENV{NDK_CCACHE})
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_EXE})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXE})
+endif()
+
 # Sanity check : Check that all submodules are present
 # =======================================================================
 

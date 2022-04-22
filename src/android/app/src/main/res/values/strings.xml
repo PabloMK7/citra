@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- General application strings -->
+    <string name="app_name" translatable="false">Citra</string>
+    <string name="app_disclaimer">This software will run games for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you run, please place your rightfully owned 3DS game files onto your device storage.</string>
+    <string name="app_notification_channel_name" translatable="false">Citra</string>
+    <string name="app_notification_channel_id" translatable="false">Citra</string>
+    <string name="app_notification_channel_description">Citra 3DS emulator notifications</string>
+    <string name="app_notification_running">Citra is running</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">Circle Pad</string>
+    <string name="controller_c">C-Stick</string>
+    <string name="controller_triggers">Triggers</string>
+    <string name="controller_dpad">D-Pad</string>
+    <string name="controller_axis_vertical">Up/Down Axis</string>
+    <string name="controller_axis_horizontal">Left/Right Axis</string>
+    <string name="input_binding">Input Binding</string>
+    <string name="input_binding_description">Press or move an input to bind it to %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Move your joystick up or down.</string>
+    <string name="input_binding_description_horizontal_axis">Move your joystick left or right.</string>
+    <string name="button_a" translatable="false">A</string>
+    <string name="button_b" translatable="false">B</string>
+    <string name="button_select" translatable="false">SELECT</string>
+    <string name="button_start" translatable="false">START</string>
+    <string name="button_x" translatable="false">X</string>
+    <string name="button_y" translatable="false">Y</string>
+    <string name="button_l" translatable="false">L</string>
+    <string name="button_r" translatable="false">R</string>
+    <string name="button_zl" translatable="false">ZL</string>
+    <string name="button_zr" translatable="false">ZR</string>
+    <string name="input_message_analog_only">This control must be bound to a gamepad analog stick or D-pad axis!</string>
+    <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Buttons</string>
+
+    <!-- Premium settings strings -->
+    <string name="design">Change Theme (Light, Dark)</string>
+    <string name="design_updated">Theme will update when exiting Settings</string>
+
+    <!-- Core settings strings -->
+    <string name="cpu_jit">Enable CPU JIT</string>
+    <string name="cpu_jit_description">Uses the Just-in-Time (JIT) compiler for CPU emulation. When enabled, game performance will be significantly improved.</string>
+    <string name="init_clock">System clock type</string>
+    <string name="init_clock_description">Set the emulated 3DS clock to either reflect that of your device or start at a simulated date and time.</string>
+
+    <!-- System settings strings -->
+    <string name="init_time">System clock starting time override</string>
+    <string name="init_time_description">If the \"System clock type\" setting is set to \"Simulated clock\", this changes the fixed date and time to start at.</string>
+    <string name="emulated_region">Emulated region</string>
+    <string name="emulated_language">Emulated language</string>
+
+    <!-- Camera settings strings -->
+    <string name="inner_camera">Inner Camera</string>
+    <string name="outer_left_camera">Outer Left Camera</string>
+    <string name="outer_right_camera">Outer Right Camera</string>
+    <string name="image_source">Image Source</string>
+    <string name="image_source_description">Sets the image source of the virtual camera. You can use an image file, or a device camera when supported.</string>
+    <string name="camera_device">Camera Device</string>
+    <string name="camera_device_description">If the \"Image Source\" setting is set to \"Device Camera\", this sets the physical camera to use.</string>
+    <string name="camera_facing_front">Front</string>
+    <string name="camera_facing_back">Back</string>
+    <string name="camera_facing_external">External</string>
+    <string name="image_flip">Image Flip</string>
+
+    <!-- Graphics settings strings -->
+    <string name="renderer">Renderer</string>
+    <string name="vsync">Enable V-Sync</string>
+    <string name="vsync_description">Synchronizes the game frame rate to the refresh rate of your device.</string>
+    <string name="linear_filtering">Enable linear filtering</string>
+    <string name="linear_filtering_description">Enables linear filtering, which causes game visuals to appear smoother.</string>
+    <string name="texture_filter_name">Texture Filter</string>
+    <string name="texture_filter_description">Enhances the visuals of games by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, and xBRZ freescale.</string>
+    <string name="hw_renderer">Enable hardware renderer</string>
+    <string name="hw_renderer_description">Uses hardware to emulate 3DS graphics. When enabled, game performance will be significantly improved.</string>
+    <string name="hw_shaders">Enable hardware shader</string>
+    <string name="hw_shaders_description">Uses hardware to emulate 3DS shaders. When enabled, game performance will be significantly improved.</string>
+    <string name="shaders_accurate_mul">Enable accurate shader multiplication</string>
+    <string name="shaders_accurate_mul_description">Uses more accurate multiplication in hardware shaders, which may fix some graphical bugs. When enabled, performance will be reduced.</string>
+    <string name="asynchronous_gpu">Enable asynchronous GPU emulation</string>
+    <string name="asynchronous_gpu_description">Uses a separate thread to emulate the GPU asynchronously. When enabled, performance will be improved.</string>
+    <string name="frame_limit_enable">Enable limit speed</string>
+    <string name="frame_limit_enable_description">When enabled, emulation speed will be limited to a specified percentage of normal speed.</string>
+    <string name="frame_limit_slider">Limit speed percent</string>
+    <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. With the default of 100% emulation will be limited to normal speed. Values higher or lower will increase or decrease the speed limit.</string>
+    <string name="internal_resolution">Internal resolution</string>
+    <string name="internal_resolution_description">Specifies the resolution used to render at. A high resolution will improve visual quality a lot but is also quite heavy on performance and might cause glitches in certain games.</string>
+    <string name="performance_warning">Turning off this setting will significantly reduce emulation performance! For the best experience, it is recommended that you leave this setting enabled.</string>
+    <string name="debug_warning">Warning: Modifying these settings will slow emulation</string>
+    <string name="stereoscopy">Stereoscopy</string>
+    <string name="render3d">Stereoscopic 3D Mode</string>
+    <string name="factor3d">Depth</string>
+    <string name="factor3d_description">Specifies the value of the 3D slider. This should be set to higher than 0% when Stereoscopic 3D is enabled.</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="cardboard_screen_size">Cardboard Screen size</string>
+    <string name="cardboard_screen_size_description">Scales the screen to a percentage of its original size.</string>
+    <string name="cardboard_x_shift">Horizontal shift</string>
+    <string name="cardboard_x_shift_description">Specifies the percentage of empty space to shift the screens horizontally. Positive values move the two eyes closer to the middle, while negative values move them away.</string>
+    <string name="cardboard_y_shift">Vertical shift</string>
+    <string name="cardboard_y_shift_description">Specifies the percentage of empty space to shift the screens vertically. Positive values move the two eyes towards the bottom, while negative values move them towards the top.</string>
+    <string name="use_shader_jit">Use shader JIT</string>
+    <string name="use_disk_shader_cache">Use disk shader cache</string>
+    <string name="use_disk_shader_cache_description">Reduce stuttering by storing and loading generated shaders to disk. It cannot be used without Enabling Hardware Shader.</string>
+
+    <!-- Premium strings -->
+    <string name="premium_text">Premium</string>
+    <string name="premium_settings_upsell">Upgrade to Premium and support Citra!</string>
+    <string name="premium_settings_upsell_description">With Premium, you will support the developers to continue improving Citra, and gain access to these exclusive features!</string>
+    <string name="premium_settings_welcome">Welcome to Premium.</string>
+    <string name="premium_settings_welcome_description">Thank you for your support!</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_stretch">Enable audio stretching</string>
+    <string name="audio_stretch_description">Stretches audio to reduce stuttering. When enabled, increases audio latency and slightly reduces performance.</string>
+    <string name="audio_input_type">Audio Input Device</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">Clear</string>
+    <string name="slider_default">Default</string>
+    <string name="ini_saved">Saved settings</string>
+    <string name="gameid_saved">Saved settings for %1$s</string>
+    <string name="error_saving">Error saving %1$s.ini: %2$s</string>
+    <string name="loading">Loading...</string>
+
+    <!-- Game Grid Screen-->
+    <string name="grid_menu_core_settings">Settings</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">Select Game Folder</string>
+    <string name="install_cia_title">Install CIA</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Settings</string>
+    <string name="preferences_premium">Premium</string>
+    <string name="preferences_general">General</string>
+    <string name="preferences_system">System</string>
+    <string name="preferences_camera">Camera</string>
+    <string name="preferences_controls">Gamepad</string>
+    <string name="preferences_graphics">Graphics</string>
+    <string name="preferences_audio">Audio</string>
+    <string name="preferences_debug">Debug</string>
+
+    <!-- ROM loading errors -->
+    <string name="loader_error_encrypted">Your ROM is encrypted</string>
+    <string name="loader_error_invalid_format">Invalid ROM format</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_save_state">Save State</string>
+    <string name="emulation_load_state">Load State</string>
+    <string name="emulation_empty_state_slot">Slot %1$d</string>
+    <string name="emulation_occupied_state_slot">Slot %1$d - %2$tF %2$tR</string>
+    <string name="emulation_show_fps">Show FPS</string>
+    <string name="emulation_configure_controls">Configure Controls</string>
+    <string name="emulation_edit_layout">Edit Layout</string>
+    <string name="emulation_done">Done</string>
+    <string name="emulation_toggle_controls">Toggle Controls</string>
+    <string name="emulation_control_scale">Adjust Scale</string>
+    <string name="emulation_control_joystick_rel_center">Relative Stick Center</string>
+    <string name="emulation_control_dpad_slide_enable">Enable D-Pad Sliding</string>
+    <string name="emulation_open_settings">Open Settings</string>
+    <string name="emulation_switch_screen_layout">Landscape Screen Layout</string>
+    <string name="emulation_screen_layout_landscape">Default</string>
+    <string name="emulation_screen_layout_portrait">Portrait</string>
+    <string name="emulation_screen_layout_single">Single Screen</string>
+    <string name="emulation_screen_layout_sidebyside">Side by Side Screens</string>
+    <string name="emulation_swap_screens">Swap Screens</string>
+    <string name="emulation_touch_overlay_reset">Reset Overlay</string>
+    <string name="emulation_show_overlay">Show Overlay</string>
+    <string name="emulation_close_game">Close Game</string>
+    <string name="emulation_close_game_message">Are you sure that you would like to close the current game?</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
+    <string name="menu_emulation_amiibo_load">Load</string>
+    <string name="menu_emulation_amiibo_remove">Remove</string>
+    <string name="select_amiibo">Select Amiibo file</string>
+    <string name="amiibo_load_error">Error loading Amiibo</string>
+    <string name="amiibo_load_error_message">While loading the specified Amiibo file, an error occurred. Please check that the file is correct.</string>
+
+    <string name="write_permission_needed">You need to allow write access to external storage for the emulator to work</string>
+    <string name="load_settings">Loading Settings...</string>
+
+    <string name="external_storage_not_mounted">The external storage needs to be available in order to use Citra</string>
+
+    <string name="select_dir">Select This Directory</string>
+    <string name="empty_gamelist">No files were found or no game directory has been selected yet.</string>
+
+    <string name="do_not_show_this_again">Do not show this again</string>
+    <string name="savestate_warning_title">Savestates</string>
+    <string name="savestate_warning_message">Warning: Savestates are NOT a replacement for in-game saves, and are not meant to be reliable.\n\nUse at your own risk!</string>
+
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">Software Keyboard</string>
+    <string name="i_forgot">I Forgot</string>
+    <string name="fixed_length_required">Text length is not correct (should be %d characters)</string>
+    <string name="max_length_exceeded">Text is too long (should be no more than %d characters)</string>
+    <string name="blank_input_not_allowed">Blank input is not allowed</string>
+    <string name="empty_input_not_allowed">Empty input is not allowed</string>
+
+    <!-- Mii Selector -->
+    <string name="mii_selector">Mii Selector</string>
+    <string name="standard_mii">Standard Mii</string>
+
+    <!-- Camera -->
+    <string name="camera_select_image">Select Image</string>
+    <string name="camera">Camera</string>
+    <string name="camera_permission_needed">Citra needs to access your camera to emulate the 3DS\'s cameras.\n\nAlternatively, you can also set \"Image Source\" to \"Still Image\" in Camera Settings.</string>
+
+    <!-- Microphone -->
+    <string name="microphone">Microphone</string>
+    <string name="microphone_permission_needed">Citra needs to access your microphone to emulate the 3DS\'s microphone.\n\nAlternatively, you can also change \"Audio Input Device\" in Audio Settings.</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">Abort</string>
+    <string name="continue_button">Continue</string>
+    <string name="system_archive_not_found">System Archive Not Found</string>
+    <string name="system_archive_not_found_message">%s is missing. Please dump your system archives.\nContinuing emulation may result in crashes and bugs.</string>
+    <string name="system_archive_general">A system archive</string>
+    <string name="save_load_error">Save/Load Error</string>
+    <string name="fatal_error">Fatal Error</string>
+    <string name="fatal_error_message">A fatal error occurred. Check the log for details.\nContinuing emulation may result in crashes and bugs.</string>
+
+    <!-- Disk shader cache -->
+    <string name="preparing_shaders">Preparing shaders</string>
+    <string name="building_shaders">Building shaders</string>
+</resources>
