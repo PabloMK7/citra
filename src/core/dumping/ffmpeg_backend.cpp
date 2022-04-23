@@ -156,6 +156,8 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
         return false;
     }
 
+    stream->time_base = codec_context->time_base;
+
     // Allocate frames
     current_frame.reset(av_frame_alloc());
     scaled_frame.reset(av_frame_alloc());
