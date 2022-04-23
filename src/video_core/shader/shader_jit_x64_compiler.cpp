@@ -595,11 +595,11 @@ void JitShader::Compile_END(Instruction instr) {
 }
 
 void JitShader::Compile_BREAKC(Instruction instr) {
-    Compile_Assert(looping, "BREAKC must be inside a LOOP");
-    if (looping) {
+    Compile_Assert(loop_depth, "BREAKC must be inside a LOOP");
+    if (loop_depth) {
         Compile_EvaluateCondition(instr);
-        ASSERT(loop_break_label);
-        jnz(*loop_break_label);
+        ASSERT(!loop_break_labels.empty());
+        jnz(loop_break_labels.back(), T_NEAR);
     }
 }
 
@@ -725,9 +725,11 @@ void JitShader::Compile_IF(Instruction instr) {
 void JitShader::Compile_LOOP(Instruction instr) {
     Compile_Assert(instr.flow_control.dest_offset >= program_counter,
                    "Backwards loops not supported");
-    Compile_Assert(!looping, "Nested loops not supported");
-
-    looping = true;
+    if (loop_depth++) {
+        // LOOPCOUNT_REG is a "global", so we don't save it here.
+        push(LOOPINC.cvt64());
+        push(LOOPCOUNT.cvt64());
+    }
 
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
     // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
@@ -746,16 +748,20 @@ void JitShader::Compile_LOOP(Instruction instr) {
     Label l_loop_start;
     L(l_loop_start);
 
-    loop_break_label = Xbyak::Label();
+    loop_break_labels.emplace_back(Xbyak::Label());
     Compile_Block(instr.flow_control.dest_offset + 1);
 
     add(LOOPCOUNT_REG, LOOPINC); // Increment LOOPCOUNT_REG by Z-component
     sub(LOOPCOUNT, 1);           // Increment loop count by 1
     jnz(l_loop_start);           // Loop if not equal
-    L(*loop_break_label);
-    loop_break_label.reset();
 
-    looping = false;
+    L(loop_break_labels.back());
+    loop_break_labels.pop_back();
+
+    if (--loop_depth) {
+        pop(LOOPCOUNT.cvt64());
+        pop(LOOPINC.cvt64());
+    }
 }
 
 void JitShader::Compile_JMP(Instruction instr) {
@@ -892,7 +898,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     // Reset flow control state
     program = (CompiledShader*)getCurr();
     program_counter = 0;
-    looping = false;
+    loop_depth = 0;
     instruction_labels.fill(Xbyak::Label());
 
     // Find all `CALL` instructions and identify return locations
