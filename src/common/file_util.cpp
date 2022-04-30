@@ -12,7 +12,6 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "core/settings.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -674,7 +673,8 @@ std::string GetSysDirectory() {
 
 namespace {
 std::unordered_map<UserPath, std::string> g_paths;
-}
+std::unordered_map<UserPath, std::string> g_default_paths;
+} // namespace
 
 void SetUserPath(const std::string& path) {
     std::string& user_path = g_paths[UserPath::UserDir];
@@ -718,12 +718,8 @@ void SetUserPath(const std::string& path) {
 #endif
     }
 
-    g_paths.emplace(UserPath::SDMCDir, !Settings::values.sdmc_dir.empty()
-                                           ? Settings::values.sdmc_dir
-                                           : user_path + SDMC_DIR DIR_SEP);
-    g_paths.emplace(UserPath::NANDDir, !Settings::values.nand_dir.empty()
-                                           ? Settings::values.nand_dir
-                                           : user_path + NAND_DIR DIR_SEP);
+    g_paths.emplace(UserPath::SDMCDir, user_path + SDMC_DIR DIR_SEP);
+    g_paths.emplace(UserPath::NANDDir, user_path + NAND_DIR DIR_SEP);
     g_paths.emplace(UserPath::SysDataDir, user_path + SYSDATA_DIR DIR_SEP);
     // TODO: Put the logs in a better location for each OS
     g_paths.emplace(UserPath::LogDir, user_path + LOG_DIR DIR_SEP);
@@ -733,6 +729,7 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::DumpDir, user_path + DUMP_DIR DIR_SEP);
     g_paths.emplace(UserPath::LoadDir, user_path + LOAD_DIR DIR_SEP);
     g_paths.emplace(UserPath::StatesDir, user_path + STATES_DIR DIR_SEP);
+    g_default_paths = g_paths;
 }
 
 std::string g_currentRomPath{};
@@ -769,8 +766,20 @@ const std::string& GetUserPath(UserPath path) {
     return g_paths[path];
 }
 
+const std::string& GetDefaultUserPath(UserPath path) {
+    // Set up all paths and files on the first run
+    if (g_default_paths.empty())
+        SetUserPath();
+    return g_default_paths[path];
+}
+
 const void UpdateUserPath(UserPath path, const std::string& filename) {
-    g_paths[path] = filename + DIR_SEP;
+    if (!FileUtil::IsDirectory(filename)) {
+        LOG_ERROR(Common_Filesystem, "Path is not a directory. UserPath: {}  filename: {}", path,
+                  filename);
+        return;
+    }
+    g_paths[path] = SanitizePath(filename) + DIR_SEP;
 }
 
 std::size_t WriteStringToFile(bool text_file, const std::string& filename, std::string_view str) {
