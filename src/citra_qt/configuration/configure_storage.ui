@@ -69,7 +69,7 @@
              <item>
               <widget class="QLabel" name="label_4">
                <property name="text">
-                <string>NOTE: this does not move the contents of the previous directory to the new one</string>
+                <string>NOTE: This does not move the contents of the previous directory to the new one.</string>
                </property>
               </widget>
              </item>
@@ -134,7 +134,7 @@
              <item>
               <widget class="QLabel" name="label_3">
                <property name="text">
-                <string>NOTE: this does not move the contents of the previous directory to the new one</string>
+                <string>NOTE: This does not move the contents of the previous directory to the new one.</string>
                </property>
               </widget>
              </item>

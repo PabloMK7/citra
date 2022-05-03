@@ -302,16 +302,22 @@ void Config::ReadDataStorageValues() {
     qt_config->beginGroup(QStringLiteral("Data Storage"));
 
     Settings::values.use_virtual_sd = ReadSetting(QStringLiteral("use_virtual_sd"), true).toBool();
-    std::string nand_dir = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
-    Settings::values.nand_dir =
-        ReadSetting(QStringLiteral("nand_directory"), QString::fromStdString(nand_dir))
+
+    const std::string nand_dir =
+        ReadSetting(
+            QStringLiteral("nand_directory"),
+            QString::fromStdString(FileUtil::GetDefaultUserPath(FileUtil::UserPath::NANDDir)))
             .toString()
             .toStdString();
-    std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
-    Settings::values.sdmc_dir =
-        ReadSetting(QStringLiteral("sdmc_directory"), QString::fromStdString(sdmc_dir))
+    const std::string sdmc_dir =
+        ReadSetting(
+            QStringLiteral("sdmc_directory"),
+            QString::fromStdString(FileUtil::GetDefaultUserPath(FileUtil::UserPath::SDMCDir)))
             .toString()
             .toStdString();
+
+    FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir, nand_dir);
+    FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir, sdmc_dir);
 
     qt_config->endGroup();
 }
@@ -863,11 +869,11 @@ void Config::SaveDataStorageValues() {
 
     WriteSetting(QStringLiteral("use_virtual_sd"), Settings::values.use_virtual_sd, true);
     WriteSetting(QStringLiteral("nand_directory"),
-                 QString::fromStdString(Settings::values.nand_dir),
-                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)));
+                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
+                 QString::fromStdString(FileUtil::GetDefaultUserPath(FileUtil::UserPath::NANDDir)));
     WriteSetting(QStringLiteral("sdmc_directory"),
-                 QString::fromStdString(Settings::values.sdmc_dir),
-                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)));
+                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)),
+                 QString::fromStdString(FileUtil::GetDefaultUserPath(FileUtil::UserPath::SDMCDir)));
 
     qt_config->endGroup();
 }

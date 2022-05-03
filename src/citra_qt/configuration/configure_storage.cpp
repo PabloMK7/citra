@@ -16,31 +16,33 @@ ConfigureStorage::ConfigureStorage(QWidget* parent)
     SetConfiguration();
 
     connect(ui->open_nand_dir, &QPushButton::clicked, []() {
-        QString path = QString::fromStdString(Settings::values.nand_dir);
+        QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     connect(ui->change_nand_dir, &QPushButton::clicked, this, [this]() {
         const QString dir_path = QFileDialog::getExistingDirectory(
-            this, tr("Select NAND Directory"), QString::fromStdString(Settings::values.nand_dir),
+            this, tr("Select NAND Directory"),
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
-            Settings::values.nand_dir = dir_path.toStdString();
+            FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir, dir_path.toStdString());
             SetConfiguration();
         }
     });
 
     connect(ui->open_sdmc_dir, &QPushButton::clicked, []() {
-        QString path = QString::fromStdString(Settings::values.sdmc_dir);
+        QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     connect(ui->change_sdmc_dir, &QPushButton::clicked, this, [this]() {
         const QString dir_path = QFileDialog::getExistingDirectory(
-            this, tr("Select SDMC Directory"), QString::fromStdString(Settings::values.sdmc_dir),
+            this, tr("Select SDMC Directory"),
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
-            Settings::values.sdmc_dir = dir_path.toStdString();
+            FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir, dir_path.toStdString());
             SetConfiguration();
         }
     });
@@ -55,14 +57,14 @@ ConfigureStorage::~ConfigureStorage() = default;
 
 void ConfigureStorage::SetConfiguration() {
     ui->nand_group->setVisible(Settings::values.use_virtual_sd);
-    QString nand_path = QString::fromStdString(Settings::values.nand_dir);
+    QString nand_path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
     ui->nand_dir_path->setText(nand_path);
-    ui->open_nand_dir->setEnabled(!Settings::values.nand_dir.empty());
+    ui->open_nand_dir->setEnabled(!nand_path.isEmpty());
 
     ui->sdmc_group->setVisible(Settings::values.use_virtual_sd);
-    QString sdmc_path = QString::fromStdString(Settings::values.sdmc_dir);
+    QString sdmc_path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
     ui->sdmc_dir_path->setText(sdmc_path);
-    ui->open_sdmc_dir->setEnabled(!Settings::values.sdmc_dir.empty());
+    ui->open_sdmc_dir->setEnabled(!sdmc_path.isEmpty());
 
     ui->toggle_virtual_sd->setChecked(Settings::values.use_virtual_sd);
 
