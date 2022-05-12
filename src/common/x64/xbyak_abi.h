@@ -158,10 +158,10 @@ struct ABIFrameInfo {
 
 inline ABIFrameInfo ABI_CalculateFrameSize(std::bitset<32> regs, std::size_t rsp_alignment,
                                            std::size_t needed_frame_size) {
-    int count = (regs & ABI_ALL_GPRS).count();
+    const auto count = (regs & ABI_ALL_GPRS).count();
     rsp_alignment -= count * 8;
     std::size_t subtraction = 0;
-    int xmm_count = (regs & ABI_ALL_XMMS).count();
+    const auto xmm_count = (regs & ABI_ALL_XMMS).count();
     if (xmm_count) {
         // If we have any XMMs to save, we must align the stack here.
         subtraction = rsp_alignment & 0xF;
