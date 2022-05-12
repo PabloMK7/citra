@@ -50,16 +50,18 @@ void TextureDownloaderES::Test() {
         state.Apply();
 
         original_data.resize(tex_size * tex_size);
-        for (std::size_t idx = 0; idx < original_data.size(); ++idx)
+        for (std::size_t idx = 0; idx < original_data.size(); ++idx) {
             original_data[idx] = data_generator(idx);
-        glTexStorage2D(GL_TEXTURE_2D, 1, tuple.internal_format, tex_size, tex_size);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_size, tex_size, tuple.format, tuple.type,
+        }
+        GLsizei tex_sizei = static_cast<GLsizei>(tex_size);
+        glTexStorage2D(GL_TEXTURE_2D, 1, tuple.internal_format, tex_sizei, tex_sizei);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_sizei, tex_sizei, tuple.format, tuple.type,
                         original_data.data());
 
         decltype(original_data) new_data(original_data.size());
         glFinish();
         auto start = std::chrono::high_resolution_clock::now();
-        GetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, tex_size, tex_size,
+        GetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, tex_sizei, tex_sizei,
                     new_data.data());
         glFinish();
         auto time = std::chrono::high_resolution_clock::now() - start;

@@ -798,7 +798,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, state.texture_units[0].texture_2d);
 
-        for (std::size_t level{0}; level <= color_surface->max_level; ++level) {
+        for (u32 level{0}; level <= color_surface->max_level; ++level) {
             glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, level, 0, 0, 0,
                                temp_tex.handle, GL_TEXTURE_2D, level, 0, 0, 0,
                                color_surface->GetScaledWidth() >> level,
