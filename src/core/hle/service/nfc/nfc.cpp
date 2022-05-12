@@ -141,7 +141,7 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
 
     TagInfo tag_info{};
     tag_info.uuid = nfc->amiibo_data.uuid;
-    tag_info.id_offset_size = tag_info.uuid.size();
+    tag_info.id_offset_size = static_cast<u16>(tag_info.uuid.size());
     tag_info.unk1 = 0x0;
     tag_info.unk2 = 0x2;
 
