@@ -33,7 +33,6 @@ if (MSVC)
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
     # /external:*         - Suppress warnings from external headers
     add_compile_options(
-        /W3
         /MP
         /permissive-
         /EHsc
@@ -45,6 +44,10 @@ if (MSVC)
         /external:I "${CMAKE_SOURCE_DIR}/externals"
         /external:anglebrackets
         /external:W0
+
+        # Warnings
+        /W3
+        /we4267 # 'var': conversion from 'size_t' to 'type', possible loss of data
     )
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it
