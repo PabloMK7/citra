@@ -2,9 +2,6 @@
 <ui version="4.0">
  <class>RecordDialog</class>
  <widget class="QDialog" name="RecordDialog">
-  <property name="windowTitle">
-   <string>View Record</string>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,17 +10,20 @@
     <height>500</height>
    </rect>
   </property>
+  <property name="windowTitle">
+   <string>View Record</string>
+  </property>
   <layout class="QVBoxLayout">
    <item>
     <layout class="QHBoxLayout">
      <item>
-      <widget class="QGroupBox">
+      <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>Client</string>
        </property>
        <layout class="QFormLayout">
         <item row="0" column="0">
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Process:</string>
           </property>
@@ -37,7 +37,7 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Thread:</string>
           </property>
@@ -51,7 +51,7 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Session:</string>
           </property>
@@ -68,13 +68,13 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox">
+      <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>Server</string>
        </property>
        <layout class="QFormLayout">
         <item row="0" column="0">
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Process:</string>
           </property>
@@ -88,7 +88,7 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Thread:</string>
           </property>
@@ -102,7 +102,7 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Session:</string>
           </property>
@@ -121,13 +121,13 @@
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox">
+    <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>General</string>
      </property>
      <layout class="QFormLayout">
       <item row="0" column="0">
-       <widget class="QLabel">
+       <widget class="QLabel" name="label">
         <property name="text">
          <string>Client Port:</string>
         </property>
@@ -141,7 +141,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel">
+       <widget class="QLabel" name="label">
         <property name="text">
          <string>Service:</string>
         </property>
@@ -155,7 +155,7 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel">
+       <widget class="QLabel" name="label">
         <property name="text">
          <string>Function:</string>
         </property>
@@ -172,7 +172,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox">
+    <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Command Buffer</string>
      </property>
@@ -180,7 +180,7 @@
       <item>
        <layout class="QHBoxLayout">
         <item>
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Select:</string>
           </property>
@@ -229,6 +229,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
      <item>
@@ -242,4 +248,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>clientProcess</tabstop>
+  <tabstop>clientThread</tabstop>
+  <tabstop>clientSession</tabstop>
+  <tabstop>serverProcess</tabstop>
+  <tabstop>serverThread</tabstop>
+  <tabstop>serverSession</tabstop>
+  <tabstop>clientPort</tabstop>
+  <tabstop>service</tabstop>
+  <tabstop>function</tabstop>
+  <tabstop>cmdbufSelection</tabstop>
+  <tabstop>cmdbuf</tabstop>
+  <tabstop>okButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
 </ui>

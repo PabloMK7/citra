@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>926</width>
+    <width>996</width>
     <height>561</height>
    </rect>
   </property>
@@ -55,7 +55,7 @@
            </widget>
           </item>
           <item row="0" column="1" colspan="3">
-           <widget class="QLabel" name="username" />
+           <widget class="QLabel" name="username"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_token">
@@ -65,8 +65,7 @@
            </widget>
           </item>
           <item row="1" column="4">
-           <widget class="QLabel" name="label_token_verified">
-           </widget>
+           <widget class="QLabel" name="label_token_verified"/>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_username">
@@ -173,20 +172,20 @@
     </layout>
    </item>
    <item>
-     <widget class="QGroupBox" name="discord_group">
-      <property name="title">
-       <string>Discord Presence</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_21">
-       <item>
-        <widget class="QCheckBox" name="toggle_discordrpc">
-         <property name="text">
-          <string>Show Current Game in your Discord Status</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
+    <widget class="QGroupBox" name="discord_group">
+     <property name="title">
+      <string>Discord Presence</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_21">
+      <item>
+       <widget class="QCheckBox" name="toggle_discordrpc">
+        <property name="text">
+         <string>Show Current Game in your Discord Status</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">
@@ -203,6 +202,13 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>edit_token</tabstop>
+  <tabstop>button_verify_login</tabstop>
+  <tabstop>toggle_telemetry</tabstop>
+  <tabstop>button_regenerate_telemetry_id</tabstop>
+  <tabstop>toggle_discordrpc</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

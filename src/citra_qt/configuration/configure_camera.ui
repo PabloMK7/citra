@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -186,11 +186,11 @@
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
          <widget class="QLabel" name="system_camera_label">
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
           <property name="toolTip">
            <string>Select the system camera to use</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
           </property>
           <property name="text">
            <string>Camera:</string>
@@ -227,11 +227,11 @@
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <item>
          <widget class="QLabel" name="camera_flip_label">
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
           <property name="toolTip">
            <string>Select the image flip to apply</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
           </property>
           <property name="text">
            <string>Flip:</string>
@@ -342,6 +342,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>camera_selection</tabstop>
+  <tabstop>camera_mode</tabstop>
+  <tabstop>camera_position</tabstop>
+  <tabstop>image_source</tabstop>
+  <tabstop>camera_file</tabstop>
+  <tabstop>toolButton</tabstop>
+  <tabstop>system_camera</tabstop>
+  <tabstop>camera_flip</tabstop>
+  <tabstop>prompt_before_load</tabstop>
+  <tabstop>preview_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

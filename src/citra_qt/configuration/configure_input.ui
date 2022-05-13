@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>374</width>
-    <height>670</height>
+    <width>441</width>
+    <height>727</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -816,6 +816,46 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>profile</tabstop>
+  <tabstop>buttonNew</tabstop>
+  <tabstop>buttonDelete</tabstop>
+  <tabstop>buttonRename</tabstop>
+  <tabstop>buttonA</tabstop>
+  <tabstop>buttonB</tabstop>
+  <tabstop>buttonX</tabstop>
+  <tabstop>buttonY</tabstop>
+  <tabstop>buttonDpadLeft</tabstop>
+  <tabstop>buttonDpadRight</tabstop>
+  <tabstop>buttonDpadUp</tabstop>
+  <tabstop>buttonDpadDown</tabstop>
+  <tabstop>buttonCircleLeft</tabstop>
+  <tabstop>buttonCircleRight</tabstop>
+  <tabstop>buttonCircleUp</tabstop>
+  <tabstop>buttonCircleDown</tabstop>
+  <tabstop>buttonCircleAnalog</tabstop>
+  <tabstop>sliderCirclePadDeadzoneAndModifier</tabstop>
+  <tabstop>buttonCStickLeft</tabstop>
+  <tabstop>buttonCStickRight</tabstop>
+  <tabstop>buttonCStickUp</tabstop>
+  <tabstop>buttonCStickDown</tabstop>
+  <tabstop>buttonCStickAnalog</tabstop>
+  <tabstop>sliderCStickDeadzoneAndModifier</tabstop>
+  <tabstop>buttonL</tabstop>
+  <tabstop>buttonR</tabstop>
+  <tabstop>buttonZL</tabstop>
+  <tabstop>buttonZR</tabstop>
+  <tabstop>buttonStart</tabstop>
+  <tabstop>buttonSelect</tabstop>
+  <tabstop>buttonHome</tabstop>
+  <tabstop>buttonCircleMod</tabstop>
+  <tabstop>buttonDebug</tabstop>
+  <tabstop>buttonGpio14</tabstop>
+  <tabstop>buttonMotionTouch</tabstop>
+  <tabstop>buttonAutoMap</tabstop>
+  <tabstop>buttonClearAll</tabstop>
+  <tabstop>buttonRestoreDefaults</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

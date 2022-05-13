@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>471</width>
-    <height>555</height>
+    <width>520</width>
+    <height>564</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -406,6 +406,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>toggle_new_3ds</tabstop>
+  <tabstop>edit_username</tabstop>
+  <tabstop>combo_birthmonth</tabstop>
+  <tabstop>combo_birthday</tabstop>
+  <tabstop>combo_language</tabstop>
+  <tabstop>combo_sound</tabstop>
+  <tabstop>combo_country</tabstop>
+  <tabstop>combo_init_clock</tabstop>
+  <tabstop>edit_init_time</tabstop>
+  <tabstop>spinBox_play_coins</tabstop>
+  <tabstop>button_regenerate_console_id</tabstop>
+  <tabstop>slider_clock_speed</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

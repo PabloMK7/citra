@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>408</width>
-    <height>396</height>
+    <height>436</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -237,6 +237,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>toggle_check_exit</tabstop>
+  <tabstop>toggle_background_pause</tabstop>
+  <tabstop>toggle_hide_mouse</tabstop>
+  <tabstop>toggle_update_check</tabstop>
+  <tabstop>toggle_auto_update</tabstop>
+  <tabstop>region_combobox</tabstop>
+  <tabstop>frame_limit</tabstop>
+  <tabstop>toggle_alternate_speed</tabstop>
+  <tabstop>frame_limit_alternate</tabstop>
+  <tabstop>button_reset_defaults</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>329</width>
-    <height>332</height>
+    <height>344</height>
    </rect>
   </property>
   <layout class="QVBoxLayout">
@@ -205,6 +205,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>emulation_combo_box</tabstop>
+  <tabstop>output_sink_combo_box</tabstop>
+  <tabstop>toggle_audio_stretching</tabstop>
+  <tabstop>audio_device_combo_box</tabstop>
+  <tabstop>volume_slider</tabstop>
+  <tabstop>input_type_combo_box</tabstop>
+  <tabstop>input_device_combo_box</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

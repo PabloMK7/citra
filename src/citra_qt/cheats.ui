@@ -42,6 +42,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
      <item>
@@ -59,14 +65,6 @@
       <layout class="QVBoxLayout">
        <item>
         <widget class="QLabel" name="labelAvailableCheats">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>60</y>
-           <width>121</width>
-           <height>16</height>
-          </rect>
-         </property>
          <property name="text">
           <string>Available Cheats:</string>
          </property>
@@ -77,11 +75,11 @@
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
          </property>
          <property name="showGrid">
           <bool>false</bool>
@@ -123,25 +121,31 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
           </spacer>
          </item>
          <item>
           <widget class="QPushButton" name="buttonSave">
-           <property name="text">
-            <string>Save</string>
-           </property>
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Save</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="buttonDelete">
-           <property name="text">
-            <string>Delete</string>
-           </property>
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Delete</string>
            </property>
           </widget>
          </item>
@@ -196,6 +200,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
      <item>
@@ -209,6 +219,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>buttonAddCheat</tabstop>
+  <tabstop>tableCheats</tabstop>
+  <tabstop>lineName</tabstop>
+  <tabstop>textNotes</tabstop>
+  <tabstop>textCode</tabstop>
+  <tabstop>buttonSave</tabstop>
+  <tabstop>buttonDelete</tabstop>
+  <tabstop>buttonClose</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

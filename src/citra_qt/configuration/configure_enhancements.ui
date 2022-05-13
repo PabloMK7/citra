@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>595</height>
+    <height>634</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -343,6 +343,21 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>resolution_factor_combobox</tabstop>
+  <tabstop>toggle_linear_filter</tabstop>
+  <tabstop>shader_combobox</tabstop>
+  <tabstop>texture_filter_combobox</tabstop>
+  <tabstop>render_3d_combobox</tabstop>
+  <tabstop>factor_3d</tabstop>
+  <tabstop>layout_combobox</tabstop>
+  <tabstop>swap_screen</tabstop>
+  <tabstop>upright_screen</tabstop>
+  <tabstop>bg_button</tabstop>
+  <tabstop>toggle_custom_textures</tabstop>
+  <tabstop>toggle_dump_textures</tabstop>
+  <tabstop>toggle_preload_textures</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

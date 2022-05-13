@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>443</width>
     <height>300</height>
    </rect>
   </property>
@@ -137,6 +137,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>toggle_gdbstub</tabstop>
+  <tabstop>gdbport_spinbox</tabstop>
+  <tabstop>log_filter_edit</tabstop>
+  <tabstop>toggle_console</tabstop>
+  <tabstop>open_log_button</tabstop>
+  <tabstop>toggle_cpu_jit</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
