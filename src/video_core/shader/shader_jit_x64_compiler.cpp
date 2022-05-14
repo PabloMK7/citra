@@ -164,8 +164,10 @@ static void LogCritical(const char* msg) {
 
 void JitShader::Compile_Assert(bool condition, const char* msg) {
     if (!condition) {
+        ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
         mov(ABI_PARAM1, reinterpret_cast<std::size_t>(msg));
         CallFarFunction(*this, LogCritical);
+        ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     }
 }
 
@@ -725,10 +727,10 @@ void JitShader::Compile_IF(Instruction instr) {
 void JitShader::Compile_LOOP(Instruction instr) {
     Compile_Assert(instr.flow_control.dest_offset >= program_counter,
                    "Backwards loops not supported");
+    Compile_Assert(loop_depth < 1, "Nested loops may not be supported");
     if (loop_depth++) {
-        // LOOPCOUNT_REG is a "global", so we don't save it here.
-        push(LOOPINC.cvt64());
-        push(LOOPCOUNT.cvt64());
+        const auto loop_save_regs = BuildRegSet({LOOPCOUNT_REG, LOOPINC, LOOPCOUNT});
+        ABI_PushRegistersAndAdjustStack(*this, loop_save_regs, 0);
     }
 
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
@@ -759,8 +761,8 @@ void JitShader::Compile_LOOP(Instruction instr) {
     loop_break_labels.pop_back();
 
     if (--loop_depth) {
-        pop(LOOPCOUNT.cvt64());
-        pop(LOOPINC.cvt64());
+        const auto loop_save_regs = BuildRegSet({LOOPCOUNT_REG, LOOPINC, LOOPCOUNT});
+        ABI_PopRegistersAndAdjustStack(*this, loop_save_regs, 0);
     }
 }
 
