@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     container: citraemu/build-environments:linux-clang-format
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with: 
           fetch-depth: 0
       - name: Build
@@ -26,11 +26,11 @@ jobs:
         image: ["linux-fresh", "linux-frozen", "linux-mingw"]
     container: citraemu/build-environments:${{ matrix.image }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.ccache
           key: ${{ runner.os }}-${{ matrix.image }}-${{ github.sha }}
@@ -49,7 +49,7 @@ jobs:
         env:
           NAME: ${{ matrix.image }}
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ matrix.image != 'linux-frozen' }}
         with:
           name: ${{ matrix.image }}
@@ -57,11 +57,11 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/Library/Caches/ccache
           key: ${{ runner.os }}-macos-${{ github.sha }}
@@ -80,18 +80,18 @@ jobs:
       - name: Pack
         run: ./.ci/macos/upload.sh
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: macos
           path: artifacts/
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.buildcache
           key: ${{ runner.os }}-win-${{ github.sha }}
@@ -110,11 +110,11 @@ jobs:
   android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
@@ -135,7 +135,7 @@ jobs:
       - name: Copy artifacts
         run: ./.ci/android/upload.sh
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: android
           path: artifacts/
@@ -144,7 +144,7 @@ jobs:
     container: citraemu/build-environments:linux-transifex
     if: ${{ github.repository == 'citra-emu/citra' && !github.head_ref }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Update Translation
@@ -156,7 +156,7 @@ jobs:
     needs: [build, macos]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
       - name: Query tag name
         uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
