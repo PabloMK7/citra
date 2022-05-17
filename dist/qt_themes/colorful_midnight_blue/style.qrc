@@ -5,7 +5,6 @@
         <file alias="16x16/connected_notification.png">../colorful/icons/16x16/connected_notification.png</file>
         <file alias="16x16/disconnected.png">../colorful/icons/16x16/disconnected.png</file>
         <file alias="16x16/lock.png">icons/16x16/lock.png</file>
-        <file alias="16x16/view-refresh.png">icons/16x16/view-refresh.png</file>
         <file alias="48x48/bad_folder.png">../colorful/icons/48x48/bad_folder.png</file>
         <file alias="48x48/chip.png">../colorful/icons/48x48/chip.png</file>
         <file alias="48x48/folder.png">../colorful/icons/48x48/folder.png</file>
