@@ -390,7 +390,7 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
                             return;
                         QPixmap pixmap;
                         if (!pixmap.loadFromData(reinterpret_cast<const u8*>(result.data()),
-                                                 result.size()))
+                                                 static_cast<u32>(result.size())))
                             return;
                         icon_cache[avatar_url] =
                             pixmap.scaled(48, 48, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);

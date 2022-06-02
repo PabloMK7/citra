@@ -354,7 +354,7 @@ void FFmpegAudioStream::ProcessFrame(const VariableAudioFrame& channel0,
     }
 
     auto resampled_count = swr_convert(swr_context.get(), dst_data.data(), frame_size - offset,
-                                       src_data.data(), channel0.size());
+                                       src_data.data(), static_cast<int>(channel0.size()));
     if (resampled_count < 0) {
         LOG_ERROR(Render, "Audio frame dropped: Could not resample data");
         return;

@@ -24,7 +24,6 @@ public:
 
     [[nodiscard]] static std::chrono::seconds GetTimeSinceJan1970();
     [[nodiscard]] static std::chrono::seconds GetLocalTimeSinceJan1970();
-    [[nodiscard]] static double GetDoubleTime();
 
     [[nodiscard]] static std::string GetTimeFormatted();
     [[nodiscard]] std::string GetTimeElapsedFormatted() const;

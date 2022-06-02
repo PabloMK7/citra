@@ -335,7 +335,8 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
         }
         // There is no SDLJoystick without a mapped SDL_Joystick
         // Create a new SDLJoystick
-        auto joystick = std::make_shared<SDLJoystick>(guid, map_it->second.size(), sdl_joystick);
+        auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(map_it->second.size()),
+                                                      sdl_joystick);
         return map_it->second.emplace_back(std::move(joystick));
     }
     auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick);
@@ -483,7 +484,8 @@ void SDLState::InitJoystick(int joystick_index) {
         (*it)->SetSDLJoystick(sdl_joystick);
         return;
     }
-    auto joystick = std::make_shared<SDLJoystick>(guid, joystick_guid_list.size(), sdl_joystick);
+    auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(joystick_guid_list.size()),
+                                                  sdl_joystick);
     joystick_guid_list.emplace_back(std::move(joystick));
 }
 
@@ -519,8 +521,8 @@ void SDLState::InitGameController(int controller_index) {
         (*it)->SetSDLGameController(sdl_controller);
         return;
     }
-    auto controller =
-        std::make_shared<SDLGameController>(guid, controller_guid_list.size(), sdl_controller);
+    auto controller = std::make_shared<SDLGameController>(
+        guid, static_cast<int>(controller_guid_list.size()), sdl_controller);
     controller_guid_list.emplace_back(std::move(controller));
 }
 

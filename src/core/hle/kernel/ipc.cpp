@@ -209,7 +209,8 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
             target_address =
                 dst_process->vm_manager
                     .MapBackingMemoryToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
-                                            buffer, buffer->GetSize(), Kernel::MemoryState::Shared)
+                                            buffer, static_cast<u32>(buffer->GetSize()),
+                                            Kernel::MemoryState::Shared)
                     .Unwrap();
 
             cmd_buf[i++] = target_address + page_offset;
@@ -217,7 +218,7 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
             // Reserve a page of memory after the mapped buffer
             dst_process->vm_manager.MapBackingMemoryToBase(
                 Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer,
-                reserve_buffer->GetSize(), Kernel::MemoryState::Reserved);
+                static_cast<u32>(reserve_buffer->GetSize()), Kernel::MemoryState::Reserved);
 
             mapped_buffer_context.push_back({permissions, size, source_address,
                                              target_address + page_offset, std::move(buffer),

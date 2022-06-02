@@ -137,24 +137,4 @@ std::string Timer::GetTimeFormatted() {
     return fmt::format("{}:{:03}", tmp, milliseconds);
 }
 
-// Returns a timestamp with decimals for precise time comparisons
-// ----------------
-double Timer::GetDoubleTime() {
-    // Get continuous timestamp
-    u64 TmpSeconds = static_cast<u64>(Common::Timer::GetTimeSinceJan1970().count());
-    double ms = static_cast<u64>(GetTimeMs().count()) % 1000;
-
-    // Remove a few years. We only really want enough seconds to make
-    // sure that we are detecting actual actions, perhaps 60 seconds is
-    // enough really, but I leave a year of seconds anyway, in case the
-    // user's clock is incorrect or something like that.
-    TmpSeconds = TmpSeconds - (38 * 365 * 24 * 60 * 60);
-
-    // Make a smaller integer that fits in the double
-    u32 Seconds = static_cast<u32>(TmpSeconds);
-    double TmpTime = Seconds + ms;
-
-    return TmpTime;
-}
-
 } // Namespace Common

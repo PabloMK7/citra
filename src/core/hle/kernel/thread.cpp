@@ -389,15 +389,16 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
         auto& vm_manager = owner_process->vm_manager;
 
         // Map the page to the current process' address space.
-        vm_manager.MapBackingMemory(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,
-                                    memory.GetFCRAMRef(*offset), Memory::PAGE_SIZE,
-                                    MemoryState::Locked);
+        vm_manager.MapBackingMemory(
+            Memory::TLS_AREA_VADDR + static_cast<VAddr>(available_page) * Memory::PAGE_SIZE,
+            memory.GetFCRAMRef(*offset), Memory::PAGE_SIZE, MemoryState::Locked);
     }
 
     // Mark the slot as used
     tls_slots[available_page].set(available_slot);
-    thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE +
-                          available_slot * Memory::TLS_ENTRY_SIZE;
+    thread->tls_address = Memory::TLS_AREA_VADDR +
+                          static_cast<VAddr>(available_page) * Memory::PAGE_SIZE +
+                          static_cast<VAddr>(available_slot) * Memory::TLS_ENTRY_SIZE;
 
     memory.ZeroBlock(*owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);
 

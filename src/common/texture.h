@@ -8,5 +8,5 @@
 #include "common/common_types.h"
 
 namespace Common {
-void FlipRGBA8Texture(std::vector<u8>& tex, u64 width, u64 height);
+void FlipRGBA8Texture(std::vector<u8>& tex, u32 width, u32 height);
 }
