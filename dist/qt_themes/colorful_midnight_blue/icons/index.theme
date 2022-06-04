@@ -1,0 +1,8 @@
+[Icon Theme]
+Name=colorful_midnight_blue
+Comment=Colorful theme (Midnight Blue style)
+Inherits=default
+Directories=16x16
+
+[16x16]
+Size=16

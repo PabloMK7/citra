@@ -1,0 +1,61 @@
+<RCC>
+    <qresource prefix="icons/colorful_midnight_blue">
+        <file alias="index.theme">icons/index.theme</file>
+        <file alias="16x16/connected.png">../colorful/icons/16x16/connected.png</file>
+        <file alias="16x16/connected_notification.png">../colorful/icons/16x16/connected_notification.png</file>
+        <file alias="16x16/disconnected.png">../colorful/icons/16x16/disconnected.png</file>
+        <file alias="16x16/lock.png">icons/16x16/lock.png</file>
+        <file alias="48x48/bad_folder.png">../colorful/icons/48x48/bad_folder.png</file>
+        <file alias="48x48/chip.png">../colorful/icons/48x48/chip.png</file>
+        <file alias="48x48/folder.png">../colorful/icons/48x48/folder.png</file>
+        <file alias="48x48/no_avatar.png">../qdarkstyle/icons/48x48/no_avatar.png</file>
+        <file alias="48x48/plus.png">../colorful/icons/48x48/plus.png</file>
+        <file alias="48x48/sd_card.png">../colorful/icons/48x48/sd_card.png</file>
+        <file alias="256x256/plus_folder.png">../colorful/icons/256x256/plus_folder.png</file>
+    </qresource>
+
+    <qresource prefix="qss_icons">
+        <file alias="rc/up_arrow_disabled.png">../qdarkstyle_midnight_blue/rc/up_arrow_disabled.png</file>
+        <file alias="rc/Hmovetoolbar.png">../qdarkstyle_midnight_blue/rc/Hmovetoolbar.png</file>
+        <file alias="rc/stylesheet-branch-end.png">../qdarkstyle_midnight_blue/rc/stylesheet-branch-end.png</file>
+        <file alias="rc/branch_closed-on.png">../qdarkstyle_midnight_blue/rc/branch_closed-on.png</file>
+        <file alias="rc/stylesheet-vline.png">../qdarkstyle_midnight_blue/rc/stylesheet-vline.png</file>
+        <file alias="rc/branch_closed.png">../qdarkstyle_midnight_blue/rc/branch_closed.png</file>
+        <file alias="rc/branch_open-on.png">../qdarkstyle_midnight_blue/rc/branch_open-on.png</file>
+        <file alias="rc/transparent.png">../qdarkstyle_midnight_blue/rc/transparent.png</file>
+        <file alias="rc/right_arrow_disabled.png">../qdarkstyle_midnight_blue/rc/right_arrow_disabled.png</file>
+        <file alias="rc/sizegrip.png">../qdarkstyle_midnight_blue/rc/sizegrip.png</file>
+        <file alias="rc/close.png">../qdarkstyle_midnight_blue/rc/close.png</file>
+        <file alias="rc/close-hover.png">../qdarkstyle_midnight_blue/rc/close-hover.png</file>
+        <file alias="rc/close-pressed.png">../qdarkstyle_midnight_blue/rc/close-pressed.png</file>
+        <file alias="rc/down_arrow.png">../qdarkstyle_midnight_blue/rc/down_arrow.png</file>
+        <file alias="rc/Vmovetoolbar.png">../qdarkstyle_midnight_blue/rc/Vmovetoolbar.png</file>
+        <file alias="rc/left_arrow.png">../qdarkstyle_midnight_blue/rc/left_arrow.png</file>
+        <file alias="rc/stylesheet-branch-more.png">../qdarkstyle_midnight_blue/rc/stylesheet-branch-more.png</file>
+        <file alias="rc/up_arrow.png">../qdarkstyle_midnight_blue/rc/up_arrow.png</file>
+        <file alias="rc/right_arrow.png">../qdarkstyle_midnight_blue/rc/right_arrow.png</file>
+        <file alias="rc/left_arrow_disabled.png">../qdarkstyle_midnight_blue/rc/left_arrow_disabled.png</file>
+        <file alias="rc/Hsepartoolbar.png">../qdarkstyle_midnight_blue/rc/Hsepartoolbar.png</file>
+        <file alias="rc/branch_open.png">../qdarkstyle_midnight_blue/rc/branch_open.png</file>
+        <file alias="rc/Vsepartoolbar.png">../qdarkstyle_midnight_blue/rc/Vsepartoolbar.png</file>
+        <file alias="rc/down_arrow_disabled.png">../qdarkstyle_midnight_blue/rc/down_arrow_disabled.png</file>
+        <file alias="rc/undock.png">../qdarkstyle_midnight_blue/rc/undock.png</file>
+        <file alias="rc/checkbox_checked_disabled.png">../qdarkstyle_midnight_blue/rc/checkbox_checked_disabled.png</file>
+        <file alias="rc/checkbox_checked_focus.png">../qdarkstyle_midnight_blue/rc/checkbox_checked_focus.png</file>
+        <file alias="rc/checkbox_checked.png">../qdarkstyle_midnight_blue/rc/checkbox_checked.png</file>
+        <file alias="rc/checkbox_indeterminate.png">../qdarkstyle_midnight_blue/rc/checkbox_indeterminate.png</file>
+        <file alias="rc/checkbox_indeterminate_focus.png">../qdarkstyle_midnight_blue/rc/checkbox_indeterminate_focus.png</file>
+        <file alias="rc/checkbox_unchecked_disabled.png">../qdarkstyle_midnight_blue/rc/checkbox_unchecked_disabled.png</file>
+        <file alias="rc/checkbox_unchecked_focus.png">../qdarkstyle_midnight_blue/rc/checkbox_unchecked_focus.png</file>
+        <file alias="rc/checkbox_unchecked.png">../qdarkstyle_midnight_blue/rc/checkbox_unchecked.png</file>
+        <file alias="rc/radio_checked_disabled.png">../qdarkstyle_midnight_blue/rc/radio_checked_disabled.png</file>
+        <file alias="rc/radio_checked_focus.png">../qdarkstyle_midnight_blue/rc/radio_checked_focus.png</file>
+        <file alias="rc/radio_checked.png">../qdarkstyle_midnight_blue/rc/radio_checked.png</file>
+        <file alias="rc/radio_unchecked_disabled.png">../qdarkstyle_midnight_blue/rc/radio_unchecked_disabled.png</file>
+        <file alias="rc/radio_unchecked_focus.png">../qdarkstyle_midnight_blue/rc/radio_unchecked_focus.png</file>
+        <file alias="rc/radio_unchecked.png">../qdarkstyle_midnight_blue/rc/radio_unchecked.png</file>
+    </qresource>
+    <qresource prefix="colorful_midnight_blue">
+        <file alias="style.qss">../qdarkstyle_midnight_blue/style.qss</file>
+    </qresource>
+</RCC>
