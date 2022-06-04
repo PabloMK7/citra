@@ -260,52 +260,52 @@ Bu onun hem forum kullanıcı adını hemde IP adresini yasaklar.</translation>
         <translation>Oyun No:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="50"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="56"/>
         <source>Add Cheat</source>
         <translation>Hile ekle</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="71"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="69"/>
         <source>Available Cheats:</source>
         <translation>Kullanılabilen Hileler:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="105"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="103"/>
         <source>Name</source>
         <translation>İsim</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="110"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="108"/>
         <source>Type</source>
         <translation>Tür</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="131"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="138"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="141"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="148"/>
         <source>Delete</source>
         <translation>Sil</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="157"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="161"/>
         <source>Name:</source>
         <translation>İsim:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="169"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="173"/>
         <source>Notes:</source>
         <translation>Notlar:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="179"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="183"/>
         <source>Code:</source>
         <translation>Kod:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="204"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="214"/>
         <source>Close</source>
         <translation>Kapat</translation>
     </message>
@@ -716,7 +716,7 @@ Hatayı yoksay ve devam et?</translation>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="193"/>
+        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="190"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="215"/>
         <source>Select the system camera to use</source>
         <translation>Kullanılacak sistem kamerasını seçin</translation>
@@ -732,7 +732,7 @@ Hatayı yoksay ve devam et?</translation>
         <translation>&lt;Default&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="234"/>
+        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="231"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="259"/>
         <source>Select the image flip to apply</source>
         <translation>Uygulanacak görüntü çevirmeyi seçin</translation>
@@ -1706,7 +1706,7 @@ Hatayı yoksay ve devam et?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="72"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="137"/>
-        <source>NOTE: this does not move the contents of the previous directory to the new one</source>
+        <source>NOTE: This does not move the contents of the previous directory to the new one.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1726,7 +1726,7 @@ Hatayı yoksay ve devam et?</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="40"/>
+        <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="41"/>
         <source>Select SDMC Directory</source>
         <translation type="unfinished"/>
     </message>
@@ -2897,52 +2897,52 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <translation>Token:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="74"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="73"/>
         <source>Username: </source>
         <translation>Kullanıcı Adı:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="91"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="90"/>
         <source>What is my token?</source>
         <translation>Tokenim nedir?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="116"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="115"/>
         <source>Web Service configuration can only be changed when a public room isn&apos;t being hosted.</source>
         <translation>Web servisi yapılandırması yalnızca Herkese Açık Oda sunulmadığı sürece değiştirilebilir.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="126"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="125"/>
         <source>Telemetry</source>
         <translation>Telemetri</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="132"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="131"/>
         <source>Share anonymous usage data with the Citra team</source>
         <translation>Citra ekibiyle anonim kullanım verilerini paylaş</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="139"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="138"/>
         <source>Learn more</source>
         <translation>Daha fazla bilgi edinin</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="148"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="147"/>
         <source>Telemetry ID:</source>
         <translation>Telemetri ID:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="164"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="163"/>
         <source>Regenerate</source>
         <translation>Yeniden Oluştur</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="178"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="177"/>
         <source>Discord Presence</source>
         <translation>Discord Görünümü</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="184"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="183"/>
         <source>Show Current Game in your Discord Status</source>
         <translation>Şu Anki Oyunu Discord Durumunda Göster</translation>
     </message>
@@ -5403,7 +5403,7 @@ Zaten odayı terk etmiş olabilir.</translation>
 <context>
     <name>RecordDialog</name>
     <message>
-        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="6"/>
+        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="14"/>
         <source>View Record</source>
         <translation>Kayıt İncele</translation>
     </message>
@@ -5486,7 +5486,7 @@ Zaten odayı terk etmiş olabilir.</translation>
         <translation>Yanıt Çevrilmiş</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="237"/>
+        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="243"/>
         <source>OK</source>
         <translation>Tamam</translation>
     </message>

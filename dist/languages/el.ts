@@ -22,7 +22,7 @@
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="14"/>
         <source>About Citra</source>
-        <translation>Σχετικά με τον προσομοιωτή </translation>
+        <translation>Σχετικά με το Citra</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="30"/>
@@ -64,7 +64,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="134"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; is a trademark of Nintendo. Citra is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;Το &amp;quot;3DS&amp;quot; είναι εμπορικό σήμα της Nintendo. Ο προσομοιωτής Citra δεν είναι σχετίζεται με τη Nintendo με κανένα τρόπο.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;Το «3DS» είναι εμπορικό σήμα της Nintendo. Το Citra δεν σχετίζεται με τη Nintendo με κανένα τρόπο.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -82,17 +82,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="123"/>
         <source>Incoming primitive batch</source>
-        <translation type="unfinished"/>
+        <translation>Εισερχόμενο πρώιμο σύνολο δεδομένων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="125"/>
         <source>Finished primitive batch</source>
-        <translation type="unfinished"/>
+        <translation>Ολοκληρώθηκε το πρώιμο σύνολο δεδομένων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="127"/>
         <source>Vertex shader invocation</source>
-        <translation type="unfinished"/>
+        <translation>Επίκληση Vertex shader</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="129"/>
@@ -112,7 +112,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="137"/>
         <source>Unknown debug context event</source>
-        <translation type="unfinished"/>
+        <translation>Άγνωστο συμβάν περιβάλλοντος ελέγχου σφαλμάτων</translation>
     </message>
 </context>
 <context>
@@ -260,52 +260,52 @@ This would ban both their forum username and their IP address.</source>
         <translation>ID τίτλου:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="50"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="56"/>
         <source>Add Cheat</source>
         <translation>Προσθήκη cheat</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="71"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="69"/>
         <source>Available Cheats:</source>
         <translation>Διαθέσιμα cheats:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="105"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="103"/>
         <source>Name</source>
         <translation>Όνομα</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="110"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="108"/>
         <source>Type</source>
         <translation>Τύπος</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="131"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="138"/>
         <source>Save</source>
         <translation>Αποθήκευση</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="141"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="148"/>
         <source>Delete</source>
         <translation>Διαγραφή</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="157"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="161"/>
         <source>Name:</source>
         <translation>Όνομα:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="169"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="173"/>
         <source>Notes:</source>
         <translation>Σημειώσεις:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="179"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="183"/>
         <source>Code:</source>
         <translation>Κωδικός:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/cheats.ui" line="204"/>
+        <location filename="../../src/citra_qt/cheats.ui" line="214"/>
         <source>Close</source>
         <translation>Κλείσιμο</translation>
     </message>
@@ -407,7 +407,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="36"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Should you choose to submit a test case to the &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Citra Compatibility List&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, The following information will be collected and displayed on the site:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Hardware Information (CPU / GPU / Operating System)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Which version of Citra you are running&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The connected Citra account&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Αν επιλέξετε να υποβάλετε μια δοκιμαστική περίπτωση στη &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;λίστα συμβατότητας του Citra&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, θα συλλεχθούν οι εξής πληροφορίες και θα προβληθούν στον ιστότοπο:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Πληροφορίες υλικού (CPU/GPU/Λειτουργικό σύστημα)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Η έκδοση του Citra που χρησιμοποιείτε&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Ο συνδεδεμένος λογαριασμός Citra&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="72"/>
@@ -427,7 +427,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="96"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions with minor graphical or audio glitches and is playable from start to finish. May require some workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Το παιχνίδι εμφανίζει μικρά προβλήματα γραφικών ή ήχου και είναι λειτουργικό από την αρχή έως το τέλος. Ενδέχεται να χρειαστούν μερικές προσωρινές λύσεις.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="106"/>
@@ -437,7 +437,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="113"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions with major graphical or audio glitches, but game is playable from start to finish with workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Το παιχνίδι εμφανίζει μεγάλα προβλήματα γραφικών ή ήχου, αλλά είναι λειτουργικό από την αρχή έως το τέλος με προσωρινές λύσεις.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="123"/>
@@ -447,7 +447,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="130"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches even with workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Το παιχνίδι λειτουργεί, αλλά με μεγάλα προβλήματα γραφικών ή ήχου. Δεν είναι δυνατή η συνέχεια σε συγκεκριμένες περιοχές λόγω των προβλημάτων, ακόμα και με προσωρινές λύσεις.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="140"/>
@@ -457,7 +457,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="147"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start Screen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Το παιχνίδι δεν λειτουργεί καθόλου λόγω των μεγάλων προβλημάτων γραφικών ή ήχου. Δεν είναι δυνατή η συνέχεια πέρα από την οθόνη εκκίνησης.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="157"/>
@@ -492,7 +492,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="73"/>
         <source>An error occurred while sending the Testcase</source>
-        <translation type="unfinished"/>
+        <translation>Προέκυψε σφάλμα κατά την αποστολή της δοκιμαστικής περίπτωσης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.cpp" line="75"/>
@@ -520,7 +520,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="54"/>
         <source>This post-processing effect adjusts audio speed to match emulation speed and helps prevent audio stutter. This however increases audio latency.</source>
-        <translation type="unfinished"/>
+        <translation>Αυτό το μετεπεξεργαστικό εφέ προσαρμόζει την ταχύτητα του ήχου για να ταιριάξει με την ταχύτητα εξομοίωσης και βοηθά στην αποτροπή το «κόμπιασμα» του ήχου. Αυτό ωστόσο αυξάνει την καθυστέρηση του ήχου.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="57"/>
@@ -555,7 +555,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="159"/>
         <source>None</source>
-        <translation type="unfinished"/>
+        <translation>Καμία</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="164"/>
@@ -657,7 +657,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="90"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="100"/>
         <source>Select the position of camera to configure</source>
-        <translation type="unfinished"/>
+        <translation>Επιλέξτε τη θέση της κάμερας προς ρύθμιση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="93"/>
@@ -683,12 +683,12 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="130"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="140"/>
         <source>Select where the image of the emulated camera comes from. It may be an image or a real camera.</source>
-        <translation type="unfinished"/>
+        <translation>Επιλέξτε την προέλευση της εικόνας της εξομοιωμένης κάμερας. Μπορεί να είναι μια εικόνα ή μια πραγματική κάμερα.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="133"/>
         <source>Camera Image Source:</source>
-        <translation type="unfinished"/>
+        <translation>Πηγή εικόνας κάμερας:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="144"/>
@@ -698,7 +698,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="149"/>
         <source>Still Image (image)</source>
-        <translation type="unfinished"/>
+        <translation>Στατική εικόνα (εικόνα)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="154"/>
@@ -716,10 +716,10 @@ Would you like to ignore the error and continue?</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="193"/>
+        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="190"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="215"/>
         <source>Select the system camera to use</source>
-        <translation type="unfinished"/>
+        <translation>Επιλέξτε την κάμερα συστήματος προς χρήση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="196"/>
@@ -732,10 +732,10 @@ Would you like to ignore the error and continue?</source>
         <translation>&lt;Default&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="234"/>
+        <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="231"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="259"/>
         <source>Select the image flip to apply</source>
-        <translation type="unfinished"/>
+        <translation>Επιλέξτε την αναστροφή εικόνας προς εφαρμογή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="237"/>
@@ -745,7 +745,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="263"/>
         <source>None</source>
-        <translation>Τίποτα</translation>
+        <translation>Καμία</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="268"/>
@@ -765,12 +765,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="288"/>
         <source>Select an image file every time before the camera is loaded</source>
-        <translation type="unfinished"/>
+        <translation>Επιλέξτε ένα αρχείο εικόνας κάθε φορά προτού φορτωθεί η κάμερα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="291"/>
         <source>Prompt before load</source>
-        <translation type="unfinished"/>
+        <translation>Ειδοποίηση πριν από τη φόρτωση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="301"/>
@@ -818,7 +818,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="30"/>
         <source>Enable GDB Stub</source>
-        <translation type="unfinished"/>
+        <translation>Ενεργοποίηση GDB Stub</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="50"/>
@@ -833,17 +833,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="79"/>
         <source>Global Log Filter</source>
-        <translation type="unfinished"/>
+        <translation>Καθολικό φίλτρο αρχείου καταγραφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="93"/>
         <source>Show Log Console (Windows Only)</source>
-        <translation type="unfinished"/>
+        <translation>Εμφάνιση κονσόλας καταγραφής (μόνο για Windows)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="100"/>
         <source>Open Log Location</source>
-        <translation type="unfinished"/>
+        <translation>Άνοιγμα τοποθεσίας αρχείου καταγραφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="112"/>
@@ -887,7 +887,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="43"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="134"/>
         <source>Hotkeys</source>
-        <translation>Πλήκτρα ελέγχου</translation>
+        <translation>Συντομεύσεις</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="48"/>
@@ -918,7 +918,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="68"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="139"/>
         <source>Debug</source>
-        <translation type="unfinished"/>
+        <translation>Έλεγχος σφαλμάτων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="73"/>
@@ -964,12 +964,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="28"/>
         <source>Confirm exit while emulation is running</source>
-        <translation type="unfinished"/>
+        <translation>Επιβεβαίωση εξόδου όταν γίνεται εξομοίωση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="35"/>
         <source>Pause emulation when in background</source>
-        <translation>Να σταματάει η προσομοίωση όταν η εφαρμογή είναι στο παρασκήνιο </translation>
+        <translation>Παύση εξομοίωσης όταν η εφαρμογή είναι στο παρασκήνιο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="42"/>
@@ -989,7 +989,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="65"/>
         <source>Silently auto update after closing</source>
-        <translation type="unfinished"/>
+        <translation>Σιωπηλή αυτόματη ενημέρωση μετά το κλείσιμο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="75"/>
@@ -1009,7 +1009,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="132"/>
         <source>Use Alternate Speed:</source>
-        <translation type="unfinished"/>
+        <translation>Χρήση εναλλακτικής ταχύτητας:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="174"/>
@@ -1019,7 +1019,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="219"/>
         <source>Reset All Settings</source>
-        <translation type="unfinished"/>
+        <translation>Επαναφορά όλων των ρυθμίσεων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="30"/>
@@ -1032,7 +1032,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="97"/>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="102"/>
         <source>unthrottled</source>
-        <translation type="unfinished"/>
+        <translation>χωρίς επιτάχυνση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="108"/>
@@ -1042,7 +1042,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="109"/>
         <source>Are you sure you want to &lt;b&gt;reset your settings&lt;/b&gt; and close Citra?</source>
-        <translation type="unfinished"/>
+        <translation>Θέλετε σίγουρα να &lt;b&gt;επαναφέρετε τις ρυθμίσεις σας&lt;/b&gt; και να κλείσετε το Citra;</translation>
     </message>
 </context>
 <context>
@@ -1055,22 +1055,22 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="26"/>
         <source>Renderer</source>
-        <translation type="unfinished"/>
+        <translation>Απεικόνιση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="32"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use OpenGL to accelerate rendering.&lt;/p&gt;&lt;p&gt;Disable to debug graphics-related problem.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Χρησιμοποιήστε το OpenGL για να επιταχύνετε την απεικόνιση.&lt;/p&gt;&lt;p&gt;Απενεργοποιήστε το για να κάνετε έλεγχο σφαλμάτων στα γραφικά.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="35"/>
         <source>Enable Hardware Renderer</source>
-        <translation type="unfinished"/>
+        <translation>Ενεργοποίηση μηχανισμού απεικόνισης υλικού</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="57"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use OpenGL to accelerate shader emulation.&lt;/p&gt;&lt;p&gt;Requires a relatively powerful GPU for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Χρησιμοποιήστε το OpenGL για να επιταχύνετε την εξομοίωση shader.&lt;/p&gt;&lt;p&gt;Απαιτεί μια σχετικά ισχυρή GPU για καλύτερες επιδόσεις.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="60"/>
@@ -1080,12 +1080,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="82"/>
         <source>Separable Shader (Intel GPUs only)</source>
-        <translation type="unfinished"/>
+        <translation>Διαχωρίσιμο shader (μόνο για Intel GPU)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="89"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some games requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most games.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Σωστή διαχείριση όλων των ακραίων περιπτώσεων στη λειτουργία πολλαπλασιασμού των shaders. &lt;/p&gt;&lt;p&gt;Ορισμένα παιχνίδια απαιτούν αυτήν τη ρύθμιση για τη σωστή απεικόνιση του shader υλικού.&lt;/p&gt;&lt;p&gt;Ωστόσο, αυτό θα μειώσει τις επιδόσεις των περισσότερων παιχνιδιών.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="92"/>
@@ -1095,7 +1095,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="105"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the JIT engine instead of the interpreter for software shader emulation. &lt;/p&gt;&lt;p&gt;Enable this for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Χρήση της μηχανής JIT αντί του διερμηνέα για την εξομοίωση shader λογισμικού. &lt;/p&gt;&lt;p&gt;Ενεργοποιήστε αυτήν τη ρύθμιση για καλύτερες επιδόσεις.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="108"/>
@@ -1110,12 +1110,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="124"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Μείωση «κομπιάσματος» αποθηκεύοντας και φορτώνοντας shaders στον δίσκο.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="127"/>
         <source>Use Disk Shader Cache</source>
-        <translation type="unfinished"/>
+        <translation>Χρήση προσωρινής μνήμης shader δίσκου</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="134"/>
@@ -1135,7 +1135,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.cpp" line="49"/>
         <source>Separable Shader support is broken on macOS with Intel GPUs, and will cause graphical issues like showing a black screen.&lt;br&gt;&lt;br&gt;The option is only there for test/development purposes. If you experience graphical issues with Hardware Shader, please turn it off.</source>
-        <translation type="unfinished"/>
+        <translation>Η υποστήριξη διαχωρίσιμου shader δεν λειτουργεί στο macOS με Intel GPU και θα προκαλέσει γραφικά ζητήματα, όπως η εμφάνιση μαύρης οθόνης.&lt;br&gt;&lt;br&gt;Η επιλογή διατίθεται μόνο για δοκιμές/ανάπτυξη. Αν αντιμετωπίσετε γραφικά προβλήματα με το shader υλικού, παρακαλώ απενεργοποιήστε τη.</translation>
     </message>
 </context>
 <context>
@@ -1148,7 +1148,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="22"/>
         <source>Double-click on a binding to change it.</source>
-        <translation type="unfinished"/>
+        <translation>Κάντε διπλό κλικ σε μια καταχώρηση για να την αλλάξετε.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="20"/>
@@ -1158,22 +1158,22 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="20"/>
         <source>Hotkey</source>
-        <translation>Πλήκτρα ελέγχου</translation>
+        <translation>Συντόμευση πληκτρολογίου</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="20"/>
         <source>Context</source>
-        <translation type="unfinished"/>
+        <translation>Περιβάλλον</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="90"/>
         <source>Conflicting Key Sequence</source>
-        <translation type="unfinished"/>
+        <translation>Διένεξη ακολουθίας πλήκτρων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="91"/>
         <source>The entered key sequence is already assigned to another hotkey.</source>
-        <translation type="unfinished"/>
+        <translation>Η επιλεγμένη ακολουθία πλήκτρων έχει ήδη συσχετιστεί με κάποια άλλη συντόμευση.</translation>
     </message>
 </context>
 <context>
@@ -1181,7 +1181,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="14"/>
         <source>ConfigureInput</source>
-        <translation type="unfinished"/>
+        <translation>Ρύθμιση εισόδου</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="22"/>
@@ -1206,7 +1206,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="70"/>
         <source>Face Buttons</source>
-        <translation type="unfinished"/>
+        <translation>Κύρια κουμπιά</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="84"/>
@@ -1231,7 +1231,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="157"/>
         <source>Directional Pad</source>
-        <translation type="unfinished"/>
+        <translation>Πλήκτρα κατεύθυνσης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="171"/>
@@ -1284,7 +1284,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="312"/>
         <source>Circle Mod:</source>
-        <translation type="unfinished"/>
+        <translation>Τροποποίηση κύκλου:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="330"/>
@@ -1294,35 +1294,35 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="348"/>
         <source>Debug:</source>
-        <translation type="unfinished"/>
+        <translation>Έλεγχος σφαλμάτων:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="367"/>
         <source>Circle Pad</source>
-        <translation type="unfinished"/>
+        <translation>Μοχλός κατεύθυνσης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="433"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="555"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="443"/>
         <source>Set Analog Stick</source>
-        <translation type="unfinished"/>
+        <translation>Ορισμός αναλογικού μοχλού</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="465"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="587"/>
         <source>Deadzone: 0</source>
-        <translation type="unfinished"/>
+        <translation>Νεκρή ζώνη: 0</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="489"/>
         <source>C-Stick</source>
-        <translation type="unfinished"/>
+        <translation>C-Stick</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="611"/>
         <source>Shoulder Buttons</source>
-        <translation type="unfinished"/>
+        <translation>Κουμπιά ωμικής ζώνης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="625"/>
@@ -1347,17 +1347,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="725"/>
         <source>Motion / Touch...</source>
-        <translation type="unfinished"/>
+        <translation>Κίνηση/Αφή...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="753"/>
         <source>Auto Map</source>
-        <translation type="unfinished"/>
+        <translation>Αυτόματη αντιστοίχιση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="781"/>
         <source>Clear All</source>
-        <translation type="unfinished"/>
+        <translation>Απαλοιφή όλων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="809"/>
@@ -1374,7 +1374,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="204"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="241"/>
         <source>[not set]</source>
-        <translation type="unfinished"/>
+        <translation>[δεν έχει οριστεί]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="208"/>
@@ -1391,19 +1391,19 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="262"/>
         <source>After pressing OK, first move your joystick horizontally, and then vertically.</source>
-        <translation type="unfinished"/>
+        <translation>Αφού επιλέξετε «OK», μετακινήστε πρώτα το χειριστήριό σας οριζόντια και μετά, κάθετα.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="457"/>
         <source>Deadzone: %1%</source>
-        <translation type="unfinished"/>
+        <translation>Νεκρή ζώνη: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="284"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="464"/>
         <source>Modifier Scale: %1%</source>
-        <translation type="unfinished"/>
+        <translation>Κλίμακα τροποποίησης: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="492"/>
@@ -1413,17 +1413,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="493"/>
         <source>Auto mapping failed. Your controller may not have a corresponding mapping</source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία αυτόματης αντιστοίχισης. Τα κουμπιά του χειριστηρίου σας ενδέχεται να μην έχουν αντιστοιχηθεί σωστά</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="499"/>
         <source>After pressing OK, press any button on your joystick</source>
-        <translation type="unfinished"/>
+        <translation>Αφού επιλέξετε «OK», πατήστε οποιοδήποτε κουμπί στο χειριστήριό σας</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="521"/>
         <source>[press key]</source>
-        <translation type="unfinished"/>
+        <translation>[πατήστε το πλήκτρο]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="568"/>
@@ -1433,7 +1433,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="569"/>
         <source>You&apos;re using a key that&apos;s already bound.</source>
-        <translation type="unfinished"/>
+        <translation>Χρησιμοποιήστε ένα πλήκτρο που έχει ήδη ανατεθεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="590"/>
@@ -1443,7 +1443,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="590"/>
         <source>Enter the name for the new profile.</source>
-        <translation type="unfinished"/>
+        <translation>Εισαγάγετε το όνομα του νέου προφίλ,</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="610"/>
@@ -1468,12 +1468,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="642"/>
         <source>Duplicate profile name</source>
-        <translation type="unfinished"/>
+        <translation>Διπλότυπο όνομα προφίλ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="643"/>
         <source>Profile name already exists. Please choose a different name.</source>
-        <translation type="unfinished"/>
+        <translation>Το όνομα του προφίλ υπάρχει ήδη. Παρακαλώ επιλέξτε ένα άλλο όνομα.</translation>
     </message>
 </context>
 <context>
@@ -1481,7 +1481,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="6"/>
         <source>Configure Motion / Touch</source>
-        <translation type="unfinished"/>
+        <translation>Ρύθμιση κίνησης/αφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="20"/>
@@ -1491,7 +1491,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="28"/>
         <source>Motion Provider:</source>
-        <translation type="unfinished"/>
+        <translation>Πάροχος κίνησης:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="42"/>
@@ -1501,7 +1501,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="75"/>
         <source>Controller:</source>
-        <translation type="unfinished"/>
+        <translation>Χειριστήριο:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="82"/>
@@ -1515,12 +1515,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="94"/>
         <source>Touch</source>
-        <translation type="unfinished"/>
+        <translation>Αφή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="102"/>
         <source>Touch Provider:</source>
-        <translation type="unfinished"/>
+        <translation>Πάροχος αφής:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="116"/>
@@ -1535,17 +1535,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="156"/>
         <source>Use button mapping:</source>
-        <translation type="unfinished"/>
+        <translation>Χρήση αντιστοίχισης κουμπιών:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="184"/>
         <source>CemuhookUDP Config</source>
-        <translation type="unfinished"/>
+        <translation>Ρύθμιση CemuhookUDP</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="190"/>
         <source>You may use any Cemuhook compatible UDP input source to provide motion and touch input.</source>
-        <translation type="unfinished"/>
+        <translation>Μπορείτε να χρησιμοποιήσετε οποιαδήποτε πηγή εισόδου UDP, συμβατή με το Cemuhook, ώστε να υπάρχει είσοδος κίνησης και αφής.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="205"/>
@@ -1560,27 +1560,27 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="247"/>
         <source>Pad:</source>
-        <translation type="unfinished"/>
+        <translation>Χειριστήριο:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="255"/>
         <source>Pad 1</source>
-        <translation type="unfinished"/>
+        <translation>Χειριστήριο 1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="260"/>
         <source>Pad 2</source>
-        <translation type="unfinished"/>
+        <translation>Χειριστήριο 2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="265"/>
         <source>Pad 3</source>
-        <translation type="unfinished"/>
+        <translation>Χειριστήριο 3</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="270"/>
         <source>Pad 4</source>
-        <translation type="unfinished"/>
+        <translation>Χειριστήριο 4</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="282"/>
@@ -1627,12 +1627,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="207"/>
         <source>After pressing OK, press a button on the controller whose motion you want to track.</source>
-        <translation type="unfinished"/>
+        <translation>Αφού επιλέξετε «OK», πατήστε ένα κουμπί στο χειριστήριο για το οποίο θέλετε να παρακολουθήσετε την κίνηση.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="210"/>
         <source>[press button]</source>
-        <translation type="unfinished"/>
+        <translation>[πατήστε το κουμπί]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="257"/>
@@ -1642,7 +1642,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="274"/>
         <source>Configuring</source>
-        <translation type="unfinished"/>
+        <translation>Διαμόρφωση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="305"/>
@@ -1652,7 +1652,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="306"/>
         <source>Successfully received data from the server.</source>
-        <translation type="unfinished"/>
+        <translation>Επιτυχής λήψη δεδομένων από τον διακομιστή.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="308"/>
@@ -1662,7 +1662,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="309"/>
         <source>Could not receive valid data from the server.&lt;br&gt;Please verify that the server is set up correctly and the address and port are correct.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν ήταν δυνατή η λήψη έγκυρων δεδομένων από τον διακομιστή.&lt;br&gt;Παρακαλώ βεβαιωθείτε ότι ο διακομιστής έχει διαμορφωθεί σωστά και ότι η διεύθυνση και η θύρα είναι σωστές.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="336"/>
@@ -1672,7 +1672,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="337"/>
         <source>UDP Test or calibration configuration is in progress.&lt;br&gt;Please wait for them to finish.</source>
-        <translation type="unfinished"/>
+        <translation>Η δοκιμή UDP ή η διαμόρφωση βαθμονόμησης βρίσκεται σε εξέλιξη.&lt;br&gt;Παρακαλώ περιμένετε να ολοκληρωθούν.</translation>
     </message>
 </context>
 <context>
@@ -1706,7 +1706,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="72"/>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="137"/>
-        <source>NOTE: this does not move the contents of the previous directory to the new one</source>
+        <source>NOTE: This does not move the contents of the previous directory to the new one.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1726,7 +1726,7 @@ Would you like to ignore the error and continue?</source>
         <translation>Επιλογή καταλόγου NAND</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="40"/>
+        <location filename="../../src/citra_qt/configuration/configure_storage.cpp" line="41"/>
         <source>Select SDMC Directory</source>
         <translation>Επιλογή καταλόγου SDMC</translation>
     </message>
@@ -1746,7 +1746,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="28"/>
         <source>Note: this can be overridden when region setting is auto-select</source>
-        <translation type="unfinished"/>
+        <translation>Σημείωση: αυτό μπορεί να παρακαμφθεί όταν επιλέγεται αυτόματα η περιοχή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="32"/>
@@ -1826,7 +1826,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="126"/>
         <source>Surround</source>
-        <translation type="unfinished"/>
+        <translation>Πολυκάναλο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="137"/>
@@ -1916,7 +1916,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="242"/>
         <source>Fixed Time</source>
-        <translation type="unfinished"/>
+        <translation>Καθορισμένη ώρα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="250"/>
@@ -1931,12 +1931,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="271"/>
         <source>Play Coins:</source>
-        <translation type="unfinished"/>
+        <translation>Play Coins:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="287"/>
         <source>Regenerate</source>
-        <translation type="unfinished"/>
+        <translation>Επαναδημιουργία</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="294"/>
@@ -1966,17 +1966,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="331"/>
         <source>&lt;html&gt;&lt;body&gt;Changes the emulated CPU clock frequency.&lt;br&gt;Underclocking can increase performance but may cause the game to freeze.&lt;br&gt;Overclocking may reduce in game lag but also might cause freezes&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;body&gt;Αλλάζει την εξομοιωμένη συχνότητα ρολογιού CPU.&lt;br&gt;Ο υποχρονισμός (underclocking) μπορεί να αυξήσει τις επιδόσεις, αλλά ενδέχεται να προκαλέσει «παγώματα» παιχνιδιών.&lt;br&gt;Ο υπερχρονισμός (overclocking) ενδέχεται να μειώσει τις καθυστερήσεις των παιχνιδιών, αλλά ίσως προκαλέσει «παγώματα»&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="375"/>
         <source>System settings are available only when game is not running.</source>
-        <translation type="unfinished"/>
+        <translation>Οι ρυθμίσεις συστήματος διατίθενται μόνο όταν δεν εκτελείται παιχνίδι.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="385"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CPU Clock Speed Information&lt;br/&gt;Underclocking can increase performance but may cause the game to freeze.&lt;br/&gt;Overclocking may reduce in game lag but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Πληροφορίες ταχύτητας ρολογιού CPU&lt;br/&gt;Ο υποχρονισμός (underclocking) μπορεί να αυξήσει τις επιδόσεις, αλλά ενδέχεται να προκαλέσει «παγώματα» παιχνιδιών.&lt;br/&gt;Ο υπερχρονισμός (overclocking) ενδέχεται να μειώσει τις καθυστερήσεις των παιχνιδιών, αλλά ίσως προκαλέσει «παγώματα»&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="32"/>
@@ -2652,7 +2652,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="437"/>
         <source>This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects in games. This might fail, if you use an outdated config savegame. Continue?</source>
-        <translation type="unfinished"/>
+        <translation>Αυτό θα αντικαταστήσει το τρέχον εικονικό 3DS με ένα νέο. Δεν θα είναι δυνατή η ανάκτηση του τρέχοντος εικονικού 3DS σας. Αυτό μπορεί να επιφέρει απρόσμενα αποτελέσματα στα παιχνίδια. Υπάρχει ενδεχόμενο αποτυχίας εάν χρησιμοποιείτε παρωχημένη διαμόρφωση αρχείων αποθήκευσης παιχνιδιών. Συνέχεια;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="441"/>
@@ -2665,12 +2665,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="14"/>
         <source>Configure Touchscreen Mappings</source>
-        <translation type="unfinished"/>
+        <translation>Ρύθμιση αντιστοιχίσεων οθόνης αφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="22"/>
         <source>Mapping:</source>
-        <translation type="unfinished"/>
+        <translation>Αντιστοίχιση:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="48"/>
@@ -2691,12 +2691,13 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="92"/>
         <source>Click the bottom area to add a point, then press a button to bind.
 Drag points to change position, or double-click table cells to edit values.</source>
-        <translation type="unfinished"/>
+        <translation>Κάντε κλικ στην κάτω περιοχή για να προσθέσετε ένα σημείο και πατήστε ένα κουμπί για ανάθεση.
+Σύρετε σημεία για να αλλάξετε τη θέση ή κάντε διπλό κλικ στα κελιά πίνακα για να επεξεργαστείτε τις τιμές.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="116"/>
         <source>Delete Point</source>
-        <translation type="unfinished"/>
+        <translation>Διαγραφή σημείου</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="79"/>
@@ -2746,7 +2747,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="231"/>
         <source>[press key]</source>
-        <translation type="unfinished"/>
+        <translation>[πατήστε το πλήκτρο]</translation>
     </message>
 </context>
 <context>
@@ -2790,7 +2791,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="89"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="159"/>
         <source>None</source>
-        <translation type="unfinished"/>
+        <translation>Χωρίς</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="94"/>
@@ -2860,7 +2861,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.cpp" line="27"/>
         <source>English</source>
-        <translation type="unfinished"/>
+        <translation>Αγγλικά</translation>
     </message>
 </context>
 <context>
@@ -2873,12 +2874,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="22"/>
         <source>Citra Web Service</source>
-        <translation type="unfinished"/>
+        <translation>Citra Web Service</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="28"/>
         <source>By providing your username and token, you agree to allow Citra to collect additional usage data, which may include user identifying information.</source>
-        <translation type="unfinished"/>
+        <translation>Παρέχοντας το όνομα χρήστη και το αναγνωριστικό σας, επιτρέπετε στο Citra να συλλέξει περισσότερα δεδομένα χρήσης, που ενδέχεται να περιέχουν αναγνωριστικές πληροφορίες χρήστη.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="46"/>
@@ -2894,55 +2895,55 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="63"/>
         <source>Token: </source>
-        <translation type="unfinished"/>
+        <translation>Αναγνωριστικό: </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="74"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="73"/>
         <source>Username: </source>
         <translation>Όνομα χρήστη:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="91"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="90"/>
         <source>What is my token?</source>
-        <translation type="unfinished"/>
+        <translation>Ποιο είναι το αναγνωριστικό μου;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="116"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="115"/>
         <source>Web Service configuration can only be changed when a public room isn&apos;t being hosted.</source>
-        <translation type="unfinished"/>
+        <translation>Η ρύθμιση της διαδικτυακής υπηρεσίας μπορεί να αλλάξει μόνο όταν δεν είναι σε λειτουργία κάποιο δημόσιο δωμάτιο.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="126"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="125"/>
         <source>Telemetry</source>
         <translation>Τηλεμετρία</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="132"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="131"/>
         <source>Share anonymous usage data with the Citra team</source>
         <translation>Κοινοποίηση ανώνυμων δεδομένων χρήσης στην ομάδα του Citra</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="139"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="138"/>
         <source>Learn more</source>
         <translation>Μάθετε περισσότερα</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="148"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="147"/>
         <source>Telemetry ID:</source>
         <translation>ID τηλεμετρίας:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="164"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="163"/>
         <source>Regenerate</source>
         <translation>Επαναδημιουργία</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="178"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="177"/>
         <source>Discord Presence</source>
         <translation>Παρουσία Discord</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="184"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="183"/>
         <source>Show Current Game in your Discord Status</source>
         <translation>Εμφάνιση τρέχοντος παιχνιδιού στην κατάσταση Discord σας</translation>
     </message>
@@ -2959,13 +2960,13 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="70"/>
         <source>&lt;a href=&apos;https://citra-emu.org/wiki/citra-web-service/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;What is my token?&lt;/span&gt;&lt;/a&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;a href=&apos;https://citra-emu.org/wiki/citra-web-service/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Ποιο είναι το αναγνωριστικό μου;&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="76"/>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="150"/>
         <source>Unspecified</source>
-        <translation type="unfinished"/>
+        <translation>Δεν έχει καθοριστεί</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="87"/>
@@ -2976,12 +2977,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="102"/>
         <source>Token not verified</source>
-        <translation type="unfinished"/>
+        <translation>Μη επαληθευμένο αναγνωριστικό</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="103"/>
         <source>Token was not verified. The change to your token has not been saved.</source>
-        <translation type="unfinished"/>
+        <translation>Το αναγνωριστικό δεν επαληθεύτηκε. Η αλλαγή στο αναγνωριστικό σας δεν έχει αποθηκευτεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="129"/>
@@ -2996,7 +2997,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="152"/>
         <source>Verification failed. Check that you have entered your token correctly, and that your internet connection is working.</source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία επαλήθευσης. Βεβαιωθείτε ότι έχετε εισαγάγει σωστά το αναγνωστικό σας και ότι λειτουργεί η σύνδεσή σας στο διαδίκτυο.</translation>
     </message>
 </context>
 <context>
@@ -3019,7 +3020,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="63"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IPv4 address of the host&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Διεύθυνση IPv4 του υπολογιστή&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="73"/>
@@ -3029,7 +3030,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="80"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Port number the host is listening on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ο αριθμός θύρας με την οποία επικοινωνεί ο υπολογιστής&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="86"/>
@@ -3093,7 +3094,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/main.cpp" line="302"/>
         <location filename="../../src/citra_qt/main.cpp" line="2405"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
-        <translation type="unfinished"/>
+        <translation>Ο χρόνος που χρειάζεται για την εξομοίωση ενός καρέ 3DS, χωρίς να υπολογίζεται ο περιορισμός καρέ ή το v-sync. Για εξομοίωση σε πλήρη ταχύτητα, αυτό θα πρέπει να είναι το πολύ 16.67 ms.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="411"/>
@@ -3140,7 +3141,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/main.cpp" line="937"/>
         <location filename="../../src/citra_qt/main.cpp" line="968"/>
         <source>Your ROM format is not supported.&lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Η μορφή της ROM σας δεν υποστηρίζεται.&lt;br/&gt;Παρακαλώ ακολουθήστε τους οδηγούς για να κάνετε εκ νέου αποτύπωση των &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;κασετών&lt;/a&gt; ή των &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;εγκατεστημένων τίτλων&lt;/a&gt; σας.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="947"/>
@@ -3150,7 +3151,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="948"/>
         <source>Your ROM is corrupted. &lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Η ROM σας είναι κατεστραμμένη. &lt;br/&gt;Παρακαλώ ακολουθήστε τους οδηγούς για να κάνετε εκ νέου αποτύπωση των &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;κασετών&lt;/a&gt; ή των &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;εγκατεστημένων τίτλων&lt;/a&gt; σας.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="957"/>
@@ -3160,7 +3161,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="958"/>
         <source>Your ROM is encrypted. &lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Η ROM σας είναι κρυπτογραφημένη. &lt;br/&gt;Παρακαλώ ακολουθήστε τους οδηγούς για να κάνετε εκ νέου αποτύπωση των &lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;κασετών&lt;/a&gt; ή των &lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;εγκατεστημένων τίτλων&lt;/a&gt; σας.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="977"/>
@@ -3171,12 +3172,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="978"/>
         <source>An error has occurred. Please &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;see the log&lt;/a&gt; for more details. Ensure that you have the latest graphics drivers for your GPU.</source>
-        <translation type="unfinished"/>
+        <translation>Προέκυψε σφάλμα. Παρακαλώ &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;δείτε το αρχείο καταγραφής&lt;/a&gt; για περισσότερες λεπτομέρειες. Βεβαιωθείτε ότι διαθέτετε τα πιο πρόσφατα προγράμματα οδήγησης για την GPU σας.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="988"/>
         <source>You are running default Windows drivers for your GPU. You need to install the proper drivers for your graphics card from the manufacturer&apos;s website.</source>
-        <translation type="unfinished"/>
+        <translation>Χρησιμοποιείτε τα προεπιλεγμένα προγράμματα οδήγησης των Windows για την GPU σας. Πρέπει να εγκαταστήσετε τα σωστά προγράμματα οδήγησης για την κάρτα γραφικών σας από τον ιστότοπο του κατασκευαστή.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="999"/>
@@ -3186,17 +3187,17 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1000"/>
         <source>An unknown error occurred. Please see the log for more details.</source>
-        <translation type="unfinished"/>
+        <translation>Προέκυψε άγνωστο σφάλμα. Παρακαλώ δείτε το αρχείο καταγραφής για περισσότερες λεπτομέρειες.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1020"/>
         <source>CIA must be installed before usage</source>
-        <translation type="unfinished"/>
+        <translation>Το CIA πρέπει να εγκατασταθεί πριν από τη χρήση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1021"/>
         <source>Before using this CIA, you must install it. Do you want to install it now?</source>
-        <translation type="unfinished"/>
+        <translation>Πριν από τη χρήση αυτού του CIA, πρέπει να το εγκαταστήσετε. Θέλετε να το εγκαταστήσετε τώρα;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1076"/>
@@ -3211,7 +3212,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/main.cpp" line="1077"/>
         <location filename="../../src/citra_qt/main.cpp" line="1989"/>
         <source>Could not start video dumping.&lt;br&gt;Refer to the log for details.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν ήταν δυνατή η εκκίνηση της αποτύπωσης βίντεο. &lt;br&gt;Ανατρέξτε στο αρχείο καταγραφής για λεπτομέρειες.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1185"/>
@@ -3222,12 +3223,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/main.cpp" line="1285"/>
         <location filename="../../src/citra_qt/main.cpp" line="1286"/>
         <source>Slot %1</source>
-        <translation>Υποδοχή %1</translation>
+        <translation>Θέση %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1289"/>
         <source>Slot %1 - %2</source>
-        <translation>Υποδοχή %1 - %2</translation>
+        <translation>Θέση %1 - %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1375"/>
@@ -3254,7 +3255,8 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/main.cpp" line="1419"/>
         <source>Could not dump base RomFS.
 Refer to the log for details.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν ήταν δυνατή η αποτύπωση του βασικού RomFS.
+Ανατρέξτε στο αρχείο καταγραφής για λεπτομέρειες.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1450"/>
@@ -3335,7 +3337,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1548"/>
         <source>%1 must be decrypted before being used with Citra. A real 3DS is required.</source>
-        <translation type="unfinished"/>
+        <translation>Το «%1» πρέπει να αποκρυπτογραφηθεί πριν από τη χρήση του με το Citra. Απαιτείται μια συσκευή 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1572"/>
@@ -3362,7 +3364,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1631"/>
         <source>You must link your Citra account to submit test cases.&lt;br/&gt;Go to Emulation &amp;gt; Configure... &amp;gt; Web to do so.</source>
-        <translation type="unfinished"/>
+        <translation>Πρέπει να συνδέσετε τον λογαριασμό Citra σας για να υποβάλετε δοκιμαστικές περιπτώσεις.&lt;br/&gt;Μεταβείτε στην Εξομοίωση &amp;gt; Διαμόρφωση... &amp;gt; Διαδίκτυο.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1807"/>
@@ -3382,7 +3384,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1828"/>
         <source>Unable to open Amiibo file &quot;%1&quot; for reading.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν είναι δυνατό το άνοιγμα του αρχείου Amiibo «%1» για ανάγνωση.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1836"/>
@@ -3392,7 +3394,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1837"/>
         <source>Unable to fully read Amiibo data. Expected to read %1 bytes, but was only able to read %2 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν είναι δυνατή η πλήρης ανάγνωση των δεδομένων του Amiibo. Αναμενόταν η ανάγνωση %1 bytes, αλλά κατέστη δυνατή η ανάγνωση μόνο %2 bytes.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1914"/>
@@ -3429,17 +3431,17 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2040"/>
         <source>Recording %1</source>
-        <translation type="unfinished"/>
+        <translation>Εγγραφή %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2045"/>
         <source>Playing %1 / %2</source>
-        <translation type="unfinished"/>
+        <translation>Αναπαραγωγή %1 / %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2050"/>
         <source>Movie Finished</source>
-        <translation type="unfinished"/>
+        <translation>Το βίντεο τελείωσε</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2066"/>
@@ -3573,7 +3575,7 @@ Refer to the log for details.</source>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="205"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="236"/>
         <source>Start Tracing</source>
-        <translation type="unfinished"/>
+        <translation>Έναρξη ιχνηλάτησης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="206"/>
@@ -3583,7 +3585,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="232"/>
         <source>Finish Tracing</source>
-        <translation type="unfinished"/>
+        <translation>Τέλος ιχνηλάτησης</translation>
     </message>
 </context>
 <context>
@@ -3591,7 +3593,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics.cpp" line="67"/>
         <source>Graphics Debugger</source>
-        <translation type="unfinished"/>
+        <translation>Έλεγχος σφαλμάτων γραφικών</translation>
     </message>
 </context>
 <context>
@@ -3644,17 +3646,17 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
         <source>Open Texture Dump Location</source>
-        <translation type="unfinished"/>
+        <translation>Άνοιγμα τοποθεσίας αποτύπωσης υφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="482"/>
         <source>Open Custom Texture Location</source>
-        <translation type="unfinished"/>
+        <translation>Άνοιγμα προσαρμοσμένης τοποθεσίας υφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="483"/>
         <source>Open Mods Location</source>
-        <translation type="unfinished"/>
+        <translation>Άνοιγμα τοποθεσίας τροποποιήσεων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="484"/>
@@ -3699,13 +3701,14 @@ any workarounds needed.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="252"/>
         <source>Great</source>
-        <translation type="unfinished"/>
+        <translation>Πολύ καλή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="252"/>
         <source>Game functions with minor graphical or audio glitches and is playable from start to finish. May require some
 workarounds.</source>
-        <translation type="unfinished"/>
+        <translation>Το παιχνίδι εμφανίζει μικρά προβλήματα γραφικών ή ήχου και είναι λειτουργικό από την αρχή έως το τέλος. Ενδέχεται να χρειαστούν μερικές
+προσωρινές λύσεις.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="253"/>
@@ -3716,18 +3719,20 @@ workarounds.</source>
         <location filename="../../src/citra_qt/game_list_p.h" line="253"/>
         <source>Game functions with major graphical or audio glitches, but game is playable from start to finish with
 workarounds.</source>
-        <translation type="unfinished"/>
+        <translation>Το παιχνίδι εμφανίζει μεγάλα προβλήματα γραφικών ή ήχου, αλλά είναι λειτουργικό από την αρχή έως το τέλος με
+προσωρινές λύσεις.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="254"/>
         <source>Bad</source>
-        <translation type="unfinished"/>
+        <translation>Κακή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="254"/>
         <source>Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches
 even with workarounds.</source>
-        <translation type="unfinished"/>
+        <translation>Το παιχνίδι λειτουργεί, αλλά με μεγάλα προβλήματα γραφικών ή ήχου. Δεν είναι δυνατή η συνέχεια σε συγκεκριμένες περιοχές λόγω των προβλημάτων,
+ακόμα και με προσωρινές λύσεις.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="255"/>
@@ -3738,7 +3743,8 @@ even with workarounds.</source>
         <location filename="../../src/citra_qt/game_list_p.h" line="255"/>
         <source>Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start
 Screen.</source>
-        <translation type="unfinished"/>
+        <translation>Το παιχνίδι δεν λειτουργεί καθόλου λόγω των μεγάλων προβλημάτων γραφικών ή ήχου. Δεν είναι δυνατή η συνέχεια
+πέρα από την οθόνη εκκίνησης.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="256"/>
@@ -3794,7 +3800,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="142"/>
         <source>Enter pattern to filter</source>
-        <translation type="unfinished"/>
+        <translation>Εισαγάγετε μοτίβο για φιλτράρισμα</translation>
     </message>
 </context>
 <context>
@@ -3842,7 +3848,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="111"/>
         <source>Region free</source>
-        <translation type="unfinished"/>
+        <translation>Χωρίς περιορισμό περιοχής</translation>
     </message>
 </context>
 <context>
@@ -3850,7 +3856,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="142"/>
         <source>Pica Breakpoints</source>
-        <translation type="unfinished"/>
+        <translation>Σημεία διακοπής Pica</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="146"/>
@@ -3874,22 +3880,22 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="52"/>
         <source>Pica Surface Viewer</source>
-        <translation type="unfinished"/>
+        <translation>Pica Surface Viewer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="57"/>
         <source>Color Buffer</source>
-        <translation type="unfinished"/>
+        <translation>Ενδιάμεση μνήμη χρωμάτων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="58"/>
         <source>Depth Buffer</source>
-        <translation type="unfinished"/>
+        <translation>Ενδιάμεση μνήμη βάθους</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="59"/>
         <source>Stencil Buffer</source>
-        <translation type="unfinished"/>
+        <translation>Ενδιάμεση μνήμη αποτύπωσης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="60"/>
@@ -3909,12 +3915,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="63"/>
         <source>Custom</source>
-        <translation type="unfinished"/>
+        <translation>Προσαρμογή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="105"/>
         <source>Unknown</source>
-        <translation type="unfinished"/>
+        <translation>Άγνωστο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="124"/>
@@ -3964,7 +3970,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="291"/>
         <source>(unable to access pixel data)</source>
-        <translation type="unfinished"/>
+        <translation>(αδυναμία πρόσβασης στα δεδομένα pixel)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="561"/>
@@ -4008,12 +4014,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="690"/>
         <source>Failed to save surface data to file &apos;%1&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία αποθήκευσης δεδομένων επιφάνειας στο αρχείο «%1»</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="708"/>
         <source>Failed to completely write surface data to file. The saved data will likely be corrupt.</source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία πλήρους εγγραφής δεδομένων επιφάνειας στο αρχείο. Τα αποθηκευμένα δεδομένα θα είναι κατά πάσα πιθανότητα κατεστραμμένα.</translation>
     </message>
 </context>
 <context>
@@ -4021,7 +4027,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="25"/>
         <source>CiTrace Recorder</source>
-        <translation type="unfinished"/>
+        <translation>Εγγραφή CiTrace</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="29"/>
@@ -4056,7 +4062,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="163"/>
         <source>A CiTrace is still being recorded. Do you want to save it? If not, all recorded data will be discarded.</source>
-        <translation type="unfinished"/>
+        <translation>Γίνεται ακόμα εγγραφή ενός CiTrace. Θέλετε να το αποθηκεύσετε; Αν όχι, όλα τα εγγεγραμμένα δεδομένα θα απορριφθούν.</translation>
     </message>
 </context>
 <context>
@@ -4064,17 +4070,17 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="46"/>
         <source>Offset</source>
-        <translation type="unfinished"/>
+        <translation>Μετατόπιση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="48"/>
         <source>Raw</source>
-        <translation type="unfinished"/>
+        <translation>Ακατέργαστο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="50"/>
         <source>Disassembly</source>
-        <translation type="unfinished"/>
+        <translation>Αποσυναρμολόγηση</translation>
     </message>
 </context>
 <context>
@@ -4082,22 +4088,22 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="346"/>
         <source>Save Shader Dump</source>
-        <translation type="unfinished"/>
+        <translation>Αποθήκευση αποτύπωσης shader</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="348"/>
         <source>Shader Binary (*.shbin)</source>
-        <translation type="unfinished"/>
+        <translation>Δυαδικό shader (*.shbin)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="364"/>
         <source>Pica Vertex Shader</source>
-        <translation type="unfinished"/>
+        <translation>Pica Vertex Shader</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="383"/>
         <source>(data only available at vertex shader invocation breakpoints)</source>
-        <translation type="unfinished"/>
+        <translation>(τα δεδομένα είναι διαθέσιμα μόνο σε σημεία διακοπής επίκλησης vertex shader)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="394"/>
@@ -4117,7 +4123,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="457"/>
         <source>Cycle Index:</source>
-        <translation type="unfinished"/>
+        <translation>Ευρετήριο κύκλου:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="564"/>
@@ -4186,12 +4192,13 @@ Screen.</source>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="610"/>
         <source>Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4
 </source>
-        <translation type="unfinished"/>
+        <translation>Παράμετροι βρόχου: %1 (επαναλήψεις), %2 (αρχικοποίηση), %3 (αύξηση), %4
+</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="617"/>
         <source>Instruction offset: 0x%1</source>
-        <translation type="unfinished"/>
+        <translation>Μετατόπιση οδηγιών: 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="619"/>
@@ -4234,7 +4241,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="101"/>
         <source>(Leave blank for open game)</source>
-        <translation type="unfinished"/>
+        <translation>(Αφήστε το κενό για ανοικτό παιχνίδι)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="118"/>
@@ -4254,7 +4261,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="153"/>
         <source>Load Previous Ban List</source>
-        <translation type="unfinished"/>
+        <translation>Φόρτωση προηγούμενης λίστας αποκλεισμού</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="184"/>
@@ -4264,12 +4271,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="189"/>
         <source>Unlisted</source>
-        <translation type="unfinished"/>
+        <translation>Μη καταχωρημένο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="197"/>
         <source>Host Room</source>
-        <translation type="unfinished"/>
+        <translation>Καταχώρηση δωματίου</translation>
     </message>
 </context>
 <context>
@@ -4283,7 +4290,8 @@ Screen.</source>
         <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="165"/>
         <source>Failed to announce the room to the public lobby. In order to host a room publicly, you must have a valid Citra account configured in Emulation -&gt; Configure -&gt; Web. If you do not want to publish a room in the public lobby, then select Unlisted instead.
 Debug Message: </source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία αναγγελίας του δωματίου στο δημόσιο λόμπι. Για να φιλοξενηθεί ένα δωμάτιο δημόσια, πρέπει να έχετε ρυθμίσει έναν έγκυρο λογαριασμό Citra στην Εξομοίωση -&gt; Διαμόρφωση -&gt; Διαδίκτυο. Αν δεν θέλετε να δημοσιεύσετε ένα δωμάτιο στο δημόσιο λόμπι, επιλέξτε «Μη καταχωρημένο».
+Μήνυμα ελέγχου σφαλμάτων: </translation>
     </message>
 </context>
 <context>
@@ -4306,7 +4314,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="37"/>
         <source>Leave empty to disable filtering</source>
-        <translation type="unfinished"/>
+        <translation>Αφήστε το κενό για να απενεργοποιήσετε το φιλτράρισμα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="50"/>
@@ -4326,7 +4334,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="65"/>
         <source>Function</source>
-        <translation type="unfinished"/>
+        <translation>Λειτουργία</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="82"/>
@@ -4339,17 +4347,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="46"/>
         <source>Invalid</source>
-        <translation type="unfinished"/>
+        <translation>Μη έγκυρο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="48"/>
         <source>Sent</source>
-        <translation type="unfinished"/>
+        <translation>Απεστάλη</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="50"/>
         <source>Handling</source>
-        <translation type="unfinished"/>
+        <translation>Χειρισμός</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="53"/>
@@ -4364,7 +4372,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="57"/>
         <source>HLE Unimplemented</source>
-        <translation type="unfinished"/>
+        <translation>Μη υλοποιημένο HLE</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="73"/>
@@ -4387,7 +4395,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/lle_service_modules.cpp" line="13"/>
         <source>Toggle LLE Service Modules</source>
-        <translation type="unfinished"/>
+        <translation>(Απ)ενεργοποίηση μονάδων υπηρεσίας LLE</translation>
     </message>
 </context>
 <context>
@@ -4445,7 +4453,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="14"/>
         <source>Public Room Browser</source>
-        <translation type="unfinished"/>
+        <translation>Περιήγηση δημόσιων δωματίων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="32"/>
@@ -4466,7 +4474,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="76"/>
         <source>Games I Own</source>
-        <translation type="unfinished"/>
+        <translation>Δικά μου παιχνίδια</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="83"/>
@@ -4476,7 +4484,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="103"/>
         <source>Refresh Lobby</source>
-        <translation type="unfinished"/>
+        <translation>Ανανέωση λόμπι</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="106"/>
@@ -4564,7 +4572,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="115"/>
         <source>Debugging</source>
-        <translation type="unfinished"/>
+        <translation>Έλεγχος σφαλμάτων</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="122"/>
@@ -4574,7 +4582,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="147"/>
         <source>Multiplayer</source>
-        <translation type="unfinished"/>
+        <translation>Multiplayer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="158"/>
@@ -4589,7 +4597,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="173"/>
         <source>Frame Advance</source>
-        <translation type="unfinished"/>
+        <translation>Επίσπευση καρέ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="186"/>
@@ -4649,17 +4657,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="271"/>
         <source>Single Window Mode</source>
-        <translation type="unfinished"/>
+        <translation>Λειτουργία μονού παραθύρου</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="276"/>
         <source>Save to Oldest Slot</source>
-        <translation type="unfinished"/>
+        <translation>Αποθήκευση στην παλαιότερη θέση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="281"/>
         <source>Load from Newest Slot</source>
-        <translation type="unfinished"/>
+        <translation>Φόρτωση από την νεότερη θέση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="286"/>
@@ -4674,7 +4682,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="299"/>
         <source>Display Dock Widget Headers</source>
-        <translation type="unfinished"/>
+        <translation>Προβολή κεφαλίδων widget</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="307"/>
@@ -4689,42 +4697,42 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="320"/>
         <source>Create Pica Surface Viewer</source>
-        <translation type="unfinished"/>
+        <translation>Δημιουργία Pica Surface Viewer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="325"/>
         <source>Record...</source>
-        <translation type="unfinished"/>
+        <translation>Εγγραφή...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="330"/>
         <source>Play...</source>
-        <translation type="unfinished"/>
+        <translation>Αναπαραγωγή...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="335"/>
         <source>Close</source>
-        <translation type="unfinished"/>
+        <translation>Κλείσιμο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="343"/>
         <source>Save without Closing</source>
-        <translation type="unfinished"/>
+        <translation>Αποθήκευση χωρίς κλείσιμο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="354"/>
         <source>Read-Only Mode</source>
-        <translation type="unfinished"/>
+        <translation>Λειτουργία «Μόνο για ανάγνωση»</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="362"/>
         <source>Enable Frame Advancing</source>
-        <translation type="unfinished"/>
+        <translation>Ενεργοποίηση επίσπευσης καρέ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="370"/>
         <source>Advance Frame</source>
-        <translation type="unfinished"/>
+        <translation>Επίσπευση καρέ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="378"/>
@@ -4734,12 +4742,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="386"/>
         <source>Dump Video</source>
-        <translation type="unfinished"/>
+        <translation>Αποτύπωση βίντεο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="394"/>
         <source>Browse Public Game Lobby</source>
-        <translation type="unfinished"/>
+        <translation>Περιήγηση στο λόμπι δημόσιων παιχνιδιών</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="402"/>
@@ -4769,12 +4777,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="436"/>
         <source>Modify Citra Install</source>
-        <translation type="unfinished"/>
+        <translation>Τροποποίηση εγκατάστασης Citra</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="439"/>
         <source>Opens the maintenance tool to modify your Citra installation</source>
-        <translation type="unfinished"/>
+        <translation>Ανοίγει το εργαλείο συντήρησης για την τροποποίηση της εγκατάστασής σας για το Citra</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="447"/>
@@ -4794,7 +4802,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="471"/>
         <source>Side by Side</source>
-        <translation type="unfinished"/>
+        <translation>Παραπλεύρως</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="479"/>
@@ -4804,7 +4812,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="487"/>
         <source>Rotate Upright</source>
-        <translation type="unfinished"/>
+        <translation>Κατακόρυφη περιστροφή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="492"/>
@@ -4842,7 +4850,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/profiler.cpp" line="51"/>
         <source>MicroProfile</source>
-        <translation type="unfinished"/>
+        <translation>MicroProfile</translation>
     </message>
 </context>
 <context>
@@ -4900,72 +4908,72 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="14"/>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="52"/>
         <source>Play Movie</source>
-        <translation type="unfinished"/>
+        <translation>Αναπαραγωγή βίντεο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="22"/>
         <source>File:</source>
-        <translation type="unfinished"/>
+        <translation>Αρχείο:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="32"/>
         <source>...</source>
-        <translation type="unfinished"/>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="48"/>
         <source>Info</source>
-        <translation type="unfinished"/>
+        <translation>Πληροφορίες</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="57"/>
         <source>Game:</source>
-        <translation type="unfinished"/>
+        <translation>Παιχνίδι:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="71"/>
         <source>Author:</source>
-        <translation type="unfinished"/>
+        <translation>Δημιουργός:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="85"/>
         <source>Rerecord Count:</source>
-        <translation type="unfinished"/>
+        <translation>Πλήθος επανεγγραφών:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="99"/>
         <source>Length:</source>
-        <translation type="unfinished"/>
+        <translation>Διάρκεια:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="31"/>
         <source>Current running game will be stopped.</source>
-        <translation type="unfinished"/>
+        <translation>Το τρέχον παιχνίδι θα διακοπεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="33"/>
         <source>&lt;br&gt;Current recording will be discarded.</source>
-        <translation type="unfinished"/>
+        <translation>&lt;br&gt;Η τρέχουσα εγγραφή θα απορριφθεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="53"/>
         <source>Citra TAS Movie (*.ctm)</source>
-        <translation type="unfinished"/>
+        <translation>Βίντεο Citra TAS (*.ctm)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="74"/>
         <source>Invalid movie file.</source>
-        <translation type="unfinished"/>
+        <translation>Μη έγκυρο αρχείο βίντεο.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="87"/>
         <source>Revision dismatch, playback may desync.</source>
-        <translation type="unfinished"/>
+        <translation>Αναντιστοιχία αναθεώρησης, η αναπαραγωγή ενδέχεται να αποσυγχρονιστεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="90"/>
         <source>Indicated length is incorrect, file may be corrupted.</source>
-        <translation type="unfinished"/>
+        <translation>Το υποδειγμένο μήκος δεν είναι σωστό, το αρχείο ενδέχεται να έχει καταστραφεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="103"/>
@@ -4973,17 +4981,17 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="113"/>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="117"/>
         <source>(unknown)</source>
-        <translation type="unfinished"/>
+        <translation>(άγνωστο)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="104"/>
         <source>Game used in this movie is not in game list.</source>
-        <translation type="unfinished"/>
+        <translation>Το παιχνίδι που χρησιμοποιείται στο βίντεο δεν βρίσκεται στη λίστα παιχνιδιών.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="122"/>
         <source>(&gt;1 day)</source>
-        <translation type="unfinished"/>
+        <translation>(&gt;1 ημέρα)</translation>
     </message>
 </context>
 <context>
@@ -4992,42 +5000,42 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="14"/>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="49"/>
         <source>Record Movie</source>
-        <translation type="unfinished"/>
+        <translation>Εγγραφή βίντεο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="22"/>
         <source>File:</source>
-        <translation type="unfinished"/>
+        <translation>Αρχείο:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="32"/>
         <source>...</source>
-        <translation type="unfinished"/>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="39"/>
         <source>Author:</source>
-        <translation type="unfinished"/>
+        <translation>Δημιουργός:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="27"/>
         <source>Current running game will be restarted.</source>
-        <translation type="unfinished"/>
+        <translation>Το τρέχον παιχνίδι θα επανεκκινηθεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="29"/>
         <source>&lt;br&gt;Current recording will be discarded.</source>
-        <translation type="unfinished"/>
+        <translation>&lt;br&gt;Η τρέχουσα εγγραφή θα απορριφθεί.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="32"/>
         <source>Recording will start once you boot a game.</source>
-        <translation type="unfinished"/>
+        <translation>Η εγγραφή θα ξεκινήσει μόλις εκκινήσετε ένα παιχνίδι.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="50"/>
         <source>Citra TAS Movie (*.ctm)</source>
-        <translation type="unfinished"/>
+        <translation>Βίντεο Citra TAS (*.ctm)</translation>
     </message>
 </context>
 <context>
@@ -5042,20 +5050,20 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="48"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="91"/>
         <source>Not Connected. Click here to find a room!</source>
-        <translation type="unfinished"/>
+        <translation>Εκτός σύνδεσης. Κάντε κλικ εδώ για να βρείτε ένα δωμάτιο!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="95"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="117"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="256"/>
         <source>Connected</source>
-        <translation type="unfinished"/>
+        <translation>Σε σύνδεση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="97"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="122"/>
         <source>Not Connected</source>
-        <translation type="unfinished"/>
+        <translation>Εκτός σύνδεσης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="178"/>
@@ -5066,7 +5074,8 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="179"/>
         <source>Failed to update the room information. Please check your Internet connection and try hosting the room again.
 Debug Message: </source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία ενημέρωσης πληροφοριών δωματίου. Παρακαλώ ελέγξτε τη σύνδεση διαδικτύου σας και δοκιμάστε να δημιουργήσετε ξανά το δωμάτιο.
+Μήνυμα ελέγχου σφαλμάτων: </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="250"/>
@@ -5079,17 +5088,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished"/>
+        <translation>Το όνομα χρήστη δεν είναι έγκυρο. Πρέπει να αποτελείται από 4 έως 20 αλφαριθμητικούς χαρακτήρες.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished"/>
+        <translation>Το όνομα δωματίου δεν είναι έγκυρο. Πρέπει να αποτελείται από 4 έως 20 αλφαριθμητικούς χαρακτήρες.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished"/>
+        <translation>Το όνομα χρήστη χρησιμοποιείται ήδη ή δεν είναι έγκυρο. Παρακαλώ επιλέξτε κάποιο άλλο.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
@@ -5104,37 +5113,37 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="21"/>
         <source>You must choose a Preferred Game to host a room. If you do not have any games in your game list yet, add a game folder by clicking on the plus icon in the game list.</source>
-        <translation type="unfinished"/>
+        <translation>Πρέπει να επιλέξετε ένα προτιμώμενο παιχνίδι για να φιλοξενήσετε ένα δωμάτιο. Αν δεν έχετε ακόμα κανένα παιχνίδι στη λίστα παιχνιδιών σας, προσθέστε έναν φάκελο παιχνιδιού κάνοντας κλικ στο εικονίδιο «συν» στη λίστα παιχνιδιών.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="25"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν είναι δυνατή η εύρεση μιας σύνδεσης στο διαδίκτυο. Ελέγξτε τις ρυθμίσεις διαδικτύου σας.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="27"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν είναι δυνατή η σύνδεση στον κεντρικό υπολογιστή. Επαληθεύστε ότι οι ρυθμίσεις σύνδεσης είναι σωστές. Αν δεν μπορείτε ακόμα να συνδεθείτε, επικοινωνήστε με τον δημιουργό του δωματίου και επιβεβαιώστε ότι ο κεντρικός υπολογιστής έχει ρυθμιστεί σωστά με προωθημένη την εξωτερική θύρα.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="31"/>
         <source>Unable to connect to the room because it is already full.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν είναι δυνατή η σύνδεση στο δωμάτιο, επειδή είναι ήδη πλήρες.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="33"/>
         <source>Creating a room failed. Please retry. Restarting Citra might be necessary.</source>
-        <translation type="unfinished"/>
+        <translation>Αποτυχία δημιουργίας δωματίου. Παρακαλώ δοκιμάστε ξανά. Ίσως είναι απαραίτητη η επανεκκίνηση του Citra.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="35"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished"/>
+        <translation>Ο δημιουργός του δωματίου σάς έχει αποκλείσει. Μιλήστε μαζί του για να άρει τον αποκλεισμό σας ή δοκιμάστε ένα διαφορετικό δωμάτιο.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="38"/>
         <source>Version mismatch! Please update to the latest version of Citra. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished"/>
+        <translation>Αναντιστοιχία έκδοσης! Παρακαλώ ενημερώστε στην πιο πρόσφατη έκδοση του Citra. Αν το πρόβλημα παραμένει, επικοινωνήστε με τον δημιουργό του δωματίου και ζητήστε του να ενημερώσει τον διακομιστή.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="40"/>
@@ -5144,7 +5153,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
-        <translation type="unfinished"/>
+        <translation>Προέκυψε άγνωστο σφάλμα. Αν αυτό το σφάλμα εξακολουθεί να παρουσιάζεται, παρακαλώ ανοίξτε ένα ζήτημα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="44"/>
@@ -5166,7 +5175,9 @@ Debug Message: </source>
         <source>Your Console ID conflicted with someone else's in the room.
 
 Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.</source>
-        <translation type="unfinished"/>
+        <translation>Το ID κονσόλας σας είναι ίδιο με αυτό κάποιου άλλου στο δωμάτιο.
+
+Παρακαλώ μεταβείτε στην Εξομοίωση &gt; Διαμόρφωση &gt; Σύστημα, για να δημιουργήσετε εκ νέου το ID κονσόλας σας.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="53"/>
@@ -5177,7 +5188,8 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="54"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="unfinished"/>
+        <translation>Δεν ήταν δυνατή η εύρεση του χρήστη που προσπαθείτε να αποβάλετε/αποκλείσετε.
+Ενδέχεται να έχει αποχωρήσει από το δωμάτιο.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="69"/>
@@ -5223,7 +5235,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="134"/>
         <source>Not playing a game</source>
-        <translation type="unfinished"/>
+        <translation>Δεν παίζει παιχνίδι</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="289"/>
@@ -5268,13 +5280,13 @@ They may have left the room.</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="57"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="107"/>
         <source>[not set]</source>
-        <translation type="unfinished"/>
+        <translation>[δεν έχει οριστεί]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="48"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="69"/>
         <source>Hat %1 %2</source>
-        <translation type="unfinished"/>
+        <translation>Περιστροφή %1 %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="55"/>
@@ -5284,7 +5296,7 @@ They may have left the room.</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="130"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="133"/>
         <source>Axis %1%2</source>
-        <translation type="unfinished"/>
+        <translation>Άξονας %1%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="61"/>
@@ -5302,17 +5314,17 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="93"/>
         <source>GC Axis %1%2</source>
-        <translation type="unfinished"/>
+        <translation>Άξονας GC %1%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="97"/>
         <source>GC Button %1</source>
-        <translation type="unfinished"/>
+        <translation>Κουμπί GC %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="121"/>
         <source>[unused]</source>
-        <translation type="unfinished"/>
+        <translation>[δεν χρησιμοποιείται]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="54"/>
@@ -5332,7 +5344,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="46"/>
         <source>Supported image files (%1)</source>
-        <translation type="unfinished"/>
+        <translation>Υποστηριζόμενα αρχεία εικόνων (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="48"/>
@@ -5345,7 +5357,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="129"/>
         <source>Software Keyboard</source>
-        <translation type="unfinished"/>
+        <translation>Εικονικό πληκτρολόγιο</translation>
     </message>
 </context>
 <context>
@@ -5353,22 +5365,22 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="87"/>
         <source>Text length is not correct (should be %1 characters)</source>
-        <translation type="unfinished"/>
+        <translation>Το μήκος κειμένου δεν είναι σωστό (πρέπει να αποτελείται από %1 χαρακτήρες)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="90"/>
         <source>Text is too long (should be no more than %1 characters)</source>
-        <translation type="unfinished"/>
+        <translation>Το κείμενο είναι πολύ μεγάλο (πρέπει να περιέχει μέχρι %1 χαρακτήρες)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="92"/>
         <source>Blank input is not allowed</source>
-        <translation type="unfinished"/>
+        <translation>Δεν επιτρέπεται κενή είσοδος</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="93"/>
         <source>Empty input is not allowed</source>
-        <translation type="unfinished"/>
+        <translation>Δεν επιτρέπεται κενή είσοδος</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="95"/>
@@ -5392,14 +5404,14 @@ They may have left the room.</source>
 <context>
     <name>RecordDialog</name>
     <message>
-        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="6"/>
+        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="14"/>
         <source>View Record</source>
         <translation>Προβολή εγγραφής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="22"/>
         <source>Client</source>
-        <translation type="unfinished"/>
+        <translation>Πελάτης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="28"/>
@@ -5411,7 +5423,7 @@ They may have left the room.</source>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="42"/>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="93"/>
         <source>Thread:</source>
-        <translation type="unfinished"/>
+        <translation>Νήμα:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="56"/>
@@ -5432,7 +5444,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="132"/>
         <source>Client Port:</source>
-        <translation type="unfinished"/>
+        <translation>Θύρα πελάτη:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="146"/>
@@ -5442,47 +5454,47 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="160"/>
         <source>Function:</source>
-        <translation type="unfinished"/>
+        <translation>Λειτουργία:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="177"/>
         <source>Command Buffer</source>
-        <translation type="unfinished"/>
+        <translation>Ενδιάμεση μνήμη εντολής</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="185"/>
         <source>Select:</source>
-        <translation type="unfinished"/>
+        <translation>Επιλογή:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="193"/>
         <source>Request Untranslated</source>
-        <translation type="unfinished"/>
+        <translation>Μη μεταφρασμένο αίτημα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="198"/>
         <source>Request Translated</source>
-        <translation type="unfinished"/>
+        <translation>Μεταφρασμένο αίτημα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="203"/>
         <source>Reply Untranslated</source>
-        <translation type="unfinished"/>
+        <translation>Μη μεταφρασμένη απάντηση</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="208"/>
         <source>Reply Translated</source>
-        <translation type="unfinished"/>
+        <translation>Μεταφρασμένη απάντηση</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="237"/>
+        <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="243"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.cpp" line="13"/>
         <source>null</source>
-        <translation type="unfinished"/>
+        <translation>κενό</translation>
     </message>
 </context>
 <context>
@@ -5505,22 +5517,22 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="171"/>
         <source>Vector Length</source>
-        <translation type="unfinished"/>
+        <translation>Μήκος διανύσματος</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="172"/>
         <source>Vector Stride</source>
-        <translation type="unfinished"/>
+        <translation>Βήμα διανύσματος</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="173"/>
         <source>Rounding Mode</source>
-        <translation type="unfinished"/>
+        <translation>Λειτουργία προσέγγισης</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="186"/>
         <source>Vector Iteration Count</source>
-        <translation type="unfinished"/>
+        <translation>Πλήθος επαναλήψεων διανύσματος</translation>
     </message>
 </context>
 <context>
@@ -5528,7 +5540,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/util/sequence_dialog/sequence_dialog.cpp" line="11"/>
         <source>Enter a hotkey</source>
-        <translation type="unfinished"/>
+        <translation>Εισαγάγετε συντόμευση πληκτρολογίου</translation>
     </message>
 </context>
 <context>
@@ -5536,7 +5548,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="302"/>
         <source>reset type = %1</source>
-        <translation type="unfinished"/>
+        <translation>επαναφορά τύπου = %1</translation>
     </message>
 </context>
 <context>
@@ -5544,12 +5556,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="315"/>
         <source>locked %1 times by thread:</source>
-        <translation type="unfinished"/>
+        <translation>κλειδώθηκε %1 φορές από νήμα:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="318"/>
         <source>free</source>
-        <translation type="unfinished"/>
+        <translation>ελεύθερο</translation>
     </message>
 </context>
 <context>
@@ -5557,7 +5569,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="357"/>
         <source>holding mutexes</source>
-        <translation type="unfinished"/>
+        <translation>διατήρηση αμοιβαίων αποκλεισμών</translation>
     </message>
 </context>
 <context>
@@ -5565,12 +5577,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="162"/>
         <source>waiting for all objects</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή για όλα τα αντικείμενα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="163"/>
         <source>waiting for one of the following objects</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή για ένα από τα εξής αντικείμενα</translation>
     </message>
 </context>
 <context>
@@ -5578,12 +5590,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="331"/>
         <source>available count = %1</source>
-        <translation type="unfinished"/>
+        <translation>διαθέσιμο πλήθος = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="332"/>
         <source>max count = %1</source>
-        <translation type="unfinished"/>
+        <translation>μέγιστο πλήθος = %1</translation>
     </message>
 </context>
 <context>
@@ -5591,7 +5603,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="180"/>
         <source>running</source>
-        <translation type="unfinished"/>
+        <translation>εκτελείται</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="183"/>
@@ -5601,37 +5613,37 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="186"/>
         <source>waiting for address 0x%1</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή για διεύθυνση 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="189"/>
         <source>sleeping</source>
-        <translation type="unfinished"/>
+        <translation>σε αδράνεια</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="192"/>
         <source>waiting for IPC response</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή για απόκριση IPC</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="196"/>
         <source>waiting for objects</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή για αντικείμενα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="199"/>
         <source>waiting for HLE return</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή για επιστροφή HLE</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="202"/>
         <source>dormant</source>
-        <translation type="unfinished"/>
+        <translation>αδρανές</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="205"/>
         <source>dead</source>
-        <translation type="unfinished"/>
+        <translation>νεκρό</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="208"/>
@@ -5641,7 +5653,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="250"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>προεπιλογή</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="253"/>
@@ -5666,7 +5678,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="266"/>
         <source>object id = %1</source>
-        <translation type="unfinished"/>
+        <translation>id αντικειμένου = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="267"/>
@@ -5676,7 +5688,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="268"/>
         <source>thread id = %1</source>
-        <translation type="unfinished"/>
+        <translation>id νήματος = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="271"/>
@@ -5691,12 +5703,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="279"/>
         <source>last running ticks = %1</source>
-        <translation type="unfinished"/>
+        <translation>τελευταίοι έλεγχοι εκτέλεσης = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="282"/>
         <source>not holding mutex</source>
-        <translation type="unfinished"/>
+        <translation>χωρίς διατήρηση αμοιβαίων αποκλεισμών</translation>
     </message>
 </context>
 <context>
@@ -5704,7 +5716,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="371"/>
         <source>waited by thread</source>
-        <translation type="unfinished"/>
+        <translation>αναμονή από νήμα</translation>
     </message>
 </context>
 <context>
@@ -5712,7 +5724,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="344"/>
         <source>reset type = %1</source>
-        <translation type="unfinished"/>
+        <translation>επαναφορά τύπου = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="346"/>
@@ -5735,22 +5747,22 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="136"/>
         <source>waited by no thread</source>
-        <translation type="unfinished"/>
+        <translation>χωρίς αναμονή από νήμα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="146"/>
         <source>one shot</source>
-        <translation type="unfinished"/>
+        <translation>μία απόπειρα</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="148"/>
         <source>sticky</source>
-        <translation type="unfinished"/>
+        <translation>καρφιτσωμένο</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="150"/>
         <source>pulse</source>
-        <translation type="unfinished"/>
+        <translation>παλμός</translation>
     </message>
 </context>
 <context>
@@ -5758,7 +5770,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="442"/>
         <source>Wait Tree</source>
-        <translation type="unfinished"/>
+        <translation>Δένδρο αναμονής</translation>
     </message>
 </context>
 </TS>
