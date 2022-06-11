@@ -13,4 +13,12 @@ add_library(network STATIC
 
 create_target_directory_groups(network)
 
+if (ENABLE_WEB_SERVICE)
+    target_compile_definitions(network PRIVATE -DENABLE_WEB_SERVICE -DCPPHTTPLIB_OPENSSL_SUPPORT)
+    target_link_libraries(network PRIVATE web_service httplib)
+    if (ANDROID)
+        target_link_libraries(network PRIVATE ifaddrs)
+    endif()
+endif()
+
 target_link_libraries(network PRIVATE common enet Boost::serialization)
