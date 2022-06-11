@@ -27,6 +27,14 @@ const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
         "modifier",
     }};
 
+enum class AnalogSubButtons {
+    up,
+    down,
+    left,
+    right,
+    modifier,
+};
+
 static QString GetKeyName(int key_code) {
     switch (key_code) {
     case Qt::Key_Shift:
@@ -163,7 +171,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             ui->buttonCircleDown,
             ui->buttonCircleLeft,
             ui->buttonCircleRight,
-            ui->buttonCircleMod,
+            nullptr,
         },
         {
             ui->buttonCStickUp,
@@ -289,6 +297,50 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         });
     }
 
+    // The Circle Mod button is common for both the sticks, so update the modifier settings
+    // for both the sticks.
+    connect(ui->buttonCircleMod, &QPushButton::clicked, [=]() {
+        HandleClick(
+            ui->buttonCircleMod,
+            [=](const Common::ParamPackage& params) {
+                for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
+                     analog_id++) {
+                    SetAnalogButton(params, analogs_param[analog_id], "modifier");
+                }
+                ApplyConfiguration();
+                Settings::SaveProfile(ui->profile->currentIndex());
+            },
+            InputCommon::Polling::DeviceType::Button);
+    });
+    connect(ui->buttonCircleMod, &QPushButton::customContextMenuRequested,
+            [&](const QPoint& menu_location) {
+                QMenu context_menu;
+                context_menu.addAction(tr("Clear"), [&] {
+                    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
+                         analog_id++) {
+                        analogs_param[analog_id].Erase("modifier");
+                    }
+                    ui->buttonCircleMod->setText(tr("[not set]"));
+                    ApplyConfiguration();
+                    Settings::SaveProfile(ui->profile->currentIndex());
+                });
+
+                context_menu.addAction(tr("Restore Default"), [&] {
+                    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
+                         analog_id++) {
+                        Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
+                            Config::default_analogs[analog_id]
+                                                   [static_cast<u32>(AnalogSubButtons::modifier)])};
+                        SetAnalogButton(params, analogs_param[analog_id], "modifier");
+                        ui->buttonCircleMod->setText(
+                            AnalogToText(analogs_param[analog_id], "modifier"));
+                    }
+                    ApplyConfiguration();
+                    Settings::SaveProfile(ui->profile->currentIndex());
+                });
+                context_menu.exec(ui->buttonCircleMod->mapToGlobal(menu_location));
+            });
+
     connect(ui->buttonMotionTouch, &QPushButton::clicked, [this] {
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
         return motion_touch_dialog->exec();
@@ -363,14 +415,14 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
             continue;
         }
 
-        auto button_param = buttons_param[button];
+        const auto& button_param = buttons_param[button];
         if (button_param.Get("engine", "") == "keyboard") {
             list << QKeySequence(button_param.Get("code", 0));
         }
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; ++analog_id) {
-        auto analog_param = analogs_param[analog_id];
+        const auto& analog_param = analogs_param[analog_id];
         if (analog_param.Get("engine", "") == "analog_from_button") {
             for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; ++sub_button_id) {
                 const Common::ParamPackage sub_button{
@@ -466,6 +518,8 @@ void ConfigureInput::UpdateButtonLabels() {
             }
         }
     }
+
+    ui->buttonCircleMod->setText(AnalogToText(analogs_param[0], "modifier"));
 
     EmitInputKeysChanged();
 }
