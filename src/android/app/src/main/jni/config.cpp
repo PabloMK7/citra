@@ -21,6 +21,7 @@
 #include "jni/config.h"
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
+#include "network/network_settings.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -260,12 +261,12 @@ void Config::ReadValues() {
     }
 
     // Web Service
-    Settings::values.enable_telemetry =
+    NetSettings::values.enable_telemetry =
         sdl2_config->GetBoolean("WebService", "enable_telemetry", true);
-    Settings::values.web_api_url =
+    NetSettings::values.web_api_url =
         sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    Settings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
-    Settings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
+    NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
+    NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
 
     // Update CFG file based on settings
     UpdateCFG();
