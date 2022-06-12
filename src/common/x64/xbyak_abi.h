@@ -6,7 +6,7 @@
 
 #include <bitset>
 #include <initializer_list>
-#include <xbyak.h>
+#include <xbyak/xbyak.h>
 #include "common/assert.h"
 
 namespace Common::X64 {

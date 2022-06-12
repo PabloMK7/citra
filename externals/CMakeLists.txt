@@ -34,7 +34,9 @@ add_subdirectory(cryptopp)
 # Xbyak
 if (ARCHITECTURE_x86_64)
     add_library(xbyak INTERFACE)
-    target_include_directories(xbyak SYSTEM INTERFACE ./xbyak/xbyak)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xbyak/xbyak DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
+    target_include_directories(xbyak SYSTEM INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
     target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
 endif()
 
