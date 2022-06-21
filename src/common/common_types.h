@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #ifdef _MSC_VER
@@ -49,6 +50,9 @@ typedef double f64; ///< 64-bit floating point
 // conversion between each other.
 typedef u32 VAddr; ///< Represents a pointer in the userspace virtual address space.
 typedef u32 PAddr; ///< Represents a pointer in the ARM11 physical address space.
+
+using u128 = std::array<std::uint64_t, 2>;
+static_assert(sizeof(u128) == 16, "u128 must be 128 bits wide");
 
 // An inheritable class to disallow the copy constructor and operator= functions
 class NonCopyable {

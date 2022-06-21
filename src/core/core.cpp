@@ -13,7 +13,8 @@
 #include "common/logging/log.h"
 #include "common/texture.h"
 #include "core/arm/arm_interface.h"
-#if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_ARM64)
+#include "core/arm/exclusive_monitor.h"
+#if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_arm64)
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
 #include "core/arm/dyncom/arm_dyncom.h"
@@ -364,11 +365,12 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     kernel = std::make_unique<Kernel::KernelSystem>(
         *memory, *timing, [this] { PrepareReschedule(); }, system_mode, num_cores, n3ds_mode);
 
+    exclusive_monitor = MakeExclusiveMonitor(*memory, num_cores);
     if (Settings::values.use_cpu_jit) {
-#if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_ARM64)
+#if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_arm64)
         for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
-                std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i)));
+                std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i), *exclusive_monitor));
         }
 #else
         for (u32 i = 0; i < num_cores; ++i) {
@@ -543,6 +545,7 @@ void System::Shutdown(bool is_deserializing) {
     dsp_core.reset();
     kernel.reset();
     cpu_cores.clear();
+    exclusive_monitor.reset();
     timing.reset();
 
     if (video_dumper && video_dumper->IsDumping()) {
