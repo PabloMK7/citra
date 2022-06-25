@@ -131,6 +131,7 @@ if (ENABLE_WEB_SERVICE)
     # cpp-jwt
     add_library(cpp-jwt INTERFACE)
     target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
+    target_compile_definitions(cpp-jwt INTERFACE CPP_JWT_USE_VENDORED_NLOHMANN_JSON)
 endif()
 
 # lodepng
