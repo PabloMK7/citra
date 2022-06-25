@@ -7,13 +7,13 @@ add_executable(citra-room
 
 create_target_directory_groups(citra-room)
 
-target_link_libraries(citra-room PRIVATE common core network)
+target_link_libraries(citra-room PRIVATE common network)
 if (ENABLE_WEB_SERVICE)
     target_compile_definitions(citra-room PRIVATE -DENABLE_WEB_SERVICE)
     target_link_libraries(citra-room PRIVATE web_service)
 endif()
 
-target_link_libraries(citra-room PRIVATE cryptopp glad)
+target_link_libraries(citra-room PRIVATE cryptopp)
 if (MSVC)
     target_link_libraries(citra-room PRIVATE getopt)
 endif()

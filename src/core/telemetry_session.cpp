@@ -12,6 +12,7 @@
 #include "core/core.h"
 #include "core/settings.h"
 #include "core/telemetry_session.h"
+#include "network/network_settings.h"
 
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/telemetry_json.h"
@@ -70,7 +71,7 @@ u64 RegenerateTelemetryId() {
 
 bool VerifyLogin(const std::string& username, const std::string& token) {
 #ifdef ENABLE_WEB_SERVICE
-    return WebService::VerifyLogin(Settings::values.web_api_url, username, token);
+    return WebService::VerifyLogin(NetSettings::values.web_api_url, username, token);
 #else
     return false;
 #endif
@@ -86,16 +87,16 @@ TelemetrySession::~TelemetrySession() {
     AddField(Telemetry::FieldType::Session, "Shutdown_Time", shutdown_time);
 
 #ifdef ENABLE_WEB_SERVICE
-    auto backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
-                                                               Settings::values.citra_username,
-                                                               Settings::values.citra_token);
+    auto backend = std::make_unique<WebService::TelemetryJson>(NetSettings::values.web_api_url,
+                                                               NetSettings::values.citra_username,
+                                                               NetSettings::values.citra_token);
 #else
     auto backend = std::make_unique<Telemetry::NullVisitor>();
 #endif
 
     // Complete the session, submitting to the web service backend if necessary
     field_collection.Accept(*backend);
-    if (Settings::values.enable_telemetry) {
+    if (NetSettings::values.enable_telemetry) {
         backend->Complete();
     }
 }
@@ -154,9 +155,9 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
 
 bool TelemetrySession::SubmitTestcase() {
 #ifdef ENABLE_WEB_SERVICE
-    auto backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
-                                                               Settings::values.citra_username,
-                                                               Settings::values.citra_token);
+    auto backend = std::make_unique<WebService::TelemetryJson>(NetSettings::values.web_api_url,
+                                                               NetSettings::values.citra_username,
+                                                               NetSettings::values.citra_token);
     field_collection.Accept(*backend);
     return backend->SubmitTestcase();
 #else

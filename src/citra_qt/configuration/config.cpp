@@ -15,6 +15,7 @@
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "network/network.h"
+#include "network/network_settings.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -702,15 +703,15 @@ void Config::ReadUpdaterValues() {
 void Config::ReadWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    Settings::values.enable_telemetry =
+    NetSettings::values.enable_telemetry =
         ReadSetting(QStringLiteral("enable_telemetry"), true).toBool();
-    Settings::values.web_api_url =
+    NetSettings::values.web_api_url =
         ReadSetting(QStringLiteral("web_api_url"), QStringLiteral("https://api.citra-emu.org"))
             .toString()
             .toStdString();
-    Settings::values.citra_username =
+    NetSettings::values.citra_username =
         ReadSetting(QStringLiteral("citra_username")).toString().toStdString();
-    Settings::values.citra_token =
+    NetSettings::values.citra_token =
         ReadSetting(QStringLiteral("citra_token")).toString().toStdString();
 
     qt_config->endGroup();
@@ -1160,14 +1161,14 @@ void Config::SaveUpdaterValues() {
 void Config::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    WriteSetting(QStringLiteral("enable_telemetry"), Settings::values.enable_telemetry, true);
+    WriteSetting(QStringLiteral("enable_telemetry"), NetSettings::values.enable_telemetry, true);
     WriteSetting(QStringLiteral("web_api_url"),
-                 QString::fromStdString(Settings::values.web_api_url),
+                 QString::fromStdString(NetSettings::values.web_api_url),
                  QStringLiteral("https://api.citra-emu.org"));
     WriteSetting(QStringLiteral("citra_username"),
-                 QString::fromStdString(Settings::values.citra_username));
+                 QString::fromStdString(NetSettings::values.citra_username));
     WriteSetting(QStringLiteral("citra_token"),
-                 QString::fromStdString(Settings::values.citra_token));
+                 QString::fromStdString(NetSettings::values.citra_token));
 
     qt_config->endGroup();
 }

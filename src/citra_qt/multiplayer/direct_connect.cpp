@@ -16,8 +16,8 @@
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/uisettings.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/settings.h"
 #include "network/network.h"
+#include "network/network_settings.h"
 #include "ui_direct_connect.h"
 
 enum class ConnectionType : u8 { TraversalServer, IP };
@@ -34,9 +34,9 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
 
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty()) {
+    if (ui->nickname->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
         // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
+        ui->nickname->setText(QString::fromStdString(NetSettings::values.citra_username));
     }
     ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
@@ -92,7 +92,6 @@ void DirectConnectWindow::Connect() {
     UISettings::values.port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                   ? ui->port->text()
                                   : UISettings::values.port;
-    Settings::Apply();
 
     // attempt to connect in a different thread
     QFuture<void> f = QtConcurrent::run([&] {

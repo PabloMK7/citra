@@ -10,7 +10,6 @@
 #include <string>
 #include <thread>
 #include <cryptopp/base64.h>
-#include <glad/glad.h>
 
 #ifdef _WIN32
 // windows.h needs to be included before shellapi.h
@@ -27,10 +26,9 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
-#include "core/announce_multiplayer_session.h"
-#include "core/core.h"
-#include "core/settings.h"
+#include "network/announce_multiplayer_session.h"
 #include "network/network.h"
+#include "network/network_settings.h"
 #include "network/room.h"
 #include "network/verify_user.h"
 
@@ -170,9 +168,6 @@ int main(int argc, char** argv) {
     int option_index = 0;
     char* endarg;
 
-    // This is just to be able to link against core
-    gladLoadGL();
-
     std::string room_name;
     std::string room_description;
     std::string password;
@@ -300,15 +295,15 @@ int main(int argc, char** argv) {
     if (announce) {
         if (username.empty()) {
             std::cout << "Hosting a public room\n\n";
-            Settings::values.web_api_url = web_api_url;
-            Settings::values.citra_username = UsernameFromDisplayToken(token);
-            username = Settings::values.citra_username;
-            Settings::values.citra_token = TokenFromDisplayToken(token);
+            NetSettings::values.web_api_url = web_api_url;
+            NetSettings::values.citra_username = UsernameFromDisplayToken(token);
+            username = NetSettings::values.citra_username;
+            NetSettings::values.citra_token = TokenFromDisplayToken(token);
         } else {
             std::cout << "Hosting a public room\n\n";
-            Settings::values.web_api_url = web_api_url;
-            Settings::values.citra_username = username;
-            Settings::values.citra_token = token;
+            NetSettings::values.web_api_url = web_api_url;
+            NetSettings::values.citra_username = username;
+            NetSettings::values.citra_token = token;
         }
     }
     if (!announce && enable_citra_mods) {
@@ -327,7 +322,8 @@ int main(int argc, char** argv) {
     std::unique_ptr<Network::VerifyUser::Backend> verify_backend;
     if (announce) {
 #ifdef ENABLE_WEB_SERVICE
-        verify_backend = std::make_unique<WebService::VerifyUserJWT>(Settings::values.web_api_url);
+        verify_backend =
+            std::make_unique<WebService::VerifyUserJWT>(NetSettings::values.web_api_url);
 #else
         std::cout
             << "Citra Web Services is not available with this build: validation is disabled.\n\n";
@@ -346,7 +342,7 @@ int main(int argc, char** argv) {
             return -1;
         }
         std::cout << "Room is open. Close with Q+Enter...\n\n";
-        auto announce_session = std::make_unique<Core::AnnounceMultiplayerSession>();
+        auto announce_session = std::make_unique<Network::AnnounceMultiplayerSession>();
         if (announce) {
             announce_session->Start();
         }

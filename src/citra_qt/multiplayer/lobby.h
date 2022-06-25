@@ -11,7 +11,7 @@
 #include <QStandardItemModel>
 #include "citra_qt/multiplayer/validation.h"
 #include "common/announce_multiplayer_room.h"
-#include "core/announce_multiplayer_session.h"
+#include "network/announce_multiplayer_session.h"
 #include "network/network.h"
 
 namespace Ui {
@@ -30,7 +30,7 @@ class Lobby : public QDialog {
 
 public:
     explicit Lobby(QWidget* parent, QStandardItemModel* list,
-                   std::shared_ptr<Core::AnnounceMultiplayerSession> session);
+                   std::shared_ptr<Network::AnnounceMultiplayerSession> session);
     ~Lobby() override;
 
     /**
@@ -91,7 +91,7 @@ private:
     LobbyFilterProxyModel* proxy{};
 
     QFutureWatcher<AnnounceMultiplayerRoom::RoomList> room_list_watcher;
-    std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
+    std::weak_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
     QFutureWatcher<void>* watcher;
     Validation validation;
 };

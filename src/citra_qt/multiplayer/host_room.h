@@ -17,7 +17,7 @@ namespace Ui {
 class HostRoom;
 }
 
-namespace Core {
+namespace Network {
 class AnnounceMultiplayerSession;
 }
 
@@ -35,7 +35,7 @@ class HostRoomWindow : public QDialog {
 
 public:
     explicit HostRoomWindow(QWidget* parent, QStandardItemModel* list,
-                            std::shared_ptr<Core::AnnounceMultiplayerSession> session);
+                            std::shared_ptr<Network::AnnounceMultiplayerSession> session);
     ~HostRoomWindow();
 
     /**
@@ -50,7 +50,7 @@ private:
     std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) const;
 
     std::unique_ptr<Ui::HostRoom> ui;
-    std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
+    std::weak_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
     QStandardItemModel* game_list;
     ComboBoxProxyModel* proxy;
     Validation validation;
