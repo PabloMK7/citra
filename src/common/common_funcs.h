@@ -28,6 +28,12 @@
 #define FORCE_INLINE inline __attribute__((always_inline))
 #endif
 
+#ifdef _MSC_VER
+#define CITRA_NO_INLINE __declspec(noinline)
+#else
+#define CITRA_NO_INLINE __attribute__((noinline))
+#endif
+
 #ifndef _MSC_VER
 
 #ifdef ARCHITECTURE_x86_64
