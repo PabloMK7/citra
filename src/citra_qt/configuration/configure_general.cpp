@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QDesktopServices>
+#include <QFileDialog>
 #include <QMessageBox>
+#include <QUrl>
 #include "citra_qt/configuration/configure_general.h"
 #include "citra_qt/uisettings.h"
 #include "core/core.h"
@@ -56,6 +59,15 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
                     .rightJustified(tr("unthrottled").size()));
         }
     });
+
+    connect(ui->change_screenshot_dir, &QToolButton::clicked, this, [this] {
+        const QString dir_path = QFileDialog::getExistingDirectory(
+            this, tr("Select Screenshot Directory"), ui->screenshot_dir_path->text(),
+            QFileDialog::ShowDirsOnly);
+        if (!dir_path.isEmpty()) {
+            ui->screenshot_dir_path->setText(dir_path);
+        }
+    });
 }
 
 ConfigureGeneral::~ConfigureGeneral() = default;
@@ -101,6 +113,16 @@ void ConfigureGeneral::SetConfiguration() {
                 .arg(SliderToSettings(ui->frame_limit_alternate->value()))
                 .rightJustified(tr("unthrottled").size()));
     }
+
+    QString screenshot_path = UISettings::values.screenshot_path;
+    if (screenshot_path.isEmpty()) {
+        screenshot_path =
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir));
+        screenshot_path.append(QStringLiteral("screenshots/"));
+        FileUtil::CreateFullPath(screenshot_path.toStdString());
+        UISettings::values.screenshot_path = screenshot_path;
+    }
+    ui->screenshot_dir_path->setText(screenshot_path);
 }
 
 void ConfigureGeneral::ResetDefaults() {
@@ -123,6 +145,8 @@ void ConfigureGeneral::ApplyConfiguration() {
 
     UISettings::values.check_for_update_on_start = ui->toggle_update_check->isChecked();
     UISettings::values.update_on_close = ui->toggle_auto_update->isChecked();
+
+    UISettings::values.screenshot_path = ui->screenshot_dir_path->text();
 
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
 

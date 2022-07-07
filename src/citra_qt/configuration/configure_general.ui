@@ -213,6 +213,33 @@
        </layout>
       </widget>
      </item>
+     <item>
+      <widget class="QGroupBox" name="screenshot_group">
+       <property name="title">
+        <string>Screenshots</string>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Save Screenshots To</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="screenshot_dir_path">
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="change_screenshot_dir">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
      <item alignment="Qt::AlignRight">
       <widget class="QPushButton" name="button_reset_defaults">
        <property name="text">
@@ -247,6 +274,8 @@
   <tabstop>frame_limit</tabstop>
   <tabstop>toggle_alternate_speed</tabstop>
   <tabstop>frame_limit_alternate</tabstop>
+  <tabstop>screenshot_dir_path</tabstop>
+  <tabstop>change_screenshot_dir</tabstop>
   <tabstop>button_reset_defaults</tabstop>
  </tabstops>
  <resources/>
