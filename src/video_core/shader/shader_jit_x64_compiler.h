@@ -120,15 +120,15 @@ private:
     /// Mapping of Pica VS instructions to pointers in the emitted code
     std::array<Xbyak::Label, MAX_PROGRAM_CODE_LENGTH> instruction_labels;
 
-    /// Label pointing to the end of the current LOOP block. Used by the BREAKC instruction to break
-    /// out of the loop.
-    std::optional<Xbyak::Label> loop_break_label;
+    /// Labels pointing to the end of each nested LOOP block. Used by the BREAKC instruction to
+    /// break out of a loop.
+    std::vector<Xbyak::Label> loop_break_labels;
 
     /// Offsets in code where a return needs to be inserted
     std::vector<unsigned> return_offsets;
 
     unsigned program_counter = 0; ///< Offset of the next instruction to decode
-    bool looping = false;         ///< True if compiling a loop, used to check for nested loops
+    u8 loop_depth = 0;            ///< Depth of the (nested) loops currently compiled
 
     using CompiledShader = void(const void* setup, void* state, const u8* start_addr);
     CompiledShader* program = nullptr;
