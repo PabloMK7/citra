@@ -184,8 +184,8 @@ FramebufferLayout MobileLandscapeFrameLayout(u32 width, u32 height, bool swapped
     // Shift the small screen to the bottom right corner
     small_screen = small_screen.TranslateX(large_screen.right);
     if (center_vertical) {
-        small_screen.TranslateY(large_screen.GetHeight() + large_screen.top -
-                                small_screen.GetHeight());
+        small_screen = small_screen.TranslateY(large_screen.GetHeight() + large_screen.top -
+                                               small_screen.GetHeight());
     }
 
     res.top_screen = swapped ? small_screen : large_screen;
