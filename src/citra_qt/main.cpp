@@ -588,7 +588,7 @@ void GMainWindow::InitializeHotkeys() {
             });
     connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Capture Screenshot"), this),
             &QShortcut::activated, this, [&] {
-                if (emu_thread->IsRunning()) {
+                if (ui->action_Capture_Screenshot->isEnabled()) {
                     OnCaptureScreenshot();
                 }
             });
