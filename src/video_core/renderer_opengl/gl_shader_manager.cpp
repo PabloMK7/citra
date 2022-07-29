@@ -706,6 +706,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     const std::size_t bucket_size{load_raws_size / num_workers};
     std::vector<std::unique_ptr<Frontend::GraphicsContext>> contexts(num_workers);
     std::vector<std::thread> threads(num_workers);
+
+    emu_window.SaveContext();
     for (std::size_t i = 0; i < num_workers; ++i) {
         const bool is_last_worker = i + 1 == num_workers;
         const std::size_t start{bucket_size * i};
@@ -713,11 +715,14 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
 
         // On some platforms the shared context has to be created from the GUI thread
         contexts[i] = emu_window.CreateSharedContext();
+        // Release the context, so it can be immediately used by the spawned thread
+        contexts[i]->DoneCurrent();
         threads[i] = std::thread(LoadRawSepareble, contexts[i].get(), start, end);
     }
     for (auto& thread : threads) {
         thread.join();
     }
+    emu_window.RestoreContext();
 
     if (compilation_failed) {
         disk_cache.InvalidateAll();

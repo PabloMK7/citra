@@ -49,6 +49,11 @@ public:
     /// Creates a new context that is shared with the current context
     std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
 
+    /// Saves the current context, for the purpose of e.g. creating new shared contexts
+    void SaveContext() override;
+    /// Restores the context previously saved
+    void RestoreContext() override;
+
 private:
     /// Called by PollEvents when a key is pressed or released.
     void OnKeyEvent(int key, u8 state);
@@ -93,6 +98,9 @@ private:
 
     /// The OpenGL context associated with the window
     SDL_GLContext window_context;
+
+    /// Used by SaveContext and RestoreContext
+    SDL_GLContext last_saved_context;
 
     /// The OpenGL context associated with the core
     std::unique_ptr<Frontend::GraphicsContext> core_context;

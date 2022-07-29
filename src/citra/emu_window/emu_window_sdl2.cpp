@@ -30,7 +30,6 @@ SharedContext_SDL2::SharedContext_SDL2() {
 }
 
 SharedContext_SDL2::~SharedContext_SDL2() {
-    DoneCurrent();
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
 }
@@ -185,6 +184,7 @@ EmuWindow_SDL2::EmuWindow_SDL2(bool fullscreen) {
 
     window_context = SDL_GL_CreateContext(render_window);
     core_context = CreateSharedContext();
+    last_saved_context = nullptr;
 
     if (window_context == nullptr) {
         LOG_CRITICAL(Frontend, "Failed to create SDL2 GL context: {}", SDL_GetError());
@@ -220,6 +220,14 @@ EmuWindow_SDL2::~EmuWindow_SDL2() {
 
 std::unique_ptr<Frontend::GraphicsContext> EmuWindow_SDL2::CreateSharedContext() const {
     return std::make_unique<SharedContext_SDL2>();
+}
+
+void EmuWindow_SDL2::SaveContext() {
+    last_saved_context = SDL_GL_GetCurrentContext();
+}
+
+void EmuWindow_SDL2::RestoreContext() {
+    SDL_GL_MakeCurrent(render_window, last_saved_context);
 }
 
 void EmuWindow_SDL2::Present() {
