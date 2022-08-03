@@ -1,0 +1,11 @@
+// Copyright 2022 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#pragma once
+
+#include <string>
+
+#include <jni.h>
+
+std::string GetJString(JNIEnv* env, jstring jstr);

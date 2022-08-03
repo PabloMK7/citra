@@ -3,21 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <map>
+
 #include <jni.h>
+
 #include "core/core.h"
+#include "jni/android_common/android_common.h"
 #include "jni/applets/swkbd.h"
 #include "jni/id_cache.h"
-
-static std::string GetJString(JNIEnv* env, jstring jstr) {
-    if (!jstr) {
-        return {};
-    }
-
-    const char* s = env->GetStringUTFChars(jstr, nullptr);
-    std::string result = s;
-    env->ReleaseStringUTFChars(jstr, s);
-    return result;
-}
 
 static jclass s_software_keyboard_class;
 static jclass s_keyboard_config_class;

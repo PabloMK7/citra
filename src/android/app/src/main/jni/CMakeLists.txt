@@ -1,4 +1,6 @@
 add_library(citra-android SHARED
+    android_common/android_common.cpp
+    android_common/android_common.h
     applets/mii_selector.cpp
     applets/mii_selector.h
     applets/swkbd.cpp
