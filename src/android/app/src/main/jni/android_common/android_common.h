@@ -9,4 +9,4 @@
 #include <jni.h>
 
 std::string GetJString(JNIEnv* env, jstring jstr);
-jstring ToJString(JNIEnv* env, const std::string& str);
+jstring ToJString(JNIEnv* env, std::string_view str);

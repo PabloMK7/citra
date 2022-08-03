@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <locale>
 #include <sstream>
+#include <string>
+#include <string_view>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -135,14 +137,14 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
     return result;
 }
 
-std::string UTF16ToUTF8(const std::u16string& input) {
+std::string UTF16ToUTF8(std::u16string_view input) {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    return convert.to_bytes(input);
+    return convert.to_bytes(input.data(), input.data() + input.size());
 }
 
-std::u16string UTF8ToUTF16(const std::string& input) {
+std::u16string UTF8ToUTF16(std::string_view input) {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    return convert.from_bytes(input);
+    return convert.from_bytes(input.data(), input.data() + input.size());
 }
 
 #ifdef _WIN32

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -37,8 +38,8 @@ void BuildCompleteFilename(std::string& _CompleteFilename, const std::string& _P
 [[nodiscard]] std::string ReplaceAll(std::string result, const std::string& src,
                                      const std::string& dest);
 
-[[nodiscard]] std::string UTF16ToUTF8(const std::u16string& input);
-[[nodiscard]] std::u16string UTF8ToUTF16(const std::string& input);
+[[nodiscard]] std::string UTF16ToUTF8(std::u16string_view input);
+[[nodiscard]] std::u16string UTF8ToUTF16(std::string_view input);
 
 #ifdef _WIN32
 [[nodiscard]] std::string UTF16ToUTF8(const std::wstring& input);
