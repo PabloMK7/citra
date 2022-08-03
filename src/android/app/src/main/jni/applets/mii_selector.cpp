@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/string_util.h"
+#include "jni/android_common/android_common.h"
 #include "jni/applets/mii_selector.h"
 #include "jni/id_cache.h"
 
@@ -26,7 +27,7 @@ void AndroidMiiSelector::Setup(const Frontend::MiiSelectorConfig& config) {
                          static_cast<jboolean>(config.enable_cancel_button));
     env->SetObjectField(java_config,
                         env->GetFieldID(s_mii_selector_config_class, "title", "Ljava/lang/String;"),
-                        env->NewStringUTF(config.title.c_str()));
+                        ToJString(env, config.title));
     env->SetLongField(
         java_config,
         env->GetFieldID(s_mii_selector_config_class, "initially_selected_mii_index", "J"),
@@ -39,7 +40,7 @@ void AndroidMiiSelector::Setup(const Frontend::MiiSelectorConfig& config) {
         env->NewObjectArray(static_cast<jsize>(miis.size()), string_class, nullptr);
     for (std::size_t i = 0; i < miis.size(); ++i) {
         const auto name = Common::UTF16BufferToUTF8(miis[i].mii_name);
-        env->SetObjectArrayElement(array, static_cast<jsize>(i), env->NewStringUTF(name.c_str()));
+        env->SetObjectArrayElement(array, static_cast<jsize>(i), ToJString(env, name));
     }
     env->SetObjectField(
         java_config,

@@ -18,3 +18,7 @@ std::string GetJString(JNIEnv *env, jstring jstr) {
     env->ReleaseStringUTFChars(jstr, s);
     return result;
 }
+
+jstring ToJString(JNIEnv* env, const std::string& str) {
+    return env->NewStringUTF(str.c_str());
+}

@@ -64,8 +64,8 @@ static bool DisplayAlertMessage(const char* caption, const char* text, bool yes_
 
     // Execute the Java method.
     jboolean result = env->CallStaticBooleanMethod(
-        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertMsg(), env->NewStringUTF(caption),
-        env->NewStringUTF(text), yes_no ? JNI_TRUE : JNI_FALSE);
+        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertMsg(), ToJString(env, caption),
+        ToJString(env, text), yes_no ? JNI_TRUE : JNI_FALSE);
 
     return result != JNI_FALSE;
 }
@@ -74,8 +74,8 @@ static std::string DisplayAlertPrompt(const char* caption, const char* text, int
     JNIEnv* env = IDCache::GetEnvForThread();
 
     jstring value = reinterpret_cast<jstring>(env->CallStaticObjectMethod(
-        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertPrompt(),
-        env->NewStringUTF(caption), env->NewStringUTF(text), buttonConfig));
+        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertPrompt(), ToJString(env, caption),
+        ToJString(env, text), buttonConfig));
 
     return GetJString(env, value);
 }

@@ -31,15 +31,15 @@ static jobject ToJavaKeyboardConfig(const Frontend::KeyboardConfig& config) {
                          static_cast<jboolean>(config.multiline_mode));
     env->SetObjectField(object,
                         env->GetFieldID(s_keyboard_config_class, "hint_text", "Ljava/lang/String;"),
-                        env->NewStringUTF(config.hint_text.c_str()));
+                        ToJString(env, config.hint_text));
 
     const jclass string_class = reinterpret_cast<jclass>(env->FindClass("java/lang/String"));
     const jobjectArray array =
         env->NewObjectArray(static_cast<jsize>(config.button_text.size()), string_class,
-                            env->NewStringUTF(config.button_text[0].c_str()));
+                            ToJString(env, config.button_text[0]));
     for (std::size_t i = 1; i < config.button_text.size(); ++i) {
         env->SetObjectArrayElement(array, static_cast<jsize>(i),
-                                   env->NewStringUTF(config.button_text[i].c_str()));
+                                   ToJString(env, config.button_text[i]));
     }
     env->SetObjectField(
         object, env->GetFieldID(s_keyboard_config_class, "button_text", "[Ljava/lang/String;"),
@@ -70,8 +70,7 @@ void AndroidKeyboard::Execute(const Frontend::KeyboardConfig& config) {
 
 void AndroidKeyboard::ShowError(const std::string& error) {
     JNIEnv* env = IDCache::GetEnvForThread();
-    env->CallStaticVoidMethod(s_software_keyboard_class, s_swkbd_show_error,
-                              env->NewStringUTF(error.c_str()));
+    env->CallStaticVoidMethod(s_software_keyboard_class, s_swkbd_show_error, ToJString(env, error));
 }
 
 void InitJNI(JNIEnv* env) {
