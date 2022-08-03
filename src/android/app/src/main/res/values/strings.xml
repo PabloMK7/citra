@@ -160,6 +160,7 @@
     <string name="emulation_control_joystick_rel_center">Relative Stick Center</string>
     <string name="emulation_control_dpad_slide_enable">Enable D-Pad Sliding</string>
     <string name="emulation_open_settings">Open Settings</string>
+    <string name="emulation_open_cheats">Open Cheats</string>
     <string name="emulation_switch_screen_layout">Landscape Screen Layout</string>
     <string name="emulation_screen_layout_landscape">Default</string>
     <string name="emulation_screen_layout_portrait">Portrait</string>
@@ -223,4 +224,17 @@
     <!-- Disk shader cache -->
     <string name="preparing_shaders">Preparing shaders</string>
     <string name="building_shaders">Building shaders</string>
+
+    <!-- Cheats -->
+    <string name="cheats">Cheats</string>
+    <string name="cheats_add">Add Cheat</string>
+    <string name="cheats_name">Name</string>
+    <string name="cheats_notes">Notes</string>
+    <string name="cheats_code">Code</string>
+    <string name="cheats_edit">Edit</string>
+    <string name="cheats_delete">Delete</string>
+    <string name="cheats_delete_confirmation">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="cheats_error_no_name">Name can\'t be empty</string>
+    <string name="cheats_error_no_code_lines">Code can\'t be empty</string>
+    <string name="cheats_error_on_line">Error on line %1$d</string>
 </resources>

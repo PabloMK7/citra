@@ -18,11 +18,12 @@ static constexpr jint JNI_VERSION = JNI_VERSION_1_6;
 
 static JavaVM* s_java_vm;
 
-static jclass s_native_library_class;
 static jclass s_core_error_class;
 static jclass s_savestate_info_class;
 static jclass s_disk_cache_progress_class;
 static jclass s_load_callback_stage_class;
+
+static jclass s_native_library_class;
 static jmethodID s_on_core_error;
 static jmethodID s_display_alert_msg;
 static jmethodID s_display_alert_prompt;
@@ -33,6 +34,10 @@ static jmethodID s_exit_emulation_activity;
 static jmethodID s_request_camera_permission;
 static jmethodID s_request_mic_permission;
 static jmethodID s_disk_cache_load_progress;
+
+static jclass s_cheat_class;
+static jfieldID s_cheat_pointer;
+static jmethodID s_cheat_constructor;
 
 static std::unordered_map<VideoCore::LoadCallbackStage, jobject> s_java_load_callback_stages;
 
@@ -57,10 +62,6 @@ JNIEnv* GetEnvForThread() {
     return owned.env;
 }
 
-jclass GetNativeLibraryClass() {
-    return s_native_library_class;
-}
-
 jclass GetCoreErrorClass() {
     return s_core_error_class;
 }
@@ -75,6 +76,10 @@ jclass GetDiskCacheProgressClass() {
 
 jclass GetDiskCacheLoadCallbackStageClass() {
     return s_load_callback_stage_class;
+}
+
+jclass GetNativeLibraryClass() {
+    return s_native_library_class;
 }
 
 jmethodID GetOnCoreError() {
@@ -117,6 +122,18 @@ jmethodID GetDiskCacheLoadProgress() {
     return s_disk_cache_load_progress;
 }
 
+jclass GetCheatClass() {
+    return s_cheat_class;
+}
+
+jfieldID GetCheatPointer() {
+    return s_cheat_pointer;
+}
+
+jmethodID GetCheatConstructor() {
+    return s_cheat_constructor;
+}
+
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage) {
     const auto it = s_java_load_callback_stages.find(stage);
     ASSERT_MSG(it != s_java_load_callback_stages.end(), "Invalid LoadCallbackStage: {}", stage);
@@ -147,9 +164,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         FileUtil::GetUserPath(FileUtil::UserPath::LogDir) + LOG_FILE));
     LOG_INFO(Frontend, "Logging backend initialised");
 
-    // Initialize Java classes
-    const jclass native_library_class = env->FindClass("org/citra/citra_emu/NativeLibrary");
-    s_native_library_class = reinterpret_cast<jclass>(env->NewGlobalRef(native_library_class));
+    // Initialize misc classes
     s_savestate_info_class = reinterpret_cast<jclass>(
         env->NewGlobalRef(env->FindClass("org/citra/citra_emu/NativeLibrary$SavestateInfo")));
     s_core_error_class = reinterpret_cast<jclass>(
@@ -159,7 +174,9 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_load_callback_stage_class = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass(
         "org/citra/citra_emu/disk_shader_cache/DiskShaderCacheProgress$LoadCallbackStage")));
 
-    // Initialize Java methods
+    // Initialize NativeLibrary
+    const jclass native_library_class = env->FindClass("org/citra/citra_emu/NativeLibrary");
+    s_native_library_class = reinterpret_cast<jclass>(env->NewGlobalRef(native_library_class));
     s_on_core_error = env->GetStaticMethodID(
         s_native_library_class, "OnCoreError",
         "(Lorg/citra/citra_emu/NativeLibrary$CoreError;Ljava/lang/String;)Z");
@@ -182,6 +199,14 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_disk_cache_load_progress = env->GetStaticMethodID(
         s_disk_cache_progress_class, "loadProgress",
         "(Lorg/citra/citra_emu/disk_shader_cache/DiskShaderCacheProgress$LoadCallbackStage;II)V");
+    env->DeleteLocalRef(native_library_class);
+
+    // Initialize Cheat
+    const jclass cheat_class = env->FindClass("org/citra/citra_emu/features/cheats/model/Cheat");
+    s_cheat_class = reinterpret_cast<jclass>(env->NewGlobalRef(cheat_class));
+    s_cheat_pointer = env->GetFieldID(cheat_class, "mPointer", "J");
+    s_cheat_constructor = env->GetMethodID(cheat_class, "<init>", "(J)V");
+    env->DeleteLocalRef(cheat_class);
 
     // Initialize LoadCallbackStage map
     const auto to_java_load_callback_stage = [env](const std::string& stage) {
@@ -215,11 +240,12 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
         return;
     }
 
-    env->DeleteGlobalRef(s_native_library_class);
     env->DeleteGlobalRef(s_savestate_info_class);
     env->DeleteGlobalRef(s_core_error_class);
     env->DeleteGlobalRef(s_disk_cache_progress_class);
     env->DeleteGlobalRef(s_load_callback_stage_class);
+    env->DeleteGlobalRef(s_native_library_class);
+    env->DeleteGlobalRef(s_cheat_class);
 
     for (auto& [key, object] : s_java_load_callback_stages) {
         env->DeleteGlobalRef(object);

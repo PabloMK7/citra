@@ -11,6 +11,9 @@ add_library(citra-android SHARED
     camera/ndk_camera.h
     camera/still_image_camera.cpp
     camera/still_image_camera.h
+    cheats/cheat.cpp
+    cheats/cheat.h
+    cheats/cheat_engine.cpp
     config.cpp
     config.h
     default_ini.h
