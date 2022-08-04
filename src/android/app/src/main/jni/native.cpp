@@ -27,6 +27,7 @@
 #include "core/hle/service/nfc/nfc.h"
 #include "core/savestate.h"
 #include "core/settings.h"
+#include "jni/android_common/android_common.h"
 #include "jni/applets/mii_selector.h"
 #include "jni/applets/swkbd.h"
 #include "jni/camera/ndk_camera.h"
@@ -58,24 +59,13 @@ std::condition_variable running_cv;
 
 } // Anonymous namespace
 
-static std::string GetJString(JNIEnv* env, jstring jstr) {
-    if (!jstr) {
-        return {};
-    }
-
-    const char* s = env->GetStringUTFChars(jstr, nullptr);
-    std::string result = s;
-    env->ReleaseStringUTFChars(jstr, s);
-    return result;
-}
-
 static bool DisplayAlertMessage(const char* caption, const char* text, bool yes_no) {
     JNIEnv* env = IDCache::GetEnvForThread();
 
     // Execute the Java method.
     jboolean result = env->CallStaticBooleanMethod(
-        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertMsg(), env->NewStringUTF(caption),
-        env->NewStringUTF(text), yes_no ? JNI_TRUE : JNI_FALSE);
+        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertMsg(), ToJString(env, caption),
+        ToJString(env, text), yes_no ? JNI_TRUE : JNI_FALSE);
 
     return result != JNI_FALSE;
 }
@@ -84,8 +74,8 @@ static std::string DisplayAlertPrompt(const char* caption, const char* text, int
     JNIEnv* env = IDCache::GetEnvForThread();
 
     jstring value = reinterpret_cast<jstring>(env->CallStaticObjectMethod(
-        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertPrompt(),
-        env->NewStringUTF(caption), env->NewStringUTF(text), buttonConfig));
+        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertPrompt(), ToJString(env, caption),
+        ToJString(env, text), buttonConfig));
 
     return GetJString(env, value);
 }
