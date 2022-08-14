@@ -68,6 +68,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="org.citra.citra_emu.features.cheats.ui.CheatsActivity"
+            android:exported="false"
+            android:theme="@style/CitraSettingsBase"
+            android:label="@string/cheats"/>
+
         <service android:name="org.citra.citra_emu.utils.DirectoryInitialization"/>
 
         <provider

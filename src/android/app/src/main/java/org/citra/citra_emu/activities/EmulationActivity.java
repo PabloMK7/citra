@@ -30,6 +30,7 @@ import androidx.fragment.app.FragmentActivity;
 import org.citra.citra_emu.CitraApplication;
 import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.R;
+import org.citra.citra_emu.features.cheats.ui.CheatsActivity;
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting;
 import org.citra.citra_emu.features.settings.ui.SettingsActivity;
 import org.citra.citra_emu.features.settings.utils.SettingsFile;
@@ -72,6 +73,7 @@ public final class EmulationActivity extends AppCompatActivity {
     public static final int MENU_ACTION_REMOVE_AMIIBO = 14;
     public static final int MENU_ACTION_JOYSTICK_REL_CENTER = 15;
     public static final int MENU_ACTION_DPAD_SLIDE_ENABLE = 16;
+    public static final int MENU_ACTION_OPEN_CHEATS = 17;
 
     public static final int REQUEST_SELECT_AMIIBO = 2;
     private static final int EMULATION_RUNNING_NOTIFICATION = 0x1000;
@@ -110,6 +112,8 @@ public final class EmulationActivity extends AppCompatActivity {
                 EmulationActivity.MENU_ACTION_JOYSTICK_REL_CENTER);
         buttonsActionsMap.append(R.id.menu_emulation_dpad_slide_enable,
                 EmulationActivity.MENU_ACTION_DPAD_SLIDE_ENABLE);
+        buttonsActionsMap
+                .append(R.id.menu_emulation_open_cheats, EmulationActivity.MENU_ACTION_OPEN_CHEATS);
     }
 
     private View mDecorView;
@@ -466,10 +470,15 @@ public final class EmulationActivity extends AppCompatActivity {
                 EmulationMenuSettings.setJoystickRelCenter(isJoystickRelCenterEnabled);
                 item.setChecked(isJoystickRelCenterEnabled);
                 break;
+
             case MENU_ACTION_DPAD_SLIDE_ENABLE:
                 final boolean isDpadSlideEnabled = !EmulationMenuSettings.getDpadSlideEnable();
                 EmulationMenuSettings.setDpadSlideEnable(isDpadSlideEnabled);
                 item.setChecked(isDpadSlideEnabled);
+                break;
+
+            case MENU_ACTION_OPEN_CHEATS:
+                CheatsActivity.launch(this);
                 break;
         }
 
