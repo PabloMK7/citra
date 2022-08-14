@@ -53,6 +53,8 @@ void EmuThread::run() {
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
 
+    core_context.MakeCurrent();
+
     if (Core::System::GetInstance().frame_limiter.IsFrameAdvancing()) {
         // Usually the loading screen is hidden after the first frame is drawn. In this case
         // we hide it immediately as we need to wait for user input to start the emulation.

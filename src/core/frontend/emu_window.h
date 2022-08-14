@@ -112,6 +112,16 @@ public:
     }
 
     /**
+     * Save current GraphicsContext.
+     */
+    virtual void SaveContext(){};
+
+    /**
+     * Restore saved GraphicsContext.
+     */
+    virtual void RestoreContext(){};
+
+    /**
      * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
      * @param framebuffer_x Framebuffer x-coordinate that was pressed
      * @param framebuffer_y Framebuffer y-coordinate that was pressed
