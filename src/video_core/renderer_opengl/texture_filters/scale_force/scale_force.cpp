@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/texture_filters/scale_force/scale_force.h"
 
 #include "shaders/scale_force.frag"

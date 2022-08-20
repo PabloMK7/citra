@@ -34,7 +34,7 @@
 #include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
@@ -1715,8 +1715,8 @@ bool RasterizerCacheOpenGL::IntervalHasInvalidPixelFormat(SurfaceParams& params,
     params.pixel_format = PixelFormat::Invalid;
     for (const auto& set : RangeFromInterval(surface_cache, interval))
         for (const auto& surface : set.second)
-            if (surface->pixel_format == PixelFormat::Invalid) {
-                LOG_WARNING(Render_OpenGL, "Surface found with invalid pixel format");
+            if (surface->pixel_format == PixelFormat::Invalid && surface->type != SurfaceType::Fill) {
+                LOG_WARNING(Render_OpenGL, "Surface {:#x} found with invalid pixel format", surface->addr);
                 return true;
             }
     return false;

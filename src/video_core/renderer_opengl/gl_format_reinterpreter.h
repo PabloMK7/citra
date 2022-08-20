@@ -10,7 +10,7 @@
 #include "common/common_types.h"
 #include "common/math_util.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
-#include "video_core/renderer_opengl/gl_surface_params.h"
+#include "video_core/rasterizer_cache/surface_params.h"
 
 namespace OpenGL {
 

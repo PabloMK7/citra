@@ -30,7 +30,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.h"
 
 #include "shaders/refine.frag"

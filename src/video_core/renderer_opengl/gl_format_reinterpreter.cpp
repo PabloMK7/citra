@@ -5,7 +5,7 @@
 #include "common/assert.h"
 #include "common/scope_exit.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"

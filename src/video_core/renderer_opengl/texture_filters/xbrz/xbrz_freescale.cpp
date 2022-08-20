@@ -40,7 +40,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/texture_filters/xbrz/xbrz_freescale.h"
 
 #include "shaders/xbrz_freescale.frag"

@@ -10,7 +10,6 @@
 #include <glad/glad.h>
 #include "common/common_types.h"
 #include "common/math_util.h"
-#include "video_core/renderer_opengl/gl_surface_params.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filter_base.h"
 
 namespace OpenGL {

@@ -8,7 +8,7 @@
 #include <fmt/chrono.h>
 
 #include "common/logging/log.h"
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"

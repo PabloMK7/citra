@@ -28,7 +28,7 @@
 #include "common/math_util.h"
 #include "core/custom_tex_cache.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
-#include "video_core/renderer_opengl/gl_surface_params.h"
+#include "video_core/rasterizer_cache/surface_params.h"
 #include "video_core/texture/texture_decode.h"
 
 namespace OpenGL {
