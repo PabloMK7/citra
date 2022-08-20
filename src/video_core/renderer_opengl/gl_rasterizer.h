@@ -263,8 +263,6 @@ private:
     /// Setup geometry shader for AccelerateDrawBatch
     bool SetupGeometryShader();
 
-    bool is_amd;
-
     OpenGLState state;
     GLuint default_texture;
 
@@ -323,8 +321,6 @@ private:
     std::array<GLvec2, 128> proctex_alpha_map_data{};
     std::array<GLvec4, 256> proctex_lut_data{};
     std::array<GLvec4, 256> proctex_diff_lut_data{};
-
-    bool allow_shadow;
 };
 
 } // namespace OpenGL

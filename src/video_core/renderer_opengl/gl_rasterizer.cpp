@@ -13,7 +13,6 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
-#include "common/scope_exit.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "video_core/pica_state.h"
@@ -36,33 +35,12 @@ MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
 
-static bool IsVendorAmd() {
-    const std::string_view gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
-    return gpu_vendor == "ATI Technologies Inc." || gpu_vendor == "Advanced Micro Devices, Inc.";
-}
-static bool IsVendorIntel() {
-    std::string gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
-    return gpu_vendor == "Intel Inc.";
-}
-
 RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
-    : is_amd(IsVendorAmd()), vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE, is_amd),
+    : vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE),
       uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false),
       index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false),
       texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false),
       texture_lf_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false) {
-
-    allow_shadow = GLES || (GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
-                            GLAD_GL_ARB_framebuffer_no_attachments);
-    if (!allow_shadow) {
-        LOG_WARNING(Render_OpenGL,
-                    "Shadow might not be able to render because of unsupported OpenGL extensions.");
-    }
-
-    if (!GLAD_GL_ARB_copy_image && !GLES) {
-        LOG_WARNING(Render_OpenGL,
-                    "ARB_copy_image not supported. Some games might produce artifacts.");
-    }
 
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
@@ -178,7 +156,7 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
     }
 #else
     shader_program_manager = std::make_unique<ShaderProgramManager>(
-        emu_window, GLAD_GL_ARB_separate_shader_objects, is_amd);
+        emu_window, GLAD_GL_ARB_separate_shader_objects);
 #endif
 
     glEnable(GL_BLEND);
@@ -574,9 +552,10 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     state.Apply();
 
     if (shadow_rendering) {
-        if (!allow_shadow || color_surface == nullptr) {
+        if (color_surface == nullptr) {
             return true;
         }
+
         glFramebufferParameteri(GL_DRAW_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH,
                                 color_surface->width * color_surface->res_scale);
         glFramebufferParameteri(GL_DRAW_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT,
@@ -663,9 +642,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                 using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
                 switch (texture.config.type.Value()) {
                 case TextureType::Shadow2D: {
-                    if (!allow_shadow)
-                        continue;
-
                     Surface surface = res_cache.GetTextureSurface(texture);
                     if (surface != nullptr) {
                         CheckBarrier(state.image_shadow_texture_px = surface->texture.handle);
@@ -675,8 +651,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                     continue;
                 }
                 case TextureType::ShadowCube: {
-                    if (!allow_shadow)
-                        continue;
                     Pica::Texture::TextureInfo info = Pica::Texture::TextureInfo::FromPicaRegister(
                         texture.config, texture.format);
                     Surface surface;
@@ -875,15 +849,13 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         state.texture_units[texture_index].texture_2d = 0;
     }
     state.texture_cube_unit.texture_cube = 0;
-    if (allow_shadow) {
-        state.image_shadow_texture_px = 0;
-        state.image_shadow_texture_nx = 0;
-        state.image_shadow_texture_py = 0;
-        state.image_shadow_texture_ny = 0;
-        state.image_shadow_texture_pz = 0;
-        state.image_shadow_texture_nz = 0;
-        state.image_shadow_buffer = 0;
-    }
+    state.image_shadow_texture_px = 0;
+    state.image_shadow_texture_nx = 0;
+    state.image_shadow_texture_py = 0;
+    state.image_shadow_texture_ny = 0;
+    state.image_shadow_texture_pz = 0;
+    state.image_shadow_texture_nz = 0;
+    state.image_shadow_buffer = 0;
     state.Apply();
 
     if (shadow_rendering) {
