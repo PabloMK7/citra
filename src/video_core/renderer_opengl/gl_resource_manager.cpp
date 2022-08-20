@@ -90,11 +90,12 @@ void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat, 
             for (GLsizei level{0}; level < levels; ++level) {
                 glTexImage3D(target, level, internalformat, width, height, depth, 0, format, type,
                              nullptr);
+
+                width >>= 1;
+                height >>= 1;
+                if (target == GL_TEXTURE_3D)
+                    depth >>= 1;
             }
-            width >>= 1;
-            height >>= 1;
-            if (target == GL_TEXTURE_3D)
-                depth >>= 1;
         }
         break;
     }
