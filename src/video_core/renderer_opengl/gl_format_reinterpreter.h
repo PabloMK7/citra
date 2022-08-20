@@ -9,27 +9,27 @@
 #include <glad/glad.h>
 #include "common/common_types.h"
 #include "common/math_util.h"
-#include "video_core/renderer_opengl/gl_resource_manager.h"
-#include "video_core/rasterizer_cache/surface_params.h"
+#include "video_core/rasterizer_cache/pixel_format.h"
 
 namespace OpenGL {
 
 class RasterizerCacheOpenGL;
 
 struct PixelFormatPair {
-    const SurfaceParams::PixelFormat dst_format, src_format;
+    const PixelFormat dst_format, src_format;
+
     struct less {
         using is_transparent = void;
-        constexpr bool operator()(OpenGL::PixelFormatPair lhs, OpenGL::PixelFormatPair rhs) const {
+        constexpr bool operator()(PixelFormatPair lhs, PixelFormatPair rhs) const {
             return std::tie(lhs.dst_format, lhs.src_format) <
                    std::tie(rhs.dst_format, rhs.src_format);
         }
-        constexpr bool operator()(OpenGL::SurfaceParams::PixelFormat lhs,
-                                  OpenGL::PixelFormatPair rhs) const {
+
+        constexpr bool operator()(PixelFormat lhs, PixelFormatPair rhs) const {
             return lhs < rhs.dst_format;
         }
-        constexpr bool operator()(OpenGL::PixelFormatPair lhs,
-                                  OpenGL::SurfaceParams::PixelFormat rhs) const {
+
+        constexpr bool operator()(PixelFormatPair lhs, PixelFormat rhs) const {
             return lhs.dst_format < rhs;
         }
     };
@@ -52,8 +52,8 @@ public:
     explicit FormatReinterpreterOpenGL();
     ~FormatReinterpreterOpenGL();
 
-    std::pair<ReinterpreterMap::iterator, ReinterpreterMap::iterator> GetPossibleReinterpretations(
-        SurfaceParams::PixelFormat dst_format);
+    auto GetPossibleReinterpretations(PixelFormat dst_format) ->
+    std::pair<ReinterpreterMap::iterator, ReinterpreterMap::iterator>;
 
 private:
     ReinterpreterMap reinterpreters;

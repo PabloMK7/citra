@@ -45,7 +45,7 @@ struct FormatTuple {
 
 constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 
-const FormatTuple& GetFormatTuple(SurfaceParams::PixelFormat pixel_format);
+const FormatTuple& GetFormatTuple(PixelFormat pixel_format);
 
 struct HostTextureTag {
     FormatTuple format_tuple;
@@ -204,15 +204,6 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
 
     bool is_custom = false;
     Core::CustomTexInfo custom_tex_info;
-
-    static constexpr unsigned int GetGLBytesPerPixel(PixelFormat format) {
-        // OpenGL needs 4 bpp alignment for D24 since using GL_UNSIGNED_INT as type
-        return format == PixelFormat::Invalid
-                   ? 0
-                   : (format == PixelFormat::D24 || GetFormatType(format) == SurfaceType::Texture)
-                         ? 4
-                         : SurfaceParams::GetFormatBpp(format) / 8;
-    }
 
     std::vector<u8> gl_buffer;
 

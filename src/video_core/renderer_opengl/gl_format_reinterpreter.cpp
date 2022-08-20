@@ -12,8 +12,6 @@
 
 namespace OpenGL {
 
-using PixelFormat = SurfaceParams::PixelFormat;
-
 class RGBA4toRGB5A1 final : public FormatReinterpreterBase {
 public:
     RGBA4toRGB5A1() {

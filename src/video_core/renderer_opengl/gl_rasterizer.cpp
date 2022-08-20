@@ -29,9 +29,6 @@
 
 namespace OpenGL {
 
-using PixelFormat = SurfaceParams::PixelFormat;
-using SurfaceType = SurfaceParams::SurfaceType;
-
 MICROPROFILE_DEFINE(OpenGL_VAO, "OpenGL", "Vertex Array Setup", MP_RGB(255, 128, 0));
 MICROPROFILE_DEFINE(OpenGL_VS, "OpenGL", "Vertex Shader Setup", MP_RGB(192, 128, 128));
 MICROPROFILE_DEFINE(OpenGL_GS, "OpenGL", "Geometry Shader Setup", MP_RGB(128, 192, 128));
@@ -1445,7 +1442,7 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
     src_params.stride = config.input_width;
     src_params.height = config.output_height;
     src_params.is_tiled = !config.input_linear;
-    src_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.input_format);
+    src_params.pixel_format = PixelFormatFromGPUPixelFormat(config.input_format);
     src_params.UpdateParams();
 
     SurfaceParams dst_params;
@@ -1455,7 +1452,7 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
     dst_params.height = config.scaling == config.ScaleXY ? config.output_height.Value() / 2
                                                          : config.output_height.Value();
     dst_params.is_tiled = config.input_linear != config.dont_swizzle;
-    dst_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.output_format);
+    dst_params.pixel_format = PixelFormatFromGPUPixelFormat(config.output_format);
     dst_params.UpdateParams();
 
     Common::Rectangle<u32> src_rect;
@@ -1595,7 +1592,7 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     src_params.height = config.height;
     src_params.stride = pixel_stride;
     src_params.is_tiled = false;
-    src_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.color_format);
+    src_params.pixel_format = PixelFormatFromGPUPixelFormat(config.color_format);
     src_params.UpdateParams();
 
     Common::Rectangle<u32> src_rect;

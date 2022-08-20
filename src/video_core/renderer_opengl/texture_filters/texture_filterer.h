@@ -7,9 +7,7 @@
 #include <memory>
 #include <string_view>
 #include <vector>
-#include <glad/glad.h>
-#include "common/common_types.h"
-#include "common/math_util.h"
+#include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filter_base.h"
 
 namespace OpenGL {
@@ -25,7 +23,7 @@ public:
     bool IsNull() const;
     // returns true if the texture was able to be filtered
     bool Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
-                const Common::Rectangle<u32>& dst_rect, SurfaceParams::SurfaceType type,
+                const Common::Rectangle<u32>& dst_rect, SurfaceType type,
                 GLuint read_fb_handle, GLuint draw_fb_handle);
 
     static std::vector<std::string_view> GetFilterNames();

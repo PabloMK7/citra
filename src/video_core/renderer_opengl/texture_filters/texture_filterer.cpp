@@ -60,12 +60,13 @@ bool TextureFilterer::IsNull() const {
 
 bool TextureFilterer::Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
                              const Common::Rectangle<u32>& dst_rect,
-                             SurfaceParams::SurfaceType type, GLuint read_fb_handle,
+                             SurfaceType type, GLuint read_fb_handle,
                              GLuint draw_fb_handle) {
     // depth / stencil texture filtering is not supported for now
-    if (IsNull() ||
-        (type != SurfaceParams::SurfaceType::Color && type != SurfaceParams::SurfaceType::Texture))
+    if (IsNull() || (type != SurfaceType::Color && type != SurfaceType::Texture)) {
         return false;
+    }
+
     filter->Filter(src_tex, src_rect, dst_tex, dst_rect, read_fb_handle, draw_fb_handle);
     return true;
 }

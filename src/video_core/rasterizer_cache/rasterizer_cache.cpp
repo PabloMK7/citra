@@ -29,23 +29,16 @@
 #include "core/custom_tex_cache.h"
 #include "core/frontend/emu_window.h"
 #include "core/hle/kernel/process.h"
-#include "core/memory.h"
 #include "core/settings.h"
 #include "video_core/pica_state.h"
-#include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
+#include "video_core/rasterizer_cache/morton_swizzle.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
-#include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
-#include "video_core/utils.h"
-#include "video_core/video_core.h"
 
 namespace OpenGL {
-
-using SurfaceType = SurfaceParams::SurfaceType;
-using PixelFormat = SurfaceParams::PixelFormat;
 
 static constexpr std::array<FormatTuple, 5> fb_format_tuples = {{
     {GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},     // RGBA8
@@ -67,7 +60,7 @@ static constexpr std::array<FormatTuple, 5> fb_format_tuples_oes = {{
 }};
 
 const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
-    const SurfaceType type = SurfaceParams::GetFormatType(pixel_format);
+    const SurfaceType type = GetFormatType(pixel_format);
     if (type == SurfaceType::Color) {
         ASSERT(static_cast<std::size_t>(pixel_format) < fb_format_tuples.size());
         if (GLES) {
@@ -86,162 +79,6 @@ template <typename Map, typename Interval>
 static constexpr auto RangeFromInterval(Map& map, const Interval& interval) {
     return boost::make_iterator_range(map.equal_range(interval));
 }
-
-template <bool morton_to_gl, PixelFormat format>
-static void MortonCopyTile(u32 stride, u8* tile_buffer, u8* gl_buffer) {
-    constexpr u32 bytes_per_pixel = SurfaceParams::GetFormatBpp(format) / 8;
-    constexpr u32 gl_bytes_per_pixel = CachedSurface::GetGLBytesPerPixel(format);
-    for (u32 y = 0; y < 8; ++y) {
-        for (u32 x = 0; x < 8; ++x) {
-            u8* tile_ptr = tile_buffer + VideoCore::MortonInterleave(x, y) * bytes_per_pixel;
-            u8* gl_ptr = gl_buffer + ((7 - y) * stride + x) * gl_bytes_per_pixel;
-            if constexpr (morton_to_gl) {
-                if constexpr (format == PixelFormat::D24S8) {
-                    gl_ptr[0] = tile_ptr[3];
-                    std::memcpy(gl_ptr + 1, tile_ptr, 3);
-                } else if (format == PixelFormat::RGBA8 && GLES) {
-                    // because GLES does not have ABGR format
-                    // so we will do byteswapping here
-                    gl_ptr[0] = tile_ptr[3];
-                    gl_ptr[1] = tile_ptr[2];
-                    gl_ptr[2] = tile_ptr[1];
-                    gl_ptr[3] = tile_ptr[0];
-                } else if (format == PixelFormat::RGB8 && GLES) {
-                    gl_ptr[0] = tile_ptr[2];
-                    gl_ptr[1] = tile_ptr[1];
-                    gl_ptr[2] = tile_ptr[0];
-                } else {
-                    std::memcpy(gl_ptr, tile_ptr, bytes_per_pixel);
-                }
-            } else {
-                if constexpr (format == PixelFormat::D24S8) {
-                    std::memcpy(tile_ptr, gl_ptr + 1, 3);
-                    tile_ptr[3] = gl_ptr[0];
-                } else if (format == PixelFormat::RGBA8 && GLES) {
-                    // because GLES does not have ABGR format
-                    // so we will do byteswapping here
-                    tile_ptr[0] = gl_ptr[3];
-                    tile_ptr[1] = gl_ptr[2];
-                    tile_ptr[2] = gl_ptr[1];
-                    tile_ptr[3] = gl_ptr[0];
-                } else if (format == PixelFormat::RGB8 && GLES) {
-                    tile_ptr[0] = gl_ptr[2];
-                    tile_ptr[1] = gl_ptr[1];
-                    tile_ptr[2] = gl_ptr[0];
-                } else {
-                    std::memcpy(tile_ptr, gl_ptr, bytes_per_pixel);
-                }
-            }
-        }
-    }
-}
-
-template <bool morton_to_gl, PixelFormat format>
-static void MortonCopy(u32 stride, u32 height, u8* gl_buffer, PAddr base, PAddr start, PAddr end) {
-    constexpr u32 bytes_per_pixel = SurfaceParams::GetFormatBpp(format) / 8;
-    constexpr u32 tile_size = bytes_per_pixel * 64;
-
-    constexpr u32 gl_bytes_per_pixel = CachedSurface::GetGLBytesPerPixel(format);
-    static_assert(gl_bytes_per_pixel >= bytes_per_pixel, "");
-    gl_buffer += gl_bytes_per_pixel - bytes_per_pixel;
-
-    const PAddr aligned_down_start = base + Common::AlignDown(start - base, tile_size);
-    const PAddr aligned_start = base + Common::AlignUp(start - base, tile_size);
-    const PAddr aligned_end = base + Common::AlignDown(end - base, tile_size);
-
-    ASSERT(!morton_to_gl || (aligned_start == start && aligned_end == end));
-
-    const u32 begin_pixel_index = (aligned_down_start - base) / bytes_per_pixel;
-    u32 x = (begin_pixel_index % (stride * 8)) / 8;
-    u32 y = (begin_pixel_index / (stride * 8)) * 8;
-
-    gl_buffer += ((height - 8 - y) * stride + x) * gl_bytes_per_pixel;
-
-    auto glbuf_next_tile = [&] {
-        x = (x + 8) % stride;
-        gl_buffer += 8 * gl_bytes_per_pixel;
-        if (!x) {
-            y += 8;
-            gl_buffer -= stride * 9 * gl_bytes_per_pixel;
-        }
-    };
-
-    u8* tile_buffer = VideoCore::g_memory->GetPhysicalPointer(start);
-
-    if (start < aligned_start && !morton_to_gl) {
-        std::array<u8, tile_size> tmp_buf;
-        MortonCopyTile<morton_to_gl, format>(stride, &tmp_buf[0], gl_buffer);
-        std::memcpy(tile_buffer, &tmp_buf[start - aligned_down_start],
-                    std::min(aligned_start, end) - start);
-
-        tile_buffer += aligned_start - start;
-        glbuf_next_tile();
-    }
-
-    const u8* const buffer_end = tile_buffer + aligned_end - aligned_start;
-    PAddr current_paddr = aligned_start;
-    while (tile_buffer < buffer_end) {
-        // Pokemon Super Mystery Dungeon will try to use textures that go beyond
-        // the end address of VRAM. Stop reading if reaches invalid address
-        if (!VideoCore::g_memory->IsValidPhysicalAddress(current_paddr) ||
-            !VideoCore::g_memory->IsValidPhysicalAddress(current_paddr + tile_size)) {
-            LOG_ERROR(Render_OpenGL, "Out of bound texture");
-            break;
-        }
-        MortonCopyTile<morton_to_gl, format>(stride, tile_buffer, gl_buffer);
-        tile_buffer += tile_size;
-        current_paddr += tile_size;
-        glbuf_next_tile();
-    }
-
-    if (end > std::max(aligned_start, aligned_end) && !morton_to_gl) {
-        std::array<u8, tile_size> tmp_buf;
-        MortonCopyTile<morton_to_gl, format>(stride, &tmp_buf[0], gl_buffer);
-        std::memcpy(tile_buffer, &tmp_buf[0], end - aligned_end);
-    }
-}
-
-static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> morton_to_gl_fns = {
-    MortonCopy<true, PixelFormat::RGBA8>,  // 0
-    MortonCopy<true, PixelFormat::RGB8>,   // 1
-    MortonCopy<true, PixelFormat::RGB5A1>, // 2
-    MortonCopy<true, PixelFormat::RGB565>, // 3
-    MortonCopy<true, PixelFormat::RGBA4>,  // 4
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,                             // 5 - 13
-    MortonCopy<true, PixelFormat::D16>,  // 14
-    nullptr,                             // 15
-    MortonCopy<true, PixelFormat::D24>,  // 16
-    MortonCopy<true, PixelFormat::D24S8> // 17
-};
-
-static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl_to_morton_fns = {
-    MortonCopy<false, PixelFormat::RGBA8>,  // 0
-    MortonCopy<false, PixelFormat::RGB8>,   // 1
-    MortonCopy<false, PixelFormat::RGB5A1>, // 2
-    MortonCopy<false, PixelFormat::RGB565>, // 3
-    MortonCopy<false, PixelFormat::RGBA4>,  // 4
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,                              // 5 - 13
-    MortonCopy<false, PixelFormat::D16>,  // 14
-    nullptr,                              // 15
-    MortonCopy<false, PixelFormat::D24>,  // 16
-    MortonCopy<false, PixelFormat::D24S8> // 17
-};
 
 // Allocate an uninitialized texture of appropriate size and format for the surface
 OGLTexture RasterizerCacheOpenGL::AllocateSurfaceTexture(const FormatTuple& format_tuple, u32 width,
@@ -264,7 +101,7 @@ OGLTexture RasterizerCacheOpenGL::AllocateSurfaceTexture(const FormatTuple& form
 
     if (GL_ARB_texture_storage) {
         // Allocate all possible mipmap levels upfront
-        auto levels = std::log2(std::max(width, height)) + 1;
+        const GLsizei levels = std::log2(std::max(width, height)) + 1;
         glTexStorage2D(GL_TEXTURE_2D, levels, format_tuple.internal_format, width, height);
     } else {
         glTexImage2D(GL_TEXTURE_2D, 0, format_tuple.internal_format, width, height, 0,
@@ -293,7 +130,7 @@ static void AllocateTextureCube(GLuint texture, const FormatTuple& format_tuple,
     glActiveTexture(TextureUnits::TextureCube.Enum());
     if (GL_ARB_texture_storage) {
         // Allocate all possible mipmap levels in case the game uses them later
-        auto levels = std::log2(width) + 1;
+        const GLsizei levels = std::log2(width) + 1;
         glTexStorage2D(GL_TEXTURE_CUBE_MAP, levels, format_tuple.internal_format, width, width);
     } else {
         for (auto faces : {
@@ -418,10 +255,10 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
         u32 value_32bit = 0;
         GLfloat value_float;
 
-        if (surface->pixel_format == SurfaceParams::PixelFormat::D16) {
+        if (surface->pixel_format == PixelFormat::D16) {
             std::memcpy(&value_32bit, fill_data, 2);
             value_float = value_32bit / 65535.0f; // 2^16 - 1
-        } else if (surface->pixel_format == SurfaceParams::PixelFormat::D24) {
+        } else if (surface->pixel_format == PixelFormat::D24) {
             std::memcpy(&value_32bit, fill_data, 3);
             value_float = value_32bit / 16777215.0f; // 2^24 - 1
         }
@@ -545,7 +382,7 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
         return;
 
     if (gl_buffer.empty()) {
-        gl_buffer.resize(width * height * GetGLBytesPerPixel(pixel_format));
+        gl_buffer.resize(width * height * GetBytesPerPixel(pixel_format));
     }
 
     // TODO: Should probably be done in ::Memory:: and check for other regions too
@@ -617,7 +454,7 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     if (dst_buffer == nullptr)
         return;
 
-    ASSERT(gl_buffer.size() == width * height * GetGLBytesPerPixel(pixel_format));
+    ASSERT(gl_buffer.size() == width * height * GetBytesPerPixel(pixel_format));
 
     // TODO: Should probably be done in ::Memory:: and check for other regions too
     // same as loadglbuffer()
@@ -771,7 +608,7 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect, GLuint read_fb_
 
     MICROPROFILE_SCOPE(OpenGL_TextureUL);
 
-    ASSERT(gl_buffer.size() == width * height * GetGLBytesPerPixel(pixel_format));
+    ASSERT(gl_buffer.size() == width * height * GetBytesPerPixel(pixel_format));
 
     u64 tex_hash = 0;
 
@@ -786,7 +623,7 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect, GLuint read_fb_
     // Load data from memory to the surface
     GLint x0 = static_cast<GLint>(rect.left);
     GLint y0 = static_cast<GLint>(rect.bottom);
-    std::size_t buffer_offset = (y0 * stride + x0) * GetGLBytesPerPixel(pixel_format);
+    std::size_t buffer_offset = (y0 * stride + x0) * GetBytesPerPixel(pixel_format);
 
     const FormatTuple& tuple = GetFormatTuple(pixel_format);
     GLuint target_tex = texture.handle;
@@ -814,7 +651,7 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect, GLuint read_fb_
     cur_state.Apply();
 
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT
-    ASSERT(stride * GetGLBytesPerPixel(pixel_format) % 4 == 0);
+    ASSERT(stride * GetBytesPerPixel(pixel_format) % 4 == 0);
     if (is_custom) {
         if (res_scale == 1) {
             texture = owner.AllocateSurfaceTexture(GetFormatTuple(PixelFormat::RGBA8),
@@ -873,7 +710,7 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
     MICROPROFILE_SCOPE(OpenGL_TextureDL);
 
     if (gl_buffer.empty()) {
-        gl_buffer.resize(width * height * GetGLBytesPerPixel(pixel_format));
+        gl_buffer.resize(width * height * GetBytesPerPixel(pixel_format));
     }
 
     OpenGLState state = OpenGLState::GetCurState();
@@ -883,10 +720,10 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint
     const FormatTuple& tuple = GetFormatTuple(pixel_format);
 
     // Ensure no bad interactions with GL_PACK_ALIGNMENT
-    ASSERT(stride * GetGLBytesPerPixel(pixel_format) % 4 == 0);
+    ASSERT(stride * GetBytesPerPixel(pixel_format) % 4 == 0);
     glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride));
     std::size_t buffer_offset =
-        (rect.bottom * stride + rect.left) * GetGLBytesPerPixel(pixel_format);
+        (rect.bottom * stride + rect.left) * GetBytesPerPixel(pixel_format);
 
     // If not 1x scale, blit scaled texture to a new 1x texture and use that to flush
     if (res_scale != 1) {
@@ -1084,7 +921,7 @@ bool RasterizerCacheOpenGL::BlitSurfaces(const Surface& src_surface,
                                          const Common::Rectangle<u32>& dst_rect) {
     MICROPROFILE_SCOPE(OpenGL_BlitSurface);
 
-    if (!SurfaceParams::CheckFormatsBlittable(src_surface->pixel_format, dst_surface->pixel_format))
+    if (!CheckFormatsBlittable(src_surface->pixel_format, dst_surface->pixel_format))
         return false;
 
     dst_surface->InvalidateAllWatcher();
@@ -1239,7 +1076,7 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
     params.width = info.width;
     params.height = info.height;
     params.is_tiled = true;
-    params.pixel_format = SurfaceParams::PixelFormatFromTextureFormat(info.format);
+    params.pixel_format = PixelFormatFromTextureFormat(info.format);
     params.res_scale = texture_filterer->IsNull() ? 1 : resolution_scale_factor;
     params.UpdateParams();
 
@@ -1411,7 +1248,7 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
         cube.texture.Create();
         AllocateTextureCube(
             cube.texture.handle,
-            GetFormatTuple(CachedSurface::PixelFormatFromTextureFormat(config.format)),
+            GetFormatTuple(PixelFormatFromTextureFormat(config.format)),
             cube.res_scale * config.width);
     }
 
@@ -1459,7 +1296,7 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     const auto& config = regs.framebuffer.framebuffer;
 
     // update resolution_scale_factor and reset cache if changed
-    if ((resolution_scale_factor != VideoCore::GetResolutionScaleFactor()) |
+    if ((resolution_scale_factor != VideoCore::GetResolutionScaleFactor()) ||
         (VideoCore::g_texture_filter_update_requested.exchange(false) &&
          texture_filterer->Reset(Settings::values.texture_filter_name, resolution_scale_factor))) {
         resolution_scale_factor = VideoCore::GetResolutionScaleFactor();
@@ -1485,11 +1322,11 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     SurfaceParams depth_params = color_params;
 
     color_params.addr = config.GetColorBufferPhysicalAddress();
-    color_params.pixel_format = SurfaceParams::PixelFormatFromColorFormat(config.color_format);
+    color_params.pixel_format = PixelFormatFromColorFormat(config.color_format);
     color_params.UpdateParams();
 
     depth_params.addr = config.GetDepthBufferPhysicalAddress();
-    depth_params.pixel_format = SurfaceParams::PixelFormatFromDepthFormat(config.depth_format);
+    depth_params.pixel_format = PixelFormatFromDepthFormat(config.depth_format);
     depth_params.UpdateParams();
 
     auto color_vp_interval = color_params.GetSubRectInterval(viewport_clamped);
@@ -1693,7 +1530,7 @@ bool RasterizerCacheOpenGL::NoUnimplementedReinterpretations(const Surface& surf
     };
     bool implemented = true;
     for (PixelFormat format : all_formats) {
-        if (SurfaceParams::GetFormatBpp(format) == surface->GetFormatBpp()) {
+        if (GetFormatBpp(format) == surface->GetFormatBpp()) {
             params.pixel_format = format;
             // This could potentially be expensive,
             // although experimentally it hasn't been too bad
@@ -1701,8 +1538,8 @@ bool RasterizerCacheOpenGL::NoUnimplementedReinterpretations(const Surface& surf
                 FindMatch<MatchFlags::Copy>(surface_cache, params, ScaleMatch::Ignore, interval);
             if (test_surface != nullptr) {
                 LOG_WARNING(Render_OpenGL, "Missing pixel_format reinterpreter: {} -> {}",
-                            SurfaceParams::PixelFormatAsString(format),
-                            SurfaceParams::PixelFormatAsString(surface->pixel_format));
+                            PixelFormatAsString(format),
+                            PixelFormatAsString(surface->pixel_format));
                 implemented = false;
             }
         }
@@ -1751,9 +1588,8 @@ bool RasterizerCacheOpenGL::ValidateByReinterpretation(const Surface& surface,
                 reinterpreter->second->Reinterpret(reinterpret_surface->texture.handle, src_rect,
                                                    read_framebuffer.handle, tmp_tex.handle,
                                                    tmp_rect, draw_framebuffer.handle);
-                SurfaceParams::SurfaceType type =
-                    SurfaceParams::GetFormatType(reinterpreter->first.dst_format);
 
+                const SurfaceType type = GetFormatType(reinterpreter->first.dst_format);
                 if (!texture_filterer->Filter(tmp_tex.handle, tmp_rect, surface->texture.handle,
                                               dest_rect, type, read_framebuffer.handle,
                                               draw_framebuffer.handle)) {

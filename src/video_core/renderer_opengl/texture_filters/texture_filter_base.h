@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <glad/glad.h>
 #include "common/common_types.h"
 #include "common/math_util.h"
-#include "video_core/rasterizer_cache/surface_params.h"
 
 namespace OpenGL {
 
