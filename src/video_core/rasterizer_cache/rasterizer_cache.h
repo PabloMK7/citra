@@ -27,108 +27,12 @@
 #include "common/common_types.h"
 #include "common/math_util.h"
 #include "core/custom_tex_cache.h"
-#include "video_core/renderer_opengl/gl_resource_manager.h"
+#include "video_core/rasterizer_cache/rasterizer_cache_utils.h"
 #include "video_core/rasterizer_cache/surface_params.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/texture/texture_decode.h"
 
 namespace OpenGL {
-
-class RasterizerCacheOpenGL;
-class TextureFilterer;
-class FormatReinterpreterOpenGL;
-
-struct FormatTuple {
-    GLint internal_format;
-    GLenum format;
-    GLenum type;
-};
-
-const FormatTuple& GetFormatTuple(PixelFormat pixel_format);
-
-struct HostTextureTag {
-    FormatTuple format_tuple;
-    u32 width;
-    u32 height;
-
-    bool operator==(const HostTextureTag& rhs) const noexcept {
-        return std::tie(format_tuple.format, format_tuple.internal_format, width, height) ==
-               std::tie(rhs.format_tuple.format, rhs.format_tuple.internal_format, rhs.width,
-                        rhs.height);
-    };
-};
-
-struct TextureCubeConfig {
-    PAddr px;
-    PAddr nx;
-    PAddr py;
-    PAddr ny;
-    PAddr pz;
-    PAddr nz;
-    u32 width;
-    Pica::TexturingRegs::TextureFormat format;
-
-    bool operator==(const TextureCubeConfig& rhs) const {
-        return std::tie(px, nx, py, ny, pz, nz, width, format) ==
-               std::tie(rhs.px, rhs.nx, rhs.py, rhs.ny, rhs.pz, rhs.nz, rhs.width, rhs.format);
-    }
-
-    bool operator!=(const TextureCubeConfig& rhs) const {
-        return !(*this == rhs);
-    }
-};
-
-} // namespace OpenGL
-
-namespace std {
-template <>
-struct hash<OpenGL::HostTextureTag> {
-    std::size_t operator()(const OpenGL::HostTextureTag& tag) const noexcept {
-        std::size_t hash = 0;
-        boost::hash_combine(hash, tag.format_tuple.format);
-        boost::hash_combine(hash, tag.format_tuple.internal_format);
-        boost::hash_combine(hash, tag.width);
-        boost::hash_combine(hash, tag.height);
-        return hash;
-    }
-};
-
-template <>
-struct hash<OpenGL::TextureCubeConfig> {
-    std::size_t operator()(const OpenGL::TextureCubeConfig& config) const noexcept {
-        std::size_t hash = 0;
-        boost::hash_combine(hash, config.px);
-        boost::hash_combine(hash, config.nx);
-        boost::hash_combine(hash, config.py);
-        boost::hash_combine(hash, config.ny);
-        boost::hash_combine(hash, config.pz);
-        boost::hash_combine(hash, config.nz);
-        boost::hash_combine(hash, config.width);
-        boost::hash_combine(hash, static_cast<u32>(config.format));
-        return hash;
-    }
-};
-} // namespace std
-
-namespace OpenGL {
-
-using SurfaceSet = std::set<Surface>;
-
-using SurfaceRegions = boost::icl::interval_set<PAddr, std::less, SurfaceInterval>;
-using SurfaceMap =
-    boost::icl::interval_map<PAddr, Surface, boost::icl::partial_absorber, std::less,
-                             boost::icl::inplace_plus, boost::icl::inter_section, SurfaceInterval>;
-using SurfaceCache =
-    boost::icl::interval_map<PAddr, SurfaceSet, boost::icl::partial_absorber, std::less,
-                             boost::icl::inplace_plus, boost::icl::inter_section, SurfaceInterval>;
-
-static_assert(std::is_same<SurfaceRegions::interval_type, SurfaceCache::interval_type>() &&
-                  std::is_same<SurfaceMap::interval_type, SurfaceCache::interval_type>(),
-              "incorrect interval types");
-
-using SurfaceRect_Tuple = std::tuple<Surface, Common::Rectangle<u32>>;
-using SurfaceSurfaceRect_Tuple = std::tuple<Surface, Surface, Common::Rectangle<u32>>;
-
-using PageMap = boost::icl::interval_map<u32, int>;
 
 enum class ScaleMatch {
     Exact,   // only accept same res scale
@@ -260,6 +164,8 @@ struct CachedTextureCube {
 };
 
 class TextureDownloaderES;
+class TextureFilterer;
+class FormatReinterpreterOpenGL;
 
 class RasterizerCacheOpenGL : NonCopyable {
 public:
