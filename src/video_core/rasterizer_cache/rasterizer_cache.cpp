@@ -18,7 +18,6 @@
 #include <glad/glad.h>
 #include "common/alignment.h"
 #include "common/bit_field.h"
-#include "common/color.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
@@ -27,7 +26,6 @@
 #include "common/vector_math.h"
 #include "core/core.h"
 #include "core/custom_tex_cache.h"
-#include "core/frontend/emu_window.h"
 #include "core/hle/kernel/process.h"
 #include "core/settings.h"
 #include "video_core/pica_state.h"
@@ -1117,18 +1115,19 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
             state.Apply();
             glActiveTexture(GL_TEXTURE0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
-            u32 width;
-            u32 height;
-            if (surface->is_custom) {
-                width = surface->custom_tex_info.width;
-                height = surface->custom_tex_info.height;
-            } else {
-                width = surface->GetScaledWidth();
-                height = surface->GetScaledHeight();
-            }
+
             // If we are using ARB_texture_storage then we've already allocated all of the mipmap
             // levels
             if (!GL_ARB_texture_storage) {
+                u32 width, height;
+                if (surface->is_custom) {
+                    width = surface->custom_tex_info.width;
+                    height = surface->custom_tex_info.height;
+                } else {
+                    width = surface->GetScaledWidth();
+                    height = surface->GetScaledHeight();
+                }
+
                 for (u32 level = surface->max_level + 1; level <= max_level; ++level) {
                     glTexImage2D(GL_TEXTURE_2D, level, format_tuple.internal_format, width >> level,
                                  height >> level, 0, format_tuple.format, format_tuple.type,
