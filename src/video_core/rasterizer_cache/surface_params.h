@@ -17,17 +17,30 @@ using Surface = std::shared_ptr<CachedSurface>;
 
 using SurfaceInterval = boost::icl::right_open_interval<PAddr>;
 
-struct SurfaceParams {
-    unsigned int GetFormatBpp() const {
-        return OpenGL::GetFormatBpp(pixel_format);
-    }
+class SurfaceParams {
+public:
+    // Surface match traits
+    bool ExactMatch(const SurfaceParams& other_surface) const;
+    bool CanSubRect(const SurfaceParams& sub_surface) const;
+    bool CanExpand(const SurfaceParams& expanded_surface) const;
+    bool CanTexCopy(const SurfaceParams& texcopy_params) const;
 
-    /// Update the params "size", "end" and "type" from the already set "addr", "width", "height"
-    /// and "pixel_format"
+    Common::Rectangle<u32> GetSubRect(const SurfaceParams& sub_surface) const;
+    Common::Rectangle<u32> GetScaledSubRect(const SurfaceParams& sub_surface) const;
+
+    // Returns the outer rectangle containing "interval"
+    SurfaceParams FromInterval(SurfaceInterval interval) const;
+    SurfaceInterval GetSubRectInterval(Common::Rectangle<u32> unscaled_rect) const;
+
+    // Returns the region of the biggest valid rectange within interval
+    SurfaceInterval GetCopyableInterval(const Surface& src_surface) const;
+
+    /// Updates remaining members from the already set addr, width, height and pixel_format
     void UpdateParams() {
         if (stride == 0) {
             stride = width;
         }
+
         type = GetFormatType(pixel_format);
         size = !is_tiled ? BytesInPixels(stride * (height - 1) + width)
                          : BytesInPixels(stride * 8 * (height / 8 - 1) + width * 8);
@@ -38,13 +51,9 @@ struct SurfaceParams {
         return SurfaceInterval(addr, end);
     }
 
-    // Returns the outer rectangle containing "interval"
-    SurfaceParams FromInterval(SurfaceInterval interval) const;
-
-    SurfaceInterval GetSubRectInterval(Common::Rectangle<u32> unscaled_rect) const;
-
-    // Returns the region of the biggest valid rectange within interval
-    SurfaceInterval GetCopyableInterval(const Surface& src_surface) const;
+    u32 GetFormatBpp() const {
+        return OpenGL::GetFormatBpp(pixel_format);
+    }
 
     u32 GetScaledWidth() const {
         return width * res_scale;
@@ -70,14 +79,7 @@ struct SurfaceParams {
         return pixels * GetFormatBpp() / 8;
     }
 
-    bool ExactMatch(const SurfaceParams& other_surface) const;
-    bool CanSubRect(const SurfaceParams& sub_surface) const;
-    bool CanExpand(const SurfaceParams& expanded_surface) const;
-    bool CanTexCopy(const SurfaceParams& texcopy_params) const;
-
-    Common::Rectangle<u32> GetSubRect(const SurfaceParams& sub_surface) const;
-    Common::Rectangle<u32> GetScaledSubRect(const SurfaceParams& sub_surface) const;
-
+public:
     PAddr addr = 0;
     PAddr end = 0;
     u32 size = 0;
