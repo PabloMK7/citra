@@ -1,31 +1,10 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
-
-#include <array>
-#include <list>
-#include <memory>
-#include <mutex>
-#include <set>
-#include <tuple>
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#include <boost/icl/interval_map.hpp>
-#include <boost/icl/interval_set.hpp>
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 #include <unordered_map>
-#include <boost/functional/hash.hpp>
-#include <glad/glad.h>
 #include "common/assert.h"
-#include "common/common_funcs.h"
-#include "common/common_types.h"
-#include "common/math_util.h"
 #include "core/custom_tex_cache.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_utils.h"
 #include "video_core/rasterizer_cache/surface_params.h"

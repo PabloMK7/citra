@@ -5,6 +5,7 @@
 #pragma once
 #include <memory>
 #include <set>
+#include <tuple>
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
 #include "common/common_types.h"
@@ -12,7 +13,7 @@
 
 namespace OpenGL {
 
-class CachedSurface;
+struct CachedSurface;
 using Surface = std::shared_ptr<CachedSurface>;
 
 // Declare rasterizer interval types

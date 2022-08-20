@@ -1,37 +1,19 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
-#include <array>
-#include <atomic>
-#include <bitset>
-#include <cmath>
-#include <cstring>
-#include <iterator>
-#include <memory>
 #include <optional>
-#include <unordered_set>
-#include <utility>
-#include <vector>
 #include <boost/range/iterator_range.hpp>
-#include <glad/glad.h>
-#include "common/alignment.h"
-#include "common/bit_field.h"
 #include "common/logging/log.h"
-#include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/texture.h"
-#include "common/vector_math.h"
 #include "core/core.h"
-#include "core/custom_tex_cache.h"
 #include "core/hle/kernel/process.h"
-#include "core/settings.h"
 #include "video_core/pica_state.h"
-#include "video_core/renderer_opengl/gl_format_reinterpreter.h"
 #include "video_core/rasterizer_cache/morton_swizzle.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
+#include "video_core/renderer_opengl/gl_format_reinterpreter.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
@@ -64,7 +46,7 @@ OGLTexture RasterizerCacheOpenGL::AllocateSurfaceTexture(const FormatTuple& form
 
     if (GL_ARB_texture_storage) {
         // Allocate all possible mipmap levels upfront
-        const GLsizei levels = std::log2(std::max(width, height)) + 1;
+        const GLsizei levels = static_cast<GLsizei>(std::log2(std::max(width, height))) + 1;
         glTexStorage2D(GL_TEXTURE_2D, levels, format_tuple.internal_format, width, height);
     } else {
         glTexImage2D(GL_TEXTURE_2D, 0, format_tuple.internal_format, width, height, 0,
@@ -93,7 +75,7 @@ static void AllocateTextureCube(GLuint texture, const FormatTuple& format_tuple,
     glActiveTexture(TextureUnits::TextureCube.Enum());
     if (GL_ARB_texture_storage) {
         // Allocate all possible mipmap levels in case the game uses them later
-        const GLsizei levels = std::log2(width) + 1;
+        const GLsizei levels = static_cast<GLsizei>(std::log2(width)) + 1;
         glTexStorage2D(GL_TEXTURE_CUBE_MAP, levels, format_tuple.internal_format, width, width);
     } else {
         for (auto faces : {
