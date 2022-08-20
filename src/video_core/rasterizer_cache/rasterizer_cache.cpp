@@ -731,13 +731,14 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
 }
 
 Surface RasterizerCacheOpenGL::GetFillSurface(const GPU::Regs::MemoryFillConfig& config) {
-    Surface new_surface = std::make_shared<CachedSurface>(*this, runtime);
+    SurfaceParams params;
+    params.addr = config.GetStartAddress();
+    params.end = config.GetEndAddress();
+    params.size = params.end - params.addr;
+    params.type = SurfaceType::Fill;
+    params.res_scale = std::numeric_limits<u16>::max();
 
-    new_surface->addr = config.GetStartAddress();
-    new_surface->end = config.GetEndAddress();
-    new_surface->size = new_surface->end - new_surface->addr;
-    new_surface->type = SurfaceType::Fill;
-    new_surface->res_scale = std::numeric_limits<u16>::max();
+    Surface new_surface = std::make_shared<CachedSurface>(params, *this, runtime);
 
     std::memcpy(&new_surface->fill_data[0], &config.value_32bit, 4);
     if (config.fill_32bit) {
@@ -1085,14 +1086,13 @@ void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface
 }
 
 Surface RasterizerCacheOpenGL::CreateSurface(const SurfaceParams& params) {
-    Surface surface = std::make_shared<CachedSurface>(*this, runtime);
-    static_cast<SurfaceParams&>(*surface) = params;
-
+    Surface surface = std::make_shared<CachedSurface>(params, *this, runtime);
     surface->invalid_regions.insert(surface->GetInterval());
 
-    surface->texture =
-        AllocateSurfaceTexture(GetFormatTuple(surface->pixel_format), surface->GetScaledWidth(),
-                               surface->GetScaledHeight());
+    // Allocate surface texture
+    const FormatTuple& tuple = GetFormatTuple(surface->pixel_format);
+    surface->texture = AllocateSurfaceTexture(tuple, surface->GetScaledWidth(),
+                                              surface->GetScaledHeight());
 
     return surface;
 }

@@ -9,7 +9,7 @@
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <fmt/format.h>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/main.h"
@@ -143,7 +143,7 @@ void OpenGLWindow::Present() {
         VideoCore::g_renderer->TryPresent(100);
     }
     context->swapBuffers(this);
-    auto f = context->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    auto f = context->versionFunctions<QOpenGLFunctions_4_3_Core>();
     f->glFinish();
     QWindow::requestUpdate();
 }

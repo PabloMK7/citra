@@ -45,8 +45,8 @@ class RasterizerCacheOpenGL;
 
 class CachedSurface : public SurfaceParams, public std::enable_shared_from_this<CachedSurface> {
 public:
-    CachedSurface(RasterizerCacheOpenGL& owner, TextureRuntime& runtime) :
-        owner(owner), runtime(runtime) {}
+    CachedSurface(SurfaceParams params, RasterizerCacheOpenGL& owner,TextureRuntime& runtime) :
+        SurfaceParams(params), owner(owner), runtime(runtime) {}
     ~CachedSurface();
 
     /// Read/Write data in 3DS memory to/from gl_buffer

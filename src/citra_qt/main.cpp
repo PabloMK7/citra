@@ -2441,7 +2441,7 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setApplicationName(QStringLiteral("Citra"));
 
     QSurfaceFormat format;
-    format.setVersion(3, 3);
+    format.setVersion(4, 3);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSwapInterval(0);
     // TODO: expose a setting for buffer value (ie default/single/double/triple)
