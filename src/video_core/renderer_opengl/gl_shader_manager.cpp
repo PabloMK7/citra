@@ -1,16 +1,18 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <algorithm>
 #include <thread>
 #include <unordered_map>
-#include <boost/functional/hash.hpp>
 #include <boost/variant.hpp>
+#include <boost/functional/hash.hpp>
 #include "core/frontend/scope_acquire_context.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_vars.h"
+#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/video_core.h"
 
 namespace OpenGL {

@@ -1,20 +1,23 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <memory>
-#include <glad/glad.h>
 #include "video_core/rasterizer_interface.h"
-#include "video_core/regs_lighting.h"
-#include "video_core/renderer_opengl/gl_resource_manager.h"
-#include "video_core/renderer_opengl/gl_shader_gen.h"
-#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 
 namespace Core {
 class System;
+}
+
+namespace Pica {
+struct Regs;
+struct ShaderRegs;
+namespace Shader {
+struct ShaderSetup;
+}
 }
 
 namespace OpenGL {
@@ -95,6 +98,8 @@ static_assert(
     "The size of the VSUniformData structure has changed, update the structure in the shader");
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");
+
+class OpenGLState;
 
 /// A class that manage different shader stages and configures them with given config data.
 class ShaderProgramManager {

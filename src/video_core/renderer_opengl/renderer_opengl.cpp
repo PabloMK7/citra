@@ -1,27 +1,14 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
-#include <array>
-#include <condition_variable>
-#include <cstddef>
-#include <cstdlib>
-#include <deque>
-#include <memory>
-#include <mutex>
-#include <glad/glad.h>
 #include <queue>
-#include "common/assert.h"
-#include "common/bit_field.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "core/core.h"
-#include "core/core_timing.h"
 #include "core/dumping/backend.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/framebuffer_layout.h"
-#include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
@@ -30,6 +17,7 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
@@ -526,7 +514,6 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
             mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
         }
 
-        GLuint render_texture = frame->color.handle;
         state.draw.draw_framebuffer = frame->render.handle;
         state.Apply();
         DrawScreens(layout, flipped);
@@ -1200,6 +1187,8 @@ static const char* GetSource(GLenum source) {
         UNREACHABLE();
     }
 #undef RET
+
+    return "";
 }
 
 static const char* GetType(GLenum type) {
@@ -1218,6 +1207,8 @@ static const char* GetType(GLenum type) {
         UNREACHABLE();
     }
 #undef RET
+
+    return "";
 }
 
 static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity,

@@ -3,13 +3,8 @@
 // Refer to the license.txt file included.
 
 #pragma once
-
-#include <array>
-#include <cstring>
 #include <functional>
 #include <optional>
-#include <string>
-#include <type_traits>
 #include "common/hash.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"

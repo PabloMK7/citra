@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,7 +8,6 @@
 #include <vector>
 #include <glad/glad.h>
 #include "common/common_types.h"
-#include "video_core/renderer_opengl/gl_shader_util.h"
 
 namespace OpenGL {
 

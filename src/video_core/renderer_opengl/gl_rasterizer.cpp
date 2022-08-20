@@ -1,28 +1,18 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
-#include <memory>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <glad/glad.h>
 #include "common/alignment.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
-#include "common/vector_math.h"
-#include "core/hw/gpu.h"
 #include "video_core/pica_state.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_rasterizer.h"
-#include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_vars.h"
-#include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/video_core.h"
 
@@ -34,6 +24,13 @@ MICROPROFILE_DEFINE(OpenGL_GS, "OpenGL", "Geometry Shader Setup", MP_RGB(128, 19
 MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
+
+#ifdef __APPLE__
+static bool IsVendorIntel() {
+    std::string gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
+    return gpu_vendor == "Intel Inc.";
+}
+#endif
 
 RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
     : vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE),
@@ -148,15 +145,13 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
     if (IsVendorIntel()) {
         shader_program_manager = std::make_unique<ShaderProgramManager>(
             emu_window,
-            VideoCore::g_separable_shader_enabled ? GLAD_GL_ARB_separate_shader_objects : false,
-            is_amd);
+            VideoCore::g_separable_shader_enabled ? GLAD_GL_ARB_separate_shader_objects : false);
     } else {
         shader_program_manager = std::make_unique<ShaderProgramManager>(
-            emu_window, GLAD_GL_ARB_separate_shader_objects, is_amd);
+            emu_window, GLAD_GL_ARB_separate_shader_objects);
     }
 #else
-    shader_program_manager = std::make_unique<ShaderProgramManager>(
-        emu_window, GLAD_GL_ARB_separate_shader_objects);
+    shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, true);
 #endif
 
     glEnable(GL_BLEND);

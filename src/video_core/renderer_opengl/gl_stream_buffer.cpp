@@ -1,9 +1,7 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <deque>
-#include <vector>
 #include "common/alignment.h"
 #include "common/assert.h"
 #include "common/microprofile.h"

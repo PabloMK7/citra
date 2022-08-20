@@ -3,13 +3,6 @@
 // Refer to the license.txt file included.
 
 #pragma once
-
-#include <array>
-#include <cstddef>
-#include <string>
-
-#include "common/common_funcs.h"
-#include "common/common_types.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_lighting.h"
 #include "video_core/regs_pipeline.h"

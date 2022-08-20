@@ -1,28 +1,15 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
-
-#include <array>
-#include <cstddef>
-#include <cstring>
-#include <memory>
-#include <vector>
-#include <glad/glad.h>
-#include "common/bit_field.h"
-#include "common/common_types.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
-#include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/rasterizer_interface.h"
-#include "video_core/regs_framebuffer.h"
 #include "video_core/regs_lighting.h"
-#include "video_core/regs_rasterizer.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
-#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"

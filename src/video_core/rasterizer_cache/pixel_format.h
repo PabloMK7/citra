@@ -103,6 +103,7 @@ inline PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat
 }
 
 inline constexpr PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelFormat format) {
+    const u32 format_index = static_cast<u32>(format);
     switch (format) {
     // RGB565 and RGB5A1 are switched in PixelFormat compared to ColorFormat
     case GPU::Regs::PixelFormat::RGB565:
@@ -110,7 +111,7 @@ inline constexpr PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelForma
     case GPU::Regs::PixelFormat::RGB5A1:
         return PixelFormat::RGB5A1;
     default:
-        return ((unsigned int)format < 5) ? (PixelFormat)format : PixelFormat::Invalid;
+        return (format_index < 5) ? static_cast<PixelFormat>(format) : PixelFormat::Invalid;
     }
 }
 
@@ -179,7 +180,7 @@ static constexpr u32 GetFormatBpp(PixelFormat format) {
     case PixelFormat::A4:
     case PixelFormat::ETC1:
         return 4;
-    case PixelFormat::Invalid:
+    default:
         return 0;
     }
 }
