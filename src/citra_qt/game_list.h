@@ -107,6 +107,9 @@ private:
 
     QString FindGameByProgramID(QStandardItem* current_item, u64 program_id, int role);
 
+    void changeEvent(QEvent*) override;
+    void RetranslateUI();
+
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;
