@@ -10,6 +10,8 @@
 
 namespace OpenGL {
 
+constexpr u32 PIXEL_FORMAT_COUNT = 18;
+
 enum class PixelFormat : u8 {
     // First 5 formats are shared between textures and color buffers
     RGBA8 = 0,
@@ -43,7 +45,7 @@ enum class SurfaceType {
     Invalid = 5
 };
 
-static constexpr std::string_view PixelFormatAsString(PixelFormat format) {
+inline constexpr std::string_view PixelFormatAsString(PixelFormat format) {
     switch (format) {
     case PixelFormat::RGBA8:
         return "RGBA8";
@@ -84,23 +86,23 @@ static constexpr std::string_view PixelFormatAsString(PixelFormat format) {
     }
 }
 
-static constexpr PixelFormat PixelFormatFromTextureFormat(Pica::TexturingRegs::TextureFormat format) {
+inline constexpr PixelFormat PixelFormatFromTextureFormat(Pica::TexturingRegs::TextureFormat format) {
     const u32 format_index = static_cast<u32>(format);
     return (format_index < 14) ? static_cast<PixelFormat>(format) : PixelFormat::Invalid;
 }
 
-static constexpr PixelFormat PixelFormatFromColorFormat(Pica::FramebufferRegs::ColorFormat format) {
+inline constexpr PixelFormat PixelFormatFromColorFormat(Pica::FramebufferRegs::ColorFormat format) {
     const u32 format_index = static_cast<u32>(format);
     return (format_index < 5) ? static_cast<PixelFormat>(format) : PixelFormat::Invalid;
 }
 
-static PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat format) {
+inline PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat format) {
     const u32 format_index = static_cast<u32>(format);
     return (format_index < 4) ? static_cast<PixelFormat>(format_index + 14)
                               : PixelFormat::Invalid;
 }
 
-static constexpr PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelFormat format) {
+inline constexpr PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelFormat format) {
     switch (format) {
     // RGB565 and RGB5A1 are switched in PixelFormat compared to ColorFormat
     case GPU::Regs::PixelFormat::RGB565:
@@ -133,7 +135,7 @@ static constexpr SurfaceType GetFormatType(PixelFormat pixel_format) {
     return SurfaceType::Invalid;
 }
 
-static constexpr bool CheckFormatsBlittable(PixelFormat source_format, PixelFormat dest_format) {
+inline constexpr bool CheckFormatsBlittable(PixelFormat source_format, PixelFormat dest_format) {
     SurfaceType source_type = GetFormatType(source_format);
     SurfaceType dest_type = GetFormatType(dest_format);
 
@@ -182,7 +184,7 @@ static constexpr u32 GetFormatBpp(PixelFormat format) {
     }
 }
 
-static constexpr u32 GetBytesPerPixel(PixelFormat format) {
+inline constexpr u32 GetBytesPerPixel(PixelFormat format) {
     // OpenGL needs 4 bpp alignment for D24 since using GL_UNSIGNED_INT as type
     if (format == PixelFormat::D24 || GetFormatType(format) == SurfaceType::Texture) {
         return 4;

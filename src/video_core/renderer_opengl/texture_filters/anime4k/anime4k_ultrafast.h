@@ -15,9 +15,8 @@ public:
     static constexpr std::string_view NAME = "Anime4K Ultrafast";
 
     explicit Anime4kUltrafast(u16 scale_factor);
-    void Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
-                const Common::Rectangle<u32>& dst_rect, GLuint read_fb_handle,
-                GLuint draw_fb_handle) override;
+    void Filter(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
+                const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) override;
 
 private:
     static constexpr u8 internal_scale_factor = 2;

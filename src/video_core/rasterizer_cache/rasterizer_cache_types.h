@@ -13,7 +13,7 @@
 
 namespace OpenGL {
 
-struct CachedSurface;
+class CachedSurface;
 using Surface = std::shared_ptr<CachedSurface>;
 
 // Declare rasterizer interval types

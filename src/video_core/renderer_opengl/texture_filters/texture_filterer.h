@@ -16,15 +16,19 @@ class TextureFilterer {
 public:
     static constexpr std::string_view NONE = "none";
 
+public:
     explicit TextureFilterer(std::string_view filter_name, u16 scale_factor);
-    // returns true if the filter actually changed
+
+    // Returns true if the filter actually changed
     bool Reset(std::string_view new_filter_name, u16 new_scale_factor);
-    // returns true if there is no active filter
+
+    // Returns true if there is no active filter
     bool IsNull() const;
-    // returns true if the texture was able to be filtered
-    bool Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
-                const Common::Rectangle<u32>& dst_rect, SurfaceType type,
-                GLuint read_fb_handle, GLuint draw_fb_handle);
+
+    // Returns true if the texture was able to be filtered
+    bool Filter(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
+                const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect,
+                SurfaceType type);
 
     static std::vector<std::string_view> GetFilterNames();
 

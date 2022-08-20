@@ -1,14 +1,12 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/assert.h"
 #include "common/scope_exit.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
-#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
-#include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 
 namespace OpenGL {
 
@@ -64,15 +62,18 @@ void main() {
         vao.Create();
     }
 
-    void Reinterpret(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint read_fb_handle,
-                     GLuint dst_tex, const Common::Rectangle<u32>& dst_rect,
-                     GLuint draw_fb_handle) override {
+    PixelFormat GetSourceFormat() const override {
+        return PixelFormat::RGBA4;
+    }
+
+    void Reinterpret(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
+                     const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) override {
         OpenGLState prev_state = OpenGLState::GetCurState();
         SCOPE_EXIT({ prev_state.Apply(); });
 
         OpenGLState state;
-        state.texture_units[0].texture_2d = src_tex;
-        state.draw.draw_framebuffer = draw_fb_handle;
+        state.texture_units[0].texture_2d = src_tex.handle;
+        state.draw.draw_framebuffer = draw_fbo.handle;
         state.draw.shader_program = program.handle;
         state.draw.vertex_array = vao.handle;
         state.viewport = {static_cast<GLint>(dst_rect.left), static_cast<GLint>(dst_rect.bottom),
@@ -80,10 +81,10 @@ void main() {
                           static_cast<GLsizei>(dst_rect.GetHeight())};
         state.Apply();
 
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex,
-                               0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
-                               0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               dst_tex.handle, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                               0, 0);
 
         glUniform2i(dst_size_loc, dst_rect.GetWidth(), dst_rect.GetHeight());
         glUniform2i(src_size_loc, src_rect.GetWidth(), src_rect.GetHeight());
@@ -148,15 +149,18 @@ void main() {
 
     ~PixelBufferD24S8toABGR() {}
 
-    void Reinterpret(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint read_fb_handle,
-                     GLuint dst_tex, const Common::Rectangle<u32>& dst_rect,
-                     GLuint draw_fb_handle) override {
+    PixelFormat GetSourceFormat() const override {
+        return PixelFormat::D24S8;
+    }
+
+    void Reinterpret(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
+                     const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) override {
         OpenGLState prev_state = OpenGLState::GetCurState();
         SCOPE_EXIT({ prev_state.Apply(); });
 
         OpenGLState state;
-        state.draw.read_framebuffer = read_fb_handle;
-        state.draw.draw_framebuffer = draw_fb_handle;
+        state.draw.read_framebuffer = read_fbo.handle;
+        state.draw.draw_framebuffer = draw_fbo.handle;
         state.Apply();
 
         glBindBuffer(GL_PIXEL_PACK_BUFFER, d24s8_abgr_buffer.handle);
@@ -170,7 +174,8 @@ void main() {
 
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               src_tex, 0);
+                               src_tex.handle, 0);
+
         glReadPixels(static_cast<GLint>(src_rect.left), static_cast<GLint>(src_rect.bottom),
                      static_cast<GLsizei>(src_rect.GetWidth()),
                      static_cast<GLsizei>(src_rect.GetHeight()), GL_DEPTH_STENCIL,
@@ -200,12 +205,11 @@ void main() {
                     static_cast<GLfloat>(state.viewport.width),
                     static_cast<GLfloat>(state.viewport.height));
 
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex,
-                               0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
-                               0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               dst_tex.handle, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                               0, 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
         glBindTexture(GL_TEXTURE_BUFFER, 0);
     }
 
@@ -292,19 +296,22 @@ void main() {
         }
     }
 
-    void Reinterpret(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint read_fb_handle,
-                     GLuint dst_tex, const Common::Rectangle<u32>& dst_rect,
-                     GLuint draw_fb_handle) override {
+    PixelFormat GetSourceFormat() const override {
+        return PixelFormat::D24S8;
+    }
+
+    void Reinterpret(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
+                     const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) override {
         OpenGLState prev_state = OpenGLState::GetCurState();
         SCOPE_EXIT({ prev_state.Apply(); });
 
         OpenGLState state;
-        state.texture_units[0].texture_2d = src_tex;
+        state.texture_units[0].texture_2d = src_tex.handle;
 
         if (use_texture_view) {
             temp_tex.Create();
             glActiveTexture(GL_TEXTURE1);
-            glTextureView(temp_tex.handle, GL_TEXTURE_2D, src_tex, GL_DEPTH24_STENCIL8, 0, 1, 0, 1);
+            glTextureView(temp_tex.handle, GL_TEXTURE_2D, src_tex.handle, GL_DEPTH24_STENCIL8, 0, 1, 0, 1);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         } else if (src_rect.top > temp_rect.top || src_rect.right > temp_rect.right) {
@@ -320,7 +327,7 @@ void main() {
         }
 
         state.texture_units[1].texture_2d = temp_tex.handle;
-        state.draw.draw_framebuffer = draw_fb_handle;
+        state.draw.draw_framebuffer = draw_fbo.handle;
         state.draw.shader_program = program.handle;
         state.draw.vertex_array = vao.handle;
         state.viewport = {static_cast<GLint>(dst_rect.left), static_cast<GLint>(dst_rect.bottom),
@@ -330,16 +337,16 @@ void main() {
 
         glActiveTexture(GL_TEXTURE1);
         if (!use_texture_view) {
-            glCopyImageSubData(src_tex, GL_TEXTURE_2D, 0, src_rect.left, src_rect.bottom, 0,
+            glCopyImageSubData(src_tex.handle, GL_TEXTURE_2D, 0, src_rect.left, src_rect.bottom, 0,
                                temp_tex.handle, GL_TEXTURE_2D, 0, src_rect.left, src_rect.bottom, 0,
                                src_rect.GetWidth(), src_rect.GetHeight(), 1);
         }
         glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
 
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex,
-                               0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
-                               0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               dst_tex.handle, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                               0, 0);
 
         glUniform2i(dst_size_loc, dst_rect.GetWidth(), dst_rect.GetHeight());
         glUniform2i(src_size_loc, src_rect.GetWidth(), src_rect.GetHeight());
@@ -363,32 +370,32 @@ private:
 FormatReinterpreterOpenGL::FormatReinterpreterOpenGL() {
     const std::string_view vendor{reinterpret_cast<const char*>(glGetString(GL_VENDOR))};
     const std::string_view version{reinterpret_cast<const char*>(glGetString(GL_VERSION))};
+
     // Fallback to PBO path on obsolete intel drivers
     // intel`s GL_VERSION string - `3.3.0 - Build 25.20.100.6373`
     const bool intel_broken_drivers =
         vendor.find("Intel") != vendor.npos && (std::atoi(version.substr(14, 2).data()) < 30);
 
-    if ((!intel_broken_drivers && GLAD_GL_ARB_stencil_texturing && GLAD_GL_ARB_texture_storage &&
-         GLAD_GL_ARB_copy_image) ||
-        GLES) {
-        reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
-                               std::make_unique<ShaderD24S8toRGBA8>());
+    auto Register = [this](PixelFormat dest, std::unique_ptr<FormatReinterpreterBase>&& obj) {
+        const u32 dst_index = static_cast<u32>(dest);
+        return reinterpreters[dst_index].push_back(std::move(obj));
+    };
+
+    if ((!intel_broken_drivers && GLAD_GL_ARB_stencil_texturing &&
+         GLAD_GL_ARB_texture_storage && GLAD_GL_ARB_copy_image) || GLES) {
+        Register(PixelFormat::RGBA8, std::make_unique<ShaderD24S8toRGBA8>());
         LOG_INFO(Render_OpenGL, "Using shader for D24S8 to RGBA8 reinterpretation");
     } else {
-        reinterpreters.emplace(PixelFormatPair{PixelFormat::RGBA8, PixelFormat::D24S8},
-                               std::make_unique<PixelBufferD24S8toABGR>());
-        LOG_INFO(Render_OpenGL, "Using pbo for D24S8 to RGBA8 reinterpretation");
+        Register(PixelFormat::RGBA8, std::make_unique<PixelBufferD24S8toABGR>());
+        LOG_INFO(Render_OpenGL, "Using PBO for D24S8 to RGBA8 reinterpretation");
     }
-    reinterpreters.emplace(PixelFormatPair{PixelFormat::RGB5A1, PixelFormat::RGBA4},
-                           std::make_unique<RGBA4toRGB5A1>());
+
+    Register(PixelFormat::RGB5A1, std::make_unique<RGBA4toRGB5A1>());
 }
 
-FormatReinterpreterOpenGL::~FormatReinterpreterOpenGL() = default;
-
-std::pair<FormatReinterpreterOpenGL::ReinterpreterMap::iterator,
-          FormatReinterpreterOpenGL::ReinterpreterMap::iterator>
-FormatReinterpreterOpenGL::GetPossibleReinterpretations(PixelFormat dst_format) {
-    return reinterpreters.equal_range(dst_format);
+auto FormatReinterpreterOpenGL::GetPossibleReinterpretations(PixelFormat dst_format)
+    -> const ReinterpreterList& {
+    return reinterpreters[static_cast<u32>(dst_format)];
 }
 
 } // namespace OpenGL

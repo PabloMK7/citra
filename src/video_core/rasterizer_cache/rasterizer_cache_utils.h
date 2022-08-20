@@ -4,9 +4,6 @@
 
 #pragma once
 #include <functional>
-#include <set>
-#include <boost/icl/interval_map.hpp>
-#include <boost/icl/interval_set.hpp>
 #include "common/hash.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 
