@@ -43,14 +43,13 @@ struct FormatTuple {
     GLenum type;
 };
 
-constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
-
 const FormatTuple& GetFormatTuple(PixelFormat pixel_format);
 
 struct HostTextureTag {
     FormatTuple format_tuple;
     u32 width;
     u32 height;
+
     bool operator==(const HostTextureTag& rhs) const noexcept {
         return std::tie(format_tuple.format, format_tuple.internal_format, width, height) ==
                std::tie(rhs.format_tuple.format, rhs.format_tuple.internal_format, rhs.width,
@@ -259,13 +258,6 @@ struct CachedTextureCube {
     std::shared_ptr<SurfaceWatcher> pz;
     std::shared_ptr<SurfaceWatcher> nz;
 };
-
-static constexpr std::array<FormatTuple, 4> depth_format_tuples = {{
-    {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // D16
-    {},
-    {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT},   // D24
-    {GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // D24S8
-}};
 
 class TextureDownloaderES;
 

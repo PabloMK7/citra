@@ -38,6 +38,15 @@
 
 namespace OpenGL {
 
+constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
+
+static constexpr std::array<FormatTuple, 4> depth_format_tuples = {{
+    {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // D16
+    {},
+    {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT},   // D24
+    {GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // D24S8
+}};
+
 static constexpr std::array<FormatTuple, 5> fb_format_tuples = {{
     {GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},     // RGBA8
     {GL_RGB8, GL_BGR, GL_UNSIGNED_BYTE},              // RGB8
@@ -59,17 +68,17 @@ static constexpr std::array<FormatTuple, 5> fb_format_tuples_oes = {{
 
 const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
     const SurfaceType type = GetFormatType(pixel_format);
+    const std::size_t format_index = static_cast<std::size_t>(pixel_format);
+
     if (type == SurfaceType::Color) {
-        ASSERT(static_cast<std::size_t>(pixel_format) < fb_format_tuples.size());
-        if (GLES) {
-            return fb_format_tuples_oes[static_cast<unsigned int>(pixel_format)];
-        }
-        return fb_format_tuples[static_cast<unsigned int>(pixel_format)];
+        ASSERT(format_index < fb_format_tuples.size());
+        return (GLES ? fb_format_tuples_oes : fb_format_tuples)[format_index];
     } else if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
-        std::size_t tuple_idx = static_cast<std::size_t>(pixel_format) - 14;
+        const std::size_t tuple_idx = format_index - 14;
         ASSERT(tuple_idx < depth_format_tuples.size());
         return depth_format_tuples[tuple_idx];
     }
+
     return tex_tuple;
 }
 
