@@ -35,10 +35,10 @@ static bool IsVendorIntel() {
 
 RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
     : vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE),
-      uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false),
-      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false),
-      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false),
-      texture_lf_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false) {
+      uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE),
+      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE),
+      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE),
+      texture_lf_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE) {
 
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
@@ -157,7 +157,9 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
 
     glEnable(GL_BLEND);
 
-    SyncEntireState();
+    // Explicitly call the derived version to avoid warnings about calling virtual
+    // methods in the constructor
+    RasterizerOpenGL::SyncEntireState();
 }
 
 RasterizerOpenGL::~RasterizerOpenGL() = default;
@@ -628,6 +630,18 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         }
     };
 
+    auto BindCubeFace = [&](GLuint& target, Pica::TexturingRegs::CubeFace face,
+                            Pica::Texture::TextureInfo& info) {
+        info.physical_address = regs.texturing.GetCubePhysicalAddress(face);
+        Surface surface = res_cache.GetTextureSurface(info);
+
+        if (surface != nullptr) {
+            CheckBarrier(target = surface->texture.handle);
+        } else {
+            target = 0;
+        }
+    };
+
     // Sync and bind the texture surfaces
     const auto pica_textures = regs.texturing.GetTextures();
     for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
@@ -647,65 +661,15 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                     continue;
                 }
                 case TextureType::ShadowCube: {
-                    Pica::Texture::TextureInfo info = Pica::Texture::TextureInfo::FromPicaRegister(
-                        texture.config, texture.format);
-                    Surface surface;
-
                     using CubeFace = Pica::TexturingRegs::CubeFace;
-                    info.physical_address =
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX);
-                    surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr) {
-                        CheckBarrier(state.image_shadow_texture_px = surface->texture.handle);
-                    } else {
-                        state.image_shadow_texture_px = 0;
-                    }
-
-                    info.physical_address =
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX);
-                    surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr) {
-                        CheckBarrier(state.image_shadow_texture_nx = surface->texture.handle);
-                    } else {
-                        state.image_shadow_texture_nx = 0;
-                    }
-
-                    info.physical_address =
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY);
-                    surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr) {
-                        CheckBarrier(state.image_shadow_texture_py = surface->texture.handle);
-                    } else {
-                        state.image_shadow_texture_py = 0;
-                    }
-
-                    info.physical_address =
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY);
-                    surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr) {
-                        CheckBarrier(state.image_shadow_texture_ny = surface->texture.handle);
-                    } else {
-                        state.image_shadow_texture_ny = 0;
-                    }
-
-                    info.physical_address =
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ);
-                    surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr) {
-                        CheckBarrier(state.image_shadow_texture_pz = surface->texture.handle);
-                    } else {
-                        state.image_shadow_texture_pz = 0;
-                    }
-
-                    info.physical_address =
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ);
-                    surface = res_cache.GetTextureSurface(info);
-                    if (surface != nullptr) {
-                        CheckBarrier(state.image_shadow_texture_nz = surface->texture.handle);
-                    } else {
-                        state.image_shadow_texture_nz = 0;
-                    }
-
+                    auto info = Pica::Texture::TextureInfo::FromPicaRegister(texture.config,
+                                                                             texture.format);
+                    BindCubeFace(state.image_shadow_texture_px, CubeFace::PositiveX, info);
+                    BindCubeFace(state.image_shadow_texture_nx, CubeFace::NegativeX, info);
+                    BindCubeFace(state.image_shadow_texture_py, CubeFace::PositiveY, info);
+                    BindCubeFace(state.image_shadow_texture_ny, CubeFace::NegativeY, info);
+                    BindCubeFace(state.image_shadow_texture_pz, CubeFace::PositiveZ, info);
+                    BindCubeFace(state.image_shadow_texture_nz, CubeFace::NegativeZ, info);
                     continue;
                 }
                 case TextureType::TextureCube:
@@ -725,7 +689,10 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                     texture_cube_sampler.SyncWithConfig(texture.config);
                     state.texture_units[texture_index].texture_2d = 0;
                     continue; // Texture unit 0 setup finished. Continue to next unit
+                default:
+                    break;
                 }
+
                 state.texture_cube_unit.texture_cube = 0;
             }
 
