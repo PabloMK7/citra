@@ -104,6 +104,10 @@ bool EmuWindow_SDL2::IsOpen() const {
     return is_open;
 }
 
+void EmuWindow_SDL2::Close() {
+    is_open = false;
+}
+
 void EmuWindow_SDL2::OnResize() {
     int width, height;
     SDL_GetWindowSize(render_window, &width, &height);
@@ -134,7 +138,7 @@ void EmuWindow_SDL2::Fullscreen() {
 EmuWindow_SDL2::EmuWindow_SDL2(bool fullscreen) {
     // Initialize the window
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
-        LOG_CRITICAL(Frontend, "Failed to initialize SDL2! Exiting...");
+        LOG_CRITICAL(Frontend, "Failed to initialize SDL2: {}! Exiting...", SDL_GetError());
         exit(1);
     }
 

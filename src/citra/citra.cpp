@@ -391,6 +391,8 @@ int main(int argc, char** argv) {
         return -1;
     case Core::System::ResultStatus::Success:
         break; // Expected case
+    default:
+        LOG_ERROR(Frontend, "Error while loading ROM: {}", system.GetStatusDetails());
     }
 
     system.TelemetrySession().AddField(Common::Telemetry::FieldType::App, "Frontend", "SDL");
@@ -437,7 +439,17 @@ int main(int argc, char** argv) {
         });
 
     while (emu_window->IsOpen()) {
-        system.RunLoop();
+        const auto result = system.RunLoop();
+
+        switch (result) {
+        case Core::System::ResultStatus::ShutdownRequested:
+            emu_window->Close();
+            break;
+        case Core::System::ResultStatus::Success:
+            break;
+        default:
+            LOG_ERROR(Frontend, "Error in main run loop: {}", result, system.GetStatusDetails());
+        }
     }
     render_thread.join();
 
