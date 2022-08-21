@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #pragma once
+#include <list>
 #include "common/assert.h"
 #include "core/custom_tex_cache.h"
 #include "video_core/rasterizer_cache/surface_params.h"
