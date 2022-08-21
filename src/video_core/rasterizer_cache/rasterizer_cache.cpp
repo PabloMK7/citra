@@ -584,10 +584,12 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     const auto& regs = Pica::g_state.regs;
     const auto& config = regs.framebuffer.framebuffer;
 
-    // update resolution_scale_factor and reset cache if changed
-    if ((resolution_scale_factor != VideoCore::GetResolutionScaleFactor()) ||
-        (VideoCore::g_texture_filter_update_requested.exchange(false) &&
-         texture_filterer->Reset(Settings::values.texture_filter_name, resolution_scale_factor))) {
+    // Update resolution_scale_factor and reset cache if changed
+    const bool resolution_scale_changed = resolution_scale_factor != VideoCore::GetResolutionScaleFactor();
+    const bool texture_filter_changed = VideoCore::g_texture_filter_update_requested.exchange(false)
+                      && texture_filterer->Reset(Settings::values.texture_filter_name, VideoCore::GetResolutionScaleFactor());
+    
+    if (resolution_scale_changed || texture_filter_changed) {
         resolution_scale_factor = VideoCore::GetResolutionScaleFactor();
         FlushAll();
         while (!surface_cache.empty())
