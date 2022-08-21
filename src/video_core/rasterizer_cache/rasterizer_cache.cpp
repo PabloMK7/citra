@@ -7,13 +7,11 @@
 #include "common/alignment.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-#include "common/scope_exit.h"
 #include "video_core/pica_state.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
-#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 
 namespace OpenGL {
@@ -78,74 +76,22 @@ static constexpr auto RangeFromInterval(Map& map, const Interval& interval) {
 }
 
 // Allocate an uninitialized texture of appropriate size and format for the surface
-OGLTexture RasterizerCacheOpenGL::AllocateSurfaceTexture(const FormatTuple& format_tuple, u32 width,
-                                                         u32 height) {
-    auto recycled_tex = host_texture_recycler.find({format_tuple, width, height});
+OGLTexture RasterizerCacheOpenGL::AllocateSurfaceTexture(const FormatTuple& tuple,
+                                                         u32 width, u32 height) {
+    auto recycled_tex = host_texture_recycler.find({tuple, width, height});
     if (recycled_tex != host_texture_recycler.end()) {
         OGLTexture texture = std::move(recycled_tex->second);
         host_texture_recycler.erase(recycled_tex);
         return texture;
     }
+
+    const GLsizei levels = static_cast<GLsizei>(std::log2(std::max(width, height))) + 1;
+
     OGLTexture texture;
     texture.Create();
-
-    OpenGLState cur_state = OpenGLState::GetCurState();
-    // Keep track of previous texture bindings
-    GLuint old_tex = cur_state.texture_units[0].texture_2d;
-    cur_state.texture_units[0].texture_2d = texture.handle;
-    cur_state.Apply();
-    glActiveTexture(GL_TEXTURE0);
-
-    if (GL_ARB_texture_storage) {
-        // Allocate all possible mipmap levels upfront
-        const GLsizei levels = static_cast<GLsizei>(std::log2(std::max(width, height))) + 1;
-        glTexStorage2D(GL_TEXTURE_2D, levels, format_tuple.internal_format, width, height);
-    } else {
-        glTexImage2D(GL_TEXTURE_2D, 0, format_tuple.internal_format, width, height, 0,
-                     format_tuple.format, format_tuple.type, nullptr);
-    }
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // Restore previous texture bindings
-    cur_state.texture_units[0].texture_2d = old_tex;
-    cur_state.Apply();
+    texture.Allocate(GL_TEXTURE_2D, levels, tuple.internal_format, width, height);
 
     return texture;
-}
-
-static void AllocateTextureCube(GLuint texture, const FormatTuple& format_tuple, u32 width) {
-    OpenGLState cur_state = OpenGLState::GetCurState();
-
-    // Keep track of previous texture bindings
-    GLuint old_tex = cur_state.texture_cube_unit.texture_cube;
-    cur_state.texture_cube_unit.texture_cube = texture;
-    cur_state.Apply();
-    glActiveTexture(TextureUnits::TextureCube.Enum());
-    if (GL_ARB_texture_storage) {
-        // Allocate all possible mipmap levels in case the game uses them later
-        const GLsizei levels = static_cast<GLsizei>(std::log2(width)) + 1;
-        glTexStorage2D(GL_TEXTURE_CUBE_MAP, levels, format_tuple.internal_format, width, width);
-    } else {
-        for (auto faces : {
-                 GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-                 GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-                 GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-                 GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-                 GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                 GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-             }) {
-            glTexImage2D(faces, 0, format_tuple.internal_format, width, width, 0,
-                         format_tuple.format, format_tuple.type, nullptr);
-        }
-    }
-
-    // Restore previous texture bindings
-    cur_state.texture_cube_unit.texture_cube = old_tex;
-    cur_state.Apply();
 }
 
 MICROPROFILE_DEFINE(OpenGL_CopySurface, "OpenGL", "CopySurface", MP_RGB(128, 192, 64));
@@ -562,20 +508,19 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
     auto& cube = texture_cube_cache[config];
 
     struct Face {
-        Face(std::shared_ptr<SurfaceWatcher>& watcher, PAddr address, GLenum gl_face)
-            : watcher(watcher), address(address), gl_face(gl_face) {}
+        Face(std::shared_ptr<SurfaceWatcher>& watcher, PAddr address)
+            : watcher(watcher), address(address) {}
         std::shared_ptr<SurfaceWatcher>& watcher;
         PAddr address;
-        GLenum gl_face;
     };
 
     const std::array<Face, 6> faces{{
-        {cube.px, config.px, GL_TEXTURE_CUBE_MAP_POSITIVE_X},
-        {cube.nx, config.nx, GL_TEXTURE_CUBE_MAP_NEGATIVE_X},
-        {cube.py, config.py, GL_TEXTURE_CUBE_MAP_POSITIVE_Y},
-        {cube.ny, config.ny, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y},
-        {cube.pz, config.pz, GL_TEXTURE_CUBE_MAP_POSITIVE_Z},
-        {cube.nz, config.nz, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z},
+        {cube.px, config.px},
+        {cube.nx, config.nx},
+        {cube.py, config.py},
+        {cube.ny, config.ny},
+        {cube.pz, config.pz},
+        {cube.nz, config.nz},
     }};
 
     for (const Face& face : faces) {
@@ -606,17 +551,16 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
             }
         }
 
+        const auto& tuple = GetFormatTuple(PixelFormatFromTextureFormat(config.format));
+        const u32 width = cube.res_scale * config.width;
+        const GLsizei levels = static_cast<GLsizei>(std::log2(width)) + 1;
+
+        // Allocate the cube texture
         cube.texture.Create();
-        AllocateTextureCube(
-            cube.texture.handle,
-            GetFormatTuple(PixelFormatFromTextureFormat(config.format)),
-            cube.res_scale * config.width);
+        cube.texture.Allocate(GL_TEXTURE_CUBE_MAP, levels, tuple.internal_format, width, width);
     }
 
     u32 scaled_size = cube.res_scale * config.width;
-
-    OpenGLState prev_state = OpenGLState::GetCurState();
-    SCOPE_EXIT({ prev_state.Apply(); });
 
     for (const Face& face : faces) {
         if (face.watcher && !face.watcher->IsValid()) {

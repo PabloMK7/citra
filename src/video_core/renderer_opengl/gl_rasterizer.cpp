@@ -717,27 +717,21 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     }
 
     OGLTexture temp_tex;
-    if (need_duplicate_texture && (GLAD_GL_ARB_copy_image || GLES)) {
+    if (need_duplicate_texture) {
+        const auto& tuple = GetFormatTuple(color_surface->pixel_format);
+        const GLsizei levels = color_surface->max_level + 1;
+
         // The game is trying to use a surface as a texture and framebuffer at the same time
         // which causes unpredictable behavior on the host.
         // Making a copy to sample from eliminates this issue and seems to be fairly cheap.
         temp_tex.Create();
-        glBindTexture(GL_TEXTURE_2D, temp_tex.handle);
-        auto [internal_format, format, type] = GetFormatTuple(color_surface->pixel_format);
-        OGLTexture::Allocate(GL_TEXTURE_2D, color_surface->max_level + 1, internal_format, format,
-                             type, color_surface->GetScaledWidth(),
-                             color_surface->GetScaledHeight());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, state.texture_units[0].texture_2d);
+        temp_tex.Allocate(GL_TEXTURE_2D, levels, tuple.internal_format,
+                          color_surface->GetScaledWidth(),
+                          color_surface->GetScaledHeight());
 
-        for (u32 level{0}; level <= color_surface->max_level; ++level) {
-            glCopyImageSubData(color_surface->texture.handle, GL_TEXTURE_2D, level, 0, 0, 0,
-                               temp_tex.handle, GL_TEXTURE_2D, level, 0, 0, 0,
-                               color_surface->GetScaledWidth() >> level,
-                               color_surface->GetScaledHeight() >> level, 1);
-        }
+        temp_tex.CopyFrom(color_surface->texture, GL_TEXTURE_2D, levels,
+                          color_surface->GetScaledWidth(),
+                          color_surface->GetScaledHeight());
 
         for (auto& unit : state.texture_units) {
             if (unit.texture_2d == color_surface->texture.handle) {

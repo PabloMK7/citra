@@ -6,7 +6,7 @@
 #include <vector>
 #include <fmt/chrono.h>
 #include "common/logging/log.h"
-#include "video_core/rasterizer_cache/rasterizer_cache.h"
+#include "video_core/rasterizer_cache/rasterizer_cache_utils.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "shaders/depth_to_color.frag"
