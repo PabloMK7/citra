@@ -12,7 +12,6 @@
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
-#include "video_core/renderer_opengl/gl_vars.h"
 
 namespace OpenGL {
 
@@ -244,9 +243,7 @@ RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
     texture_filterer = std::make_unique<TextureFilterer>(Settings::values.texture_filter_name,
                                                          resolution_scale_factor);
     format_reinterpreter = std::make_unique<FormatReinterpreterOpenGL>();
-    if (GLES) {
-        texture_downloader_es = std::make_unique<TextureDownloaderES>(false);
-    }
+    texture_downloader_es = std::make_unique<TextureDownloaderES>(false);
 }
 
 RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {

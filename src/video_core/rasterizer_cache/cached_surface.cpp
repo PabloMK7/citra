@@ -260,11 +260,6 @@ void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
            GetTexImageOES conveniently only dumps the specified region, and works on both
            desktop and ES.
         */
-        // if the backend isn't OpenGL ES, this won't be initialized yet
-        if (!owner.texture_downloader_es) {
-            owner.texture_downloader_es = std::make_unique<TextureDownloaderES>(false);
-        }
-
         owner.texture_downloader_es->GetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                                                  height, width, &decoded_texture[0]);
         state.texture_units[0].texture_2d = old_texture;
