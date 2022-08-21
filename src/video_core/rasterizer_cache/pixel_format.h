@@ -5,8 +5,8 @@
 #pragma once
 #include <string_view>
 #include "core/hw/gpu.h"
-#include "video_core/regs_texturing.h"
 #include "video_core/regs_framebuffer.h"
+#include "video_core/regs_texturing.h"
 
 namespace OpenGL {
 
@@ -98,8 +98,7 @@ constexpr PixelFormat PixelFormatFromColorFormat(Pica::FramebufferRegs::ColorFor
 
 constexpr PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat format) {
     const u32 format_index = static_cast<u32>(format);
-    return (format_index < 4) ? static_cast<PixelFormat>(format_index + 14)
-                              : PixelFormat::Invalid;
+    return (format_index < 4) ? static_cast<PixelFormat>(format_index + 14) : PixelFormat::Invalid;
 }
 
 constexpr PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelFormat format) {

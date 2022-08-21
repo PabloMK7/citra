@@ -81,8 +81,8 @@ void main() {
 
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                                dst_tex.handle, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               0, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
 
         glUniform2i(dst_size_loc, dst_rect.GetWidth(), dst_rect.GetHeight());
         glUniform2i(src_size_loc, src_rect.GetWidth(), src_rect.GetHeight());
@@ -95,7 +95,6 @@ private:
     GLint dst_size_loc{-1}, src_size_loc{-1}, src_offset_loc{-1};
     OGLVertexArray vao;
 };
-
 
 class ShaderD24S8toRGBA8 final : public FormatReinterpreterBase {
 public:
@@ -186,7 +185,8 @@ void main() {
         if (use_texture_view) {
             temp_tex.Create();
             glActiveTexture(GL_TEXTURE1);
-            glTextureView(temp_tex.handle, GL_TEXTURE_2D, src_tex.handle, GL_DEPTH24_STENCIL8, 0, 1, 0, 1);
+            glTextureView(temp_tex.handle, GL_TEXTURE_2D, src_tex.handle, GL_DEPTH24_STENCIL8, 0, 1,
+                          0, 1);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         } else if (src_rect.top > temp_rect.top || src_rect.right > temp_rect.right) {
@@ -220,8 +220,8 @@ void main() {
 
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                                dst_tex.handle, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               0, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
 
         glUniform2i(dst_size_loc, dst_rect.GetWidth(), dst_rect.GetHeight());
         glUniform2i(src_size_loc, src_rect.GetWidth(), src_rect.GetHeight());

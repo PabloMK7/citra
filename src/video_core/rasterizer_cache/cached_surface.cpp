@@ -3,15 +3,15 @@
 // Refer to the license.txt file included.
 
 #include "common/microprofile.h"
-#include "common/texture.h"
 #include "common/scope_exit.h"
+#include "common/texture.h"
 #include "core/core.h"
 #include "video_core/rasterizer_cache/cached_surface.h"
 #include "video_core/rasterizer_cache/morton_swizzle.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
-#include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
+#include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
 
 namespace OpenGL {
 
@@ -306,8 +306,8 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect) {
 
         if (is_custom) {
             const auto& tuple = GetFormatTuple(PixelFormat::RGBA8);
-            unscaled_tex = owner.AllocateSurfaceTexture(tuple, custom_tex_info.width,
-                                                        custom_tex_info.height);
+            unscaled_tex =
+                owner.AllocateSurfaceTexture(tuple, custom_tex_info.width, custom_tex_info.height);
         } else {
             unscaled_tex = owner.AllocateSurfaceTexture(tuple, rect.GetWidth(), rect.GetHeight());
         }
@@ -367,8 +367,7 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect) {
 
         if (!owner.texture_filterer->Filter(unscaled_tex, from_rect, texture, scaled_rect, type)) {
             const Aspect aspect = ToAspect(type);
-            runtime.BlitTextures(unscaled_tex, {aspect, from_rect},
-                                 texture, {aspect, scaled_rect});
+            runtime.BlitTextures(unscaled_tex, {aspect, from_rect}, texture, {aspect, scaled_rect});
         }
     }
 
@@ -396,7 +395,8 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect) {
     // Ensure no bad interactions with GL_PACK_ALIGNMENT
     ASSERT(stride * GetBytesPerPixel(pixel_format) % 4 == 0);
     glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride));
-    const std::size_t buffer_offset = (rect.bottom * stride + rect.left) * GetBytesPerPixel(pixel_format);
+    const std::size_t buffer_offset =
+        (rect.bottom * stride + rect.left) * GetBytesPerPixel(pixel_format);
 
     // If not 1x scale, blit scaled texture to a new 1x texture and use that to flush
     const Aspect aspect = ToAspect(type);
@@ -408,11 +408,10 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect) {
         scaled_rect.bottom *= res_scale;
 
         const Common::Rectangle<u32> unscaled_tex_rect{0, rect.GetHeight(), rect.GetWidth(), 0};
-        auto unscaled_tex = owner.AllocateSurfaceTexture(tuple, rect.GetWidth(),
-                                                         rect.GetHeight());
+        auto unscaled_tex = owner.AllocateSurfaceTexture(tuple, rect.GetWidth(), rect.GetHeight());
         // Blit scaled texture to the unscaled one
-        runtime.BlitTextures(texture, {aspect, scaled_rect},
-                             unscaled_tex, {aspect, unscaled_tex_rect});
+        runtime.BlitTextures(texture, {aspect, scaled_rect}, unscaled_tex,
+                             {aspect, unscaled_tex_rect});
 
         state.texture_units[0].texture_2d = unscaled_tex.handle;
         state.Apply();
@@ -432,7 +431,8 @@ void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect) {
     glPixelStorei(GL_PACK_ROW_LENGTH, 0);
 }
 
-bool CachedSurface::CanFill(const SurfaceParams& dest_surface, SurfaceInterval fill_interval) const {
+bool CachedSurface::CanFill(const SurfaceParams& dest_surface,
+                            SurfaceInterval fill_interval) const {
     if (type == SurfaceType::Fill && IsRegionValid(fill_interval) &&
         boost::icl::first(fill_interval) >= addr &&
         boost::icl::last_next(fill_interval) <= end && // dest_surface is within our fill range
@@ -459,7 +459,8 @@ bool CachedSurface::CanFill(const SurfaceParams& dest_surface, SurfaceInterval f
     return false;
 }
 
-bool CachedSurface::CanCopy(const SurfaceParams& dest_surface, SurfaceInterval copy_interval) const {
+bool CachedSurface::CanCopy(const SurfaceParams& dest_surface,
+                            SurfaceInterval copy_interval) const {
     SurfaceParams subrect_params = dest_surface.FromInterval(copy_interval);
     ASSERT(subrect_params.GetInterval() == copy_interval);
     if (CanSubRect(subrect_params))

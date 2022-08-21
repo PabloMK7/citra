@@ -58,11 +58,11 @@ public:
     /// Deletes the internal OpenGL resource
     void Release();
 
-    void Allocate(GLenum target, GLsizei levels, GLenum internalformat,
-                  GLsizei width, GLsizei height = 1, GLsizei depth = 1);
+    void Allocate(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
+                  GLsizei height = 1, GLsizei depth = 1);
 
-    void CopyFrom(const OGLTexture& other, GLenum target, GLsizei levels,
-                  GLsizei width, GLsizei height);
+    void CopyFrom(const OGLTexture& other, GLenum target, GLsizei levels, GLsizei width,
+                  GLsizei height);
 
     GLuint handle = 0;
 };

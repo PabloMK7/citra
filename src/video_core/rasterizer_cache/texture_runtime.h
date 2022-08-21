@@ -10,11 +10,7 @@
 namespace OpenGL {
 
 // Describes the type of data a texture holds
-enum class Aspect {
-    Color = 0,
-    Depth = 1,
-    DepthStencil = 2
-};
+enum class Aspect { Color = 0, Depth = 1, DepthStencil = 2 };
 
 // A union for both color and depth/stencil clear values
 union ClearValue {
@@ -26,8 +22,8 @@ union ClearValue {
 };
 
 struct Subresource {
-    Subresource(Aspect aspect, Common::Rectangle<u32> region, u32 level = 0, u32 layer = 0) :
-        aspect(aspect), region(region), level(level), layer(layer) {}
+    Subresource(Aspect aspect, Common::Rectangle<u32> region, u32 level = 0, u32 layer = 0)
+        : aspect(aspect), region(region), level(level), layer(layer) {}
 
     Aspect aspect;
     Common::Rectangle<u32> region;
@@ -47,8 +43,8 @@ public:
     ~TextureRuntime() = default;
 
     // Copies the GPU pixel data to the provided pixels buffer
-    void ReadTexture(const OGLTexture& tex, Subresource subresource,
-                     const FormatTuple& tuple, u8* pixels);
+    void ReadTexture(const OGLTexture& tex, Subresource subresource, const FormatTuple& tuple,
+                     u8* pixels);
 
     // Fills the rectangle of the texture with the clear value provided
     bool ClearTexture(const OGLTexture& texture, Subresource subresource, ClearValue value);

@@ -39,15 +39,15 @@ void TextureRuntime::ReadTexture(const OGLTexture& tex, Subresource subresource,
     const u32 level = subresource.level;
     switch (subresource.aspect) {
     case Aspect::Color:
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                               tex.handle, level);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               0, 0);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.handle,
+                               level);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
         break;
     case Aspect::Depth:
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                               tex.handle, level);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.handle,
+                               level);
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
         break;
     case Aspect::DepthStencil:
@@ -58,8 +58,8 @@ void TextureRuntime::ReadTexture(const OGLTexture& tex, Subresource subresource,
     }
 
     const auto& rect = subresource.region;
-    glReadPixels(rect.left, rect.bottom, rect.GetWidth(), rect.GetHeight(),
-                 tuple.format, tuple.type, pixels);
+    glReadPixels(rect.left, rect.bottom, rect.GetWidth(), rect.GetHeight(), tuple.format,
+                 tuple.type, pixels);
 }
 
 bool TextureRuntime::ClearTexture(const OGLTexture& tex, Subresource subresource,
@@ -81,10 +81,10 @@ bool TextureRuntime::ClearTexture(const OGLTexture& tex, Subresource subresource
     const u32 level = subresource.level;
     switch (subresource.aspect) {
     case Aspect::Color:
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                               tex.handle, level);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               0, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.handle,
+                               level);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
 
         state.color_mask.red_enabled = true;
         state.color_mask.green_enabled = true;
@@ -96,8 +96,8 @@ bool TextureRuntime::ClearTexture(const OGLTexture& tex, Subresource subresource
         break;
     case Aspect::Depth:
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                               tex.handle, level);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.handle,
+                               level);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
         state.depth.write_mask = GL_TRUE;
@@ -136,9 +136,8 @@ bool TextureRuntime::BlitTextures(const OGLTexture& src_tex, Subresource src_sub
     state.draw.draw_framebuffer = draw_fbo.handle;
     state.Apply();
 
-    auto BindAttachment = [src_level = src_subresource.level,
-                           dst_level = dst_subresource.level](GLenum target, u32 src_tex,
-                                                              u32 dst_tex) -> void {
+    auto BindAttachment = [src_level = src_subresource.level, dst_level = dst_subresource.level](
+                              GLenum target, u32 src_tex, u32 dst_tex) -> void {
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, target, GL_TEXTURE_2D, src_tex, src_level);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, target, GL_TEXTURE_2D, dst_tex, dst_level);
     };
@@ -172,8 +171,8 @@ bool TextureRuntime::BlitTextures(const OGLTexture& src_tex, Subresource src_sub
     const GLenum filter = src_subresource.aspect == Aspect::Color ? GL_LINEAR : GL_NEAREST;
     const auto& src_rect = src_subresource.region;
     const auto& dst_rect = dst_subresource.region;
-    glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top,
-                      dst_rect.left, dst_rect.bottom, dst_rect.right, dst_rect.top,
+    glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top, dst_rect.left,
+                      dst_rect.bottom, dst_rect.right, dst_rect.top,
                       ToBufferMask(src_subresource.aspect), filter);
 
     return true;

@@ -47,8 +47,7 @@
 
 namespace OpenGL {
 
-XbrzFreescale::XbrzFreescale(u16 scale_factor) :
-    TextureFilterBase(scale_factor) {
+XbrzFreescale::XbrzFreescale(u16 scale_factor) : TextureFilterBase(scale_factor) {
 
     const OpenGLState cur_state = OpenGLState::GetCurState();
 
@@ -84,8 +83,8 @@ void XbrzFreescale::Filter(const OGLTexture& src_tex, Common::Rectangle<u32> src
                       static_cast<GLsizei>(dst_rect.GetHeight())};
     state.Apply();
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           dst_tex.handle, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex.handle,
+                           0);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

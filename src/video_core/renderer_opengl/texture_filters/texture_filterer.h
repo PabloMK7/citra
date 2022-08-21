@@ -27,8 +27,7 @@ public:
 
     // Returns true if the texture was able to be filtered
     bool Filter(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
-                const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect,
-                SurfaceType type);
+                const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect, SurfaceType type);
 
     static std::vector<std::string_view> GetFilterNames();
 

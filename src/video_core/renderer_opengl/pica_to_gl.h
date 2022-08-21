@@ -232,8 +232,8 @@ inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
 }
 
 inline Common::Vec4f ColorRGBA8(const u32 color) {
-    const auto rgba = Common::Vec4u{color >> 0 & 0xFF, color >> 8 & 0xFF,
-                                    color >> 16 & 0xFF, color >> 24 & 0xFF};
+    const auto rgba =
+        Common::Vec4u{color >> 0 & 0xFF, color >> 8 & 0xFF, color >> 16 & 0xFF, color >> 24 & 0xFF};
     return rgba / 255.0f;
 }
 

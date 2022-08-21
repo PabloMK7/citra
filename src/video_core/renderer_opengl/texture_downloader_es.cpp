@@ -6,12 +6,12 @@
 #include <vector>
 #include <fmt/chrono.h>
 #include "common/logging/log.h"
-#include "video_core/rasterizer_cache/rasterizer_cache_utils.h"
-#include "video_core/renderer_opengl/gl_state.h"
-#include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "shaders/depth_to_color.frag"
 #include "shaders/depth_to_color.vert"
 #include "shaders/ds_to_color.frag"
+#include "video_core/rasterizer_cache/rasterizer_cache_utils.h"
+#include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/texture_downloader_es.h"
 
 namespace OpenGL {
 

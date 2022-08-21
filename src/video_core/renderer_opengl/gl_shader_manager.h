@@ -20,7 +20,7 @@ class EmuWindow;
 namespace Pica {
 struct Regs;
 struct ShaderRegs;
-}
+} // namespace Pica
 
 namespace Pica::Shader {
 struct ShaderSetup;

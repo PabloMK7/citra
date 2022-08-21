@@ -17,9 +17,9 @@ namespace OpenGL {
  */
 class SurfaceWatcher {
     friend class CachedSurface;
+
 public:
-    explicit SurfaceWatcher(std::weak_ptr<CachedSurface>&& surface) :
-        surface(std::move(surface)) {}
+    explicit SurfaceWatcher(std::weak_ptr<CachedSurface>&& surface) : surface(std::move(surface)) {}
 
     /// Checks whether the surface has been changed.
     bool IsValid() const {
@@ -46,8 +46,8 @@ class RasterizerCacheOpenGL;
 
 class CachedSurface : public SurfaceParams, public std::enable_shared_from_this<CachedSurface> {
 public:
-    CachedSurface(SurfaceParams params, RasterizerCacheOpenGL& owner,TextureRuntime& runtime) :
-        SurfaceParams(params), owner(owner), runtime(runtime) {}
+    CachedSurface(SurfaceParams params, RasterizerCacheOpenGL& owner, TextureRuntime& runtime)
+        : SurfaceParams(params), owner(owner), runtime(runtime) {}
     ~CachedSurface();
 
     /// Read/Write data in 3DS memory to/from gl_buffer

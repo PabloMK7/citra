@@ -14,9 +14,9 @@ SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
     const u32 stride_tiled_bytes = BytesInPixels(stride * tiled_size);
 
     PAddr aligned_start =
-            addr + Common::AlignDown(boost::icl::first(interval) - addr, stride_tiled_bytes);
+        addr + Common::AlignDown(boost::icl::first(interval) - addr, stride_tiled_bytes);
     PAddr aligned_end =
-            addr + Common::AlignUp(boost::icl::last_next(interval) - addr, stride_tiled_bytes);
+        addr + Common::AlignUp(boost::icl::last_next(interval) - addr, stride_tiled_bytes);
 
     if (aligned_end - aligned_start > stride_tiled_bytes) {
         params.addr = aligned_start;
@@ -27,9 +27,9 @@ SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
         const u32 tiled_alignment = BytesInPixels(is_tiled ? 8 * 8 : 1);
 
         aligned_start =
-                addr + Common::AlignDown(boost::icl::first(interval) - addr, tiled_alignment);
+            addr + Common::AlignDown(boost::icl::first(interval) - addr, tiled_alignment);
         aligned_end =
-                addr + Common::AlignUp(boost::icl::last_next(interval) - addr, tiled_alignment);
+            addr + Common::AlignUp(boost::icl::last_next(interval) - addr, tiled_alignment);
 
         params.addr = aligned_start;
         params.width = PixelsInBytes(aligned_end - aligned_start) / tiled_size;

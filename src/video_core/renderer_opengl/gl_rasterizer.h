@@ -6,10 +6,10 @@
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "video_core/pica_types.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/regs_lighting.h"
 #include "video_core/regs_texturing.h"
-#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
@@ -298,7 +298,8 @@ private:
     OGLTexture texture_buffer_lut_rg;
     OGLTexture texture_buffer_lut_rgba;
 
-    std::array<std::array<Common::Vec2f, 256>, Pica::LightingRegs::NumLightingSampler> lighting_lut_data{};
+    std::array<std::array<Common::Vec2f, 256>, Pica::LightingRegs::NumLightingSampler>
+        lighting_lut_data{};
     std::array<Common::Vec2f, 128> fog_lut_data{};
     std::array<Common::Vec2f, 128> proctex_noise_lut_data{};
     std::array<Common::Vec2f, 128> proctex_color_map_data{};
