@@ -13,6 +13,7 @@
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_vars.h"
+#include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/video_core.h"
 
@@ -1638,7 +1639,7 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
         if (border_color != config.border_color.raw) {
             border_color = config.border_color.raw;
             auto gl_color = PicaToGL::ColorRGBA8(border_color);
-            glSamplerParameterfv(s, GL_TEXTURE_BORDER_COLOR, gl_color.data());
+            glSamplerParameterfv(s, GL_TEXTURE_BORDER_COLOR, gl_color.AsArray());
         }
     }
 
@@ -1668,8 +1669,8 @@ void RasterizerOpenGL::SyncClipEnabled() {
 
 void RasterizerOpenGL::SyncClipCoef() {
     const auto raw_clip_coef = Pica::g_state.regs.rasterizer.GetClipCoef();
-    const GLvec4 new_clip_coef = {raw_clip_coef.x.ToFloat32(), raw_clip_coef.y.ToFloat32(),
-                                  raw_clip_coef.z.ToFloat32(), raw_clip_coef.w.ToFloat32()};
+    const Common::Vec4f new_clip_coef = {raw_clip_coef.x.ToFloat32(), raw_clip_coef.y.ToFloat32(),
+                                         raw_clip_coef.z.ToFloat32(), raw_clip_coef.w.ToFloat32()};
     if (new_clip_coef != uniform_block_data.data.clip_coef) {
         uniform_block_data.data.clip_coef = new_clip_coef;
         uniform_block_data.dirty = true;
@@ -1939,10 +1940,12 @@ void RasterizerOpenGL::SyncLightAmbient(int light_index) {
 }
 
 void RasterizerOpenGL::SyncLightPosition(int light_index) {
-    GLvec3 position = {
-        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].x).ToFloat32(),
-        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].y).ToFloat32(),
-        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32()};
+    const auto& light = Pica::g_state.regs.lighting.light[light_index];
+    const Common::Vec3f position = {
+        Pica::float16::FromRaw(light.x).ToFloat32(),
+        Pica::float16::FromRaw(light.y).ToFloat32(),
+        Pica::float16::FromRaw(light.z).ToFloat32()
+    };
 
     if (position != uniform_block_data.data.light_src[light_index].position) {
         uniform_block_data.data.light_src[light_index].position = position;
@@ -1952,8 +1955,8 @@ void RasterizerOpenGL::SyncLightPosition(int light_index) {
 
 void RasterizerOpenGL::SyncLightSpotDirection(int light_index) {
     const auto& light = Pica::g_state.regs.lighting.light[light_index];
-    GLvec3 spot_direction = {light.spot_x / 2047.0f, light.spot_y / 2047.0f,
-                             light.spot_z / 2047.0f};
+    const auto spot_direction = Common::Vec3u{light.spot_x, light.spot_y, light.spot_z}
+                                / 2047.0f;
 
     if (spot_direction != uniform_block_data.data.light_src[light_index].spot_direction) {
         uniform_block_data.data.light_src[light_index].spot_direction = spot_direction;
@@ -1962,9 +1965,8 @@ void RasterizerOpenGL::SyncLightSpotDirection(int light_index) {
 }
 
 void RasterizerOpenGL::SyncLightDistanceAttenuationBias(int light_index) {
-    GLfloat dist_atten_bias =
-        Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_bias)
-            .ToFloat32();
+    const auto& light = Pica::g_state.regs.lighting.light[light_index];
+    float dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
 
     if (dist_atten_bias != uniform_block_data.data.light_src[light_index].dist_atten_bias) {
         uniform_block_data.data.light_src[light_index].dist_atten_bias = dist_atten_bias;
@@ -1973,9 +1975,8 @@ void RasterizerOpenGL::SyncLightDistanceAttenuationBias(int light_index) {
 }
 
 void RasterizerOpenGL::SyncLightDistanceAttenuationScale(int light_index) {
-    GLfloat dist_atten_scale =
-        Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_scale)
-            .ToFloat32();
+    const auto& light = Pica::g_state.regs.lighting.light[light_index];
+    float dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
 
     if (dist_atten_scale != uniform_block_data.data.light_src[light_index].dist_atten_scale) {
         uniform_block_data.data.light_src[light_index].dist_atten_scale = dist_atten_scale;
@@ -2006,7 +2007,8 @@ void RasterizerOpenGL::SyncShadowTextureBias() {
 
 void RasterizerOpenGL::SyncAndUploadLUTsLF() {
     constexpr std::size_t max_size =
-        sizeof(GLvec2) * 256 * Pica::LightingRegs::NumLightingSampler + sizeof(GLvec2) * 128; // fog
+        sizeof(Common::Vec2f) * 256 * Pica::LightingRegs::NumLightingSampler +
+        sizeof(Common::Vec2f) * 128; // fog
 
     if (!uniform_block_data.lighting_lut_dirty_any && !uniform_block_data.fog_lut_dirty) {
         return;
@@ -2017,27 +2019,27 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
     bool invalidate;
     std::size_t bytes_used = 0;
     glBindBuffer(GL_TEXTURE_BUFFER, texture_lf_buffer.GetHandle());
-    std::tie(buffer, offset, invalidate) = texture_lf_buffer.Map(max_size, sizeof(GLvec4));
+    std::tie(buffer, offset, invalidate) = texture_lf_buffer.Map(max_size, sizeof(Common::Vec4f));
 
     // Sync the lighting luts
     if (uniform_block_data.lighting_lut_dirty_any || invalidate) {
         for (unsigned index = 0; index < uniform_block_data.lighting_lut_dirty.size(); index++) {
             if (uniform_block_data.lighting_lut_dirty[index] || invalidate) {
-                std::array<GLvec2, 256> new_data;
+                std::array<Common::Vec2f, 256> new_data;
                 const auto& source_lut = Pica::g_state.lighting.luts[index];
                 std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
                                [](const auto& entry) {
-                                   return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+                                   return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
                                });
 
                 if (new_data != lighting_lut_data[index] || invalidate) {
                     lighting_lut_data[index] = new_data;
                     std::memcpy(buffer + bytes_used, new_data.data(),
-                                new_data.size() * sizeof(GLvec2));
+                                new_data.size() * sizeof(Common::Vec2f));
                     uniform_block_data.data.lighting_lut_offset[index / 4][index % 4] =
-                        static_cast<GLint>((offset + bytes_used) / sizeof(GLvec2));
+                        static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec2f));
                     uniform_block_data.dirty = true;
-                    bytes_used += new_data.size() * sizeof(GLvec2);
+                    bytes_used += new_data.size() * sizeof(Common::Vec2f);
                 }
                 uniform_block_data.lighting_lut_dirty[index] = false;
             }
@@ -2047,20 +2049,20 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
 
     // Sync the fog lut
     if (uniform_block_data.fog_lut_dirty || invalidate) {
-        std::array<GLvec2, 128> new_data;
+        std::array<Common::Vec2f, 128> new_data;
 
         std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
                        [](const auto& entry) {
-                           return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+                           return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
                        });
 
         if (new_data != fog_lut_data || invalidate) {
             fog_lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(Common::Vec2f));
             uniform_block_data.data.fog_lut_offset =
-                static_cast<GLint>((offset + bytes_used) / sizeof(GLvec2));
+                static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
             uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(GLvec2);
+            bytes_used += new_data.size() * sizeof(Common::Vec2f);
         }
         uniform_block_data.fog_lut_dirty = false;
     }
@@ -2069,9 +2071,9 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
 }
 
 void RasterizerOpenGL::SyncAndUploadLUTs() {
-    constexpr std::size_t max_size = sizeof(GLvec2) * 128 * 3 + // proctex: noise + color + alpha
-                                     sizeof(GLvec4) * 256 +     // proctex
-                                     sizeof(GLvec4) * 256;      // proctex diff
+    constexpr std::size_t max_size = sizeof(Common::Vec2f) * 128 * 3 + // proctex: noise + color + alpha
+                                     sizeof(Common::Vec4f) * 256 +     // proctex
+                                     sizeof(Common::Vec4f) * 256;      // proctex diff
 
     if (!uniform_block_data.proctex_noise_lut_dirty &&
         !uniform_block_data.proctex_color_map_dirty &&
@@ -2085,23 +2087,23 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     bool invalidate;
     std::size_t bytes_used = 0;
     glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer.GetHandle());
-    std::tie(buffer, offset, invalidate) = texture_buffer.Map(max_size, sizeof(GLvec4));
+    std::tie(buffer, offset, invalidate) = texture_buffer.Map(max_size, sizeof(Common::Vec4f));
 
     // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
     auto SyncProcTexValueLUT = [this, buffer, offset, invalidate, &bytes_used](
                                    const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
-                                   std::array<GLvec2, 128>& lut_data, GLint& lut_offset) {
-        std::array<GLvec2, 128> new_data;
+                                   std::array<Common::Vec2f, 128>& lut_data, GLint& lut_offset) {
+        std::array<Common::Vec2f, 128> new_data;
         std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
-            return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+            return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
         });
 
         if (new_data != lut_data || invalidate) {
             lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
-            lut_offset = static_cast<GLint>((offset + bytes_used) / sizeof(GLvec2));
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(Common::Vec2f));
+            lut_offset = static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec2f));
             uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(GLvec2);
+            bytes_used += new_data.size() * sizeof(Common::Vec2f);
         }
     };
 
@@ -2128,44 +2130,44 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
 
     // Sync the proctex lut
     if (uniform_block_data.proctex_lut_dirty || invalidate) {
-        std::array<GLvec4, 256> new_data;
+        std::array<Common::Vec4f, 256> new_data;
 
         std::transform(Pica::g_state.proctex.color_table.begin(),
                        Pica::g_state.proctex.color_table.end(), new_data.begin(),
                        [](const auto& entry) {
                            auto rgba = entry.ToVector() / 255.0f;
-                           return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
+                           return Common::Vec4f{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
                        });
 
         if (new_data != proctex_lut_data || invalidate) {
             proctex_lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec4));
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(Common::Vec4f));
             uniform_block_data.data.proctex_lut_offset =
-                static_cast<GLint>((offset + bytes_used) / sizeof(GLvec4));
+                static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec4f));
             uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(GLvec4);
+            bytes_used += new_data.size() * sizeof(Common::Vec4f);
         }
         uniform_block_data.proctex_lut_dirty = false;
     }
 
     // Sync the proctex difference lut
     if (uniform_block_data.proctex_diff_lut_dirty || invalidate) {
-        std::array<GLvec4, 256> new_data;
+        std::array<Common::Vec4f, 256> new_data;
 
         std::transform(Pica::g_state.proctex.color_diff_table.begin(),
                        Pica::g_state.proctex.color_diff_table.end(), new_data.begin(),
                        [](const auto& entry) {
                            auto rgba = entry.ToVector() / 255.0f;
-                           return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
+                           return Common::Vec4f{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
                        });
 
         if (new_data != proctex_diff_lut_data || invalidate) {
             proctex_diff_lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec4));
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(Common::Vec4f));
             uniform_block_data.data.proctex_diff_lut_offset =
-                static_cast<GLint>((offset + bytes_used) / sizeof(GLvec4));
+                static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec4f));
             uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(GLvec4);
+            bytes_used += new_data.size() * sizeof(Common::Vec4f);
         }
         uniform_block_data.proctex_diff_lut_dirty = false;
     }

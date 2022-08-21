@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <thread>
+#include <set>
 #include <unordered_map>
 #include <boost/variant.hpp>
 #include <boost/functional/hash.hpp>
@@ -150,11 +151,11 @@ void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs,
     std::transform(std::begin(setup.uniforms.b), std::end(setup.uniforms.b), std::begin(bools),
                    [](bool value) -> BoolAligned { return {value ? GL_TRUE : GL_FALSE}; });
     std::transform(std::begin(regs.int_uniforms), std::end(regs.int_uniforms), std::begin(i),
-                   [](const auto& value) -> GLuvec4 {
+                   [](const auto& value) -> Common::Vec4u {
                        return {value.x.Value(), value.y.Value(), value.z.Value(), value.w.Value()};
                    });
     std::transform(std::begin(setup.uniforms.f), std::end(setup.uniforms.f), std::begin(f),
-                   [](const auto& value) -> GLvec4 {
+                   [](const auto& value) -> Common::Vec4f {
                        return {value.x.ToFloat32(), value.y.ToFloat32(), value.z.ToFloat32(),
                                value.w.ToFloat32()};
                    });
