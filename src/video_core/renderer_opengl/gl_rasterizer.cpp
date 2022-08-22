@@ -630,7 +630,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         }
     };
 
-    auto BindCubeFace = [&](GLuint& target, Pica::TexturingRegs::CubeFace face,
+    const auto BindCubeFace = [&](GLuint& target, Pica::TexturingRegs::CubeFace face,
                             Pica::Texture::TextureInfo& info) {
         info.physical_address = regs.texturing.GetCubePhysicalAddress(face);
         Surface surface = res_cache.GetTextureSurface(info);
