@@ -2158,6 +2158,10 @@ PlotWidget {
   padding: 0px;
 }
 
+TouchScreenPreview {
+  qproperty-dotHighlightColor: #3daee9;
+  background-color: #0f1922;
+}
 
 QListWidget#selectorList {
   background-color: #0f1922;
