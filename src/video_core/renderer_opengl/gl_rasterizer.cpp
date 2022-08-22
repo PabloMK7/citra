@@ -152,7 +152,7 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
             std::make_unique<ShaderProgramManager>(emu_window, GLAD_GL_ARB_separate_shader_objects);
     }
 #else
-    shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, true);
+    shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, !GLES);
 #endif
 
     glEnable(GL_BLEND);

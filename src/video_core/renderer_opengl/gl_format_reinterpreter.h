@@ -27,7 +27,8 @@ public:
                              const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) = 0;
 
 protected:
-    OGLFramebuffer read_fbo, draw_fbo;
+    OGLFramebuffer read_fbo;
+    OGLFramebuffer draw_fbo;
 };
 
 using ReinterpreterList = std::vector<std::unique_ptr<FormatReinterpreterBase>>;
