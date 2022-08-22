@@ -104,7 +104,7 @@ bool EmuWindow_SDL2::IsOpen() const {
     return is_open;
 }
 
-void EmuWindow_SDL2::Close() {
+void EmuWindow_SDL2::RequestClose() {
     is_open = false;
 }
 
@@ -260,7 +260,7 @@ void EmuWindow_SDL2::PollEvents() {
                 OnResize();
                 break;
             case SDL_WINDOWEVENT_CLOSE:
-                is_open = false;
+                RequestClose();
                 break;
             }
             break;
@@ -291,7 +291,7 @@ void EmuWindow_SDL2::PollEvents() {
             OnFingerUp();
             break;
         case SDL_QUIT:
-            is_open = false;
+            RequestClose();
             break;
         default:
             break;

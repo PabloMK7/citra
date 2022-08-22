@@ -443,7 +443,7 @@ int main(int argc, char** argv) {
 
         switch (result) {
         case Core::System::ResultStatus::ShutdownRequested:
-            emu_window->Close();
+            emu_window->RequestClose();
             break;
         case Core::System::ResultStatus::Success:
             break;

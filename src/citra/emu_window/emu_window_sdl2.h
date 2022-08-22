@@ -47,7 +47,7 @@ public:
     bool IsOpen() const;
 
     /// Close the window.
-    void Close();
+    void RequestClose();
 
     /// Creates a new context that is shared with the current context
     std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
