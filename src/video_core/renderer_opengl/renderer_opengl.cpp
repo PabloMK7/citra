@@ -1234,7 +1234,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 VideoCore::ResultStatus RendererOpenGL::Init() {
 #ifndef ANDROID
     if (!gladLoadGL()) {
-        return VideoCore::ResultStatus::ErrorBelowGL33;
+        return VideoCore::ResultStatus::ErrorBelowGL43;
     }
 
     // Qualcomm has some spammy info messages that are marked as errors but not important
@@ -1245,9 +1245,9 @@ VideoCore::ResultStatus RendererOpenGL::Init() {
     }
 #endif
 
-    const char* gl_version{reinterpret_cast<char const*>(glGetString(GL_VERSION))};
-    const char* gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
-    const char* gpu_model{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
+    const std::string_view gl_version{reinterpret_cast<char const*>(glGetString(GL_VERSION))};
+    const std::string_view gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
+    const std::string_view gpu_model{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
 
     LOG_INFO(Render_OpenGL, "GL_VERSION: {}", gl_version);
     LOG_INFO(Render_OpenGL, "GL_VENDOR: {}", gpu_vendor);
@@ -1259,12 +1259,12 @@ VideoCore::ResultStatus RendererOpenGL::Init() {
     telemetry_session.AddField(user_system, "GPU_Model", std::string(gpu_model));
     telemetry_session.AddField(user_system, "GPU_OpenGL_Version", std::string(gl_version));
 
-    if (!strcmp(gpu_vendor, "GDI Generic")) {
+    if (gpu_vendor == "GDI Generic") {
         return VideoCore::ResultStatus::ErrorGenericDrivers;
     }
 
-    if (!(GLAD_GL_VERSION_3_3 || GLAD_GL_ES_VERSION_3_1)) {
-        return VideoCore::ResultStatus::ErrorBelowGL33;
+    if (!(GLAD_GL_VERSION_4_3 || GLAD_GL_ES_VERSION_3_1)) {
+        return VideoCore::ResultStatus::ErrorBelowGL43;
     }
 
     InitOpenGLObjects();

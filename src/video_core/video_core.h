@@ -7,6 +7,7 @@
 #include <atomic>
 #include <iostream>
 #include <memory>
+#include <functional>
 #include "core/frontend/emu_window.h"
 
 namespace Frontend {
@@ -49,7 +50,7 @@ extern Memory::MemorySystem* g_memory;
 enum class ResultStatus {
     Success,
     ErrorGenericDrivers,
-    ErrorBelowGL33,
+    ErrorBelowGL43,
 };
 
 /// Initialize the video core

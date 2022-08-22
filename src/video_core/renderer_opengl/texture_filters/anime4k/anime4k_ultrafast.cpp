@@ -90,15 +90,9 @@ void Anime4kUltrafast::Filter(const OGLTexture& src_tex, Common::Rectangle<u32> 
         state.Apply();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture.tex.handle);
-        if (GL_ARB_texture_storage) {
-            glTexStorage2D(GL_TEXTURE_2D, 1, internal_format,
-                           src_rect.GetWidth() * internal_scale_factor,
-                           src_rect.GetHeight() * internal_scale_factor);
-        } else {
-            glTexImage2D(
-                GL_TEXTURE_2D, 0, internal_format, src_rect.GetWidth() * internal_scale_factor,
-                src_rect.GetHeight() * internal_scale_factor, 0, format, GL_HALF_FLOAT, nullptr);
-        }
+        glTexStorage2D(GL_TEXTURE_2D, 1, internal_format,
+                       src_rect.GetWidth() * internal_scale_factor,
+                       src_rect.GetHeight() * internal_scale_factor);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                                texture.tex.handle, 0);
         return texture;
