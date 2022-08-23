@@ -144,12 +144,10 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
 
 #ifdef __APPLE__
     if (IsVendorIntel()) {
-        shader_program_manager = std::make_unique<ShaderProgramManager>(
-            emu_window,
-            VideoCore::g_separable_shader_enabled ? GLAD_GL_ARB_separate_shader_objects : false);
+        shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, false);
     } else {
         shader_program_manager =
-            std::make_unique<ShaderProgramManager>(emu_window, GLAD_GL_ARB_separate_shader_objects);
+            std::make_unique<ShaderProgramManager>(emu_window, false);
     }
 #else
     shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, !GLES);
