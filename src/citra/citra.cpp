@@ -393,6 +393,7 @@ int main(int argc, char** argv) {
         break; // Expected case
     default:
         LOG_ERROR(Frontend, "Error while loading ROM: {}", system.GetStatusDetails());
+        break;
     }
 
     system.TelemetrySession().AddField(Common::Telemetry::FieldType::App, "Frontend", "SDL");
@@ -449,6 +450,7 @@ int main(int argc, char** argv) {
             break;
         default:
             LOG_ERROR(Frontend, "Error in main run loop: {}", result, system.GetStatusDetails());
+            break;
         }
     }
     render_thread.join();
