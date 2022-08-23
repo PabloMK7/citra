@@ -921,7 +921,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
                                           "have the latest graphics driver.");
 
     if (!QOpenGLContext::globalShareContext()->versionFunctions<QOpenGLFunctions_4_3_Core>()) {
-        QMessageBox::critical(this, below_gl33_title, below_gl33_message);
+        QMessageBox::critical(this, below_gl43_title, below_gl43_message);
         return false;
     }
 
@@ -991,8 +991,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
                    "proper drivers for your graphics card from the manufacturer's website."));
             break;
 
-        case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33:
-            QMessageBox::critical(this, below_gl33_title, below_gl33_message);
+        case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL43:
+            QMessageBox::critical(this, below_gl43_title, below_gl43_message);
             break;
 
         default:
