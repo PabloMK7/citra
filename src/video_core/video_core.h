@@ -5,9 +5,9 @@
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <iostream>
 #include <memory>
-#include <functional>
 #include "core/frontend/emu_window.h"
 
 namespace Frontend {

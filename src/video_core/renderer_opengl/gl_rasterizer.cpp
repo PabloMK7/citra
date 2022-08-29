@@ -146,8 +146,7 @@ RasterizerOpenGL::RasterizerOpenGL(Frontend::EmuWindow& emu_window)
     if (IsVendorIntel()) {
         shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, false);
     } else {
-        shader_program_manager =
-            std::make_unique<ShaderProgramManager>(emu_window, false);
+        shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, false);
     }
 #else
     shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, !GLES);
@@ -629,7 +628,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     };
 
     const auto BindCubeFace = [&](GLuint& target, Pica::TexturingRegs::CubeFace face,
-                            Pica::Texture::TextureInfo& info) {
+                                  Pica::Texture::TextureInfo& info) {
         info.physical_address = regs.texturing.GetCubePhysicalAddress(face);
         Surface surface = res_cache.GetTextureSurface(info);
 
