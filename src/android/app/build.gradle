@@ -83,6 +83,17 @@ android {
         }
     }
 
+    flavorDimensions "version"
+    productFlavors {
+        canary {
+            dimension "version"
+            applicationIdSuffix ".canary"
+        }
+        nightly {
+            dimension "version"
+        }
+    }
+
     externalNativeBuild {
         cmake {
             version "3.18.1"
@@ -138,6 +149,11 @@ def getVersion() {
                 .replaceAll(/(-0)?-[^-]+$/, "")
     } catch (Exception) {
         logger.error('Cannot find git, defaulting to dummy version number')
+    }
+
+    if (System.getenv("GITHUB_ACTIONS") != null) {
+        def gitTag = System.getenv("GIT_TAG_NAME")
+        versionName = gitTag ?: versionName
     }
 
     return versionName
