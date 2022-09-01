@@ -1,13 +1,10 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <deque>
-#include <vector>
 #include "common/alignment.h"
 #include "common/assert.h"
 #include "common/microprofile.h"
-#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
 
 MICROPROFILE_DEFINE(OpenGL_StreamBuffer, "OpenGL", "Stream Buffer Orphaning",
@@ -15,21 +12,12 @@ MICROPROFILE_DEFINE(OpenGL_StreamBuffer, "OpenGL", "Stream Buffer Orphaning",
 
 namespace OpenGL {
 
-OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool array_buffer_for_amd,
-                                 bool prefer_coherent)
+OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coherent)
     : gl_target(target), buffer_size(size) {
     gl_buffer.Create();
     glBindBuffer(gl_target, gl_buffer.handle);
 
     GLsizeiptr allocate_size = size;
-    if (array_buffer_for_amd) {
-        // On AMD GPU there is a strange crash in indexed drawing. The crash happens when the buffer
-        // read position is near the end and is an out-of-bound access to the vertex buffer. This is
-        // probably a bug in the driver and is related to the usage of vec3<byte> attributes in the
-        // vertex array. Doubling the allocation size for the vertex buffer seems to avoid the
-        // crash.
-        allocate_size *= 2;
-    }
 
     if (GLAD_GL_ARB_buffer_storage) {
         persistent = true;

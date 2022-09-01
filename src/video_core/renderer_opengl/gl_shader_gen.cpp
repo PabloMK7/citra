@@ -1,21 +1,13 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <array>
-#include <cstddef>
 #include <string_view>
 #include <fmt/format.h>
-#include "common/assert.h"
-#include "common/bit_field.h"
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/core.h"
-#include "video_core/regs_framebuffer.h"
-#include "video_core/regs_lighting.h"
-#include "video_core/regs_rasterizer.h"
-#include "video_core/regs_texturing.h"
-#include "video_core/renderer_opengl/gl_rasterizer.h"
+#include "video_core/pica_state.h"
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
@@ -1233,18 +1225,6 @@ ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& confi
     const auto& state = config.state;
     std::string out;
 
-    if (GLES) {
-        out += R"(
-#define ALLOW_SHADOW (defined(CITRA_GLES))
-)";
-    } else {
-        out += R"(
-#extension GL_ARB_shader_image_load_store : enable
-#extension GL_ARB_shader_image_size : enable
-#define ALLOW_SHADOW (defined(GL_ARB_shader_image_load_store) && defined(GL_ARB_shader_image_size))
-)";
-    }
-
     if (separable_shader && !GLES) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
@@ -1270,7 +1250,6 @@ uniform samplerBuffer texture_buffer_lut_lf;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
 
-#if ALLOW_SHADOW
 layout(r32ui) uniform readonly uimage2D shadow_texture_px;
 layout(r32ui) uniform readonly uimage2D shadow_texture_nx;
 layout(r32ui) uniform readonly uimage2D shadow_texture_py;
@@ -1278,7 +1257,6 @@ layout(r32ui) uniform readonly uimage2D shadow_texture_ny;
 layout(r32ui) uniform readonly uimage2D shadow_texture_pz;
 layout(r32ui) uniform readonly uimage2D shadow_texture_nz;
 layout(r32ui) uniform uimage2D shadow_buffer;
-#endif
 )";
 
     out += UniformBlockDef;
@@ -1331,8 +1309,6 @@ float getLod(vec2 coord) {
     vec2 d = max(abs(dFdx(coord)), abs(dFdy(coord)));
     return log2(max(d.x, d.y));
 }
-
-#if ALLOW_SHADOW
 
 uvec2 DecodeShadow(uint pixel) {
     return uvec2(pixel >> 8, pixel & 0xFFu);
@@ -1459,18 +1435,6 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         CompareShadow(pixels.w, z));
     return vec4(mix2(s, f));
 }
-
-#else
-
-vec4 shadowTexture(vec2 uv, float w) {
-    return vec4(1.0);
-}
-
-vec4 shadowTextureCube(vec2 uv, float w) {
-    return vec4(1.0);
-}
-
-#endif
 )";
 
     if (config.state.proctex.enable)
@@ -1559,7 +1523,6 @@ vec4 secondary_fragment_color = vec4(0.0);
 
     if (state.shadow_rendering) {
         out += R"(
-#if ALLOW_SHADOW
 uint d = uint(clamp(depth, 0.0, 1.0) * float(0xFFFFFF));
 uint s = uint(last_tex_env_out.g * float(0xFF));
 ivec2 image_coord = ivec2(gl_FragCoord.xy);
@@ -1582,7 +1545,6 @@ do {
     new = EncodeShadow(ref);
 
 } while ((old = imageAtomicCompSwap(shadow_buffer, image_coord, old, new)) != old2);
-#endif // ALLOW_SHADOW
 )";
     } else {
         out += "gl_FragDepth = depth;\n";

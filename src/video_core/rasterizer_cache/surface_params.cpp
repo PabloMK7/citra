@@ -1,10 +1,10 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
-#include "video_core/renderer_opengl/gl_surface_params.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
+#include "video_core/rasterizer_cache/surface_params.h"
 
 namespace OpenGL {
 
@@ -12,6 +12,7 @@ SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
     SurfaceParams params = *this;
     const u32 tiled_size = is_tiled ? 8 : 1;
     const u32 stride_tiled_bytes = BytesInPixels(stride * tiled_size);
+
     PAddr aligned_start =
         addr + Common::AlignDown(boost::icl::first(interval) - addr, stride_tiled_bytes);
     PAddr aligned_end =
@@ -24,17 +25,19 @@ SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
         // 1 row
         ASSERT(aligned_end - aligned_start == stride_tiled_bytes);
         const u32 tiled_alignment = BytesInPixels(is_tiled ? 8 * 8 : 1);
+
         aligned_start =
             addr + Common::AlignDown(boost::icl::first(interval) - addr, tiled_alignment);
         aligned_end =
             addr + Common::AlignUp(boost::icl::last_next(interval) - addr, tiled_alignment);
+
         params.addr = aligned_start;
         params.width = PixelsInBytes(aligned_end - aligned_start) / tiled_size;
         params.stride = params.width;
         params.height = tiled_size;
     }
-    params.UpdateParams();
 
+    params.UpdateParams();
     return params;
 }
 
@@ -158,6 +161,7 @@ bool SurfaceParams::CanTexCopy(const SurfaceParams& texcopy_params) const {
         end < texcopy_params.end) {
         return false;
     }
+
     if (texcopy_params.width != texcopy_params.stride) {
         const u32 tile_stride = BytesInPixels(stride * (is_tiled ? 8 : 1));
         return (texcopy_params.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
@@ -165,6 +169,7 @@ bool SurfaceParams::CanTexCopy(const SurfaceParams& texcopy_params) const {
                (texcopy_params.height == 1 || texcopy_params.stride == tile_stride) &&
                ((texcopy_params.addr - addr) % tile_stride) + texcopy_params.width <= tile_stride;
     }
+
     return FromInterval(texcopy_params.GetInterval()).GetInterval() == texcopy_params.GetInterval();
 }
 

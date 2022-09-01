@@ -1,16 +1,18 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <set>
 #include <thread>
 #include <unordered_map>
 #include <boost/functional/hash.hpp>
 #include <boost/variant.hpp>
-#include "core/core.h"
 #include "core/frontend/scope_acquire_context.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
+#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/video_core.h"
 
@@ -149,11 +151,11 @@ void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs,
     std::transform(std::begin(setup.uniforms.b), std::end(setup.uniforms.b), std::begin(bools),
                    [](bool value) -> BoolAligned { return {value ? GL_TRUE : GL_FALSE}; });
     std::transform(std::begin(regs.int_uniforms), std::end(regs.int_uniforms), std::begin(i),
-                   [](const auto& value) -> GLuvec4 {
+                   [](const auto& value) -> Common::Vec4u {
                        return {value.x.Value(), value.y.Value(), value.z.Value(), value.w.Value()};
                    });
     std::transform(std::begin(setup.uniforms.f), std::end(setup.uniforms.f), std::begin(f),
-                   [](const auto& value) -> GLvec4 {
+                   [](const auto& value) -> Common::Vec4f {
                        return {value.x.ToFloat32(), value.y.ToFloat32(), value.z.ToFloat32(),
                                value.w.ToFloat32()};
                    });
@@ -325,8 +327,8 @@ using FragmentShaders = ShaderCache<PicaFSConfig, &GenerateFragmentShader, GL_FR
 
 class ShaderProgramManager::Impl {
 public:
-    explicit Impl(bool separable, bool is_amd)
-        : is_amd(is_amd), separable(separable), programmable_vertex_shaders(separable),
+    explicit Impl(bool separable)
+        : separable(separable), programmable_vertex_shaders(separable),
           trivial_vertex_shader(separable), fixed_geometry_shaders(separable),
           fragment_shaders(separable), disk_cache(separable) {
         if (separable)
@@ -359,7 +361,6 @@ public:
         }
     };
 
-    bool is_amd;
     bool separable;
 
     ShaderTuple current;
@@ -375,9 +376,8 @@ public:
     ShaderDiskCache disk_cache;
 };
 
-ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, bool separable,
-                                           bool is_amd)
-    : impl(std::make_unique<Impl>(separable, is_amd)), emu_window{emu_window_} {}
+ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, bool separable)
+    : impl(std::make_unique<Impl>(separable)), emu_window{emu_window_} {}
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
@@ -439,15 +439,6 @@ void ShaderProgramManager::UseFragmentShader(const Pica::Regs& regs) {
 
 void ShaderProgramManager::ApplyTo(OpenGLState& state) {
     if (impl->separable) {
-        if (impl->is_amd) {
-            // Without this reseting, AMD sometimes freezes when one stage is changed but not
-            // for the others. On the other hand, including this reset seems to introduce memory
-            // leak in Intel Graphics.
-            glUseProgramStages(
-                impl->pipeline.handle,
-                GL_VERTEX_SHADER_BIT | GL_GEOMETRY_SHADER_BIT | GL_FRAGMENT_SHADER_BIT, 0);
-        }
-
         glUseProgramStages(impl->pipeline.handle, GL_VERTEX_SHADER_BIT, impl->current.vs);
         glUseProgramStages(impl->pipeline.handle, GL_GEOMETRY_SHADER_BIT, impl->current.gs);
         glUseProgramStages(impl->pipeline.handle, GL_FRAGMENT_SHADER_BIT, impl->current.fs);
@@ -471,12 +462,6 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
 
 void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                                          const VideoCore::DiskResourceLoadCallback& callback) {
-    if (!GLAD_GL_ARB_get_program_binary && !GLES) {
-        LOG_ERROR(Render_OpenGL,
-                  "Cannot load disk cache as ARB_get_program_binary is not supported!");
-        return;
-    }
-
     auto& disk_cache = impl->disk_cache;
     const auto transferable = disk_cache.LoadTransferable();
     if (!transferable) {

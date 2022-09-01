@@ -3,23 +3,32 @@
 // Refer to the license.txt file included.
 
 #pragma once
-
+#include <string_view>
 #include "common/common_types.h"
 #include "common/math_util.h"
-#include "video_core/renderer_opengl/gl_surface_params.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
 
 namespace OpenGL {
 
+class TextureRuntime;
+class OGLTexture;
+
 class TextureFilterBase {
     friend class TextureFilterer;
-    virtual void Filter(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
-                        const Common::Rectangle<u32>& dst_rect, GLuint read_fb_handle,
-                        GLuint draw_fb_handle) = 0;
 
 public:
-    explicit TextureFilterBase(u16 scale_factor) : scale_factor{scale_factor} {};
+    explicit TextureFilterBase(u16 scale_factor) : scale_factor(scale_factor) {
+        draw_fbo.Create();
+    };
+
     virtual ~TextureFilterBase() = default;
 
+private:
+    virtual void Filter(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
+                        const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) = 0;
+
+protected:
+    OGLFramebuffer draw_fbo;
     const u16 scale_factor{};
 };
 

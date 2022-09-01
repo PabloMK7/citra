@@ -1,32 +1,18 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
-
-#include <array>
-#include <cstddef>
-#include <cstring>
-#include <memory>
-#include <vector>
-#include <glad/glad.h>
-#include "common/bit_field.h"
-#include "common/common_types.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
-#include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/rasterizer_interface.h"
-#include "video_core/regs_framebuffer.h"
 #include "video_core/regs_lighting.h"
-#include "video_core/regs_rasterizer.h"
 #include "video_core/regs_texturing.h"
-#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
-#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
-#include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/shader/shader.h"
 
 namespace Frontend {
@@ -118,20 +104,18 @@ private:
             view[2] = v.view.z.ToFloat32();
 
             if (flip_quaternion) {
-                for (float& x : normquat) {
-                    x = -x;
-                }
+                normquat = -normquat;
             }
         }
 
-        GLvec4 position;
-        GLvec4 color;
-        GLvec2 tex_coord0;
-        GLvec2 tex_coord1;
-        GLvec2 tex_coord2;
-        GLfloat tex_coord0_w;
-        GLvec4 normquat;
-        GLvec3 view;
+        Common::Vec4f position;
+        Common::Vec4f color;
+        Common::Vec2f tex_coord0;
+        Common::Vec2f tex_coord1;
+        Common::Vec2f tex_coord2;
+        float tex_coord0_w;
+        Common::Vec4f normquat;
+        Common::Vec3f view;
     };
 
     /// Syncs the clip enabled status to match the PICA register
@@ -263,8 +247,6 @@ private:
     /// Setup geometry shader for AccelerateDrawBatch
     bool SetupGeometryShader();
 
-    bool is_amd;
-
     OpenGLState state;
     GLuint default_texture;
 
@@ -316,15 +298,14 @@ private:
     OGLTexture texture_buffer_lut_rg;
     OGLTexture texture_buffer_lut_rgba;
 
-    std::array<std::array<GLvec2, 256>, Pica::LightingRegs::NumLightingSampler> lighting_lut_data{};
-    std::array<GLvec2, 128> fog_lut_data{};
-    std::array<GLvec2, 128> proctex_noise_lut_data{};
-    std::array<GLvec2, 128> proctex_color_map_data{};
-    std::array<GLvec2, 128> proctex_alpha_map_data{};
-    std::array<GLvec4, 256> proctex_lut_data{};
-    std::array<GLvec4, 256> proctex_diff_lut_data{};
-
-    bool allow_shadow;
+    std::array<std::array<Common::Vec2f, 256>, Pica::LightingRegs::NumLightingSampler>
+        lighting_lut_data{};
+    std::array<Common::Vec2f, 128> fog_lut_data{};
+    std::array<Common::Vec2f, 128> proctex_noise_lut_data{};
+    std::array<Common::Vec2f, 128> proctex_color_map_data{};
+    std::array<Common::Vec2f, 128> proctex_alpha_map_data{};
+    std::array<Common::Vec4f, 256> proctex_lut_data{};
+    std::array<Common::Vec4f, 256> proctex_diff_lut_data{};
 };
 
 } // namespace OpenGL

@@ -1,13 +1,10 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2022 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <array>
-#include <glad/glad.h>
-#include "common/common_types.h"
-#include "common/math_util.h"
 #include "core/hw/gpu.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
