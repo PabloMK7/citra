@@ -33,6 +33,8 @@ enum class PrecompiledEntryKind : u32 {
 
 constexpr u32 NativeVersion = 1;
 
+// The hash is based on relevant files. The list of files can be found at src/common/CMakeLists.txt
+// and CMakeModules/GenerateSCMRev.cmake
 ShaderCacheVersionHash GetShaderCacheVersionHash() {
     ShaderCacheVersionHash hash{};
     const std::size_t length = std::min(std::strlen(Common::g_shader_cache_version), hash.size());

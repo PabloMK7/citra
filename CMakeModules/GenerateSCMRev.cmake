@@ -68,6 +68,8 @@ set(HASH_FILES
     "${VIDEO_CORE}/renderer_opengl/gl_shader_disk_cache.h"
     "${VIDEO_CORE}/renderer_opengl/gl_shader_gen.cpp"
     "${VIDEO_CORE}/renderer_opengl/gl_shader_gen.h"
+    "${VIDEO_CORE}/renderer_opengl/gl_shader_util.cpp"
+    "${VIDEO_CORE}/renderer_opengl/gl_shader_util.h"
     "${VIDEO_CORE}/shader/shader.cpp"
     "${VIDEO_CORE}/shader/shader.h"
     "${VIDEO_CORE}/pica.cpp"
