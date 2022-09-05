@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <thread>
+#include <vector>
 
 #ifdef _MSC_VER
 #pragma warning(push)
