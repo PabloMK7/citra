@@ -77,13 +77,6 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.13"
           ENABLE_COMPATIBILITY_REPORTING: "ON"
-      - name: Pack
-        run: ./.ci/macos/upload.sh
-      - name: Upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos
-          path: artifacts/
   windows:
     runs-on: windows-latest
     steps:
