@@ -12,12 +12,21 @@ MICROPROFILE_DEFINE(OpenGL_StreamBuffer, "OpenGL", "Stream Buffer Orphaning",
 
 namespace OpenGL {
 
-OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coherent)
+OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool array_buffer_for_amd,
+                                 bool prefer_coherent)
     : gl_target(target), buffer_size(size) {
     gl_buffer.Create();
     glBindBuffer(gl_target, gl_buffer.handle);
 
     GLsizeiptr allocate_size = size;
+    if (array_buffer_for_amd) {
+        // On AMD GPU there is a strange crash in indexed drawing. The crash happens when the buffer
+        // read position is near the end and is an out-of-bound access to the vertex buffer. This is
+        // probably a bug in the driver and is related to the usage of vec3<byte> attributes in the
+        // vertex array. Doubling the allocation size for the vertex buffer seems to avoid the
+        // crash.
+        allocate_size *= 2;
+    }
 
     if (GLAD_GL_ARB_buffer_storage) {
         persistent = true;

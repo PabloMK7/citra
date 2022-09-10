@@ -10,7 +10,8 @@ namespace OpenGL {
 
 class OGLStreamBuffer : private NonCopyable {
 public:
-    explicit OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coherent = false);
+    explicit OGLStreamBuffer(GLenum target, GLsizeiptr size, bool array_buffer_for_amd,
+                             bool prefer_coherent = false);
     ~OGLStreamBuffer();
 
     GLuint GetHandle() const;

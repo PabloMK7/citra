@@ -247,6 +247,8 @@ private:
     /// Setup geometry shader for AccelerateDrawBatch
     bool SetupGeometryShader();
 
+    bool is_amd;
+
     OpenGLState state;
     GLuint default_texture;
 

@@ -108,7 +108,7 @@ class OpenGLState;
 /// A class that manage different shader stages and configures them with given config data.
 class ShaderProgramManager {
 public:
-    ShaderProgramManager(Frontend::EmuWindow& emu_window_, bool separable);
+    ShaderProgramManager(Frontend::EmuWindow& emu_window_, bool separable, bool is_amd);
     ~ShaderProgramManager();
 
     void LoadDiskCache(const std::atomic_bool& stop_loading,
