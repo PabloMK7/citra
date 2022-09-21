@@ -66,12 +66,13 @@ void EmuThread::run() {
     // so that the DebugModeLeft signal can be emitted before the
     // next execution step.
     bool was_active = false;
+    Core::System& system = Core::System::GetInstance();
     while (!stop_run) {
         if (running) {
             if (!was_active)
                 emit DebugModeLeft();
 
-            Core::System::ResultStatus result = Core::System::GetInstance().RunLoop();
+            const Core::System::ResultStatus result = system.RunLoop();
             if (result == Core::System::ResultStatus::ShutdownRequested) {
                 // Notify frontend we shutdown
                 emit ErrorThrown(result, "");
@@ -91,7 +92,7 @@ void EmuThread::run() {
                 emit DebugModeLeft();
 
             exec_step = false;
-            Core::System::GetInstance().SingleStep();
+            [[maybe_unused]] const Core::System::ResultStatus result = system.SingleStep();
             emit DebugModeEntered();
             yieldCurrentThread();
 
@@ -103,7 +104,7 @@ void EmuThread::run() {
     }
 
     // Shutdown the core emulation
-    Core::System::GetInstance().Shutdown();
+    system.Shutdown();
 
 #if MICROPROFILE_ENABLED
     MicroProfileOnThreadExit();

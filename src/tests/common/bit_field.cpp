@@ -5,7 +5,7 @@
 #include <array>
 #include <cstring>
 #include <type_traits>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include "common/bit_field.h"
 
 TEST_CASE("BitField", "[common]") {

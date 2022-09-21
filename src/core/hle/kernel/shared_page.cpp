@@ -94,7 +94,7 @@ u64 Handler::GetSystemTime() const {
     epoch_tm.tm_mon = 0;
     epoch_tm.tm_year = 100;
     epoch_tm.tm_isdst = 0;
-    u64 epoch = std::mktime(&epoch_tm) * 1000;
+    s64 epoch = std::mktime(&epoch_tm) * 1000;
 
     // 3DS console time uses Jan 1 1900 as internal epoch,
     // so we use the milliseconds between 1900 and 2000 as base console time

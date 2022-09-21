@@ -7,6 +7,7 @@
 #include <iterator>
 #include <mutex>
 #include <numeric>
+#include <sstream>
 #include <thread>
 #include <fmt/chrono.h>
 #include <fmt/format.h>

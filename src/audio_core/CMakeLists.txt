@@ -29,7 +29,7 @@ add_library(audio_core STATIC
     time_stretch.cpp
     time_stretch.h
 
-    $<$<BOOL:${SDL2_FOUND}>:sdl2_sink.cpp sdl2_sink.h>
+    $<$<BOOL:${ENABLE_SDL2}>:sdl2_sink.cpp sdl2_sink.h>
     $<$<BOOL:${ENABLE_CUBEB}>:cubeb_sink.cpp cubeb_sink.h cubeb_input.cpp cubeb_input.h>
 )
 
@@ -37,6 +37,7 @@ create_target_directory_groups(audio_core)
 
 target_link_libraries(audio_core PUBLIC common)
 target_link_libraries(audio_core PRIVATE SoundTouch teakra)
+set_target_properties(audio_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if(ENABLE_MF)
     target_sources(audio_core PRIVATE
@@ -79,8 +80,8 @@ if(ANDROID)
     target_link_libraries(audio_core PRIVATE mediandk)
 endif()
 
-if(SDL2_FOUND)
-    target_link_libraries(audio_core PRIVATE SDL2)
+if(ENABLE_SDL2)
+    target_link_libraries(audio_core PRIVATE SDL2::SDL2)
     target_compile_definitions(audio_core PRIVATE HAVE_SDL2)
 endif()
 

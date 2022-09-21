@@ -7,9 +7,9 @@
 [submodule "soundtouch"]
     path = externals/soundtouch
     url = https://github.com/citra-emu/ext-soundtouch.git
-[submodule "catch"]
-    path = externals/catch
-    url = https://github.com/philsquared/Catch.git
+[submodule "catch2"]
+    path = externals/catch2
+    url = https://github.com/catchorg/Catch2
 [submodule "dynarmic"]
     path = externals/dynarmic
     url = https://github.com/citra-emu/dynarmic.git
@@ -36,7 +36,7 @@
     url = https://github.com/libusb/libusb.git
 [submodule "cubeb"]
     path = externals/cubeb
-    url = https://github.com/kinetiknz/cubeb.git
+    url = https://github.com/mozilla/cubeb
 [submodule "discord-rpc"]
     path = externals/discord-rpc
     url = https://github.com/discord/discord-rpc.git
@@ -55,3 +55,6 @@
 [submodule "libyuv"]
     path = externals/libyuv
     url = https://github.com/lemenkov/libyuv.git
+[submodule "sdl2"]
+	path = externals/sdl2/SDL
+	url = https://github.com/libsdl-org/SDL

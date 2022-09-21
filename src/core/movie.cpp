@@ -223,10 +223,10 @@ Movie::PlayMode Movie::GetPlayMode() const {
 }
 
 u64 Movie::GetCurrentInputIndex() const {
-    return nearbyint(current_input / 234.0 * GPU::SCREEN_REFRESH_RATE);
+    return static_cast<u64>(std::nearbyint(current_input / 234.0 * GPU::SCREEN_REFRESH_RATE));
 }
 u64 Movie::GetTotalInputCount() const {
-    return nearbyint(total_input / 234.0 * GPU::SCREEN_REFRESH_RATE);
+    return static_cast<u64>(std::nearbyint(total_input / 234.0 * GPU::SCREEN_REFRESH_RATE));
 }
 
 void Movie::CheckInputEnd() {

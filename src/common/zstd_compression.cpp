@@ -35,7 +35,7 @@ std::vector<u8> CompressDataZSTDDefault(const u8* source, std::size_t source_siz
 
 std::vector<u8> DecompressDataZSTD(const std::vector<u8>& compressed) {
     const std::size_t decompressed_size =
-        ZSTD_getDecompressedSize(compressed.data(), compressed.size());
+        ZSTD_getFrameContentSize(compressed.data(), compressed.size());
     std::vector<u8> decompressed(decompressed_size);
 
     const std::size_t uncompressed_result_size = ZSTD_decompress(

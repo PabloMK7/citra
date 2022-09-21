@@ -450,7 +450,7 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
                 return;
             if (pipe == 0) {
                 // pipe 0 is for debug. 3DS automatically drains this pipe and discards the data
-                impl->ReadPipe(pipe, impl->GetPipeReadableSize(pipe));
+                impl->ReadPipe(static_cast<u8>(pipe), impl->GetPipeReadableSize(pipe));
             } else {
                 std::lock_guard lock(HLE::g_hle_lock);
                 if (auto locked = dsp.lock()) {

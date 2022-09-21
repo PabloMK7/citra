@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/memory.h"

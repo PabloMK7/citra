@@ -101,7 +101,7 @@ struct ArchiveFormatInfo {
     u32_le number_files;       ///< The pre-defined number of files in the archive.
     u8 duplicate_data;         ///< Whether the archive should duplicate the data.
 };
-static_assert(std::is_pod<ArchiveFormatInfo>::value, "ArchiveFormatInfo is not POD");
+static_assert(std::is_trivial_v<ArchiveFormatInfo>, "ArchiveFormatInfo is not POD");
 
 class ArchiveBackend : NonCopyable {
 public:

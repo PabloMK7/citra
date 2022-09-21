@@ -91,7 +91,7 @@ ASSERT_POS(tc0_w, RasterizerRegs::VSOutputAttributes::TEXCOORD0_W);
 ASSERT_POS(view, RasterizerRegs::VSOutputAttributes::VIEW_X);
 ASSERT_POS(tc2, RasterizerRegs::VSOutputAttributes::TEXCOORD2_U);
 #undef ASSERT_POS
-static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
+static_assert(std::is_trivial_v<OutputVertex>, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 24 * sizeof(float), "OutputVertex has invalid size");
 
 /**
@@ -153,7 +153,7 @@ struct UnitState {
             ar& output;
         }
     } registers;
-    static_assert(std::is_pod<Registers>::value, "Structure is not POD");
+    static_assert(std::is_trivial_v<Registers>, "Structure is not POD");
 
     bool conditional_code[2];
 

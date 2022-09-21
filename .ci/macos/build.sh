@@ -10,6 +10,8 @@ export CCACHE_SLOPPINESS=time_macros
 
 export CC="ccache clang"
 export CXX="ccache clang++"
+export OBJC="clang"
+export ASM="clang"
 
 ccache -s
 

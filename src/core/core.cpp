@@ -326,7 +326,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     m_filepath = filepath;
 
     // Reset counters and set time origin to current frame
-    GetAndResetPerfStats();
+    [[maybe_unused]] const PerfStats::Results result = GetAndResetPerfStats();
     perf_stats->BeginSystemFrame();
     return status;
 }
@@ -571,8 +571,9 @@ void System::Reset() {
     }
 
     Shutdown();
+
     // Reload the system with the same setting
-    Load(*m_emu_window, m_filepath);
+    [[maybe_unused]] const System::ResultStatus result = Load(*m_emu_window, m_filepath);
 
     // Restore the deliver arg.
     if (auto apt = Service::APT::GetModule(*this)) {
@@ -597,7 +598,8 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         // Re-initialize everything like it was before
         auto system_mode = this->app_loader->LoadKernelSystemMode();
         auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
-        Init(*m_emu_window, *system_mode.first, *n3ds_mode.first, num_cores);
+        [[maybe_unused]] const System::ResultStatus result =
+            Init(*m_emu_window, *system_mode.first, *n3ds_mode.first, num_cores);
     }
 
     // flush on save, don't flush on load

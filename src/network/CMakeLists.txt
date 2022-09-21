@@ -26,3 +26,4 @@ if (ENABLE_WEB_SERVICE)
 endif()
 
 target_link_libraries(network PRIVATE common enet Boost::serialization)
+set_target_properties(network PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})

@@ -390,7 +390,7 @@ Loader::ResultStatus NCCHContainer::Load() {
                 exheader_header.arm11_system_local_caps.resource_limit_category;
 
             LOG_DEBUG(Service_FS, "Name:                        {}",
-                      exheader_header.codeset_info.name);
+                      reinterpret_cast<const char*>(exheader_header.codeset_info.name));
             LOG_DEBUG(Service_FS, "Program ID:                  {:016X}", ncch_header.program_id);
             LOG_DEBUG(Service_FS, "Code compressed:             {}", is_compressed ? "yes" : "no");
             LOG_DEBUG(Service_FS, "Entry point:                 0x{:08X}", entry_point);

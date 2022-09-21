@@ -205,7 +205,7 @@ public:
     // printing the character '{' is desirable. Ditto for }} and '}',
     // etc).
     template <typename... Args>
-    void AddLine(std::string_view text, Args&&... args) {
+    void AddLine(fmt::format_string<Args...> text, Args&&... args) {
         AddExpression(fmt::format(text, std::forward<Args>(args)...));
         AddNewLine();
     }

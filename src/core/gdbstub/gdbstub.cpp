@@ -534,9 +534,8 @@ static void SendReply(const char* reply) {
 
 /// Handle query command from gdb client.
 static void HandleQuery() {
-    LOG_DEBUG(Debug_GDBStub, "gdb: query '{}'\n", command_buffer + 1);
-
     const char* query = reinterpret_cast<const char*>(command_buffer + 1);
+    LOG_DEBUG(Debug_GDBStub, "gdb: query '{}'\n", query);
 
     if (strcmp(query, "TStatus") == 0) {
         SendReply("T0");
@@ -685,7 +684,8 @@ static void ReadCommand() {
         LOG_ERROR(
             Debug_GDBStub,
             "gdb: invalid checksum: calculated {:02x} and read {:02x} for ${}# (length: {})\n",
-            checksum_calculated, checksum_received, command_buffer, command_length);
+            checksum_calculated, checksum_received, reinterpret_cast<const char*>(command_buffer),
+            command_length);
 
         command_length = 0;
 
@@ -1059,7 +1059,7 @@ void HandlePacket() {
         return;
     }
 
-    LOG_DEBUG(Debug_GDBStub, "Packet: {}", command_buffer);
+    LOG_DEBUG(Debug_GDBStub, "Packet: {}", command_buffer[0]);
 
     switch (command_buffer[0]) {
     case 'q':

@@ -23,9 +23,10 @@ target_link_libraries(boost_serialization PUBLIC boost)
 
 # Add additional boost libs here; remember to ALIAS them in the root CMakeLists!
 
-# Catch
-add_library(catch-single-include INTERFACE)
-target_include_directories(catch-single-include INTERFACE catch/single_include)
+# Catch2
+set(CATCH_INSTALL_DOCS OFF)
+set(CATCH_INSTALL_EXTRAS OFF)
+add_subdirectory(catch2)
 
 # Crypto++
 add_subdirectory(cryptopp)
@@ -47,7 +48,6 @@ endif()
 
 # libfmt
 add_subdirectory(fmt)
-add_library(fmt::fmt ALIAS fmt)
 
 # getopt
 if (MSVC)
@@ -79,7 +79,15 @@ target_include_directories(SoundTouch INTERFACE ./soundtouch/include)
 # Teakra
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
 
+# SDL2
+if (ENABLE_SDL2 AND NOT USE_SYSTEM_SDL2)
+    add_subdirectory(sdl2)
+endif()
+
 # Zstandard
+set(ZSTD_LEGACY_SUPPORT OFF)
+set(ZSTD_BUILD_PROGRAMS OFF)
+set(ZSTD_BUILD_SHARED OFF)
 add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
 target_include_directories(libzstd_static INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib>)
 

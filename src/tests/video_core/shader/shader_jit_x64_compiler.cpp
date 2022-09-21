@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <catch2/catch.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <nihstro/inline_assembly.h>
 #include "video_core/shader/shader_interpreter.h"
 #include "video_core/shader/shader_jit_x64_compiler.h"
@@ -78,9 +79,9 @@ TEST_CASE("LG2", "[video_core][shader][shader_jit]") {
     REQUIRE(std::isnan(shader.Run(NAN)));
     REQUIRE(std::isnan(shader.Run(-1.f)));
     REQUIRE(std::isinf(shader.Run(0.f)));
-    REQUIRE(shader.Run(4.f) == Approx(2.f));
-    REQUIRE(shader.Run(64.f) == Approx(6.f));
-    REQUIRE(shader.Run(1.e24f) == Approx(79.7262742773f));
+    REQUIRE(shader.Run(4.f) == Catch::Approx(2.f));
+    REQUIRE(shader.Run(64.f) == Catch::Approx(6.f));
+    REQUIRE(shader.Run(1.e24f) == Catch::Approx(79.7262742773f));
 }
 
 TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
@@ -95,11 +96,11 @@ TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
     });
 
     REQUIRE(std::isnan(shader.Run(NAN)));
-    REQUIRE(shader.Run(-800.f) == Approx(0.f));
-    REQUIRE(shader.Run(0.f) == Approx(1.f));
-    REQUIRE(shader.Run(2.f) == Approx(4.f));
-    REQUIRE(shader.Run(6.f) == Approx(64.f));
-    REQUIRE(shader.Run(79.7262742773f) == Approx(1.e24f));
+    REQUIRE(shader.Run(-800.f) == Catch::Approx(0.f));
+    REQUIRE(shader.Run(0.f) == Catch::Approx(1.f));
+    REQUIRE(shader.Run(2.f) == Catch::Approx(4.f));
+    REQUIRE(shader.Run(6.f) == Catch::Approx(64.f));
+    REQUIRE(shader.Run(79.7262742773f) == Catch::Approx(1.e24f));
     REQUIRE(std::isinf(shader.Run(800.f)));
 }
 
@@ -137,7 +138,7 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
         shader_test.RunJit(shader_unit_jit, input);
 
         REQUIRE(shader_unit_jit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Approx(expected_out));
+        REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
     {
         shader_test.shader_setup->uniforms.i[0] = {9, 0, 2, 0};
@@ -154,6 +155,6 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
         shader_test.RunJit(shader_unit_jit, input);
 
         REQUIRE(shader_unit_jit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Approx(expected_out));
+        REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
 }

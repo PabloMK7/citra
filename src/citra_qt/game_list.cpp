@@ -574,8 +574,8 @@ void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
 void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
     const int game_dir_index = selected.data(GameListDir::GameDirRole).toInt();
 
-    QAction* move_up = context_menu.addAction(tr(u8"\U000025b2 Move Up"));
-    QAction* move_down = context_menu.addAction(tr(u8"\U000025bc Move Down "));
+    QAction* move_up = context_menu.addAction(tr("\u25b2 Move Up"));
+    QAction* move_down = context_menu.addAction(tr("\u25bc Move Down "));
     QAction* open_directory_location = context_menu.addAction(tr("Open Directory Location"));
 
     const int row = selected.row();

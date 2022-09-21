@@ -99,7 +99,7 @@ public:
 
     template <typename ValueType>
     std::optional<ValueType> Read() {
-        static_assert(std::is_pod_v<ValueType>);
+        static_assert(std::is_trivial_v<ValueType>);
         ValueType val{};
         if (!Read(&val, sizeof(val)))
             return std::nullopt;

@@ -83,7 +83,7 @@ std::tuple<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
         else
             light_vector = position + view;
 
-        light_vector.Normalize();
+        [[maybe_unused]] float length = light_vector.Normalize();
 
         Common::Vec3<float> norm_view = view.Normalized();
         Common::Vec3<float> half_vector = norm_view + light_vector;

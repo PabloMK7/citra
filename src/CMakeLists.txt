@@ -32,23 +32,41 @@ if (MSVC)
     # /Zc:inline          - Let codegen omit inline functions in object files
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
     # /external:*         - Suppress warnings from external headers
-    add_compile_options(
-        /MP
-        /permissive-
-        /EHsc
-        /volatile:iso
-        /Zc:externConstexpr
-        /Zc:inline
-        /Zc:throwingNew
-        /experimental:external
-        /external:I "${CMAKE_SOURCE_DIR}/externals"
-        /external:anglebrackets
-        /external:W0
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # Ignore /Zc:externConstexpr /Zc:throwingNew /experimental:external when using clang-cl
+        add_compile_options(
+            /MP
+            /permissive-
+            /EHsc
+            /volatile:iso
+            /Zc:inline
+            /external:I "${CMAKE_SOURCE_DIR}/externals"
+            /external:anglebrackets
+            /external:W0
 
-        # Warnings
-        /W3
-        /we4267 # 'var': conversion from 'size_t' to 'type', possible loss of data
-    )
+            # Warnings
+            /W3
+            /we4267 # 'var': conversion from 'size_t' to 'type', possible loss of data
+        )
+    else()
+        add_compile_options(
+            /MP
+            /permissive-
+            /EHsc
+            /volatile:iso
+            /Zc:externConstexpr
+            /Zc:inline
+            /Zc:throwingNew
+            /experimental:external
+            /external:I "${CMAKE_SOURCE_DIR}/externals"
+            /external:anglebrackets
+            /external:W0
+
+            # Warnings
+            /W3
+            /we4267 # 'var': conversion from 'size_t' to 'type', possible loss of data
+        )
+    endif()
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it
     # when using ccache or other caching tools

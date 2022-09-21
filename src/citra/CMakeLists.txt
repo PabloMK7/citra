@@ -20,7 +20,7 @@ target_link_libraries(citra PRIVATE inih glad lodepng)
 if (MSVC)
     target_link_libraries(citra PRIVATE getopt)
 endif()
-target_link_libraries(citra PRIVATE ${PLATFORM_LIBRARIES} SDL2 Threads::Threads)
+target_link_libraries(citra PRIVATE ${PLATFORM_LIBRARIES} SDL2::SDL2 Threads::Threads)
 
 if(UNIX AND NOT APPLE)
     install(TARGETS citra RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

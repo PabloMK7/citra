@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 #pragma once
 
-// AAC decoder related APIs are only available with WIN7+
-#define WINVER _WIN32_WINNT_WIN7
-
 #include <optional>
 #include <string>
 #include <tuple>

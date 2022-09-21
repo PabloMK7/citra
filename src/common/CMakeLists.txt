@@ -137,8 +137,10 @@ endif()
 
 create_target_directory_groups(common)
 
-target_link_libraries(common PUBLIC fmt microprofile Boost::boost Boost::serialization)
+target_link_libraries(common PUBLIC fmt::fmt microprofile Boost::boost Boost::serialization)
 target_link_libraries(common PRIVATE libzstd_static)
+set_target_properties(common PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
+
 if (ARCHITECTURE_x86_64)
     target_link_libraries(common PRIVATE xbyak)
 endif()

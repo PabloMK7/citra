@@ -1,5 +1,5 @@
 # Build directory
-[Bb]uild/
+[Bb]uild*/
 doc-build/
 build-*/
 

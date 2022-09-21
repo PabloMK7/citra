@@ -262,8 +262,8 @@ void Module::APTInterface::GetSharedFont(Kernel::HLERequestContext& ctx) {
     // kernel version and an applet with new kernel version run at the same time, and they both use
     // shared font, different linear heap region would have required shared font to relocate
     // according to two different addresses at the same time, which is impossible.
-    VAddr target_address =
-        apt->shared_font_mem->GetLinearHeapPhysicalOffset() + Memory::LINEAR_HEAP_VADDR;
+    VAddr target_address = static_cast<VAddr>(apt->shared_font_mem->GetLinearHeapPhysicalOffset()) +
+                           Memory::LINEAR_HEAP_VADDR;
     if (!apt->shared_font_relocated) {
         BCFNT::RelocateSharedFont(apt->shared_font_mem, target_address);
         apt->shared_font_relocated = true;

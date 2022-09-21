@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
-#include <fmt/format.h>
 #include "common/common_types.h"
-
+#include "common/logging/formatter.h"
 namespace Log {
 
 // trims up to and including the last of ../, ..\, src/, src\ in a string

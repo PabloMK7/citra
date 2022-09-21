@@ -199,7 +199,7 @@ void Timing::Timer::Advance() {
         std::pop_heap(event_queue.begin(), event_queue.end(), std::greater<>());
         event_queue.pop_back();
         if (evt.type->callback != nullptr) {
-            evt.type->callback(evt.userdata, executed_ticks - evt.time);
+            evt.type->callback(evt.userdata, static_cast<int>(executed_ticks - evt.time));
         } else {
             LOG_ERROR(Core, "Event '{}' has no callback", *evt.type->name);
         }
