@@ -264,8 +264,8 @@ public:
         }
         const CompatStatus& status = iterator->second;
         setData(compatibility, CompatNumberRole);
-        setText(QObject::tr(status.text));
-        setToolTip(QObject::tr(status.tooltip));
+        setText(tr(status.text));
+        setToolTip(tr(status.tooltip));
         setData(CreateCirclePixmapFromColor(status.color), Qt::DecorationRole);
     }
 
@@ -431,6 +431,9 @@ public:
     void setFocus();
 
 private:
+    void changeEvent(QEvent*) override;
+    void RetranslateUI();
+
     class KeyReleaseEater : public QObject {
     public:
         explicit KeyReleaseEater(GameList* gamelist, QObject* parent = nullptr);
