@@ -693,7 +693,7 @@ void RendererOpenGL::ReloadShader() {
             shader_data += fragment_shader_interlaced;
         } else {
             std::string shader_text =
-                OpenGL::GetPostProcessingShaderCode(true, Settings::values.pp_shader_name);
+                OpenGL::GetPostProcessingShaderCode(false, Settings::values.pp_shader_name);
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += fragment_shader_interlaced;
