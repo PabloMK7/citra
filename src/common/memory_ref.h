@@ -77,7 +77,7 @@ public:
     }
     MemoryRef(std::shared_ptr<BackingMem> backing_mem_, u64 offset_)
         : backing_mem(std::move(backing_mem_)), offset(offset_) {
-        ASSERT(offset < backing_mem->GetSize());
+        ASSERT(offset <= backing_mem->GetSize());
         Init();
     }
     explicit operator bool() const {
