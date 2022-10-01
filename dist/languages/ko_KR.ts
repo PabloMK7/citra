@@ -72,12 +72,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="119"/>
         <source>Pica command loaded</source>
-        <translation>Pica 명령 로드됨</translation>
+        <translation>Pica command 로드됨</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="121"/>
         <source>Pica command processed</source>
-        <translation>Pica 명령 처리됨</translation>
+        <translation>Pica command 처리됨</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="123"/>
@@ -87,7 +87,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="125"/>
         <source>Finished primitive batch</source>
-        <translation>완성된  기본다각형 배치</translation>
+        <translation>완료된 기본다각형 배치</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="127"/>
@@ -102,7 +102,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="131"/>
         <source>GSP command processed</source>
-        <translation>GSP 명령 처리됨</translation>
+        <translation>GSP command 처리됨</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="133"/>
@@ -421,7 +421,7 @@ Would you like to ignore the error and continue?</source>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="89"/>
-        <source>Great </source>
+        <source>Great</source>
         <translation>좋음</translation>
     </message>
     <message>
@@ -3355,13 +3355,13 @@ Drag points to change position, or double-click table cells to edit values.</sou
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="919"/>
-        <source>OpenGL 3.3 Unsupported</source>
-        <translation>OpenGL 3.3이 지원되지않습니다</translation>
+        <source>OpenGL 4.3 Unsupported</source>
+        <translation>OpenGL 4.3이 지원되지 않습니다</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="920"/>
-        <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
-        <translation>GPU가 OpenGL 3.3을 지원하지 않거나 최신 그래픽 드라이버를 가지고 있지 않을 수 있습니다.</translation>
+        <source>Your GPU may not support OpenGL 4.3, or you do not have the latest graphics driver.</source>
+        <translation>GPU가 OpenGL 4.3을 지원하지 않거나 최신 그래픽 드라이버를 가지고 있지 않을 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="937"/>
@@ -3783,7 +3783,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="100"/>
         <source>Register</source>
-        <translation>Register</translation>
+        <translation>레지스터</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="102"/>
@@ -3801,7 +3801,7 @@ Refer to the log for details.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="187"/>
         <source>Pica Command List</source>
-        <translation>Pica 명령 목록</translation>
+        <translation>Pica command 목록</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="205"/>
@@ -3831,89 +3831,89 @@ Refer to the log for details.</source>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="309"/>
-        <source>Name</source>
-        <translation>이름</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="310"/>
-        <source>Compatibility</source>
-        <translation>호환성</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="311"/>
-        <source>Region</source>
-        <translation>지역</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="312"/>
-        <source>File type</source>
-        <translation>파일 타입</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="313"/>
-        <source>Size</source>
-        <translation>크기</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="476"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="471"/>
         <source>Open Save Data Location</source>
         <translation>세이브 데이터 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="477"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="472"/>
         <source>Open Extra Data Location</source>
         <translation>Extra Date 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="478"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="473"/>
         <source>Open Application Location</source>
         <translation>어플리케이션 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="479"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="474"/>
         <source>Open Update Data Location</source>
         <translation>업데이트 데이터 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="475"/>
         <source>Open Texture Dump Location</source>
         <translation>텍스처 덤프 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="482"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="477"/>
         <source>Open Custom Texture Location</source>
         <translation>커스텀 텍스처 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="483"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="478"/>
         <source>Open Mods Location</source>
         <translation>모드 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="484"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="479"/>
         <source>Dump RomFS</source>
         <translation>RomFS 덤프</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="485"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
         <source>Navigate to GameDB entry</source>
         <translation>GameDB 엔트리로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="563"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="558"/>
         <source>Scan Subfolders</source>
         <translation>서브 디렉토리 스캔</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="564"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="559"/>
         <source>Remove Game Directory</source>
         <translation>게임 디렉토리 삭제</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="584"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="579"/>
         <source>Open Directory Location</source>
         <translation>디렉토리 위치 열기</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="674"/>
+        <source>Name</source>
+        <translation>이름</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="675"/>
+        <source>Compatibility</source>
+        <translation>호환성</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="676"/>
+        <source>Region</source>
+        <translation>지역</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="677"/>
+        <source>File type</source>
+        <translation>파일 타입</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="678"/>
+        <source>Size</source>
+        <translation>크기</translation>
     </message>
 </context>
 <context>
@@ -4001,7 +4001,7 @@ Screen.</source>
 <context>
     <name>GameListPlaceholder</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="753"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="777"/>
         <source>Double-click to add a new folder to the game list</source>
         <translation>더블 클릭하여 게임 목록에 새 폴더 추가</translation>
     </message>
@@ -4024,12 +4024,12 @@ Screen.</source>
         <translation>의 결과</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="139"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="690"/>
         <source>Filter:</source>
         <translation>필터:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="142"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="691"/>
         <source>Enter pattern to filter</source>
         <translation>검색 필터 입력</translation>
     </message>
@@ -4258,7 +4258,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="25"/>
         <source>CiTrace Recorder</source>
-        <translation>CiTrace Recorder</translation>
+        <translation>CiTrace 레코더</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="29"/>
@@ -4530,7 +4530,7 @@ Debug Message: </translation>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="14"/>
         <source>IPC Recorder</source>
-        <translation>IPC Recorder</translation>
+        <translation>IPC 레코더</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="21"/>
@@ -4928,7 +4928,7 @@ Debug Message: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="320"/>
         <source>Create Pica Surface Viewer</source>
-        <translation>Pica Surface 뷰어 만들기</translation>
+        <translation>Pica Surface Viewer 생성</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="325"/>
@@ -5738,7 +5738,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="18"/>
         <source>VFP Registers</source>
-        <translation>VFP Registers</translation>
+        <translation>VFP 레지스터</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="20"/>
@@ -5758,7 +5758,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="173"/>
         <source>Rounding Mode</source>
-        <translation>Rounding Mode</translation>
+        <translation>반올림 모드</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="186"/>

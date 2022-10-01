@@ -421,8 +421,8 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="89"/>
-        <source>Great </source>
-        <translation>Bien</translation>
+        <source>Great</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="96"/>
@@ -959,158 +959,158 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="26"/>
         <source>Renderer</source>
-        <translation type="unfinished"/>
+        <translation>Moteur de rendu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="34"/>
         <source>Internal Resolution</source>
-        <translation type="unfinished"/>
+        <translation>Définition interne</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="42"/>
         <source>Auto (Window Size)</source>
-        <translation type="unfinished"/>
+        <translation>Auto (Taille de la fenêtre)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="47"/>
         <source>Native (400x240)</source>
-        <translation type="unfinished"/>
+        <translation>Native (400x240)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="52"/>
         <source>2x Native (800x480)</source>
-        <translation type="unfinished"/>
+        <translation>2x Native (800x480)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="57"/>
         <source>3x Native (1200x720)</source>
-        <translation type="unfinished"/>
+        <translation>3x Native (1200x720)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="62"/>
         <source>4x Native (1600x960)</source>
-        <translation type="unfinished"/>
+        <translation>4x Native (1600x960)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="67"/>
         <source>5x Native (2000x1200)</source>
-        <translation type="unfinished"/>
+        <translation>5x Native (2000x1200)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="72"/>
         <source>6x Native (2400x1440)</source>
-        <translation type="unfinished"/>
+        <translation>6x Native (2400x1440)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="77"/>
         <source>7x Native (2800x1680)</source>
-        <translation type="unfinished"/>
+        <translation>7x Native (2800x1680)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="82"/>
         <source>8x Native (3200x1920)</source>
-        <translation type="unfinished"/>
+        <translation>8x Native (3200x1920)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="87"/>
         <source>9x Native (3600x2160)</source>
-        <translation type="unfinished"/>
+        <translation>9x Native (3600x2160)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="92"/>
         <source>10x Native (4000x2400)</source>
-        <translation type="unfinished"/>
+        <translation>10x Native (4000x2400)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="102"/>
         <source>Enable Linear Filtering</source>
-        <translation type="unfinished"/>
+        <translation>Activer le filtrage linéaire</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="111"/>
         <source>Post-Processing Shader</source>
-        <translation type="unfinished"/>
+        <translation>Nuanceur de post traitement</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="125"/>
         <source>Texture Filter</source>
-        <translation type="unfinished"/>
+        <translation>Filtrage des textures</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="140"/>
         <source>Stereoscopy</source>
-        <translation type="unfinished"/>
+        <translation>Stéréoscopie</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="148"/>
         <source>Stereoscopic 3D Mode</source>
-        <translation type="unfinished"/>
+        <translation>Mode stéréoscopique 3D </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="156"/>
         <source>Off</source>
-        <translation type="unfinished"/>
+        <translation>Désactivé</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="161"/>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="247"/>
         <source>Side by Side</source>
-        <translation type="unfinished"/>
+        <translation>Côte à côte</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="166"/>
         <source>Anaglyph</source>
-        <translation type="unfinished"/>
+        <translation>Anaglyphe</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="171"/>
         <source>Interlaced</source>
-        <translation type="unfinished"/>
+        <translation>Entrelacé</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="176"/>
         <source>Reverse Interlaced</source>
-        <translation type="unfinished"/>
+        <translation>Entrelacé inverse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="188"/>
         <source>Depth</source>
-        <translation type="unfinished"/>
+        <translation>Profondeur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="195"/>
         <source>%</source>
-        <translation type="unfinished"/>
+        <translation>%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="216"/>
         <source>Layout</source>
-        <translation type="unfinished"/>
+        <translation>Disposition</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="224"/>
         <source>Screen Layout:</source>
-        <translation type="unfinished"/>
+        <translation>Disposition de l&apos;écran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="232"/>
         <source>Default</source>
-        <translation type="unfinished"/>
+        <translation>Par défaut</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="237"/>
         <source>Single Screen</source>
-        <translation type="unfinished"/>
+        <translation>Un seul écran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="242"/>
         <source>Large Screen</source>
-        <translation type="unfinished"/>
+        <translation>Écran large</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="257"/>
         <source>Swap Screens</source>
-        <translation type="unfinished"/>
+        <translation>Permuter les écrans</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="264"/>
@@ -1120,42 +1120,42 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="273"/>
         <source>Background Color:</source>
-        <translation type="unfinished"/>
+        <translation>Couleur d&apos;arrière-plan :</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="295"/>
         <source>Utility</source>
-        <translation type="unfinished"/>
+        <translation>Utilitaires</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="301"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace textures with PNG files.&lt;/p&gt;&lt;p&gt;Textures are loaded from load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remplace les textures par des fichiers PNG.&lt;/p&gt;&lt;p&gt;Les textures sont chargées depuis load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="304"/>
         <source>Use Custom Textures</source>
-        <translation type="unfinished"/>
+        <translation>Utiliser des textures personnalisées</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="311"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dump textures to PNG files.&lt;/p&gt;&lt;p&gt;Textures are dumped to dump/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Décharge des textures vers des fichiers PNG.&lt;/p&gt;&lt;p&gt;Les textures sont déchargées vers dump/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="314"/>
         <source>Dump Textures</source>
-        <translation type="unfinished"/>
+        <translation>Décharger des textures</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="321"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load all custom textures into memory on boot, instead of loading them when the game requires them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Charge toutes les textures personnalisées dans la mémoire au démarrage, plutôt que de les charger quand le jeu en fait la demande.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="324"/>
         <source>Preload Custom Textures</source>
-        <translation type="unfinished"/>
+        <translation>Précharger des textures personnalisées</translation>
     </message>
 </context>
 <context>
@@ -1228,17 +1228,17 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="219"/>
         <source>Screenshots</source>
-        <translation type="unfinished"/>
+        <translation>Captures d&apos;écran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="225"/>
         <source>Save Screenshots To</source>
-        <translation type="unfinished"/>
+        <translation>Enregistrer les captures d&apos;écran dans</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="236"/>
         <source>...</source>
-        <translation type="unfinished"/>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="246"/>
@@ -1261,7 +1261,7 @@ Souhaitez-vous ignorer l&apos;erreur et poursuivre?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="65"/>
         <source>Select Screenshot Directory</source>
-        <translation type="unfinished"/>
+        <translation>Choix du répertoire des captures d&apos;écran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="130"/>
@@ -3355,13 +3355,13 @@ Glissez les points pour modifier la position, ou double-cliquez les cellules pou
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="919"/>
-        <source>OpenGL 3.3 Unsupported</source>
-        <translation>OpenGL 3.3 n&apos;est pas supporté</translation>
+        <source>OpenGL 4.3 Unsupported</source>
+        <translation>OpenGL 4.3 n&apos;est pas supporté</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="920"/>
-        <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
-        <translation>Votre carte graphique ne supporte pas OpenGL 3.3, ou vous n&apos;avez pas le dernier pilote disponible.</translation>
+        <source>Your GPU may not support OpenGL 4.3, or you do not have the latest graphics driver.</source>
+        <translation>Votre carte graphique ne supporte pas OpenGL 4.3, ou vous n&apos;avez pas le dernier pilote disponible.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="937"/>
@@ -3653,12 +3653,12 @@ Référez vous au fichier journal pour les détails.</translation>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1965"/>
         <source>Invalid Screenshot Directory</source>
-        <translation type="unfinished"/>
+        <translation>Répertoire des captures d&apos;écran invalide</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1966"/>
         <source>Cannot create specified screenshot directory. Screenshot path is set back to its default value.</source>
-        <translation type="unfinished"/>
+        <translation>Création du répertoire des captures d&apos;écran spécifié impossible. Le chemin d&apos;accès vers les captures d&apos;écran est réinitialisé à sa valeur par défaut.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="2046"/>
@@ -3831,89 +3831,89 @@ Référez vous au fichier journal pour les détails.</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="309"/>
-        <source>Name</source>
-        <translation>Nom</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="310"/>
-        <source>Compatibility</source>
-        <translation>Compatibilité</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="311"/>
-        <source>Region</source>
-        <translation>Région</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="312"/>
-        <source>File type</source>
-        <translation>Type de fichier</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="313"/>
-        <source>Size</source>
-        <translation>Taille</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="476"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="471"/>
         <source>Open Save Data Location</source>
         <translation>Ouvrir l&apos;emplacement des données de sauvegarde</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="477"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="472"/>
         <source>Open Extra Data Location</source>
         <translation>Ouvrir un emplacement de données supplémentaire</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="478"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="473"/>
         <source>Open Application Location</source>
         <translation>Ouvrir l&apos;emplacement de l&apos;application</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="479"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="474"/>
         <source>Open Update Data Location</source>
         <translation>Ouvrir l&apos;emplacement des données de mise à jour</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="475"/>
         <source>Open Texture Dump Location</source>
         <translation>Ouvrir l&apos;emplacement du vidage des textures</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="482"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="477"/>
         <source>Open Custom Texture Location</source>
         <translation>Ouvrir l&apos;emplacement personnalisé des textures</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="483"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="478"/>
         <source>Open Mods Location</source>
         <translation>Ouvrir l&apos;emplacement des Mods</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="484"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="479"/>
         <source>Dump RomFS</source>
         <translation>Extraire RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="485"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
         <source>Navigate to GameDB entry</source>
         <translation>Naviguer jusqu&apos;à l&apos;entrée de la GameDB</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="563"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="558"/>
         <source>Scan Subfolders</source>
         <translation>Scanner les sous-dossiers</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="564"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="559"/>
         <source>Remove Game Directory</source>
         <translation>Supprimer ce répertoire de jeu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="584"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="579"/>
         <source>Open Directory Location</source>
         <translation>Ouvrir l&apos;emplacement de ce répertoire</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="674"/>
+        <source>Name</source>
+        <translation>Nom</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="675"/>
+        <source>Compatibility</source>
+        <translation>Compatibilité</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="676"/>
+        <source>Region</source>
+        <translation>Région</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="677"/>
+        <source>File type</source>
+        <translation>Type de fichier</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="678"/>
+        <source>Size</source>
+        <translation>Taille</translation>
     </message>
 </context>
 <context>
@@ -3997,7 +3997,7 @@ Screen.</source>
 <context>
     <name>GameListPlaceholder</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="753"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="777"/>
         <source>Double-click to add a new folder to the game list</source>
         <translation>Faites un double-clic pour ajouter un nouveau dossier à la liste de jeux</translation>
     </message>
@@ -4020,12 +4020,12 @@ Screen.</source>
         <translation>résultats</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="139"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="690"/>
         <source>Filter:</source>
         <translation>Filtre :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="142"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="691"/>
         <source>Enter pattern to filter</source>
         <translation>Entrer le motif de filtrage</translation>
     </message>

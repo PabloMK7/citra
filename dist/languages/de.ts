@@ -421,8 +421,8 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="89"/>
-        <source>Great </source>
-        <translation>Gut</translation>
+        <source>Great</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="96"/>
@@ -959,67 +959,67 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="26"/>
         <source>Renderer</source>
-        <translation type="unfinished"/>
+        <translation>Renderer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="34"/>
         <source>Internal Resolution</source>
-        <translation type="unfinished"/>
+        <translation>Interne Auflösung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="42"/>
         <source>Auto (Window Size)</source>
-        <translation type="unfinished"/>
+        <translation>Auto (Fenstergröße)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="47"/>
         <source>Native (400x240)</source>
-        <translation type="unfinished"/>
+        <translation>Nativ (400x240)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="52"/>
         <source>2x Native (800x480)</source>
-        <translation type="unfinished"/>
+        <translation>2x Nativ (800x480)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="57"/>
         <source>3x Native (1200x720)</source>
-        <translation type="unfinished"/>
+        <translation>3x Nativ (1200x720)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="62"/>
         <source>4x Native (1600x960)</source>
-        <translation type="unfinished"/>
+        <translation>4x Nativ (1600x960)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="67"/>
         <source>5x Native (2000x1200)</source>
-        <translation type="unfinished"/>
+        <translation>5x Nativ (2000x1200)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="72"/>
         <source>6x Native (2400x1440)</source>
-        <translation type="unfinished"/>
+        <translation>6x Nativ (2400x1440)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="77"/>
         <source>7x Native (2800x1680)</source>
-        <translation type="unfinished"/>
+        <translation>7x Nativ (2800x1680)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="82"/>
         <source>8x Native (3200x1920)</source>
-        <translation type="unfinished"/>
+        <translation>8x Nativ (3200x1920)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="87"/>
         <source>9x Native (3600x2160)</source>
-        <translation type="unfinished"/>
+        <translation>9x Nativ (3600x2160)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="92"/>
         <source>10x Native (4000x2400)</source>
-        <translation type="unfinished"/>
+        <translation>10x Nativ (4000x2400)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="102"/>
@@ -1034,7 +1034,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="125"/>
         <source>Texture Filter</source>
-        <translation type="unfinished"/>
+        <translation>Texturenfilter</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="140"/>
@@ -1049,7 +1049,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="156"/>
         <source>Off</source>
-        <translation type="unfinished"/>
+        <translation>Aus</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="161"/>
@@ -1075,42 +1075,42 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="188"/>
         <source>Depth</source>
-        <translation type="unfinished"/>
+        <translation>Tiefe</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="195"/>
         <source>%</source>
-        <translation type="unfinished"/>
+        <translation>%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="216"/>
         <source>Layout</source>
-        <translation type="unfinished"/>
+        <translation>Anordnung</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="224"/>
         <source>Screen Layout:</source>
-        <translation type="unfinished"/>
+        <translation>Bildschirm-Anordnung:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="232"/>
         <source>Default</source>
-        <translation type="unfinished"/>
+        <translation>Standard</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="237"/>
         <source>Single Screen</source>
-        <translation type="unfinished"/>
+        <translation>Einzelner Bildschirm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="242"/>
         <source>Large Screen</source>
-        <translation type="unfinished"/>
+        <translation>Großer Bildschirm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="257"/>
         <source>Swap Screens</source>
-        <translation type="unfinished"/>
+        <translation>Bildschirme tauschen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="264"/>
@@ -1120,7 +1120,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="273"/>
         <source>Background Color:</source>
-        <translation type="unfinished"/>
+        <translation>Hintergrundfarbe:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="295"/>
@@ -1135,7 +1135,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="304"/>
         <source>Use Custom Textures</source>
-        <translation type="unfinished"/>
+        <translation>Benutzerdefinierte Texturen verwenden</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="311"/>
@@ -1238,7 +1238,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="236"/>
         <source>...</source>
-        <translation type="unfinished"/>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="246"/>
@@ -1839,7 +1839,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="77"/>
         <source>SDL</source>
-        <translation type="unfinished"/>
+        <translation>SDL</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="80"/>
@@ -1854,7 +1854,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="206"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Information</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="207"/>
@@ -1864,7 +1864,7 @@ Möchten Sie den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="210"/>
         <source>[press button]</source>
-        <translation type="unfinished"/>
+        <translation>[drücke Knopf]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="257"/>
@@ -3355,13 +3355,13 @@ Ziehe Punkte, um ihre Position zu verändern, oder doppelklicke auf Zellen in de
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="919"/>
-        <source>OpenGL 3.3 Unsupported</source>
-        <translation>OpenGL 3.3 wird nicht unterstützt</translation>
+        <source>OpenGL 4.3 Unsupported</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="920"/>
-        <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
-        <translation>Ihre Grafikkarte unterstützt OpenGL 3.3 möglicherweise nicht. Stellen Sie sicher, dass der aktuellste Grafiktreiber installiert ist.</translation>
+        <source>Your GPU may not support OpenGL 4.3, or you do not have the latest graphics driver.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="937"/>
@@ -3409,7 +3409,7 @@ Ziehe Punkte, um ihre Position zu verändern, oder doppelklicke auf Zellen in de
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="989"/>
         <source>You are running default Windows drivers for your GPU. You need to install the proper drivers for your graphics card from the manufacturer&apos;s website.</source>
-        <translation>Sie benutzen die vorinstallierten Windows Treiber für deine Grafikkarte. Sie müssen den korrekten Grafiktreiber von der Herstellerseite Ihrer Grafikkarte herunterladen und installieren.</translation>
+        <translation>Sie benutzen die vorinstallierten Windows Treiber für ihre Grafikkarte. Sie müssen den korrekten Grafiktreiber von der Herstellerseite Ihrer Grafikkarte herunterladen und installieren.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1000"/>
@@ -3831,89 +3831,89 @@ Sieh dir den Log für Details an.</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="309"/>
-        <source>Name</source>
-        <translation>Name</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="310"/>
-        <source>Compatibility</source>
-        <translation>Kompatibilität</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="311"/>
-        <source>Region</source>
-        <translation>Region</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="312"/>
-        <source>File type</source>
-        <translation>Dateityp</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="313"/>
-        <source>Size</source>
-        <translation>Größe</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="476"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="471"/>
         <source>Open Save Data Location</source>
         <translation>Verzeichnis der Speicherdaten öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="477"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="472"/>
         <source>Open Extra Data Location</source>
         <translation>Verzeichnis für zusätzliche Daten öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="478"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="473"/>
         <source>Open Application Location</source>
         <translation>Verzeichnis der Programmdaten öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="479"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="474"/>
         <source>Open Update Data Location</source>
         <translation>Verzeichnis der Updatedaten öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="475"/>
         <source>Open Texture Dump Location</source>
         <translation>Öffne Texture Dump Standort</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="482"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="477"/>
         <source>Open Custom Texture Location</source>
         <translation>Öffne Custom Texture Standort</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="483"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="478"/>
         <source>Open Mods Location</source>
         <translation>Öffne Mods Standort</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="484"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="479"/>
         <source>Dump RomFS</source>
         <translation>Dumpe RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="485"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="480"/>
         <source>Navigate to GameDB entry</source>
         <translation>Navigiere zum GameDB Eintrag</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="563"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="558"/>
         <source>Scan Subfolders</source>
         <translation>Unterordner scannen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="564"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="559"/>
         <source>Remove Game Directory</source>
         <translation>Spieleverzeichnis entfernen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="584"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="579"/>
         <source>Open Directory Location</source>
         <translation>Verzeichnispfad öffnen</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="674"/>
+        <source>Name</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="675"/>
+        <source>Compatibility</source>
+        <translation>Kompatibilität</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="676"/>
+        <source>Region</source>
+        <translation>Region</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="677"/>
+        <source>File type</source>
+        <translation>Dateityp</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="678"/>
+        <source>Size</source>
+        <translation>Größe</translation>
     </message>
 </context>
 <context>
@@ -3999,7 +3999,7 @@ Screen.</source>
 <context>
     <name>GameListPlaceholder</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="753"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="777"/>
         <source>Double-click to add a new folder to the game list</source>
         <translation>Doppel-Klick um neue Ordner zur Spieleliste hinzuzufügen</translation>
     </message>
@@ -4022,12 +4022,12 @@ Screen.</source>
         <translation>Ergebnisse</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="139"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="690"/>
         <source>Filter:</source>
         <translation>Filter:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="142"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="691"/>
         <source>Enter pattern to filter</source>
         <translation>Geben Sie Wörter zum Filtern ein</translation>
     </message>
@@ -4932,17 +4932,17 @@ Debug Meldung:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="325"/>
         <source>Record...</source>
-        <translation type="unfinished"/>
+        <translation>Aufnehmen...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="330"/>
         <source>Play...</source>
-        <translation type="unfinished"/>
+        <translation>Spielen...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="335"/>
         <source>Close</source>
-        <translation type="unfinished"/>
+        <translation>Schließen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="343"/>
@@ -5143,27 +5143,27 @@ Debug Meldung:</translation>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="22"/>
         <source>File:</source>
-        <translation type="unfinished"/>
+        <translation>Datei</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="32"/>
         <source>...</source>
-        <translation type="unfinished"/>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="48"/>
         <source>Info</source>
-        <translation type="unfinished"/>
+        <translation>Info</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="57"/>
         <source>Game:</source>
-        <translation type="unfinished"/>
+        <translation>Spiel:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="71"/>
         <source>Author:</source>
-        <translation type="unfinished"/>
+        <translation>Autor:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="85"/>
@@ -5235,17 +5235,17 @@ Debug Meldung:</translation>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="22"/>
         <source>File:</source>
-        <translation type="unfinished"/>
+        <translation>Datei:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="32"/>
         <source>...</source>
-        <translation type="unfinished"/>
+        <translation>...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="39"/>
         <source>Author:</source>
-        <translation type="unfinished"/>
+        <translation>Autor:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="27"/>
