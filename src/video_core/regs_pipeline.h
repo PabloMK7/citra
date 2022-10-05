@@ -77,9 +77,9 @@ struct PipelineRegs {
         }
 
         u32 GetElementSizeInBytes(std::size_t n) const {
-            return (GetFormat(n) == VertexAttributeFormat::FLOAT)
-                       ? 4
-                       : (GetFormat(n) == VertexAttributeFormat::SHORT) ? 2 : 1;
+            return (GetFormat(n) == VertexAttributeFormat::FLOAT)   ? 4
+                   : (GetFormat(n) == VertexAttributeFormat::SHORT) ? 2
+                                                                    : 1;
         }
 
         u32 GetStride(std::size_t n) const {

@@ -24,7 +24,9 @@ jobs:
     strategy:
       matrix:
         image: ["linux-fresh", "linux-frozen", "linux-mingw"]
-    container: citraemu/build-environments:${{ matrix.image }}
+    container:
+      image: citraemu/build-environments:${{ matrix.image }}
+      options: -u 1001
     steps:
       - uses: actions/checkout@v3
         with:

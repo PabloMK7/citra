@@ -630,9 +630,9 @@ private:
                 std::string dest_reg =
                     (instr.mad.dest.Value() < 0x10)
                         ? outputreg_getter(static_cast<u32>(instr.mad.dest.Value().GetIndex()))
-                        : (instr.mad.dest.Value() < 0x20)
-                              ? "reg_tmp" + std::to_string(instr.mad.dest.Value().GetIndex())
-                              : "";
+                    : (instr.mad.dest.Value() < 0x20)
+                        ? "reg_tmp" + std::to_string(instr.mad.dest.Value().GetIndex())
+                        : "";
 
                 if (sanitize_mul) {
                     SetDest(swizzle, dest_reg,

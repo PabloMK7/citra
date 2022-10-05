@@ -88,10 +88,10 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                     vertex_attribute_elements[i] *
                         ((vertex_attribute_formats[i] == PipelineRegs::VertexAttributeFormat::FLOAT)
                              ? 4
-                             : (vertex_attribute_formats[i] ==
-                                PipelineRegs::VertexAttributeFormat::SHORT)
-                                   ? 2
-                                   : 1));
+                         : (vertex_attribute_formats[i] ==
+                            PipelineRegs::VertexAttributeFormat::SHORT)
+                             ? 2
+                             : 1));
             }
 
             switch (vertex_attribute_formats[i]) {

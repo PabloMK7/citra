@@ -174,9 +174,9 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             float24* dest =
                 (instr.common.dest.Value() < 0x10)
                     ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
-                    : (instr.common.dest.Value() < 0x20)
-                          ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
-                          : dummy_vec4_float24;
+                : (instr.common.dest.Value() < 0x20)
+                    ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
+                    : dummy_vec4_float24;
 
             debug_data.max_opdesc_id =
                 std::max<u32>(debug_data.max_opdesc_id, 1 + instr.common.operand_desc_id);
@@ -517,9 +517,9 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 float24* dest =
                     (instr.mad.dest.Value() < 0x10)
                         ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
-                        : (instr.mad.dest.Value() < 0x20)
-                              ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
-                              : dummy_vec4_float24;
+                    : (instr.mad.dest.Value() < 0x20)
+                        ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
+                        : dummy_vec4_float24;
 
                 Record<DebugDataRecord::SRC1>(debug_data, iteration, src1);
                 Record<DebugDataRecord::SRC2>(debug_data, iteration, src2);

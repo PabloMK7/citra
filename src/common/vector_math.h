@@ -690,8 +690,8 @@ template <typename T>
 
 // linear interpolation via float: 0.0=begin, 1.0=end
 template <typename X>
-[[nodiscard]] constexpr decltype(X{} * float{} + X{} * float{}) Lerp(const X& begin, const X& end,
-                                                                     const float t) {
+[[nodiscard]] constexpr decltype(X{} * float{} + X{} * float{})
+    Lerp(const X& begin, const X& end, const float t) {
     return begin * (1.f - t) + end * t;
 }
 
