@@ -79,7 +79,6 @@ struct Client::Impl {
             LOG_ERROR(WebService, "Invalid URL {}", host + path);
             return Common::WebResult{Common::WebResult::Code::InvalidURL, "Invalid URL"};
         }
-        LOG_ERROR(WebService, "{}", host);
 
         httplib::Headers params;
         if (!jwt.empty()) {
