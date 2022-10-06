@@ -247,7 +247,12 @@ Loader::ResultStatus NCCHContainer::Load() {
                 switch (ncch_header.secondary_key_slot) {
                 case 0:
                     LOG_DEBUG(Service_FS, "Secure1 crypto");
-                    secondary_key = primary_key;
+                    SetKeyY(KeySlotID::NCCHSecure1, key_y_secondary);
+                    if (!IsNormalKeyAvailable(KeySlotID::NCCHSecure1)) {
+                        LOG_ERROR(Service_FS, "Secure1 KeyX missing");
+                        failed_to_decrypt = true;
+                    }
+                    secondary_key = GetNormalKey(KeySlotID::NCCHSecure1);
                     break;
                 case 1:
                     LOG_DEBUG(Service_FS, "Secure2 crypto");
