@@ -10,7 +10,9 @@ on:
 jobs:
   clang-format:
     runs-on: ubuntu-latest
-    container: citraemu/build-environments:linux-clang-format
+    container: 
+      image: citraemu/build-environments:linux-clang-format
+      options: -u 1001
     steps:
       - uses: actions/checkout@v3
         with: 
