@@ -10,8 +10,8 @@ def buildType
 def abiFilter = "arm64-v8a" //, "x86"
 
 android {
-    compileSdkVersion 31
-    ndkVersion "23.1.7779620"
+    compileSdkVersion 32
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -116,15 +116,15 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.exifinterface:exifinterface:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.exifinterface:exifinterface:1.3.4'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.5.1'
-    implementation 'androidx.fragment:fragment:1.5.1'
+    implementation 'androidx.fragment:fragment:1.5.3'
     implementation "androidx.slidingpanelayout:slidingpanelayout:1.2.0"
-    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'com.google.android.material:material:1.6.1'
 
     // For loading huge screenshots from the disk.
     implementation 'com.squareup.picasso:picasso:2.71828'
@@ -133,10 +133,11 @@ dependencies {
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation 'com.nononsenseapps:filepicker:4.2.1'
     implementation 'org.ini4j:ini4j:0.5.4'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
+    // Please don't upgrade the billing library as the newer version is not GPL-compatible
     implementation 'com.android.billingclient:billing:2.0.3'
 }
 
