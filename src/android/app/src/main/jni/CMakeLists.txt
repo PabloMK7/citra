@@ -25,6 +25,8 @@ add_library(citra-android SHARED
     game_settings.h
     id_cache.cpp
     id_cache.h
+    lodepng_image_interface.cpp
+    lodepng_image_interface.h
     mic.cpp
     mic.h
     native.cpp
@@ -34,6 +36,6 @@ add_library(citra-android SHARED
 )
 
 target_link_libraries(citra-android PRIVATE audio_core common core input_common network)
-target_link_libraries(citra-android PRIVATE android camera2ndk EGL glad inih jnigraphics log mediandk yuv)
+target_link_libraries(citra-android PRIVATE android camera2ndk EGL glad inih jnigraphics lodepng log mediandk yuv)
 
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} citra-android)

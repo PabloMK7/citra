@@ -103,7 +103,13 @@
     <string name="use_shader_jit">Use shader JIT</string>
     <string name="use_disk_shader_cache">Use disk shader cache</string>
     <string name="use_disk_shader_cache_description">Reduce stuttering by storing and loading generated shaders to disk. It cannot be used without Enabling Hardware Shader.</string>
-
+    <string name="utility">Utility</string>
+    <string name="dump_textures">Dump textures</string>
+    <string name="dump_textures_description">Dumps textures to dump/textures/[GAME ID]</string>
+    <string name="custom_textures">Use custom textures</string>
+    <string name="custom_textures_description">Uses custom textures found in load/textures/[GAME ID]</string>
+    <string name="preload_textures">Preload custom textures</string>
+    <string name="preload_textures_description">Loads all custom textures into memory. This feature can use a lot of memory.</string>
     <!-- Premium strings -->
     <string name="premium_text">Premium</string>
     <string name="premium_settings_upsell">Upgrade to Premium and support Citra!</string>

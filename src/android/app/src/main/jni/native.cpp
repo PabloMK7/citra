@@ -38,6 +38,7 @@
 #include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
+#include "jni/lodepng_image_interface.h"
 #include "jni/mic.h"
 #include "jni/native.h"
 #include "jni/ndk_motion.h"
@@ -173,6 +174,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     Frontend::RegisterDefaultApplets();
     system.RegisterMiiSelector(std::make_shared<MiiSelector::AndroidMiiSelector>());
     system.RegisterSoftwareKeyboard(std::make_shared<SoftwareKeyboard::AndroidKeyboard>());
+
+    // Register generic image interface
+    Core::System::GetInstance().RegisterImageInterface(std::make_shared<LodePNGImageInterface>());
 
     // Register real Mic factory
     Frontend::Mic::RegisterRealMicFactory(std::make_unique<Mic::AndroidFactory>());
