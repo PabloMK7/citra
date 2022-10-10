@@ -70,7 +70,7 @@ if (MSVC)
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it
     # when using ccache or other caching tools
-    if (NOT USE_CCACHE)
+    if (NOT CITRA_USE_CCACHE)
         add_compile_options(
             /Zi
             /Zo
