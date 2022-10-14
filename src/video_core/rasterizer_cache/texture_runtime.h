@@ -57,7 +57,8 @@ public:
     // Copies a rectangle of src_tex to another rectange of dst_rect performing
     // scaling and format conversions
     bool BlitTextures(const OGLTexture& src_tex, Subresource src_subresource,
-                      const OGLTexture& dst_tex, Subresource dst_subresource);
+                      const OGLTexture& dst_tex, Subresource dst_subresource,
+                      bool dst_cube = false);
 
     // Generates mipmaps for all the available levels of the texture
     void GenerateMipmaps(const OGLTexture& tex, u32 max_level);

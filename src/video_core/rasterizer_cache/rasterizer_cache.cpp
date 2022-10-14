@@ -559,7 +559,8 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
 
     u32 scaled_size = cube.res_scale * config.width;
 
-    for (const Face& face : faces) {
+    for (std::size_t i = 0; i < faces.size(); i++) {
+        const Face& face = faces[i];
         if (face.watcher && !face.watcher->IsValid()) {
             auto surface = face.watcher->Get();
             if (!surface->invalid_regions.empty()) {
@@ -570,7 +571,7 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
             const auto dst_rect = Common::Rectangle<u32>{0, scaled_size, scaled_size, 0};
             const Aspect aspect = ToAspect(surface->type);
             runtime.BlitTextures(surface->texture, {aspect, src_rect}, cube.texture,
-                                 {aspect, dst_rect});
+                                 {aspect, dst_rect, 0, static_cast<u32>(i)}, true);
 
             face.watcher->Validate();
         }

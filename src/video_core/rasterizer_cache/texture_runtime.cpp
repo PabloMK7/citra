@@ -127,7 +127,8 @@ bool TextureRuntime::CopyTextures(const OGLTexture& src_tex, Subresource src_sub
 }
 
 bool TextureRuntime::BlitTextures(const OGLTexture& src_tex, Subresource src_subresource,
-                                  const OGLTexture& dst_tex, Subresource dst_subresource) {
+                                  const OGLTexture& dst_tex, Subresource dst_subresource,
+                                  bool dst_cube) {
     OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
@@ -136,10 +137,12 @@ bool TextureRuntime::BlitTextures(const OGLTexture& src_tex, Subresource src_sub
     state.draw.draw_framebuffer = draw_fbo.handle;
     state.Apply();
 
-    auto BindAttachment = [src_level = src_subresource.level, dst_level = dst_subresource.level](
-                              GLenum target, u32 src_tex, u32 dst_tex) -> void {
+    auto BindAttachment =
+        [dst_cube, src_level = src_subresource.level, dst_level = dst_subresource.level,
+         dst_layer = dst_subresource.layer](GLenum target, u32 src_tex, u32 dst_tex) -> void {
+        GLenum dst_target = dst_cube ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + dst_layer : GL_TEXTURE_2D;
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, target, GL_TEXTURE_2D, src_tex, src_level);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, target, GL_TEXTURE_2D, dst_tex, dst_level);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, target, dst_target, dst_tex, dst_level);
     };
 
     // Sanity check; Can't blit a color texture to a depth buffer
