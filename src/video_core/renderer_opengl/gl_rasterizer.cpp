@@ -1914,7 +1914,8 @@ void RasterizerOpenGL::SyncLightPosition(int light_index) {
 
 void RasterizerOpenGL::SyncLightSpotDirection(int light_index) {
     const auto& light = Pica::g_state.regs.lighting.light[light_index];
-    const auto spot_direction = Common::Vec3u{light.spot_x, light.spot_y, light.spot_z} / 2047.0f;
+    const auto spot_direction =
+        Common::Vec3f{light.spot_x / 2047.0f, light.spot_y / 2047.0f, light.spot_z / 2047.0f};
 
     if (spot_direction != uniform_block_data.data.light_src[light_index].spot_direction) {
         uniform_block_data.data.light_src[light_index].spot_direction = spot_direction;
