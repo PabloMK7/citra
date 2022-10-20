@@ -318,12 +318,13 @@ bool CIAFile::Close() const {
             if (abort)
                 break;
 
-            // Try deleting the file, if it fails it's because it's the currently running file
-            // and we are on windows. In that case, let system know to delete the currently
-            // running file once it shuts down.
+            // If the file to delete is the current launched rom, signal the system to delete
+            // the current rom instead of deleting it now, once all the handles to the file
+            // are closed.
             std::string toDelete = GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index);
-            if (!FileUtil::Delete(toDelete) && FileUtil::GetCurrentRomPath() == toDelete)
-                Core::System::GetInstance().SetSelfDelete(toDelete);
+            if (!(Core::System::GetInstance().IsPoweredOn() &&
+                  Core::System::GetInstance().SetSelfDelete(toDelete)))
+                FileUtil::Delete(toDelete);
         }
 
         FileUtil::Delete(old_tmd_path);

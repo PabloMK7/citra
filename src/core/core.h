@@ -306,9 +306,12 @@ public:
     void LoadState(u32 slot);
 
     /// Self delete ncch
-    void SetSelfDelete(const std::string& file) {
-        if (m_filepath == file)
+    bool SetSelfDelete(const std::string& file) {
+        if (m_filepath == file) {
             self_delete_pending = true;
+            return true;
+        }
+        return false;
     }
 
 private:

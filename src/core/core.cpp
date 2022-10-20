@@ -31,6 +31,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/fs/archive.h"
@@ -575,7 +576,24 @@ void System::Reset() {
         deliver_arg = apt->GetAppletManager()->ReceiveDeliverArg();
     }
 
+    bool was_self_delete_pending = self_delete_pending;
+
     Shutdown();
+
+    // Self updating apps may launch themselves after the update, if that's the case
+    // find the new path to launch.
+    if (was_self_delete_pending) {
+        // TODO: We can get the title id, but not the MediaType, so we
+        // check both NAND and SDMC mediatypes.
+        m_filepath = Service::AM::GetTitleContentPath(Service::FS::MediaType::NAND, title_id);
+        if (m_filepath.empty() || !FileUtil::Exists(m_filepath)) {
+            m_filepath = Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, title_id);
+            if (m_filepath.empty() || !FileUtil::Exists(m_filepath)) {
+                LOG_CRITICAL(Core, "Failed to get application path for system reset");
+                return;
+            }
+        }
+    }
 
     // Reload the system with the same setting
     [[maybe_unused]] const System::ResultStatus result = Load(*m_emu_window, m_filepath);
