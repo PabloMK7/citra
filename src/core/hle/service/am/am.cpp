@@ -318,7 +318,12 @@ bool CIAFile::Close() const {
             if (abort)
                 break;
 
-            FileUtil::Delete(GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index));
+            // Try deleting the file, if it fails it's because it's the currently running file
+            // and we are on windows. In that case, let system know to delete the currently
+            // running file once it shuts down.
+            std::string toDelete = GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index);
+            if (!FileUtil::Delete(toDelete) && FileUtil::GetCurrentRomPath() == toDelete)
+                Core::System::GetInstance().SetSelfDelete(toDelete);
         }
 
         FileUtil::Delete(old_tmd_path);

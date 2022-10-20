@@ -324,6 +324,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
+    self_delete_pending = false;
 
     // Reset counters and set time origin to current frame
     [[maybe_unused]] const PerfStats::Results result = GetAndResetPerfStats();
@@ -555,6 +556,10 @@ void System::Shutdown(bool is_deserializing) {
     }
 
     memory.reset();
+
+    if (self_delete_pending)
+        FileUtil::Delete(m_filepath);
+    self_delete_pending = false;
 
     LOG_DEBUG(Core, "Shutdown OK");
 }
