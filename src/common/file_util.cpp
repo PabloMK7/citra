@@ -774,6 +774,9 @@ const std::string& GetDefaultUserPath(UserPath path) {
 }
 
 const void UpdateUserPath(UserPath path, const std::string& filename) {
+    if (filename.empty()) {
+        return;
+    }
     if (!FileUtil::IsDirectory(filename)) {
         LOG_ERROR(Common_Filesystem, "Path is not a directory. UserPath: {}  filename: {}", path,
                   filename);

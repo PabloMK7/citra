@@ -51,28 +51,42 @@ ConfigureStorage::ConfigureStorage(QWidget* parent)
         ApplyConfiguration();
         SetConfiguration();
     });
+    connect(ui->toggle_custom_storage, &QCheckBox::clicked, this, [this]() {
+        ApplyConfiguration();
+        SetConfiguration();
+    });
 }
 
 ConfigureStorage::~ConfigureStorage() = default;
 
 void ConfigureStorage::SetConfiguration() {
-    ui->nand_group->setVisible(Settings::values.use_virtual_sd);
+    ui->nand_group->setVisible(Settings::values.use_custom_storage);
     QString nand_path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
     ui->nand_dir_path->setText(nand_path);
     ui->open_nand_dir->setEnabled(!nand_path.isEmpty());
 
-    ui->sdmc_group->setVisible(Settings::values.use_virtual_sd);
+    ui->sdmc_group->setVisible(Settings::values.use_virtual_sd &&
+                               Settings::values.use_custom_storage);
     QString sdmc_path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
     ui->sdmc_dir_path->setText(sdmc_path);
     ui->open_sdmc_dir->setEnabled(!sdmc_path.isEmpty());
 
     ui->toggle_virtual_sd->setChecked(Settings::values.use_virtual_sd);
+    ui->toggle_custom_storage->setChecked(Settings::values.use_custom_storage);
 
     ui->storage_group->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 }
 
 void ConfigureStorage::ApplyConfiguration() {
     Settings::values.use_virtual_sd = ui->toggle_virtual_sd->isChecked();
+    Settings::values.use_custom_storage = ui->toggle_custom_storage->isChecked();
+
+    if (!Settings::values.use_custom_storage) {
+        FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir,
+                                 GetDefaultUserPath(FileUtil::UserPath::NANDDir));
+        FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir,
+                                 GetDefaultUserPath(FileUtil::UserPath::SDMCDir));
+    }
 }
 
 void ConfigureStorage::RetranslateUI() {

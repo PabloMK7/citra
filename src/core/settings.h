@@ -155,6 +155,7 @@ struct Values {
 
     // Data Storage
     bool use_virtual_sd;
+    bool use_custom_storage;
 
     // System
     int region_value;

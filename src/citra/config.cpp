@@ -203,14 +203,15 @@ void Config::ReadValues() {
     Settings::values.use_virtual_sd =
         sdl2_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
-    const std::string default_nand_dir = FileUtil::GetDefaultUserPath(FileUtil::UserPath::NANDDir);
-    FileUtil::UpdateUserPath(
-        FileUtil::UserPath::NANDDir,
-        sdl2_config->GetString("Data Storage", "nand_directory", default_nand_dir));
-    const std::string default_sdmc_dir = FileUtil::GetDefaultUserPath(FileUtil::UserPath::SDMCDir);
-    FileUtil::UpdateUserPath(
-        FileUtil::UserPath::SDMCDir,
-        sdl2_config->GetString("Data Storage", "sdmc_directory", default_sdmc_dir));
+    Settings::values.use_custom_storage =
+        sdl2_config->GetBoolean("Data Storage", "use_custom_storage", false);
+
+    if (Settings::values.use_custom_storage) {
+        FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir,
+                                 sdl2_config->GetString("Data Storage", "nand_directory", ""));
+        FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir,
+                                 sdl2_config->GetString("Data Storage", "sdmc_directory", ""));
+    }
 
     // System
     Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", true);

@@ -250,6 +250,10 @@ volume =
 # 1 (default): Yes, 0: No
 use_virtual_sd =
 
+# Whether to use custom storage locations
+# 1: Yes, 0 (default): No
+use_custom_storage =
+
 # The path of the virtual SD card directory.
 # empty (default) will use the user_path
 sdmc_directory =

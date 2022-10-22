@@ -120,8 +120,11 @@ void LogSettings() {
     log_setting("Camera_OuterLeftConfig", values.camera_config[OuterLeftCamera]);
     log_setting("Camera_OuterLeftFlip", values.camera_flip[OuterLeftCamera]);
     log_setting("DataStorage_UseVirtualSd", values.use_virtual_sd);
-    log_setting("DataStorage_SdmcDir", FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
-    log_setting("DataStorage_NandDir", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
+    log_setting("DataStorage_UseCustomStorage", values.use_custom_storage);
+    if (values.use_custom_storage) {
+        log_setting("DataStorage_SdmcDir", FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
+        log_setting("DataStorage_NandDir", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
+    }
     log_setting("System_IsNew3ds", values.is_new_3ds);
     log_setting("System_RegionValue", values.region_value);
     log_setting("Debugging_UseGdbstub", values.use_gdbstub);
