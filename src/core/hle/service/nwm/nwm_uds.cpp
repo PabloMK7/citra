@@ -491,7 +491,10 @@ void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     auto node_it = std::find_if(node_info.begin(), node_info.end(), [&node](const NodeInfo& info) {
         return info.network_node_id == node.node_id;
     });
-    ASSERT(node_it != node_info.end());
+    if (node_it == node_info.end()) {
+        LOG_ERROR(Service_NWM, "node_it is last node of node_info");
+        return;
+    }
 
     connection_status.node_bitmask &= ~(1 << (node.node_id - 1));
     connection_status.changed_nodes |= 1 << (node.node_id - 1);
@@ -1096,9 +1099,6 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     u32 data_size = rp.Pop<u32>();
     u8 flags = rp.Pop<u8>();
 
-    // There should never be a dest_node_id of 0
-    ASSERT(dest_node_id != 0);
-
     std::vector<u8> input_buffer = rp.PopStaticBuffer();
     ASSERT(input_buffer.size() >= data_size);
     input_buffer.resize(data_size);
@@ -1110,6 +1110,14 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    // There should never be a dest_node_id of 0
+    if (dest_node_id == 0) {
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+        LOG_ERROR(Service_NWM, "dest_node_id is 0");
         return;
     }
 
