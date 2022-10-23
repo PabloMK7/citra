@@ -379,7 +379,8 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
     u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
 
     if (page_pointer) {
-        const auto volatile_pointer = reinterpret_cast<volatile T*>(&page_pointer[vaddr & PAGE_MASK]);
+        const auto volatile_pointer =
+            reinterpret_cast<volatile T*>(&page_pointer[vaddr & PAGE_MASK]);
         return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
     }
 
@@ -394,7 +395,8 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
         return true;
     case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
-        const auto volatile_pointer = reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
+        const auto volatile_pointer =
+            reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
         return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
     }
     case PageType::Special:

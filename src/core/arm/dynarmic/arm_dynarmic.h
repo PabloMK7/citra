@@ -20,15 +20,15 @@ namespace Core {
 class DynarmicExclusiveMonitor;
 class ExclusiveMonitor;
 class System;
-}
+} // namespace Core
 
 class DynarmicUserCallbacks;
 
 class ARM_Dynarmic final : public ARM_Interface {
 public:
     explicit ARM_Dynarmic(Core::System* system_, Memory::MemorySystem& memory_, u32 core_id_,
-                           std::shared_ptr<Core::Timing::Timer> timer,
-                           Core::ExclusiveMonitor& exclusive_monitor_);
+                          std::shared_ptr<Core::Timing::Timer> timer,
+                          Core::ExclusiveMonitor& exclusive_monitor_);
     ~ARM_Dynarmic() override;
 
     void Run() override;

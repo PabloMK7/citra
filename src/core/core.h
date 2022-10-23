@@ -364,7 +364,7 @@ private:
     std::unique_ptr<Kernel::KernelSystem> kernel;
     std::unique_ptr<Timing> timing;
 
-     std::unique_ptr<Core::ExclusiveMonitor> exclusive_monitor;
+    std::unique_ptr<Core::ExclusiveMonitor> exclusive_monitor;
 
 private:
     static System s_instance;

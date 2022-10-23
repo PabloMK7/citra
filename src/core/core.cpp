@@ -369,8 +369,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     if (Settings::values.use_cpu_jit) {
 #if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_arm64)
         for (u32 i = 0; i < num_cores; ++i) {
-            cpu_cores.push_back(
-                std::make_shared<ARM_Dynarmic>(this, *memory, i, timing->GetTimer(i), *exclusive_monitor));
+            cpu_cores.push_back(std::make_shared<ARM_Dynarmic>(
+                this, *memory, i, timing->GetTimer(i), *exclusive_monitor));
         }
 #else
         for (u32 i = 0; i < num_cores; ++i) {
