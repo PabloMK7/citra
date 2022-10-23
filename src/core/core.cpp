@@ -576,23 +576,11 @@ void System::Reset() {
         deliver_arg = apt->GetAppletManager()->ReceiveDeliverArg();
     }
 
-    bool was_self_delete_pending = self_delete_pending;
-
     Shutdown();
 
-    // Self updating apps may launch themselves after the update, if that's the case
-    // find the new path to launch.
-    if (was_self_delete_pending) {
-        // TODO: We can get the title id, but not the MediaType, so we
-        // check both NAND and SDMC mediatypes.
-        m_filepath = Service::AM::GetTitleContentPath(Service::FS::MediaType::NAND, title_id);
-        if (m_filepath.empty() || !FileUtil::Exists(m_filepath)) {
-            m_filepath = Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, title_id);
-            if (m_filepath.empty() || !FileUtil::Exists(m_filepath)) {
-                LOG_CRITICAL(Core, "Failed to get application path for system reset");
-                return;
-            }
-        }
+    if (!m_chainloadpath.empty()) {
+        m_filepath = m_chainloadpath;
+        m_chainloadpath.clear();
     }
 
     // Reload the system with the same setting

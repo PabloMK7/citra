@@ -5,6 +5,7 @@
 #include "common/common_paths.h"
 #include "core/core.h"
 #include "core/hle/applets/applet.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/errors.h"
 #include "core/hle/service/apt/ns.h"
@@ -527,17 +528,31 @@ ResultCode AppletManager::DoApplicationJump(DeliverArg arg) {
     // prompts it to call GetProgramIdOnApplicationJump and
     // PrepareToStartApplication/StartApplication on the title to launch.
 
-    if (app_jump_parameters.next_title_id == app_jump_parameters.current_title_id) {
-        // Perform a soft-reset if we're trying to relaunch the same title.
-        // TODO(Subv): Note that this reboots the entire emulated system, a better way would be to
-        // simply re-launch the title without closing all services, but this would only work for
-        // installed titles since we have no way of getting the file path of an arbitrary game dump
-        // based only on the title id.
-        system.RequestReset();
+    // Perform a soft-reset if we're trying to relaunch the same title.
+    // TODO(Subv): Note that this reboots the entire emulated system, a better way would be to
+    // simply re-launch the title without closing all services, but this would only work for
+    // installed titles since we have no way of getting the file path of an arbitrary game dump
+    // based only on the title id.
+
+    std::string new_path = Service::AM::GetTitleContentPath(app_jump_parameters.next_media_type,
+                                                            app_jump_parameters.next_title_id);
+    if (new_path.empty() || !FileUtil::Exists(new_path)) {
+        LOG_CRITICAL(
+            Service_APT,
+            "Failed to find title during application jump: {} Resetting current title instead.",
+            new_path);
+        new_path.clear();
         return RESULT_SUCCESS;
     }
 
+    system.RequestReset(new_path);
+    return RESULT_SUCCESS;
+
     // Launch the title directly.
+    // The emulator does not suport terminating old processes, would require a lot of cleanup
+    // This code is left commented for when this is implemented, for now we cannot use NS
+    // as the old process resources would interfere with the new ones
+    /*
     auto process =
         NS::LaunchTitle(app_jump_parameters.next_media_type, app_jump_parameters.next_title_id);
     if (!process) {
@@ -545,6 +560,7 @@ ResultCode AppletManager::DoApplicationJump(DeliverArg arg) {
         system.RequestShutdown();
     }
     return RESULT_SUCCESS;
+    */
 }
 
 void AppletManager::EnsureHomeMenuLoaded() {
