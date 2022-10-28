@@ -6,7 +6,7 @@
 
 #include <map>
 #include <memory>
-#include <dynarmic/A32/a32.h>
+#include <dynarmic/interface/A32/a32.h>
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/dynarmic/arm_dynarmic_cp15.h"
@@ -17,15 +17,18 @@ class MemorySystem;
 } // namespace Memory
 
 namespace Core {
+class DynarmicExclusiveMonitor;
+class ExclusiveMonitor;
 class System;
-}
+} // namespace Core
 
 class DynarmicUserCallbacks;
 
 class ARM_Dynarmic final : public ARM_Interface {
 public:
-    ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory, u32 id,
-                 std::shared_ptr<Core::Timing::Timer> timer);
+    explicit ARM_Dynarmic(Core::System* system_, Memory::MemorySystem& memory_, u32 core_id_,
+                          std::shared_ptr<Core::Timing::Timer> timer,
+                          Core::ExclusiveMonitor& exclusive_monitor_);
     ~ARM_Dynarmic() override;
 
     void Run() override;
@@ -52,6 +55,7 @@ public:
 
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u32 start_address, std::size_t length) override;
+    void ClearExclusiveState() override;
     void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
     void PurgeState() override;
 
@@ -69,6 +73,7 @@ private:
 
     u32 fpexc = 0;
     CP15State cp15_state;
+    Core::DynarmicExclusiveMonitor& exclusive_monitor;
 
     Dynarmic::A32::Jit* jit = nullptr;
     std::shared_ptr<Memory::PageTable> current_page_table = nullptr;

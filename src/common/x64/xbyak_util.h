@@ -5,7 +5,7 @@
 #pragma once
 
 #include <type_traits>
-#include <xbyak.h>
+#include <xbyak/xbyak.h>
 #include "common/x64/xbyak_abi.h"
 
 namespace Common::X64 {

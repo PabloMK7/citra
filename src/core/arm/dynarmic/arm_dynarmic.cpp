@@ -3,12 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-#include <dynarmic/A32/a32.h>
-#include <dynarmic/A32/context.h>
+#include <dynarmic/interface/A32/a32.h>
+#include <dynarmic/interface/A32/context.h>
+#include <dynarmic/interface/optimization_flags.h>
 #include "common/assert.h"
 #include "common/microprofile.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dynarmic/arm_dynarmic_cp15.h"
+#include "core/arm/dynarmic/arm_exclusive_monitor.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
@@ -100,10 +102,23 @@ public:
         memory.Write64(vaddr, value);
     }
 
+    bool MemoryWriteExclusive8(u32 vaddr, u8 value, u8 expected) override {
+        return memory.WriteExclusive8(vaddr, value, expected);
+    }
+    bool MemoryWriteExclusive16(u32 vaddr, u16 value, u16 expected) override {
+        return memory.WriteExclusive16(vaddr, value, expected);
+    }
+    bool MemoryWriteExclusive32(u32 vaddr, u32 value, u32 expected) override {
+        return memory.WriteExclusive32(vaddr, value, expected);
+    }
+    bool MemoryWriteExclusive64(u32 vaddr, u64 value, u64 expected) override {
+        return memory.WriteExclusive64(vaddr, value, expected);
+    }
+
     void InterpreterFallback(VAddr pc, std::size_t num_instructions) override {
         // Should never happen.
         UNREACHABLE_MSG("InterpeterFallback reached with pc = 0x{:08x}, code = 0x{:08x}, num = {}",
-                        pc, MemoryReadCode(pc), num_instructions);
+                        pc, MemoryReadCode(pc).value(), num_instructions);
     }
 
     void CallSVC(std::uint32_t swi) override {
@@ -114,6 +129,8 @@ public:
         switch (exception) {
         case Dynarmic::A32::Exception::UndefinedInstruction:
         case Dynarmic::A32::Exception::UnpredictableInstruction:
+        case Dynarmic::A32::Exception::DecodeError:
+        case Dynarmic::A32::Exception::NoExecuteFault:
             break;
         case Dynarmic::A32::Exception::Breakpoint:
             if (GDBStub::IsConnected()) {
@@ -130,10 +147,11 @@ public:
         case Dynarmic::A32::Exception::Yield:
         case Dynarmic::A32::Exception::PreloadData:
         case Dynarmic::A32::Exception::PreloadDataWithIntentToWrite:
+        case Dynarmic::A32::Exception::PreloadInstruction:
             return;
         }
         ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})", exception,
-                   pc, MemoryReadCode(pc));
+                   pc, MemoryReadCode(pc).value());
     }
 
     void AddTicks(std::uint64_t ticks) override {
@@ -149,10 +167,12 @@ public:
     Memory::MemorySystem& memory;
 };
 
-ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory, u32 id,
-                           std::shared_ptr<Core::Timing::Timer> timer)
-    : ARM_Interface(id, timer), system(*system), memory(memory),
-      cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
+ARM_Dynarmic::ARM_Dynarmic(Core::System* system_, Memory::MemorySystem& memory_, u32 core_id_,
+                           std::shared_ptr<Core::Timing::Timer> timer_,
+                           Core::ExclusiveMonitor& exclusive_monitor_)
+    : ARM_Interface(core_id_, timer_), system(*system_), memory(memory_),
+      cb(std::make_unique<DynarmicUserCallbacks>(*this)),
+      exclusive_monitor{dynamic_cast<Core::DynarmicExclusiveMonitor&>(exclusive_monitor_)} {
     SetPageTable(memory.GetCurrentPageTable());
 }
 
@@ -208,6 +228,7 @@ u32 ARM_Dynarmic::GetVFPSystemReg(VFPSystemRegister reg) const {
     default:
         UNREACHABLE_MSG("Unknown VFP system register: {}", reg);
     }
+    return UINT_MAX;
 }
 
 void ARM_Dynarmic::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
@@ -291,6 +312,10 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
     jit->InvalidateCacheRange(start_address, length);
 }
 
+void ARM_Dynarmic::ClearExclusiveState() {
+    jit->ClearExclusiveState();
+}
+
 std::shared_ptr<Memory::PageTable> ARM_Dynarmic::GetPageTable() const {
     return current_page_table;
 }
@@ -328,6 +353,11 @@ std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {
     config.page_table = &current_page_table->GetPointerArray();
     config.coprocessors[15] = std::make_shared<DynarmicCP15>(cp15_state);
     config.define_unpredictable_behaviour = true;
+
+    // Multi-process state
+    config.processor_id = GetID();
+    config.global_monitor = &exclusive_monitor.monitor;
+
     return std::make_unique<Dynarmic::A32::Jit>(config);
 }
 

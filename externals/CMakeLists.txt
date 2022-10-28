@@ -31,23 +31,26 @@ add_subdirectory(catch2)
 # Crypto++
 add_subdirectory(cryptopp)
 
+# fmt and Xbyak need to be added before dynarmic
+# libfmt
+add_subdirectory(fmt)
+
 # Xbyak
 if (ARCHITECTURE_x86_64)
     add_library(xbyak INTERFACE)
-    target_include_directories(xbyak SYSTEM INTERFACE ./xbyak/xbyak)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xbyak/xbyak DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
+    target_include_directories(xbyak SYSTEM INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
     target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
 endif()
 
 # Dynarmic
-if (ARCHITECTURE_x86_64 OR ARCHITECTURE_ARM64)
+if (ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64)
     set(DYNARMIC_TESTS OFF)
     set(DYNARMIC_NO_BUNDLED_FMT ON)
     set(DYNARMIC_FRONTENDS "A32")
     add_subdirectory(dynarmic)
 endif()
-
-# libfmt
-add_subdirectory(fmt)
 
 # getopt
 if (MSVC)

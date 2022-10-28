@@ -58,6 +58,7 @@ add_library(common STATIC
     announce_multiplayer_room.h
     archives.h
     assert.h
+    atomic_ops.h
     detached_tasks.cpp
     detached_tasks.h
     bit_field.h
@@ -127,7 +128,7 @@ if(ARCHITECTURE_x86_64)
             x64/xbyak_abi.h
             x64/xbyak_util.h
     )
-elseif(ARCHITECTURE_ARM64)
+elseif(ARCHITECTURE_arm64)
     target_sources(common
         PRIVATE
             aarch64/cpu_detect.cpp

@@ -327,6 +327,23 @@ public:
     void Write32(VAddr addr, u32 data);
     void Write64(VAddr addr, u64 data);
 
+    /**
+     * Writes a {8, 16, 32, 64}-bit unsigned integer to the given virtual address in
+     * the current process' address space if and only if the address contains
+     * the expected value. This operation is atomic.
+     *
+     * @param addr The virtual address to write the X-bit unsigned integer to.
+     * @param data The X-bit unsigned integer to write to the given virtual address.
+     * @param expected The X-bit unsigned integer to check against the given virtual address.
+     * @returns true if the operation failed
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    bool WriteExclusive8(const VAddr addr, const u8 data, const u8 expected);
+    bool WriteExclusive16(const VAddr addr, const u16 data, const u16 expected);
+    bool WriteExclusive32(const VAddr addr, const u32 data, const u32 expected);
+    bool WriteExclusive64(const VAddr addr, const u64 data, const u64 expected);
+
     void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer,
                    std::size_t size);
     void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
@@ -383,6 +400,9 @@ private:
 
     template <typename T>
     void Write(const VAddr vaddr, const T data);
+
+    template <typename T>
+    bool WriteExclusive(const VAddr vaddr, const T data, const T expected);
 
     /**
      * Gets the pointer for virtual memory where the page is marked as RasterizerCachedMemory.

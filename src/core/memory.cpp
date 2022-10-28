@@ -9,6 +9,7 @@
 #include "audio_core/dsp_interface.h"
 #include "common/archives.h"
 #include "common/assert.h"
+#include "common/atomic_ops.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
@@ -373,6 +374,40 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
     }
 }
 
+template <typename T>
+bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expected) {
+    u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
+
+    if (page_pointer) {
+        const auto volatile_pointer =
+            reinterpret_cast<volatile T*>(&page_pointer[vaddr & PAGE_MASK]);
+        return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
+    }
+
+    PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
+    switch (type) {
+    case PageType::Unmapped:
+        LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
+                  sizeof(data) * 8, (u32)data, vaddr, Core::GetRunningCore().GetPC());
+        return true;
+    case PageType::Memory:
+        ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
+        return true;
+    case PageType::RasterizerCachedMemory: {
+        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
+        const auto volatile_pointer =
+            reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
+        return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
+    }
+    case PageType::Special:
+        WriteMMIO<T>(GetMMIOHandler(*impl->current_page_table, vaddr), vaddr, data);
+        return false;
+    default:
+        UNREACHABLE();
+    }
+    return true;
+}
+
 bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     auto& page_table = *process.vm_manager.page_table;
 
@@ -730,6 +765,22 @@ void MemorySystem::Write32(const VAddr addr, const u32 data) {
 
 void MemorySystem::Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
+}
+
+bool MemorySystem::WriteExclusive8(const VAddr addr, const u8 data, const u8 expected) {
+    return WriteExclusive<u8>(addr, data, expected);
+}
+
+bool MemorySystem::WriteExclusive16(const VAddr addr, const u16 data, const u16 expected) {
+    return WriteExclusive<u16_le>(addr, data, expected);
+}
+
+bool MemorySystem::WriteExclusive32(const VAddr addr, const u32 data, const u32 expected) {
+    return WriteExclusive<u32_le>(addr, data, expected);
+}
+
+bool MemorySystem::WriteExclusive64(const VAddr addr, const u64 data, const u64 expected) {
+    return WriteExclusive<u64_le>(addr, data, expected);
 }
 
 void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_addr,
