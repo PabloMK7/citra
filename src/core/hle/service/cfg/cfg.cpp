@@ -10,7 +10,6 @@
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
 #include "common/archives.h"
-#include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -107,7 +106,7 @@ static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exact
 
 constexpr EULAVersion MAX_EULA_VERSION{0x7F, 0x7F};
 constexpr ConsoleModelInfo CONSOLE_MODEL_OLD{NINTENDO_3DS_XL, {0, 0, 0}};
-constexpr ConsoleModelInfo CONSOLE_MODEL_NEW{NEW_NINTENDO_3DS_XL, {0, 0, 0}};
+[[maybe_unused]] constexpr ConsoleModelInfo CONSOLE_MODEL_NEW{NEW_NINTENDO_3DS_XL, {0, 0, 0}};
 constexpr u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 constexpr UsernameBlock CONSOLE_USERNAME_BLOCK{u"CITRA", 0, 0};
 constexpr BirthdayBlock PROFILE_BIRTHDAY{3, 25}; // March 25th, 2014
@@ -269,7 +268,7 @@ void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x06, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    u32 data;
+    u32 data{};
 
     // TODO(Subv): Find out the correct error codes
     rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
@@ -370,7 +369,7 @@ ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 f
 }
 
 ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
-    void* pointer;
+    void* pointer = nullptr;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
     memcpy(output, pointer, size);
 
@@ -378,7 +377,7 @@ ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* ou
 }
 
 ResultCode Module::SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input) {
-    void* pointer;
+    void* pointer = nullptr;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
     memcpy(pointer, input, size);
     return RESULT_SUCCESS;
@@ -701,7 +700,7 @@ void Module::SetSystemLanguage(SystemLanguage language) {
 }
 
 SystemLanguage Module::GetSystemLanguage() {
-    u8 block;
+    u8 block{};
     GetConfigInfoBlock(LanguageBlockID, sizeof(block), 8, &block);
     return static_cast<SystemLanguage>(block);
 }
@@ -712,7 +711,7 @@ void Module::SetSoundOutputMode(SoundOutputMode mode) {
 }
 
 SoundOutputMode Module::GetSoundOutputMode() {
-    u8 block;
+    u8 block{};
     GetConfigInfoBlock(SoundOutputModeBlockID, sizeof(block), 8, &block);
     return static_cast<SoundOutputMode>(block);
 }
@@ -723,7 +722,7 @@ void Module::SetCountryCode(u8 country_code) {
 }
 
 u8 Module::GetCountryCode() {
-    ConsoleCountryInfo block;
+    ConsoleCountryInfo block{};
     GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
     return block.country_code;
 }
@@ -734,7 +733,7 @@ void Module::SetCountryInfo(u8 country_code, u8 state_code) {
 }
 
 u8 Module::GetStateCode() {
-    ConsoleCountryInfo block;
+    ConsoleCountryInfo block{};
     GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
     return block.state_code;
 }

@@ -95,6 +95,9 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
         buffer[6] = 0;
         buffer[7] = 0;
         break;
+    default:
+        LOG_ERROR(Service_DSP, "Unknown pipe {}", pipe);
+        break;
     }
 
     system.DSP().PipeWrite(pipe, buffer);

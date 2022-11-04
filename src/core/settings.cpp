@@ -22,7 +22,6 @@ namespace Settings {
 Values values = {};
 
 void Apply() {
-
     GDBStub::SetServerPort(values.gdbstub_port);
     GDBStub::ToggleServer(values.use_gdbstub);
 

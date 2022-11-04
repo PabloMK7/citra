@@ -10,7 +10,7 @@
 #include "core/memory.h"
 
 TEST_CASE("Memory Basics", "[kernel][memory]") {
-    auto mem = std::make_shared<BufferMem>(Memory::PAGE_SIZE);
+    auto mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
     MemoryRef block{mem};
     Memory::MemorySystem memory;
     SECTION("mapping memory") {

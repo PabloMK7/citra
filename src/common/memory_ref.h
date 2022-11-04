@@ -65,12 +65,16 @@ private:
 
 BOOST_CLASS_EXPORT_KEY(BufferMem);
 
-/// A managed reference to host-side memory. Fast enough to be used everywhere instead of u8*
-/// Supports serialization.
+/**
+ * A managed reference to host-side memory.
+ * Fast enough to be used everywhere instead of u8*
+ * Supports serialization.
+ */
 class MemoryRef {
 public:
     MemoryRef() = default;
     MemoryRef(std::nullptr_t) {}
+
     MemoryRef(std::shared_ptr<BackingMem> backing_mem_)
         : backing_mem(std::move(backing_mem_)), offset(0) {
         Init();
@@ -80,30 +84,38 @@ public:
         ASSERT(offset <= backing_mem->GetSize());
         Init();
     }
+
     explicit operator bool() const {
         return cptr != nullptr;
     }
+
     operator u8*() {
         return cptr;
     }
+
     u8* GetPtr() {
         return cptr;
     }
+
     operator const u8*() const {
         return cptr;
     }
+
     const u8* GetPtr() const {
         return cptr;
     }
+
     std::size_t GetSize() const {
         return csize;
     }
+
     MemoryRef& operator+=(u32 offset_by) {
         ASSERT(offset_by < csize);
         offset += offset_by;
         Init();
         return *this;
     }
+
     MemoryRef operator+(u32 offset_by) const {
         ASSERT(offset_by < csize);
         return MemoryRef(backing_mem, offset + offset_by);

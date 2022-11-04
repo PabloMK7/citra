@@ -8,9 +8,7 @@
 #include "common/microprofile.h"
 #include "common/swap.h"
 #include "core/core.h"
-#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/result.h"
@@ -83,7 +81,9 @@ u32 GSP_GPU::GetUnusedThreadId() const {
         if (!used_thread_ids[id])
             return id;
     }
-    ASSERT_MSG(false, "All GSP threads are in use");
+
+    UNREACHABLE_MSG("All GSP threads are in use");
+    return 0;
 }
 
 /// Gets a pointer to a thread command buffer in GSP shared memory

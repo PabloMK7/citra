@@ -92,7 +92,8 @@ u16 NWM_UDS::GetNextAvailableNodeId() {
     }
 
     // Any connection attempts to an already full network should have been refused.
-    ASSERT_MSG(false, "No available connection slots in the network");
+    UNREACHABLE_MSG("No available connection slots in the network");
+    return 0;
 }
 
 void NWM_UDS::BroadcastNodeMap() {

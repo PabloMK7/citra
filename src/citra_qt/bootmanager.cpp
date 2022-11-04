@@ -32,11 +32,13 @@ EmuThread::EmuThread(Frontend::GraphicsContext& core_context) : core_context(cor
 EmuThread::~EmuThread() = default;
 
 static GMainWindow* GetMainWindow() {
-    for (QWidget* w : qApp->topLevelWidgets()) {
+    const auto widgets = qApp->topLevelWidgets();
+    for (QWidget* w : widgets) {
         if (GMainWindow* main = qobject_cast<GMainWindow*>(w)) {
             return main;
         }
     }
+
     return nullptr;
 }
 
@@ -46,7 +48,8 @@ void EmuThread::run() {
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
-    Core::System::GetInstance().Renderer().Rasterizer()->LoadDiskResources(
+    Core::System& system = Core::System::GetInstance();
+    system.Renderer().Rasterizer()->LoadDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             emit LoadProgress(stage, value, total);
         });
@@ -55,18 +58,17 @@ void EmuThread::run() {
 
     core_context.MakeCurrent();
 
-    if (Core::System::GetInstance().frame_limiter.IsFrameAdvancing()) {
+    if (system.frame_limiter.IsFrameAdvancing()) {
         // Usually the loading screen is hidden after the first frame is drawn. In this case
         // we hide it immediately as we need to wait for user input to start the emulation.
         emit HideLoadingScreen();
-        Core::System::GetInstance().frame_limiter.WaitOnce();
+        system.frame_limiter.WaitOnce();
     }
 
     // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
     // next execution step.
     bool was_active = false;
-    Core::System& system = Core::System::GetInstance();
     while (!stop_run) {
         if (running) {
             if (!was_active)
@@ -423,7 +425,7 @@ void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_p
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
     VideoCore::RequestScreenshot(
         screenshot_image.bits(),
-        [=] {
+        [this, &screenshot_path] {
             const std::string std_screenshot_path = screenshot_path.toStdString();
             if (screenshot_image.mirrored(false, true).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);

@@ -57,6 +57,7 @@ QString IPCRecorderWidget::GetStatusStr(const IPCDebugger::RequestRecord& record
         return tr("HLE Unimplemented");
     default:
         UNREACHABLE();
+        return QLatin1String{};
     }
 }
 

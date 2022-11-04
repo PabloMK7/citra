@@ -68,9 +68,11 @@ struct Regs {
         case PixelFormat::RGB5A1:
         case PixelFormat::RGBA4:
             return 2;
+        default:
+            UNREACHABLE();
         }
 
-        UNREACHABLE();
+        return 0;
     }
 
     INSERT_PADDING_WORDS(0x4);

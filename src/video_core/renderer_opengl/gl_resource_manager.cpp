@@ -89,7 +89,7 @@ void OGLTexture::CopyFrom(const OGLTexture& other, GLenum target, GLsizei levels
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, handle);
 
-    for (u32 level = 0; level < levels; level++) {
+    for (GLsizei level = 0; level < levels; level++) {
         glCopyImageSubData(other.handle, target, level, 0, 0, 0, handle, target, level, 0, 0, 0,
                            width >> level, height >> level, 1);
     }

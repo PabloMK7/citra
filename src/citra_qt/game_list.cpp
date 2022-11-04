@@ -169,8 +169,7 @@ GameListSearchField::GameListSearchField(GameList* parent) : QWidget{parent} {
  * @return true if the haystack contains all words of userinput
  */
 static bool ContainsAllWords(const QString& haystack, const QString& userinput) {
-    const QStringList userinput_split =
-        userinput.split(QLatin1Char{' '}, QString::SplitBehavior::SkipEmptyParts);
+    const QStringList userinput_split = userinput.split(QLatin1Char{' '}, Qt::SkipEmptyParts);
 
     return std::all_of(userinput_split.begin(), userinput_split.end(),
                        [&haystack](const QString& s) { return haystack.contains(s); });
@@ -511,42 +510,42 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
 
     navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
-    connect(open_save_location, &QAction::triggered, [this, program_id] {
+    connect(open_save_location, &QAction::triggered, this, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::SAVE_DATA);
     });
-    connect(open_extdata_location, &QAction::triggered, [this, extdata_id] {
+    connect(open_extdata_location, &QAction::triggered, this, [this, extdata_id] {
         emit OpenFolderRequested(extdata_id, GameListOpenTarget::EXT_DATA);
     });
-    connect(open_application_location, &QAction::triggered, [this, program_id] {
+    connect(open_application_location, &QAction::triggered, this, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::APPLICATION);
     });
-    connect(open_update_location, &QAction::triggered, [this, program_id] {
+    connect(open_update_location, &QAction::triggered, this, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::UPDATE_DATA);
     });
-    connect(open_texture_dump_location, &QAction::triggered, [this, program_id] {
+    connect(open_texture_dump_location, &QAction::triggered, this, [this, program_id] {
         if (FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
                                                  FileUtil::GetUserPath(FileUtil::UserPath::DumpDir),
                                                  program_id))) {
             emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_DUMP);
         }
     });
-    connect(open_texture_load_location, &QAction::triggered, [this, program_id] {
+    connect(open_texture_load_location, &QAction::triggered, this, [this, program_id] {
         if (FileUtil::CreateFullPath(fmt::format("{}textures/{:016X}/",
                                                  FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                                                  program_id))) {
             emit OpenFolderRequested(program_id, GameListOpenTarget::TEXTURE_LOAD);
         }
     });
-    connect(open_mods_location, &QAction::triggered, [this, program_id] {
+    connect(open_mods_location, &QAction::triggered, this, [this, program_id] {
         if (FileUtil::CreateFullPath(fmt::format("{}mods/{:016X}/",
                                                  FileUtil::GetUserPath(FileUtil::UserPath::LoadDir),
                                                  program_id))) {
             emit OpenFolderRequested(program_id, GameListOpenTarget::MODS);
         }
     });
-    connect(dump_romfs, &QAction::triggered,
+    connect(dump_romfs, &QAction::triggered, this,
             [this, path, program_id] { emit DumpRomFSRequested(path, program_id); });
-    connect(navigate_to_gamedb_entry, &QAction::triggered, [this, program_id]() {
+    connect(navigate_to_gamedb_entry, &QAction::triggered, this, [this, program_id]() {
         emit NavigateToGamedbEntryRequested(program_id, compatibility_list);
     });
 };
@@ -561,11 +560,11 @@ void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
     deep_scan->setCheckable(true);
     deep_scan->setChecked(game_dir.deep_scan);
 
-    connect(deep_scan, &QAction::triggered, [this, &game_dir] {
+    connect(deep_scan, &QAction::triggered, this, [this, &game_dir] {
         game_dir.deep_scan = !game_dir.deep_scan;
         PopulateAsync(UISettings::values.game_dirs);
     });
-    connect(delete_dir, &QAction::triggered, [this, &game_dir, selected] {
+    connect(delete_dir, &QAction::triggered, this, [this, &game_dir, selected] {
         UISettings::values.game_dirs.removeOne(game_dir);
         item_model->invisibleRootItem()->removeRow(selected.row());
     });
@@ -583,7 +582,7 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
     move_up->setEnabled(row > 0);
     move_down->setEnabled(row < item_model->rowCount() - 2);
 
-    connect(move_up, &QAction::triggered, [this, selected, row, game_dir_index] {
+    connect(move_up, &QAction::triggered, this, [this, selected, row, game_dir_index] {
         const int other_index = selected.sibling(row - 1, 0).data(GameListDir::GameDirRole).toInt();
         // swap the items in the settings
         std::swap(UISettings::values.game_dirs[game_dir_index],
@@ -598,7 +597,7 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
         tree_view->setExpanded(selected, UISettings::values.game_dirs[game_dir_index].expanded);
     });
 
-    connect(move_down, &QAction::triggered, [this, selected, row, game_dir_index] {
+    connect(move_down, &QAction::triggered, this, [this, selected, row, game_dir_index] {
         const int other_index = selected.sibling(row + 1, 0).data(GameListDir::GameDirRole).toInt();
         // swap the items in the settings
         std::swap(UISettings::values.game_dirs[game_dir_index],
@@ -613,7 +612,7 @@ void GameList::AddPermDirPopup(QMenu& context_menu, QModelIndex selected) {
         tree_view->setExpanded(selected, UISettings::values.game_dirs[game_dir_index].expanded);
     });
 
-    connect(open_directory_location, &QAction::triggered, [this, game_dir_index] {
+    connect(open_directory_location, &QAction::triggered, this, [this, game_dir_index] {
         emit OpenDirectory(UISettings::values.game_dirs[game_dir_index].path);
     });
 }
@@ -640,7 +639,7 @@ void GameList::LoadCompatibilityList() {
     const QJsonDocument json = QJsonDocument::fromJson(content);
     const QJsonArray arr = json.array();
 
-    for (const QJsonValue value : arr) {
+    for (const QJsonValue& value : arr) {
         const QJsonObject game = value.toObject();
         const QString compatibility_key = QStringLiteral("compatibility");
 
@@ -652,7 +651,7 @@ void GameList::LoadCompatibilityList() {
         const QString directory = game[QStringLiteral("directory")].toString();
         const QJsonArray ids = game[QStringLiteral("releases")].toArray();
 
-        for (const QJsonValue id_ref : ids) {
+        for (const QJsonValue& id_ref : ids) {
             const QJsonObject id_object = id_ref.toObject();
             const QString id = id_object[QStringLiteral("id")].toString();
 

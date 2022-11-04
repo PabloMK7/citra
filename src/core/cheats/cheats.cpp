@@ -47,7 +47,7 @@ void CheatEngine::AddCheat(const std::shared_ptr<CheatBase>& cheat) {
 
 void CheatEngine::RemoveCheat(int index) {
     std::unique_lock<std::shared_mutex> lock(cheats_list_mutex);
-    if (index < 0 || index >= cheats_list.size()) {
+    if (index < 0 || index >= static_cast<int>(cheats_list.size())) {
         LOG_ERROR(Core_Cheats, "Invalid index {}", index);
         return;
     }
@@ -56,7 +56,7 @@ void CheatEngine::RemoveCheat(int index) {
 
 void CheatEngine::UpdateCheat(int index, const std::shared_ptr<CheatBase>& new_cheat) {
     std::unique_lock<std::shared_mutex> lock(cheats_list_mutex);
-    if (index < 0 || index >= cheats_list.size()) {
+    if (index < 0 || index >= static_cast<int>(cheats_list.size())) {
         LOG_ERROR(Core_Cheats, "Invalid index {}", index);
         return;
     }

@@ -884,6 +884,8 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
     default:
         ASSERT(false);
     }
+
+    return ResultCode(-1);
 }
 
 FS_USER::FS_USER(Core::System& system)

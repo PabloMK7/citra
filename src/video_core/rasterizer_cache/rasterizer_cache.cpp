@@ -93,10 +93,11 @@ OGLTexture RasterizerCacheOpenGL::AllocateSurfaceTexture(const FormatTuple& tupl
     return texture;
 }
 
-MICROPROFILE_DEFINE(OpenGL_CopySurface, "OpenGL", "CopySurface", MP_RGB(128, 192, 64));
+MICROPROFILE_DEFINE(RasterizerCache_CopySurface, "RasterizerCache", "CopySurface",
+                    MP_RGB(128, 192, 64));
 void RasterizerCacheOpenGL::CopySurface(const Surface& src_surface, const Surface& dst_surface,
                                         SurfaceInterval copy_interval) {
-    MICROPROFILE_SCOPE(OpenGL_CopySurface);
+    MICROPROFILE_SCOPE(RasterizerCache_CopySurface);
 
     SurfaceParams subrect_params = dst_surface->FromInterval(copy_interval);
     ASSERT(subrect_params.GetInterval() == copy_interval);
@@ -253,12 +254,13 @@ RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
 #endif
 }
 
-MICROPROFILE_DEFINE(OpenGL_BlitSurface, "OpenGL", "BlitSurface", MP_RGB(128, 192, 64));
+MICROPROFILE_DEFINE(RasterizerCache_BlitSurface, "RasterizerCache", "BlitSurface",
+                    MP_RGB(128, 192, 64));
 bool RasterizerCacheOpenGL::BlitSurfaces(const Surface& src_surface,
                                          const Common::Rectangle<u32>& src_rect,
                                          const Surface& dst_surface,
                                          const Common::Rectangle<u32>& dst_rect) {
-    MICROPROFILE_SCOPE(OpenGL_BlitSurface);
+    MICROPROFILE_SCOPE(RasterizerCache_BlitSurface);
 
     if (CheckFormatsBlittable(src_surface->pixel_format, dst_surface->pixel_format)) {
         dst_surface->InvalidateAllWatcher();
@@ -917,8 +919,8 @@ void RasterizerCacheOpenGL::ClearAll(bool flush) {
     for (auto& pair : RangeFromInterval(cached_pages, flush_interval)) {
         const auto interval = pair.first & flush_interval;
 
-        const PAddr interval_start_addr = boost::icl::first(interval) << Memory::PAGE_BITS;
-        const PAddr interval_end_addr = boost::icl::last_next(interval) << Memory::PAGE_BITS;
+        const PAddr interval_start_addr = boost::icl::first(interval) << Memory::CITRA_PAGE_BITS;
+        const PAddr interval_end_addr = boost::icl::last_next(interval) << Memory::CITRA_PAGE_BITS;
         const u32 interval_size = interval_end_addr - interval_start_addr;
 
         VideoCore::g_memory->RasterizerMarkRegionCached(interval_start_addr, interval_size, false);
@@ -1069,8 +1071,8 @@ void RasterizerCacheOpenGL::UnregisterSurface(const Surface& surface) {
 
 void RasterizerCacheOpenGL::UpdatePagesCachedCount(PAddr addr, u32 size, int delta) {
     const u32 num_pages =
-        ((addr + size - 1) >> Memory::PAGE_BITS) - (addr >> Memory::PAGE_BITS) + 1;
-    const u32 page_start = addr >> Memory::PAGE_BITS;
+        ((addr + size - 1) >> Memory::CITRA_PAGE_BITS) - (addr >> Memory::CITRA_PAGE_BITS) + 1;
+    const u32 page_start = addr >> Memory::CITRA_PAGE_BITS;
     const u32 page_end = page_start + num_pages;
 
     // Interval maps will erase segments if count reaches 0, so if delta is negative we have to
@@ -1083,8 +1085,8 @@ void RasterizerCacheOpenGL::UpdatePagesCachedCount(PAddr addr, u32 size, int del
         const auto interval = pair.first & pages_interval;
         const int count = pair.second;
 
-        const PAddr interval_start_addr = boost::icl::first(interval) << Memory::PAGE_BITS;
-        const PAddr interval_end_addr = boost::icl::last_next(interval) << Memory::PAGE_BITS;
+        const PAddr interval_start_addr = boost::icl::first(interval) << Memory::CITRA_PAGE_BITS;
+        const PAddr interval_end_addr = boost::icl::last_next(interval) << Memory::CITRA_PAGE_BITS;
         const u32 interval_size = interval_end_addr - interval_start_addr;
 
         if (delta > 0 && count == delta)

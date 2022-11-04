@@ -354,7 +354,7 @@ void MicroProfileInitUI()
     if(!bInitialized)
     {
         bInitialized = true;
-        memset(&g_MicroProfileUI, 0, sizeof(g_MicroProfileUI));
+        g_MicroProfileUI = {};
         UI.nActiveMenu = UINT32_MAX;
         UI.fDetailedOffsetTarget = UI.fDetailedOffset = 0.f;
         UI.fDetailedRangeTarget = UI.fDetailedRange = 50.f;
@@ -845,8 +845,8 @@ void MicroProfileDrawDetailedBars(uint32_t nWidth, uint32_t nHeight, int nBaseY,
     MicroProfile& S = *MicroProfileGet();
     MP_DEBUG_DUMP_RANGE();
     int nY = nBaseY - UI.nOffsetY;
-    int64_t nNumBoxes = 0;
-    int64_t nNumLines = 0;
+    [[maybe_unused]] int64_t nNumBoxes = 0;
+    [[maybe_unused]] int64_t nNumLines = 0;
 
     uint32_t nFrameNext = (S.nFrameCurrent+1) % MICROPROFILE_MAX_FRAME_HISTORY;
     MicroProfileFrameState* pFrameCurrent = &S.Frames[S.nFrameCurrent];
@@ -1988,7 +1988,7 @@ const char* MicroProfileUIMenuGroups(int nIndex, bool* bSelected)
     else
     {
         nIndex = nIndex-1;
-        if(nIndex < UI.GroupMenuCount)
+        if(static_cast<uint32_t>(nIndex) < UI.GroupMenuCount)
         {
             MicroProfileGroupMenuItem& Item = UI.GroupMenu[nIndex];
             static char buffer[MICROPROFILE_NAME_MAX_LEN+32];
@@ -2135,7 +2135,7 @@ const char* MicroProfileUIMenuCustom(int nIndex, bool* bSelected)
     case 1: return "--";
     default:
         nIndex -= 2;
-        if(nIndex < UI.nCustomCount)
+        if(static_cast<uint32_t>(nIndex) < UI.nCustomCount)
         {
             return UI.Custom[nIndex].pName;
         }
@@ -2185,7 +2185,7 @@ void MicroProfileUIClickGroups(int nIndex)
     else
     {
         nIndex -= 1;
-        if(nIndex < UI.GroupMenuCount)
+        if(static_cast<uint32_t>(nIndex) < UI.GroupMenuCount)
         {
             MicroProfileGroupMenuItem& Item = UI.GroupMenu[nIndex];
             if(Item.nIsCategory)

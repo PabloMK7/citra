@@ -23,12 +23,3 @@ typedef void* HANDLE;
 #include <microprofile.h>
 
 #define MP_RGB(r, g, b) ((r) << 16 | (g) << 8 | (b) << 0)
-
-// On OS X, some Mach header included by MicroProfile defines these as macros, conflicting with
-// identifiers we use.
-#ifdef PAGE_SIZE
-#undef PAGE_SIZE
-#endif
-#ifdef PAGE_MASK
-#undef PAGE_MASK
-#endif

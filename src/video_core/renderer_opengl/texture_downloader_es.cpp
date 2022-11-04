@@ -208,7 +208,7 @@ GLuint TextureDownloaderES::ConvertDepthToColor(GLuint level, GLenum& format, GL
 void TextureDownloaderES::GetTexImage(GLenum target, GLuint level, GLenum format, GLenum type,
                                       GLint height, GLint width, void* pixels) {
     OpenGLState state = OpenGLState::GetCurState();
-    GLuint texture;
+    GLuint texture{};
     const GLuint old_read_buffer = state.draw.read_framebuffer;
     switch (target) {
     case GL_TEXTURE_2D:

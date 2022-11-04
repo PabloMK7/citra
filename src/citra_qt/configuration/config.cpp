@@ -518,7 +518,7 @@ void Config::ReadRendererValues() {
 void Config::ReadShortcutValues() {
     qt_config->beginGroup(QStringLiteral("Shortcuts"));
 
-    for (auto [name, group, shortcut] : default_hotkeys) {
+    for (const auto& [name, group, shortcut] : default_hotkeys) {
         auto [keyseq, context] = shortcut;
         qt_config->beginGroup(group);
         qt_config->beginGroup(name);
@@ -553,7 +553,7 @@ void Config::ReadSystemValues() {
 // https://developers.google.com/media/vp9/live-encoding
 const QString DEFAULT_VIDEO_ENCODER_OPTIONS =
     QStringLiteral("quality:realtime,speed:6,tile-columns:4,frame-parallel:1,threads:8,row-mt:1");
-const QString DEFAULT_AUDIO_ENCODER_OPTIONS = QString{};
+const QString DEFAULT_AUDIO_ENCODER_OPTIONS = QStringLiteral("");
 
 void Config::ReadVideoDumpingValues() {
     qt_config->beginGroup(QStringLiteral("VideoDumping"));
@@ -1013,9 +1013,9 @@ void Config::SaveRendererValues() {
                  200);
 
     // Cast to double because Qt's written float values are not human-readable
-    WriteSetting(QStringLiteral("bg_red"), (double)Settings::values.bg_red, 0.0);
-    WriteSetting(QStringLiteral("bg_green"), (double)Settings::values.bg_green, 0.0);
-    WriteSetting(QStringLiteral("bg_blue"), (double)Settings::values.bg_blue, 0.0);
+    WriteSetting(QStringLiteral("bg_red"), static_cast<double>(Settings::values.bg_red), 0.0);
+    WriteSetting(QStringLiteral("bg_green"), static_cast<double>(Settings::values.bg_green), 0.0);
+    WriteSetting(QStringLiteral("bg_blue"), static_cast<double>(Settings::values.bg_blue), 0.0);
 
     WriteSetting(QStringLiteral("texture_filter_name"),
                  QString::fromStdString(Settings::values.texture_filter_name),

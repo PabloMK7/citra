@@ -744,7 +744,7 @@ void RendererOpenGL::ReloadShader() {
 void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
                                                  const GPU::Regs::FramebufferConfig& framebuffer) {
     GPU::Regs::PixelFormat format = framebuffer.color_format;
-    GLint internal_format;
+    GLint internal_format{};
 
     texture.format = format;
     texture.width = framebuffer.width;

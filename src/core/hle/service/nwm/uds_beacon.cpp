@@ -15,9 +15,6 @@
 
 namespace Service::NWM {
 
-// 802.11 broadcast MAC address
-constexpr MacAddress BroadcastMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
 constexpr u64 DefaultNetworkUptime = 900000000; // 15 minutes in microseconds.
 
 // Note: These values were taken from a packet capture of an o3DS XL

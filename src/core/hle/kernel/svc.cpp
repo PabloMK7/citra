@@ -10,7 +10,6 @@
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
-#include "common/scope_exit.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -39,7 +38,6 @@
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/lock.h"
 #include "core/hle/result.h"
-#include "core/hle/service/service.h"
 
 namespace Kernel {
 
@@ -219,10 +217,10 @@ ResultCode SVC::ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32
               "size=0x{:X}, permissions=0x{:08X}",
               operation, addr0, addr1, size, permissions);
 
-    if ((addr0 & Memory::PAGE_MASK) != 0 || (addr1 & Memory::PAGE_MASK) != 0) {
+    if ((addr0 & Memory::CITRA_PAGE_MASK) != 0 || (addr1 & Memory::CITRA_PAGE_MASK) != 0) {
         return ERR_MISALIGNED_ADDRESS;
     }
-    if ((size & Memory::PAGE_MASK) != 0) {
+    if ((size & Memory::CITRA_PAGE_MASK) != 0) {
         return ERR_MISALIGNED_SIZE;
     }
 
@@ -374,7 +372,7 @@ ResultCode SVC::UnmapMemoryBlock(Handle handle, u32 addr) {
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
 ResultCode SVC::ConnectToPort(Handle* out_handle, VAddr port_name_address) {
-    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), port_name_address))
+    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), port_name_address))
         return ERR_NOT_FOUND;
 
     static constexpr std::size_t PortNameMaxLength = 11;
@@ -541,7 +539,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
                                      bool wait_all, s64 nano_seconds) {
     Thread* thread = kernel.GetCurrentThreadManager().GetCurrentThread();
 
-    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
+    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
         return ERR_INVALID_POINTER;
 
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
@@ -687,7 +685,7 @@ static ResultCode ReceiveIPCRequest(Kernel::KernelSystem& kernel, Memory::Memory
 /// In a single operation, sends a IPC reply and waits for a new request.
 ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
                                 Handle reply_target) {
-    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
+    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
         return ERR_INVALID_POINTER;
 
     // Check if 'handle_count' is invalid
@@ -1288,7 +1286,7 @@ s64 SVC::GetSystemTick() {
 /// Creates a memory block at the specified address with the specified permissions and size
 ResultCode SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_permission,
                                   u32 other_permission) {
-    if (size % Memory::PAGE_SIZE != 0)
+    if (size % Memory::CITRA_PAGE_SIZE != 0)
         return ERR_MISALIGNED_SIZE;
 
     std::shared_ptr<SharedMemory> shared_memory = nullptr;
@@ -1393,7 +1391,7 @@ ResultCode SVC::AcceptSession(Handle* out_server_session, Handle server_port_han
     return RESULT_SUCCESS;
 }
 
-static void CopyStringPart(char* out, const char* in, int offset, int max_length) {
+static void CopyStringPart(char* out, const char* in, size_t offset, size_t max_length) {
     size_t str_size = strlen(in);
     if (offset < str_size) {
         strncpy(out, in + offset, max_length - 1);
@@ -1509,7 +1507,7 @@ ResultCode SVC::GetProcessInfo(s64* out, Handle process_handle, u32 type) {
         // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
         *out = process->memory_used;
-        if (*out % Memory::PAGE_SIZE != 0) {
+        if (*out % Memory::CITRA_PAGE_SIZE != 0) {
             LOG_ERROR(Kernel_SVC, "called, memory size not page-aligned");
             return ERR_MISALIGNED_SIZE;
         }

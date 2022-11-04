@@ -28,7 +28,7 @@ public:
          * @note All methods in this class are called from the GSP thread
          */
         virtual void GXCommandProcessed(int total_command_count) {
-            const Service::GSP::Command& cmd =
+            [[maybe_unused]] const Service::GSP::Command& cmd =
                 observed->ReadGXCommandHistory(total_command_count - 1);
             LOG_TRACE(Debug_GPU, "Received command: id={:x}", (int)cmd.id.Value());
         }

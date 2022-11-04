@@ -1218,7 +1218,7 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
 
     for (vecitr = 0; vecitr <= veclen; vecitr += 1 << FPSCR_LENGTH_BIT) {
         u32 except;
-        char type;
+        [[maybe_unused]] char type;
 
         type = (fop->flags & OP_SD) ? 's' : 'd';
         if (op == FOP_EXT)

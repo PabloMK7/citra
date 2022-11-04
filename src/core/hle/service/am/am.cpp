@@ -17,12 +17,9 @@
 #include "core/file_sys/errors.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
-#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/errors.h"
-#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/service/am/am.h"
@@ -610,7 +607,6 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
 
     std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
 
-    u32 content_read = 0;
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
         std::size_t write_offset = 0;
@@ -642,7 +638,6 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
 
             content_info_out.Write(&content_info, write_offset, sizeof(ContentInfo));
             write_offset += sizeof(ContentInfo);
-            content_read++;
         }
     }
 

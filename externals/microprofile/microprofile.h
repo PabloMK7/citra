@@ -847,7 +847,7 @@ inline MicroProfileLogEntry MicroProfileMakeLogIndex(uint64_t nBegin, MicroProfi
     MicroProfileLogEntry Entry =  (nBegin<<62) | ((0x3fff&nToken)<<48) | (MP_LOG_TICK_MASK&nTick);
     int t = MicroProfileLogType(Entry);
     uint64_t nTimerIndex = MicroProfileLogTimerIndex(Entry);
-    MP_ASSERT(t == nBegin);
+    MP_ASSERT(static_cast<uint64_t>(t) == nBegin);
     MP_ASSERT(nTimerIndex == (nToken&0x3fff));
     return Entry;
 
@@ -1579,10 +1579,10 @@ void MicroProfileFlip()
 
         pFramePut->nFrameStartCpu = MP_TICK();
         pFramePut->nFrameStartGpu = (uint32_t)MicroProfileGpuInsertTimeStamp();
-        if(pFrameNext->nFrameStartGpu != (uint64_t)-1)
+        if(static_cast<uint64_t>(pFrameNext->nFrameStartGpu) != (uint64_t)-1)
             pFrameNext->nFrameStartGpu = MicroProfileGpuGetTimeStamp((uint32_t)pFrameNext->nFrameStartGpu);
 
-        if(pFrameCurrent->nFrameStartGpu == (uint64_t)-1)
+        if(static_cast<uint64_t>(pFrameCurrent->nFrameStartGpu) == (uint64_t)-1)
             pFrameCurrent->nFrameStartGpu = pFrameNext->nFrameStartGpu + 1;
 
         uint64_t nFrameStartCpu = pFrameCurrent->nFrameStartCpu;

@@ -111,13 +111,13 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                 }
             };
 
-            const Instruction instr = par->info.code[index.row()];
+            const Instruction& instr = par->info.code[index.row()];
             const OpCode opcode = instr.opcode;
             const OpCode::Info opcode_info = opcode.GetInfo();
             const u32 operand_desc_id = opcode_info.type == OpCode::Type::MultiplyAdd
                                             ? instr.mad.operand_desc_id.Value()
                                             : instr.common.operand_desc_id.Value();
-            const SwizzlePattern swizzle = par->info.swizzle_info[operand_desc_id].pattern;
+            const SwizzlePattern& swizzle = par->info.swizzle_info[operand_desc_id].pattern;
 
             // longest known instruction name: "setemit "
             int kOpcodeColumnWidth = 8;
@@ -407,8 +407,8 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
                 static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
         input_data_mapper->setMapping(input_data[i], i);
     }
-    connect(input_data_mapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped),
-            this, &GraphicsVertexShaderWidget::OnInputAttributeChanged);
+    connect(input_data_mapper, &QSignalMapper::mappedInt, this,
+            &GraphicsVertexShaderWidget::OnInputAttributeChanged);
 
     auto main_widget = new QWidget;
     auto main_layout = new QVBoxLayout;
@@ -514,8 +514,10 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
         info.code.push_back({instr});
     int num_attributes = shader_config.max_input_attribute_index + 1;
 
-    for (auto pattern : shader_setup.swizzle_data)
-        info.swizzle_info.push_back({pattern});
+    for (auto pattern : shader_setup.swizzle_data) {
+        const nihstro::SwizzleInfo swizzle_info = {.pattern = nihstro::SwizzlePattern{pattern}};
+        info.swizzle_info.push_back(swizzle_info);
+    }
 
     u32 entry_point = Pica::g_state.regs.vs.main_offset;
     info.labels.insert({entry_point, "main"});

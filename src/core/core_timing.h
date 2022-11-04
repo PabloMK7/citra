@@ -301,10 +301,6 @@ private:
     std::vector<std::shared_ptr<Timer>> timers;
     Timer* current_timer = nullptr;
 
-    // Stores a scaling for the internal clockspeed. Changing this number results in
-    // under/overclocking the guest cpu
-    double cpu_clock_scale = 1.0;
-
     // When true, the event queue can't be modified. Used while deserializing to workaround
     // destructor side effects.
     bool event_queue_locked = false;

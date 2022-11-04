@@ -80,7 +80,7 @@ private:
     std::shared_ptr<Callback> timeout_callback;
 
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
-                std::shared_ptr<WaitObject> object);
+                std::shared_ptr<WaitObject> object) override;
 
     class DummyCallback : public WakeupCallback {
     public:

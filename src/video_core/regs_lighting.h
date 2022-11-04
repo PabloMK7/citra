@@ -129,6 +129,8 @@ struct LightingRegs {
                             "ReflectBlue, instead got %i",
                             config);
         }
+
+        return false;
     }
 
     struct LightSrc {

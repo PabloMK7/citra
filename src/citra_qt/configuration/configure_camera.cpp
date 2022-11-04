@@ -9,8 +9,6 @@
 #include <QMessageBox>
 #include <QWidget>
 #include "citra_qt/configuration/configure_camera.h"
-#include "citra_qt/uisettings.h"
-#include "core/core.h"
 #include "core/frontend/camera/factory.h"
 #include "core/frontend/camera/interface.h"
 #include "core/hle/service/cam/cam.h"
@@ -91,7 +89,7 @@ void ConfigureCamera::ConnectEvents() {
                 SetConfiguration();
             });
     connect(ui->toolButton, &QToolButton::clicked, this, &ConfigureCamera::OnToolButtonClicked);
-    connect(ui->preview_button, &QPushButton::clicked, this, [=] { StartPreviewing(); });
+    connect(ui->preview_button, &QPushButton::clicked, this, [this] { StartPreviewing(); });
     connect(ui->prompt_before_load, &QCheckBox::stateChanged, this, [this](int state) {
         ui->camera_file->setDisabled(state == Qt::Checked);
         ui->toolButton->setDisabled(state == Qt::Checked);
@@ -99,12 +97,11 @@ void ConfigureCamera::ConnectEvents() {
             ui->camera_file->setText(QString{});
         }
     });
-    connect(ui->camera_file, &QLineEdit::textChanged, this, [=] { StopPreviewing(); });
-    connect(ui->system_camera,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            [=] { StopPreviewing(); });
-    connect(ui->camera_flip, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, [=] { StopPreviewing(); });
+    connect(ui->camera_file, &QLineEdit::textChanged, this, [this] { StopPreviewing(); });
+    connect(ui->system_camera, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this] { StopPreviewing(); });
+    connect(ui->camera_flip, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this] { StopPreviewing(); });
 }
 
 void ConfigureCamera::UpdateCameraMode() {

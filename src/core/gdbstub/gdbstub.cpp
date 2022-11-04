@@ -849,14 +849,14 @@ static void ReadMemory() {
         SendReply("E01");
     }
 
-    if (!Memory::IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                       addr)) {
+    auto& memory = Core::System::GetInstance().Memory();
+    if (!memory.IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
+                                      addr)) {
         return SendReply("E00");
     }
 
     std::vector<u8> data(len);
-    Core::System::GetInstance().Memory().ReadBlock(
-        *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, data.data(), len);
+    memory.ReadBlock(addr, data.data(), len);
 
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
@@ -873,16 +873,16 @@ static void WriteMemory() {
     auto len_pos = std::find(start_offset, command_buffer + command_length, ':');
     u32 len = HexToInt(start_offset, static_cast<u32>(len_pos - start_offset));
 
-    if (!Memory::IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                       addr)) {
+    auto& memory = Core::System::GetInstance().Memory();
+    if (!memory.IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
+                                      addr)) {
         return SendReply("E00");
     }
 
     std::vector<u8> data(len);
 
     GdbHexToMem(data.data(), len_pos + 1, len);
-    Core::System::GetInstance().Memory().WriteBlock(
-        *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, data.data(), len);
+    memory.WriteBlock(addr, data.data(), len);
     Core::GetRunningCore().ClearInstructionCache();
     SendReply("OK");
 }

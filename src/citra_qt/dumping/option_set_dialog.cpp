@@ -114,7 +114,7 @@ void OptionSetDialog::InitializeUI(const std::string& initial_value) {
             ui->formatLabel->text().append(QStringLiteral("\n"));
         }
         ui->formatLabel->setText(
-            ui->formatLabel->text().append(tr("Range: %1 - %2").arg(option.min).arg(option.max)));
+            ui->formatLabel->text().append(tr("Range: %1 - %2").arg(option.min, option.max)));
     }
 
     // Decide and initialize layout

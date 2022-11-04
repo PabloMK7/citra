@@ -37,7 +37,7 @@ CheatDialog::CheatDialog(QWidget* parent)
     connect(ui->textNotes, &QPlainTextEdit::textChanged, this, &CheatDialog::OnTextEdited);
     connect(ui->textCode, &QPlainTextEdit::textChanged, this, &CheatDialog::OnTextEdited);
 
-    connect(ui->buttonSave, &QPushButton::clicked,
+    connect(ui->buttonSave, &QPushButton::clicked, this,
             [this] { SaveCheat(ui->tableCheats->currentRow()); });
     connect(ui->buttonDelete, &QPushButton::clicked, this, &CheatDialog::OnDeleteCheat);
 
@@ -91,7 +91,7 @@ bool CheatDialog::SaveCheat(int row) {
     }
 
     // Check if the cheat lines are valid
-    auto code_lines = ui->textCode->toPlainText().split(QLatin1Char{'\n'}, QString::SkipEmptyParts);
+    auto code_lines = ui->textCode->toPlainText().split(QLatin1Char{'\n'}, Qt::SkipEmptyParts);
     for (int i = 0; i < code_lines.size(); ++i) {
         Cheats::GatewayCheat::CheatLine cheat_line(code_lines[i].toStdString());
         if (cheat_line.valid)
@@ -190,8 +190,9 @@ void CheatDialog::OnDeleteCheat() {
     if (newly_created) {
         newly_created = false;
     } else {
-        Core::System::GetInstance().CheatEngine().RemoveCheat(ui->tableCheats->currentRow());
-        Core::System::GetInstance().CheatEngine().SaveCheatFile();
+        auto& cheat_engine = Core::System::GetInstance().CheatEngine();
+        cheat_engine.RemoveCheat(ui->tableCheats->currentRow());
+        cheat_engine.SaveCheatFile();
     }
 
     LoadCheats();

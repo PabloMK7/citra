@@ -14,7 +14,6 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 #include "citra_qt/debugger/graphics/graphics_cmdlists.h"
-#include "citra_qt/util/spinbox.h"
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"
 #include "core/core.h"
@@ -130,7 +129,7 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
         COMMAND_IN_RANGE(command_id, texturing.texture1) ||
         COMMAND_IN_RANGE(command_id, texturing.texture2)) {
 
-        unsigned texture_index;
+        [[maybe_unused]] u32 texture_index;
         if (COMMAND_IN_RANGE(command_id, texturing.texture0)) {
             texture_index = 0;
         } else if (COMMAND_IN_RANGE(command_id, texturing.texture1)) {

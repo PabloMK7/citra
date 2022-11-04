@@ -1242,7 +1242,7 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
     for (vecitr = 0; vecitr <= veclen; vecitr += 1 << FPSCR_LENGTH_BIT) {
         s32 m = vfp_get_float(state, sm);
         u32 except;
-        char type;
+        [[maybe_unused]] char type;
 
         type = (fop->flags & OP_DD) ? 'd' : 's';
         if (op == FOP_EXT)

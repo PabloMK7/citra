@@ -228,6 +228,7 @@ u32 ARM_Dynarmic::GetVFPSystemReg(VFPSystemRegister reg) const {
     default:
         UNREACHABLE_MSG("Unknown VFP system register: {}", reg);
     }
+
     return UINT_MAX;
 }
 
@@ -261,6 +262,8 @@ u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) const {
     default:
         UNREACHABLE_MSG("Unknown CP15 register: {}", reg);
     }
+
+    return 0;
 }
 
 void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {

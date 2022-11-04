@@ -178,15 +178,6 @@ static const std::unordered_map<int, int> sockopt_map = {{
     {0x1009, SO_ERROR},
 }};
 
-/// Converts a socket option from 3ds-specific to platform-specific
-static int TranslateSockOpt(int console_opt_name) {
-    auto found = sockopt_map.find(console_opt_name);
-    if (found != sockopt_map.end()) {
-        return found->second;
-    }
-    return console_opt_name;
-}
-
 /// Structure to represent the 3ds' pollfd structure, which is different than most implementations
 struct CTRPollFD {
     u32 fd; ///< Socket handle

@@ -105,9 +105,9 @@ void Thread::Stop() {
     ReleaseThreadMutexes(this);
 
     // Mark the TLS slot in the thread's page as free.
-    u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
+    u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::CITRA_PAGE_SIZE;
     u32 tls_slot =
-        ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
+        ((tls_address - Memory::TLS_AREA_VADDR) % Memory::CITRA_PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
     ASSERT(owner_process.lock());
     owner_process.lock()->tls_slots[tls_page].reset(tls_slot);
 }
@@ -337,8 +337,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     }
 
     // TODO(yuriks): Other checks, returning 0xD9001BEA
-
-    if (!Memory::IsValidVirtualAddress(*owner_process, entry_point)) {
+    if (!memory.IsValidVirtualAddress(*owner_process, entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name={}): invalid entry {:08x}", name, entry_point);
         // TODO: Verify error
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
@@ -374,13 +373,13 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
         auto memory_region = GetMemoryRegion(MemoryRegion::BASE);
 
         // Allocate some memory from the end of the linear heap for this region.
-        auto offset = memory_region->LinearAllocate(Memory::PAGE_SIZE);
+        auto offset = memory_region->LinearAllocate(Memory::CITRA_PAGE_SIZE);
         if (!offset) {
             LOG_ERROR(Kernel_SVC,
                       "Not enough space in region to allocate a new TLS page for thread");
             return ERR_OUT_OF_MEMORY;
         }
-        owner_process->memory_used += Memory::PAGE_SIZE;
+        owner_process->memory_used += Memory::CITRA_PAGE_SIZE;
 
         tls_slots.emplace_back(0); // The page is completely available at the start
         available_page = tls_slots.size() - 1;
@@ -390,14 +389,14 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
 
         // Map the page to the current process' address space.
         vm_manager.MapBackingMemory(
-            Memory::TLS_AREA_VADDR + static_cast<VAddr>(available_page) * Memory::PAGE_SIZE,
-            memory.GetFCRAMRef(*offset), Memory::PAGE_SIZE, MemoryState::Locked);
+            Memory::TLS_AREA_VADDR + static_cast<VAddr>(available_page) * Memory::CITRA_PAGE_SIZE,
+            memory.GetFCRAMRef(*offset), Memory::CITRA_PAGE_SIZE, MemoryState::Locked);
     }
 
     // Mark the slot as used
     tls_slots[available_page].set(available_slot);
     thread->tls_address = Memory::TLS_AREA_VADDR +
-                          static_cast<VAddr>(available_page) * Memory::PAGE_SIZE +
+                          static_cast<VAddr>(available_page) * Memory::CITRA_PAGE_SIZE +
                           static_cast<VAddr>(available_slot) * Memory::TLS_ENTRY_SIZE;
 
     memory.ZeroBlock(*owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);

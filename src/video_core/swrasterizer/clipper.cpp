@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    float24 pos;
+    [[maybe_unused]] float24 pos;
     Common::Vec4<float24> coeffs;
     Common::Vec4<float24> bias;
 };

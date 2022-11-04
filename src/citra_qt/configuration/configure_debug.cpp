@@ -24,7 +24,9 @@ ConfigureDebug::ConfigureDebug(QWidget* parent)
         QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
-    ui->toggle_cpu_jit->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+
+    const bool is_powered_on = Core::System::GetInstance().IsPoweredOn();
+    ui->toggle_cpu_jit->setEnabled(!is_powered_on);
 }
 
 ConfigureDebug::~ConfigureDebug() = default;

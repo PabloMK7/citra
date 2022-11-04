@@ -255,7 +255,7 @@ public:
     }
 
 private:
-    const Regs& regs;
+    [[maybe_unused]] const Regs& regs;
     Shader::ShaderSetup& setup;
     Common::Vec4<float24>* buffer_begin;
     Common::Vec4<float24>* buffer_cur;

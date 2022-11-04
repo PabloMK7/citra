@@ -192,7 +192,7 @@ static_assert(sizeof(CaptureState) == 0x8, "CaptureState structure size is wrong
 
 void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 5, 0);
-    const u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE);
+    const u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::CITRA_PAGE_SIZE);
     master_state_offset = rp.Pop<u32>();
     channel_state_offset = rp.Pop<u32>();
     capture_state_offset = rp.Pop<u32>();

@@ -9,7 +9,6 @@
 #include <QVBoxLayout>
 #include "citra_qt/debugger/graphics/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics/graphics_breakpoints_p.h"
-#include "common/assert.h"
 
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)
     : QAbstractListModel(parent), context_weak(debug_context),
@@ -60,12 +59,15 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const {
 }
 
 Qt::ItemFlags BreakPointModel::flags(const QModelIndex& index) const {
-    if (!index.isValid())
-        return 0;
+    if (!index.isValid()) {
+        return {};
+    }
 
     Qt::ItemFlags flags = Qt::ItemIsEnabled;
-    if (index.column() == 0)
+    if (index.column() == 0) {
         flags |= Qt::ItemIsUserCheckable;
+    }
+
     return flags;
 }
 

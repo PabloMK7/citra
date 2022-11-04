@@ -44,7 +44,8 @@ CachedSurface::~CachedSurface() {
     }
 }
 
-MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 192, 64));
+MICROPROFILE_DEFINE(RasterizerCache_SurfaceLoad, "RasterizerCache", "Surface Load",
+                    MP_RGB(128, 192, 64));
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
     const bool need_swap =
@@ -65,7 +66,7 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     if (load_start < Memory::VRAM_VADDR && load_end > Memory::VRAM_VADDR)
         load_start = Memory::VRAM_VADDR;
 
-    MICROPROFILE_SCOPE(OpenGL_SurfaceLoad);
+    MICROPROFILE_SCOPE(RasterizerCache_SurfaceLoad);
 
     ASSERT(load_start >= addr && load_end <= end);
     const u32 start_offset = load_start - addr;
@@ -121,7 +122,8 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     }
 }
 
-MICROPROFILE_DEFINE(OpenGL_SurfaceFlush, "OpenGL", "Surface Flush", MP_RGB(128, 192, 64));
+MICROPROFILE_DEFINE(RasterizerCache_SurfaceFlush, "RasterizerCache", "Surface Flush",
+                    MP_RGB(128, 192, 64));
 void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     u8* const dst_buffer = VideoCore::g_memory->GetPhysicalPointer(addr);
     if (dst_buffer == nullptr)
@@ -137,7 +139,7 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     if (flush_start < Memory::VRAM_VADDR && flush_end > Memory::VRAM_VADDR)
         flush_start = Memory::VRAM_VADDR;
 
-    MICROPROFILE_SCOPE(OpenGL_SurfaceFlush);
+    MICROPROFILE_SCOPE(RasterizerCache_SurfaceFlush);
 
     ASSERT(flush_start >= addr && flush_end <= end);
     const u32 start_offset = flush_start - addr;
@@ -270,13 +272,14 @@ void CachedSurface::DumpTexture(GLuint target_tex, u64 tex_hash) {
     }
 }
 
-MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 192, 64));
+MICROPROFILE_DEFINE(RasterizerCache_TextureUL, "RasterizerCache", "Texture Upload",
+                    MP_RGB(128, 192, 64));
 void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect) {
     if (type == SurfaceType::Fill) {
         return;
     }
 
-    MICROPROFILE_SCOPE(OpenGL_TextureUL);
+    MICROPROFILE_SCOPE(RasterizerCache_TextureUL);
     ASSERT(gl_buffer.size() == width * height * GetBytesPerPixel(pixel_format));
 
     u64 tex_hash = 0;
@@ -374,13 +377,14 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect) {
     InvalidateAllWatcher();
 }
 
-MICROPROFILE_DEFINE(OpenGL_TextureDL, "OpenGL", "Texture Download", MP_RGB(128, 192, 64));
+MICROPROFILE_DEFINE(RasterizerCache_TextureDL, "RasterizerCache", "Texture Download",
+                    MP_RGB(128, 192, 64));
 void CachedSurface::DownloadGLTexture(const Common::Rectangle<u32>& rect) {
     if (type == SurfaceType::Fill) {
         return;
     }
 
-    MICROPROFILE_SCOPE(OpenGL_TextureDL);
+    MICROPROFILE_SCOPE(RasterizerCache_TextureDL);
 
     if (gl_buffer.empty()) {
         gl_buffer.resize(width * height * GetBytesPerPixel(pixel_format));

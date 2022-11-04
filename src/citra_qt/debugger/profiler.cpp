@@ -160,7 +160,8 @@ void MicroProfileWidget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void MicroProfileWidget::wheelEvent(QWheelEvent* event) {
-    MicroProfileMousePosition(event->x() / x_scale, event->y() / y_scale, event->delta() / 120);
+    MicroProfileMousePosition(event->position().x() / x_scale, event->position().y() / y_scale,
+                              event->angleDelta().y() / 120);
     event->accept();
 }
 
