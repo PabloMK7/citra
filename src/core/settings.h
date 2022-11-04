@@ -210,6 +210,7 @@ struct Values {
     bool use_vsync_new;
 
     // Audio
+    bool audio_muted;
     bool enable_dsp_lle;
     bool enable_dsp_lle_multithread;
     std::string sink_id;
@@ -243,6 +244,8 @@ struct Values {
     std::string audio_encoder_options;
     u64 audio_bitrate;
 } extern values;
+
+float Volume();
 
 // a special value for Values::region_value indicating that citra will automatically select a region
 // value to fit the region lockout info of the game

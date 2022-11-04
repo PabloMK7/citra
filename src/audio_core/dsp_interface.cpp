@@ -86,7 +86,7 @@ void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
 
     // Implementation of the hardware volume slider
     // A cubic curve is used to approximate a linear change in human-perceived loudness
-    const float linear_volume = std::clamp(Settings::values.volume, 0.0f, 1.0f);
+    const float linear_volume = std::clamp(Settings::Volume(), 0.0f, 1.0f);
     if (linear_volume != 1.0) {
         const float volume_scale_factor = linear_volume * linear_volume * linear_volume;
         for (std::size_t i = 0; i < num_frames; i++) {
