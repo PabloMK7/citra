@@ -50,8 +50,8 @@ public slots:
     void SetCoordinates(int dot_id, const QPoint& pos);
 
 protected:
-    virtual void showEvent(QShowEvent* ev) override;
-    virtual void keyPressEvent(QKeyEvent* event) override;
+    void showEvent(QShowEvent* ev) override;
+    void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
     void NewMapping();
@@ -72,7 +72,7 @@ private:
     void SaveCurrentMapping();
 
     std::unique_ptr<Ui::ConfigureTouchFromButton> ui;
-    std::unique_ptr<QStandardItemModel> binding_list_model;
+    QStandardItemModel* binding_list_model;
     std::vector<Settings::TouchFromButtonMap> touch_maps;
     int selected_index;
 

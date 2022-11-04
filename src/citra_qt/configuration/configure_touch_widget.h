@@ -33,11 +33,11 @@ signals:
     void DotMoved(int dot_id, const QPoint& pos);
 
 protected:
-    virtual void resizeEvent(QResizeEvent*) override;
-    virtual void mouseMoveEvent(QMouseEvent*) override;
-    virtual void leaveEvent(QEvent*) override;
-    virtual void mousePressEvent(QMouseEvent*) override;
-    virtual bool eventFilter(QObject*, QEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
+    void mouseMoveEvent(QMouseEvent*) override;
+    void leaveEvent(QEvent*) override;
+    void mousePressEvent(QMouseEvent*) override;
+    bool eventFilter(QObject*, QEvent*) override;
 
 private:
     std::optional<QPoint> MapToDeviceCoords(int screen_x, int screen_y) const;
@@ -53,9 +53,10 @@ private:
     static constexpr char PropX[] = "device_x";
     static constexpr char PropY[] = "device_y";
 
-    struct {
+    struct DragState {
         bool active = false;
         QPointer<QLabel> dot;
         QPoint start_pos;
-    } drag_state;
+    };
+    DragState drag_state;
 };

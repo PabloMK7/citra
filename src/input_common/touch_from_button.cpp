@@ -30,19 +30,19 @@ public:
             if (state) {
                 const float x = static_cast<float>(std::get<1>(m)) / Core::kScreenBottomWidth;
                 const float y = static_cast<float>(std::get<2>(m)) / Core::kScreenBottomHeight;
-                return std::make_tuple(x, y, true);
+                return {x, y, true};
             }
         }
-        return std::make_tuple(0.0f, 0.0f, false);
+        return {};
     }
 
 private:
-    std::vector<std::tuple<std::unique_ptr<Input::ButtonDevice>, int, int>> map; // button, x, y
+    // A vector of the mapped button, its x and its y-coordinate
+    std::vector<std::tuple<std::unique_ptr<Input::ButtonDevice>, int, int>> map;
 };
 
 std::unique_ptr<Input::TouchDevice> TouchFromButtonFactory::Create(
     const Common::ParamPackage& params) {
-
     return std::make_unique<TouchFromButtonDevice>();
 }
 

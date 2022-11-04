@@ -9,7 +9,6 @@
 #include <functional>
 #include <thread>
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 #include "common/logging/log.h"
 #include "input_common/udp/client.h"
 #include "input_common/udp/protocol.h"

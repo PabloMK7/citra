@@ -118,8 +118,10 @@ Common::ParamPackage GetControllerAnalogBinds(const Common::ParamPackage& params
 }
 
 void ReloadInputDevices() {
-    if (udp)
-        udp->ReloadUDPClient();
+    if (!udp) {
+        return;
+    }
+    udp->ReloadUDPClient();
 }
 
 namespace Polling {
