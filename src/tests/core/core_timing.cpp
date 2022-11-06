@@ -21,10 +21,10 @@ static u64 expected_callback = 0;
 static s64 lateness = 0;
 
 template <unsigned int IDX>
-void CallbackTemplate(u64 userdata, s64 cycles_late) {
+void CallbackTemplate(std::uintptr_t user_data, s64 cycles_late) {
     static_assert(IDX < CB_IDS.size(), "IDX out of range");
     callbacks_ran_flags.set(IDX);
-    REQUIRE(CB_IDS[IDX] == userdata);
+    REQUIRE(CB_IDS[IDX] == user_data);
     REQUIRE(CB_IDS[IDX] == expected_callback);
     REQUIRE(lateness == cycles_late);
 }
@@ -81,10 +81,10 @@ namespace SharedSlotTest {
 static unsigned int counter = 0;
 
 template <unsigned int ID>
-void FifoCallback(u64 userdata, s64 cycles_late) {
+void FifoCallback(std::uintptr_t user_data, s64 cycles_late) {
     static_assert(ID < CB_IDS.size(), "ID out of range");
     callbacks_ran_flags.set(ID);
-    REQUIRE(CB_IDS[ID] == userdata);
+    REQUIRE(CB_IDS[ID] == user_data);
     REQUIRE(ID == counter);
     REQUIRE(lateness == cycles_late);
     ++counter;
@@ -143,13 +143,13 @@ TEST_CASE("CoreTiming[PredictableLateness]", "[core]") {
 namespace ChainSchedulingTest {
 static int reschedules = 0;
 
-static void RescheduleCallback(Core::Timing& timing, u64 userdata, s64 cycles_late) {
+static void RescheduleCallback(Core::Timing& timing, std::uintptr_t user_data, s64 cycles_late) {
     --reschedules;
     REQUIRE(reschedules >= 0);
     REQUIRE(lateness == cycles_late);
 
     if (reschedules > 0)
-        timing.ScheduleEvent(1000, reinterpret_cast<Core::TimingEventType*>(userdata), userdata);
+        timing.ScheduleEvent(1000, reinterpret_cast<Core::TimingEventType*>(user_data), user_data);
 }
 } // namespace ChainSchedulingTest
 
@@ -161,9 +161,9 @@ TEST_CASE("CoreTiming[ChainScheduling]", "[core]") {
     Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
     Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
     Core::TimingEventType* cb_c = timing.RegisterEvent("callbackC", CallbackTemplate<2>);
-    Core::TimingEventType* cb_rs =
-        timing.RegisterEvent("callbackReschedule", [&timing](u64 userdata, s64 cycles_late) {
-            RescheduleCallback(timing, userdata, cycles_late);
+    Core::TimingEventType* cb_rs = timing.RegisterEvent(
+        "callbackReschedule", [&timing](std::uintptr_t user_data, s64 cycles_late) {
+            RescheduleCallback(timing, user_data, cycles_late);
         });
 
     // Enter slice 0

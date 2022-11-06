@@ -74,7 +74,7 @@ private:
 
     void LoadInputDevices();
     void UnloadInputDevices();
-    void UpdateCallback(u64 userdata, s64 cycles_late);
+    void UpdateCallback(std::uintptr_t user_data, s64 cycles_late);
 
     Core::System& system;
     std::shared_ptr<Kernel::Event> update_event;

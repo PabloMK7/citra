@@ -1118,11 +1118,12 @@ Module::Module(Core::System& system) : system(system) {
             system.Kernel().CreateEvent(ResetType::OneShot, "CAM::vsync_interrupt_event");
     }
     completion_event_callback = system.CoreTiming().RegisterEvent(
-        "CAM::CompletionEventCallBack",
-        [this](u64 userdata, s64 cycles_late) { CompletionEventCallBack(userdata, cycles_late); });
+        "CAM::CompletionEventCallBack", [this](std::uintptr_t user_data, s64 cycles_late) {
+            CompletionEventCallBack(user_data, cycles_late);
+        });
     vsync_interrupt_event_callback = system.CoreTiming().RegisterEvent(
-        "CAM::VsyncInterruptEventCallBack", [this](u64 userdata, s64 cycles_late) {
-            VsyncInterruptEventCallBack(userdata, cycles_late);
+        "CAM::VsyncInterruptEventCallBack", [this](std::uintptr_t user_data, s64 cycles_late) {
+            VsyncInterruptEventCallBack(user_data, cycles_late);
         });
 }
 

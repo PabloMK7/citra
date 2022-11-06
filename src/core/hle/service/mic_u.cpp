@@ -126,9 +126,9 @@ struct MIC_U::Impl {
     explicit Impl(Core::System& system) : timing(system.CoreTiming()) {
         buffer_full_event =
             system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
-        buffer_write_event =
-            timing.RegisterEvent("MIC_U::UpdateBuffer", [this](u64 userdata, s64 cycles_late) {
-                UpdateSharedMemBuffer(userdata, cycles_late);
+        buffer_write_event = timing.RegisterEvent(
+            "MIC_U::UpdateBuffer", [this](std::uintptr_t user_data, s64 cycles_late) {
+                UpdateSharedMemBuffer(user_data, cycles_late);
             });
     }
 
@@ -158,7 +158,7 @@ struct MIC_U::Impl {
         LOG_TRACE(Service_MIC, "called");
     }
 
-    void UpdateSharedMemBuffer(u64 userdata, s64 cycles_late) {
+    void UpdateSharedMemBuffer(std::uintptr_t user_data, s64 cycles_late) {
         if (change_mic_impl_requested.exchange(false)) {
             CreateMic();
         }

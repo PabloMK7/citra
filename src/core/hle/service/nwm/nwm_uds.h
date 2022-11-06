@@ -459,7 +459,7 @@ private:
                           const u8* network_info_buffer, std::size_t network_info_size,
                           u8 connection_type, std::vector<u8> passphrase);
 
-    void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
+    void BeaconBroadcastCallback(std::uintptr_t user_data, s64 cycles_late);
 
     /**
      * Returns a list of received 802.11 beacon frames from the specified sender since the last

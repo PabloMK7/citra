@@ -108,7 +108,7 @@ u64 Handler::GetSystemTime() const {
     return console_time;
 }
 
-void Handler::UpdateTimeCallback(u64 userdata, int cycles_late) {
+void Handler::UpdateTimeCallback(std::uintptr_t user_data, int cycles_late) {
     DateTime& date_time =
         shared_page.date_time_counter % 2 ? shared_page.date_time_0 : shared_page.date_time_1;
 

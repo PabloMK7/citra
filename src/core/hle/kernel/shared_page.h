@@ -114,7 +114,7 @@ public:
 
 private:
     u64 GetSystemTime() const;
-    void UpdateTimeCallback(u64 userdata, int cycles_late);
+    void UpdateTimeCallback(std::uintptr_t user_data, int cycles_late);
     Core::Timing& timing;
     Core::TimingEventType* update_time_event;
     std::chrono::seconds init_time;

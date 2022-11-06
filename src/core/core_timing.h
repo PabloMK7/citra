@@ -128,7 +128,7 @@ constexpr u64 cyclesToMs(s64 cycles) {
 
 namespace Core {
 
-using TimedCallback = std::function<void(u64 userdata, int cycles_late)>;
+using TimedCallback = std::function<void(std::uintptr_t user_data, int cycles_late)>;
 
 struct TimingEventType {
     TimedCallback callback;
@@ -141,7 +141,7 @@ public:
     struct Event {
         s64 time;
         u64 fifo_order;
-        u64 userdata;
+        std::uintptr_t user_data;
         const TimingEventType* type;
 
         bool operator>(const Event& right) const;
@@ -152,7 +152,7 @@ public:
         void save(Archive& ar, const unsigned int) const {
             ar& time;
             ar& fifo_order;
-            ar& userdata;
+            ar& user_data;
             std::string name = *(type->name);
             ar << name;
         }
@@ -161,7 +161,7 @@ public:
         void load(Archive& ar, const unsigned int) {
             ar& time;
             ar& fifo_order;
-            ar& userdata;
+            ar& user_data;
             std::string name;
             ar >> name;
             type = Global<Timing>().RegisterEvent(name, nullptr);
@@ -265,10 +265,11 @@ public:
      */
     TimingEventType* RegisterEvent(const std::string& name, TimedCallback callback);
 
-    void ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type, u64 userdata = 0,
+    void ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type,
+                       std::uintptr_t user_data = 0,
                        std::size_t core_id = std::numeric_limits<std::size_t>::max());
 
-    void UnscheduleEvent(const TimingEventType* event_type, u64 userdata);
+    void UnscheduleEvent(const TimingEventType* event_type, std::uintptr_t user_data);
 
     /// We only permit one event of each type in the queue at a time.
     void RemoveEvent(const TimingEventType* event_type);

@@ -503,7 +503,7 @@ template void Write<u16>(u32 addr, const u16 data);
 template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
-static void VBlankCallback(u64 userdata, s64 cycles_late) {
+static void VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
     VideoCore::g_renderer->SwapBuffers();
 
     // Signal to GSP that GPU interrupt has occurred
