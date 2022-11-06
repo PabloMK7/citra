@@ -1,11 +1,10 @@
 # CMake 3.12 required for 20 to be a valid value for CXX_STANDARD
-cmake_minimum_required(VERSION 3.12)
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.15)
-    # Don't override the warning flags in MSVC:
-    cmake_policy(SET CMP0092 NEW)
-    # Enforce new LTO setting
-    cmake_policy(SET CMP0069 NEW)
-endif()
+cmake_minimum_required(VERSION 3.15)
+
+# Don't override the warning flags in MSVC:
+cmake_policy(SET CMP0092 NEW)
+# Enforce new LTO setting
+cmake_policy(SET CMP0069 NEW)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
@@ -158,6 +157,8 @@ message(STATUS "Target architecture: ${ARCHITECTURE}")
 # Configure C++ standard
 # ===========================
 
+# boost asio's concept usage doesn't play nicely with some compilers yet.
+add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
