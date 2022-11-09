@@ -542,7 +542,6 @@ ResultCode AppletManager::DoApplicationJump(DeliverArg arg) {
             "Failed to find title during application jump: {} Resetting current title instead.",
             new_path);
         new_path.clear();
-        return RESULT_SUCCESS;
     }
 
     system.RequestReset(new_path);
