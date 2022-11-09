@@ -705,7 +705,7 @@ static bool IsDataAvailable() {
     fd_set fd_socket;
 
     FD_ZERO(&fd_socket);
-    FD_SET(gdbserver_socket, &fd_socket);
+    FD_SET(static_cast<u32>(gdbserver_socket), &fd_socket);
 
     struct timeval t;
     t.tv_sec = 0;

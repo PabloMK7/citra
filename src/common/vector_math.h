@@ -138,7 +138,7 @@ public:
 
     // Only implemented for T=float
     [[nodiscard]] float Length() const;
-    [[nodiscard]] float Normalize(); // returns the previous length, which is often useful
+    float Normalize(); // returns the previous length, which is often useful
 
     [[nodiscard]] constexpr T& operator[](std::size_t i) {
         return *((&x) + i);
@@ -314,7 +314,7 @@ public:
     // Only implemented for T=float
     [[nodiscard]] float Length() const;
     [[nodiscard]] Vec3 Normalized() const;
-    [[nodiscard]] float Normalize(); // returns the previous length, which is often useful
+    float Normalize(); // returns the previous length, which is often useful
 
     [[nodiscard]] constexpr T& operator[](std::size_t i) {
         return *((&x) + i);

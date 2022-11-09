@@ -192,7 +192,8 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     }
 
     int src_offset_disp = (int)src_offset;
-    ASSERT_MSG(src_offset == src_offset_disp, "Source register offset too large for int type");
+    ASSERT_MSG(src_offset == static_cast<std::size_t>(src_offset_disp),
+               "Source register offset too large for int type");
 
     unsigned operand_desc_id;
 

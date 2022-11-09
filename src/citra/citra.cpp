@@ -139,7 +139,8 @@ static void OnNetworkError(const Network::RoomMember::Error& error) {
         LOG_ERROR(Network, "You have been banned by the host");
         break;
     default:
-        LOG_ERROR(Network, "Unknown network error {}", error);
+        LOG_ERROR(Network, "Unknown network error: {}", error);
+        break;
     }
 }
 

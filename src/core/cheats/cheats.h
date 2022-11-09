@@ -29,8 +29,8 @@ public:
     void Connect();
     std::vector<std::shared_ptr<CheatBase>> GetCheats() const;
     void AddCheat(const std::shared_ptr<CheatBase>& cheat);
-    void RemoveCheat(int index);
-    void UpdateCheat(int index, const std::shared_ptr<CheatBase>& new_cheat);
+    void RemoveCheat(std::size_t index);
+    void UpdateCheat(std::size_t index, const std::shared_ptr<CheatBase>& new_cheat);
     void SaveCheatFile() const;
 
 private:
