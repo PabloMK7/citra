@@ -126,7 +126,8 @@ public:
     bool SendSignal(Signal signal, u32 param = 0);
 
     /// Request reset of the system
-    void RequestReset() {
+    void RequestReset(const std::string& chainload = "") {
+        m_chainloadpath = chainload;
         SendSignal(Signal::Reset);
     }
 
@@ -306,6 +307,15 @@ public:
 
     void LoadState(u32 slot);
 
+    /// Self delete ncch
+    bool SetSelfDelete(const std::string& file) {
+        if (m_filepath == file) {
+            self_delete_pending = true;
+            return true;
+        }
+        return false;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -376,7 +386,9 @@ private:
     /// Saved variables for reset
     Frontend::EmuWindow* m_emu_window;
     std::string m_filepath;
+    std::string m_chainloadpath;
     u64 title_id;
+    bool self_delete_pending;
 
     std::mutex signal_mutex;
     Signal current_signal;
