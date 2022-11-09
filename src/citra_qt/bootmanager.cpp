@@ -425,7 +425,7 @@ void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_p
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
     VideoCore::RequestScreenshot(
         screenshot_image.bits(),
-        [this, &screenshot_path] {
+        [this, screenshot_path] {
             const std::string std_screenshot_path = screenshot_path.toStdString();
             if (screenshot_image.mirrored(false, true).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
