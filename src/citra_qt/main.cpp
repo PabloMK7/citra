@@ -1320,7 +1320,9 @@ void GMainWindow::UpdateSaveStates() {
 }
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
-    BootGame(game_path);
+    if (ConfirmChangeGame()) {
+        BootGame(game_path);
+    }
 }
 
 void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
