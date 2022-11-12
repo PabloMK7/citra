@@ -368,7 +368,8 @@ void CachedSurface::UploadGLTexture(Common::Rectangle<u32> rect) {
         const u32 height = is_custom ? custom_tex_info.height : rect.GetHeight();
         const Common::Rectangle<u32> from_rect{0, height, width, 0};
 
-        if (!owner.texture_filterer->Filter(unscaled_tex, from_rect, texture, scaled_rect, type)) {
+        if (is_custom ||
+            !owner.texture_filterer->Filter(unscaled_tex, from_rect, texture, scaled_rect, type)) {
             const Aspect aspect = ToAspect(type);
             runtime.BlitTextures(unscaled_tex, {aspect, from_rect}, texture, {aspect, scaled_rect});
         }
