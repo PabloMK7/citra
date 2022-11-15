@@ -115,19 +115,19 @@ static void SendData(Memory::MemorySystem& memory, const u32* input, ConversionB
 
             switch (output_format) {
             case OutputFormat::RGBA8:
-                Color::EncodeRGBA8(col_vec, output);
+                Common::Color::EncodeRGBA8(col_vec, output);
                 output += 4;
                 break;
             case OutputFormat::RGB8:
-                Color::EncodeRGB8(col_vec, output);
+                Common::Color::EncodeRGB8(col_vec, output);
                 output += 3;
                 break;
             case OutputFormat::RGB5A1:
-                Color::EncodeRGB5A1(col_vec, output);
+                Common::Color::EncodeRGB5A1(col_vec, output);
                 output += 2;
                 break;
             case OutputFormat::RGB565:
-                Color::EncodeRGB565(col_vec, output);
+                Common::Color::EncodeRGB565(col_vec, output);
                 output += 2;
                 break;
             }

@@ -80,27 +80,27 @@ Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned in
 
     switch (info.format) {
     case TextureFormat::RGBA8: {
-        auto res = Color::DecodeRGBA8(source + MortonInterleave(x, y) * 4);
+        auto res = Common::Color::DecodeRGBA8(source + MortonInterleave(x, y) * 4);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
     case TextureFormat::RGB8: {
-        auto res = Color::DecodeRGB8(source + MortonInterleave(x, y) * 3);
+        auto res = Common::Color::DecodeRGB8(source + MortonInterleave(x, y) * 3);
         return {res.r(), res.g(), res.b(), 255};
     }
 
     case TextureFormat::RGB5A1: {
-        auto res = Color::DecodeRGB5A1(source + MortonInterleave(x, y) * 2);
+        auto res = Common::Color::DecodeRGB5A1(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
     case TextureFormat::RGB565: {
-        auto res = Color::DecodeRGB565(source + MortonInterleave(x, y) * 2);
+        auto res = Common::Color::DecodeRGB565(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), 255};
     }
 
     case TextureFormat::RGBA4: {
-        auto res = Color::DecodeRGBA4(source + MortonInterleave(x, y) * 2);
+        auto res = Common::Color::DecodeRGBA4(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
@@ -116,7 +116,7 @@ Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned in
     }
 
     case TextureFormat::RG8: {
-        auto res = Color::DecodeRG8(source + MortonInterleave(x, y) * 2);
+        auto res = Common::Color::DecodeRG8(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), 0, 255};
     }
 
@@ -138,8 +138,8 @@ Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned in
     case TextureFormat::IA4: {
         const u8* source_ptr = source + MortonInterleave(x, y);
 
-        u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
-        u8 a = Color::Convert4To8((*source_ptr) & 0xF);
+        u8 i = Common::Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
+        u8 a = Common::Color::Convert4To8((*source_ptr) & 0xF);
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
@@ -154,7 +154,7 @@ Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned in
         const u8* source_ptr = source + morton_offset / 2;
 
         u8 i = (morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
-        i = Color::Convert4To8(i);
+        i = Common::Color::Convert4To8(i);
 
         return {i, i, i, 255};
     }
@@ -164,7 +164,7 @@ Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned in
         const u8* source_ptr = source + morton_offset / 2;
 
         u8 a = (morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
-        a = Color::Convert4To8(a);
+        a = Common::Color::Convert4To8(a);
 
         if (disable_alpha) {
             return {a, a, a, 255};
@@ -194,7 +194,8 @@ Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned in
             memcpy(&packed_alpha, subtile_ptr, sizeof(u64));
             subtile_ptr += sizeof(u64);
 
-            alpha = Color::Convert4To8((packed_alpha >> (4 * (x * subtile_width + y))) & 0xF);
+            alpha =
+                Common::Color::Convert4To8((packed_alpha >> (4 * (x * subtile_width + y))) & 0xF);
         }
 
         u64_le subtile_data;

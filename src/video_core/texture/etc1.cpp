@@ -86,18 +86,18 @@ union ETC1Tile {
                 ret.g() += static_cast<int>(differential.dg);
                 ret.b() += static_cast<int>(differential.db);
             }
-            ret.r() = Color::Convert5To8(ret.r());
-            ret.g() = Color::Convert5To8(ret.g());
-            ret.b() = Color::Convert5To8(ret.b());
+            ret.r() = Common::Color::Convert5To8(ret.r());
+            ret.g() = Common::Color::Convert5To8(ret.g());
+            ret.b() = Common::Color::Convert5To8(ret.b());
         } else {
             if (x < 2) {
-                ret.r() = Color::Convert4To8(static_cast<u8>(separate.r1));
-                ret.g() = Color::Convert4To8(static_cast<u8>(separate.g1));
-                ret.b() = Color::Convert4To8(static_cast<u8>(separate.b1));
+                ret.r() = Common::Color::Convert4To8(static_cast<u8>(separate.r1));
+                ret.g() = Common::Color::Convert4To8(static_cast<u8>(separate.g1));
+                ret.b() = Common::Color::Convert4To8(static_cast<u8>(separate.b1));
             } else {
-                ret.r() = Color::Convert4To8(static_cast<u8>(separate.r2));
-                ret.g() = Color::Convert4To8(static_cast<u8>(separate.g2));
-                ret.b() = Color::Convert4To8(static_cast<u8>(separate.b2));
+                ret.r() = Common::Color::Convert4To8(static_cast<u8>(separate.r2));
+                ret.g() = Common::Color::Convert4To8(static_cast<u8>(separate.g2));
+                ret.b() = Common::Color::Convert4To8(static_cast<u8>(separate.b2));
             }
         }
 
