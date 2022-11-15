@@ -9,14 +9,14 @@
 namespace Common {
 
 struct MemoryInfo {
-    u64 TotalPhysicalMemory{};
-    u64 TotalSwapMemory{};
+    u64 total_physical_memory{};
+    u64 total_swap_memory{};
 };
 
 /**
  * Gets the memory info of the host system
  * @return Reference to a MemoryInfo struct with the physical and swap memory sizes in bytes
  */
-const MemoryInfo& GetMemInfo();
+[[nodiscard]] const MemoryInfo GetMemInfo();
 
 } // namespace Common

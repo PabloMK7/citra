@@ -3,10 +3,9 @@
 // Refer to the license.txt file included.
 
 #ifdef _WIN32
-// clang-format off
 #include <windows.h>
+// Depends on <windows.h> coming first
 #include <sysinfoapi.h>
-// clang-format on
 #else
 #include <sys/types.h>
 #if defined(__APPLE__) || defined(__FreeBSD__)
@@ -23,15 +22,15 @@
 namespace Common {
 
 // Detects the RAM and Swapfile sizes
-static MemoryInfo Detect() {
+const MemoryInfo GetMemInfo() {
     MemoryInfo mem_info{};
 
 #ifdef _WIN32
     MEMORYSTATUSEX memorystatus;
     memorystatus.dwLength = sizeof(memorystatus);
     GlobalMemoryStatusEx(&memorystatus);
-    mem_info.TotalPhysicalMemory = memorystatus.ullTotalPhys;
-    mem_info.TotalSwapMemory = memorystatus.ullTotalPageFile - mem_info.TotalPhysicalMemory;
+    mem_info.total_physical_memory = memorystatus.ullTotalPhys;
+    mem_info.total_swap_memory = memorystatus.ullTotalPageFile - mem_info.total_physical_memory;
 #elif defined(__APPLE__)
     u64 ramsize;
     struct xsw_usage vmusage;
@@ -42,31 +41,26 @@ static MemoryInfo Detect() {
     // sysctlbyname(const char *, void *, size_t *, void *, size_t);
     sysctlbyname("hw.memsize", &ramsize, &sizeof_ramsize, nullptr, 0);
     sysctlbyname("vm.swapusage", &vmusage, &sizeof_vmusage, nullptr, 0);
-    mem_info.TotalPhysicalMemory = ramsize;
-    mem_info.TotalSwapMemory = vmusage.xsu_total;
+    mem_info.total_physical_memory = ramsize;
+    mem_info.total_swap_memory = vmusage.xsu_total;
 #elif defined(__FreeBSD__)
     u_long physmem, swap_total;
     std::size_t sizeof_u_long = sizeof(u_long);
     // sysctlbyname(const char *, void *, size_t *, const void *, size_t);
     sysctlbyname("hw.physmem", &physmem, &sizeof_u_long, nullptr, 0);
     sysctlbyname("vm.swap_total", &swap_total, &sizeof_u_long, nullptr, 0);
-    mem_info.TotalPhysicalMemory = physmem;
-    mem_info.TotalSwapMemory = swap_total;
+    mem_info.total_physical_memory = physmem;
+    mem_info.total_swap_memory = swap_total;
 #elif defined(__linux__)
     struct sysinfo meminfo;
     sysinfo(&meminfo);
-    mem_info.TotalPhysicalMemory = meminfo.totalram;
-    mem_info.TotalSwapMemory = meminfo.totalswap;
+    mem_info.total_physical_memory = meminfo.totalram;
+    mem_info.total_swap_memory = meminfo.totalswap;
 #else
-    mem_info.TotalPhysicalMemory = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGE_SIZE);
-    mem_info.TotalSwapMemory = 0;
+    mem_info.total_physical_memory = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGE_SIZE);
+    mem_info.total_swap_memory = 0;
 #endif
 
-    return mem_info;
-}
-
-const MemoryInfo& GetMemInfo() {
-    static MemoryInfo mem_info = Detect();
     return mem_info;
 }
 

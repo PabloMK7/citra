@@ -74,6 +74,7 @@ add_library(common STATIC
     file_util.h
     hash.h
     linear_disk_cache.h
+    literals.h
     logging/backend.cpp
     logging/backend.h
     logging/filter.cpp
