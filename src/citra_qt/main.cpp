@@ -61,10 +61,12 @@
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
+#include "common/literals.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
+#include "common/memory_detect.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
@@ -213,6 +215,10 @@ GMainWindow::GMainWindow()
     LOG_INFO(Frontend, "Host CPU: {}", cpu_string);
 #endif
     LOG_INFO(Frontend, "Host OS: {}", QSysInfo::prettyProductName().toStdString());
+    const auto& mem_info = Common::GetMemInfo();
+    using namespace Common::Literals;
+    LOG_INFO(Frontend, "Host RAM: {:.2f} GiB", mem_info.total_physical_memory / f64{1_GiB});
+    LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", mem_info.total_swap_memory / f64{1_GiB});
     UpdateWindowTitle();
 
     show();

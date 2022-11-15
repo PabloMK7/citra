@@ -74,6 +74,7 @@ add_library(common STATIC
     file_util.h
     hash.h
     linear_disk_cache.h
+    literals.h
     logging/backend.cpp
     logging/backend.h
     logging/filter.cpp
@@ -83,6 +84,8 @@ add_library(common STATIC
     logging/text_formatter.cpp
     logging/text_formatter.h
     math_util.h
+    memory_detect.cpp
+    memory_detect.h
     memory_ref.h
     memory_ref.cpp
     microprofile.cpp
