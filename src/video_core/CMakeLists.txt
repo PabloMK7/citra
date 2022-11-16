@@ -69,6 +69,8 @@ add_library(video_core STATIC
     renderer_opengl/texture_filters/anime4k/anime4k_ultrafast.h
     renderer_opengl/texture_filters/bicubic/bicubic.cpp
     renderer_opengl/texture_filters/bicubic/bicubic.h
+    renderer_opengl/texture_filters/nearest_neighbor/nearest_neighbor.cpp
+    renderer_opengl/texture_filters/nearest_neighbor/nearest_neighbor.h
     renderer_opengl/texture_filters/scale_force/scale_force.cpp
     renderer_opengl/texture_filters/scale_force/scale_force.h
     renderer_opengl/texture_filters/texture_filter_base.h
@@ -117,6 +119,7 @@ set(SHADER_FILES
     renderer_opengl/texture_filters/anime4k/x_gradient.frag
     renderer_opengl/texture_filters/anime4k/y_gradient.frag
     renderer_opengl/texture_filters/bicubic/bicubic.frag
+    renderer_opengl/texture_filters/nearest_neighbor/nearest_neighbor.frag
     renderer_opengl/texture_filters/scale_force/scale_force.frag
     renderer_opengl/texture_filters/tex_coord.vert
     renderer_opengl/texture_filters/xbrz/xbrz_freescale.frag

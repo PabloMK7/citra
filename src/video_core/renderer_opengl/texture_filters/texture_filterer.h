@@ -14,7 +14,7 @@ namespace OpenGL {
 
 class TextureFilterer {
 public:
-    static constexpr std::string_view NONE = "none";
+    static constexpr std::string_view NONE = "Linear (Default)";
 
 public:
     explicit TextureFilterer(std::string_view filter_name, u16 scale_factor);
