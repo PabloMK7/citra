@@ -95,6 +95,7 @@ void LogSettings() {
     log_setting("Renderer_TextureFilterName", values.texture_filter_name);
     log_setting("Stereoscopy_Render3d", values.render_3d);
     log_setting("Stereoscopy_Factor3d", values.factor_3d);
+    log_setting("Stereoscopy_MonoRenderLeftEye", values.mono_render_left_eye);
     log_setting("Layout_LayoutOption", values.layout_option);
     log_setting("Layout_SwapScreen", values.swap_screen);
     log_setting("Layout_UprightScreen", values.upright_screen);

@@ -149,6 +149,8 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
              static_cast<int>(Settings::values.render_3d));
     AddField(Telemetry::FieldType::UserConfig, "Renderer_Factor3d",
              Settings::values.factor_3d.load());
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_MonoRenderLeftEye",
+             Settings::values.mono_render_left_eye);
     AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds", Settings::values.is_new_3ds);
     AddField(Telemetry::FieldType::UserConfig, "System_RegionValue", Settings::values.region_value);
 }

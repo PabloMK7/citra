@@ -345,6 +345,8 @@ void Config::ReadLayoutValues() {
     Settings::values.render_3d = static_cast<Settings::StereoRenderOption>(
         ReadSetting(QStringLiteral("render_3d"), 0).toInt());
     Settings::values.factor_3d = ReadSetting(QStringLiteral("factor_3d"), 0).toInt();
+    Settings::values.mono_render_left_eye =
+        ReadSetting(QStringLiteral("mono_render_left_eye"), true).toBool();
     Settings::values.pp_shader_name =
         ReadSetting(QStringLiteral("pp_shader_name"),
                     (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
@@ -899,6 +901,8 @@ void Config::SaveLayoutValues() {
 
     WriteSetting(QStringLiteral("render_3d"), static_cast<int>(Settings::values.render_3d), 0);
     WriteSetting(QStringLiteral("factor_3d"), Settings::values.factor_3d.load(), 0);
+    WriteSetting(QStringLiteral("mono_render_left_eye"), Settings::values.mono_render_left_eye,
+                 false);
     WriteSetting(QStringLiteral("pp_shader_name"),
                  QString::fromStdString(Settings::values.pp_shader_name),
                  (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)

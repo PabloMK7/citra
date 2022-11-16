@@ -53,6 +53,7 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor);
     ui->render_3d_combobox->setCurrentIndex(static_cast<int>(Settings::values.render_3d));
     ui->factor_3d->setValue(Settings::values.factor_3d);
+    ui->mono_render_left_eye->setChecked(Settings::values.mono_render_left_eye);
     updateShaders(Settings::values.render_3d);
     ui->toggle_linear_filter->setChecked(Settings::values.filter_mode);
     int tex_filter_idx = ui->texture_filter_combobox->findText(
@@ -107,6 +108,7 @@ void ConfigureEnhancements::ApplyConfiguration() {
     Settings::values.render_3d =
         static_cast<Settings::StereoRenderOption>(ui->render_3d_combobox->currentIndex());
     Settings::values.factor_3d = ui->factor_3d->value();
+    Settings::values.mono_render_left_eye = ui->mono_render_left_eye->isChecked();
     Settings::values.pp_shader_name =
         ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     Settings::values.filter_mode = ui->toggle_linear_filter->isChecked();

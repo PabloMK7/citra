@@ -207,6 +207,20 @@
         </item>
        </layout>
       </item>
+       <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+           <widget class="QCheckBox" name="mono_render_left_eye">
+             <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If false, right eye will be used. Useful if using ReShade&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+               <string>Render Left Eye in Monoscopic Mode</string>
+             </property>
+           </widget>
+           </item>
+         </layout>
+       </item>
      </layout>
     </widget>
    </item>
@@ -350,6 +364,7 @@
   <tabstop>texture_filter_combobox</tabstop>
   <tabstop>render_3d_combobox</tabstop>
   <tabstop>factor_3d</tabstop>
+  <tabstop>mono_render_left_eye</tabstop>
   <tabstop>layout_combobox</tabstop>
   <tabstop>swap_screen</tabstop>
   <tabstop>upright_screen</tabstop>

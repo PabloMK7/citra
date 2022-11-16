@@ -166,6 +166,10 @@ render_3d =
 # 0 - 100: Intensity. 0 (default)
 factor_3d =
 
+# Change Default Eye to Render When in Monoscopic Mode
+# 0 (default): Right, 1: Left
+mono_render_left_eye =
+
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
 # Loaded from shaders/anaglyph if render_3d is anaglyph
