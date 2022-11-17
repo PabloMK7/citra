@@ -129,7 +129,8 @@ signals:
 class OpenGLWindow : public QWindow {
     Q_OBJECT
 public:
-    explicit OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context);
+    explicit OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context,
+                          bool is_secondary = false);
 
     ~OpenGLWindow();
 
@@ -142,13 +143,14 @@ protected:
 private:
     std::unique_ptr<QOpenGLContext> context;
     QWidget* event_handler;
+    bool is_secondary;
 };
 
 class GRenderWindow : public QWidget, public Frontend::EmuWindow {
     Q_OBJECT
 
 public:
-    GRenderWindow(QWidget* parent, EmuThread* emu_thread);
+    GRenderWindow(QWidget* parent, EmuThread* emu_thread, bool is_secondary);
     ~GRenderWindow() override;
 
     // EmuWindow implementation.
@@ -178,6 +180,10 @@ public:
     bool event(QEvent* event) override;
 
     void focusOutEvent(QFocusEvent* event) override;
+    void focusInEvent(QFocusEvent* event) override;
+    bool HasFocus() const {
+        return has_focus;
+    }
 
     void InitRenderTarget();
 
@@ -229,6 +235,7 @@ private:
     /// Temporary storage of the screenshot taken
     QImage screenshot_image;
     bool first_frame = false;
+    bool has_focus = false;
 
 protected:
     void showEvent(QShowEvent* event) override;

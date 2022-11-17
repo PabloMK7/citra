@@ -247,7 +247,8 @@ System::ResultStatus System::SingleStep() {
     return RunLoop(false);
 }
 
-System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath) {
+System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath,
+                                  Frontend::EmuWindow* secondary_window) {
     FileUtil::SetCurrentRomPath(filepath);
     app_loader = Loader::GetLoader(filepath);
     if (!app_loader) {
@@ -278,7 +279,8 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     if (Settings::values.is_new_3ds) {
         num_cores = 4;
     }
-    ResultStatus init_result{Init(emu_window, *system_mode.first, *n3ds_mode.first, num_cores)};
+    ResultStatus init_result{
+        Init(emu_window, secondary_window, *system_mode.first, *n3ds_mode.first, num_cores)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -324,6 +326,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
+    m_secondary_window = secondary_window;
     m_filepath = filepath;
     self_delete_pending = false;
 
@@ -355,8 +358,9 @@ void System::Reschedule() {
     }
 }
 
-System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode,
-                                  u32 num_cores) {
+System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
+                                  Frontend::EmuWindow* secondary_window, u32 system_mode,
+                                  u8 n3ds_mode, u32 num_cores) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     memory = std::make_unique<Memory::MemorySystem>();
@@ -420,7 +424,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mo
     video_dumper = std::make_unique<VideoDumper::NullBackend>();
 #endif
 
-    VideoCore::ResultStatus result = VideoCore::Init(emu_window, *memory);
+    VideoCore::ResultStatus result = VideoCore::Init(emu_window, secondary_window, *memory);
     if (result != VideoCore::ResultStatus::Success) {
         switch (result) {
         case VideoCore::ResultStatus::ErrorGenericDrivers:
@@ -586,7 +590,8 @@ void System::Reset() {
     }
 
     // Reload the system with the same setting
-    [[maybe_unused]] const System::ResultStatus result = Load(*m_emu_window, m_filepath);
+    [[maybe_unused]] const System::ResultStatus result =
+        Load(*m_emu_window, m_filepath, m_secondary_window);
 
     // Restore the deliver arg.
     if (auto apt = Service::APT::GetModule(*this)) {
@@ -611,8 +616,8 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         // Re-initialize everything like it was before
         auto system_mode = this->app_loader->LoadKernelSystemMode();
         auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
-        [[maybe_unused]] const System::ResultStatus result =
-            Init(*m_emu_window, *system_mode.first, *n3ds_mode.first, num_cores);
+        [[maybe_unused]] const System::ResultStatus result = Init(
+            *m_emu_window, m_secondary_window, *system_mode.first, *n3ds_mode.first, num_cores);
     }
 
     // flush on save, don't flush on load

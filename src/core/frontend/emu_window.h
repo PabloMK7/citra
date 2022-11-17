@@ -7,7 +7,9 @@
 #include <memory>
 #include <tuple>
 #include <utility>
+
 #include "common/common_types.h"
+#include "core/3ds.h"
 #include "core/frontend/framebuffer_layout.h"
 
 namespace Frontend {
@@ -87,12 +89,15 @@ public:
  */
 class EmuWindow : public GraphicsContext {
 public:
+    class TouchState;
+
     /// Data structure to store emuwindow configuration
     struct WindowConfig {
         bool fullscreen = false;
         int res_width = 0;
         int res_height = 0;
-        std::pair<unsigned, unsigned> min_client_area_size;
+        std::pair<unsigned, unsigned> min_client_area_size{
+            Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight};
     };
 
     /// Polls window events
@@ -177,6 +182,7 @@ public:
 
 protected:
     EmuWindow();
+    EmuWindow(bool is_secondary);
     virtual ~EmuWindow();
 
     /**
@@ -204,6 +210,8 @@ protected:
         framebuffer_layout = layout;
     }
 
+    bool is_secondary{};
+
 private:
     /**
      * Handler called when the minimal client area was requested to be changed via SetConfig.
@@ -214,13 +222,14 @@ private:
         // By default, ignore this request and do nothing.
     }
 
+    void CreateTouchState();
+
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
 
-    WindowConfig config;        ///< Internal configuration (changes pending for being applied in
-                                /// ProcessConfigurationChanges)
-    WindowConfig active_config; ///< Internal active configuration
+    WindowConfig config{};        ///< Internal configuration (changes pending for being applied in
+                                  /// ProcessConfigurationChanges)
+    WindowConfig active_config{}; ///< Internal active configuration
 
-    class TouchState;
     std::shared_ptr<TouchState> touch_state;
 
     /**

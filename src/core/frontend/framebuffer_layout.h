@@ -99,6 +99,16 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped, bool 
 FramebufferLayout SideFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
 
 /**
+ * Factory method for constructing a Frame with the Top screen and bottom
+ * screen on separate windows
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_secondary if true, the bottom screen will be enabled instead of the top screen
+ * @return Newly created FramebufferLayout object with default screen regions initialized
+ */
+FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary, bool upright);
+
+/**
  * Factory method for constructing a custom FramebufferLayout
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
@@ -111,7 +121,7 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height);
  * Read from the current settings to determine which layout to use.
  * @param res_scale resolution scale factor
  */
-FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale);
+FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary = false);
 
 /**
  * Convenience method for transforming a frame layout when using Cardboard VR

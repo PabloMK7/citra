@@ -261,6 +261,11 @@
             <string>Side by Side</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Separate Windows</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>

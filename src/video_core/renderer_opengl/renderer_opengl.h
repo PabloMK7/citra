@@ -56,7 +56,7 @@ struct PresentationTexture {
 
 class RendererOpenGL : public RendererBase {
 public:
-    explicit RendererOpenGL(Frontend::EmuWindow& window);
+    explicit RendererOpenGL(Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window);
     ~RendererOpenGL() override;
 
     /// Initialize the renderer
@@ -70,7 +70,7 @@ public:
 
     /// Draws the latest frame from texture mailbox to the currently bound draw framebuffer in this
     /// context
-    void TryPresent(int timeout_ms) override;
+    void TryPresent(int timeout_ms, bool is_secondary) override;
 
     /// Prepares for video dumping (e.g. create necessary buffers, etc)
     void PrepareVideoDumping() override;

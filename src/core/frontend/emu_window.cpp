@@ -4,12 +4,13 @@
 
 #include <cmath>
 #include <mutex>
-#include "core/3ds.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/input.h"
 #include "core/settings.h"
 
 namespace Frontend {
+/// We need a global touch state that is shared across the different window instances
+static std::weak_ptr<EmuWindow::TouchState> global_touch_state;
 
 GraphicsContext::~GraphicsContext() = default;
 
@@ -45,18 +46,14 @@ private:
 };
 
 EmuWindow::EmuWindow() {
-    // TODO: Find a better place to set this.
-    config.min_client_area_size =
-        std::make_pair(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
-    active_config = config;
-    touch_state = std::make_shared<TouchState>();
-    Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
+    CreateTouchState();
+};
+
+EmuWindow::EmuWindow(bool is_secondary_) : is_secondary{is_secondary_} {
+    CreateTouchState();
 }
 
-EmuWindow::~EmuWindow() {
-    Input::UnregisterFactory<Input::TouchDevice>("emu_window");
-}
-
+EmuWindow::~EmuWindow() = default;
 /**
  * Check if the given x/y coordinates are within the touchpad specified by the framebuffer layout
  * @param layout FramebufferLayout object describing the framebuffer size and screen positions
@@ -109,6 +106,15 @@ std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsi
     new_y = std::min(new_y, framebuffer_layout.bottom_screen.bottom - 1);
 
     return std::make_tuple(new_x, new_y);
+}
+
+void EmuWindow::CreateTouchState() {
+    if (touch_state = global_touch_state.lock()) {
+        return;
+    }
+    touch_state = std::make_shared<TouchState>();
+    Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
+    global_touch_state = touch_state;
 }
 
 bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
@@ -194,6 +200,12 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
             layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen,
                                              Settings::values.upright_screen);
             break;
+#ifndef ANDROID
+        case Settings::LayoutOption::SeparateWindows:
+            layout = Layout::SeparateWindowsLayout(width, height, is_secondary,
+                                                   Settings::values.upright_screen);
+            break;
+#endif
         case Settings::LayoutOption::MobilePortrait:
             layout = Layout::MobilePortraitFrameLayout(width, height, Settings::values.swap_screen);
             break;

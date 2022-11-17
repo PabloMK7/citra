@@ -29,8 +29,10 @@ private:
 
 class EmuWindow_SDL2 : public Frontend::EmuWindow {
 public:
-    explicit EmuWindow_SDL2(bool fullscreen);
+    explicit EmuWindow_SDL2(bool fullscreen, bool is_secondary);
     ~EmuWindow_SDL2();
+
+    static void InitializeSDL2();
 
     void Present();
 
@@ -88,11 +90,17 @@ private:
     /// Called when a configuration change affects the minimal size of the window
     void OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) override;
 
+    /// Called when polling to update framerate
+    void UpdateFramerateCounter();
+
     /// Is the window still open?
     bool is_open = true;
 
     /// Internal SDL2 render window
     SDL_Window* render_window;
+
+    /// Internal SDL2 window ID
+    int render_window_id{};
 
     /// Fake hidden window for the core context
     SDL_Window* dummy_window;

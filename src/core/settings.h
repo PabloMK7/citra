@@ -24,7 +24,9 @@ enum class LayoutOption {
     SingleScreen,
     LargeScreen,
     SideScreen,
-
+#ifndef ANDROID
+    SeparateWindows,
+#endif
     // Similiar to default, but better for mobile devices in portrait mode. Top screen in clamped to
     // the top of the frame, and the bottom screen is enlarged to match the top screen.
     MobilePortrait,

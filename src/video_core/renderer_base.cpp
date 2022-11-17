@@ -9,11 +9,20 @@
 #include "video_core/swrasterizer/swrasterizer.h"
 #include "video_core/video_core.h"
 
-RendererBase::RendererBase(Frontend::EmuWindow& window) : render_window{window} {}
+RendererBase::RendererBase(Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window_)
+    : render_window{window}, secondary_window{secondary_window_} {}
+
 RendererBase::~RendererBase() = default;
+
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
-    const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
-    render_window.UpdateCurrentFramebufferLayout(layout.width, layout.height, is_portrait_mode);
+    const auto update_layout = [is_portrait_mode](Frontend::EmuWindow& window) {
+        const Layout::FramebufferLayout& layout = window.GetFramebufferLayout();
+        window.UpdateCurrentFramebufferLayout(layout.width, layout.height, is_portrait_mode);
+    };
+    update_layout(render_window);
+    if (secondary_window) {
+        update_layout(*secondary_window);
+    }
 }
 
 void RendererBase::RefreshRasterizerSetting() {

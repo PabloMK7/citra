@@ -143,7 +143,8 @@ public:
      * @param filepath String path to the executable application to load on the host file system.
      * @returns ResultStatus code, indicating if the operation succeeded.
      */
-    [[nodiscard]] ResultStatus Load(Frontend::EmuWindow& emu_window, const std::string& filepath);
+    [[nodiscard]] ResultStatus Load(Frontend::EmuWindow& emu_window, const std::string& filepath,
+                                    Frontend::EmuWindow* secondary_window = {});
 
     /**
      * Indicates if the emulated system is powered on (all subsystems initialized and able to run an
@@ -324,8 +325,9 @@ private:
      * @param system_mode The system mode.
      * @return ResultStatus code, indicating if the operation succeeded.
      */
-    [[nodiscard]] ResultStatus Init(Frontend::EmuWindow& emu_window, u32 system_mode, u8 n3ds_mode,
-                                    u32 num_cores);
+    [[nodiscard]] ResultStatus Init(Frontend::EmuWindow& emu_window,
+                                    Frontend::EmuWindow* secondary_window, u32 system_mode,
+                                    u8 n3ds_mode, u32 num_cores);
 
     /// Reschedule the core emulation
     void Reschedule();
@@ -385,6 +387,7 @@ private:
     std::string status_details = "";
     /// Saved variables for reset
     Frontend::EmuWindow* m_emu_window;
+    Frontend::EmuWindow* m_secondary_window;
     std::string m_filepath;
     std::string m_chainloadpath;
     u64 title_id;

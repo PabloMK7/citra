@@ -39,13 +39,14 @@ Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 Memory::MemorySystem* g_memory;
 
 /// Initialize the video core
-ResultStatus Init(Frontend::EmuWindow& emu_window, Memory::MemorySystem& memory) {
+ResultStatus Init(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window,
+                  Memory::MemorySystem& memory) {
     g_memory = &memory;
     Pica::Init();
 
     OpenGL::GLES = Settings::values.use_gles;
 
-    g_renderer = std::make_unique<OpenGL::RendererOpenGL>(emu_window);
+    g_renderer = std::make_unique<OpenGL::RendererOpenGL>(emu_window, secondary_window);
     ResultStatus result = g_renderer->Init();
 
     if (result != ResultStatus::Success) {

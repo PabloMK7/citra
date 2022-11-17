@@ -113,9 +113,10 @@ void EmuThread::run() {
 #endif
 }
 
-OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context)
+OpenGLWindow::OpenGLWindow(QWindow* parent, QWidget* event_handler, QOpenGLContext* shared_context,
+                           bool is_secondary)
     : QWindow(parent), context(std::make_unique<QOpenGLContext>(shared_context->parent())),
-      event_handler(event_handler) {
+      event_handler(event_handler), is_secondary{is_secondary} {
 
     // disable vsync for any shared contexts
     auto format = shared_context->format();
@@ -143,7 +144,7 @@ void OpenGLWindow::Present() {
 
     context->makeCurrent(this);
     if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->TryPresent(100);
+        VideoCore::g_renderer->TryPresent(100, is_secondary);
     }
     context->swapBuffers(this);
     auto f = context->versionFunctions<QOpenGLFunctions_4_3_Core>();
@@ -196,8 +197,8 @@ void OpenGLWindow::exposeEvent(QExposeEvent* event) {
     QWindow::exposeEvent(event);
 }
 
-GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread)
-    : QWidget(parent_), emu_thread(emu_thread) {
+GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread, bool is_secondary_)
+    : QWidget(parent_), EmuWindow(is_secondary_), emu_thread(emu_thread) {
 
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
                        .arg(QString::fromUtf8(Common::g_build_name),
@@ -207,7 +208,6 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread)
     auto layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
-    InputCommon::Init();
 
     this->setMouseTracking(true);
 
@@ -215,9 +215,7 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread)
     connect(this, &GRenderWindow::FirstFrameDisplayed, parent, &GMainWindow::OnLoadComplete);
 }
 
-GRenderWindow::~GRenderWindow() {
-    InputCommon::Shutdown();
-}
+GRenderWindow::~GRenderWindow() = default;
 
 void GRenderWindow::MakeCurrent() {
     core_context->MakeCurrent();
@@ -382,6 +380,12 @@ bool GRenderWindow::event(QEvent* event) {
 void GRenderWindow::focusOutEvent(QFocusEvent* event) {
     QWidget::focusOutEvent(event);
     InputCommon::GetKeyboard()->ReleaseAllKeys();
+    has_focus = false;
+}
+
+void GRenderWindow::focusInEvent(QFocusEvent* event) {
+    QWidget::focusInEvent(event);
+    has_focus = true;
 }
 
 void GRenderWindow::resizeEvent(QResizeEvent* event) {
@@ -396,7 +400,8 @@ void GRenderWindow::InitRenderTarget() {
 
     GMainWindow* parent = GetMainWindow();
     QWindow* parent_win_handle = parent ? parent->windowHandle() : nullptr;
-    child_window = new OpenGLWindow(parent_win_handle, this, QOpenGLContext::globalShareContext());
+    child_window = new OpenGLWindow(parent_win_handle, this, QOpenGLContext::globalShareContext(),
+                                    is_secondary);
     child_window->create();
     child_widget = createWindowContainer(child_window, this);
     child_widget->resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
@@ -421,7 +426,7 @@ void GRenderWindow::ReleaseRenderTarget() {
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
     if (res_scale == 0)
         res_scale = VideoCore::GetResolutionScaleFactor();
-    const Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(res_scale)};
+    const auto layout{Layout::FrameLayoutFromResolutionScale(res_scale, is_secondary)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
     VideoCore::RequestScreenshot(
         screenshot_image.bits(),
