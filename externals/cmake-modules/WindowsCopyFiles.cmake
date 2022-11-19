@@ -22,7 +22,7 @@ function(windows_copy_files TARGET SOURCE_DIR DEST_DIR)
     # cmake adds an extra check for command success which doesn't work too well with robocopy
     # so trick it into thinking the command was successful with the || cmd /c "exit /b 0"
     add_custom_command(TARGET ${TARGET} POST_BUILD
-        COMMAND if not exist ${DEST_DIR} mkdir ${DEST_DIR} 2> nul
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${DEST_DIR}
         COMMAND robocopy ${SOURCE_DIR} ${DEST_DIR} ${ARGN} /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"
     )
 endfunction()
