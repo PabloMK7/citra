@@ -492,6 +492,8 @@ if (ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64)
         arm/dynarmic/arm_dynarmic_cp15.h
         arm/dynarmic/arm_exclusive_monitor.cpp
         arm/dynarmic/arm_exclusive_monitor.h
+        arm/dynarmic/arm_tick_counts.cpp
+        arm/dynarmic/arm_tick_counts.h
     )
     target_link_libraries(core PRIVATE dynarmic)
 endif()

@@ -11,6 +11,7 @@
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dynarmic/arm_dynarmic_cp15.h"
 #include "core/arm/dynarmic/arm_exclusive_monitor.h"
+#include "core/arm/dynarmic/arm_tick_counts.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
@@ -160,6 +161,9 @@ public:
     std::uint64_t GetTicksRemaining() override {
         s64 ticks = parent.GetTimer().GetDowncount();
         return static_cast<u64>(ticks <= 0 ? 0 : ticks);
+    }
+    std::uint64_t GetTicksForCode(bool is_thumb, VAddr, std::uint32_t instruction) override {
+        return Core::TicksForInstruction(is_thumb, instruction);
     }
 
     ARM_Dynarmic& parent;
