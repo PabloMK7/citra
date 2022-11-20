@@ -547,6 +547,8 @@ void Config::ReadSystemValues() {
             .toInt());
     Settings::values.init_time =
         ReadSetting(QStringLiteral("init_time"), 946681277ULL).toULongLong();
+    Settings::values.init_time_offset =
+        ReadSetting(QStringLiteral("init_time_offset"), 0LL).toLongLong();
 
     qt_config->endGroup();
 }
@@ -1057,6 +1059,8 @@ void Config::SaveSystemValues() {
                  static_cast<u32>(Settings::InitClock::SystemTime));
     WriteSetting(QStringLiteral("init_time"),
                  static_cast<unsigned long long>(Settings::values.init_time), 946681277ULL);
+    WriteSetting(QStringLiteral("init_time_offset"),
+                 static_cast<long long>(Settings::values.init_time_offset), 0LL);
 
     qt_config->endGroup();
 }

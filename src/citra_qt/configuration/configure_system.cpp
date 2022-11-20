@@ -266,6 +266,14 @@ void ConfigureSystem::SetConfiguration() {
     date_time.setTime_t(Settings::values.init_time);
     ui->edit_init_time->setDateTime(date_time);
 
+    long long init_time_offset = Settings::values.init_time_offset;
+    long long days_offset = init_time_offset / 86400;
+    ui->edit_init_time_offset_days->setValue(days_offset);
+
+    unsigned long long time_offset = std::abs(init_time_offset) - std::abs(days_offset * 86400);
+    QTime time = QTime::fromMSecsSinceStartOfDay(time_offset * 1000);
+    ui->edit_init_time_offset_time->setTime(time);
+
     if (!enabled) {
         cfg = Service::CFG::GetModule(Core::System::GetInstance());
         ASSERT_MSG(cfg, "CFG Module missing!");
@@ -382,6 +390,14 @@ void ConfigureSystem::ApplyConfiguration() {
             static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
         Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
 
+        s64 time_offset_time = ui->edit_init_time_offset_time->time().msecsSinceStartOfDay() / 1000;
+        s64 time_offset_days = ui->edit_init_time_offset_days->value() * 86400;
+
+        if (time_offset_days < 0) {
+            time_offset_time = -time_offset_time;
+        }
+
+        Settings::values.init_time_offset = time_offset_days + time_offset_time;
         Settings::values.is_new_3ds = ui->toggle_new_3ds->isChecked();
     }
 
@@ -415,10 +431,10 @@ void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {
 }
 
 void ConfigureSystem::ConfigureTime() {
-    ui->edit_init_time->setCalendarPopup(true);
     QDateTime dt;
     dt.fromString(QStringLiteral("2000-01-01 00:00:01"), QStringLiteral("yyyy-MM-dd hh:mm:ss"));
     ui->edit_init_time->setMinimumDateTime(dt);
+    ui->edit_init_time->setCalendarPopup(true);
 
     SetConfiguration();
 
@@ -428,8 +444,13 @@ void ConfigureSystem::ConfigureTime() {
 void ConfigureSystem::UpdateInitTime(int init_clock) {
     const bool is_fixed_time =
         static_cast<Settings::InitClock>(init_clock) == Settings::InitClock::FixedTime;
+
     ui->label_init_time->setVisible(is_fixed_time);
     ui->edit_init_time->setVisible(is_fixed_time);
+
+    ui->label_init_time_offset->setVisible(!is_fixed_time);
+    ui->edit_init_time_offset_days->setVisible(!is_fixed_time);
+    ui->edit_init_time_offset_time->setVisible(!is_fixed_time);
 }
 
 void ConfigureSystem::RefreshConsoleID() {

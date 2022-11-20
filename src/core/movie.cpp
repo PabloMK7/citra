@@ -601,9 +601,17 @@ void Movie::PrepareForPlayback(const std::string& movie_file) {
 }
 
 void Movie::PrepareForRecording() {
-    init_time = (Settings::values.init_clock == Settings::InitClock::SystemTime
-                     ? Common::Timer::GetTimeSinceJan1970().count()
-                     : Settings::values.init_time);
+    if (Settings::values.init_clock == Settings::InitClock::SystemTime) {
+        long long init_time_offset = Settings::values.init_time_offset;
+        long long days_offset = init_time_offset / 86400;
+        unsigned long long seconds_offset =
+            std::abs(init_time_offset) - std::abs(days_offset * 86400);
+
+        init_time =
+            Common::Timer::GetTimeSinceJan1970().count() + seconds_offset + (days_offset * 86400);
+    } else {
+        init_time = Settings::values.init_time;
+    }
 }
 
 Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file) const {

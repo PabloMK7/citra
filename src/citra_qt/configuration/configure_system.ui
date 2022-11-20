@@ -258,6 +258,44 @@
           </property>
          </widget>
         </item>
+        <item row="8" column="1">
+         <widget class="QDateTimeEdit" name="edit_init_time">
+          <property name="displayFormat">
+           <string>yyyy-MM-ddTHH:mm:ss</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="label_init_time_offset">
+          <property name="text">
+           <string>Offset time</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <layout class="QGridLayout" name="edit_init_time_offset_grid">
+          <item column="0">
+           <widget class="QSpinBox" name="edit_init_time_offset_days">
+            <property name="suffix">
+             <string> days</string>
+            </property>
+            <property name="minimum">
+             <number>-2147483648</number>
+            </property>
+            <property name="maximum">
+             <number>2147483647</number>
+            </property>
+           </widget>
+          </item>
+          <item column="1">
+           <widget class="QTimeEdit" name="edit_init_time_offset_time">
+            <property name="displayFormat">
+             <string>HH:mm:ss</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item row="9" column="1">
          <widget class="QSpinBox" name="spinBox_play_coins">
           <property name="maximum">
@@ -292,13 +330,6 @@
          <widget class="QLabel" name="label_console_id">
           <property name="text">
            <string>Console ID:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QDateTimeEdit" name="edit_init_time">
-          <property name="displayFormat">
-           <string>yyyy-MM-ddTHH:mm:ss</string>
           </property>
          </widget>
         </item>
