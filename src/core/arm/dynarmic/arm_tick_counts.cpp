@@ -369,6 +369,104 @@ const std::array arm_matchers{
     // clang-format on
 };
 
+const std::array thumb_matchers{
+    // clang-format off
+
+    // Shift (immediate) add, subtract, move and compare instructions
+    INST("LSL (imm)",                "00000vvvvvmmmddd",    1)
+    INST("LSR (imm)",                "00001vvvvvmmmddd",    1)
+    INST("ASR (imm)",                "00010vvvvvmmmddd",    1)
+    INST("ADD (reg, T1)",            "0001100mmmnnnddd",    1)
+    INST("SUB (reg)",                "0001101mmmnnnddd",    1)
+    INST("ADD (imm, T1)",            "0001110vvvnnnddd",    1)
+    INST("SUB (imm, T1)",            "0001111vvvnnnddd",    1)
+    INST("MOV (imm)",                "00100dddvvvvvvvv",    1)
+    INST("CMP (imm)",                "00101nnnvvvvvvvv",    1)
+    INST("ADD (imm, T2)",            "00110dddvvvvvvvv",    1)
+    INST("SUB (imm, T2)",            "00111dddvvvvvvvv",    1)
+
+     // Data-processing instructions
+    INST("AND (reg)",                "0100000000mmmddd",    1)
+    INST("EOR (reg)",                "0100000001mmmddd",    1)
+    INST("LSL (reg)",                "0100000010mmmddd",    1)
+    INST("LSR (reg)",                "0100000011mmmddd",    1)
+    INST("ASR (reg)",                "0100000100mmmddd",    1)
+    INST("ADC (reg)",                "0100000101mmmddd",    1)
+    INST("SBC (reg)",                "0100000110mmmddd",    1)
+    INST("ROR (reg)",                "0100000111sssddd",    1)
+    INST("TST (reg)",                "0100001000mmmnnn",    1)
+    INST("RSB (imm)",                "0100001001nnnddd",    1)
+    INST("CMP (reg, T1)",            "0100001010mmmnnn",    1)
+    INST("CMN (reg)",                "0100001011mmmnnn",    1)
+    INST("ORR (reg)",                "0100001100mmmddd",    1)
+    INST("MUL (reg)",                "0100001101nnnddd",    1)
+    INST("BIC (reg)",                "0100001110mmmddd",    1)
+    INST("MVN (reg)",                "0100001111mmmddd",    1)
+
+    // Special data instructions
+    INST("ADD (reg, T2)",            "01000100Dmmmmddd",    1) // v4T, Low regs: v6T2
+    INST("CMP (reg, T2)",            "01000101Nmmmmnnn",    1) // v4T
+    INST("MOV (reg)",                "01000110Dmmmmddd",    1) // v4T, Low regs: v6
+
+    // Store/Load single data item instructions
+    INST("LDR (literal)",            "01001tttvvvvvvvv",    2)
+    INST("STR (reg)",                "0101000mmmnnnttt",    2)
+    INST("STRH (reg)",               "0101001mmmnnnttt",    2)
+    INST("STRB (reg)",               "0101010mmmnnnttt",    2)
+    INST("LDRSB (reg)",              "0101011mmmnnnttt",    2)
+    INST("LDR (reg)",                "0101100mmmnnnttt",    2)
+    INST("LDRH (reg)",               "0101101mmmnnnttt",    2)
+    INST("LDRB (reg)",               "0101110mmmnnnttt",    2)
+    INST("LDRSH (reg)",              "0101111mmmnnnttt",    2)
+    INST("STR (imm, T1)",            "01100vvvvvnnnttt",    2)
+    INST("LDR (imm, T1)",            "01101vvvvvnnnttt",    2)
+    INST("STRB (imm)",               "01110vvvvvnnnttt",    2)
+    INST("LDRB (imm)",               "01111vvvvvnnnttt",    2)
+    INST("STRH (imm)",               "10000vvvvvnnnttt",    2)
+    INST("LDRH (imm)",               "10001vvvvvnnnttt",    2)
+    INST("STR (imm, T2)",            "10010tttvvvvvvvv",    2)
+    INST("LDR (imm, T2)",            "10011tttvvvvvvvv",    2)
+
+    // Generate relative address instructions
+    INST("ADR",                      "10100dddvvvvvvvv",    1)
+    INST("ADD (SP plus imm, T1)",    "10101dddvvvvvvvv",    1)
+    INST("ADD (SP plus imm, T2)",    "101100000vvvvvvv",    1) // v4T
+    INST("SUB (SP minus imm)",       "101100001vvvvvvv",    1) // v4T
+
+    // Hint instructions
+    INST("NOP",                      "10111111--------",    (1)) // IT on v7
+
+    // Miscellaneous 16-bit instructions
+    INST("SXTH",                     "1011001000mmmddd",    1) // v6
+    INST("SXTB",                     "1011001001mmmddd",    1) // v6
+    INST("UXTH",                     "1011001010mmmddd",    1) // v6
+    INST("UXTB",                     "1011001011mmmddd",    1) // v6
+    INST("PUSH",                     "1011010xxxxxxxxx",    LoadStoreMultiple(i)) // v4T
+    INST("POP",                      "1011110xxxxxxxxx",    LoadStoreMultiple(i)) // v4T
+    INST("SETEND",                   "101101100101x000",    1) // v6
+    INST("CPS",                      "10110110011m0aif",    1) // v6
+    INST("REV",                      "1011101000mmmddd",    1) // v6
+    INST("REV16",                    "1011101001mmmddd",    1) // v6
+    INST("REVSH",                    "1011101011mmmddd",    1) // v6
+    INST("BKPT",                     "10111110xxxxxxxx",    8) // v5
+
+    // Store/Load multiple registers
+    INST("STMIA",                    "11000nnnxxxxxxxx",    LoadStoreMultiple(i))
+    INST("LDMIA",                    "11001nnnxxxxxxxx",    LoadStoreMultiple(i))
+
+    // Branch instructions
+    INST("BX",                       "010001110mmmm000",    5) // v4T
+    INST("BLX (reg)",                "010001111mmmm000",    6) // v5T
+    INST("UDF",                      "11011110--------",    8)
+    INST("SVC",                      "11011111xxxxxxxx",    8)
+    INST("B (T1)",                   "1101ccccvvvvvvvv",    4)
+    INST("B (T2)",                   "11100vvvvvvvvvvv",    4)
+    INST("BL (imm)",                 "11110Svvvvvvvvvv11j1jvvvvvvvvvvv",    4) // v4T
+    INST("BLX (imm)",                "11110Svvvvvvvvvv11j0jvvvvvvvvvvv",    5) // v5T
+
+    // clang-format on
+};
+
 } // namespace
 
 namespace Core {
