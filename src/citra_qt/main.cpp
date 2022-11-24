@@ -473,6 +473,9 @@ void GMainWindow::InitializeHotkeys() {
     const QString toggle_filter_bar = QStringLiteral("Toggle Filter Bar");
     const QString toggle_status_bar = QStringLiteral("Toggle Status Bar");
     const QString fullscreen = QStringLiteral("Fullscreen");
+    const QString toggle_screen_layout = QStringLiteral("Toggle Screen Layout");
+    const QString swap_screens = QStringLiteral("Swap Screens");
+    const QString rotate_screens = QStringLiteral("Rotate Screens Upright");
 
     ui->action_Show_Filter_Bar->setShortcut(
         hotkey_registry.GetKeySequence(main_window, toggle_filter_bar));
@@ -510,28 +513,39 @@ void GMainWindow::InitializeHotkeys() {
                     return;
                 BootGame(QString(game_path));
             });
-    connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Swap Screens"), render_window),
+    connect(hotkey_registry.GetHotkey(main_window, swap_screens, render_window),
             &QShortcut::activated, ui->action_Screen_Layout_Swap_Screens, &QAction::trigger);
-    connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Rotate Screens Upright"),
-                                      render_window),
+    connect(hotkey_registry.GetHotkey(main_window, rotate_screens, render_window),
             &QShortcut::activated, ui->action_Screen_Layout_Upright_Screens, &QAction::trigger);
-    connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Toggle Screen Layout"),
-                                      render_window),
+    connect(hotkey_registry.GetHotkey(main_window, toggle_screen_layout, render_window),
             &QShortcut::activated, this, &GMainWindow::ToggleScreenLayout);
     connect(hotkey_registry.GetHotkey(main_window, fullscreen, render_window),
             &QShortcut::activated, ui->action_Fullscreen, &QAction::trigger);
     connect(hotkey_registry.GetHotkey(main_window, fullscreen, render_window),
             &QShortcut::activatedAmbiguously, ui->action_Fullscreen, &QAction::trigger);
 
-    // This action will fire specifically when secondary_window is in focus
-    QAction* secondary_fullscreen_action = new QAction(secondary_window);
+    const auto add_secondary_window_hotkey = [this](QKeySequence hotkey, const char* slot) {
+        // This action will fire specifically when secondary_window is in focus
+        QAction* secondary_window_action = new QAction(secondary_window);
+        secondary_window_action->setShortcut(hotkey);
+
+        connect(secondary_window_action, SIGNAL(triggered()), this, slot);
+        secondary_window->addAction(secondary_window_action);
+    };
+
     // Use the same fullscreen hotkey as the main window
     const auto fullscreen_hotkey = hotkey_registry.GetKeySequence(main_window, fullscreen);
-    secondary_fullscreen_action->setShortcut(fullscreen_hotkey);
+    add_secondary_window_hotkey(fullscreen_hotkey, SLOT(ToggleSecondaryFullscreen()));
 
-    connect(secondary_fullscreen_action, SIGNAL(triggered()), this,
-            SLOT(ToggleSecondaryFullscreen()));
-    secondary_window->addAction(secondary_fullscreen_action);
+    const auto toggle_screen_hotkey =
+        hotkey_registry.GetKeySequence(main_window, toggle_screen_layout);
+    add_secondary_window_hotkey(toggle_screen_hotkey, SLOT(ToggleScreenLayout()));
+
+    const auto swap_screen_hotkey = hotkey_registry.GetKeySequence(main_window, swap_screens);
+    add_secondary_window_hotkey(swap_screen_hotkey, SLOT(TriggerSwapScreens()));
+
+    const auto rotate_screen_hotkey = hotkey_registry.GetKeySequence(main_window, rotate_screens);
+    add_secondary_window_hotkey(rotate_screen_hotkey, SLOT(TriggerRotateScreens()));
 
     connect(hotkey_registry.GetHotkey(main_window, QStringLiteral("Exit Fullscreen"), this),
             &QShortcut::activated, this, [&] {
@@ -1817,6 +1831,14 @@ void GMainWindow::OnSwapScreens() {
 void GMainWindow::OnRotateScreens() {
     Settings::values.upright_screen = ui->action_Screen_Layout_Upright_Screens->isChecked();
     Settings::Apply();
+}
+
+void GMainWindow::TriggerSwapScreens() {
+    ui->action_Screen_Layout_Swap_Screens->trigger();
+}
+
+void GMainWindow::TriggerRotateScreens() {
+    ui->action_Screen_Layout_Upright_Screens->trigger();
 }
 
 void GMainWindow::OnCheats() {
