@@ -1035,12 +1035,6 @@ void HandlePacket() {
         return;
     }
 
-    if (HasHioRequest()) {
-        const auto reply = BuildHioRequestPacket();
-        SendReply(reply.data());
-        return;
-    }
-
     if (!IsDataAvailable()) {
         return;
     }
@@ -1059,8 +1053,12 @@ void HandlePacket() {
     case 'c':
     case 'C':
     case 's':
-        //
-        ;
+        if (HasHioRequest()) {
+            // Really, this request needs to get sent _after_ the step or continue
+            // began, but not sure how to schedule that...
+            const auto request_packet = BuildHioRequestPacket();
+            SendReply(request_packet.data());
+        }
     }
 
     switch (command_buffer[0]) {

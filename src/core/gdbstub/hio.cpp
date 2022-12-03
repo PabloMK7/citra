@@ -36,12 +36,15 @@ void SetHioRequest(const VAddr addr) {
     auto& memory = Core::System::GetInstance().Memory();
     memory.ReadBlock(*process, addr, &current_hio_request, sizeof(PackedGdbHioRequest));
 
-    // TODO read + check request magic header
-
-    current_hio_request_addr = addr;
-    sent_request = false;
-
-    LOG_DEBUG(Debug_GDBStub, "HIO request initiated");
+    if (std::string_view{current_hio_request.magic} != "GDB") {
+        LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application");
+        current_hio_request_addr = 0;
+        current_hio_request = {};
+    } else {
+        current_hio_request_addr = addr;
+        sent_request = false;
+        LOG_DEBUG(Debug_GDBStub, "HIO request initiated");
+    }
 }
 
 bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
@@ -132,41 +135,37 @@ bool HasHioRequest() {
 }
 
 std::string BuildHioRequestPacket() {
-    char buf[256 + 1];
-    char tmp[32 + 1];
+    std::stringstream packet;
+    // TODO:use the IntToGdbHex funcs instead std::hex ?
+    packet << "F" << current_hio_request.function_name << std::hex;
+
     u32 nStr = 0;
-
-    // TODO: c++ify this and use the IntToGdbHex funcs instead of snprintf
-
-    snprintf(buf, 256, "F%s", current_hio_request.function_name);
 
     for (u32 i = 0; i < 8 && current_hio_request.param_format[i] != 0; i++) {
         switch (current_hio_request.param_format[i]) {
         case 'i':
         case 'I':
         case 'p':
-            snprintf(tmp, 32, ",%x", (u32)current_hio_request.parameters[i]);
+            packet << "," << (u32)current_hio_request.parameters[i];
             break;
         case 'l':
         case 'L':
-            snprintf(tmp, 32, ",%llx", current_hio_request.parameters[i]);
+            packet << "," << current_hio_request.parameters[i];
             break;
         case 's':
-            snprintf(tmp, 32, ",%x/%zx", (u32)current_hio_request.parameters[i],
-                     current_hio_request.string_lengths[nStr++]);
+            packet << "," << (u32)current_hio_request.parameters[i] << "/"
+                   << current_hio_request.string_lengths[nStr++];
             break;
         default:
-            tmp[0] = 0;
+            packet << '\0';
             break;
         }
-        strcat(buf, tmp);
     }
 
-    auto packet = std::string{buf, strlen(buf)};
-    LOG_DEBUG(Debug_GDBStub, "HIO request packet: {}", packet);
+    LOG_DEBUG(Debug_GDBStub, "HIO request packet: {}", packet.str());
     sent_request = true;
 
-    return packet;
+    return packet.str();
 }
 
 } // namespace GDBStub
