@@ -35,6 +35,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/gdbstub/hio.h"
 #include "core/hle/kernel/process.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
@@ -1061,6 +1062,19 @@ void HandlePacket() {
 
     LOG_DEBUG(Debug_GDBStub, "Packet: {}", command_buffer[0]);
 
+    // HACK: instead of polling DebugEvents properly via SVC, just check for
+    // whether there's a pending a request, and send it if so.
+    switch (command_buffer[0]) {
+    case 'c':
+    case 'C':
+    case 's':
+        if (HasHioRequest()) {
+            const auto reply = BuildHioReply();
+            SendReply(reply.data());
+            return;
+        }
+    }
+
     switch (command_buffer[0]) {
     case 'q':
         HandleQuery();
@@ -1075,6 +1089,11 @@ void HandlePacket() {
         Shutdown();
         LOG_INFO(Debug_GDBStub, "killed by gdb");
         return;
+    case 'F':
+        if (HandleHioRequest(command_buffer, command_length)) {
+            Continue();
+        };
+        break;
     case 'g':
         ReadRegisters();
         break;

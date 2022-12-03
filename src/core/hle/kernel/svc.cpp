@@ -13,6 +13,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/gdbstub/hio.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
@@ -1140,8 +1141,14 @@ void SVC::Break(u8 break_reason) {
     system.SetStatus(Core::System::ResultStatus::ErrorUnknown);
 }
 
-/// Used to output a message on a debug hardware unit - does nothing on a retail unit
+/// Used to output a message on a debug hardware unit, or for the GDB HIO
+// protocol - does nothing on a retail unit.
 void SVC::OutputDebugString(VAddr address, s32 len) {
+    if (len == 0) {
+        GDBStub::SetHioRequest(address);
+        return;
+    }
+
     if (len <= 0) {
         return;
     }
@@ -2212,7 +2219,7 @@ const std::array<SVC::FunctionDef, 180> SVC::SVC_Table{{
     {0x60, nullptr, "DebugActiveProcess"},
     {0x61, nullptr, "BreakDebugProcess"},
     {0x62, nullptr, "TerminateDebugProcess"},
-    {0x63, nullptr, "GetProcessDebugEvent"},
+    {0x63, nullptr, "GetProcessDebugEvent"}, // TODO: do we need this for HIO to work?
     {0x64, nullptr, "ContinueDebugEvent"},
     {0x65, &SVC::Wrap<&SVC::GetProcessList>, "GetProcessList"},
     {0x66, nullptr, "GetThreadList"},
