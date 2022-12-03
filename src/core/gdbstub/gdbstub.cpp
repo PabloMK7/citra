@@ -262,13 +262,7 @@ static u8 NibbleToHex(u8 n) {
     }
 }
 
-/**
- * Converts input hex string characters into an array of equivalent of u8 bytes.
- *
- * @param src Pointer to array of output hex string characters.
- * @param len Length of src array.
- */
-static u32 HexToInt(const u8* src, std::size_t len) {
+u32 HexToInt(const u8* src, std::size_t len) {
     u32 output = 0;
     while (len-- > 0) {
         output = (output << 4) | HexCharToValue(src[0]);
@@ -319,12 +313,7 @@ static void IntToGdbHex(u8* dest, u32 v) {
     }
 }
 
-/**
- * Convert a gdb-formatted hex string into a u32.
- *
- * @param src Pointer to hex string.
- */
-static u32 GdbHexToInt(const u8* src) {
+u32 GdbHexToInt(const u8* src) {
     u32 output = 0;
 
     for (int i = 0; i < 8; i += 2) {
@@ -348,12 +337,7 @@ static void LongToGdbHex(u8* dest, u64 v) {
     }
 }
 
-/**
- * Convert a gdb-formatted hex string into a u64.
- *
- * @param src Pointer to hex string.
- */
-static u64 GdbHexToLong(const u8* src) {
+u64 GdbHexToLong(const u8* src) {
     u64 output = 0;
 
     for (int i = 0; i < 16; i += 2) {
@@ -1051,6 +1035,12 @@ void HandlePacket() {
         return;
     }
 
+    if (HasHioRequest()) {
+        const auto reply = BuildHioRequestPacket();
+        SendReply(reply.data());
+        return;
+    }
+
     if (!IsDataAvailable()) {
         return;
     }
@@ -1064,15 +1054,13 @@ void HandlePacket() {
 
     // HACK: instead of polling DebugEvents properly via SVC, just check for
     // whether there's a pending a request, and send it if so.
+    // ...This doesn't seem good enough for the general case
     switch (command_buffer[0]) {
     case 'c':
     case 'C':
     case 's':
-        if (HasHioRequest()) {
-            const auto reply = BuildHioReply();
-            SendReply(reply.data());
-            return;
-        }
+        //
+        ;
     }
 
     switch (command_buffer[0]) {
@@ -1090,7 +1078,7 @@ void HandlePacket() {
         LOG_INFO(Debug_GDBStub, "killed by gdb");
         return;
     case 'F':
-        if (HandleHioRequest(command_buffer, command_length)) {
+        if (HandleHioReply(command_buffer, command_length)) {
             Continue();
         };
         break;

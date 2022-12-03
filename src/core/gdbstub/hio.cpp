@@ -1,3 +1,7 @@
+// Copyright 2022 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/gdbstub/hio.h"
@@ -8,6 +12,7 @@ namespace {
 
 static VAddr current_hio_request_addr;
 static PackedGdbHioRequest current_hio_request;
+static std::atomic<bool> sent_request{false};
 
 } // namespace
 
@@ -22,35 +27,39 @@ void SetHioRequest(const VAddr addr) {
         return;
     }
 
-    auto& memory = Core::System::GetInstance().Memory();
-    if (!memory.IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                      addr)) {
+    const auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+    if (!Memory::IsValidVirtualAddress(*process, addr)) {
         LOG_WARNING(Debug_GDBStub, "Invalid address for HIO request");
         return;
     }
 
-    memory.ReadBlock(addr, &current_hio_request, sizeof(PackedGdbHioRequest));
+    auto& memory = Core::System::GetInstance().Memory();
+    memory.ReadBlock(*process, addr, &current_hio_request, sizeof(PackedGdbHioRequest));
+
+    // TODO read + check request magic header
+
     current_hio_request_addr = addr;
+    sent_request = false;
 
     LOG_DEBUG(Debug_GDBStub, "HIO request initiated");
 }
 
-bool HandleHioRequest(const u8* const command_buffer, const u32 command_length) {
-    if (!HasHioRequest()) {
+bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
+    if (current_hio_request_addr == 0 || !sent_request) {
+        LOG_WARNING(Debug_GDBStub, "Got HIO reply but never sent a request");
         // TODO send error reply packet?
         return false;
     }
 
-    u64 retval{0};
+    auto* command_pos = command_buffer + 1;
 
-    auto* command_pos = command_buffer;
-    ++command_pos;
-
-    // TODO: not totally sure what's going on here...
     if (*command_pos == 0 || *command_pos == ',') {
         // return GDB_ReplyErrno(ctx, EILSEQ);
         return false;
-    } else if (*command_pos == '-') {
+    }
+
+    // Set the sign of the retval
+    if (*command_pos == '-') {
         command_pos++;
         current_hio_request.retval = -1;
     } else if (*command_pos == '+') {
@@ -60,13 +69,13 @@ bool HandleHioRequest(const u8* const command_buffer, const u32 command_length) 
         current_hio_request.retval = 1;
     }
 
-    // TODO:
-    // pos = GDB_ParseHexIntegerList64(&retval, pos, 1, ',');
-
-    if (command_pos == nullptr) {
+    const auto retval_end = std::find(command_pos, command_buffer + command_length, ',');
+    if (retval_end >= command_buffer + command_length) {
         // return GDB_ReplyErrno(ctx, EILSEQ);
         return false;
     }
+    u64 retval = (u64)HexToInt(command_pos, retval_end - command_pos);
+    command_pos = retval_end + 1;
 
     current_hio_request.retval *= retval;
     current_hio_request.gdb_errno = 0;
@@ -75,13 +84,11 @@ bool HandleHioRequest(const u8* const command_buffer, const u32 command_length) 
     if (*command_pos != 0) {
         u32 errno_;
         // GDB protocol technically allows errno to have a +/- prefix but this will never happen.
-        // TODO:
-        // pos = GDB_ParseHexIntegerList(&errno_, ++pos, 1, ',');
+        const auto errno_end = std::find(command_pos, command_buffer + command_length, ',');
+        errno_ = HexToInt(command_pos, errno_end - command_pos);
+        command_pos = errno_end + 1;
+
         current_hio_request.gdb_errno = (int)errno_;
-        if (command_pos == nullptr) {
-            return false;
-            // return GDB_ReplyErrno(ctx, EILSEQ);
-        }
 
         if (*command_pos != 0) {
             if (*command_pos != 'C') {
@@ -96,24 +103,35 @@ bool HandleHioRequest(const u8* const command_buffer, const u32 command_length) 
     std::fill(std::begin(current_hio_request.param_format),
               std::end(current_hio_request.param_format), 0);
 
-    auto& memory = Core::System::GetInstance().Memory();
-    // should have been checked when we first initialized the request:
-    assert(memory.IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                        current_hio_request_addr));
+    LOG_DEBUG(Debug_GDBStub, "HIO reply: {{retval = {}, errno = {}, ctrl_c = {}}}",
+              current_hio_request.retval, current_hio_request.gdb_errno,
+              current_hio_request.ctrl_c);
 
-    memory.WriteBlock(current_hio_request_addr, &current_hio_request, sizeof(PackedGdbHioRequest));
+    const auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+    // should have been checked when we first initialized the request,
+    // but just double check again before we write to memory
+    if (!Memory::IsValidVirtualAddress(*process, current_hio_request_addr)) {
+        LOG_WARNING(Debug_GDBStub, "Invalid address {:X} to write HIO request",
+                    current_hio_request_addr);
+        return false;
+    }
+
+    auto& memory = Core::System::GetInstance().Memory();
+    memory.WriteBlock(*process, current_hio_request_addr, &current_hio_request,
+                      sizeof(PackedGdbHioRequest));
 
     current_hio_request = PackedGdbHioRequest{};
     current_hio_request_addr = 0;
+    sent_request = false;
 
     return true;
 }
 
 bool HasHioRequest() {
-    return current_hio_request_addr != 0;
+    return current_hio_request_addr != 0 && !sent_request;
 }
 
-std::string BuildHioReply() {
+std::string BuildHioRequestPacket() {
     char buf[256 + 1];
     char tmp[32 + 1];
     u32 nStr = 0;
@@ -144,7 +162,11 @@ std::string BuildHioReply() {
         strcat(buf, tmp);
     }
 
-    return std::string{buf, strlen(buf)};
+    auto packet = std::string{buf, strlen(buf)};
+    LOG_DEBUG(Debug_GDBStub, "HIO request packet: {}", packet);
+    sent_request = true;
+
+    return packet;
 }
 
 } // namespace GDBStub

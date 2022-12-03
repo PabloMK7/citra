@@ -1,3 +1,7 @@
+// Copyright 2022 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #pragma once
 
 #include "common/common_types.h"
@@ -23,10 +27,10 @@ struct PackedGdbHioRequest {
 
 void SetHioRequest(const VAddr address);
 
-bool HandleHioRequest(const u8* const command_buffer, const u32 command_length);
+bool HandleHioReply(const u8* const command_buffer, const u32 command_length);
 
 bool HasHioRequest();
 
-std::string BuildHioReply();
+std::string BuildHioRequestPacket();
 
 } // namespace GDBStub

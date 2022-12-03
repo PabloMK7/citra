@@ -107,4 +107,27 @@ void SetCpuStepFlag(bool is_step);
  * @param trap Trap no.
  */
 void SendTrap(Kernel::Thread* thread, int trap);
+
+/**
+ * Converts input hex string characters into an array of equivalent of u8 bytes.
+ *
+ * @param src Pointer to array of output hex string characters.
+ * @param len Length of src array.
+ */
+u32 HexToInt(const u8* src, std::size_t len);
+
+/**
+ * Convert a gdb-formatted hex string into a u32.
+ *
+ * @param src Pointer to hex string.
+ */
+u32 GdbHexToInt(const u8* src);
+
+/**
+ * Convert a gdb-formatted hex string into a u64.
+ *
+ * @param src Pointer to hex string.
+ */
+u64 GdbHexToLong(const u8* src);
+
 } // namespace GDBStub
