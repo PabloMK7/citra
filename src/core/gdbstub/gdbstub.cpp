@@ -638,7 +638,7 @@ static void ReadCommand() {
     memset(command_buffer, 0, sizeof(command_buffer));
 
     u8 c = ReadByte();
-    if (c == '+') {
+    if (c == GDB_STUB_ACK) {
         // ignore ack
         return;
     } else if (c == 0x03) {
@@ -828,7 +828,7 @@ static void ReadMemory() {
     u32 len =
         HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
-    LOG_DEBUG(Debug_GDBStub, "gdb: addr: {:08x} len: {:08x}\n", addr, len);
+    LOG_DEBUG(Debug_GDBStub, "ReadMemory addr: {:08x} len: {:08x}", addr, len);
 
     if (len * 2 > sizeof(reply)) {
         SendReply("E01");
@@ -845,6 +845,9 @@ static void ReadMemory() {
 
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
+
+    LOG_DEBUG(Debug_GDBStub, "ReadMemory result: {}", reply);
+
     SendReply(reinterpret_cast<char*>(reply));
 }
 
@@ -1046,21 +1049,6 @@ void HandlePacket() {
 
     LOG_DEBUG(Debug_GDBStub, "Packet: {}", command_buffer[0]);
 
-    // HACK: instead of polling DebugEvents properly via SVC, just check for
-    // whether there's a pending a request, and send it if so.
-    // ...This doesn't seem good enough for the general case
-    switch (command_buffer[0]) {
-    case 'c':
-    case 'C':
-    case 's':
-        if (HasHioRequest()) {
-            // Really, this request needs to get sent _after_ the step or continue
-            // began, but not sure how to schedule that...
-            const auto request_packet = BuildHioRequestPacket();
-            SendReply(request_packet.data());
-        }
-    }
-
     switch (command_buffer[0]) {
     case 'q':
         HandleQuery();
@@ -1077,8 +1065,8 @@ void HandlePacket() {
         return;
     case 'F':
         if (HandleHioReply(command_buffer, command_length)) {
-            Continue();
-        };
+            // TODO figure out how to "resume" the last command
+        }
         break;
     case 'g':
         ReadRegisters();
@@ -1256,6 +1244,10 @@ bool GetCpuHaltFlag() {
     return halt_loop;
 }
 
+void SetCpuHaltFlag(bool halt) {
+    halt_loop = halt;
+}
+
 bool GetCpuStepFlag() {
     return step_loop;
 }
@@ -1270,7 +1262,13 @@ void SendTrap(Kernel::Thread* thread, int trap) {
     }
 
     current_thread = thread;
-    SendSignal(thread, trap);
+
+    if (HasPendingHioRequest()) {
+        const auto request_packet = BuildHioRequestPacket();
+        SendReply(request_packet.data());
+    } else {
+        SendSignal(thread, trap);
+    }
 
     halt_loop = true;
     send_trap = false;

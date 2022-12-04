@@ -12,7 +12,14 @@ namespace {
 
 static VAddr current_hio_request_addr;
 static PackedGdbHioRequest current_hio_request;
-static std::atomic<bool> sent_request{false};
+
+enum class Status {
+    NoRequest,
+    NotSent,
+    SentWaitingReply,
+};
+
+static std::atomic<Status> request_status{Status::NoRequest};
 
 } // namespace
 
@@ -40,15 +47,23 @@ void SetHioRequest(const VAddr addr) {
         LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application");
         current_hio_request_addr = 0;
         current_hio_request = {};
+        request_status = Status::NoRequest;
     } else {
+        LOG_DEBUG(Debug_GDBStub, "HIO request initiated at 0x{:X}", addr);
         current_hio_request_addr = addr;
-        sent_request = false;
-        LOG_DEBUG(Debug_GDBStub, "HIO request initiated");
+        request_status = Status::NotSent;
+
+        // Now halt, so that no further instructions are executed until the request
+        // is processed by the client. We auto-continue after the reply comes back
+        Break();
+        SetCpuHaltFlag(true);
+        SetCpuStepFlag(false);
+        Core::GetRunningCore().ClearInstructionCache();
     }
 }
 
 bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
-    if (current_hio_request_addr == 0 || !sent_request) {
+    if (!WaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "Got HIO reply but never sent a request");
         // TODO send error reply packet?
         return false;
@@ -73,10 +88,6 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     }
 
     const auto retval_end = std::find(command_pos, command_buffer + command_length, ',');
-    if (retval_end >= command_buffer + command_length) {
-        // return GDB_ReplyErrno(ctx, EILSEQ);
-        return false;
-    }
     u64 retval = (u64)HexToInt(command_pos, retval_end - command_pos);
     command_pos = retval_end + 1;
 
@@ -86,7 +97,7 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
 
     if (*command_pos != 0) {
         u32 errno_;
-        // GDB protocol technically allows errno to have a +/- prefix but this will never happen.
+        // GDB protocol technically allows errno to have a +/- prefix but this should never happen.
         const auto errno_end = std::find(command_pos, command_buffer + command_length, ',');
         errno_ = HexToInt(command_pos, errno_end - command_pos);
         command_pos = errno_end + 1;
@@ -123,15 +134,19 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     memory.WriteBlock(*process, current_hio_request_addr, &current_hio_request,
                       sizeof(PackedGdbHioRequest));
 
-    current_hio_request = PackedGdbHioRequest{};
+    current_hio_request = {};
     current_hio_request_addr = 0;
-    sent_request = false;
+    request_status = Status::NoRequest;
 
     return true;
 }
 
-bool HasHioRequest() {
-    return current_hio_request_addr != 0 && !sent_request;
+bool HasPendingHioRequest() {
+    return current_hio_request_addr != 0 && request_status == Status::NotSent;
+}
+
+bool WaitingForHioReply() {
+    return current_hio_request_addr != 0 && request_status == Status::SentWaitingReply;
 }
 
 std::string BuildHioRequestPacket() {
@@ -163,7 +178,8 @@ std::string BuildHioRequestPacket() {
     }
 
     LOG_DEBUG(Debug_GDBStub, "HIO request packet: {}", packet.str());
-    sent_request = true;
+
+    request_status = Status::SentWaitingReply;
 
     return packet.str();
 }

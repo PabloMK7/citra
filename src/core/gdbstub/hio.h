@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "common/common_types.h"
 
 namespace GDBStub {
@@ -29,7 +31,9 @@ void SetHioRequest(const VAddr address);
 
 bool HandleHioReply(const u8* const command_buffer, const u32 command_length);
 
-bool HasHioRequest();
+bool HasPendingHioRequest();
+
+bool WaitingForHioReply();
 
 std::string BuildHioRequestPacket();
 
