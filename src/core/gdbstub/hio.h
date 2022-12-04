@@ -17,11 +17,11 @@ struct PackedGdbHioRequest {
     char param_format[8 + 1];
 
     u64 parameters[8];
-    size_t string_lengths[8];
+    u32 string_lengths[8];
 
     // Return
     s64 retval;
-    int gdb_errno;
+    s32 gdb_errno;
     bool ctrl_c;
 };
 
