@@ -354,10 +354,8 @@ void ConfigureMotionTouch::ApplyConfiguration() {
     std::string motion_engine = ui->motion_provider->currentData().toString().toStdString();
     std::string touch_engine = ui->touch_provider->currentData().toString().toStdString();
 
-    Common::ParamPackage motion_param{}, touch_param{};
-    motion_param.Set("engine", std::move(motion_engine));
-    touch_param.Set("engine", std::move(touch_engine));
-
+    Common::ParamPackage motion_param{};
+    motion_param.Set("engine", motion_engine);
     if (motion_engine == "motion_emu") {
         motion_param.Set("sensitivity", static_cast<float>(ui->motion_sensitivity->value()));
     } else if (motion_engine == "sdl") {
@@ -365,6 +363,8 @@ void ConfigureMotionTouch::ApplyConfiguration() {
         motion_param.Set("port", port);
     }
 
+    Common::ParamPackage touch_param{};
+    touch_param.Set("engine", touch_engine);
     if (touch_engine == "cemuhookudp") {
         touch_param.Set("min_x", min_x);
         touch_param.Set("min_y", min_y);
