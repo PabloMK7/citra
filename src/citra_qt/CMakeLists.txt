@@ -38,6 +38,8 @@ add_executable(citra-qt
     configuration/config.cpp
     configuration/config.h
     configuration/configure.ui
+    configuration/configuration_shared.cpp
+    configuration/configuration_shared.h
     configuration/configure_audio.cpp
     configuration/configure_audio.h
     configuration/configure_audio.ui
@@ -67,6 +69,9 @@ add_executable(citra-qt
     configuration/configure_motion_touch.cpp
     configuration/configure_motion_touch.h
     configuration/configure_motion_touch.ui
+    configuration/configure_per_game.cpp
+    configuration/configure_per_game.h
+    configuration/configure_per_game.ui
     configuration/configure_storage.cpp
     configuration/configure_storage.h
     configuration/configure_storage.ui

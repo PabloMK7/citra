@@ -94,7 +94,7 @@ public:
     virtual void UnloadComponent() = 0;
 
     /// Select the sink to use based on sink id.
-    void SetSink(const std::string& sink_id, const std::string& audio_device);
+    void SetSink(std::string_view sink_id, std::string_view audio_device);
     /// Get the current sink
     Sink& GetSink();
     /// Enable/Disable audio stretching.

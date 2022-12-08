@@ -7,7 +7,7 @@
 #include "citra_qt/configuration/configure_hotkeys.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/util/sequence_dialog/sequence_dialog.h"
-#include "core/settings.h"
+#include "common/settings.h"
 #include "ui_configure_hotkeys.h"
 
 ConfigureHotkeys::ConfigureHotkeys(QWidget* parent)

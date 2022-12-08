@@ -25,6 +25,8 @@ public:
     void RetranslateUI();
     void SetConfiguration();
 
+    void SetupPerGameUI();
+
 private:
     std::unique_ptr<Ui::ConfigureGeneral> ui;
 };

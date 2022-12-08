@@ -8,7 +8,7 @@ import org.citra.citra_emu.CitraApplication;
 public class EmulationMenuSettings {
     private static SharedPreferences mPreferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.getAppContext());
 
-    // These must match what is defined in src/core/settings.h
+    // These must match what is defined in src/common/settings.h
     public static final int LayoutOption_Default = 0;
     public static final int LayoutOption_SingleScreen = 1;
     public static final int LayoutOption_LargeScreen = 2;

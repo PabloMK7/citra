@@ -3,12 +3,12 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "common/settings.h"
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/movie.h"
-#include "core/settings.h"
 
 namespace Service::IR {
 

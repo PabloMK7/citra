@@ -9,8 +9,8 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
+#include "common/settings.h"
 #include "core/core.h"
-#include "core/settings.h"
 #include "core/telemetry_session.h"
 #include "network/network_settings.h"
 
@@ -124,35 +124,37 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
     Telemetry::AppendOSInfo(field_collection);
 
     // Log user configuration information
-    AddField(Telemetry::FieldType::UserConfig, "Audio_SinkId", Settings::values.sink_id);
+    AddField(Telemetry::FieldType::UserConfig, "Audio_SinkId", Settings::values.sink_id.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Audio_EnableAudioStretching",
-             Settings::values.enable_audio_stretching);
-    AddField(Telemetry::FieldType::UserConfig, "Core_UseCpuJit", Settings::values.use_cpu_jit);
+             Settings::values.enable_audio_stretching.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "Core_UseCpuJit",
+             Settings::values.use_cpu_jit.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_ResolutionFactor",
-             Settings::values.resolution_factor);
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_FrameLimit", Settings::values.frame_limit);
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseFrameLimitAlternate",
-             Settings::values.use_frame_limit_alternate);
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_FrameLimitAlternate",
-             Settings::values.frame_limit_alternate);
+             Settings::values.resolution_factor.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_FrameLimit",
+             Settings::values.frame_limit.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_UseHwRenderer",
-             Settings::values.use_hw_renderer);
+             Settings::values.use_hw_renderer.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_UseHwShader",
-             Settings::values.use_hw_shader);
+             Settings::values.use_hw_shader.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_ShadersAccurateMul",
-             Settings::values.shaders_accurate_mul);
+             Settings::values.shaders_accurate_mul.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_UseShaderJit",
-             Settings::values.use_shader_jit);
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseVsync", Settings::values.use_vsync_new);
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_FilterMode", Settings::values.filter_mode);
+             Settings::values.use_shader_jit.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseVsync",
+             Settings::values.use_vsync_new.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_FilterMode",
+             Settings::values.filter_mode.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_Render3d",
-             static_cast<int>(Settings::values.render_3d));
+             static_cast<int>(Settings::values.render_3d.GetValue()));
     AddField(Telemetry::FieldType::UserConfig, "Renderer_Factor3d",
-             Settings::values.factor_3d.load());
+             Settings::values.factor_3d.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_MonoRenderLeftEye",
-             Settings::values.mono_render_left_eye);
-    AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds", Settings::values.is_new_3ds);
-    AddField(Telemetry::FieldType::UserConfig, "System_RegionValue", Settings::values.region_value);
+             Settings::values.mono_render_left_eye.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds",
+             Settings::values.is_new_3ds.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "System_RegionValue",
+             Settings::values.region_value.GetValue());
 }
 
 bool TelemetrySession::SubmitTestcase() {

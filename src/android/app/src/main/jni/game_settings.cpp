@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/settings.h"
+#include "common/settings.h"
 
 namespace GameSettings {
 

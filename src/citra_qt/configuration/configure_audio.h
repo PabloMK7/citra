@@ -11,6 +11,10 @@ namespace Ui {
 class ConfigureAudio;
 }
 
+namespace ConfigurationShared {
+enum class CheckState;
+}
+
 class ConfigureAudio : public QWidget {
     Q_OBJECT
 
@@ -30,5 +34,8 @@ private:
     void SetAudioDeviceFromDeviceID();
     void SetVolumeIndicatorText(int percentage);
 
+    void SetupPerGameUI();
+
+    ConfigurationShared::CheckState audio_stretching;
     std::unique_ptr<Ui::ConfigureAudio> ui;
 };

@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -104,6 +104,7 @@
     <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
     <addaction name="action_Configure"/>
+    <addaction name="action_Configure_Current_Game"/>
     <addaction name="action_Cheats"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -239,20 +240,20 @@
    </property>
   </action>
   <action name="action_Save">
-    <property name="enabled">
-      <bool>false</bool>
-    </property>
-    <property name="text">
-      <string>Save</string>
-    </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
   </action>
   <action name="action_Load">
-    <property name="enabled">
-      <bool>false</bool>
-    </property>
-    <property name="text">
-      <string>Load</string>
-    </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load</string>
+   </property>
   </action>
   <action name="action_FAQ">
    <property name="text">
@@ -539,6 +540,14 @@
   <action name="action_Open_Citra_Folder">
    <property name="text">
     <string>Open Citra Folder</string>
+   </property>
+  </action>
+  <action name="action_Configure_Current_Game">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Configure Current Game...</string>
    </property>
   </action>
  </widget>

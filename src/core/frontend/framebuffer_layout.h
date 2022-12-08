@@ -5,7 +5,7 @@
 #pragma once
 
 #include "common/math_util.h"
-#include "core/settings.h"
+#include "common/settings.h"
 
 namespace Layout {
 

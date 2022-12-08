@@ -6,8 +6,8 @@
 #include <QFileDialog>
 #include <QUrl>
 #include "citra_qt/configuration/configure_storage.h"
+#include "common/settings.h"
 #include "core/core.h"
-#include "core/settings.h"
 #include "ui_configure_storage.h"
 
 ConfigureStorage::ConfigureStorage(QWidget* parent)
@@ -60,7 +60,7 @@ ConfigureStorage::ConfigureStorage(QWidget* parent)
 ConfigureStorage::~ConfigureStorage() = default;
 
 void ConfigureStorage::SetConfiguration() {
-    ui->nand_group->setVisible(Settings::values.use_custom_storage);
+    ui->nand_group->setVisible(Settings::values.use_custom_storage.GetValue());
     QString nand_path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
     ui->nand_dir_path->setText(nand_path);
     ui->open_nand_dir->setEnabled(!nand_path.isEmpty());
@@ -71,8 +71,8 @@ void ConfigureStorage::SetConfiguration() {
     ui->sdmc_dir_path->setText(sdmc_path);
     ui->open_sdmc_dir->setEnabled(!sdmc_path.isEmpty());
 
-    ui->toggle_virtual_sd->setChecked(Settings::values.use_virtual_sd);
-    ui->toggle_custom_storage->setChecked(Settings::values.use_custom_storage);
+    ui->toggle_virtual_sd->setChecked(Settings::values.use_virtual_sd.GetValue());
+    ui->toggle_custom_storage->setChecked(Settings::values.use_custom_storage.GetValue());
 
     ui->storage_group->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 }

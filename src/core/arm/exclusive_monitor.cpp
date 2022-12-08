@@ -4,9 +4,9 @@
 #if defined(ARCHITECTURE_x86_64) || defined(ARCHITECTURE_arm64)
 #include "core/arm/dynarmic/arm_exclusive_monitor.h"
 #endif
+#include "common/settings.h"
 #include "core/arm/exclusive_monitor.h"
 #include "core/memory.h"
-#include "core/settings.h"
 
 namespace Core {
 

@@ -99,6 +99,8 @@ add_library(common STATIC
     scm_rev.cpp
     scm_rev.h
     scope_exit.h
+    settings.cpp
+    settings.h
     serialization/atomic.h
     serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h

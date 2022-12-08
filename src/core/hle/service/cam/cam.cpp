@@ -6,6 +6,7 @@
 #include "common/archives.h"
 #include "common/bit_set.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/frontend/camera/factory.h"
@@ -19,7 +20,6 @@
 #include "core/hle/service/cam/cam_s.h"
 #include "core/hle/service/cam/cam_u.h"
 #include "core/memory.h"
-#include "core/settings.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::CAM::Module)
 

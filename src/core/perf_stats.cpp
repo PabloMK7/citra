@@ -12,9 +12,9 @@
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 #include "common/file_util.h"
+#include "common/settings.h"
 #include "core/hw/gpu.h"
 #include "core/perf_stats.h"
-#include "core/settings.h"
 
 using namespace std::chrono_literals;
 using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
@@ -136,14 +136,9 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
     }
 
     auto now = Clock::now();
-    double sleep_scale = Settings::values.frame_limit / 100.0;
+    double sleep_scale = Settings::values.frame_limit.GetValue() / 100.0;
 
-    if (Settings::values.use_frame_limit_alternate) {
-        if (Settings::values.frame_limit_alternate == 0) {
-            return;
-        }
-        sleep_scale = Settings::values.frame_limit_alternate / 100.0;
-    } else if (Settings::values.frame_limit == 0) {
+    if (Settings::values.frame_limit.GetValue() == 0) {
         return;
     }
 

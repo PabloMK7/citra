@@ -8,6 +8,7 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -28,7 +29,6 @@
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"
 #include "core/hw/aes/key.h"
-#include "core/settings.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 

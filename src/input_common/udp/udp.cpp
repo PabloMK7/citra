@@ -6,8 +6,8 @@
 #include <optional>
 #include <tuple>
 #include "common/param_package.h"
+#include "common/settings.h"
 #include "core/frontend/input.h"
-#include "core/settings.h"
 #include "input_common/udp/client.h"
 #include "input_common/udp/udp.h"
 

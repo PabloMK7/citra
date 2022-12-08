@@ -11,6 +11,7 @@
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/memory.h"
@@ -19,7 +20,6 @@
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
-#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +52,7 @@ enum N3DSMode : u8 {
 void KernelSystem::MemoryInit(u32 mem_type, u8 n3ds_mode) {
     ASSERT(mem_type != 1);
 
-    const bool is_new_3ds = Settings::values.is_new_3ds;
+    const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
     u32 reported_mem_type = mem_type;
     if (is_new_3ds) {
         if (n3ds_mode == MemoryMode::Mode6 || n3ds_mode == MemoryMode::Mode6_2) {

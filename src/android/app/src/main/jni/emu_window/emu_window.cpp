@@ -11,7 +11,7 @@
 #include <glad/glad.h>
 
 #include "common/logging/log.h"
-#include "core/settings.h"
+#include "common/settings.h"
 #include "input_common/main.h"
 #include "jni/emu_window/emu_window.h"
 #include "jni/id_cache.h"

@@ -5,6 +5,7 @@
 #include <queue>
 #include "common/logging/log.h"
 #include "common/microprofile.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
 #include "core/frontend/emu_window.h"
@@ -12,7 +13,6 @@
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
-#include "core/settings.h"
 #include "core/tracer/recorder.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/rasterizer_interface.h"
@@ -381,7 +381,7 @@ void RendererOpenGL::SwapBuffers() {
     RenderToMailbox(main_layout, render_window.mailbox, false);
 
 #ifndef ANDROID
-    if (Settings::values.layout_option == Settings::LayoutOption::SeparateWindows) {
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
@@ -618,8 +618,8 @@ void RendererOpenGL::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color
  * Initializes the OpenGL state and creates persistent objects.
  */
 void RendererOpenGL::InitOpenGLObjects() {
-    glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
-                 0.0f);
+    glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
+                 Settings::values.bg_blue.GetValue(), 0.0f);
 
     filter_sampler.Create();
     ReloadSampler();
@@ -685,12 +685,13 @@ void RendererOpenGL::ReloadShader() {
     if (GLES) {
         shader_data += fragment_shader_precision_OES;
     }
-    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph) {
-        if (Settings::values.pp_shader_name == "dubois (builtin)") {
+
+    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
+        if (Settings::values.pp_shader_name.GetValue() == "dubois (builtin)") {
             shader_data += fragment_shader_anaglyph;
         } else {
-            std::string shader_text =
-                OpenGL::GetPostProcessingShaderCode(true, Settings::values.pp_shader_name);
+            std::string shader_text = OpenGL::GetPostProcessingShaderCode(
+                true, Settings::values.pp_shader_name.GetValue());
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += fragment_shader_anaglyph;
@@ -698,13 +699,14 @@ void RendererOpenGL::ReloadShader() {
                 shader_data += shader_text;
             }
         }
-    } else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
-               Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
-        if (Settings::values.pp_shader_name == "horizontal (builtin)") {
+    } else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
+               Settings::values.render_3d.GetValue() ==
+                   Settings::StereoRenderOption::ReverseInterlaced) {
+        if (Settings::values.pp_shader_name.GetValue() == "horizontal (builtin)") {
             shader_data += fragment_shader_interlaced;
         } else {
-            std::string shader_text =
-                OpenGL::GetPostProcessingShaderCode(false, Settings::values.pp_shader_name);
+            std::string shader_text = OpenGL::GetPostProcessingShaderCode(
+                false, Settings::values.pp_shader_name.GetValue());
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += fragment_shader_interlaced;
@@ -713,11 +715,11 @@ void RendererOpenGL::ReloadShader() {
             }
         }
     } else {
-        if (Settings::values.pp_shader_name == "none (builtin)") {
+        if (Settings::values.pp_shader_name.GetValue() == "none (builtin)") {
             shader_data += fragment_shader;
         } else {
-            std::string shader_text =
-                OpenGL::GetPostProcessingShaderCode(false, Settings::values.pp_shader_name);
+            std::string shader_text = OpenGL::GetPostProcessingShaderCode(
+                false, Settings::values.pp_shader_name.GetValue());
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += fragment_shader;
@@ -731,16 +733,17 @@ void RendererOpenGL::ReloadShader() {
     state.Apply();
     uniform_modelview_matrix = glGetUniformLocation(shader.handle, "modelview_matrix");
     uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
-    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph ||
-        Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
-        Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
+    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph ||
+        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
+        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::ReverseInterlaced) {
         uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
     }
-    if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
-        Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
+    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
+        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::ReverseInterlaced) {
         GLuint uniform_reverse_interlaced =
             glGetUniformLocation(shader.handle, "reverse_interlaced");
-        if (Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced)
+        if (Settings::values.render_3d.GetValue() ==
+            Settings::StereoRenderOption::ReverseInterlaced)
             glUniform1i(uniform_reverse_interlaced, 1);
         else
             glUniform1i(uniform_reverse_interlaced, 0);
@@ -958,8 +961,8 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
 void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool flipped) {
     if (VideoCore::g_renderer_bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
-        glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
-                     0.0f);
+        glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
+                     Settings::values.bg_blue.GetValue(), 0.0f);
     }
 
     if (VideoCore::g_renderer_sampler_update_requested.exchange(false)) {
@@ -989,9 +992,9 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     glUniform1i(uniform_color_texture, 0);
 
     const bool stereo_single_screen =
-        Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph ||
-        Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
-        Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced;
+        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph ||
+        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
+        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::ReverseInterlaced;
 
     // Bind a second texture for the right eye if in Anaglyph mode
     if (stereo_single_screen) {
@@ -1001,12 +1004,13 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     glUniform1i(uniform_layer, 0);
     if (layout.top_screen_enabled) {
         if (layout.is_rotated) {
-            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+            if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
                 int eye = Settings::values.mono_render_left_eye ? 0 : 1;
                 DrawSingleScreenRotated(screen_infos[eye], (float)top_screen.left,
                                         (float)top_screen.top, (float)top_screen.GetWidth(),
                                         (float)top_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::SideBySide) {
                 DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
                                         (float)top_screen.top, (float)top_screen.GetWidth() / 2,
                                         (float)top_screen.GetHeight());
@@ -1015,7 +1019,8 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
                                         ((float)top_screen.left / 2) + ((float)layout.width / 2),
                                         (float)top_screen.top, (float)top_screen.GetWidth() / 2,
                                         (float)top_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::CardboardVR) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::CardboardVR) {
                 DrawSingleScreenRotated(screen_infos[0], layout.top_screen.left,
                                         layout.top_screen.top, layout.top_screen.GetWidth(),
                                         layout.top_screen.GetHeight());
@@ -1031,11 +1036,12 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
                     (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
             }
         } else {
-            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
-                int eye = Settings::values.mono_render_left_eye ? 0 : 1;
+            if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
+                int eye = Settings::values.mono_render_left_eye.GetValue() ? 0 : 1;
                 DrawSingleScreen(screen_infos[eye], (float)top_screen.left, (float)top_screen.top,
                                  (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::SideBySide) {
                 DrawSingleScreen(screen_infos[0], (float)top_screen.left / 2, (float)top_screen.top,
                                  (float)top_screen.GetWidth() / 2, (float)top_screen.GetHeight());
                 glUniform1i(uniform_layer, 1);
@@ -1043,7 +1049,8 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
                                  ((float)top_screen.left / 2) + ((float)layout.width / 2),
                                  (float)top_screen.top, (float)top_screen.GetWidth() / 2,
                                  (float)top_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::CardboardVR) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::CardboardVR) {
                 DrawSingleScreen(screen_infos[0], layout.top_screen.left, layout.top_screen.top,
                                  layout.top_screen.GetWidth(), layout.top_screen.GetHeight());
                 glUniform1i(uniform_layer, 1);
@@ -1061,11 +1068,12 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     glUniform1i(uniform_layer, 0);
     if (layout.bottom_screen_enabled) {
         if (layout.is_rotated) {
-            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+            if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
                 DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
                                         (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
                                         (float)bottom_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::SideBySide) {
                 DrawSingleScreenRotated(
                     screen_infos[2], (float)bottom_screen.left / 2, (float)bottom_screen.top,
                     (float)bottom_screen.GetWidth() / 2, (float)bottom_screen.GetHeight());
@@ -1074,7 +1082,8 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
                     screen_infos[2], ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
                     (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
                     (float)bottom_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::CardboardVR) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::CardboardVR) {
                 DrawSingleScreenRotated(screen_infos[2], layout.bottom_screen.left,
                                         layout.bottom_screen.top, layout.bottom_screen.GetWidth(),
                                         layout.bottom_screen.GetHeight());
@@ -1091,11 +1100,12 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
                                               (float)bottom_screen.GetHeight());
             }
         } else {
-            if (Settings::values.render_3d == Settings::StereoRenderOption::Off) {
+            if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
                 DrawSingleScreen(screen_infos[2], (float)bottom_screen.left,
                                  (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
                                  (float)bottom_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::SideBySide) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::SideBySide) {
                 DrawSingleScreen(screen_infos[2], (float)bottom_screen.left / 2,
                                  (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
                                  (float)bottom_screen.GetHeight());
@@ -1104,7 +1114,8 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
                                  ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
                                  (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
                                  (float)bottom_screen.GetHeight());
-            } else if (Settings::values.render_3d == Settings::StereoRenderOption::CardboardVR) {
+            } else if (Settings::values.render_3d.GetValue() ==
+                       Settings::StereoRenderOption::CardboardVR) {
                 DrawSingleScreen(screen_infos[2], layout.bottom_screen.left,
                                  layout.bottom_screen.top, layout.bottom_screen.GetWidth(),
                                  layout.bottom_screen.GetHeight());

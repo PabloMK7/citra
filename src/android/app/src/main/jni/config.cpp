@@ -11,10 +11,10 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/service.h"
-#include "core/settings.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "jni/camera/ndk_camera.h"
@@ -139,9 +139,9 @@ void Config::ReadValues() {
     Settings::values.factor_3d =
         static_cast<u8>(sdl2_config->GetInteger("Renderer", "factor_3d", 0));
     std::string default_shader = "none (builtin)";
-    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
+    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph)
         default_shader = "dubois (builtin)";
-    else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced)
+    else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced)
         default_shader = "horizontal (builtin)";
     Settings::values.pp_shader_name =
         sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);
@@ -186,9 +186,9 @@ void Config::ReadValues() {
         sdl2_config->GetBoolean("Utility", "preload_textures", false);
 
     // Audio
-    Settings::values.enable_dsp_lle = sdl2_config->GetBoolean("Audio", "enable_dsp_lle", false);
-    Settings::values.enable_dsp_lle_multithread =
-        sdl2_config->GetBoolean("Audio", "enable_dsp_lle_multithread", false);
+    Settings::values.audio_emulation =
+        static_cast<Settings::AudioEmulation>(sdl2_config->GetInteger(
+            "Audio", "audio_emulation", static_cast<int>(Settings::AudioEmulation::HLE)));
     Settings::values.sink_id = sdl2_config->GetString("Audio", "output_engine", "auto");
     Settings::values.enable_audio_stretching =
         sdl2_config->GetBoolean("Audio", "enable_audio_stretching", true);

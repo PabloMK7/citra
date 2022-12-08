@@ -5,11 +5,11 @@
 #include <memory>
 #include "common/archives.h"
 #include "common/file_util.h"
+#include "common/settings.h"
 #include "core/file_sys/archive_sdmcwriteonly.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
-#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace

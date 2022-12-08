@@ -87,7 +87,7 @@ void ConfigureWeb::SetConfiguration() {
         tr("Telemetry ID: 0x%1").arg(QString::number(Core::GetTelemetryId(), 16).toUpper()));
     user_verified = true;
 
-    ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence);
+    ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
 }
 
 void ConfigureWeb::ApplyConfiguration() {

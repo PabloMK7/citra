@@ -7,13 +7,13 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
 #include "common/assert.h"
+#include "common/settings.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/wait_object.h"
-#include "core/settings.h"
 
 namespace {
 

@@ -241,8 +241,8 @@ static Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams&
 
 RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
     resolution_scale_factor = VideoCore::GetResolutionScaleFactor();
-    texture_filterer = std::make_unique<TextureFilterer>(Settings::values.texture_filter_name,
-                                                         resolution_scale_factor);
+    texture_filterer = std::make_unique<TextureFilterer>(
+        Settings::values.texture_filter_name.GetValue(), resolution_scale_factor);
     format_reinterpreter = std::make_unique<FormatReinterpreterOpenGL>();
     texture_downloader_es = std::make_unique<TextureDownloaderES>(false);
 }
@@ -592,7 +592,7 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
         resolution_scale_factor != VideoCore::GetResolutionScaleFactor();
     const bool texture_filter_changed =
         VideoCore::g_texture_filter_update_requested.exchange(false) &&
-        texture_filterer->Reset(Settings::values.texture_filter_name,
+        texture_filterer->Reset(Settings::values.texture_filter_name.GetValue(),
                                 VideoCore::GetResolutionScaleFactor());
 
     if (resolution_scale_changed || texture_filter_changed) {

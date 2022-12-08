@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>408</width>
-    <height>436</height>
+    <width>524</width>
+    <height>578</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="general_group">
        <property name="title">
         <string>General</string>
        </property>
@@ -70,144 +70,152 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox_4">
+      <widget class="QGroupBox" name="emulation_group">
        <property name="title">
         <string>Emulation</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="2">
-         <widget class="QComboBox" name="region_combobox">
-          <item>
-           <property name="text">
-            <string>Auto-select</string>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QWidget" name="widget_region" native="true">
+          <layout class="QHBoxLayout" name="region_layout">
+           <property name="leftMargin">
+            <number>0</number>
            </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">JPN</string>
+           <property name="topMargin">
+            <number>0</number>
            </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">USA</string>
+           <property name="rightMargin">
+            <number>0</number>
            </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">EUR</string>
+           <property name="bottomMargin">
+            <number>0</number>
            </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">AUS</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">CHN</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">KOR</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string notr="true">TWN</string>
-           </property>
-          </item>
+           <item>
+            <widget class="QLabel" name="region_label">
+             <property name="text">
+              <string>Region:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="region_combobox">
+             <item>
+              <property name="text">
+               <string>Auto-select</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">JPN</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">USA</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">EUR</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">AUS</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">CHN</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">KOR</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string notr="true">TWN</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_emulation_speed">
-          <property name="text">
-           <string>Emulation Speed:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="toggle_alternate_speed">
-          <property name="text">
-           <string>Use Alternate Speed:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QSlider" name="frame_limit">
-          <property name="minimum">
-           <number>0</number>
-          </property>
-          <property name="maximum">
-           <number>199</number>
-          </property>
-          <property name="singleStep">
-           <number>5</number>
-          </property>
-          <property name="pageStep">
-           <number>15</number>
-          </property>
-          <property name="value">
-           <number>19</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="tickPosition">
-           <enum>QSlider::TicksBelow</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="emulation_speed_display_label">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Region:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QSlider" name="frame_limit_alternate">
-          <property name="minimum">
-           <number>0</number>
-          </property>
-          <property name="maximum">
-           <number>199</number>
-          </property>
-          <property name="singleStep">
-           <number>5</number>
-          </property>
-          <property name="pageStep">
-           <number>15</number>
-          </property>
-          <property name="value">
-           <number>39</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="tickPosition">
-           <enum>QSlider::TicksBelow</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="emulation_speed_alternate_display_label">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
+        <item>
+         <widget class="QWidget" name="emulation_speed_layout" native="true">
+          <layout class="QHBoxLayout" name="emulation_speed_layout_inner">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="emulation_speed_combo">
+             <item>
+              <property name="text">
+               <string>Use global emulation speed</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Set emulation speed:</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_emulation_speed">
+             <property name="text">
+              <string>Emulation Speed:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="frame_limit">
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>199</number>
+             </property>
+             <property name="singleStep">
+              <number>5</number>
+             </property>
+             <property name="pageStep">
+              <number>15</number>
+             </property>
+             <property name="value">
+              <number>19</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="emulation_speed_display_label">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
@@ -218,23 +226,57 @@
        <property name="title">
         <string>Screenshots</string>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Save Screenshots To</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="screenshot_dir_path">
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="change_screenshot_dir">
-          <property name="text">
-           <string>...</string>
-          </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <property name="verticalSpacing">
+         <number>0</number>
+        </property>
+        <item row="0" column="1">
+         <widget class="QWidget" name="widget_screenshot" native="true">
+          <layout class="QHBoxLayout" name="screenshot_layout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="screenshot_combo">
+             <item>
+              <property name="text">
+               <string>Use global screenshot path</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Set screenshot path:</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="screenshot_dir_label">
+             <property name="text">
+              <string>Save Screenshots To</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="screenshot_dir_path"/>
+           </item>
+           <item>
+            <widget class="QToolButton" name="change_screenshot_dir">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
@@ -270,12 +312,6 @@
   <tabstop>toggle_hide_mouse</tabstop>
   <tabstop>toggle_update_check</tabstop>
   <tabstop>toggle_auto_update</tabstop>
-  <tabstop>region_combobox</tabstop>
-  <tabstop>frame_limit</tabstop>
-  <tabstop>toggle_alternate_speed</tabstop>
-  <tabstop>frame_limit_alternate</tabstop>
-  <tabstop>screenshot_dir_path</tabstop>
-  <tabstop>change_screenshot_dir</tabstop>
   <tabstop>button_reset_defaults</tabstop>
  </tabstops>
  <resources/>

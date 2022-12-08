@@ -6,12 +6,12 @@
 #include <cstring>
 #include "common/archives.h"
 #include "common/assert.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/movie.h"
-#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@ static std::chrono::seconds GetInitTime() {
         return std::chrono::seconds(override_init_time);
     }
 
-    switch (Settings::values.init_clock) {
+    switch (Settings::values.init_clock.GetValue()) {
     case Settings::InitClock::SystemTime: {
         auto now = std::chrono::system_clock::now();
         // If the system time is in daylight saving, we give an additional hour to console time
@@ -47,7 +47,7 @@ static std::chrono::seconds GetInitTime() {
             now = now + std::chrono::hours(1);
 
         // add the offset
-        s64 init_time_offset = Settings::values.init_time_offset;
+        s64 init_time_offset = Settings::values.init_time_offset.GetValue();
         long long days_offset = init_time_offset / 86400;
         long long days_offset_in_seconds = days_offset * 86400; // h/m/s truncated
         unsigned long long seconds_offset =
@@ -58,9 +58,9 @@ static std::chrono::seconds GetInitTime() {
         return std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
     }
     case Settings::InitClock::FixedTime:
-        return std::chrono::seconds(Settings::values.init_time);
+        return std::chrono::seconds(Settings::values.init_time.GetValue());
     default:
-        UNREACHABLE_MSG("Invalid InitClock value ({})", Settings::values.init_clock);
+        UNREACHABLE_MSG("Invalid InitClock value ({})", Settings::values.init_clock.GetValue());
     }
 }
 
@@ -85,7 +85,7 @@ Handler::Handler(Core::Timing& timing) : timing(timing) {
                                              std::bind(&Handler::UpdateTimeCallback, this, _1, _2));
     timing.ScheduleEvent(0, update_time_event, 0, 0);
 
-    float slidestate = Settings::values.factor_3d / 100.0f;
+    float slidestate = Settings::values.factor_3d.GetValue() / 100.0f;
     shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
 }
 

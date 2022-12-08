@@ -25,6 +25,7 @@
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 #include "core/dumping/ffmpeg_backend.h"
 #endif
+#include "common/settings.h"
 #include "core/custom_tex_cache.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/global.h"
@@ -45,7 +46,6 @@
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/rpc/rpc_server.h"
-#include "core/settings.h"
 #include "network/network.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -365,7 +365,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     memory = std::make_unique<Memory::MemorySystem>();
 
-    timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage);
+    timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue());
 
     kernel = std::make_unique<Kernel::KernelSystem>(
         *memory, *timing, [this] { PrepareReschedule(); }, system_mode, num_cores, n3ds_mode);
@@ -395,17 +395,19 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     kernel->SetCPUs(cpu_cores);
     kernel->SetRunningCPU(cpu_cores[0].get());
 
-    if (Settings::values.enable_dsp_lle) {
-        dsp_core = std::make_unique<AudioCore::DspLle>(*memory,
-                                                       Settings::values.enable_dsp_lle_multithread);
-    } else {
+    const auto audio_emulation = Settings::values.audio_emulation.GetValue();
+    if (audio_emulation == Settings::AudioEmulation::HLE) {
         dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
+    } else {
+        const bool multithread = audio_emulation == Settings::AudioEmulation::LLEMultithreaded;
+        dsp_core = std::make_unique<AudioCore::DspLle>(*memory, multithread);
     }
 
     memory->SetDSP(*dsp_core);
 
-    dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
-    dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
+    dsp_core->SetSink(Settings::values.sink_id.GetValue(),
+                      Settings::values.audio_device_id.GetValue());
+    dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
 

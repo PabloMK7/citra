@@ -8,11 +8,9 @@
 #include "citra_qt/debugger/console.h"
 #include "citra_qt/uisettings.h"
 #include "common/file_util.h"
-#include "common/logging/backend.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
-#include "core/settings.h"
 #include "ui_configure_debug.h"
 
 ConfigureDebug::ConfigureDebug(QWidget* parent)
@@ -32,13 +30,13 @@ ConfigureDebug::ConfigureDebug(QWidget* parent)
 ConfigureDebug::~ConfigureDebug() = default;
 
 void ConfigureDebug::SetConfiguration() {
-    ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub);
-    ui->gdbport_spinbox->setEnabled(Settings::values.use_gdbstub);
-    ui->gdbport_spinbox->setValue(Settings::values.gdbstub_port);
+    ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub.GetValue());
+    ui->gdbport_spinbox->setEnabled(Settings::values.use_gdbstub.GetValue());
+    ui->gdbport_spinbox->setValue(Settings::values.gdbstub_port.GetValue());
     ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-    ui->toggle_console->setChecked(UISettings::values.show_console);
-    ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter));
-    ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit);
+    ui->toggle_console->setChecked(UISettings::values.show_console.GetValue());
+    ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
+    ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
 }
 
 void ConfigureDebug::ApplyConfiguration() {
@@ -48,7 +46,7 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
     Debugger::ToggleConsole();
     Log::Filter filter;
-    filter.ParseFilterString(Settings::values.log_filter);
+    filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Log::SetGlobalFilter(filter);
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
 }

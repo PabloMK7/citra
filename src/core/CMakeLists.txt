@@ -454,8 +454,6 @@ add_library(core STATIC
     rpc/udp_server.h
     savestate.cpp
     savestate.h
-    settings.cpp
-    settings.h
     telemetry_session.cpp
     telemetry_session.h
     tracer/citrace.h

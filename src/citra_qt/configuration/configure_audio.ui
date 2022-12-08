@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>329</width>
-    <height>344</height>
+    <width>696</width>
+    <height>527</height>
    </rect>
   </property>
   <layout class="QVBoxLayout">
@@ -18,26 +18,53 @@
      </property>
      <layout class="QVBoxLayout">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_emulation">
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="label_emulation">
-          <property name="text">
-           <string>Emulation:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="emulation_combo_box"/>
-        </item>
-       </layout>
+      <widget class="QWidget" name="widget_emulation" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_emulation">
+            <property name="leftMargin">
+            <number>0</number>
+            </property>
+            <property name="topMargin">
+            <number>0</number>
+            </property>
+            <property name="rightMargin">
+            <number>0</number>
+            </property>
+            <property name="bottomMargin">
+            <number>0</number>
+            </property>
+            <item>
+            <widget class="QLabel" name="label_emulation">
+            <property name="text">
+            <string>Emulation:</string>
+            </property>
+            </widget>
+            </item>
+            <item>
+            <widget class="QComboBox" name="emulation_combo_box">
+            <item>
+            <property name="text">
+                <string>HLE (fast)</string>
+            </property>
+            </item>
+            <item>
+            <property name="text">
+                <string>LLE (accurate)</string>
+            </property>
+            </item>
+            <item>
+            <property name="text">
+                <string>LLE multi-core</string>
+            </property>
+            </item>
+            </widget>
+            </item>
+        </layout>
+       </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout">
+       <layout class="QHBoxLayout" name="output_engine_layout">
         <item>
-         <widget class="QLabel" name="label1">
+         <widget class="QLabel" name="output_sink_label">
           <property name="text">
            <string>Output Engine</string>
           </property>
@@ -59,9 +86,9 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout">
+       <layout class="QHBoxLayout" name="audio_device_layout">
         <item>
-         <widget class="QLabel" name="label2">
+         <widget class="QLabel" name="audio_device_label">
           <property name="text">
            <string>Audio Device</string>
           </property>
@@ -73,72 +100,97 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Volume:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QSlider" name="volume_slider">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximum">
-           <number>100</number>
-          </property>
-          <property name="pageStep">
-           <number>10</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="volume_indicator">
-          <property name="minimumSize">
-           <size>
-            <width>32</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>0 %</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QWidget" name="volume_layout" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="volume_combo_box">
+           <item>
+            <property name="text">
+             <string>Use global volume</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Set volume:</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="volume_label">
+           <property name="text">
+            <string>Volume:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>30</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QSlider" name="volume_slider">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="pageStep">
+            <number>5</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="volume_indicator">
+           <property name="minimumSize">
+            <size>
+             <width>32</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>0 %</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
+    <widget class="QGroupBox" name="microphone_layout">
      <property name="title">
       <string>Microphone</string>
      </property>
@@ -146,7 +198,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="input_type_label">
           <property name="text">
            <string>Input Type</string>
           </property>
@@ -176,7 +228,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="input_device_label">
           <property name="text">
            <string>Input Device</string>
           </property>

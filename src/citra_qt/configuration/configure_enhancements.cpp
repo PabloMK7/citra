@@ -4,8 +4,8 @@
 
 #include <QColorDialog>
 #include "citra_qt/configuration/configure_enhancements.h"
+#include "common/settings.h"
 #include "core/core.h"
-#include "core/settings.h"
 #include "ui_configure_enhancements.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
@@ -21,7 +21,7 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
 
     ui->layoutBox->setEnabled(!Settings::values.custom_layout);
 
-    ui->resolution_factor_combobox->setEnabled(Settings::values.use_hw_renderer);
+    ui->resolution_factor_combobox->setEnabled(Settings::values.use_hw_renderer.GetValue());
 
     connect(ui->render_3d_combobox,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
@@ -50,27 +50,30 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
 }
 
 void ConfigureEnhancements::SetConfiguration() {
-    ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor);
-    ui->render_3d_combobox->setCurrentIndex(static_cast<int>(Settings::values.render_3d));
-    ui->factor_3d->setValue(Settings::values.factor_3d);
-    ui->mono_render_left_eye->setChecked(Settings::values.mono_render_left_eye);
-    updateShaders(Settings::values.render_3d);
-    ui->toggle_linear_filter->setChecked(Settings::values.filter_mode);
+    ui->resolution_factor_combobox->setCurrentIndex(Settings::values.resolution_factor.GetValue());
+    ui->render_3d_combobox->setCurrentIndex(
+        static_cast<int>(Settings::values.render_3d.GetValue()));
+    ui->factor_3d->setValue(Settings::values.factor_3d.GetValue());
+    ui->mono_render_left_eye->setChecked(Settings::values.mono_render_left_eye.GetValue());
+    updateShaders(Settings::values.render_3d.GetValue());
+    ui->toggle_linear_filter->setChecked(Settings::values.filter_mode.GetValue());
     int tex_filter_idx = ui->texture_filter_combobox->findText(
-        QString::fromStdString(Settings::values.texture_filter_name));
+        QString::fromStdString(Settings::values.texture_filter_name.GetValue()));
     if (tex_filter_idx == -1) {
         ui->texture_filter_combobox->setCurrentIndex(0);
     } else {
         ui->texture_filter_combobox->setCurrentIndex(tex_filter_idx);
     }
-    ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
-    ui->swap_screen->setChecked(Settings::values.swap_screen);
-    ui->upright_screen->setChecked(Settings::values.upright_screen);
-    ui->toggle_dump_textures->setChecked(Settings::values.dump_textures);
-    ui->toggle_custom_textures->setChecked(Settings::values.custom_textures);
-    ui->toggle_preload_textures->setChecked(Settings::values.preload_textures);
-    bg_color = QColor::fromRgbF(Settings::values.bg_red, Settings::values.bg_green,
-                                Settings::values.bg_blue);
+    ui->layout_combobox->setCurrentIndex(
+        static_cast<int>(Settings::values.layout_option.GetValue()));
+    ui->swap_screen->setChecked(Settings::values.swap_screen.GetValue());
+    ui->upright_screen->setChecked(Settings::values.upright_screen.GetValue());
+    ui->toggle_dump_textures->setChecked(Settings::values.dump_textures.GetValue());
+    ui->toggle_custom_textures->setChecked(Settings::values.custom_textures.GetValue());
+    ui->toggle_preload_textures->setChecked(Settings::values.preload_textures.GetValue());
+    bg_color =
+        QColor::fromRgbF(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
+                         Settings::values.bg_blue.GetValue());
     QPixmap pixmap(ui->bg_button->size());
     pixmap.fill(bg_color);
     const QIcon color_icon(pixmap);
@@ -93,7 +96,7 @@ void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_op
     for (const auto& shader : OpenGL::GetPostProcessingShaderList(
              stereo_option == Settings::StereoRenderOption::Anaglyph)) {
         ui->shader_combobox->addItem(QString::fromStdString(shader));
-        if (Settings::values.pp_shader_name == shader)
+        if (Settings::values.pp_shader_name.GetValue() == shader)
             ui->shader_combobox->setCurrentIndex(ui->shader_combobox->count() - 1);
     }
 }

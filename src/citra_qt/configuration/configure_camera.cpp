@@ -9,10 +9,10 @@
 #include <QMessageBox>
 #include <QWidget>
 #include "citra_qt/configuration/configure_camera.h"
+#include "common/settings.h"
 #include "core/frontend/camera/factory.h"
 #include "core/frontend/camera/interface.h"
 #include "core/hle/service/cam/cam.h"
-#include "core/settings.h"
 #include "ui_configure_camera.h"
 
 #if defined(__APPLE__)

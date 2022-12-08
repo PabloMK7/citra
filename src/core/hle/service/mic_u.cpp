@@ -5,6 +5,7 @@
 #include <boost/serialization/weak_ptr.hpp>
 #include "common/archives.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/frontend/mic.h"
 #include "core/hle/ipc.h"
@@ -14,7 +15,6 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic_u.h"
-#include "core/settings.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::MIC::MIC_U)
 SERIALIZE_EXPORT_IMPL(Service::MIC::MIC_U)
@@ -350,12 +350,12 @@ struct MIC_U::Impl {
 
     void CreateMic() {
         std::unique_ptr<Frontend::Mic::Interface> new_mic;
-        switch (Settings::values.mic_input_type) {
+        switch (Settings::values.mic_input_type.GetValue()) {
         case Settings::MicInputType::None:
             new_mic = std::make_unique<Frontend::Mic::NullMic>();
             break;
         case Settings::MicInputType::Real:
-            new_mic = Frontend::Mic::CreateRealMic(Settings::values.mic_input_device);
+            new_mic = Frontend::Mic::CreateRealMic(Settings::values.mic_input_device.GetValue());
             break;
         case Settings::MicInputType::Static:
             new_mic = std::make_unique<Frontend::Mic::StaticMic>();

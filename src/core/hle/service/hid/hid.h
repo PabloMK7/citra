@@ -13,10 +13,10 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/settings.h"
 #include "core/core_timing.h"
 #include "core/frontend/input.h"
 #include "core/hle/service/service.h"
-#include "core/settings.h"
 
 namespace Core {
 class System;

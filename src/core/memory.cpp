@@ -12,6 +12,7 @@
 #include "common/atomic_ops.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
@@ -20,7 +21,6 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
 #include "core/memory.h"
-#include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
@@ -289,7 +289,7 @@ private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version) {
-        bool save_n3ds_ram = Settings::values.is_new_3ds;
+        bool save_n3ds_ram = Settings::values.is_new_3ds.GetValue();
         ar& save_n3ds_ram;
         ar& boost::serialization::make_binary_object(vram.get(), Memory::VRAM_SIZE);
         ar& boost::serialization::make_binary_object(

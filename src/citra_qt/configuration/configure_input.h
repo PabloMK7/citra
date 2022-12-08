@@ -13,7 +13,7 @@
 #include <QKeySequence>
 #include <QWidget>
 #include "common/param_package.h"
-#include "core/settings.h"
+#include "common/settings.h"
 #include "input_common/main.h"
 
 class QKeyEvent;

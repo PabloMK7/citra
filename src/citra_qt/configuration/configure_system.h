@@ -12,6 +12,10 @@ namespace Ui {
 class ConfigureSystem;
 }
 
+namespace ConfigurationShared {
+enum class CheckState;
+}
+
 namespace Service {
 namespace CFG {
 class Module;
@@ -37,6 +41,9 @@ private:
     void UpdateInitTime(int init_clock);
     void RefreshConsoleID();
 
+    void SetupPerGameUI();
+
+    ConfigurationShared::CheckState is_new_3ds;
     std::unique_ptr<Ui::ConfigureSystem> ui;
     bool enabled = false;
 

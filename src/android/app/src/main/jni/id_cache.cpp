@@ -6,7 +6,7 @@
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
-#include "core/settings.h"
+#include "common/settings.h"
 #include "jni/applets/mii_selector.h"
 #include "jni/applets/swkbd.h"
 #include "jni/camera/still_image_camera.h"
@@ -156,7 +156,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 
     // Initialize Logger
     Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter);
+    log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Log::SetGlobalFilter(log_filter);
     Log::AddBackend(std::make_unique<Log::LogcatBackend>());
     FileUtil::CreateFullPath(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));

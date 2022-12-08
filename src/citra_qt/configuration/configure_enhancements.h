@@ -6,9 +6,10 @@
 
 #include <memory>
 #include <QWidget>
+#include "common/common_types.h"
 
 namespace Settings {
-enum class StereoRenderOption;
+enum class StereoRenderOption : u32;
 }
 
 namespace Ui {

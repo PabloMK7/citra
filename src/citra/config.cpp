@@ -13,9 +13,9 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "common/settings.h"
 #include "core/frontend/mic.h"
 #include "core/hle/service/service.h"
-#include "core/settings.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "network/network_settings.h"
@@ -128,10 +128,6 @@ void Config::ReadValues() {
         sdl2_config->GetBoolean("Renderer", "use_disk_shader_cache", true);
     Settings::values.frame_limit =
         static_cast<u16>(sdl2_config->GetInteger("Renderer", "frame_limit", 100));
-    Settings::values.use_frame_limit_alternate =
-        sdl2_config->GetBoolean("Renderer", "use_frame_limit_alternate", false);
-    Settings::values.frame_limit_alternate =
-        static_cast<u16>(sdl2_config->GetInteger("Renderer", "frame_limit_alternate", 200));
     Settings::values.use_vsync_new =
         static_cast<u16>(sdl2_config->GetInteger("Renderer", "use_vsync_new", 1));
     Settings::values.texture_filter_name =
@@ -144,10 +140,11 @@ void Config::ReadValues() {
     Settings::values.factor_3d =
         static_cast<u8>(sdl2_config->GetInteger("Renderer", "factor_3d", 0));
     std::string default_shader = "none (builtin)";
-    if (Settings::values.render_3d == Settings::StereoRenderOption::Anaglyph)
+    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph)
         default_shader = "dubois (builtin)";
-    else if (Settings::values.render_3d == Settings::StereoRenderOption::Interlaced ||
-             Settings::values.render_3d == Settings::StereoRenderOption::ReverseInterlaced)
+    else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
+             Settings::values.render_3d.GetValue() ==
+                 Settings::StereoRenderOption::ReverseInterlaced)
         default_shader = "horizontal (builtin)";
     Settings::values.pp_shader_name =
         sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);
@@ -188,9 +185,8 @@ void Config::ReadValues() {
         sdl2_config->GetBoolean("Utility", "preload_textures", false);
 
     // Audio
-    Settings::values.enable_dsp_lle = sdl2_config->GetBoolean("Audio", "enable_dsp_lle", false);
-    Settings::values.enable_dsp_lle_multithread =
-        sdl2_config->GetBoolean("Audio", "enable_dsp_lle_multithread", false);
+    Settings::values.audio_emulation = static_cast<Settings::AudioEmulation>(
+        sdl2_config->GetInteger("Audio", "audio_emulation", 0));
     Settings::values.sink_id = sdl2_config->GetString("Audio", "output_engine", "auto");
     Settings::values.enable_audio_stretching =
         sdl2_config->GetBoolean("Audio", "enable_audio_stretching", true);

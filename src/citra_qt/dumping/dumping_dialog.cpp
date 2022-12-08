@@ -7,7 +7,7 @@
 #include "citra_qt/dumping/dumping_dialog.h"
 #include "citra_qt/dumping/options_dialog.h"
 #include "citra_qt/uisettings.h"
-#include "core/settings.h"
+#include "common/settings.h"
 #include "ui_dumping_dialog.h"
 
 DumpingDialog::DumpingDialog(QWidget* parent)

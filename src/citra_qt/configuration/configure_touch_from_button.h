@@ -9,7 +9,7 @@
 #include <optional>
 #include <vector>
 #include <QDialog>
-#include "core/settings.h"
+#include "common/settings.h"
 
 class QItemSelection;
 class QModelIndex;

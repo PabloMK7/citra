@@ -11,6 +11,10 @@ namespace Ui {
 class ConfigureGraphics;
 }
 
+namespace ConfigurationShared {
+enum class CheckState;
+}
+
 class ConfigureGraphics : public QWidget {
     Q_OBJECT
 
@@ -24,6 +28,14 @@ public:
 
     void UpdateBackgroundColorButton(const QColor& color);
 
+    void SetupPerGameUI();
+
+    ConfigurationShared::CheckState use_hw_renderer;
+    ConfigurationShared::CheckState use_hw_shader;
+    ConfigurationShared::CheckState separable_shader;
+    ConfigurationShared::CheckState shaders_accurate_mul;
+    ConfigurationShared::CheckState use_disk_shader_cache;
+    ConfigurationShared::CheckState use_vsync_new;
     std::unique_ptr<Ui::ConfigureGraphics> ui;
     QColor bg_color;
 };

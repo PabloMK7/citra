@@ -13,7 +13,7 @@
 #include <QString>
 #include <QStringList>
 #include <QVector>
-#include "common/common_types.h"
+#include "common/settings.h"
 
 namespace UISettings {
 
@@ -40,13 +40,13 @@ struct GameDir {
     }
 };
 
-enum class GameListIconSize {
+enum class GameListIconSize : u32 {
     NoIcon,    ///< Do not display icons
     SmallIcon, ///< Display a small (24x24) icon
     LargeIcon, ///< Display a large (48x48) icon
 };
 
-enum class GameListText {
+enum class GameListText : s32 {
     NoText = -1,   ///< No text
     FileName,      ///< Display the file name of the entry
     FullPath,      ///< Display the full path of the entry
@@ -65,40 +65,41 @@ struct Values {
     QByteArray gamelist_header_state;
 
     QByteArray microprofile_geometry;
-    bool microprofile_visible;
+    Settings::Setting<bool> microprofile_visible{false, "microProfileDialogVisible"};
 
-    bool single_window_mode;
-    bool fullscreen;
-    bool display_titlebar;
-    bool show_filter_bar;
-    bool show_status_bar;
+    Settings::Setting<bool> single_window_mode{true, "singleWindowMode"};
+    Settings::Setting<bool> fullscreen{false, "fullscreen"};
+    Settings::Setting<bool> display_titlebar{true, "displayTitleBars"};
+    Settings::Setting<bool> show_filter_bar{true, "showFilterBar"};
+    Settings::Setting<bool> show_status_bar{true, "showStatusBar"};
 
-    bool confirm_before_closing;
-    bool first_start;
-    bool pause_when_in_background;
-    bool hide_mouse;
+    Settings::Setting<bool> confirm_before_closing{true, "confirmClose"};
+    Settings::Setting<bool> first_start{true, "firstStart"};
+    Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
+    Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
 
     bool updater_found;
-    bool update_on_close;
-    bool check_for_update_on_start;
+    Settings::Setting<bool> update_on_close{false, "update_on_close"};
+    Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
 
     // Discord RPC
-    bool enable_discord_presence;
+    Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
 
     // Game List
-    GameListIconSize game_list_icon_size;
-    GameListText game_list_row_1;
-    GameListText game_list_row_2;
-    bool game_list_hide_no_icon;
-    bool game_list_single_line_mode;
+    Settings::Setting<GameListIconSize> game_list_icon_size{GameListIconSize::LargeIcon,
+                                                            "iconSize"};
+    Settings::Setting<GameListText> game_list_row_1{GameListText::TitleName, "row1"};
+    Settings::Setting<GameListText> game_list_row_2{GameListText::FileName, "row2"};
+    Settings::Setting<bool> game_list_hide_no_icon{false, "hideNoIcon"};
+    Settings::Setting<bool> game_list_single_line_mode{false, "singleLineMode"};
 
-    u16 screenshot_resolution_factor;
+    Settings::Setting<u16> screenshot_resolution_factor{0, "screenshot_resolution_factor"};
+    Settings::SwitchableSetting<std::string> screenshot_path{"", "screenshotPath"};
 
     QString roms_path;
     QString symbols_path;
     QString movie_record_path;
     QString movie_playback_path;
-    QString screenshot_path;
     QString video_dumping_path;
     QString game_dir_deprecated;
     bool game_dir_deprecated_deepscan;
@@ -111,7 +112,7 @@ struct Values {
     // Shortcut name <Shortcut, context>
     std::vector<Shortcut> shortcuts;
 
-    uint32_t callout_flags;
+    Settings::Setting<u32> callout_flags{0, "calloutFlags"};
 
     // multiplayer settings
     QString nickname;
@@ -127,7 +128,7 @@ struct Values {
     std::pair<std::vector<std::string>, std::vector<std::string>> ban_list;
 
     // logging
-    bool show_console;
+    Settings::Setting<bool> show_console{false, "showConsole"};
 };
 
 extern Values values;

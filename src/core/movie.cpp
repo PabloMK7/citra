@@ -601,8 +601,8 @@ void Movie::PrepareForPlayback(const std::string& movie_file) {
 }
 
 void Movie::PrepareForRecording() {
-    if (Settings::values.init_clock == Settings::InitClock::SystemTime) {
-        long long init_time_offset = Settings::values.init_time_offset;
+    if (Settings::values.init_clock.GetValue() == Settings::InitClock::SystemTime) {
+        long long init_time_offset = Settings::values.init_time_offset.GetValue();
         long long days_offset = init_time_offset / 86400;
         unsigned long long seconds_offset =
             std::abs(init_time_offset) - std::abs(days_offset * 86400);
@@ -610,7 +610,7 @@ void Movie::PrepareForRecording() {
         init_time =
             Common::Timer::GetTimeSinceJan1970().count() + seconds_offset + (days_offset * 86400);
     } else {
-        init_time = Settings::values.init_time;
+        init_time = Settings::values.init_time.GetValue();
     }
 }
 

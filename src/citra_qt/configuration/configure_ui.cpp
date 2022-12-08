@@ -46,12 +46,14 @@ void ConfigureUi::SetConfiguration() {
     ui->language_combobox->setCurrentIndex(
         ui->language_combobox->findData(UISettings::values.language));
     ui->icon_size_combobox->setCurrentIndex(
-        static_cast<int>(UISettings::values.game_list_icon_size));
-    ui->row_1_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.game_list_row_1));
-    ui->row_2_text_combobox->setCurrentIndex(static_cast<int>(UISettings::values.game_list_row_2) +
-                                             1);
-    ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon);
-    ui->toggle_single_line_mode->setChecked(UISettings::values.game_list_single_line_mode);
+        static_cast<int>(UISettings::values.game_list_icon_size.GetValue()));
+    ui->row_1_text_combobox->setCurrentIndex(
+        static_cast<int>(UISettings::values.game_list_row_1.GetValue()));
+    ui->row_2_text_combobox->setCurrentIndex(
+        static_cast<int>(UISettings::values.game_list_row_2.GetValue()) + 1);
+    ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon.GetValue());
+    ui->toggle_single_line_mode->setChecked(
+        UISettings::values.game_list_single_line_mode.GetValue());
 }
 
 void ConfigureUi::ApplyConfiguration() {

@@ -218,8 +218,9 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
 
     // TODO(xperia64): How the 3D Slider is updated by the HID module needs to be RE'd
     // and possibly moved to its own Core::Timing event.
-    mem->pad.sliderstate_3d = (Settings::values.factor_3d / 100.0f);
-    system.Kernel().GetSharedPageHandler().Set3DSlider(Settings::values.factor_3d / 100.0f);
+    mem->pad.sliderstate_3d = (Settings::values.factor_3d.GetValue() / 100.0f);
+    system.Kernel().GetSharedPageHandler().Set3DSlider(Settings::values.factor_3d.GetValue() /
+                                                       100.0f);
 
     // Reschedule recurrent event
     system.CoreTiming().ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
@@ -406,7 +407,7 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
 void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp{ctx, 0x17, 0, 0};
 
-    const u8 volume = static_cast<u8>(0x3F * Settings::values.volume);
+    const u8 volume = static_cast<u8>(0x3F * Settings::values.volume.GetValue());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);

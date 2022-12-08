@@ -7,7 +7,7 @@
 #include <QLayout>
 #include <QScrollArea>
 #include "citra_qt/debugger/lle_service_modules.h"
-#include "core/settings.h"
+#include "common/settings.h"
 
 LLEServiceModulesWidget::LLEServiceModulesWidget(QWidget* parent)
     : QDockWidget(tr("Toggle LLE Service Modules"), parent) {

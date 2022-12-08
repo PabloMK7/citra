@@ -7,11 +7,11 @@
 #include "common/archives.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/path_parser.h"
-#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
