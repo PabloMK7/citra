@@ -80,6 +80,9 @@ add_library(core STATIC
     file_sys/patch.h
     file_sys/path_parser.cpp
     file_sys/path_parser.h
+    file_sys/plugin_3gx.cpp
+    file_sys/plugin_3gx.h
+    file_sys/plugin_3gx_bootloader.h
     file_sys/romfs_reader.cpp
     file_sys/romfs_reader.h
     file_sys/savedata_archive.cpp
@@ -365,6 +368,8 @@ add_library(core STATIC
     hle/service/nwm/uds_connection.h
     hle/service/nwm/uds_data.cpp
     hle/service/nwm/uds_data.h
+    hle/service/plgldr/plgldr.cpp
+    hle/service/plgldr/plgldr.h
     hle/service/pm/pm.cpp
     hle/service/pm/pm.h
     hle/service/pm/pm_app.cpp

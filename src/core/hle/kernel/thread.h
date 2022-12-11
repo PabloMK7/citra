@@ -148,6 +148,7 @@ private:
 
     std::shared_ptr<Thread> current_thread;
     Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
+    std::deque<Thread*> unscheduled_ready_queue;
     std::unordered_map<u64, Thread*> wakeup_callback_table;
 
     /// Event type for the thread wake up event
@@ -289,6 +290,7 @@ public:
 
     u32 thread_id;
 
+    bool can_schedule;
     ThreadStatus status;
     VAddr entry_point;
     VAddr stack_top;

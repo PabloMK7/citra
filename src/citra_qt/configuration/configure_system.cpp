@@ -308,6 +308,8 @@ void ConfigureSystem::SetConfiguration() {
     ui->clock_display_label->setText(
         QStringLiteral("%1%").arg(Settings::values.cpu_clock_percentage.GetValue()));
     ui->toggle_new_3ds->setChecked(Settings::values.is_new_3ds.GetValue());
+    ui->plugin_loader->setChecked(Settings::values.plugin_loader_enabled.GetValue());
+    ui->allow_plugin_loader->setChecked(Settings::values.allow_plugin_loader.GetValue());
 }
 
 void ConfigureSystem::ReadSystemSettings() {
@@ -411,6 +413,10 @@ void ConfigureSystem::ApplyConfiguration() {
         }
 
         Settings::values.init_time_offset = time_offset_days + time_offset_time;
+        Settings::values.is_new_3ds = ui->toggle_new_3ds->isChecked();
+
+        Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
+        Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
     }
 
     ConfigurationShared::ApplyPerGameSetting(
@@ -520,6 +526,13 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->edit_init_time_offset_days->setVisible(false);
     ui->edit_init_time_offset_time->setVisible(false);
     ui->button_regenerate_console_id->setVisible(false);
+    // Apps can change the state of the plugin loader, so plugins load
+    // to a chainloaded app with specific parameters. Don't allow
+    // the plugin loader state to be configured per-game as it may
+    // mess things up.
+    ui->label_plugin_loader->setVisible(false);
+    ui->plugin_loader->setVisible(false);
+    ui->allow_plugin_loader->setVisible(false);
 
     connect(ui->clock_speed_combo, qOverload<int>(&QComboBox::activated), this, [this](int index) {
         ui->slider_clock_speed->setEnabled(index == 1);

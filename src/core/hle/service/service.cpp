@@ -41,6 +41,7 @@
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nim/nim.h"
 #include "core/hle/service/nwm/nwm.h"
+#include "core/hle/service/plgldr/plgldr.h"
 #include "core/hle/service/pm/pm.h"
 #include "core/hle/service/ps/ps_ps.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -55,7 +56,7 @@
 
 namespace Service {
 
-const std::array<ServiceModuleInfo, 40> service_module_map{
+const std::array<ServiceModuleInfo, 41> service_module_map{
     {{"FS", 0x00040130'00001102, FS::InstallInterfaces},
      {"PM", 0x00040130'00001202, PM::InstallInterfaces},
      {"LDR", 0x00040130'00003702, LDR::InstallInterfaces},
@@ -94,6 +95,7 @@ const std::array<ServiceModuleInfo, 40> service_module_map{
      {"SOC", 0x00040130'00002E02, SOC::InstallInterfaces},
      {"SSL", 0x00040130'00002F02, SSL::InstallInterfaces},
      {"PS", 0x00040130'00003102, PS::InstallInterfaces},
+     {"PLGLDR", 0x00040130'00006902, PLGLDR::InstallInterfaces},
      // no HLE implementation
      {"CDC", 0x00040130'00001802, nullptr},
      {"GPIO", 0x00040130'00001B02, nullptr},

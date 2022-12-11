@@ -340,6 +340,27 @@
           </property>
          </widget>
         </item>
+        <item row="13" column="0">
+          <widget class="QLabel" name="label_plugin_loader">
+            <property name="text">
+              <string>3GX Plugin Loader:</string>
+            </property>
+          </widget>
+        </item>
+        <item row="13" column="1">
+          <widget class="QCheckBox" name="plugin_loader">
+            <property name="text">
+              <string>Enable 3GX plugin loader</string>
+            </property>
+          </widget>
+        </item>
+        <item row="14" column="1">
+          <widget class="QCheckBox" name="allow_plugin_loader">
+            <property name="text">
+              <string>Allow games to change plugin loader state</string>
+            </property>
+          </widget>
+        </item>
        </layout>
       </widget>
      </item>

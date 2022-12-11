@@ -61,6 +61,14 @@ struct MemoryRegionInfo {
     std::optional<u32> LinearAllocate(u32 size);
 
     /**
+     * Allocates memory from the linear heap with only size specified.
+     * @param size size of the memory to allocate.
+     * @returns the address offset to the found block, searching from the end of FCRAM; null if
+     * there is no enough space
+     */
+    std::optional<u32> RLinearAllocate(u32 size);
+
+    /**
      * Frees one segment of memory. The memory must have been allocated as heap or linear heap.
      * @param offset the region address offset to the beginning of FCRAM.
      * @param size the size of the region to free.

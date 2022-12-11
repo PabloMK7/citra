@@ -20,6 +20,8 @@
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
+#include "core/hle/service/plgldr/plgldr.h"
+#include "core/hw/hw.h"
 #include "core/memory.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -63,12 +65,16 @@ private:
         if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
             return &new_linear_heap[(addr - NEW_LINEAR_HEAP_VADDR) / CITRA_PAGE_SIZE];
         }
+        if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END) {
+            return &plugin_fb[(addr - PLUGIN_3GX_FB_VADDR) / CITRA_PAGE_SIZE];
+        }
         return nullptr;
     }
 
     std::array<bool, VRAM_SIZE / CITRA_PAGE_SIZE> vram{};
     std::array<bool, LINEAR_HEAP_SIZE / CITRA_PAGE_SIZE> linear_heap{};
     std::array<bool, NEW_LINEAR_HEAP_SIZE / CITRA_PAGE_SIZE> new_linear_heap{};
+    std::array<bool, PLUGIN_3GX_FB_SIZE / CITRA_PAGE_SIZE> plugin_fb{};
 
     static_assert(sizeof(bool) == 1);
     friend class boost::serialization::access;
@@ -77,6 +83,7 @@ private:
         ar& vram;
         ar& linear_heap;
         ar& new_linear_heap;
+        ar& plugin_fb;
     }
 };
 
@@ -280,6 +287,10 @@ public:
         if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
             return {vram_mem, addr - VRAM_VADDR};
         }
+        if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END) {
+            return {fcram_mem, addr - PLUGIN_3GX_FB_VADDR +
+                                   Service::PLGLDR::PLG_LDR::GetPluginFBAddr() - FCRAM_PADDR};
+        }
 
         UNREACHABLE();
         return MemoryRef{};
@@ -436,6 +447,22 @@ T MemorySystem::Read(const VAddr vaddr) {
         return value;
     }
 
+    // Custom Luma3ds mapping
+    // Is there a more efficient way to do this?
+    if (vaddr & (1 << 31)) {
+        PAddr paddr = (vaddr & ~(1 << 31));
+        if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) { // Check FCRAM region
+            T value;
+            std::memcpy(&value, GetFCRAMPointer(paddr - Memory::FCRAM_PADDR), sizeof(T));
+            return value;
+        } else if ((paddr & 0xF0000000) == 0x10000000 &&
+                   paddr >= Memory::IO_AREA_PADDR) { // Check MMIO region
+            T ret;
+            HW::Read<T>(ret, static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR + 0x1EC00000);
+            return ret;
+        }
+    }
+
     PageType type = impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
@@ -471,6 +498,20 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         std::memcpy(&page_pointer[vaddr & CITRA_PAGE_MASK], &data, sizeof(T));
         return;
+    }
+
+    // Custom Luma3ds mapping
+    // Is there a more efficient way to do this?
+    if (vaddr & (1 << 31)) {
+        PAddr paddr = (vaddr & ~(1 << 31));
+        if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) { // Check FCRAM region
+            std::memcpy(GetFCRAMPointer(paddr - Memory::FCRAM_PADDR), &data, sizeof(T));
+            return;
+        } else if ((paddr & 0xF0000000) == 0x10000000 &&
+                   paddr >= Memory::IO_AREA_PADDR) { // Check MMIO region
+            HW::Write<T>(static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR + 0x1EC00000, data);
+            return;
+        }
     }
 
     PageType type = impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS];
@@ -657,6 +698,10 @@ static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return {addr - VRAM_PADDR + VRAM_VADDR};
     }
+    if (addr >= Service::PLGLDR::PLG_LDR::GetPluginFBAddr() &&
+        addr < Service::PLGLDR::PLG_LDR::GetPluginFBAddr() + PLUGIN_3GX_FB_SIZE) {
+        return {addr - Service::PLGLDR::PLG_LDR::GetPluginFBAddr() + PLUGIN_3GX_FB_VADDR};
+    }
     if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
         return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
     }
@@ -796,6 +841,9 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
     CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
     CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
+    if (Service::PLGLDR::PLG_LDR::GetPluginFBAddr())
+        CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END,
+                    Service::PLGLDR::PLG_LDR::GetPluginFBAddr());
 }
 
 u8 MemorySystem::Read8(const VAddr addr) {

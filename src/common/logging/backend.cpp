@@ -226,6 +226,7 @@ void DebuggerBackend::Write(const Entry& entry) {
     SUB(Service, IR)                                                                               \
     SUB(Service, Y2R)                                                                              \
     SUB(Service, PS)                                                                               \
+    SUB(Service, PLGLDR)                                                                           \
     CLS(HW)                                                                                        \
     SUB(HW, Memory)                                                                                \
     SUB(HW, LCD)                                                                                   \

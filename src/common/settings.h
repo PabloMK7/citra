@@ -432,6 +432,8 @@ struct Values {
     Setting<InitClock> init_clock{InitClock::SystemTime, "init_clock"};
     Setting<u64> init_time{946681277ULL, "init_time"};
     Setting<s64> init_time_offset{0, "init_time_offset"};
+    Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
+    Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
 
     // Renderer
     Setting<bool> use_gles{false, "use_gles"};

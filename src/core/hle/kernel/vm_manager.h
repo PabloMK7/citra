@@ -131,7 +131,7 @@ public:
     std::map<VAddr, VirtualMemoryArea> vma_map;
     using VMAHandle = decltype(vma_map)::const_iterator;
 
-    explicit VMManager(Memory::MemorySystem& memory);
+    explicit VMManager(Memory::MemorySystem& memory, Kernel::Process& proc);
     ~VMManager();
 
     /// Clears the address space map, re-initializing with a single free area.
@@ -254,6 +254,7 @@ private:
     void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
 
     Memory::MemorySystem& memory;
+    Kernel::Process& process;
 
     // When locked, ChangeMemoryState calls will be ignored, other modification calls will hit an
     // assert. VMManager locks itself after deserialization.

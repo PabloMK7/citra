@@ -8,6 +8,8 @@
 #include "common/microprofile.h"
 #include "common/swap.h"
 #include "core/core.h"
+#include "core/file_sys/plugin_3gx.h"
+#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/shared_page.h"
@@ -68,6 +70,9 @@ static PAddr VirtualToPhysicalAddress(VAddr addr) {
     }
     if (addr >= Memory::NEW_LINEAR_HEAP_VADDR && addr <= Memory::NEW_LINEAR_HEAP_VADDR_END) {
         return addr - Memory::NEW_LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
+    }
+    if (addr >= Memory::PLUGIN_3GX_FB_VADDR && addr <= Memory::PLUGIN_3GX_FB_VADDR_END) {
+        return addr - Memory::PLUGIN_3GX_FB_VADDR + Service::PLGLDR::PLG_LDR::GetPluginFBAddr();
     }
 
     LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x{:08X}", addr);

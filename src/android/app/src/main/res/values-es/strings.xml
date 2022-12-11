@@ -37,6 +37,10 @@
     <string name="init_time_description">Si el \"Tipo del reloj del sistema\" está en \"Reloj emulado\", ésto cambia la fecha y hora de inicio.</string>
     <string name="emulated_region">Región emulada</string>
     <string name="emulated_language">Idioma emulado</string>
+    <string name="plugin_loader">Activar \"3GX Plugin Loader\"</string>
+    <string name="plugin_loader_description">Carga \"3GX plugins\" de la SD emulada si están disponibles.</string>
+    <string name="allow_plugin_loader">Permiter que apps cambien el estado del \"plugin loader\"</string>
+    <string name="allow_plugin_loader_description">Permite a las aplicaciones homebrew activar el \"plugin loader\" incluso si está desactivado.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>

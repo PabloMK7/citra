@@ -82,6 +82,20 @@ enum class MemoryRegion : u16 {
     BASE = 3,
 };
 
+union CoreVersion {
+    CoreVersion(u32 version) : raw(version) {}
+    CoreVersion(u32 major_ver, u32 minor_ver, u32 revision_ver) {
+        revision.Assign(revision_ver);
+        minor.Assign(minor_ver);
+        major.Assign(major_ver);
+    }
+
+    u32 raw;
+    BitField<8, 8, u32> revision;
+    BitField<16, 8, u32> minor;
+    BitField<24, 8, u32> major;
+};
+
 class KernelSystem {
 public:
     explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,

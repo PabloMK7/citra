@@ -38,6 +38,8 @@
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/lock.h"
 #include "core/hle/result.h"
+#include "core/hle/service/plgldr/plgldr.h"
+#include "core/hle/service/service.h"
 
 namespace Kernel {
 
@@ -65,6 +67,15 @@ struct MemoryInfo {
     u32 state;
 };
 
+/// Values accepted by svcKernelSetState, only the known values are listed
+/// (the behaviour of other values are known, but their purpose is unclear and irrelevant).
+enum class KernelState {
+    /**
+     * Reboots the console
+     */
+    KERNEL_STATE_REBOOT = 7,
+};
+
 struct PageInfo {
     u32 flags;
 };
@@ -86,10 +97,143 @@ enum class SystemInfoType {
      */
     KERNEL_SPAWNED_PIDS = 26,
     /**
+     * Check if the current system is a new 3DS. This parameter is not available on real systems,
+     * but can be used by homebrew applications.
+     */
+    NEW_3DS_INFO = 0x10001,
+    /**
      * Gets citra related information. This parameter is not available on real systems,
      * but can be used by homebrew applications to get some emulator info.
      */
     CITRA_INFORMATION = 0x20000,
+};
+
+enum class ProcessInfoType {
+    /**
+     * Returns the amount of private (code, data, regular heap) and shared memory used by the
+     * process + total supervisor-mode stack size + page-rounded size of the external handle table.
+     * This is the amount of physical memory the process is using, minus TLS, main thread stack and
+     * linear memory.
+     */
+    PRIVATE_AND_SHARED_USED_MEMORY = 0,
+
+    /**
+     * Returns the amount of <related unused field> + total supervisor-mode stack size +
+     * page-rounded size of the external handle table.
+     */
+    SUPERVISOR_AND_HANDLE_USED_MEMORY = 1,
+
+    /**
+     * Returns the amount of private (code, data, heap) memory used by the process + total
+     * supervisor-mode stack size + page-rounded size of the external handle table.
+     */
+    PRIVATE_SHARED_SUPERVISOR_HANDLE_USED_MEMORY = 2,
+
+    /**
+     * Returns the amount of <related unused field> + total supervisor-mode stack size +
+     * page-rounded size of the external handle table.
+     */
+    SUPERVISOR_AND_HANDLE_USED_MEMORY2 = 3,
+
+    /**
+     * Returns the amount of handles in use by the process.
+     */
+    USED_HANDLE_COUNT = 4,
+
+    /**
+     * Returns the highest count of handles that have been open at once by the process.
+     */
+    HIGHEST_HANDLE_COUNT = 5,
+
+    /**
+     * Returns *(u32*)(KProcess+0x234) which is always 0.
+     */
+    KPROCESS_0X234 = 6,
+
+    /**
+     * Returns the number of threads of the process.
+     */
+    THREAD_COUNT = 7,
+
+    /**
+     * Returns the maximum number of threads which can be opened by this process (always 0).
+     */
+    MAX_THREAD_AMOUNT = 8,
+
+    /**
+     * Originally this only returned 0xD8E007ED. Now with v11.3 this returns the memregion for the
+     * process: out low u32 = KProcess "Kernel flags from the exheader kernel descriptors" & 0xF00
+     * (memory region flag). High out u32 = 0.
+     */
+    MEMORY_REGION_FLAGS = 19,
+
+    /**
+     * Low u32 = (0x20000000 - <LINEAR virtual-memory base for this process>). That is, the output
+     * value is the value which can be added to LINEAR memory vaddrs for converting to
+     * physical-memory addrs.
+     */
+    LINEAR_BASE_ADDR_OFFSET = 20,
+
+    /**
+     * Returns the VA -> PA conversion offset for the QTM static mem block reserved in the exheader
+     * (0x800000), otherwise 0 (+ error 0xE0E01BF4) if it doesn't exist.
+     */
+    QTM_MEMORY_BLOCK_CONVERSION_OFFSET = 21,
+
+    /**
+     * Returns the base VA of the QTM static mem block reserved in the exheader, otherwise 0 (+
+     * error 0xE0E01BF4) if it doesn't exist.
+     */
+    QTM_MEMORY_ADDRESS = 22,
+
+    /**
+     * Returns the size of the QTM static mem block reserved in the exheader, otherwise 0 (+ error
+     * 0xE0E01BF4) if it doesn't exist.
+     */
+    QTM_MEMORY_SIZE = 23,
+
+    // Custom values used by Luma3DS and 3GX plugins
+
+    /**
+     * Returns the process name.
+     */
+    LUMA_CUSTOM_PROCESS_NAME = 0x10000,
+
+    /**
+     * Returns the process title ID.
+     */
+    LUMA_CUSTOM_PROCESS_TITLE_ID = 0x10001,
+
+    /**
+     * Returns the codeset text size.
+     */
+    LUMA_CUSTOM_TEXT_SIZE = 0x10002,
+
+    /**
+     * Returns the codeset rodata size.
+     */
+    LUMA_CUSTOM_RODATA_SIZE = 0x10003,
+
+    /**
+     * Returns the codeset data size.
+     */
+    LUMA_CUSTOM_DATA_SIZE = 0x10004,
+
+    /**
+     * Returns the codeset text vaddr.
+     */
+    LUMA_CUSTOM_TEXT_ADDR = 0x10005,
+
+    /**
+     * Returns the codeset rodata vaddr.
+     */
+    LUMA_CUSTOM_RODATA_ADDR = 0x10006,
+
+    /**
+     * Returns the codeset data vaddr.
+     */
+    LUMA_CUSTOM_DATA_ADDR = 0x10007,
+
 };
 
 /**
@@ -119,6 +263,73 @@ enum class SystemInfoCitraInformation {
     BUILD_GIT_BRANCH_PART2 = 31,      // Git branch last 7 characters.
     BUILD_GIT_DESCRIPTION_PART1 = 40, // Git description (commit) first 7 characters.
     BUILD_GIT_DESCRIPTION_PART2 = 41, // Git description (commit) last 7 characters.
+};
+
+/**
+ * Accepted by the custom svcControlProcess.
+ */
+enum class ControlProcessOP {
+    /**
+     * List all handles of the process, varg3 can be either 0 to fetch
+     * all handles, or token of the type to fetch s32 count =
+     * svcControlProcess(handle, PROCESSOP_GET_ALL_HANDLES,
+     * (u32)&outBuf, 0) Returns how many handles were found
+     */
+    PROCESSOP_GET_ALL_HANDLES = 0,
+
+    /**
+     * Set the whole memory of the process with rwx access (in the mmu
+     * table only) svcControlProcess(handle, PROCESSOP_SET_MMU_TO_RWX,
+     * 0, 0)
+     */
+    PROCESSOP_SET_MMU_TO_RWX,
+
+    /**
+     * Get the handle of an event which will be signaled
+     * each time the memory layout of this process changes
+     * svcControlProcess(handle,
+     * PROCESSOP_GET_ON_MEMORY_CHANGE_EVENT,
+     * &eventHandleOut, 0)
+     */
+    PROCESSOP_GET_ON_MEMORY_CHANGE_EVENT,
+
+    /**
+     * Set a flag to be signaled when the process will be exited
+     * svcControlProcess(handle, PROCESSOP_SIGNAL_ON_EXIT, 0, 0)
+     */
+    PROCESSOP_SIGNAL_ON_EXIT,
+
+    /**
+     * Get the physical address of the VAddr within the process
+     * svcControlProcess(handle, PROCESSOP_GET_PA_FROM_VA, (u32)&PAOut,
+     * VAddr)
+     */
+    PROCESSOP_GET_PA_FROM_VA,
+
+    /*
+     * Lock / Unlock the process's threads
+     * svcControlProcess(handle, PROCESSOP_SCHEDULE_THREADS, lock,
+     * threadPredicate) lock: 0 to unlock threads, any other value to
+     * lock threads threadPredicate: can be NULL or a funcptr to a
+     * predicate (typedef bool (*ThreadPredicate)(KThread *thread);)
+     * The predicate must return true to operate on the thread
+     */
+    PROCESSOP_SCHEDULE_THREADS,
+
+    /*
+     * Lock / Unlock the process's threads
+     * svcControlProcess(handle, PROCESSOP_SCHEDULE_THREADS, lock,
+     * tlsmagicexclude) lock: 0 to unlock threads, any other value to
+     * lock threads tlsmagicexclude: do not lock threads with this tls magic
+     * value
+     */
+    PROCESSOP_SCHEDULE_THREADS_WITHOUT_TLS_MAGIC,
+
+    /**
+     * Disable any thread creation restrictions, such as priority value
+     * or allowed cores
+     */
+    PROCESSOP_DISABLE_CREATE_THREAD_RESTRICTIONS,
 };
 
 class SVC : public SVCWrapper<SVC> {
@@ -174,6 +385,7 @@ private:
     ResultCode GetThreadId(u32* thread_id, Handle handle);
     ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count);
     ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count);
+    ResultCode KernelSetState(u32 kernel_state, u32 varg1, u32 varg2);
     ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_info,
                                   Handle process_handle, u32 addr);
     ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 addr);
@@ -196,6 +408,14 @@ private:
     ResultCode AcceptSession(Handle* out_server_session, Handle server_port_handle);
     ResultCode GetSystemInfo(s64* out, u32 type, s32 param);
     ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type);
+    ResultCode GetThreadInfo(s64* out, Handle thread_handle, u32 type);
+    ResultCode InvalidateInstructionCacheRange(u32 addr, u32 size);
+    ResultCode InvalidateEntireInstructionCache();
+    u32 ConvertVaToPa(u32 addr);
+    ResultCode MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
+                                  Handle src_process_handle, u32 src_address, u32 size);
+    ResultCode UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size);
+    ResultCode ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32 varg3);
 
     struct FunctionDef {
         using Func = void (SVC::*)();
@@ -205,7 +425,7 @@ private:
         const char* name;
     };
 
-    static const std::array<FunctionDef, 126> SVC_Table;
+    static const std::array<FunctionDef, 180> SVC_Table;
     static const FunctionDef* GetSVCInfo(u32 func_num);
 };
 
@@ -318,6 +538,8 @@ void SVC::ExitProcess() {
 
         thread->Stop();
     }
+
+    current_process->Exit();
 
     // Kill the current thread
     kernel.GetCurrentThreadManager().GetCurrentThread()->Stop();
@@ -920,7 +1142,8 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
     std::shared_ptr<Process> current_process = kernel.GetCurrentProcess();
 
     std::shared_ptr<ResourceLimit>& resource_limit = current_process->resource_limit;
-    if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority) {
+    if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority &&
+        !current_process->no_thread_restrictions) {
         return ERR_NOT_AUTHORIZED;
     }
 
@@ -945,7 +1168,7 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
         // process, exheader kernel-flags bitmask 0x2000 must be set (otherwise error 0xD9001BEA is
         // returned). When processorid==0x3 and the process is not a BASE mem-region process, error
         // 0xD9001BEA is returned. These are the only restriction checks done by the kernel for
-        // processorid.
+        // processorid. If this is implemented, make sure to check process->no_thread_restrictions.
         break;
     default:
         ASSERT_MSG(false, "Unsupported thread processor ID: {}", processor_id);
@@ -1107,6 +1330,22 @@ ResultCode SVC::ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
 
     CASCADE_RESULT(*count, semaphore->Release(release_count));
 
+    return RESULT_SUCCESS;
+}
+
+/// Sets the kernel state
+ResultCode SVC::KernelSetState(u32 kernel_state, u32 varg1, u32 varg2) {
+    switch (static_cast<KernelState>(kernel_state)) {
+
+    // This triggers a hardware reboot on real console, since this doesn't make sense
+    // on emulator, we shutdown instead.
+    case KernelState::KERNEL_STATE_REBOOT:
+        system.RequestShutdown();
+        break;
+    default:
+        LOG_ERROR(Kernel_SVC, "Unknown KernelSetState state={} varg1={} varg2={}", kernel_state,
+                  varg1, varg2);
+    }
     return RESULT_SUCCESS;
 }
 
@@ -1434,6 +1673,12 @@ ResultCode SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
         *out = 5;
         break;
+    case SystemInfoType::NEW_3DS_INFO:
+        // The actual subtypes are not implemented, homebrew just check
+        // this doesn't return an error in n3ds to know the system type
+        LOG_ERROR(Kernel_SVC, "unimplemented GetSystemInfo type=65537 param={}", param);
+        *out = 0;
+        return (system.GetNumCores() == 4) ? RESULT_SUCCESS : ERR_INVALID_ENUM_VALUE;
     case SystemInfoType::CITRA_INFORMATION:
         switch ((SystemInfoCitraInformation)param) {
         case SystemInfoCitraInformation::IS_CITRA:
@@ -1501,9 +1746,9 @@ ResultCode SVC::GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     if (process == nullptr)
         return ERR_INVALID_HANDLE;
 
-    switch (type) {
-    case 0:
-    case 2:
+    switch (static_cast<ProcessInfoType>(type)) {
+    case ProcessInfoType::PRIVATE_AND_SHARED_USED_MEMORY:
+    case ProcessInfoType::PRIVATE_SHARED_SUPERVISOR_HANDLE_USED_MEMORY:
         // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
         *out = process->memory_used;
@@ -1512,25 +1757,53 @@ ResultCode SVC::GetProcessInfo(s64* out, Handle process_handle, u32 type) {
             return ERR_MISALIGNED_SIZE;
         }
         break;
-    case 1:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
+    case ProcessInfoType::SUPERVISOR_AND_HANDLE_USED_MEMORY:
+    case ProcessInfoType::SUPERVISOR_AND_HANDLE_USED_MEMORY2:
+    case ProcessInfoType::USED_HANDLE_COUNT:
+    case ProcessInfoType::HIGHEST_HANDLE_COUNT:
+    case ProcessInfoType::KPROCESS_0X234:
+    case ProcessInfoType::THREAD_COUNT:
+    case ProcessInfoType::MAX_THREAD_AMOUNT:
         // These are valid, but not implemented yet
         LOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo type={}", type);
         break;
-    case 20:
+    case ProcessInfoType::LINEAR_BASE_ADDR_OFFSET:
         *out = Memory::FCRAM_PADDR - process->GetLinearHeapAreaAddress();
         break;
-    case 21:
-    case 22:
-    case 23:
+    case ProcessInfoType::QTM_MEMORY_BLOCK_CONVERSION_OFFSET:
+    case ProcessInfoType::QTM_MEMORY_ADDRESS:
+    case ProcessInfoType::QTM_MEMORY_SIZE:
         // These return a different error value than higher invalid values
         LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type={}", type);
         return ERR_NOT_IMPLEMENTED;
+    // Here start the custom ones, taken from Luma3DS for 3GX support
+    case ProcessInfoType::LUMA_CUSTOM_PROCESS_NAME:
+        // Get process name
+        strncpy(reinterpret_cast<char*>(out), process->codeset->GetName().c_str(), 8);
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_PROCESS_TITLE_ID:
+        // Get process TID
+        *out = process->codeset->program_id;
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_TEXT_SIZE:
+        *out = process->codeset->CodeSegment().size;
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_RODATA_SIZE:
+        *out = process->codeset->RODataSegment().size;
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_DATA_SIZE:
+        *out = process->codeset->DataSegment().size;
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_TEXT_ADDR:
+        *out = process->codeset->CodeSegment().addr;
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_RODATA_ADDR:
+        *out = process->codeset->RODataSegment().addr;
+        break;
+    case ProcessInfoType::LUMA_CUSTOM_DATA_ADDR:
+        *out = process->codeset->DataSegment().addr;
+        break;
+
     default:
         LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type={}", type);
         return ERR_INVALID_ENUM_VALUE;
@@ -1539,7 +1812,179 @@ ResultCode SVC::GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     return RESULT_SUCCESS;
 }
 
-const std::array<SVC::FunctionDef, 126> SVC::SVC_Table{{
+ResultCode SVC::GetThreadInfo(s64* out, Handle thread_handle, u32 type) {
+    LOG_TRACE(Kernel_SVC, "called thread=0x{:08X} type={}", thread_handle, type);
+
+    std::shared_ptr<Thread> thread =
+        kernel.GetCurrentProcess()->handle_table.Get<Thread>(thread_handle);
+    if (thread == nullptr) {
+        return ERR_INVALID_HANDLE;
+    }
+
+    switch (type) {
+    case 0x10000:
+        *out = static_cast<s64>(thread->GetTLSAddress());
+        break;
+    default:
+        LOG_ERROR(Kernel_SVC, "unknown GetThreadInfo type={}", type);
+        return ERR_INVALID_ENUM_VALUE;
+    }
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode SVC::InvalidateInstructionCacheRange(u32 addr, u32 size) {
+    Core::GetRunningCore().InvalidateCacheRange(addr, size);
+    return RESULT_SUCCESS;
+}
+
+ResultCode SVC::InvalidateEntireInstructionCache() {
+    Core::GetRunningCore().ClearInstructionCache();
+    return RESULT_SUCCESS;
+}
+
+u32 SVC::ConvertVaToPa(u32 addr) {
+    auto vma = kernel.GetCurrentProcess()->vm_manager.FindVMA(addr);
+    if (vma == kernel.GetCurrentProcess()->vm_manager.vma_map.end() ||
+        vma->second.type != VMAType::BackingMemory) {
+        return 0;
+    }
+    return kernel.memory.GetFCRAMOffset(vma->second.backing_memory.GetPtr() + addr -
+                                        vma->second.base) +
+           Memory::FCRAM_PADDR;
+}
+
+ResultCode SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
+                                   Handle src_process_handle, u32 src_address, u32 size) {
+    std::shared_ptr<Process> dst_process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(dst_process_handle);
+    std::shared_ptr<Process> src_process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(src_process_handle);
+
+    if (dst_process == nullptr || src_process == nullptr) {
+        return ERR_INVALID_HANDLE;
+    }
+
+    if (size & 0xFFF) {
+        size = (size & ~0xFFF) + Memory::CITRA_PAGE_SIZE;
+    }
+
+    // Only linear memory supported
+    auto vma = src_process->vm_manager.FindVMA(src_address);
+    if (vma == src_process->vm_manager.vma_map.end() ||
+        vma->second.type != VMAType::BackingMemory ||
+        vma->second.meminfo_state != MemoryState::Continuous) {
+        return ERR_INVALID_ADDRESS;
+    }
+
+    u32 offset = src_address - vma->second.base;
+    if (offset + size > vma->second.size) {
+        return ERR_INVALID_ADDRESS;
+    }
+
+    auto vma_res = dst_process->vm_manager.MapBackingMemory(
+        dst_address,
+        memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
+                           kernel.memory.GetFCRAMPointer(0)),
+        size, Kernel::MemoryState::Continuous);
+
+    if (!vma_res.Succeeded()) {
+        return ERR_INVALID_ADDRESS_STATE;
+    }
+    dst_process->vm_manager.Reprotect(vma_res.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode SVC::UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size) {
+    std::shared_ptr<Process> dst_process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process);
+
+    if (dst_process == nullptr) {
+        return ERR_INVALID_HANDLE;
+    }
+
+    if (size & 0xFFF) {
+        size = (size & ~0xFFF) + Memory::CITRA_PAGE_SIZE;
+    }
+
+    // Only linear memory supported
+    auto vma = dst_process->vm_manager.FindVMA(dst_address);
+    if (vma == dst_process->vm_manager.vma_map.end() ||
+        vma->second.type != VMAType::BackingMemory ||
+        vma->second.meminfo_state != MemoryState::Continuous) {
+        return ERR_INVALID_ADDRESS;
+    }
+
+    dst_process->vm_manager.UnmapRange(dst_address, size);
+    return RESULT_SUCCESS;
+}
+
+ResultCode SVC::ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32 varg3) {
+    std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+
+    if (process == nullptr) {
+        return ERR_INVALID_HANDLE;
+    }
+
+    switch (static_cast<ControlProcessOP>(process_OP)) {
+    case ControlProcessOP::PROCESSOP_SET_MMU_TO_RWX: {
+        for (auto it = process->vm_manager.vma_map.cbegin();
+             it != process->vm_manager.vma_map.cend(); it++) {
+            if (it->second.meminfo_state != MemoryState::Free)
+                process->vm_manager.Reprotect(it, Kernel::VMAPermission::ReadWriteExecute);
+        }
+        return RESULT_SUCCESS;
+    }
+    case ControlProcessOP::PROCESSOP_GET_ON_MEMORY_CHANGE_EVENT: {
+        auto plgldr = Service::PLGLDR::GetService(system);
+        if (!plgldr) {
+            return ERR_NOT_FOUND;
+        }
+
+        ResultVal<Handle> out = plgldr->GetMemoryChangedHandle(kernel);
+        if (out.Failed()) {
+            return out.Code();
+        }
+
+        memory.Write32(varg2, out.Unwrap());
+        return RESULT_SUCCESS;
+    }
+    case ControlProcessOP::PROCESSOP_SCHEDULE_THREADS_WITHOUT_TLS_MAGIC: {
+        for (u32 i = 0; i < system.GetNumCores(); i++) {
+            auto& thread_list = kernel.GetThreadManager(i).GetThreadList();
+            for (auto& thread : thread_list) {
+                if (thread->owner_process.lock() != process) {
+                    continue;
+                }
+                if (memory.Read32(thread.get()->GetTLSAddress()) == varg3) {
+                    continue;
+                }
+                if (thread.get()->thread_id ==
+                    kernel.GetCurrentThreadManager().GetCurrentThread()->thread_id) {
+                    continue;
+                }
+                thread.get()->can_schedule = !varg2;
+            }
+        }
+        return RESULT_SUCCESS;
+    }
+    case ControlProcessOP::PROCESSOP_DISABLE_CREATE_THREAD_RESTRICTIONS: {
+        process->no_thread_restrictions = varg2 == 1;
+        return RESULT_SUCCESS;
+    }
+    case ControlProcessOP::PROCESSOP_GET_ALL_HANDLES:
+    case ControlProcessOP::PROCESSOP_GET_PA_FROM_VA:
+    case ControlProcessOP::PROCESSOP_SIGNAL_ON_EXIT:
+    case ControlProcessOP::PROCESSOP_SCHEDULE_THREADS:
+    default:
+        LOG_ERROR(Kernel_SVC, "Unknown ControlProcessOp type={}", process_OP);
+        return ERR_NOT_IMPLEMENTED;
+    }
+}
+
+const std::array<SVC::FunctionDef, 180> SVC::SVC_Table{{
     {0x00, nullptr, "Unknown"},
     {0x01, &SVC::Wrap<&SVC::ControlMemory>, "ControlMemory"},
     {0x02, &SVC::Wrap<&SVC::QueryMemory>, "QueryMemory"},
@@ -1584,7 +2029,7 @@ const std::array<SVC::FunctionDef, 126> SVC::SVC_Table{{
     {0x29, nullptr, "GetHandleInfo"},
     {0x2A, &SVC::Wrap<&SVC::GetSystemInfo>, "GetSystemInfo"},
     {0x2B, &SVC::Wrap<&SVC::GetProcessInfo>, "GetProcessInfo"},
-    {0x2C, nullptr, "GetThreadInfo"},
+    {0x2C, &SVC::Wrap<&SVC::GetThreadInfo>, "GetThreadInfo"},
     {0x2D, &SVC::Wrap<&SVC::ConnectToPort>, "ConnectToPort"},
     {0x2E, nullptr, "SendSyncRequest1"},
     {0x2F, nullptr, "SendSyncRequest2"},
@@ -1664,8 +2109,63 @@ const std::array<SVC::FunctionDef, 126> SVC::SVC_Table{{
     {0x79, nullptr, "SetResourceLimitValues"},
     {0x7A, nullptr, "AddCodeSegment"},
     {0x7B, nullptr, "Backdoor"},
-    {0x7C, nullptr, "KernelSetState"},
+    {0x7C, &SVC::Wrap<&SVC::KernelSetState>, "KernelSetState"},
     {0x7D, &SVC::Wrap<&SVC::QueryProcessMemory>, "QueryProcessMemory"},
+    // Custom SVCs
+    {0x7E, nullptr, "Unused"},
+    {0x7F, nullptr, "Unused"},
+    {0x80, nullptr, "CustomBackdoor"},
+    {0x81, nullptr, "Unused"},
+    {0x82, nullptr, "Unused"},
+    {0x83, nullptr, "Unused"},
+    {0x84, nullptr, "Unused"},
+    {0x85, nullptr, "Unused"},
+    {0x86, nullptr, "Unused"},
+    {0x87, nullptr, "Unused"},
+    {0x88, nullptr, "Unused"},
+    {0x89, nullptr, "Unused"},
+    {0x8A, nullptr, "Unused"},
+    {0x8B, nullptr, "Unused"},
+    {0x8C, nullptr, "Unused"},
+    {0x8D, nullptr, "Unused"},
+    {0x8E, nullptr, "Unused"},
+    {0x8F, nullptr, "Unused"},
+    {0x90, &SVC::Wrap<&SVC::ConvertVaToPa>, "ConvertVaToPa"},
+    {0x91, nullptr, "FlushDataCacheRange"},
+    {0x92, nullptr, "FlushEntireDataCache"},
+    {0x93, &SVC::Wrap<&SVC::InvalidateInstructionCacheRange>, "InvalidateInstructionCacheRange"},
+    {0x94, &SVC::Wrap<&SVC::InvalidateEntireInstructionCache>, "InvalidateEntireInstructionCache"},
+    {0x95, nullptr, "Unused"},
+    {0x96, nullptr, "Unused"},
+    {0x97, nullptr, "Unused"},
+    {0x98, nullptr, "Unused"},
+    {0x99, nullptr, "Unused"},
+    {0x9A, nullptr, "Unused"},
+    {0x9B, nullptr, "Unused"},
+    {0x9C, nullptr, "Unused"},
+    {0x9D, nullptr, "Unused"},
+    {0x9E, nullptr, "Unused"},
+    {0x9F, nullptr, "Unused"},
+    {0xA0, &SVC::Wrap<&SVC::MapProcessMemoryEx>, "MapProcessMemoryEx"},
+    {0xA1, &SVC::Wrap<&SVC::UnmapProcessMemoryEx>, "UnmapProcessMemoryEx"},
+    {0xA2, nullptr, "ControlMemoryEx"},
+    {0xA3, nullptr, "ControlMemoryUnsafe"},
+    {0xA4, nullptr, "Unused"},
+    {0xA5, nullptr, "Unused"},
+    {0xA6, nullptr, "Unused"},
+    {0xA7, nullptr, "Unused"},
+    {0xA8, nullptr, "Unused"},
+    {0xA9, nullptr, "Unused"},
+    {0xAA, nullptr, "Unused"},
+    {0xAB, nullptr, "Unused"},
+    {0xAC, nullptr, "Unused"},
+    {0xAD, nullptr, "Unused"},
+    {0xAE, nullptr, "Unused"},
+    {0xAF, nullptr, "Unused"},
+    {0xB0, nullptr, "ControlService"},
+    {0xB1, nullptr, "CopyHandle"},
+    {0xB2, nullptr, "TranslateHandle"},
+    {0xB3, &SVC::Wrap<&SVC::ControlProcess>, "ControlProcess"},
 }};
 
 const SVC::FunctionDef* SVC::GetSVCInfo(u32 func_num) {

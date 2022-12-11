@@ -4,18 +4,24 @@
 
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include "core/core_timing.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
 
 TEST_CASE("Memory Basics", "[kernel][memory]") {
     auto mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
     MemoryRef block{mem};
+    Core::Timing timing(1, 100);
     Memory::MemorySystem memory;
+    Kernel::KernelSystem kernel(
+        memory, timing, [] {}, 0, 1, 0);
+    Kernel::Process process(kernel);
     SECTION("mapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>(memory);
+        auto manager = std::make_unique<Kernel::VMManager>(memory, process);
         auto result =
             manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
                                       Kernel::MemoryState::Private);
@@ -31,7 +37,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
     SECTION("unmapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>(memory);
+        auto manager = std::make_unique<Kernel::VMManager>(memory, process);
         auto result =
             manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
                                       Kernel::MemoryState::Private);
@@ -49,7 +55,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
     SECTION("changing memory permissions") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>(memory);
+        auto manager = std::make_unique<Kernel::VMManager>(memory, process);
         auto result =
             manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
                                       Kernel::MemoryState::Private);
@@ -69,7 +75,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
     SECTION("changing memory state") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>(memory);
+        auto manager = std::make_unique<Kernel::VMManager>(memory, process);
         auto result =
             manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
                                       Kernel::MemoryState::Private);

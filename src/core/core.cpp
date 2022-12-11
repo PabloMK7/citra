@@ -473,6 +473,10 @@ const Kernel::KernelSystem& System::Kernel() const {
     return *kernel;
 }
 
+bool System::KernelRunning() {
+    return kernel != nullptr;
+}
+
 Timing& System::CoreTiming() {
     return *timing;
 }

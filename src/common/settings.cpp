@@ -14,6 +14,7 @@
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_user.h"
 #include "core/hle/service/mic_u.h"
+#include "core/hle/service/plgldr/plgldr.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
@@ -70,6 +71,9 @@ void Apply() {
 
         Service::MIC::ReloadMic(system);
     }
+
+    Service::PLGLDR::PLG_LDR::SetEnabled(values.plugin_loader_enabled.GetValue());
+    Service::PLGLDR::PLG_LDR::SetAllowGameChangeState(values.allow_plugin_loader.GetValue());
 }
 
 void LogSettings() {
@@ -136,6 +140,8 @@ void LogSettings() {
     }
     log_setting("System_IsNew3ds", values.is_new_3ds.GetValue());
     log_setting("System_RegionValue", values.region_value.GetValue());
+    log_setting("System_PluginLoader", values.plugin_loader_enabled.GetValue());
+    log_setting("System_PluginLoaderAllowed", values.allow_plugin_loader.GetValue());
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
 }

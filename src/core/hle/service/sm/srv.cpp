@@ -243,10 +243,18 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
     u32 notification_id = rp.Pop<u32>();
     u8 flags = rp.Pop<u8>();
 
+    // Handle notification 0x203 in HLE, as this one may be used by homebrew to power off the
+    // console. Normally, this is handled by NS. If notification handling is properly implemented,
+    // this piece of code should be removed, and handled by subscribing from NS instead.
+    if (notification_id == 0x203) {
+        Core::System::GetInstance().RequestShutdown();
+    } else {
+        LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}",
+                    notification_id, flags);
+    }
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}", notification_id,
-                flags);
 }
 
 void SRV::RegisterService(Kernel::HLERequestContext& ctx) {

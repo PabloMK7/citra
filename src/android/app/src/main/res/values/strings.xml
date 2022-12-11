@@ -51,6 +51,10 @@
     <string name="init_time_description">If the \"System clock type\" setting is set to \"Simulated clock\", this changes the fixed date and time to start at.</string>
     <string name="emulated_region">Emulated region</string>
     <string name="emulated_language">Emulated language</string>
+    <string name="plugin_loader">Enable 3GX Plugin Loader</string>
+    <string name="plugin_loader_description">Loads 3GX plugins from the emulated SD if they are available.</string>
+    <string name="allow_plugin_loader">Allow apps to change plugin loader state</string>
+    <string name="allow_plugin_loader_description">Allow homebrew apps to enable the plugin loader even when it is disabled.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>

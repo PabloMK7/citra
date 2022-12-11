@@ -234,6 +234,9 @@ public:
     /// Gets a const reference to the kernel
     [[nodiscard]] const Kernel::KernelSystem& Kernel() const;
 
+    /// Get kernel is running
+    [[nodiscard]] bool KernelRunning();
+
     /// Gets a reference to the timing system
     [[nodiscard]] Timing& CoreTiming();
 

@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <iterator>
 #include "common/assert.h"
+#include "core/core.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/vm_manager.h"
+#include "core/hle/service/plgldr/plgldr.h"
 #include "core/memory.h"
 #include "core/mmio.h"
 
@@ -37,8 +39,8 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     return true;
 }
 
-VMManager::VMManager(Memory::MemorySystem& memory)
-    : page_table(std::make_shared<Memory::PageTable>()), memory(memory) {
+VMManager::VMManager(Memory::MemorySystem& memory, Kernel::Process& proc)
+    : page_table(std::make_shared<Memory::PageTable>()), memory(memory), process(proc) {
     Reset();
 }
 
@@ -383,6 +385,10 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         memory.MapIoRegion(*page_table, vma.base, vma.size, vma.mmio_handler);
         break;
     }
+
+    auto plgldr = Service::PLGLDR::GetService(Core::System::GetInstance());
+    if (plgldr)
+        plgldr->OnMemoryChanged(process, Core::System::GetInstance().Kernel());
 }
 
 ResultVal<std::vector<std::pair<MemoryRef, u32>>> VMManager::GetBackingBlocksForRange(VAddr address,

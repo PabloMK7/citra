@@ -229,6 +229,10 @@ void Config::ReadValues() {
                 std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
                 .count();
     }
+    Settings::values.plugin_loader_enabled =
+        sdl2_config->GetBoolean("System", "plugin_loader", false);
+    Settings::values.allow_plugin_loader =
+        sdl2_config->GetBoolean("System", "allow_plugin_loader", true);
 
     // Camera
     using namespace Service::CAM;

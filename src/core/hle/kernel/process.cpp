@@ -12,12 +12,15 @@
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 #include "common/serialization/boost_vector.hpp"
+#include "core/core.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/vm_manager.h"
+#include "core/hle/service/plgldr/plgldr.h"
+#include "core/loader/loader.h"
 #include "core/memory.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Process)
@@ -36,6 +39,7 @@ void Process::serialize(Archive& ar, const unsigned int file_version) {
     ar&(boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<
                                                      AddressMapping, 8, 0, true>>&)address_mappings;
     ar& flags.raw;
+    ar& no_thread_restrictions;
     ar& kernel_version;
     ar& ideal_processor;
     ar& status;
@@ -186,10 +190,22 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
         kernel.HandleSpecialMapping(vm_manager, mapping);
     }
 
+    auto plgldr = Service::PLGLDR::GetService(Core::System::GetInstance());
+    if (plgldr) {
+        plgldr->OnProcessRun(*this, kernel);
+    }
+
     status = ProcessStatus::Running;
 
     vm_manager.LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, SharedFrom(this));
+}
+
+void Process::Exit() {
+    auto plgldr = Service::PLGLDR::GetService(Core::System::GetInstance());
+    if (plgldr) {
+        plgldr->OnProcessExit(*this, kernel);
+    }
 }
 
 VAddr Process::GetLinearHeapAreaAddress() const {
@@ -449,7 +465,7 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
 }
 
 Kernel::Process::Process(KernelSystem& kernel)
-    : Object(kernel), handle_table(kernel), vm_manager(kernel.memory), kernel(kernel) {
+    : Object(kernel), handle_table(kernel), vm_manager(kernel.memory, *this), kernel(kernel) {
     kernel.memory.RegisterPageTable(vm_manager.page_table);
 }
 Kernel::Process::~Process() {

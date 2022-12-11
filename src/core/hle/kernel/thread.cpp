@@ -72,8 +72,8 @@ void Thread::Acquire(Thread* thread) {
 }
 
 Thread::Thread(KernelSystem& kernel, u32 core_id)
-    : WaitObject(kernel), context(kernel.GetThreadManager(core_id).NewContext()), core_id(core_id),
-      thread_manager(kernel.GetThreadManager(core_id)) {}
+    : WaitObject(kernel), context(kernel.GetThreadManager(core_id).NewContext()),
+      can_schedule(true), core_id(core_id), thread_manager(kernel.GetThreadManager(core_id)) {}
 Thread::~Thread() {}
 
 Thread* ThreadManager::GetCurrentThread() const {
@@ -164,15 +164,29 @@ Thread* ThreadManager::PopNextReadyThread() {
     Thread* thread = GetCurrentThread();
 
     if (thread && thread->status == ThreadStatus::Running) {
-        // We have to do better than the current thread.
-        // This call returns null when that's not possible.
-        next = ready_queue.pop_first_better(thread->current_priority);
-        if (!next) {
-            // Otherwise just keep going with the current thread
-            next = thread;
-        }
+        do {
+            // We have to do better than the current thread.
+            // This call returns null when that's not possible.
+            next = ready_queue.pop_first_better(thread->current_priority);
+            if (!next) {
+                // Otherwise just keep going with the current thread
+                next = thread;
+                break;
+            } else if (!next->can_schedule)
+                unscheduled_ready_queue.push_back(next);
+        } while (!next->can_schedule);
     } else {
-        next = ready_queue.pop_first();
+        do {
+            next = ready_queue.pop_first();
+            if (next && !next->can_schedule)
+                unscheduled_ready_queue.push_back(next);
+        } while (next && !next->can_schedule);
+    }
+
+    while (!unscheduled_ready_queue.empty()) {
+        auto t = std::move(unscheduled_ready_queue.back());
+        ready_queue.push_back(t->current_priority, t);
+        unscheduled_ready_queue.pop_back();
     }
 
     return next;

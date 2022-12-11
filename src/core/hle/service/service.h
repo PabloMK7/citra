@@ -194,7 +194,7 @@ struct ServiceModuleInfo {
     std::function<void(Core::System&)> init_function;
 };
 
-extern const std::array<ServiceModuleInfo, 40> service_module_map;
+extern const std::array<ServiceModuleInfo, 41> service_module_map;
 
 } // namespace Service
 

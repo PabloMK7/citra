@@ -281,6 +281,11 @@ init_clock =
 # Note: 3DS can only handle times later then Jan 1 2000
 init_time =
 
+# Plugin loader state, if enabled plugins will be loaded from the SD card.
+# You can also set if homebrew apps are allowed to enable the plugin loader
+plugin_loader =
+allow_plugin_loader =
+
 [Camera]
 # Which camera engine to use for the right outer camera
 # blank: a dummy camera that always returns black image

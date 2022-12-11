@@ -245,6 +245,25 @@ std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
     return std::nullopt;
 }
 
+std::optional<u32> MemoryRegionInfo::RLinearAllocate(u32 size) {
+    ASSERT(!is_locked);
+
+    // Find the first sufficient continuous block from the upper address
+    for (auto iter = free_blocks.rbegin(); iter != free_blocks.rend(); ++iter) {
+        auto interval = *iter;
+        ASSERT(interval.bounds() == boost::icl::interval_bounds::right_open());
+        if (interval.upper() - interval.lower() >= size) {
+            Interval allocated(interval.upper() - size, interval.upper());
+            free_blocks -= allocated;
+            used += size;
+            return allocated.lower();
+        }
+    }
+
+    // No sufficient block found
+    return std::nullopt;
+}
+
 void MemoryRegionInfo::Free(u32 offset, u32 size) {
     if (is_locked) {
         return;
