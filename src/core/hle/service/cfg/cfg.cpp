@@ -61,8 +61,34 @@ static_assert(sizeof(SaveFileConfig) == 0x455C,
               "SaveFileConfig header must be exactly 0x455C bytes");
 
 enum ConfigBlockID {
+    ConfigSavegameVersionBlockID = 0x00000000, // Maybe?
+    RtcCompensationBlockID = 0x00010000,
+    AudioCalibrationBlockID = 0x00020000,
+    LeapYearCounterBlockID = 0x00030000,
+    UserTimeOffsetBlockID = 0x00030001,
+    SettingsTimeOffsetBlockID = 0x00030002,
+    TouchCalibrationBlockID = 0x00040000,
+    AnalogStickCalibrationBlockID = 0x00040001, // Maybe?
+    GyroscopeCalibrationBlockID = 0x00040002,
+    AccelerometerCalibrationBlockID = 0x00040003,
+    CStickCalibrationBlockID = 0x00040004,
+    ScreenFlickerCalibrationBlockID = 0x00050000,
+    BacklightControlsBlockID = 0x00050001,
+    BacklightPwmCalibrationBlockID = 0x00050002,
+    PowerSavingModeCalibrationBlockID = 0x00050003,
+    PowerSavingModeCalibrationLegacyBlockID = 0x00050004,
     StereoCameraSettingsBlockID = 0x00050005,
+    _3dSwitchingDelayBlockID = 0x00050006,
+    Unknown_0x00050007 = 0x00050007,
+    PowerSavingModeExtraConfigBlockID = 0x00050008,
+    BacklightControlNew3dsBlockID = 0x00050009,
+    Unknown_0x00060000 = 0x00060000,
+    _3dFiltersBlockID = 0x00070000,
     SoundOutputModeBlockID = 0x00070001,
+    MicrophoneEchoCancellationBlockID = 0x00070002,
+    WifiConfigurationSlot0BlockID = 0x00080000,
+    WifiConfigurationSlot1BlockID = 0x00080001,
+    WifiConfigurationSlot2BlockID = 0x00080002,
     ConsoleUniqueID1BlockID = 0x00090000,
     ConsoleUniqueID2BlockID = 0x00090001,
     ConsoleUniqueID3BlockID = 0x00090002,
@@ -72,9 +98,34 @@ enum ConfigBlockID {
     CountryInfoBlockID = 0x000B0000,
     CountryNameBlockID = 0x000B0001,
     StateNameBlockID = 0x000B0002,
+    LatitudeLongitudeBlockID = 0x000B0003,
+    RestrictedPhotoExchangeBlockID = 0x000C0000,
+    CoppacsRestrictionBlockID = 0x000C0001,
+    ParentalRestrictionEmailBlockID = 0x000C0002,
     EULAVersionBlockID = 0x000D0000,
+    Unknown_0x000E0000 = 0x000E0000,
+    DebugConfigurationBlockID = 0x000F0000,
+    Unknown_0x000F0001 = 0x000F0001,
+    Unknown_0x000F0003 = 0x000F0003,
     ConsoleModelBlockID = 0x000F0004,
+    NetworkUpdatesEnabledBlockID = 0x000F0005,
+    XDeviceTokenBlockID = 0x000F0006,
+    TwlEulaInfoBlockID = 0x00100000,
+    TwlParentalRestrictionsBlockID = 0x00100001,
+    TwlCountryCodeBlockID = 0x00100002,
+    TwlMovableUniqueBlockIDBlockID = 0x00100003,
+    SystemSetupRequiredBlockID = 0x00110000,
+    LaunchMenuBlockID = 0x00110001,
+    VolumeSliderBoundsBlockID = 0x00120000,
     DebugModeBlockID = 0x00130000,
+    ClockSequenceBlockID = 0x00150000,
+    Unknown_0x00150001 = 0x00150001,
+    NpnsUrlID = 0x00150002, // Maybe? 3dbrew documentation is weirdly written.
+    Unknown_0x00160000 = 0x00160000,
+    MiiverseAccessKeyBlockID = 0x00170000,
+    QtmInfraredLedRelatedBlockID = 0x00180000,
+    QtmCalibrationDataBlockID = 0x00180001,
+    Unknown_0x00190000 = 0x00190000,
 };
 
 struct UsernameBlock {
@@ -452,8 +503,8 @@ ResultCode Module::FormatConfig() {
     // Insert the default blocks
     u8 zero_buffer[0xC0] = {};
 
-    // 0x00030001 - Unknown
-    res = CreateConfigInfoBlk(0x00030001, 0x8, 0xE, zero_buffer);
+    // 0x00030001 - User time offset (Read by CECD): displayed timestamp - RTC timestamp
+    res = CreateConfigInfoBlk(UserTimeOffsetBlockID, 0x8, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
@@ -511,24 +562,27 @@ ResultCode Module::FormatConfig() {
                               country_name_buffer);
     if (!res.IsSuccess())
         return res;
+
     // 0x000B0002 - Localized names for the profile State/Province
     res = CreateConfigInfoBlk(StateNameBlockID, sizeof(country_name_buffer), 0xE,
                               country_name_buffer);
     if (!res.IsSuccess())
         return res;
 
-    // 0x000B0003 - Unknown, related to country/address (zip code?)
-    res = CreateConfigInfoBlk(0x000B0003, 0x4, 0xE, zero_buffer);
+    // 0x000B0003 - Coordinates. A pair of s16 represents latitude and longitude, respectively. One
+    // need to multiply both value by 180/32768 to get coordinates in degrees
+    res = CreateConfigInfoBlk(LatitudeLongitudeBlockID, 0x4, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
-    // 0x000C0000 - Unknown
-    res = CreateConfigInfoBlk(0x000C0000, 0xC0, 0xE, zero_buffer);
+    // 0x000C0000 - Restricted photo exchange data, and other info (includes a mirror of Parental
+    // Restrictions PIN/Secret Answer)
+    res = CreateConfigInfoBlk(RestrictedPhotoExchangeBlockID, 0xC0, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
-    // 0x000C0001 - Unknown
-    res = CreateConfigInfoBlk(0x000C0001, 0x14, 0xE, zero_buffer);
+    // 0x000C0001 - COPPACS restriction data
+    res = CreateConfigInfoBlk(CoppacsRestrictionBlockID, 0x14, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
@@ -543,13 +597,31 @@ ResultCode Module::FormatConfig() {
     if (!res.IsSuccess())
         return res;
 
+    // 0x000F0006 - In NIM, taken as a (hopefully null terminated) string used for the
+    // "X-Device-Token" http header field for NPNS url.
+    res = CreateConfigInfoBlk(XDeviceTokenBlockID, 0x28, 0xC, zero_buffer);
+    if (!res.IsSuccess())
+        return res;
+
+    // 0x00110000 - The low u16 indicates whether the system setup is required, such as when the
+    // system is booted for the first time or after doing a System Format: 0 = setup required,
+    // non-zero = no setup required
+    res = CreateConfigInfoBlk(SystemSetupRequiredBlockID, 0x4, 0xC, zero_buffer);
+    if (!res.IsSuccess())
+        return res;
+
     // 0x00130000 - DebugMode (0x100 for debug mode)
     res = CreateConfigInfoBlk(DebugModeBlockID, 0x4, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
-    // 0x00170000 - Unknown
-    res = CreateConfigInfoBlk(0x00170000, 0x4, 0xE, zero_buffer);
+    // 0x00160000 - Unknown, first byte is used by config service-cmd 0x00070040.
+    res = CreateConfigInfoBlk(0x00160000, 0x4, 0xE, zero_buffer);
+    if (!res.IsSuccess())
+        return res;
+
+    // 0x00170000 - Miiverse (OLV) access key
+    res = CreateConfigInfoBlk(MiiverseAccessKeyBlockID, 0x4, 0xE, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
@@ -558,7 +630,7 @@ ResultCode Module::FormatConfig() {
     if (!res.IsSuccess())
         return res;
     return RESULT_SUCCESS;
-} // namespace Service::CFG
+}
 
 ResultCode Module::LoadConfigNANDSaveFile() {
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
