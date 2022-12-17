@@ -2233,10 +2233,16 @@ void GMainWindow::HideMouseCursor() {
         return;
     }
     render_window->setCursor(QCursor(Qt::BlankCursor));
+    secondary_window->setCursor(QCursor(Qt::BlankCursor));
+    if (UISettings::values.single_window_mode.GetValue()) {
+        setCursor(QCursor(Qt::BlankCursor));
+    }
 }
 
 void GMainWindow::ShowMouseCursor() {
+    unsetCursor();
     render_window->unsetCursor();
+    secondary_window->unsetCursor();
     if (emu_thread != nullptr && UISettings::values.hide_mouse) {
         mouse_hide_timer.start();
     }
