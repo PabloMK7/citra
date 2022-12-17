@@ -43,6 +43,9 @@ public:
     /// Save all button configurations to settings file
     void ApplyConfiguration();
 
+    /// Reset the settings for this game
+    void ResetDefaults();
+
 private:
     void changeEvent(QEvent* event) override;
     void RetranslateUI();

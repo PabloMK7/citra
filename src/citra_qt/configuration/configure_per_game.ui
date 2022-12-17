@@ -177,6 +177,13 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QPushButton" name="button_reset_per_game">
+          <property name="text">
+           <string>Reset Game Settings</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>

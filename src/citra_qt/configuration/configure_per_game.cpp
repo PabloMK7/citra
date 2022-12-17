@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <vector>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QString>
 #include <fmt/format.h>
@@ -13,6 +14,7 @@
 #include "citra_qt/configuration/configure_per_game.h"
 #include "citra_qt/configuration/configure_system.h"
 #include "citra_qt/util/util.h"
+#include "common/file_util.h"
 #include "core/core.h"
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
@@ -51,10 +53,29 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
                 &ConfigurePerGame::HandleApplyButtonClicked);
     }
 
+    connect(ui->button_reset_per_game, &QPushButton::clicked, this,
+            &ConfigurePerGame::ResetDefaults);
+
     LoadConfiguration();
 }
 
 ConfigurePerGame::~ConfigurePerGame() = default;
+
+void ConfigurePerGame::ResetDefaults() {
+    const auto config_file_name = title_id == 0 ? filename : fmt::format("{:016X}", title_id);
+    QMessageBox::StandardButton answer = QMessageBox::question(
+        this, tr("Citra"), tr("Are you sure you want to <b>reset your settings for this game</b>?"),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+    if (answer == QMessageBox::No) {
+        return;
+    }
+
+    FileUtil::Delete(fmt::format("{}/custom/{}.ini",
+                                 FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir),
+                                 config_file_name));
+    close();
+}
 
 void ConfigurePerGame::ApplyConfiguration() {
     general_tab->ApplyConfiguration();

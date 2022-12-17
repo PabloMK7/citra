@@ -141,10 +141,12 @@ void ConfigureGeneral::ResetDefaults() {
         tr("Are you sure you want to <b>reset your settings</b> and close Citra?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
-    if (answer == QMessageBox::No)
+    if (answer == QMessageBox::No) {
         return;
+    }
 
     FileUtil::Delete(FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini");
+    FileUtil::DeleteDirRecursively(FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "custom");
     std::exit(0);
 }
 
