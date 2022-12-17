@@ -23,6 +23,7 @@ add_library(audio_core STATIC
     interpolate.cpp
     interpolate.h
     null_sink.h
+    precompiled_headers.h
     sink.h
     sink_details.cpp
     sink_details.h
@@ -88,4 +89,8 @@ endif()
 if(ENABLE_CUBEB)
     target_link_libraries(audio_core PRIVATE cubeb)
     target_compile_definitions(audio_core PUBLIC HAVE_CUBEB)
+endif()
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(audio_core PRIVATE precompiled_headers.h)
 endif()

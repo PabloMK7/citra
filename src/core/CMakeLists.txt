@@ -449,6 +449,7 @@ add_library(core STATIC
     movie.h
     perf_stats.cpp
     perf_stats.h
+    precompiled_headers.h
     rpc/packet.cpp
     rpc/packet.h
     rpc/rpc_server.cpp
@@ -503,4 +504,8 @@ endif()
 
 if (ENABLE_FFMPEG_VIDEO_DUMPER)
     target_link_libraries(core PUBLIC FFmpeg::avcodec FFmpeg::avformat FFmpeg::swscale FFmpeg::swresample FFmpeg::avutil)
+endif()
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(core PRIVATE precompiled_headers.h)
 endif()

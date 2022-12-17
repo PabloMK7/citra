@@ -164,6 +164,7 @@ add_executable(citra-qt
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
+    precompiled_headers.h
     uisettings.cpp
     uisettings.h
     qt_image_interface.cpp
@@ -318,4 +319,8 @@ if (MSVC)
         include(CopyCitraFFmpegDeps)
         copy_citra_FFmpeg_deps(citra-qt)
     endif()
+endif()
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(citra-qt PRIVATE precompiled_headers.h)
 endif()

@@ -9,6 +9,7 @@ add_executable(tests
     core/hle/kernel/hle_ipc.cpp
     core/memory/memory.cpp
     core/memory/vm_manager.cpp
+    precompiled_headers.h
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
 )
@@ -26,3 +27,7 @@ target_link_libraries(tests PRIVATE common core video_core audio_core)
 target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} Catch2::Catch2WithMain nihstro-headers Threads::Threads)
 
 add_test(NAME tests COMMAND tests)
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(tests PRIVATE precompiled_headers.h)
+endif()

@@ -60,6 +60,7 @@ if (MSVC)
     else()
         add_compile_options(
             /MP
+            /Zo
             /permissive-
             /EHsc
             /volatile:iso
@@ -88,11 +89,11 @@ if (MSVC)
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it
     # when using ccache or other caching tools
-    if (NOT CITRA_USE_CCACHE)
-        add_compile_options(
-            /Zi
-            /Zo
-        )
+    if (CITRA_USE_CCACHE OR CITRA_USE_PRECOMPILED_HEADERS)
+    # Precompiled headers are deleted if not using /Z7. See https://github.com/nanoant/CMakePCHCompiler/issues/21
+        add_compile_options(/Z7)
+    else()
+        add_compile_options(/Zi)
     endif()
 
     # /GS- - No stack buffer overflow checks

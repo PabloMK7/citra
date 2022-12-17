@@ -10,6 +10,7 @@ add_executable(citra
     emu_window/emu_window_sdl2.h
     lodepng_image_interface.cpp
     lodepng_image_interface.h
+    precompiled_headers.h
     resource.h
 )
 
@@ -29,4 +30,8 @@ endif()
 if (MSVC)
     include(CopyCitraSDLDeps)
     copy_citra_SDL_deps(citra)
+endif()
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(citra PRIVATE precompiled_headers.h)
 endif()

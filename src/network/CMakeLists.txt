@@ -7,6 +7,7 @@ add_library(network STATIC
     network_settings.h
     packet.cpp
     packet.h
+    precompiled_headers.h
     room.cpp
     room.h
     room_member.cpp
@@ -27,3 +28,7 @@ endif()
 
 target_link_libraries(network PRIVATE common enet Boost::serialization)
 set_target_properties(network PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(network PRIVATE precompiled_headers.h)
+endif()

@@ -10,6 +10,7 @@ add_library(video_core STATIC
     pica.h
     pica_state.h
     pica_types.h
+    precompiled_headers.h
     primitive_assembly.cpp
     primitive_assembly.h
     rasterizer_interface.h
@@ -162,4 +163,8 @@ set_target_properties(video_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABL
 
 if (ARCHITECTURE_x86_64)
     target_link_libraries(video_core PUBLIC xbyak)
+endif()
+
+if (CITRA_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(video_core PRIVATE precompiled_headers.h)
 endif()
