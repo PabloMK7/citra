@@ -65,7 +65,7 @@ static_assert(sizeof(NodeInfo) == 40, "NodeInfo has incorrect size.");
 
 using NodeList = std::vector<NodeInfo>;
 
-enum class NetworkStatus {
+enum class NetworkStatus : u32 {
     NotConnected = 3,
     ConnectedAsHost = 6,
     Connecting = 7,
@@ -73,15 +73,15 @@ enum class NetworkStatus {
     ConnectedAsSpectator = 10,
 };
 
-enum class DisconnectStatus {
-    Connected = 1,
-    NotConnected = 2,
-    // TODO(B3N30): Figure out the other values
+enum class NetworkStatusChangeReason : u32 {
+    None = 0,
+    ConnectionEstablished = 1,
+    ConnectionLost = 4,
 };
 
 struct ConnectionStatus {
-    u32_le status;
-    u32_le disconnect_reason;
+    enum_le<NetworkStatus> status;
+    enum_le<NetworkStatusChangeReason> status_change_reason;
     u16_le network_node_id;
     u16_le changed_nodes;
     u16_le nodes[UDSMaxNodes];
