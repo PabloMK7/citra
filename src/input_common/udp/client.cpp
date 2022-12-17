@@ -233,7 +233,7 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
     std::function<void(Status)> status_callback,
     std::function<void(u16, u16, u16, u16)> data_callback) {
 
-    std::thread([=] {
+    std::thread([=, this] {
         constexpr u16 CALIBRATION_THRESHOLD = 100;
 
         u16 min_x{UINT16_MAX};

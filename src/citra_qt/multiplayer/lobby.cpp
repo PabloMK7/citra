@@ -30,12 +30,12 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->setupUi(this);
 
     // setup the watcher for background connections
-    watcher = new QFutureWatcher<void>;
+    watcher = new QFutureWatcher<void>(this);
 
     model = new QStandardItemModel(ui->room_list);
 
     // Create a proxy to the game list to get the list of games owned
-    game_list = new QStandardItemModel;
+    game_list = new QStandardItemModel(this);
     UpdateGameList(list);
 
     proxy = new LobbyFilterProxyModel(this, game_list);

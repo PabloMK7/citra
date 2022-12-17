@@ -76,10 +76,12 @@ void CSpinBox::stepBy(int steps) {
     }*/
 
     // Increment "new_value" by "steps", and perform annoying overflow checks, too.
-    if (steps < 0 && new_value + steps > new_value) {
-        new_value = std::numeric_limits<qint64>::min();
-    } else if (steps > 0 && new_value + steps < new_value) {
-        new_value = std::numeric_limits<qint64>::max();
+    constexpr qint64 qint64_min = std::numeric_limits<qint64>::min();
+    constexpr qint64 qint64_max = std::numeric_limits<qint64>::max();
+    if (steps < 0 && new_value < qint64_min - steps) {
+        new_value = qint64_min;
+    } else if (steps > 0 && new_value > qint64_max - steps) {
+        new_value = qint64_max;
     } else {
         new_value += steps;
     }

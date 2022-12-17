@@ -320,6 +320,12 @@ public:
         setData(type(), TypeRole);
         setData(size_bytes, SizeRole);
     }
+    explicit GameListItemSize(const QString& string) {
+        // This is required to avoid incorrect virtual function call in
+        // GameListItem's constructor
+        setText(string);
+        setData(string, SortRole);
+    }
 
     void setData(const QVariant& value, int role) override {
         // By specializing setData for SizeRole, we can ensure that the numerical and string

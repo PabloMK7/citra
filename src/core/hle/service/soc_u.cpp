@@ -1054,6 +1054,7 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
                 // if the buffer is not big enough. However the count returned is always correct.
                 CTRAddrInfo ctr_addr = CTRAddrInfo::FromPlatform(*cur);
                 std::memcpy(out_buff.data() + pos, &ctr_addr, sizeof(ctr_addr));
+                pos += sizeof(ctr_addr);
             }
             cur = cur->ai_next;
             count++;
