@@ -199,6 +199,7 @@ void QtMultimediaCameraHandler::StartCamera() {
     camera->setViewfinderSettings(settings);
     camera->start();
     started = true;
+    paused = false;
 }
 
 bool QtMultimediaCameraHandler::CameraAvailable() const {
@@ -210,13 +211,14 @@ void QtMultimediaCameraHandler::StopCameras() {
     for (auto& handler : handlers) {
         if (handler && handler->started) {
             handler->StopCamera();
+            handler->paused = true;
         }
     }
 }
 
 void QtMultimediaCameraHandler::ResumeCameras() {
     for (auto& handler : handlers) {
-        if (handler && handler->started) {
+        if (handler && handler->paused) {
             handler->StartCamera();
         }
     }
@@ -228,6 +230,7 @@ void QtMultimediaCameraHandler::ReleaseHandlers() {
     for (std::size_t i = 0; i < handlers.size(); i++) {
         status[i] = false;
         handlers[i]->started = false;
+        handlers[i]->paused = false;
     }
 }
 

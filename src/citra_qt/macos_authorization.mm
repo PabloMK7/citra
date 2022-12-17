@@ -9,13 +9,19 @@
 
 namespace AppleAuthorization {
 
+static bool authorized_camera = false;
+static bool authorized_microphone = false;
+
 static bool authorized = false;
 
 enum class AuthMediaType { Camera, Microphone };
 
 // Based on
 // https://developer.apple.com/documentation/avfoundation/cameras_and_media_capture/requesting_authorization_for_media_capture_on_macos
+// TODO: This could be rewritten to return the authorization state, having pure c++ code deal with
+// it, log information and possibly wait for the camera access request.
 void CheckAuthorization(AuthMediaType type) {
+    authorized = false;
     if (@available(macOS 10.14, *)) {
         NSString* media_type;
         if (type == AuthMediaType::Camera) {
@@ -69,13 +75,19 @@ void CheckAuthorization(AuthMediaType type) {
 }
 
 bool CheckAuthorizationForCamera() {
-    CheckAuthorization(AuthMediaType::Camera);
-    return authorized;
+    if (!authorized_camera) {
+        CheckAuthorization(AuthMediaType::Camera);
+        authorized_camera = authorized;
+    }
+    return authorized_camera;
 }
 
 bool CheckAuthorizationForMicrophone() {
-    CheckAuthorization(AuthMediaType::Microphone);
-    return authorized;
+    if (!authorized_microphone) {
+        CheckAuthorization(AuthMediaType::Microphone);
+        authorized_microphone = authorized;
+    }
+    return authorized_microphone;
 }
 
 } // AppleAuthorization
