@@ -19,25 +19,31 @@ namespace Camera {
 QList<QVideoFrame::PixelFormat> QtCameraSurface::supportedPixelFormats(
     [[maybe_unused]] QAbstractVideoBuffer::HandleType handleType) const {
     return QList<QVideoFrame::PixelFormat>()
-           << QVideoFrame::Format_ARGB32 << QVideoFrame::Format_ARGB32_Premultiplied
-           << QVideoFrame::Format_RGB32 << QVideoFrame::Format_RGB24 << QVideoFrame::Format_RGB565
-           << QVideoFrame::Format_RGB555 << QVideoFrame::Format_ARGB8565_Premultiplied
-           << QVideoFrame::Format_BGRA32 << QVideoFrame::Format_BGRA32_Premultiplied
-           << QVideoFrame::Format_BGR32 << QVideoFrame::Format_BGR24 << QVideoFrame::Format_BGR565
-           << QVideoFrame::Format_BGR555 << QVideoFrame::Format_BGRA5658_Premultiplied
-           << QVideoFrame::Format_AYUV444 << QVideoFrame::Format_AYUV444_Premultiplied
-           << QVideoFrame::Format_YUV444 << QVideoFrame::Format_YUV420P << QVideoFrame::Format_YV12
-           << QVideoFrame::Format_UYVY << QVideoFrame::Format_YUYV << QVideoFrame::Format_NV12
-           << QVideoFrame::Format_NV21 << QVideoFrame::Format_IMC1 << QVideoFrame::Format_IMC2
-           << QVideoFrame::Format_IMC3 << QVideoFrame::Format_IMC4 << QVideoFrame::Format_Y8
-           << QVideoFrame::Format_Y16 << QVideoFrame::Format_Jpeg << QVideoFrame::Format_CameraRaw
-           << QVideoFrame::Format_AdobeDng; // Supporting all the formats
+           << QVideoFrame::Format_RGB32 << QVideoFrame::Format_RGB24
+           << QVideoFrame::Format_ARGB32_Premultiplied << QVideoFrame::Format_ARGB32
+           << QVideoFrame::Format_RGB565 << QVideoFrame::Format_RGB555
+           << QVideoFrame::Format_Jpeg
+           // the following formats are supported via Qt internal conversions
+           << QVideoFrame::Format_ARGB8565_Premultiplied << QVideoFrame::Format_BGRA32
+           << QVideoFrame::Format_BGRA32_Premultiplied << QVideoFrame::Format_BGR32
+           << QVideoFrame::Format_BGR24 << QVideoFrame::Format_BGR565 << QVideoFrame::Format_BGR555
+           << QVideoFrame::Format_AYUV444 << QVideoFrame::Format_YUV444
+           << QVideoFrame::Format_YUV420P << QVideoFrame::Format_YV12 << QVideoFrame::Format_UYVY
+           << QVideoFrame::Format_YUYV << QVideoFrame::Format_NV12
+           << QVideoFrame::Format_NV21; // Supporting all the QImage convertible formats, ordered by
+                                        // QImage decoding performance
 }
 
 bool QtCameraSurface::present(const QVideoFrame& frame) {
     if (!frame.isValid()) {
         return false;
     }
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QMutexLocker locker(&mutex);
+    // In Qt 5.15, the image is already flipped
+    current_frame = frame.image();
+    locker.unlock();
+#else
     QVideoFrame cloneFrame(frame);
     cloneFrame.map(QAbstractVideoBuffer::ReadOnly);
     const QImage image(cloneFrame.bits(), cloneFrame.width(), cloneFrame.height(),
@@ -46,6 +52,7 @@ bool QtCameraSurface::present(const QVideoFrame& frame) {
     current_frame = image.mirrored(true, true);
     locker.unlock();
     cloneFrame.unmap();
+#endif
     return true;
 }
 
