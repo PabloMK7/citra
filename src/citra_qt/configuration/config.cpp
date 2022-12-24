@@ -483,7 +483,7 @@ void Config::ReadLayoutValues() {
     ReadGlobalSetting(Settings::values.upright_screen);
 
     if (global) {
-        ReadBasicSetting(Settings::values.mono_render_left_eye);
+        ReadBasicSetting(Settings::values.mono_render_option);
         ReadBasicSetting(Settings::values.custom_layout);
         ReadBasicSetting(Settings::values.custom_top_left);
         ReadBasicSetting(Settings::values.custom_top_top);
@@ -991,7 +991,7 @@ void Config::SaveLayoutValues() {
     WriteGlobalSetting(Settings::values.upright_screen);
 
     if (global) {
-        WriteBasicSetting(Settings::values.mono_render_left_eye);
+        WriteBasicSetting(Settings::values.mono_render_option);
         WriteBasicSetting(Settings::values.custom_layout);
         WriteBasicSetting(Settings::values.custom_top_left);
         WriteBasicSetting(Settings::values.custom_top_top);

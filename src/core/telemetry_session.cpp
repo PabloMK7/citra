@@ -149,8 +149,8 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
              static_cast<int>(Settings::values.render_3d.GetValue()));
     AddField(Telemetry::FieldType::UserConfig, "Renderer_Factor3d",
              Settings::values.factor_3d.GetValue());
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_MonoRenderLeftEye",
-             Settings::values.mono_render_left_eye.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_MonoRenderOption",
+             static_cast<int>(Settings::values.mono_render_option.GetValue()));
     AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds",
              Settings::values.is_new_3ds.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "System_RegionValue",

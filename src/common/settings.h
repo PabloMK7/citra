@@ -52,6 +52,10 @@ enum class StereoRenderOption : u32 {
     CardboardVR = 5
 };
 
+// Which eye to render when 3d is off. 800px wide mode could be added here in the future, when
+// implemented
+enum class MonoRenderOption : u32 { LeftEye = 0, RightEye = 1 };
+
 enum class AudioEmulation : u32 { HLE = 0, LLE = 1, LLEMultithreaded = 2 };
 
 namespace NativeButton {
@@ -467,8 +471,9 @@ struct Values {
 
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
     SwitchableSetting<u32> factor_3d{0, "factor_3d"};
+    SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
+                                                           "mono_render_option"};
 
-    Setting<bool> mono_render_left_eye{false, "mono_render_left_eye"};
     Setting<s32> cardboard_screen_size{85, "cardboard_screen_size"};
     Setting<s32> cardboard_x_shift{0, "cardboard_x_shift"};
     Setting<s32> cardboard_y_shift{0, "cardboard_y_shift"};

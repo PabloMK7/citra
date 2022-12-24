@@ -54,7 +54,8 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->render_3d_combobox->setCurrentIndex(
         static_cast<int>(Settings::values.render_3d.GetValue()));
     ui->factor_3d->setValue(Settings::values.factor_3d.GetValue());
-    ui->mono_render_left_eye->setChecked(Settings::values.mono_render_left_eye.GetValue());
+    ui->mono_rendering_eye->setCurrentIndex(
+        static_cast<int>(Settings::values.mono_render_option.GetValue()));
     updateShaders(Settings::values.render_3d.GetValue());
     ui->toggle_linear_filter->setChecked(Settings::values.filter_mode.GetValue());
     int tex_filter_idx = ui->texture_filter_combobox->findText(
@@ -111,7 +112,8 @@ void ConfigureEnhancements::ApplyConfiguration() {
     Settings::values.render_3d =
         static_cast<Settings::StereoRenderOption>(ui->render_3d_combobox->currentIndex());
     Settings::values.factor_3d = ui->factor_3d->value();
-    Settings::values.mono_render_left_eye = ui->mono_render_left_eye->isChecked();
+    Settings::values.mono_render_option =
+        static_cast<Settings::MonoRenderOption>(ui->mono_rendering_eye->currentIndex());
     Settings::values.pp_shader_name =
         ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     Settings::values.filter_mode = ui->toggle_linear_filter->isChecked();

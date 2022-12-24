@@ -167,8 +167,8 @@ render_3d =
 factor_3d =
 
 # Change Default Eye to Render When in Monoscopic Mode
-# 0 (default): Right, 1: Left
-mono_render_left_eye =
+# 0 (default): Left, 1: Right
+mono_render_option =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.

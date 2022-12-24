@@ -109,7 +109,7 @@ void LogSettings() {
     log_setting("Renderer_TextureFilterName", values.texture_filter_name.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
     log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
-    log_setting("Stereoscopy_MonoRenderLeftEye", values.mono_render_left_eye.GetValue());
+    log_setting("Stereoscopy_MonoRenderOption", values.mono_render_option.GetValue());
     log_setting("Layout_LayoutOption", values.layout_option.GetValue());
     log_setting("Layout_SwapScreen", values.swap_screen.GetValue());
     log_setting("Layout_UprightScreen", values.upright_screen.GetValue());
