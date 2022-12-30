@@ -33,6 +33,7 @@ add_subdirectory(cryptopp)
 
 # fmt and Xbyak need to be added before dynarmic
 # libfmt
+option(FMT_INSTALL "" ON)
 add_subdirectory(fmt)
 
 # Xbyak
@@ -43,7 +44,6 @@ endif()
 # Dynarmic
 if (ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64)
     set(DYNARMIC_TESTS OFF)
-    set(DYNARMIC_NO_BUNDLED_FMT ON)
     set(DYNARMIC_FRONTENDS "A32")
     add_subdirectory(dynarmic)
 endif()
