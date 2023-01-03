@@ -264,6 +264,9 @@
    <property name="text">
     <string>About Citra</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::AboutRole</enum>
+   </property>
   </action>
   <action name="action_Single_Window_Mode">
    <property name="checkable">
@@ -286,6 +289,9 @@
   <action name="action_Configure">
    <property name="text">
     <string>Configure...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::PreferencesRole</enum>
    </property>
   </action>
   <action name="action_Cheats">
@@ -548,6 +554,9 @@
    </property>
    <property name="text">
     <string>Configure Current Game...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
  </widget>
