@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/arch.h"
+#if CITRA_ARCH(x86_64)
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -158,3 +161,5 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
         REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
 }
+
+#endif // CITRA_ARCH(x86_64)

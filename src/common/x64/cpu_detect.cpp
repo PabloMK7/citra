@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/arch.h"
+#if CITRA_ARCH(x86_64)
+
 #include <cstring>
 #include "common/common_types.h"
 #include "common/x64/cpu_detect.h"
@@ -144,3 +147,5 @@ const CPUCaps& GetCPUCaps() {
 }
 
 } // namespace Common
+
+#endif // CITRA_ARCH(x86_64)

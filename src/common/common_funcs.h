@@ -5,8 +5,9 @@
 #pragma once
 
 #include <string>
+#include "common/arch.h"
 
-#if !defined(ARCHITECTURE_x86_64)
+#if !CITRA_ARCH(x86_64)
 #include <cstdlib> // for exit
 #endif
 #include "common/common_types.h"
@@ -36,7 +37,7 @@
 
 #ifndef _MSC_VER
 
-#ifdef ARCHITECTURE_x86_64
+#if CITRA_ARCH(x86_64)
 #define Crash() __asm__ __volatile__("int $3")
 #else
 #define Crash() exit(1)

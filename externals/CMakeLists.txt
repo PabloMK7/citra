@@ -37,12 +37,12 @@ option(FMT_INSTALL "" ON)
 add_subdirectory(fmt)
 
 # Xbyak
-if (ARCHITECTURE_x86_64)
+if ("x86_64" IN_LIST ARCHITECTURE)
     add_subdirectory(xbyak)
 endif()
 
 # Dynarmic
-if (ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64)
+if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
     set(DYNARMIC_TESTS OFF)
     set(DYNARMIC_FRONTENDS "A32")
     add_subdirectory(dynarmic)

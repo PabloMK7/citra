@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include "common/arch.h"
+#if CITRA_ARCH(arm64)
+
 #include <string>
 
 namespace Common {
@@ -29,3 +32,5 @@ struct CPUCaps {
 const CPUCaps& GetCPUCaps();
 
 } // namespace Common
+
+#endif // CITRA_ARCH(arm64)

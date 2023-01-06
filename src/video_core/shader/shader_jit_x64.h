@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include "common/arch.h"
+#if CITRA_ARCH(x86_64)
+
 #include <memory>
 #include <unordered_map>
 #include "common/common_types.h"
@@ -26,3 +29,5 @@ private:
 };
 
 } // namespace Pica::Shader
+
+#endif // CITRA_ARCH(x86_64)

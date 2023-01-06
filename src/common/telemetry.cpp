@@ -4,11 +4,12 @@
 
 #include <algorithm>
 #include <cstring>
+#include "common/arch.h"
 #include "common/assert.h"
 #include "common/scm_rev.h"
 #include "common/telemetry.h"
 
-#ifdef ARCHITECTURE_x86_64
+#if CITRA_ARCH(x86_64)
 #include "common/x64/cpu_detect.h"
 #endif
 
@@ -54,7 +55,7 @@ void AppendBuildInfo(FieldCollection& fc) {
 }
 
 void AppendCPUInfo(FieldCollection& fc) {
-#ifdef ARCHITECTURE_x86_64
+#if CITRA_ARCH(x86_64)
     fc.AddField(FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
     fc.AddField(FieldType::UserSystem, "CPU_BrandString", Common::GetCPUCaps().brand_string);
     fc.AddField(FieldType::UserSystem, "CPU_Extension_x64_AES", Common::GetCPUCaps().aes);
