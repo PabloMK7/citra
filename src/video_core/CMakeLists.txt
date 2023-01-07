@@ -87,6 +87,10 @@ add_library(video_core STATIC
     shader/shader.h
     shader/shader_interpreter.cpp
     shader/shader_interpreter.h
+    shader/shader_jit_x64.cpp
+    shader/shader_jit_x64_compiler.cpp
+    shader/shader_jit_x64.h
+    shader/shader_jit_x64_compiler.h
     swrasterizer/clipper.cpp
     swrasterizer/clipper.h
     swrasterizer/framebuffer.cpp
@@ -144,24 +148,13 @@ add_dependencies(video_core shaders)
 
 target_include_directories(video_core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-if(ARCHITECTURE_x86_64)
-    target_sources(video_core
-        PRIVATE
-            shader/shader_jit_x64.cpp
-            shader/shader_jit_x64_compiler.cpp
-
-            shader/shader_jit_x64.h
-            shader/shader_jit_x64_compiler.h
-    )
-endif()
-
 create_target_directory_groups(video_core)
 
 target_link_libraries(video_core PUBLIC common core)
 target_link_libraries(video_core PRIVATE glad nihstro-headers Boost::serialization)
 set_target_properties(video_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
-if (ARCHITECTURE_x86_64)
+if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(video_core PUBLIC xbyak)
 endif()
 

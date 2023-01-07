@@ -54,6 +54,8 @@ add_custom_command(OUTPUT scm_rev.cpp
 )
 
 add_library(common STATIC
+    aarch64/cpu_detect.cpp
+    aarch64/cpu_detect.h
     alignment.h
     announce_multiplayer_room.h
     archives.h
@@ -124,26 +126,13 @@ add_library(common STATIC
     timer.h
     vector_math.h
     web_result.h
+    x64/cpu_detect.cpp
+    x64/cpu_detect.h
+    x64/xbyak_abi.h
+    x64/xbyak_util.h
     zstd_compression.cpp
     zstd_compression.h
 )
-
-if(ARCHITECTURE_x86_64)
-    target_sources(common
-        PRIVATE
-            x64/cpu_detect.cpp
-
-            x64/cpu_detect.h
-            x64/xbyak_abi.h
-            x64/xbyak_util.h
-    )
-elseif(ARCHITECTURE_arm64)
-    target_sources(common
-        PRIVATE
-            aarch64/cpu_detect.cpp
-            aarch64/cpu_detect.h
-    )
-endif()
 
 create_target_directory_groups(common)
 
@@ -151,7 +140,7 @@ target_link_libraries(common PUBLIC fmt::fmt microprofile Boost::boost Boost::se
 target_link_libraries(common PRIVATE libzstd_static)
 set_target_properties(common PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
-if (ARCHITECTURE_x86_64)
+if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(common PRIVATE xbyak)
 endif()
 

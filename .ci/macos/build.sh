@@ -2,7 +2,6 @@
 
 set -o pipefail
 
-export Qt5_DIR=$(brew --prefix)/opt/qt5
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
 # ccache configurations
 export CCACHE_CPP2=yes
@@ -16,13 +15,17 @@ export ASM="clang"
 ccache -s
 
 mkdir build && cd build
+# TODO: CryptoPP and LibreSSL ASM disabled due to platform detection issues in build.
 cmake .. -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
     -DENABLE_QT_TRANSLATION=ON \
     -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"} \
     -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON \
     -DUSE_DISCORD_PRESENCE=ON \
     -DENABLE_FFMPEG_AUDIO_DECODER=ON \
     -DENABLE_FFMPEG_VIDEO_DUMPER=ON \
+    -DCRYPTOPP_OPT_DISABLE_ASM=ON \
+    -DENABLE_ASM=OFF \
     -GNinja
 ninja
 

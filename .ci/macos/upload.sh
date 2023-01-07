@@ -15,7 +15,7 @@ cp build/bin/Release/citra-room "$REV_NAME"
 # move libs into folder for deployment
 macpack "${REV_NAME}/citra-qt.app/Contents/MacOS/citra-qt" -d "../Frameworks"
 # move qt frameworks into app bundle for deployment
-$(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra-qt.app" -executable="${REV_NAME}/citra-qt.app/Contents/MacOS/citra-qt"
+macdeployqt "${REV_NAME}/citra-qt.app" -executable="${REV_NAME}/citra-qt.app/Contents/MacOS/citra-qt"
 
 # move libs into folder for deployment
 macpack "${REV_NAME}/citra" -d "libs"

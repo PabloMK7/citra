@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/arch.h"
+#if CITRA_ARCH(x86_64)
+
 #include "common/microprofile.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_jit_x64.h"
@@ -43,3 +46,5 @@ void JitX64Engine::Run(const ShaderSetup& setup, UnitState& state) const {
 }
 
 } // namespace Pica::Shader
+
+#endif // CITRA_ARCH(x86_64)

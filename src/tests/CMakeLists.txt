@@ -12,14 +12,8 @@ add_executable(tests
     precompiled_headers.h
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
+    video_core/shader/shader_jit_x64_compiler.cpp
 )
-
-if (ARCHITECTURE_x86_64)
-    target_sources(tests
-        PRIVATE
-            video_core/shader/shader_jit_x64_compiler.cpp
-    )
-endif()
 
 create_target_directory_groups(tests)
 

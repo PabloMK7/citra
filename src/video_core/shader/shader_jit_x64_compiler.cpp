@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/arch.h"
+#if CITRA_ARCH(x86_64)
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -1131,3 +1134,5 @@ Xbyak::Label JitShader::CompilePrelude_Exp2() {
 }
 
 } // namespace Pica::Shader
+
+#endif // CITRA_ARCH(x86_64)
