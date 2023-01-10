@@ -40,5 +40,7 @@
 	<string>This app requires camera access to emulate the 3DS's cameras.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app requires microphone access to emulate the 3DS's microphone.</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
 </dict>
 </plist>
