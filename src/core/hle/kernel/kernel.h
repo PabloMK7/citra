@@ -224,6 +224,10 @@ public:
     /// Retrieves a process from the current list of processes.
     std::shared_ptr<Process> GetProcessById(u32 process_id) const;
 
+    const std::vector<std::shared_ptr<Process>>& GetProcessList() const {
+        return process_list;
+    }
+
     std::shared_ptr<Process> GetCurrentProcess() const;
     void SetCurrentProcess(std::shared_ptr<Process> process);
     void SetCurrentProcessForCPU(std::shared_ptr<Process> process, u32 core_id);

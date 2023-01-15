@@ -44,6 +44,7 @@ void Process::serialize(Archive& ar, const unsigned int file_version) {
     ar& ideal_processor;
     ar& status;
     ar& process_id;
+    ar& creation_time_ticks;
     ar& vm_manager;
     ar& memory_used;
     ar& memory_region;
@@ -72,6 +73,7 @@ std::shared_ptr<Process> KernelSystem::CreateProcess(std::shared_ptr<CodeSet> co
     process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
     process->status = ProcessStatus::Created;
     process->process_id = ++next_process_id;
+    process->creation_time_ticks = timing.GetTicks();
 
     process_list.push_back(process);
     return process;

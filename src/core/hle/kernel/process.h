@@ -185,6 +185,9 @@ public:
     /// The id of this process
     u32 process_id;
 
+    // Creation time in ticks of the process.
+    u64 creation_time_ticks;
+
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them
      * to this process.
