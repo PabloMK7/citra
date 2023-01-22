@@ -12,6 +12,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
@@ -19,11 +20,13 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -74,6 +77,7 @@ public final class EmulationActivity extends AppCompatActivity {
     public static final int MENU_ACTION_JOYSTICK_REL_CENTER = 15;
     public static final int MENU_ACTION_DPAD_SLIDE_ENABLE = 16;
     public static final int MENU_ACTION_OPEN_CHEATS = 17;
+    public static final int MENU_ACTION_CLOSE_GAME = 18;
 
     public static final int REQUEST_SELECT_AMIIBO = 2;
     private static final int EMULATION_RUNNING_NOTIFICATION = 0x1000;
@@ -114,6 +118,8 @@ public final class EmulationActivity extends AppCompatActivity {
                 EmulationActivity.MENU_ACTION_DPAD_SLIDE_ENABLE);
         buttonsActionsMap
                 .append(R.id.menu_emulation_open_cheats, EmulationActivity.MENU_ACTION_OPEN_CHEATS);
+        buttonsActionsMap
+                .append(R.id.menu_emulation_close_game, EmulationActivity.MENU_ACTION_CLOSE_GAME);
     }
 
     private View mDecorView;
@@ -223,21 +229,12 @@ public final class EmulationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        NativeLibrary.PauseEmulation();
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.emulation_close_game)
-                .setMessage(R.string.emulation_close_game_message)
-                .setPositiveButton(android.R.string.yes, (dialogInterface, i) ->
-                {
-                    mEmulationFragment.stopEmulation();
-                    finish();
-                })
-                .setNegativeButton(android.R.string.cancel, (dialogInterface, i) ->
-                    NativeLibrary.UnPauseEmulation())
-                .setOnCancelListener(dialogInterface ->
-                    NativeLibrary.UnPauseEmulation())
-                .create()
-                .show();
+        View anchor = findViewById(R.id.menu_anchor);
+        PopupMenu popupMenu = new PopupMenu(this, anchor);
+        onCreateOptionsMenu(popupMenu.getMenu(), popupMenu.getMenuInflater());
+        updateSavestateMenuOptions(popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(this::onOptionsItemSelected);
+        popupMenu.show();
     }
 
     @Override
@@ -271,6 +268,10 @@ public final class EmulationActivity extends AppCompatActivity {
         }
     }
 
+    public void onEmulationStarted() {
+        Toast.makeText(this, getString(R.string.emulation_menu_help), Toast.LENGTH_LONG).show();
+    }
+
     private void enableFullscreenImmersive() {
         // It would be nice to use IMMERSIVE_STICKY, but that doesn't show the toolbar.
         mDecorView.setSystemUiVisibility(
@@ -285,7 +286,12 @@ public final class EmulationActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_emulation, menu);
+        onCreateOptionsMenu(menu, getMenuInflater());
+        return true;
+    }
+
+    private void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_emulation, menu);
 
         int layoutOptionMenuItem = R.id.menu_screen_layout_landscape;
         switch (EmulationMenuSettings.getLandscapeScreenLayout()) {
@@ -306,8 +312,6 @@ public final class EmulationActivity extends AppCompatActivity {
         menu.findItem(R.id.menu_emulation_show_fps).setChecked(EmulationMenuSettings.getShowFps());
         menu.findItem(R.id.menu_emulation_swap_screens).setChecked(EmulationMenuSettings.getSwapScreens());
         menu.findItem(R.id.menu_emulation_show_overlay).setChecked(EmulationMenuSettings.getShowOverlay());
-
-        return true;
     }
 
     private void DisplaySavestateWarning() {
@@ -333,12 +337,16 @@ public final class EmulationActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
+        updateSavestateMenuOptions(menu);
+        return true;
+    }
 
+    private void updateSavestateMenuOptions(Menu menu) {
         final NativeLibrary.SavestateInfo[] savestates = NativeLibrary.GetSavestateInfo();
         if (savestates == null) {
             menu.findItem(R.id.menu_emulation_save_state).setVisible(false);
             menu.findItem(R.id.menu_emulation_load_state).setVisible(false);
-            return true;
+            return;
         }
         menu.findItem(R.id.menu_emulation_save_state).setVisible(true);
         menu.findItem(R.id.menu_emulation_load_state).setVisible(true);
@@ -367,7 +375,6 @@ public final class EmulationActivity extends AppCompatActivity {
             saveStateMenu.getItem(info.slot - 1).setTitle(text);
             loadStateMenu.getItem(info.slot - 1).setTitle(text).setEnabled(true);
         }
-        return true;
     }
 
     @SuppressWarnings("WrongConstant")
@@ -479,6 +486,24 @@ public final class EmulationActivity extends AppCompatActivity {
 
             case MENU_ACTION_OPEN_CHEATS:
                 CheatsActivity.launch(this);
+                break;
+
+            case MENU_ACTION_CLOSE_GAME:
+                NativeLibrary.PauseEmulation();
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.emulation_close_game)
+                        .setMessage(R.string.emulation_close_game_message)
+                        .setPositiveButton(android.R.string.yes, (dialogInterface, i) ->
+                        {
+                            mEmulationFragment.stopEmulation();
+                            finish();
+                        })
+                        .setNegativeButton(android.R.string.cancel, (dialogInterface, i) ->
+                                NativeLibrary.UnPauseEmulation())
+                        .setOnCancelListener(dialogInterface ->
+                                NativeLibrary.UnPauseEmulation())
+                        .create()
+                        .show();
                 break;
         }
 

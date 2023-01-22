@@ -157,6 +157,7 @@
     <string name="loader_error_invalid_format">Invalid ROM format</string>
 
     <!-- Emulation Menu -->
+    <string name="emulation_menu_help">Press Back to access the menu.</string>
     <string name="emulation_save_state">Save State</string>
     <string name="emulation_load_state">Load State</string>
     <string name="emulation_empty_state_slot">Slot %1$d</string>

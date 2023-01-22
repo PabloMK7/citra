@@ -14,4 +14,10 @@
         android:layout_height="match_parent"
         android:transitionName="image_game_icon" />
 
+    <View
+        android:id="@+id/menu_anchor"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_gravity="top|end" />
+
 </FrameLayout>

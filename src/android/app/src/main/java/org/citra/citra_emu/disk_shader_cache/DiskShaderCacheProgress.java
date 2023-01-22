@@ -133,6 +133,8 @@ public class DiskShaderCacheProgress {
             case Complete:
                 // Workaround for when dialog is dismissed when the app is in the background
                 fragment.dismissAllowingStateLoss();
+
+                emulationActivity.runOnUiThread(emulationActivity::onEmulationStarted);
                 break;
         }
     }

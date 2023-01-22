@@ -115,4 +115,9 @@
         app:showAsAction="never"
         android:title="@string/emulation_open_settings" />
 
+    <item
+        android:id="@+id/menu_emulation_close_game"
+        app:showAsAction="never"
+        android:title="@string/emulation_close_game" />
+
 </menu>
