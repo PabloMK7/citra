@@ -268,6 +268,8 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             return ResultStatus::ErrorLoader_ErrorEncrypted;
         case Loader::ResultStatus::ErrorInvalidFormat:
             return ResultStatus::ErrorLoader_ErrorInvalidFormat;
+        case Loader::ResultStatus::ErrorGbaTitle:
+            return ResultStatus::ErrorLoader_ErrorGbaTitle;
         default:
             return ResultStatus::ErrorSystemMode;
         }
@@ -292,7 +294,6 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     telemetry_session->AddInitialInfo(*app_loader);
     std::shared_ptr<Kernel::Process> process;
     const Loader::ResultStatus load_result{app_loader->Load(process)};
-    kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", load_result);
         System::Shutdown();
@@ -302,10 +303,13 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             return ResultStatus::ErrorLoader_ErrorEncrypted;
         case Loader::ResultStatus::ErrorInvalidFormat:
             return ResultStatus::ErrorLoader_ErrorInvalidFormat;
+        case Loader::ResultStatus::ErrorGbaTitle:
+            return ResultStatus::ErrorLoader_ErrorGbaTitle;
         default:
             return ResultStatus::ErrorLoader;
         }
     }
+    kernel->SetCurrentProcess(process);
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
     title_id = 0;
     if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
@@ -539,7 +543,8 @@ void System::Shutdown(bool is_deserializing) {
                                 perf_results.emulation_speed * 100.0);
     telemetry_session->AddField(performance, "Shutdown_Framerate", perf_results.game_fps);
     telemetry_session->AddField(performance, "Shutdown_Frametime", perf_results.frametime * 1000.0);
-    telemetry_session->AddField(performance, "Mean_Frametime_MS", perf_stats->GetMeanFrametime());
+    telemetry_session->AddField(performance, "Mean_Frametime_MS",
+                                perf_stats ? perf_stats->GetMeanFrametime() : 0);
 
     // Shutdown emulation session
     VideoCore::Shutdown();

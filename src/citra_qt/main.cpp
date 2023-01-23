@@ -1015,6 +1015,11 @@ bool GMainWindow::LoadROM(const QString& filename) {
                    "titles</a>."));
             break;
 
+        case Core::System::ResultStatus::ErrorLoader_ErrorGbaTitle:
+            QMessageBox::critical(this, tr("Unsupported ROM"),
+                                  tr("GBA Virtual Console ROMs are not supported by Citra."));
+            break;
+
         case Core::System::ResultStatus::ErrorVideoCore:
             QMessageBox::critical(
                 this, tr("Video Core Error"),

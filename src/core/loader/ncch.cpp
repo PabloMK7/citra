@@ -85,6 +85,11 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
     u64_le program_id;
     if (ResultStatus::Success == ReadCode(code) &&
         ResultStatus::Success == ReadProgramId(program_id)) {
+        if (IsGbaVirtualConsole(code)) {
+            LOG_ERROR(Loader, "Encountered unsupported GBA Virtual Console code section.");
+            return ResultStatus::ErrorGbaTitle;
+        }
+
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8);
 
@@ -175,6 +180,12 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
         ASSERT_MSG(cfg, "CFG Module missing!");
         cfg->SetPreferredRegionCodes(regions);
     }
+}
+
+bool AppLoader_NCCH::IsGbaVirtualConsole(const std::vector<u8>& code) {
+    const u32* gbaVcHeader = reinterpret_cast<const u32*>(code.data() + code.size() - 0x10);
+    return code.size() >= 0x10 && gbaVcHeader[0] == MakeMagic('.', 'C', 'A', 'A') &&
+           gbaVcHeader[1] == 1;
 }
 
 ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {

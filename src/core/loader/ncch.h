@@ -78,6 +78,9 @@ private:
     /// Reads the region lockout info in the SMDH and send it to CFG service
     void ParseRegionLockoutInfo();
 
+    /// Detects whether the NCCH contains GBA Virtual Console.
+    bool IsGbaVirtualConsole(const std::vector<u8>& code);
+
     FileSys::NCCHContainer base_ncch;
     FileSys::NCCHContainer update_ncch;
     FileSys::NCCHContainer* overlay_ncch;

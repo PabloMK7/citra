@@ -82,10 +82,12 @@ public:
         ErrorSystemMode,            ///< Error determining the system mode
         ErrorLoader,                ///< Error loading the specified application
         ErrorLoader_ErrorEncrypted, ///< Error loading the specified application due to encryption
-        ErrorLoader_ErrorInvalidFormat,     ///< Error loading the specified application due to an
-                                            /// invalid format
-        ErrorSystemFiles,                   ///< Error in finding system files
-        ErrorVideoCore,                     ///< Error in the video core
+        ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified application due to an
+                                        /// invalid format
+        ErrorLoader_ErrorGbaTitle, ///< Error loading the specified application as it is GBA Virtual
+                                   ///< Console
+        ErrorSystemFiles,          ///< Error in finding system files
+        ErrorVideoCore,            ///< Error in the video core
         ErrorVideoCore_ErrorGenericDrivers, ///< Error in the video core due to the user having
                                             /// generic drivers installed
         ErrorVideoCore_ErrorBelowGL43,      ///< Error in the video core due to the user not having
