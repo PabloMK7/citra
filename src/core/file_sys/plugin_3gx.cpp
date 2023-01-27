@@ -26,7 +26,8 @@
 #include "core/loader/loader.h"
 
 static std::string ReadTextInfo(FileUtil::IOFile& file, std::size_t offset, std::size_t max_size) {
-    if (max_size > 0x400) { // Limit read string size to 0x400 bytes, just in case
+    if (offset == 0 || max_size == 0 ||
+        max_size > 0x400) { // Limit read string size to 0x400 bytes, just in case
         return "";
     }
     std::vector<char> char_data(max_size);
