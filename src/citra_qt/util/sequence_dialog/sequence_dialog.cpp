@@ -9,7 +9,6 @@
 
 SequenceDialog::SequenceDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle(tr("Enter a hotkey"));
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     key_sequence = new QKeySequenceEdit;
 

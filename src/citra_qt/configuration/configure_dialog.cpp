@@ -20,8 +20,6 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry, bool
 
     PopulateSelectionList();
 
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
     connect(ui->uiTab, &ConfigureUi::LanguageChanged, this, &ConfigureDialog::OnLanguageChanged);
     connect(ui->selectorList, &QListWidget::itemSelectionChanged, this,
             &ConfigureDialog::UpdateVisibleTabs);

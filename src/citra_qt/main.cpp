@@ -2645,6 +2645,10 @@ int main(int argc, char* argv[]) {
     std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
     chdir(bin_path.c_str());
 #endif
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Disables the "?" button on all dialogs. Disabled by default on Qt6.
+    QCoreApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
+#endif
     QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication app(argc, argv);
