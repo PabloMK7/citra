@@ -1,9 +1,9 @@
 [main]
 host = https://www.transifex.com
 
-[citra.emulator]
+[o:citra:p:citra:r:emulator]
 file_filter = <lang>.ts
 source_file = en.ts
 source_lang = en
-type = QT
+type        = QT
 
