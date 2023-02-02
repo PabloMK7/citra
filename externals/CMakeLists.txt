@@ -32,6 +32,7 @@ add_subdirectory(catch2)
 set(CRYPTOPP_BUILD_DOCUMENTATION OFF)
 set(CRYPTOPP_BUILD_TESTING OFF)
 set(CRYPTOPP_INSTALL OFF)
+set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp")
 add_subdirectory(cryptopp-cmake)
 
 # HACK: The logic to set up the base include directory for CryptoPP does not work with Android SDK CMake 3.22.1.
