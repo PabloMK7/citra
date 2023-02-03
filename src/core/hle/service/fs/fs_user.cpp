@@ -74,7 +74,7 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
         rb.PushMoveObjects(file->Connect());
     } else {
         rb.PushMoveObjects<Kernel::Object>(nullptr);
-        LOG_ERROR(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
+        LOG_DEBUG(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
     }
 
     ctx.SleepClientThread("fs_user::open", open_timeout_ns, nullptr);

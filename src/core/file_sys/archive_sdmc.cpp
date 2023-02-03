@@ -132,7 +132,7 @@ ResultCode SDMCArchive::DeleteFile(const Path& path) const {
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
     case PathParser::NotFound:
-        LOG_ERROR(Service_FS, "{} not found", full_path);
+        LOG_DEBUG(Service_FS, "{} not found", full_path);
         return ERROR_NOT_FOUND;
     case PathParser::DirectoryFound:
         LOG_ERROR(Service_FS, "{} is not a file", full_path);
@@ -291,7 +291,7 @@ ResultCode SDMCArchive::CreateDirectory(const Path& path) const {
         return ERROR_NOT_FOUND;
     case PathParser::DirectoryFound:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "{} already exists", full_path);
+        LOG_DEBUG(Service_FS, "{} already exists", full_path);
         return ERROR_ALREADY_EXISTS;
     case PathParser::NotFound:
         break; // Expected 'success' case
