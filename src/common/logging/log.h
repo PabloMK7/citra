@@ -11,7 +11,7 @@
 namespace Log {
 
 // trims up to and including the last of ../, ..\, src/, src\ in a string
-inline const char* TrimSourcePath(std::string_view source) {
+constexpr const char* TrimSourcePath(std::string_view source) {
     const auto rfind = [source](const std::string_view match) {
         return source.rfind(match) == source.npos ? 0 : (source.rfind(match) + match.size());
     };
