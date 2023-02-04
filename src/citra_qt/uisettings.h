@@ -17,7 +17,10 @@
 
 namespace UISettings {
 
-using ContextualShortcut = std::pair<QString, int>;
+struct ContextualShortcut {
+    QString keyseq;
+    int context;
+};
 
 struct Shortcut {
     QString name;

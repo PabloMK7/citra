@@ -19,7 +19,7 @@ class ConfigureHotkeys : public QWidget {
 
 public:
     explicit ConfigureHotkeys(QWidget* parent = nullptr);
-    ~ConfigureHotkeys();
+    ~ConfigureHotkeys() override;
 
     void ApplyConfiguration(HotkeyRegistry& registry);
     void RetranslateUI();
@@ -41,10 +41,13 @@ signals:
 
 private:
     void Configure(QModelIndex index);
-    bool IsUsedKey(QKeySequence key_sequence) const;
+    std::pair<bool, QString> IsUsedKey(QKeySequence key_sequence) const;
     QList<QKeySequence> GetUsedKeyList() const;
 
-    std::unique_ptr<Ui::ConfigureHotkeys> ui;
+    void RestoreDefaults();
+    void ClearAll();
+    void PopupContextMenu(const QPoint& menu_location);
+    void RestoreHotkey(QModelIndex index);
 
     /**
      * List of keyboard keys currently registered to any of the 3DS inputs.
@@ -52,6 +55,8 @@ private:
      * Synchronised with ConfigureInput via signal-slot.
      */
     QList<QKeySequence> input_keys_list;
+
+    std::unique_ptr<Ui::ConfigureHotkeys> ui;
 
     QStandardItemModel* model;
 };

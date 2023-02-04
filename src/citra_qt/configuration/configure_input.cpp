@@ -395,9 +395,6 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     });
 
     LoadConfiguration();
-
-    // TODO(wwylele): enable this when we actually emulate it
-    ui->buttonHome->setEnabled(false);
 }
 
 ConfigureInput::~ConfigureInput() = default;

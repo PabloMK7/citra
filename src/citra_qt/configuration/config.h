@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <QVariant>
+#include "citra_qt/uisettings.h"
 #include "common/settings.h"
 
 class QSettings;
@@ -25,6 +26,7 @@ public:
 
     static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
     static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs;
+    static const std::array<UISettings::Shortcut, 24> default_hotkeys;
 
 private:
     void Initialize(const std::string& config_name);

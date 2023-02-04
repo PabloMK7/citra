@@ -119,6 +119,7 @@ private:
 
     void ConnectWidgetEvents();
     void ConnectMenuEvents();
+    void UpdateMenuState();
 
     void PreventOSSleep();
     void AllowOSSleep();
@@ -169,7 +170,9 @@ private:
 
 private slots:
     void OnStartGame();
+    void OnRestartGame();
     void OnPauseGame();
+    void OnPauseContinueGame();
     void OnStopGame();
     void OnSaveState();
     void OnLoadState();

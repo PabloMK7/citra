@@ -93,7 +93,6 @@
      <addaction name="action_Load_from_Newest_Slot"/>
      <addaction name="separator"/>
     </widget>
-    <addaction name="action_Start"/>
     <addaction name="action_Pause"/>
     <addaction name="action_Stop"/>
     <addaction name="action_Restart"/>
@@ -213,14 +212,6 @@
   <action name="action_Exit">
    <property name="text">
     <string>E&amp;xit</string>
-   </property>
-  </action>
-  <action name="action_Start">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Start</string>
    </property>
   </action>
   <action name="action_Pause">

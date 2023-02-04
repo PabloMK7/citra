@@ -68,6 +68,7 @@ public:
 private:
     struct Hotkey {
         QKeySequence keyseq;
+        QString controller_keyseq;
         QShortcut* shortcut = nullptr;
         Qt::ShortcutContext context = Qt::WindowShortcut;
     };
