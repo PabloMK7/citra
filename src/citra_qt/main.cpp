@@ -117,6 +117,7 @@ __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
 #endif
 
 constexpr int default_mouse_timeout = 2500;
+constexpr int num_options_3d = 5;
 
 /**
  * "Callouts" are one-time instructional messages shown to the user. In the config settings, there
@@ -202,6 +203,7 @@ GMainWindow::GMainWindow()
 
     ConnectMenuEvents();
     ConnectWidgetEvents();
+    Connect3DStateEvents();
 
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
@@ -299,7 +301,6 @@ void GMainWindow::InitializeWidgets() {
     // Create status bar
     message_label = new QLabel();
     // Configured separately for left alignment
-    message_label->setVisible(false);
     message_label->setFrameStyle(QFrame::NoFrame);
     message_label->setContentsMargins(4, 0, 4, 0);
     message_label->setAlignment(Qt::AlignLeft);
@@ -324,10 +325,26 @@ void GMainWindow::InitializeWidgets() {
         label->setVisible(false);
         label->setFrameStyle(QFrame::NoFrame);
         label->setContentsMargins(4, 0, 4, 0);
-        statusBar()->addPermanentWidget(label, 0);
+        statusBar()->addPermanentWidget(label);
     }
-    statusBar()->addPermanentWidget(multiplayer_state->GetStatusText(), 0);
-    statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon(), 0);
+
+    option_3d_button = new QPushButton();
+    option_3d_button->setObjectName(QStringLiteral("3DOptionStatusBarButton"));
+    option_3d_button->setFocusPolicy(Qt::NoFocus);
+    option_3d_button->setToolTip(tr("Indicates the current 3D setting. Click to toggle."));
+
+    factor_3d_slider = new QSlider(Qt::Orientation::Horizontal, this);
+    factor_3d_slider->setStyleSheet(QStringLiteral("QSlider { padding: 4px; }"));
+    factor_3d_slider->setToolTip(tr("Current 3D factor while 3D is enabled."));
+    factor_3d_slider->setRange(0, 100);
+
+    Update3DState();
+    statusBar()->insertPermanentWidget(0, option_3d_button);
+    statusBar()->insertPermanentWidget(1, factor_3d_slider);
+
+    statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
+    statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
+
     statusBar()->setVisible(true);
 
     // Removes an ugly inner border from the status bar widgets under Linux
@@ -575,6 +592,35 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect_shortcut(QStringLiteral("Mute Audio"),
                      [] { Settings::values.audio_muted = !Settings::values.audio_muted; });
+
+    connect_shortcut(QStringLiteral("Toggle 3D"), &GMainWindow::Toggle3D);
+
+    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
+    // variable hold a garbage value after this function exits
+    static constexpr u16 FACTOR_3D_STEP = 5;
+    connect_shortcut(QStringLiteral("Decrease 3D Factor"), [this] {
+        const auto factor_3d = Settings::values.factor_3d.GetValue();
+        if (factor_3d > 0) {
+            if (factor_3d % FACTOR_3D_STEP != 0) {
+                Settings::values.factor_3d = factor_3d - (factor_3d % FACTOR_3D_STEP);
+            } else {
+                Settings::values.factor_3d = factor_3d - FACTOR_3D_STEP;
+            }
+            UpdateStatusBar();
+        }
+    });
+    connect_shortcut(QStringLiteral("Increase 3D Factor"), [this] {
+        const auto factor_3d = Settings::values.factor_3d.GetValue();
+        if (factor_3d < 100) {
+            if (factor_3d % FACTOR_3D_STEP != 0) {
+                Settings::values.factor_3d =
+                    factor_3d + FACTOR_3D_STEP - (factor_3d % FACTOR_3D_STEP);
+            } else {
+                Settings::values.factor_3d = factor_3d + FACTOR_3D_STEP;
+            }
+            UpdateStatusBar();
+        }
+    });
 }
 
 void GMainWindow::ShowUpdaterWidgets() {
@@ -803,6 +849,12 @@ void GMainWindow::UpdateMenuState() {
     } else {
         ui->action_Pause->setText(tr("&Pause"));
     }
+}
+
+void GMainWindow::Connect3DStateEvents() {
+    connect(option_3d_button, &QPushButton::clicked, this, &GMainWindow::Toggle3D);
+    connect(factor_3d_slider, qOverload<int>(&QSlider::valueChanged), this,
+            [](int value) { Settings::values.factor_3d = value; });
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
@@ -1219,7 +1271,6 @@ void GMainWindow::ShutdownGame() {
 
     // Disable status bar updates
     status_bar_update_timer.stop();
-    message_label->setVisible(false);
     message_label_used_for_movie = false;
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
@@ -1900,6 +1951,7 @@ void GMainWindow::OnConfigure() {
             setMouseTracking(false);
         }
         UpdateSecondaryWindowVisibility();
+        Update3DState();
     } else {
         Settings::values.input_profiles = old_input_profiles;
         Settings::values.touch_from_button_maps = old_touch_from_button_maps;
@@ -2160,22 +2212,18 @@ void GMainWindow::UpdateStatusBar() {
     const auto play_mode = Core::Movie::GetInstance().GetPlayMode();
     if (play_mode == Core::Movie::PlayMode::Recording) {
         message_label->setText(tr("Recording %1").arg(current));
-        message_label->setVisible(true);
         message_label_used_for_movie = true;
         ui->action_Save_Movie->setEnabled(true);
     } else if (play_mode == Core::Movie::PlayMode::Playing) {
         message_label->setText(tr("Playing %1 / %2").arg(current, total));
-        message_label->setVisible(true);
         message_label_used_for_movie = true;
         ui->action_Save_Movie->setEnabled(false);
     } else if (play_mode == Core::Movie::PlayMode::MovieFinished) {
         message_label->setText(tr("Movie Finished"));
-        message_label->setVisible(true);
         message_label_used_for_movie = true;
         ui->action_Save_Movie->setEnabled(false);
     } else if (message_label_used_for_movie) { // Clear the label if movie was just closed
         message_label->setText(QString{});
-        message_label->setVisible(false);
         message_label_used_for_movie = false;
         ui->action_Save_Movie->setEnabled(false);
     }
@@ -2195,6 +2243,18 @@ void GMainWindow::UpdateStatusBar() {
     emu_speed_label->setVisible(true);
     game_fps_label->setVisible(true);
     emu_frametime_label->setVisible(true);
+}
+
+void GMainWindow::Update3DState() {
+    static const std::array options_3d = {tr("Off"), tr("Side by Side"), tr("Anaglyph"),
+                                          tr("Interlaced"), tr("Reverse Interlaced")};
+
+    option_3d_button->setText(
+        tr("3D: %1").arg(options_3d[static_cast<int>(Settings::values.render_3d.GetValue())]));
+
+    factor_3d_slider->setValue(Settings::values.factor_3d.GetValue());
+    factor_3d_slider->setVisible(Settings::values.render_3d.GetValue() !=
+                                 Settings::StereoRenderOption::Off);
 }
 
 void GMainWindow::HideMouseCursor() {
@@ -2299,7 +2359,6 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     if (emu_thread) {
         emu_thread->SetRunning(true);
         message_label->setText(status_message);
-        message_label->setVisible(true);
         message_label_used_for_movie = false;
     }
 }
@@ -2307,6 +2366,12 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
 void GMainWindow::OnMenuAboutCitra() {
     AboutDialog about{this};
     about.exec();
+}
+
+void GMainWindow::Toggle3D() {
+    Settings::values.render_3d = static_cast<Settings::StereoRenderOption>(
+        (static_cast<int>(Settings::values.render_3d.GetValue()) + 1) % num_options_3d);
+    Update3DState();
 }
 
 bool GMainWindow::ConfirmClose() {
@@ -2418,8 +2483,18 @@ void GMainWindow::UpdateUITheme() {
     QStringList theme_paths(default_theme_paths);
 
     if (is_default_theme || current_theme.isEmpty()) {
-        qApp->setStyleSheet({});
-        setStyleSheet({});
+        const QString theme_uri(QStringLiteral(":default/style.qss"));
+        QFile f(theme_uri);
+        if (f.open(QFile::ReadOnly | QFile::Text)) {
+            QTextStream ts(&f);
+            qApp->setStyleSheet(ts.readAll());
+            setStyleSheet(ts.readAll());
+        } else {
+            LOG_ERROR(Frontend,
+                      "Unable to open default stylesheet, falling back to empty stylesheet");
+            qApp->setStyleSheet({});
+            setStyleSheet({});
+        }
         theme_paths.append(default_icons);
         QIcon::setThemeName(default_icons);
     } else {
