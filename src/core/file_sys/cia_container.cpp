@@ -16,8 +16,6 @@
 
 namespace FileSys {
 
-constexpr u32 CIA_SECTION_ALIGNMENT = 0x40;
-
 Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
     std::vector<u8> header_data(sizeof(Header));
 

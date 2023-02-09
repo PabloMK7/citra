@@ -361,6 +361,52 @@
             </property>
           </widget>
         </item>
+        <item row="15" column="0">
+         <widget class="QLabel" name="label_nus_download">
+          <property name="text">
+           <string>Download System Files from Nitendo servers</string>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_nus_download">
+          <item>
+           <widget class="QComboBox" name="combo_download_mode">
+            <item>
+             <property name="text">
+              <string>All</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Recommended</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Minimal</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="button_start_download">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::RightToLeft</enum>
+            </property>
+            <property name="text">
+             <string>Download</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
       </widget>
      </item>

@@ -1920,6 +1920,7 @@ void GMainWindow::OnLoadState() {
 }
 
 void GMainWindow::OnConfigure() {
+    game_list->SetDirectoryWatcherEnabled(false);
     Settings::SetConfiguringGlobal(true);
     ConfigureDialog configureDialog(this, hotkey_registry,
                                     !multiplayer_state->IsHostingPublicRoom());
@@ -1931,6 +1932,7 @@ void GMainWindow::OnConfigure() {
     const auto old_touch_from_button_maps = Settings::values.touch_from_button_maps;
     const bool old_discord_presence = UISettings::values.enable_discord_presence.GetValue();
     auto result = configureDialog.exec();
+    game_list->SetDirectoryWatcherEnabled(true);
     if (result == QDialog::Accepted) {
         configureDialog.ApplyConfiguration();
         InitializeHotkeys();

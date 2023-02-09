@@ -88,7 +88,7 @@ struct KeySlot {
 };
 
 std::array<KeySlot, KeySlotID::MaxKeySlotID> key_slots;
-std::array<std::optional<AESKey>, 6> common_key_y_slots;
+std::array<std::optional<AESKey>, MaxCommonKeySlot> common_key_y_slots;
 
 enum class FirmwareType : u32 {
     ARM9 = 0,  // uses NDMA
@@ -494,9 +494,9 @@ void LoadPresetKeys() {
 
 } // namespace
 
-void InitKeys() {
+void InitKeys(bool force) {
     static bool initialized = false;
-    if (initialized)
+    if (initialized && !force)
         return;
     initialized = true;
     HW::RSA::InitSlots();

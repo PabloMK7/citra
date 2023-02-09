@@ -3,14 +3,22 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <QFutureWatcher>
 #include <QMessageBox>
+#include <QProgressDialog>
+#include <QtConcurrent/QtConcurrentMap>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_system.h"
 #include "common/settings.h"
 #include "core/core.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/ptm/ptm.h"
+#include "core/hw/aes/key.h"
 #include "ui_configure_system.h"
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/nus_titles.h"
+#endif
 
 static const std::array<int, 12> days_in_month = {{
     31,
@@ -239,6 +247,8 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
             &ConfigureSystem::UpdateInitTime);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
+    connect(ui->button_start_download, &QPushButton::clicked, this,
+            &ConfigureSystem::DownloadFromNUS);
     for (u8 i = 0; i < country_names.size(); i++) {
         if (std::strcmp(country_names.at(i), "") != 0) {
             ui->combo_country->addItem(tr(country_names.at(i)), i);
@@ -257,6 +267,30 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
     ui->clock_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
 
     SetupPerGameUI();
+
+    ui->combo_download_mode->setCurrentIndex(1); // set to Recommended
+    bool keys_available = true;
+    HW::AES::InitKeys(true);
+    for (u8 i = 0; i < HW::AES::MaxCommonKeySlot; i++) {
+        HW::AES::SelectCommonKeyIndex(i);
+        if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::TicketCommonKey)) {
+            keys_available = false;
+            break;
+        }
+    }
+    if (keys_available) {
+        ui->button_start_download->setEnabled(true);
+        ui->combo_download_mode->setEnabled(true);
+        ui->label_nus_download->setText(tr("Download System Files from Nintendo servers"));
+    } else {
+        ui->button_start_download->setEnabled(false);
+        ui->combo_download_mode->setEnabled(false);
+        ui->label_nus_download->setText(
+            tr("Citra is missing keys to download system files. <br><a "
+               "href='https://citra-emu.org/wiki/aes-keys/'><span style=\"text-decoration: "
+               "underline; color:#039be5;\">How to get keys?</span></a>"));
+    }
+
     ConfigureTime();
 }
 
@@ -541,4 +575,45 @@ void ConfigureSystem::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);
+}
+
+void ConfigureSystem::DownloadFromNUS() {
+#ifdef ENABLE_WEB_SERVICE
+    ui->button_start_download->setEnabled(false);
+
+    const auto mode = static_cast<Title::Mode>(ui->combo_download_mode->currentIndex());
+    const std::vector<u64> titles = BuildFirmwareTitleList(mode, cfg->GetRegionValue());
+
+    QProgressDialog progress(tr("Downloading files..."), tr("Cancel"), 0,
+                             static_cast<int>(titles.size()), this);
+    progress.setWindowModality(Qt::WindowModal);
+
+    QFutureWatcher<void> future_watcher;
+    QObject::connect(&future_watcher, &QFutureWatcher<void>::finished, &progress,
+                     &QProgressDialog::reset);
+    QObject::connect(&progress, &QProgressDialog::canceled, &future_watcher,
+                     &QFutureWatcher<void>::cancel);
+    QObject::connect(&future_watcher, &QFutureWatcher<void>::progressValueChanged, &progress,
+                     &QProgressDialog::setValue);
+
+    auto failed = false;
+    const auto download_title = [&future_watcher, &failed](const u64& title_id) {
+        if (Service::AM::InstallFromNus(title_id) != Service::AM::InstallStatus::Success) {
+            failed = true;
+            future_watcher.cancel();
+        }
+    };
+
+    future_watcher.setFuture(QtConcurrent::map(titles, download_title));
+    progress.exec();
+    future_watcher.waitForFinished();
+
+    if (failed) {
+        QMessageBox::critical(this, tr("Citra"), tr("Downloading system files failed."));
+    } else if (!future_watcher.isCanceled()) {
+        QMessageBox::information(this, tr("Citra"), tr("Successfully downloaded system files."));
+    }
+
+    ui->button_start_download->setEnabled(true);
+#endif
 }

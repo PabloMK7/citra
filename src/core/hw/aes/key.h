@@ -48,11 +48,13 @@ enum KeySlotID : std::size_t {
     MaxKeySlotID = 0x40,
 };
 
+constexpr std::size_t MaxCommonKeySlot = 6;
+
 constexpr std::size_t AES_BLOCK_SIZE = 16;
 
 using AESKey = std::array<u8, AES_BLOCK_SIZE>;
 
-void InitKeys();
+void InitKeys(bool force = false);
 
 void SetGeneratorConstant(const AESKey& key);
 void SetKeyX(std::size_t slot_id, const AESKey& key);

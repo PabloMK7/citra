@@ -43,6 +43,8 @@ private:
 
     void SetupPerGameUI();
 
+    void DownloadFromNUS();
+
     ConfigurationShared::CheckState is_new_3ds;
     std::unique_ptr<Ui::ConfigureSystem> ui;
     bool enabled = false;
