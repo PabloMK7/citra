@@ -2663,6 +2663,55 @@ void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
 #undef main
 #endif
 
+static void SetHighDPIAttributes() {
+#ifdef _WIN32
+    // For Windows, we want to avoid scaling artifacts on fractional scaling ratios.
+    // This is done by setting the optimal scaling policy for the primary screen.
+
+    // Create a temporary QApplication.
+    int temp_argc = 0;
+    char** temp_argv = nullptr;
+    QApplication temp{temp_argc, temp_argv};
+
+    // Get the current screen geometry.
+    const QScreen* primary_screen = QGuiApplication::primaryScreen();
+    if (primary_screen == nullptr) {
+        return;
+    }
+
+    const QRect screen_rect = primary_screen->geometry();
+    const int real_width = screen_rect.width();
+    const int real_height = screen_rect.height();
+    const float real_ratio = primary_screen->logicalDotsPerInch() / 96.0f;
+
+    // Recommended minimum width and height for proper window fit.
+    // Any screen with a lower resolution than this will still have a scale of 1.
+    constexpr float minimum_width = 1350.0f;
+    constexpr float minimum_height = 900.0f;
+
+    const float width_ratio = std::max(1.0f, real_width / minimum_width);
+    const float height_ratio = std::max(1.0f, real_height / minimum_height);
+
+    // Get the lower of the 2 ratios and truncate, this is the maximum integer scale.
+    const float max_ratio = std::trunc(std::min(width_ratio, height_ratio));
+
+    if (max_ratio > real_ratio) {
+        QApplication::setHighDpiScaleFactorRoundingPolicy(
+            Qt::HighDpiScaleFactorRoundingPolicy::Round);
+    } else {
+        QApplication::setHighDpiScaleFactorRoundingPolicy(
+            Qt::HighDpiScaleFactorRoundingPolicy::Floor);
+    }
+#else
+    // Other OSes should be better than Windows at fractional scaling.
+    QApplication::setHighDpiScaleFactorRoundingPolicy(
+        Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+#endif
+
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+}
+
 int main(int argc, char* argv[]) {
     Common::DetachedTasks detached_tasks;
     MicroProfileOnThreadCreate("Frontend");
@@ -2679,6 +2728,8 @@ int main(int argc, char* argv[]) {
     // TODO: expose a setting for buffer value (ie default/single/double/triple)
     format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
     QSurfaceFormat::setDefaultFormat(format);
+
+    SetHighDPIAttributes();
 
 #ifdef __APPLE__
     std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
