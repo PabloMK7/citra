@@ -161,6 +161,28 @@ static void InitializeLogging() {
 #endif
 }
 
+static QString PrettyProductName() {
+#ifdef _WIN32
+    // After Windows 10 Version 2004, Microsoft decided to switch to a different notation: 20H2
+    // With that notation change they changed the registry key used to denote the current version
+    QSettings windows_registry(
+        QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
+        QSettings::NativeFormat);
+    const QString release_id = windows_registry.value(QStringLiteral("ReleaseId")).toString();
+    if (release_id == QStringLiteral("2009")) {
+        const u32 current_build = windows_registry.value(QStringLiteral("CurrentBuild")).toUInt();
+        const QString display_version =
+            windows_registry.value(QStringLiteral("DisplayVersion")).toString();
+        const u32 ubr = windows_registry.value(QStringLiteral("UBR")).toUInt();
+        const u32 version = current_build >= 22000 ? 11 : 10;
+        return QStringLiteral("Windows %1 Version %2 (Build %3.%4)")
+            .arg(QString::number(version), display_version, QString::number(current_build),
+                 QString::number(ubr));
+    }
+#endif
+    return QSysInfo::prettyProductName();
+}
+
 GMainWindow::GMainWindow()
     : ui{std::make_unique<Ui::MainWindow>()}, config{std::make_unique<Config>()}, emu_thread{
                                                                                       nullptr} {
@@ -223,7 +245,7 @@ GMainWindow::GMainWindow()
     }
     LOG_INFO(Frontend, "Host CPU: {}", cpu_string);
 #endif
-    LOG_INFO(Frontend, "Host OS: {}", QSysInfo::prettyProductName().toStdString());
+    LOG_INFO(Frontend, "Host OS: {}", PrettyProductName().toStdString());
     const auto& mem_info = Common::GetMemInfo();
     using namespace Common::Literals;
     LOG_INFO(Frontend, "Host RAM: {:.2f} GiB", mem_info.total_physical_memory / f64{1_GiB});
