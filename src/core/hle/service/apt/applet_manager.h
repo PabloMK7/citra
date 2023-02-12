@@ -185,6 +185,11 @@ public:
         deliver_arg = std::move(arg);
     }
 
+    ResultCode PrepareToStartApplication(u64 title_id, FS::MediaType media_type);
+    ResultCode StartApplication(const std::vector<u8>& parameter, const std::vector<u8>& hmac,
+                                bool paused);
+    ResultCode WakeupApplication();
+
     struct AppletInfo {
         u64 title_id;
         Service::FS::MediaType media_type;
@@ -221,10 +226,27 @@ public:
         return app_jump_parameters;
     }
 
+    struct ApplicationStartParameters {
+        u64 next_title_id;
+        FS::MediaType next_media_type;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& next_title_id;
+            ar& next_media_type;
+        }
+        friend class boost::serialization::access;
+    };
+
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
     // NOTE: A bug in gcc prevents serializing std::optional
     boost::optional<MessageParameter> next_parameter;
+
+    /// This parameter will be sent to the application/applet once they register themselves by using
+    /// APT::Initialize.
+    boost::optional<MessageParameter> delayed_parameter;
 
     static constexpr std::size_t NumAppletSlot = 4;
 
@@ -271,6 +293,7 @@ private:
     };
 
     ApplicationJumpParameters app_jump_parameters{};
+    boost::optional<ApplicationStartParameters> app_start_parameters{};
     boost::optional<DeliverArg> deliver_arg{};
 
     // Holds data about the concurrently running applets in the system.
@@ -279,6 +302,10 @@ private:
     // This overload returns nullptr if no applet with the specified id has been started.
     AppletSlotData* GetAppletSlotData(AppletId id);
     AppletSlotData* GetAppletSlotData(AppletAttributes attributes);
+
+    /// Checks if the Application slot has already been registered and sends the parameter to it,
+    /// otherwise it queues for sending when the application registers itself with APT::Enable.
+    void SendApplicationParameterAfterRegistration(const MessageParameter& parameter);
 
     void EnsureHomeMenuLoaded();
 
@@ -293,6 +320,8 @@ private:
         ar& next_parameter;
         ar& app_jump_parameters;
         if (file_version > 0) {
+            ar& delayed_parameter;
+            ar& app_start_parameters;
             ar& deliver_arg;
         }
         ar& applet_slots;

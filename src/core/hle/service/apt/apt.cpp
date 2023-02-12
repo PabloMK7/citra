@@ -540,39 +540,40 @@ void Module::APTInterface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
 
 void Module::APTInterface::PrepareToStartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x15, 5, 0); // 0x00150140
-    u32 title_info1 = rp.Pop<u32>();
-    u32 title_info2 = rp.Pop<u32>();
-    u32 title_info3 = rp.Pop<u32>();
-    u32 title_info4 = rp.Pop<u32>();
-    u32 flags = rp.Pop<u32>();
-
-    if (flags & 0x00000100) {
-        apt->unknown_ns_state_field = 1;
-    }
+    const u64 title_id = rp.Pop<u64>();
+    const auto media_type = rp.PopEnum<FS::MediaType>();
+    rp.Skip(1, false); // Padding
+    const u32 flags = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(apt->applet_manager->PrepareToStartApplication(title_id, media_type));
 
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
-                "title_info4={:#010X}, flags={:#010X}",
-                title_info1, title_info2, title_info3, title_info4, flags);
+    LOG_INFO(Service_APT, "called title_id={:#010X} media_type={} flags={:#010X}", title_id,
+             media_type, flags);
 }
 
 void Module::APTInterface::StartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1B, 3, 4); // 0x001B00C4
-    const auto buffer1_size = rp.Pop<u32>();
-    const auto buffer2_size = rp.Pop<u32>();
-    const auto flag = rp.Pop<u32>();
-    [[maybe_unused]] const std::vector<u8> buffer1 = rp.PopStaticBuffer();
-    [[maybe_unused]] const std::vector<u8> buffer2 = rp.PopStaticBuffer();
+    const u32 parameter_size = rp.Pop<u32>();
+    const u32 hmac_size = rp.Pop<u32>();
+    const bool paused = rp.Pop<bool>();
+    const std::vector<u8> parameter = rp.PopStaticBuffer();
+    const std::vector<u8> hmac = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(apt->applet_manager->StartApplication(parameter, hmac, paused));
 
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called buffer1_size={:#010X}, buffer2_size={:#010X}, flag={:#010X}",
-                buffer1_size, buffer2_size, flag);
+    LOG_INFO(Service_APT, "called parameter_size={:#010X}, hmac_size={:#010X}, paused={}",
+             parameter_size, hmac_size, paused);
+}
+
+void Module::APTInterface::WakeupApplication(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1C, 0, 0); // 0x001C0000
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->WakeupApplication());
+
+    LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::APTInterface::AppletUtility(Kernel::HLERequestContext& ctx) {

@@ -362,6 +362,16 @@ public:
         void StartApplication(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::WakeupApplication service function.
+         *  Inputs:
+         *      0 : Command header [0x001C0000]
+         * Outputs:
+         *     0 : Return Header
+         *     1 : Result of function, 0 on success, otherwise error code
+         */
+        void WakeupApplication(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::AppletUtility service function
          *  Inputs:
          *      1 : Unknown, but clearly used for something

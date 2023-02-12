@@ -283,8 +283,15 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
     slot_data->title_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
     slot_data->attributes.raw = attributes.raw;
 
-    if (slot_data->applet_id == AppletId::Application ||
-        slot_data->applet_id == AppletId::HomeMenu) {
+    const auto* home_menu_slot = GetAppletSlotData(AppletId::HomeMenu);
+
+    // Applications need to receive a Wakeup signal to actually start up, this signal is usually
+    // sent by the Home Menu after starting the app by way of APT::WakeupApplication. In some cases
+    // such as when starting a game directly or the Home Menu itself, we have to send the signal
+    // ourselves since the Home Menu is not running yet. We detect if the Home Menu is running by
+    // checking if there's an applet registered in the HomeMenu slot.
+    if (slot_data->applet_id == AppletId::HomeMenu ||
+        (slot_data->applet_id == AppletId::Application && !home_menu_slot)) {
         // Initialize the APT parameter to wake up the application.
         next_parameter.emplace();
         next_parameter->signal = SignalType::Wakeup;
@@ -309,6 +316,12 @@ ResultCode AppletManager::Enable(AppletAttributes attributes) {
     }
 
     slot_data->registered = true;
+
+    // Send any outstanding parameters to the newly-registered application
+    if (delayed_parameter && delayed_parameter->destination_id == slot_data->applet_id) {
+        CancelAndSendParameter(*delayed_parameter);
+        delayed_parameter.reset();
+    }
 
     return RESULT_SUCCESS;
 }
@@ -578,6 +591,89 @@ ResultCode AppletManager::DoApplicationJump(DeliverArg arg) {
     }
     return RESULT_SUCCESS;
     */
+}
+
+ResultCode AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType media_type) {
+    // TODO(Subv): This should check that the current applet is of System type and return 0xc8a0cc04
+    // if not.
+
+    // TODO(Subv): This should return 0xc8a0cff0 if the applet preparation state is already set
+
+    const auto& application_slot = applet_slots[static_cast<size_t>(AppletSlot::Application)];
+
+    if (application_slot.registered) {
+        // TODO(Subv): Convert this to the enum constructor of ResultCode
+        return ResultCode(0xc8a0cffc);
+    }
+
+    ASSERT_MSG(!app_start_parameters,
+               "Trying to prepare an application when another is already prepared");
+
+    app_start_parameters.emplace();
+    app_start_parameters->next_title_id = title_id;
+    app_start_parameters->next_media_type = media_type;
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode AppletManager::StartApplication(const std::vector<u8>& parameter,
+                                           const std::vector<u8>& hmac, bool paused) {
+    // The delivery argument is always unconditionally set.
+    deliver_arg.emplace(DeliverArg{parameter, hmac});
+
+    // Note: APT first checks if we can launch the application via AM::CheckDemoLaunchRights and
+    // returns 0xc8a12403 if we can't. We intentionally do not implement that check.
+
+    // TODO(Subv): The APT service performs several checks here related to the exheader flags of the
+    // process we're launching and other things like title id blacklists. We do not yet implement
+    // any of that.
+
+    // TODO(Subv): The real APT service doesn't seem to check whether the titleid to launch is set
+    // or not, it either launches NATIVE_FIRM if some internal state is set, or fails when calling
+    // PM::LaunchTitle. We should research more about that.
+    ASSERT_MSG(app_start_parameters, "Trying to start an application without preparing it first.");
+
+    // Launch the title directly.
+    const auto process =
+        NS::LaunchTitle(app_start_parameters->next_media_type, app_start_parameters->next_title_id);
+    if (!process) {
+        LOG_CRITICAL(Service_APT, "Failed to launch title during application start, exiting.");
+        system.RequestShutdown();
+    }
+
+    app_start_parameters.reset();
+
+    if (!paused) {
+        return WakeupApplication();
+    }
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode AppletManager::WakeupApplication() {
+    // Send a Wakeup signal via the apt parameter to the application once it registers itself.
+    // The real APT service does this by spinwaiting on another thread until the application is
+    // registered.
+    MessageParameter wakeup_parameter{};
+    wakeup_parameter.signal = SignalType::Wakeup;
+    wakeup_parameter.sender_id = AppletId::HomeMenu;
+    wakeup_parameter.destination_id = AppletId::Application;
+    SendApplicationParameterAfterRegistration(wakeup_parameter);
+
+    return RESULT_SUCCESS;
+}
+
+void AppletManager::SendApplicationParameterAfterRegistration(const MessageParameter& parameter) {
+    const auto* slot = GetAppletSlotData(AppletId::Application);
+
+    // If the application is already registered, immediately send the parameter
+    if (slot && slot->registered) {
+        CancelAndSendParameter(parameter);
+        return;
+    }
+
+    // Otherwise queue it until the Application calls APT::Enable
+    delayed_parameter = parameter;
 }
 
 void AppletManager::EnsureHomeMenuLoaded() {
