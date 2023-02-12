@@ -34,11 +34,11 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->emulation_speed_display_label->setMinimumWidth(tr("unthrottled").size() * 6);
     ui->emulation_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->screenshot_combo->setVisible(!Settings::IsConfiguringGlobal());
+    ui->updateBox->setVisible(UISettings::values.updater_found);
 
     SetupPerGameUI();
     SetConfiguration();
 
-    ui->updateBox->setVisible(UISettings::values.updater_found);
     connect(ui->button_reset_defaults, &QPushButton::clicked, this,
             &ConfigureGeneral::ResetDefaults);
 
