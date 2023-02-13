@@ -6,6 +6,3 @@ contact_links:
   - name: Community forums
     url: https://community.citra-emu.org
     about: This is an alternative place for tech support, however helpers there are not as active.
-  - name: Citra Android
-    url: https://github.com/citra-emu/citra-android
-    about: If you need tech support on Citra Android, you should use either of the above two options. If you want to file an issue, you should go to the Android repo linked here.
