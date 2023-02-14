@@ -16,16 +16,19 @@
 // Call directly after the command or use the error num.
 // This function might change the error code.
 std::string GetLastErrorMsg() {
-    static const std::size_t buff_size = 255;
+    constexpr std::size_t buff_size = 255;
     char err_str[buff_size];
+    std::size_t msg_len;
 
 #ifdef _WIN32
-    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(),
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err_str, buff_size, nullptr);
+    msg_len =
+        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(),
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err_str, buff_size, nullptr);
 #else
     // Thread safe (XSI-compliant)
     strerror_r(errno, err_str, buff_size);
+    msg_len = strnlen(err_str, buff_size);
 #endif
 
-    return std::string(err_str, buff_size);
+    return std::string(err_str, msg_len);
 }

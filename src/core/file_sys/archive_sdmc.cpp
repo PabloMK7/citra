@@ -106,7 +106,7 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
 
     FileUtil::IOFile file(full_path, mode.write_flag ? "r+b" : "rb");
     if (!file.IsOpen()) {
-        LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
+        LOG_CRITICAL(Service_FS, "Error opening {}: {}", full_path, GetLastErrorMsg());
         return ERROR_NOT_FOUND;
     }
 
