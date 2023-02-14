@@ -9,6 +9,7 @@
 #include <QSettings>
 #include "citra_qt/configuration/config.h"
 #include "common/file_util.h"
+#include "common/settings.h"
 #include "core/frontend/mic.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
@@ -496,6 +497,7 @@ void Config::ReadLayoutValues() {
         ReadBasicSetting(Settings::values.custom_bottom_top);
         ReadBasicSetting(Settings::values.custom_bottom_right);
         ReadBasicSetting(Settings::values.custom_bottom_bottom);
+        ReadBasicSetting(Settings::values.custom_second_layer_opacity);
     }
 
     qt_config->endGroup();
@@ -1006,6 +1008,7 @@ void Config::SaveLayoutValues() {
         WriteBasicSetting(Settings::values.custom_bottom_top);
         WriteBasicSetting(Settings::values.custom_bottom_right);
         WriteBasicSetting(Settings::values.custom_bottom_bottom);
+        WriteBasicSetting(Settings::values.custom_second_layer_opacity);
     }
 
     qt_config->endGroup();

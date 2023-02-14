@@ -349,7 +349,7 @@ FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary
     return SingleFrameLayout(width, height, is_secondary, upright);
 }
 
-FramebufferLayout CustomFrameLayout(u32 width, u32 height) {
+FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
@@ -364,8 +364,13 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height) {
                                       Settings::values.custom_bottom_right.GetValue(),
                                       Settings::values.custom_bottom_bottom.GetValue()};
 
-    res.top_screen = top_screen;
-    res.bottom_screen = bot_screen;
+    if (is_swapped) {
+        res.top_screen = bot_screen;
+        res.bottom_screen = top_screen;
+    } else {
+        res.top_screen = top_screen;
+        res.bottom_screen = bot_screen;
+    }
     return res;
 }
 
@@ -375,7 +380,8 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
         layout = CustomFrameLayout(std::max(Settings::values.custom_top_right.GetValue(),
                                             Settings::values.custom_bottom_right.GetValue()),
                                    std::max(Settings::values.custom_top_bottom.GetValue(),
-                                            Settings::values.custom_bottom_bottom.GetValue()));
+                                            Settings::values.custom_bottom_bottom.GetValue()),
+                                   Settings::values.swap_screen.GetValue());
     } else {
         int width, height;
         switch (Settings::values.layout_option.GetValue()) {

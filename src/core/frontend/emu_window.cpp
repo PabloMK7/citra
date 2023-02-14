@@ -178,7 +178,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
         layout_option.GetValue(), Settings::values.upright_screen.GetValue());
 
     if (Settings::values.custom_layout.GetValue() == true) {
-        layout = Layout::CustomFrameLayout(width, height);
+        layout = Layout::CustomFrameLayout(width, height, Settings::values.swap_screen.GetValue());
     } else {
         width = std::max(width, min_size.first);
         height = std::max(height, min_size.second);

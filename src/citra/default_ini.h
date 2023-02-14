@@ -204,6 +204,9 @@ custom_bottom_top =
 custom_bottom_right =
 custom_bottom_bottom =
 
+# Opacity of second layer when using custom layout option (bottom screen unless swapped)
+custom_second_layer_opacity =
+
 # Swaps the prominent screen with the other screen.
 # For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
 # 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent

@@ -177,6 +177,8 @@ void Config::ReadValues() {
         static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_right", 360));
     Settings::values.custom_bottom_bottom =
         static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_bottom", 480));
+    Settings::values.custom_second_layer_opacity =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_second_layer_opacity", 100));
 
     // Utility
     Settings::values.dump_textures = sdl2_config->GetBoolean("Utility", "dump_textures", false);
