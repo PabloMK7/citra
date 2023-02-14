@@ -153,6 +153,20 @@ struct ConsoleCountryInfo {
     u8 country_code; ///< The country code of the console
 };
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
+
+struct BacklightControls {
+    u8 power_saving_enabled; ///< Whether power saving mode is enabled.
+    u8 brightness_level;     ///< The configured brightness level.
+};
+static_assert(sizeof(BacklightControls) == 2, "BacklightControls must be exactly 2 bytes");
+
+struct New3dsBacklightControls {
+    u8 unknown_1[4];            ///< Unknown data
+    u8 auto_brightness_enabled; ///< Whether auto brightness is enabled.
+    u8 unknown_2[3];            ///< Unknown data
+};
+static_assert(sizeof(New3dsBacklightControls) == 8,
+              "New3dsBacklightControls must be exactly 8 bytes");
 } // namespace
 
 constexpr EULAVersion MAX_EULA_VERSION{0x7F, 0x7F};
@@ -166,6 +180,8 @@ constexpr u8 UNITED_STATES_COUNTRY_ID = 49;
 constexpr u8 WASHINGTON_DC_STATE_ID = 2;
 /// TODO(Subv): Find what the other bytes are
 constexpr ConsoleCountryInfo COUNTRY_INFO{{0, 0}, WASHINGTON_DC_STATE_ID, UNITED_STATES_COUNTRY_ID};
+constexpr BacklightControls BACKLIGHT_CONTROLS{0, 2};
+constexpr New3dsBacklightControls NEW_3DS_BACKLIGHT_CONTROLS{{0, 0, 0, 0}, 0, {0, 0, 0}};
 
 /**
  * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
@@ -508,8 +524,20 @@ ResultCode Module::FormatConfig() {
     if (!res.IsSuccess())
         return res;
 
+    // 0x00050001 - Backlight controls
+    res = CreateConfigInfoBlk(BacklightControlsBlockID, sizeof(BACKLIGHT_CONTROLS), 0xC,
+                              &BACKLIGHT_CONTROLS);
+    if (!res.IsSuccess())
+        return res;
+
     res = CreateConfigInfoBlk(StereoCameraSettingsBlockID, sizeof(STEREO_CAMERA_SETTINGS), 0xE,
                               STEREO_CAMERA_SETTINGS.data());
+    if (!res.IsSuccess())
+        return res;
+
+    // 0x00050009 - New 3DS backlight controls
+    res = CreateConfigInfoBlk(BacklightControlNew3dsBlockID, sizeof(NEW_3DS_BACKLIGHT_CONTROLS),
+                              0xC, &NEW_3DS_BACKLIGHT_CONTROLS);
     if (!res.IsSuccess())
         return res;
 
