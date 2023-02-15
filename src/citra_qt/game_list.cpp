@@ -501,8 +501,8 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
     QAction* delete_opengl_disk_shader_cache =
         shader_menu->addAction(tr("Delete OpenGL Shader Cache"));
 
-    const bool is_application =
-        0x0004000000000000 <= program_id && program_id <= 0x00040000FFFFFFFF;
+    const u32 program_id_high = (program_id >> 32) & 0xFFFFFFFF;
+    const bool is_application = program_id_high == 0x00040000 || program_id_high == 0x00040010;
 
     bool opengl_cache_exists = false;
     ForEachOpenGLCacheFile(
