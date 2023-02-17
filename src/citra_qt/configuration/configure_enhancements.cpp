@@ -69,6 +69,7 @@ void ConfigureEnhancements::SetConfiguration() {
         static_cast<int>(Settings::values.layout_option.GetValue()));
     ui->swap_screen->setChecked(Settings::values.swap_screen.GetValue());
     ui->upright_screen->setChecked(Settings::values.upright_screen.GetValue());
+    ui->large_screen_proportion->setValue(Settings::values.large_screen_proportion.GetValue());
     ui->toggle_dump_textures->setChecked(Settings::values.dump_textures.GetValue());
     ui->toggle_custom_textures->setChecked(Settings::values.custom_textures.GetValue());
     ui->toggle_preload_textures->setChecked(Settings::values.preload_textures.GetValue());
@@ -122,6 +123,7 @@ void ConfigureEnhancements::ApplyConfiguration() {
         static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();
     Settings::values.upright_screen = ui->upright_screen->isChecked();
+    Settings::values.large_screen_proportion = ui->large_screen_proportion->value();
     Settings::values.dump_textures = ui->toggle_dump_textures->isChecked();
     Settings::values.custom_textures = ui->toggle_custom_textures->isChecked();
     Settings::values.preload_textures = ui->toggle_preload_textures->isChecked();

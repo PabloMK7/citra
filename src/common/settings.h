@@ -455,6 +455,8 @@ struct Values {
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
+    SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
+                                                           "large_screen_proportion"};
     Setting<bool> custom_layout{false, "custom_layout"};
     Setting<u16> custom_top_left{0, "custom_top_left"};
     Setting<u16> custom_top_top{0, "custom_top_top"};

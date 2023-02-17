@@ -216,6 +216,10 @@ swap_screen =
 # 0 (default): Off, 1: On
 upright_screen =
 
+# The proportion between the large and small screens when playing in Large Screen Small Screen layout.
+# Must be a real value between 1.0 and 16.0. Default is 4
+large_screen_proportion =
+
 # Dumps textures as PNG to dump/textures/[Title ID]/.
 # 0 (default): Off, 1: On
 dump_textures =

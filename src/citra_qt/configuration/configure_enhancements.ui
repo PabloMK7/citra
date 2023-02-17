@@ -296,6 +296,30 @@
        </widget>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Large Screen Proportion:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="large_screen_proportion">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>16</number>
+          </property>
+          <property name="value">
+           <number>4</number>
+          </property>
+         </widget>
+        </item>
+        </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
          <widget class="QLabel" name="bg_label">
@@ -384,6 +408,7 @@
   <tabstop>layout_combobox</tabstop>
   <tabstop>swap_screen</tabstop>
   <tabstop>upright_screen</tabstop>
+  <tabstop>large_screen_proportion</tabstop>
   <tabstop>bg_button</tabstop>
   <tabstop>toggle_custom_textures</tabstop>
   <tabstop>toggle_dump_textures</tabstop>

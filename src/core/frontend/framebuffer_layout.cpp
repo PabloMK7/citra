@@ -231,7 +231,8 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     return res;
 }
 
-FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
+FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upright,
+                                   float scale_factor) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
@@ -244,25 +245,29 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     float small_screen_aspect_ratio;
     if (upright) {
         if (swapped) {
-            emulation_aspect_ratio = (Core::kScreenBottomWidth * 4.0f + Core::kScreenTopWidth) /
-                                     (Core::kScreenBottomHeight * 4);
+            emulation_aspect_ratio =
+                (Core::kScreenBottomWidth * scale_factor + Core::kScreenTopWidth) /
+                (Core::kScreenBottomHeight * scale_factor);
             large_screen_aspect_ratio = BOT_SCREEN_UPRIGHT_ASPECT_RATIO;
             small_screen_aspect_ratio = TOP_SCREEN_UPRIGHT_ASPECT_RATIO;
         } else {
-            emulation_aspect_ratio = (Core::kScreenTopWidth * 4.0f + Core::kScreenBottomWidth) /
-                                     (Core::kScreenTopHeight * 4);
+            emulation_aspect_ratio =
+                (Core::kScreenTopWidth * scale_factor + Core::kScreenBottomWidth) /
+                (Core::kScreenTopHeight * scale_factor);
             large_screen_aspect_ratio = TOP_SCREEN_UPRIGHT_ASPECT_RATIO;
             small_screen_aspect_ratio = BOT_SCREEN_UPRIGHT_ASPECT_RATIO;
         }
     } else {
         if (swapped) {
-            emulation_aspect_ratio = Core::kScreenBottomHeight * 4 /
-                                     (Core::kScreenBottomWidth * 4.0f + Core::kScreenTopWidth);
+            emulation_aspect_ratio =
+                Core::kScreenBottomHeight * scale_factor /
+                (Core::kScreenBottomWidth * scale_factor + Core::kScreenTopWidth);
             large_screen_aspect_ratio = BOT_SCREEN_ASPECT_RATIO;
             small_screen_aspect_ratio = TOP_SCREEN_ASPECT_RATIO;
         } else {
-            emulation_aspect_ratio = Core::kScreenTopHeight * 4 /
-                                     (Core::kScreenTopWidth * 4.0f + Core::kScreenBottomWidth);
+            emulation_aspect_ratio =
+                Core::kScreenTopHeight * scale_factor /
+                (Core::kScreenTopWidth * scale_factor + Core::kScreenBottomWidth);
             large_screen_aspect_ratio = TOP_SCREEN_ASPECT_RATIO;
             small_screen_aspect_ratio = BOT_SCREEN_ASPECT_RATIO;
         }
@@ -271,7 +276,7 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> total_rect = maxRectangle(screen_window_area, emulation_aspect_ratio);
     Common::Rectangle<u32> large_screen = maxRectangle(total_rect, large_screen_aspect_ratio);
-    Common::Rectangle<u32> fourth_size_rect = total_rect.Scale(.25f);
+    Common::Rectangle<u32> fourth_size_rect = total_rect.Scale(1.f / scale_factor);
     Common::Rectangle<u32> small_screen = maxRectangle(fourth_size_rect, small_screen_aspect_ratio);
 
     if (window_aspect_ratio < emulation_aspect_ratio) {
@@ -416,22 +421,35 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             if (Settings::values.upright_screen.GetValue()) {
                 if (Settings::values.swap_screen.GetValue()) {
                     width = Core::kScreenBottomHeight * res_scale;
-                    height = (Core::kScreenBottomWidth + Core::kScreenTopWidth / 4) * res_scale;
+                    height = (Core::kScreenBottomWidth +
+                              Core::kScreenTopWidth /
+                                  Settings::values.large_screen_proportion.GetValue()) *
+                             res_scale;
                 } else {
                     width = Core::kScreenTopHeight * res_scale;
-                    height = (Core::kScreenTopWidth + Core::kScreenBottomWidth / 4) * res_scale;
+                    height = (Core::kScreenTopWidth +
+                              Core::kScreenBottomWidth /
+                                  Settings::values.large_screen_proportion.GetValue()) *
+                             res_scale;
                 }
             } else {
                 if (Settings::values.swap_screen.GetValue()) {
-                    width = (Core::kScreenBottomWidth + Core::kScreenTopWidth / 4) * res_scale;
+                    width = (Core::kScreenBottomWidth +
+                             Core::kScreenTopWidth /
+                                 Settings::values.large_screen_proportion.GetValue()) *
+                            res_scale;
                     height = Core::kScreenBottomHeight * res_scale;
                 } else {
-                    width = (Core::kScreenTopWidth + Core::kScreenBottomWidth / 4) * res_scale;
+                    width = (Core::kScreenTopWidth +
+                             Core::kScreenBottomWidth /
+                                 Settings::values.large_screen_proportion.GetValue()) *
+                            res_scale;
                     height = Core::kScreenTopHeight * res_scale;
                 }
             }
             layout = LargeFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
-                                      Settings::values.upright_screen.GetValue());
+                                      Settings::values.upright_screen.GetValue(),
+                                      Settings::values.large_screen_proportion.GetValue());
             break;
         case Settings::LayoutOption::SideScreen:
             if (Settings::values.upright_screen.GetValue()) {
@@ -576,9 +594,12 @@ std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption la
         min_height = Core::kScreenBottomHeight;
         break;
     case Settings::LayoutOption::LargeScreen:
-        min_width = Settings::values.swap_screen
-                        ? Core::kScreenTopWidth / 4 + Core::kScreenBottomWidth
-                        : Core::kScreenTopWidth + Core::kScreenBottomWidth / 4;
+        min_width =
+            Settings::values.swap_screen
+                ? Core::kScreenTopWidth / Settings::values.large_screen_proportion.GetValue() +
+                      Core::kScreenBottomWidth
+                : Core::kScreenTopWidth + Core::kScreenBottomWidth /
+                                              Settings::values.large_screen_proportion.GetValue();
         min_height = Core::kScreenBottomHeight;
         break;
     case Settings::LayoutOption::SideScreen:
