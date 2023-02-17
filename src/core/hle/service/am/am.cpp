@@ -1087,7 +1087,11 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0008, 0, 0); // 0x00080000
+
     u32 ticket_count = 0;
+    for (const auto& title_list : am->am_title_list) {
+        ticket_count += static_cast<u32>(title_list.size());
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -1101,9 +1105,18 @@ void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
     u32 ticket_index = rp.Pop<u32>();
     auto& ticket_tids_out = rp.PopMappedBuffer();
 
+    u32 tickets_written = 0;
+    for (const auto& title_list : am->am_title_list) {
+        const auto tickets_to_write =
+            std::min(static_cast<u32>(title_list.size()), ticket_list_count - tickets_written);
+        ticket_tids_out.Write(title_list.data(), tickets_written * sizeof(u64),
+                              tickets_to_write * sizeof(u64));
+        tickets_written += tickets_to_write;
+    }
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(ticket_list_count);
+    rb.Push(tickets_written);
     rb.PushMappedBuffer(ticket_tids_out);
     LOG_WARNING(Service_AM, "(STUBBED) ticket_list_count=0x{:08x}, ticket_index=0x{:08x}",
                 ticket_list_count, ticket_index);
