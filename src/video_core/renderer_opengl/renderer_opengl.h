@@ -90,6 +90,7 @@ private:
                                      const GPU::Regs::FramebufferConfig& framebuffer);
     void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
     void ApplySecondLayerOpacity();
+    void ResetSecondLayerOpacity();
     void DrawBottomScreen(const Layout::FramebufferLayout& layout,
                           const Common::Rectangle<u32>& bottom_screen,
                           const bool stereo_single_screen);

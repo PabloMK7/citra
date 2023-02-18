@@ -1002,7 +1002,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     }
 
     glUniform1i(uniform_layer, 0);
-    if (!Settings::values.swap_screen) {
+    if (!Settings::values.swap_screen.GetValue()) {
         DrawTopScreen(layout, top_screen, stereo_single_screen);
         glUniform1i(uniform_layer, 0);
         ApplySecondLayerOpacity();
@@ -1013,18 +1013,28 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
         ApplySecondLayerOpacity();
         DrawTopScreen(layout, top_screen, stereo_single_screen);
     }
-    state.blend.enabled = false;
+    ResetSecondLayerOpacity();
 }
 
 void RendererOpenGL::ApplySecondLayerOpacity() {
     if (Settings::values.custom_layout &&
         Settings::values.custom_second_layer_opacity.GetValue() < 100) {
-        state.blend.enabled = true;
         state.blend.src_rgb_func = GL_CONSTANT_ALPHA;
         state.blend.src_a_func = GL_CONSTANT_ALPHA;
         state.blend.dst_a_func = GL_ONE_MINUS_CONSTANT_ALPHA;
         state.blend.dst_rgb_func = GL_ONE_MINUS_CONSTANT_ALPHA;
         state.blend.color.alpha = Settings::values.custom_second_layer_opacity.GetValue() / 100.0f;
+    }
+}
+
+void RendererOpenGL::ResetSecondLayerOpacity() {
+    if (Settings::values.custom_layout &&
+        Settings::values.custom_second_layer_opacity.GetValue() < 100) {
+        state.blend.src_rgb_func = GL_ONE;
+        state.blend.dst_rgb_func = GL_ZERO;
+        state.blend.src_a_func = GL_ONE;
+        state.blend.dst_a_func = GL_ZERO;
+        state.blend.color.alpha = 0.0f;
     }
 }
 
@@ -1037,8 +1047,10 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
 
     if (layout.is_rotated) {
         if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
-            DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
-                                    (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
+            int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
+            DrawSingleScreenRotated(screen_infos[eye], (float)top_screen.left,
+                                    (float)top_screen.top, (float)top_screen.GetWidth(),
+                                    (float)top_screen.GetHeight());
         } else if (Settings::values.render_3d.GetValue() ==
                    Settings::StereoRenderOption::SideBySide) {
             DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
@@ -1064,7 +1076,8 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
         }
     } else {
         if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
-            DrawSingleScreen(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
+            int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
+            DrawSingleScreen(screen_infos[eye], (float)top_screen.left, (float)top_screen.top,
                              (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
         } else if (Settings::values.render_3d.GetValue() ==
                    Settings::StereoRenderOption::SideBySide) {
