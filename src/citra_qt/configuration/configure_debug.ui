@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>443</width>
-    <height>300</height>
+    <height>358</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -107,12 +107,80 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_3">
+    <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
-      <string>Miscellaneous</string>
+      <string>CPU</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
-      <item>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="0">
+       <widget class="QWidget" name="clock_speed_widget" native="true">
+        <layout class="QHBoxLayout" name="clock_speed_layout">
+         <property name="spacing">
+          <number>7</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="clock_speed_combo">
+           <item>
+            <property name="text">
+             <string>Use global clock speed</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Set clock speed:</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="clock_speed_label">
+           <property name="text">
+            <string>CPU Clock Speed</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="slider_clock_speed">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;body&gt;Changes the emulated CPU clock frequency.&lt;br&gt;Underclocking can increase performance but may cause the game to freeze.&lt;br&gt;Overclocking may reduce in game lag but also might cause freezes&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>79</number>
+           </property>
+           <property name="singleStep">
+            <number>5</number>
+           </property>
+           <property name="pageStep">
+            <number>15</number>
+           </property>
+           <property name="value">
+            <number>25</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksBelow</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="clock_display_label">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
        <widget class="QCheckBox" name="toggle_cpu_jit">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the use of the ARM JIT compiler for emulating the 3DS CPUs. Don't disable unless for debugging purposes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -123,6 +191,16 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_cpu_clock_info">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CPU Clock Speed Information&lt;br/&gt;Underclocking can increase performance but may cause the game to freeze.&lt;br/&gt;Overclocking may reduce in game lag but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
     </widget>
    </item>
    <item>
@@ -146,7 +224,6 @@
   <tabstop>log_filter_edit</tabstop>
   <tabstop>toggle_console</tabstop>
   <tabstop>open_log_button</tabstop>
-  <tabstop>toggle_cpu_jit</tabstop>
  </tabstops>
  <resources/>
  <connections>

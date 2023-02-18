@@ -225,17 +225,6 @@ static const std::array<const char*, 187> country_names = {
     QT_TRANSLATE_NOOP("ConfigureSystem", "Bermuda"), // 180-186
 };
 
-// The QSlider doesn't have an easy way to set a custom step amount,
-// so we can just convert from the sliders range (0 - 79) to the expected
-// settings range (5 - 400) with simple math.
-static constexpr int SliderToSettings(int value) {
-    return 5 * value + 5;
-}
-
-static constexpr int SettingsToSlider(int value) {
-    return (value - 5) / 5;
-}
-
 ConfigureSystem::ConfigureSystem(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureSystem>()) {
     ui->setupUi(this);
@@ -254,17 +243,6 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
             ui->combo_country->addItem(tr(country_names.at(i)), i);
         }
     }
-
-    // Set a minimum width for the label to prevent the slider from changing size.
-    // This scales across DPIs. (This value should be enough for "xxx%")
-    ui->clock_display_label->setMinimumWidth(40);
-
-    connect(ui->slider_clock_speed, &QSlider::valueChanged, this, [&](int value) {
-        ui->clock_display_label->setText(QStringLiteral("%1%").arg(SliderToSettings(value)));
-    });
-
-    ui->clock_speed_label->setVisible(Settings::IsConfiguringGlobal());
-    ui->clock_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
 
     SetupPerGameUI();
 
@@ -325,22 +303,6 @@ void ConfigureSystem::SetConfiguration() {
         ui->label_disable_info->hide();
     }
 
-    if (!Settings::IsConfiguringGlobal()) {
-        if (Settings::values.cpu_clock_percentage.UsingGlobal()) {
-            ui->clock_speed_combo->setCurrentIndex(0);
-            ui->slider_clock_speed->setEnabled(false);
-        } else {
-            ui->clock_speed_combo->setCurrentIndex(1);
-            ui->slider_clock_speed->setEnabled(true);
-        }
-        ConfigurationShared::SetHighlight(ui->clock_speed_widget,
-                                          !Settings::values.cpu_clock_percentage.UsingGlobal());
-    }
-
-    ui->slider_clock_speed->setValue(
-        SettingsToSlider(Settings::values.cpu_clock_percentage.GetValue()));
-    ui->clock_display_label->setText(
-        QStringLiteral("%1%").arg(Settings::values.cpu_clock_percentage.GetValue()));
     ui->toggle_new_3ds->setChecked(Settings::values.is_new_3ds.GetValue());
     ui->plugin_loader->setChecked(Settings::values.plugin_loader_enabled.GetValue());
     ui->allow_plugin_loader->setChecked(Settings::values.allow_plugin_loader.GetValue());
@@ -452,10 +414,6 @@ void ConfigureSystem::ApplyConfiguration() {
         Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
         Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
     }
-
-    ConfigurationShared::ApplyPerGameSetting(
-        &Settings::values.cpu_clock_percentage, ui->clock_speed_combo,
-        [this](s32) { return SliderToSettings(ui->slider_clock_speed->value()); });
 }
 
 void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {
@@ -534,7 +492,6 @@ void ConfigureSystem::SetupPerGameUI() {
     // Block the global settings if a game is currently running that overrides them
     if (Settings::IsConfiguringGlobal()) {
         ui->toggle_new_3ds->setEnabled(Settings::values.is_new_3ds.UsingGlobal());
-        ui->slider_clock_speed->setEnabled(Settings::values.cpu_clock_percentage.UsingGlobal());
         return;
     }
 
@@ -567,11 +524,6 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_plugin_loader->setVisible(false);
     ui->plugin_loader->setVisible(false);
     ui->allow_plugin_loader->setVisible(false);
-
-    connect(ui->clock_speed_combo, qOverload<int>(&QComboBox::activated), this, [this](int index) {
-        ui->slider_clock_speed->setEnabled(index == 1);
-        ConfigurationShared::SetHighlight(ui->clock_speed_widget, index == 1);
-    });
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);

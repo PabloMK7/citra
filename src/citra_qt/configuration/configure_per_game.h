@@ -17,6 +17,7 @@ class ConfigureAudio;
 class ConfigureGeneral;
 class ConfigureGraphics;
 class ConfigureSystem;
+class ConfigureDebug;
 
 class QGraphicsScene;
 class QStandardItem;
@@ -66,4 +67,5 @@ private:
     std::unique_ptr<ConfigureGeneral> general_tab;
     std::unique_ptr<ConfigureGraphics> graphics_tab;
     std::unique_ptr<ConfigureSystem> system_tab;
+    std::unique_ptr<ConfigureDebug> debug_tab;
 };
