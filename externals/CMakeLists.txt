@@ -35,6 +35,12 @@ set(CRYPTOPP_INSTALL OFF)
 set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp")
 add_subdirectory(cryptopp-cmake)
 
+# HACK: Mismatch between compilation of CryptoPP and headers used in Citra can cause runtime issues.
+# Pull out the compile definitions from CryptoPP and apply them to Citra as well to fix this.
+# See: https://github.com/weidai11/cryptopp/issues/1191
+get_source_file_property(CRYPTOPP_COMPILE_DEFINITIONS ${CRYPTOPP_SOURCES}/cryptlib.cpp TARGET_DIRECTORY cryptopp COMPILE_DEFINITIONS)
+set(CRYPTOPP_COMPILE_DEFINITIONS ${CRYPTOPP_COMPILE_DEFINITIONS} PARENT_SCOPE)
+
 # HACK: The logic to set up the base include directory for CryptoPP does not work with Android SDK CMake 3.22.1.
 # Until there is a fixed version available, this code will detect and add in the proper include if it does not exist.
 if(ANDROID)

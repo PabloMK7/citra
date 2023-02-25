@@ -379,6 +379,11 @@ endif()
 enable_testing()
 add_subdirectory(externals)
 
+# See externals/CMakeLists.txt
+foreach(def ${CRYPTOPP_COMPILE_DEFINITIONS})
+    add_definitions(-D${def})
+endforeach()
+
 # Boost
 if (USE_SYSTEM_BOOST)
     find_package(Boost 1.70.0 COMPONENTS serialization REQUIRED)
