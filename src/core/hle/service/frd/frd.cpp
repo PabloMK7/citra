@@ -110,6 +110,7 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
+    rb.Push(0);
 
     LOG_INFO(Service_FRD, "returning the username defined in cfg");
 }

@@ -1388,7 +1388,7 @@ Module::Module(Core::System& system) : system(system) {
     auto archive_result = systemsavedata_factory.Open(archive_path, 0);
 
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code() != FileSys::ERR_NOT_FORMATTED) {
+    if (archive_result.Code() != FileSys::ERROR_NOT_FOUND) {
         ASSERT_MSG(archive_result.Succeeded(), "Could not open the CECD SystemSaveData archive!");
         cecd_system_save_data_archive = std::move(archive_result).Unwrap();
     } else {

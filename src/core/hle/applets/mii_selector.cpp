@@ -19,7 +19,7 @@
 
 namespace HLE::Applets {
 
-ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
+ResultCode MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Service_APT, "unsupported signal {}", parameter.signal);
         UNIMPLEMENTED();
@@ -42,18 +42,17 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
         "MiiSelector Memory");
 
     // Send the response message with the newly created SharedMemory
-    Service::APT::MessageParameter result;
-    result.signal = Service::APT::SignalType::Response;
-    result.buffer.clear();
-    result.destination_id = Service::APT::AppletId::Application;
-    result.sender_id = id;
-    result.object = framebuffer_memory;
+    SendParameter({
+        .sender_id = id,
+        .destination_id = parent,
+        .signal = Service::APT::SignalType::Response,
+        .object = framebuffer_memory,
+    });
 
-    SendParameter(result);
     return RESULT_SUCCESS;
 }
 
-ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
+ResultCode MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (MiiConfig) is wrong");
 
@@ -85,17 +84,11 @@ void MiiSelector::Update() {
     Finalize();
 }
 
-void MiiSelector::Finalize() {
-    // Let the application know that we're closing
-    Service::APT::MessageParameter message;
-    message.buffer.resize(sizeof(MiiResult));
-    std::memcpy(message.buffer.data(), &result, message.buffer.size());
-    message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = Service::APT::AppletId::Application;
-    message.sender_id = id;
-    SendParameter(message);
-
-    is_running = false;
+ResultCode MiiSelector::Finalize() {
+    std::vector<u8> buffer(sizeof(MiiResult));
+    std::memcpy(buffer.data(), &result, buffer.size());
+    CloseApplet(nullptr, buffer);
+    return RESULT_SUCCESS;
 }
 
 MiiResult MiiSelector::GetStandardMiiResult() {

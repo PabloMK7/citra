@@ -208,6 +208,9 @@ void Process::Exit() {
     if (plgldr) {
         plgldr->OnProcessExit(*this, kernel);
     }
+
+    // Clear the process's open handles.
+    handle_table.Clear();
 }
 
 VAddr Process::GetLinearHeapAreaAddress() const {

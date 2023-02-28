@@ -9,7 +9,7 @@
 
 namespace HLE::Applets {
 
-ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
+ResultCode Mint::ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Service_APT, "unsupported signal {}", parameter.signal);
         UNIMPLEMENTED();
@@ -33,34 +33,33 @@ ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& paramete
         "Mint Memory");
 
     // Send the response message with the newly created SharedMemory
-    Service::APT::MessageParameter result;
-    result.signal = Service::APT::SignalType::Response;
-    result.buffer.clear();
-    result.destination_id = Service::APT::AppletId::Application;
-    result.sender_id = id;
-    result.object = framebuffer_memory;
+    SendParameter({
+        .sender_id = id,
+        .destination_id = parent,
+        .signal = Service::APT::SignalType::Response,
+        .object = framebuffer_memory,
+    });
 
-    SendParameter(result);
     return RESULT_SUCCESS;
 }
 
-ResultCode Mint::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
+ResultCode Mint::Start(const Service::APT::MessageParameter& parameter) {
     is_running = true;
+    startup_param = parameter.buffer;
 
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the
     // application.
     // TODO(Subv): Reverse the parameter format for the Mint applet
 
     // Let the application know that we're closing
-    Service::APT::MessageParameter message;
-    message.buffer.resize(parameter.buffer.size());
-    std::fill(message.buffer.begin(), message.buffer.end(), 0);
-    message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = Service::APT::AppletId::Application;
-    message.sender_id = id;
-    SendParameter(message);
+    Finalize();
+    return RESULT_SUCCESS;
+}
 
-    is_running = false;
+ResultCode Mint::Finalize() {
+    std::vector<u8> buffer(startup_param.size());
+    std::fill(buffer.begin(), buffer.end(), 0);
+    CloseApplet(nullptr, buffer);
     return RESULT_SUCCESS;
 }
 

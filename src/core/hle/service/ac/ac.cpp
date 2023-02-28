@@ -36,6 +36,7 @@ void Module::Interface::ConnectAsync(Kernel::HLERequestContext& ctx) {
 
     rp.Skip(2, false); // ProcessId descriptor
     ac->connect_event = rp.PopObject<Kernel::Event>();
+    rp.Skip(2, false); // Buffer descriptor
 
     if (ac->connect_event) {
         ac->connect_event->SetName("AC:connect_event");

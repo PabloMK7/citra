@@ -60,7 +60,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Check error code, this one is probably wrong
-        return ERR_NOT_FORMATTED;
+        return ERROR_NOT_FOUND;
     }
     auto archive = std::make_unique<SaveDataArchive>(fullpath);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
