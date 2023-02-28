@@ -117,7 +117,6 @@ __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
 #endif
 
 constexpr int default_mouse_timeout = 2500;
-constexpr int num_options_3d = 5;
 
 /**
  * "Callouts" are one-time instructional messages shown to the user. In the config settings, there
@@ -225,7 +224,6 @@ GMainWindow::GMainWindow()
 
     ConnectMenuEvents();
     ConnectWidgetEvents();
-    Connect3DStateEvents();
 
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
@@ -349,20 +347,6 @@ void GMainWindow::InitializeWidgets() {
         label->setContentsMargins(4, 0, 4, 0);
         statusBar()->addPermanentWidget(label);
     }
-
-    option_3d_button = new QPushButton();
-    option_3d_button->setObjectName(QStringLiteral("3DOptionStatusBarButton"));
-    option_3d_button->setFocusPolicy(Qt::NoFocus);
-    option_3d_button->setToolTip(tr("Indicates the current 3D setting. Click to toggle."));
-
-    factor_3d_slider = new QSlider(Qt::Orientation::Horizontal, this);
-    factor_3d_slider->setStyleSheet(QStringLiteral("QSlider { padding: 4px; }"));
-    factor_3d_slider->setToolTip(tr("Current 3D factor while 3D is enabled."));
-    factor_3d_slider->setRange(0, 100);
-
-    Update3DState();
-    statusBar()->insertPermanentWidget(0, option_3d_button);
-    statusBar()->insertPermanentWidget(1, factor_3d_slider);
 
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
@@ -614,8 +598,6 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect_shortcut(QStringLiteral("Mute Audio"),
                      [] { Settings::values.audio_muted = !Settings::values.audio_muted; });
-
-    connect_shortcut(QStringLiteral("Toggle 3D"), &GMainWindow::Toggle3D);
 
     // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
     // variable hold a garbage value after this function exits
@@ -871,12 +853,6 @@ void GMainWindow::UpdateMenuState() {
     } else {
         ui->action_Pause->setText(tr("&Pause"));
     }
-}
-
-void GMainWindow::Connect3DStateEvents() {
-    connect(option_3d_button, &QPushButton::clicked, this, &GMainWindow::Toggle3D);
-    connect(factor_3d_slider, qOverload<int>(&QSlider::valueChanged), this,
-            [](int value) { Settings::values.factor_3d = value; });
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
@@ -1975,7 +1951,6 @@ void GMainWindow::OnConfigure() {
             setMouseTracking(false);
         }
         UpdateSecondaryWindowVisibility();
-        Update3DState();
     } else {
         Settings::values.input_profiles = old_input_profiles;
         Settings::values.touch_from_button_maps = old_touch_from_button_maps;
@@ -2269,18 +2244,6 @@ void GMainWindow::UpdateStatusBar() {
     emu_frametime_label->setVisible(true);
 }
 
-void GMainWindow::Update3DState() {
-    static const std::array options_3d = {tr("Off"), tr("Side by Side"), tr("Anaglyph"),
-                                          tr("Interlaced"), tr("Reverse Interlaced")};
-
-    option_3d_button->setText(
-        tr("3D: %1").arg(options_3d[static_cast<int>(Settings::values.render_3d.GetValue())]));
-
-    factor_3d_slider->setValue(Settings::values.factor_3d.GetValue());
-    factor_3d_slider->setVisible(Settings::values.render_3d.GetValue() !=
-                                 Settings::StereoRenderOption::Off);
-}
-
 void GMainWindow::HideMouseCursor() {
     if (emu_thread == nullptr || !UISettings::values.hide_mouse.GetValue()) {
         mouse_hide_timer.stop();
@@ -2390,12 +2353,6 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
 void GMainWindow::OnMenuAboutCitra() {
     AboutDialog about{this};
     about.exec();
-}
-
-void GMainWindow::Toggle3D() {
-    Settings::values.render_3d = static_cast<Settings::StereoRenderOption>(
-        (static_cast<int>(Settings::values.render_3d.GetValue()) + 1) % num_options_3d);
-    Update3DState();
 }
 
 bool GMainWindow::ConfirmClose() {
