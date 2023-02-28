@@ -713,8 +713,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_LoadState(JNIEnv* env, jclass clazz
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_LogDeviceInfo(JNIEnv* env, jclass clazz) {
-    // TODO: Log the Common::g_build_fullname once the CI is setup for android
-    LOG_INFO(Frontend, "Citra Version: Android Beta | {}-{}", Common::g_scm_branch,
+    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
     LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
     // There is no decent way to get the OS version, so we log the API level instead.
