@@ -17,7 +17,7 @@ ccache -s
 mkdir build && cd build
 # TODO: LibreSSL ASM disabled due to platform detection issues in build.
 cmake .. -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
+    -DCMAKE_OSX_ARCHITECTURES="$TARGET_ARCH" \
     -DENABLE_QT_TRANSLATION=ON \
     -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"} \
     -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON \
@@ -30,4 +30,7 @@ ninja
 
 ccache -s
 
-ctest -VV -C Release
+CURRENT_ARCH=`arch`
+if [ "$TARGET_ARCH" = "$CURRENT_ARCH" ]; then
+  ctest -VV -C Release
+fi

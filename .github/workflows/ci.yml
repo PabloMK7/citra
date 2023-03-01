@@ -74,6 +74,9 @@ jobs:
           path: artifacts/
   macos:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: ["x86_64", "arm64"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -82,9 +85,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-macos-${{ github.sha }}
+          key: ${{ runner.os }}-macos-${{ matrix.arch }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-macos-
+            ${{ runner.os }}-macos-${{ matrix.arch }}-
       - name: Query tag name
         uses: little-core-labs/get-git-tag@v3.0.2
         id: tagName
@@ -95,6 +98,49 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.13"
           ENABLE_COMPATIBILITY_REPORTING: "ON"
+          TARGET_ARCH: ${{ matrix.arch }}
+      - name: Pack
+        run: ./.ci/macos/upload.sh
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-${{ matrix.arch }}
+          path: artifacts/
+  macos-universal:
+    runs-on: macos-latest
+    needs: macos
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Query tag name
+        uses: little-core-labs/get-git-tag@v3.0.2
+        id: tagName
+      - name: Download x86 build
+        uses: actions/download-artifact@master
+        with:
+          name: macos-x86_64
+          path: macos-x86_64/
+      - name: Download ARM64 build
+        uses: actions/download-artifact@master
+        with:
+          name: macos-arm64
+          path: macos-arm64/
+      - name: Create universal app
+        run: ./.ci/macos/universal.sh
+        env:
+          ARTIFACTS: macos-x86_64 macos-arm64
+#      - name: Upload
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: macos
+#          path: artifacts/
+      - name: Delete intermediate artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            macos-x86_64
+            macos-arm64
   windows:
     runs-on: windows-latest
     steps:
@@ -178,7 +224,7 @@ jobs:
           TRANSIFEX_API_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}
   release:
     runs-on: ubuntu-latest
-    needs: [build, android, macos, source, windows]
+    needs: [build, android, macos-universal, source, windows]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/download-artifact@v3
