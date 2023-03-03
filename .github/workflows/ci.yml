@@ -96,7 +96,7 @@ jobs:
       - name: Build
         run: ./.ci/macos/build.sh
         env:
-          MACOSX_DEPLOYMENT_TARGET: "10.13"
+          MACOSX_DEPLOYMENT_TARGET: "11"
           ENABLE_COMPATIBILITY_REPORTING: "ON"
           TARGET_ARCH: ${{ matrix.arch }}
       - name: Pack
