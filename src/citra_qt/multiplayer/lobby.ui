@@ -78,6 +78,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="hide_empty">
+           <property name="text">
+            <string>Hide Empty Rooms</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QCheckBox" name="hide_full">
            <property name="text">
             <string>Hide Full Rooms</string>

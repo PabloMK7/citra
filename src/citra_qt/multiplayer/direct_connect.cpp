@@ -70,20 +70,13 @@ void DirectConnectWindow::Connect() {
             }
         }
     }
-    switch (static_cast<ConnectionType>(ui->connection_type->currentIndex())) {
-    case ConnectionType::TraversalServer:
-        break;
-    case ConnectionType::IP:
-        if (!ui->ip->hasAcceptableInput()) {
-            NetworkMessage::ErrorManager::ShowError(
-                NetworkMessage::ErrorManager::IP_ADDRESS_NOT_VALID);
-            return;
-        }
-        if (!ui->port->hasAcceptableInput()) {
-            NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::PORT_NOT_VALID);
-            return;
-        }
-        break;
+    if (!ui->ip->hasAcceptableInput()) {
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::IP_ADDRESS_NOT_VALID);
+        return;
+    }
+    if (!ui->port->hasAcceptableInput()) {
+        NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::PORT_NOT_VALID);
+        return;
     }
 
     // Store settings
