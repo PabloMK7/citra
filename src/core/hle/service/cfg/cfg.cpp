@@ -639,7 +639,8 @@ ResultCode Module::FormatConfig() {
     // 0x00110000 - The low u16 indicates whether the system setup is required, such as when the
     // system is booted for the first time or after doing a System Format: 0 = setup required,
     // non-zero = no setup required
-    res = CreateConfigInfoBlk(SystemSetupRequiredBlockID, 0x4, 0xC, zero_buffer);
+    u32 system_setup_flag = 1;
+    res = CreateConfigInfoBlk(SystemSetupRequiredBlockID, 0x4, 0xC, &system_setup_flag);
     if (!res.IsSuccess())
         return res;
 
