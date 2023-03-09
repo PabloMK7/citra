@@ -4,6 +4,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.features.settings.model.Settings;
 import org.citra.citra_emu.features.settings.utils.SettingsFile;
@@ -108,8 +110,6 @@ public final class SettingsActivityPresenter {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...");
             mSettings.saveSettings(mView);
         }
-
-        ThemeUtil.applyTheme();
 
         NativeLibrary.ReloadSettings();
     }

@@ -40,7 +40,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:padding="@dimen/spacing_small"
-        android:background="@color/citra_orange"
         android:text="@string/emulation_done"
         android:visibility="gone" />
 

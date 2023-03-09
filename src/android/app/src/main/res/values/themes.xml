@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Citra.Main" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Main theme colors -->
+        <item name="colorPrimary">@color/citra_primary</item>
+        <item name="colorOnPrimary">@color/citra_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/citra_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/citra_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/citra_secondary</item>
+        <item name="colorOnSecondary">@color/citra_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/citra_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/citra_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/citra_tertiary</item>
+        <item name="colorOnTertiary">@color/citra_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/citra_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/citra_onTertiaryContainer</item>
+        <item name="colorError">@color/citra_error</item>
+        <item name="colorErrorContainer">@color/citra_errorContainer</item>
+        <item name="colorOnError">@color/citra_onError</item>
+        <item name="colorOnErrorContainer">@color/citra_onErrorContainer</item>
+        <item name="android:colorBackground">@color/citra_background</item>
+        <item name="colorOnBackground">@color/citra_onBackground</item>
+        <item name="colorSurface">@color/citra_surface</item>
+        <item name="colorOnSurface">@color/citra_onSurface</item>
+        <item name="colorSurfaceVariant">@color/citra_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/citra_onSurfaceVariant</item>
+        <item name="colorOutline">@color/citra_outline</item>
+        <item name="colorOnSurfaceInverse">@color/citra_inverseOnSurface</item>
+        <item name="colorSurfaceInverse">@color/citra_inverseSurface</item>
+        <item name="colorPrimaryInverse">@color/citra_inversePrimary</item>
+
+        <item name="homeAsUpIndicator">@drawable/ic_back</item>
+        <item name="android:statusBarColor">@color/citra_surface</item>
+        <item name="android:textColorLink">@color/citra_primary</item>
+        <item name="materialAlertDialogTheme">@style/CitraMaterialDialog</item>
+        <item name="popupMenuStyle">@style/CitraShapedPopup</item>
+        <item name="popupTheme">@style/CitraPopup</item>
+        <item name="sliderStyle">@style/CitraSlider</item>
+    </style>
+
+    <!-- Inherit from a base file picker theme that handles day/night -->
+    <style name="FilePickerTheme" parent="FilePickerBaseTheme">
+        <item name="colorPrimary">@color/citra_primary</item>
+        <item name="colorPrimaryDark">@color/citra_primary</item>
+        <item name="colorAccent">@color/citra_primary</item>
+
+        <!-- Need to set this also to style create folder dialog -->
+        <item name="alertDialogTheme">@style/FilePickerAlertDialogTheme</item>
+
+        <item name="nnf_list_item_divider">@drawable/gamelist_divider</item>
+        <item name="nnf_toolbarTheme">@style/ThemeOverlay.AppCompat.DayNight.ActionBar</item>
+    </style>
+
+</resources>

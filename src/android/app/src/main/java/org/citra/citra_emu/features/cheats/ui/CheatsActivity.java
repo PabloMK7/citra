@@ -14,10 +14,13 @@ import androidx.core.view.ViewCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.slidingpanelayout.widget.SlidingPaneLayout;
 
+import com.google.android.material.appbar.MaterialToolbar;
+
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.features.cheats.model.Cheat;
 import org.citra.citra_emu.features.cheats.model.CheatsViewModel;
 import org.citra.citra_emu.ui.TwoPaneOnBackPressedCallback;
+import org.citra.citra_emu.utils.ThemeUtil;
 
 public class CheatsActivity extends AppCompatActivity
         implements SlidingPaneLayout.PanelSlideListener {
@@ -37,6 +40,8 @@ public class CheatsActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeUtil.applyTheme(this);
+
         super.onCreate(savedInstanceState);
 
         mViewModel = new ViewModelProvider(this).get(CheatsViewModel.class);
@@ -63,6 +68,8 @@ public class CheatsActivity extends AppCompatActivity
         mViewModel.getOpenDetailsViewEvent().observe(this, this::openDetailsView);
 
         // Show "Up" button in the action bar for navigation
+        MaterialToolbar toolbar = findViewById(R.id.toolbar_cheats);
+        setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 

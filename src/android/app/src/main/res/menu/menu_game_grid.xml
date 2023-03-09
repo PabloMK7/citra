@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/button_premium"
-        android:icon="@drawable/ic_premium"
+        android:icon="@drawable/ic_heart"
         android:title="@string/premium_text"
         app:showAsAction="ifRoom" />
     <item
@@ -20,14 +20,14 @@
                 app:showAsAction="ifRoom" />
             <item
                 android:id="@+id/button_install_cia"
-                android:icon="@drawable/ic_cia_install"
+                android:icon="@drawable/ic_install"
                 android:title="@string/install_cia_title"
                 app:showAsAction="ifRoom" />
         </menu>
     </item>
     <item
         android:id="@+id/menu_settings_core"
-        android:icon="@drawable/ic_settings_core"
+        android:icon="@drawable/ic_settings"
         android:title="@string/grid_menu_core_settings"
         app:showAsAction="ifRoom" />
 

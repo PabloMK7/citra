@@ -10,8 +10,12 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.divider.MaterialDividerItemDecoration;
 
 import org.citra.citra_emu.CitraApplication;
 import org.citra.citra_emu.R;
@@ -49,7 +53,9 @@ public final class PlatformGamesFragment extends Fragment implements PlatformGam
 
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.addItemDecoration(new GameAdapter.SpacesItemDecoration(ContextCompat.getDrawable(getActivity(), R.drawable.gamelist_divider), 1));
+        MaterialDividerItemDecoration divider = new MaterialDividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL);
+        divider.setLastItemDecorated(false);
+        mRecyclerView.addItemDecoration(divider);
 
         // Add swipe down to refresh gesture
         final SwipeRefreshLayout pullToRefresh = view.findViewById(R.id.refresh_grid_games);
@@ -59,6 +65,9 @@ public final class PlatformGamesFragment extends Fragment implements PlatformGam
             refresh();
             pullToRefresh.setRefreshing(false);
         });
+
+        pullToRefresh.setProgressBackgroundColorSchemeColor(MaterialColors.getColor(pullToRefresh, R.attr.colorPrimary));
+        pullToRefresh.setColorSchemeColors(MaterialColors.getColor(pullToRefresh, R.attr.colorOnPrimary));
     }
 
     @Override

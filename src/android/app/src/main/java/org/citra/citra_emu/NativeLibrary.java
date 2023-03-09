@@ -38,6 +38,8 @@ import java.util.Objects;
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.RECORD_AUDIO;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 /**
  * Class which contains methods that interact
  * with the native side of the Citra code.
@@ -245,7 +247,7 @@ public final class NativeLibrary {
             final String title = Objects.requireNonNull(Objects.requireNonNull(getArguments()).getString("title"));
             final String message = Objects.requireNonNull(Objects.requireNonNull(getArguments()).getString("message"));
 
-            return new AlertDialog.Builder(emulationActivity)
+            return new MaterialAlertDialogBuilder(emulationActivity)
                     .setTitle(title)
                     .setMessage(message)
                     .setPositiveButton(R.string.continue_button, (dialog, which) -> {
@@ -345,7 +347,7 @@ public final class NativeLibrary {
         } else {
             // Create object used for waiting.
             final Object lock = new Object();
-            AlertDialog.Builder builder = new AlertDialog.Builder(emulationActivity)
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(emulationActivity)
                     .setTitle(caption)
                     .setMessage(text);
 
@@ -427,7 +429,7 @@ public final class NativeLibrary {
         return alertPromptResult;
     }
 
-    public static AlertDialog.Builder displayAlertPromptImpl(String caption, String text, int buttonConfig) {
+    public static MaterialAlertDialogBuilder displayAlertPromptImpl(String caption, String text, int buttonConfig) {
         final EmulationActivity emulationActivity = sEmulationActivity.get();
         alertPromptResult = "";
         alertPromptButton = 0;
@@ -444,7 +446,7 @@ public final class NativeLibrary {
         FrameLayout container = new FrameLayout(emulationActivity);
         container.addView(alertPromptEditText);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(emulationActivity)
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(emulationActivity)
                 .setTitle(caption)
                 .setView(container)
                 .setPositiveButton(android.R.string.ok, (dialogInterface, i) ->
@@ -506,7 +508,7 @@ public final class NativeLibrary {
             captionId = R.string.loader_error_encrypted;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(emulationActivity)
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(emulationActivity)
                 .setTitle(captionId)
                 .setMessage(Html.fromHtml("Please follow the guides to redump your <a href=\"https://citra-emu.org/wiki/dumping-game-cartridges/\">game cartidges</a> or <a href=\"https://citra-emu.org/wiki/dumping-installed-titles/\">installed titles</a>.", Html.FROM_HTML_MODE_LEGACY))
                 .setPositiveButton(android.R.string.ok, (dialog, whichButton) -> emulationActivity.finish())

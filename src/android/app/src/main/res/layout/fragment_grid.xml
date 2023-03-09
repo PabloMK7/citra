@@ -17,17 +17,19 @@
                 android:id="@+id/gamelist_empty_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:gravity="center"
                 android:text="@string/empty_gamelist"
-                android:visibility="gone"
                 android:textSize="18sp"
-                android:gravity="center" />
+                android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/grid_games"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:listitem="@layout/card_game" />
+
         </RelativeLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 </FrameLayout>

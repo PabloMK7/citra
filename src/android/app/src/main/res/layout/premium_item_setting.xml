@@ -21,7 +21,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginStart="@dimen/spacing_large"
         android:layout_marginEnd="@dimen/spacing_large"
-        android:textColor="?android:colorAccent"
+        android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
         tools:text="Setting Name" />
 
@@ -37,7 +37,6 @@
         android:layout_marginTop="@dimen/spacing_small"
         android:layout_marginEnd="@dimen/spacing_large"
         android:visibility="visible"
-        tools:text="@string/app_disclaimer"
-        android:textColor="@color/header_subtext" />
+        tools:text="@string/app_disclaimer" />
 
 </RelativeLayout>

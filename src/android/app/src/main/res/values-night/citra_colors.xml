@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="citra_primary">#F8BE00</color>
+    <color name="citra_onPrimary">#3F2E00</color>
+    <color name="citra_primaryContainer">#451C00</color>
+    <color name="citra_onPrimaryContainer">#FFDF9A</color>
+    <color name="citra_secondary">#D7C4A0</color>
+    <color name="citra_onSecondary">#3A2F15</color>
+    <color name="citra_secondaryContainer">#52452A</color>
+    <color name="citra_onSecondaryContainer">#F4E0BB</color>
+    <color name="citra_tertiary">#FFB2BC</color>
+    <color name="citra_onTertiary">#5F1126</color>
+    <color name="citra_tertiaryContainer">#7D293B</color>
+    <color name="citra_onTertiaryContainer">#FFD9DD</color>
+    <color name="citra_error">#FFB4AB</color>
+    <color name="citra_errorContainer">#93000A</color>
+    <color name="citra_onError">#690005</color>
+    <color name="citra_onErrorContainer">#FFDAD6</color>
+    <color name="citra_background">#1E1B16</color>
+    <color name="citra_onBackground">#E9E1D9</color>
+    <color name="citra_surface">#1E1B16</color>
+    <color name="citra_onSurface">#E9E1D9</color>
+    <color name="citra_surfaceVariant">#4D4639</color>
+    <color name="citra_onSurfaceVariant">#D0C5B4</color>
+    <color name="citra_outline">#999080</color>
+    <color name="citra_inverseOnSurface">#1E1B16</color>
+    <color name="citra_inverseSurface">#E9E1D9</color>
+    <color name="citra_inversePrimary">#785A00</color>
+    <color name="citra_surfaceTint">#F8BE00</color>
+    <color name="citra_outlineVariant">#4D4639</color>
+
+</resources>

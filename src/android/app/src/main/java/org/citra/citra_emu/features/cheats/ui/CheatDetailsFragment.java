@@ -15,6 +15,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.features.cheats.model.Cheat;
 import org.citra.citra_emu.features.cheats.model.CheatsViewModel;
@@ -80,12 +82,12 @@ public class CheatDetailsFragment extends Fragment {
     private void onDeleteClicked(View view) {
         String name = mEditName.getText().toString();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setMessage(getString(R.string.cheats_delete_confirmation, name));
-        builder.setPositiveButton(android.R.string.yes,
-                (dialog, i) -> mViewModel.deleteSelectedCheat());
-        builder.setNegativeButton(android.R.string.no, null);
-        builder.show();
+        new MaterialAlertDialogBuilder(requireContext())
+                .setMessage(getString(R.string.cheats_delete_confirmation, name))
+                .setPositiveButton(android.R.string.yes,
+                        (dialog, i) -> mViewModel.deleteSelectedCheat())
+                .setNegativeButton(android.R.string.no, null)
+                .show();
     }
 
     private void onEditClicked(View view) {

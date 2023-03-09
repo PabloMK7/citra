@@ -22,6 +22,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 public final class MiiSelector {
     public static class MiiSelectorConfig implements java.io.Serializable {
         public boolean enable_cancel_button;
@@ -69,8 +71,8 @@ public final class MiiSelector {
                     ? (int) config.initially_selected_mii_index
                     : 0;
             data.index = initialIndex;
-            AlertDialog.Builder builder =
-                    new AlertDialog.Builder(emulationActivity)
+            MaterialAlertDialogBuilder builder =
+                    new MaterialAlertDialogBuilder(emulationActivity)
                             .setTitle(config.title.isEmpty()
                                     ? emulationActivity.getString(R.string.mii_selector)
                                     : config.title)

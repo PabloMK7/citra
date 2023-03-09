@@ -19,7 +19,6 @@
         android:layout_marginStart="@dimen/spacing_large"
         android:layout_marginTop="@dimen/spacing_large"
         android:layout_toStartOf="@+id/checkbox"
-        android:textColor="@color/header_text"
         android:textSize="16sp"
         tools:text="@string/frame_limit_enable" />
 
@@ -36,7 +35,6 @@
         android:layout_marginTop="@dimen/spacing_small"
         android:layout_toStartOf="@+id/checkbox"
         android:textAlignment="textStart"
-        android:textColor="@color/header_subtext"
         tools:text="@string/frame_limit_enable_description" />
 
     <CheckBox

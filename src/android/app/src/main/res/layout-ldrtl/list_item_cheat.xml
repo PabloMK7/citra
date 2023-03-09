@@ -13,7 +13,6 @@
         android:id="@+id/text_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textColor="@color/header_text"
         android:textSize="16sp"
         android:layout_margin="@dimen/spacing_large"
         style="@style/TextAppearance.AppCompat.Headline"

@@ -34,7 +34,7 @@
 
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
-            android:theme="@style/CitraBase"
+            android:theme="@style/Theme.Citra.Main"
             android:resizeableActivity="false">
 
             <!-- This intentfilter marks this Activity as the one that gets launched from Home screen. -->
@@ -48,13 +48,13 @@
         <activity
             android:name="org.citra.citra_emu.features.settings.ui.SettingsActivity"
             android:configChanges="orientation|screenSize|uiMode"
-            android:theme="@style/CitraSettingsBase"
+            android:theme="@style/Theme.Citra.Main"
             android:label="@string/preferences_settings"/>
 
         <activity
             android:name="org.citra.citra_emu.activities.EmulationActivity"
             android:resizeableActivity="false"
-            android:theme="@style/CitraEmulationBase"
+            android:theme="@style/Theme.Citra.Main"
             android:launchMode="singleTop"/>
 
         <service android:name="org.citra.citra_emu.utils.ForegroundService"/>
@@ -72,7 +72,7 @@
         <activity
             android:name="org.citra.citra_emu.features.cheats.ui.CheatsActivity"
             android:exported="false"
-            android:theme="@style/CitraSettingsBase"
+            android:theme="@style/Theme.Citra.Main"
             android:label="@string/cheats"/>
 
         <service android:name="org.citra.citra_emu.utils.DirectoryInitialization"/>

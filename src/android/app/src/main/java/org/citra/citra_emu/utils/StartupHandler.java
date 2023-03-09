@@ -7,6 +7,8 @@ import android.text.TextUtils;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentActivity;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.activities.EmulationActivity;
 
@@ -33,7 +35,7 @@ public final class StartupHandler {
     public static void HandleInit(FragmentActivity parent) {
         if (PermissionsHandler.isFirstBoot(parent)) {
             // Prompt user with standard first boot disclaimer
-            new AlertDialog.Builder(parent)
+            new MaterialAlertDialogBuilder(parent)
                     .setTitle(R.string.app_name)
                     .setIcon(R.mipmap.ic_launcher)
                     .setMessage(parent.getResources().getString(R.string.app_disclaimer))

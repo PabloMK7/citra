@@ -2,8 +2,6 @@ package org.citra.citra_emu.adapters;
 
 import android.database.Cursor;
 import android.database.DataSetObserver;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
@@ -12,14 +10,14 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.color.MaterialColors;
 
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.activities.EmulationActivity;
 import org.citra.citra_emu.model.GameDatabase;
-import org.citra.citra_emu.ui.DividerItemDecoration;
 import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.PicassoUtils;
 import org.citra.citra_emu.viewholders.GameViewHolder;
@@ -99,9 +97,9 @@ public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> impl
                 holder.regions = mCursor.getString(GameDatabase.GAME_COLUMN_REGIONS);
                 holder.company = mCursor.getString(GameDatabase.GAME_COLUMN_COMPANY);
 
-                final int backgroundColorId = isValidGame(holder.path) ? R.color.card_view_background : R.color.card_view_disabled;
+                final int backgroundColorId = isValidGame(holder.path) ? R.attr.colorSurface : R.attr.colorErrorContainer;
                 View itemView = holder.getItemView();
-                itemView.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), backgroundColorId));
+                itemView.setBackgroundColor(MaterialColors.getColor(itemView, backgroundColorId));
             } else {
                 Log.error("[GameAdapter] Can't bind view; Cursor is not valid.");
             }
@@ -202,24 +200,6 @@ public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> impl
         GameViewHolder holder = (GameViewHolder) view.getTag();
 
         EmulationActivity.launch((FragmentActivity) view.getContext(), holder.path, holder.title);
-    }
-
-    public static class SpacesItemDecoration extends DividerItemDecoration {
-        private int space;
-
-        public SpacesItemDecoration(Drawable divider, int space) {
-            super(divider);
-            this.space = space;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, @NonNull View view, @NonNull RecyclerView parent,
-                                   @NonNull RecyclerView.State state) {
-            outRect.left = 0;
-            outRect.right = 0;
-            outRect.bottom = space;
-            outRect.top = 0;
-        }
     }
 
     private boolean isValidGame(String path) {

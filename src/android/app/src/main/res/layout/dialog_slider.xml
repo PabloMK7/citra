@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <SeekBar
-        android:id="@+id/seekbar"
+    <com.google.android.material.slider.Slider
+        android:id="@+id/slider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/spacing_large"

@@ -19,6 +19,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.citra.citra_emu.CitraApplication;
 import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.R;
@@ -124,7 +126,7 @@ public final class SoftwareKeyboard {
             FrameLayout container = new FrameLayout(emulationActivity);
             container.addView(editText);
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(emulationActivity)
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(emulationActivity)
                     .setTitle(R.string.software_keyboard)
                     .setView(container);
             setCancelable(false);
@@ -227,7 +229,7 @@ public final class SoftwareKeyboard {
                 break;
         }
 
-        new AlertDialog.Builder(emulationActivity)
+        new MaterialAlertDialogBuilder(emulationActivity)
                 .setTitle(R.string.software_keyboard)
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok, null)
