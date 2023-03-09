@@ -134,6 +134,12 @@ public:
     std::shared_ptr<Process> CreateProcess(std::shared_ptr<CodeSet> code_set);
 
     /**
+     * Removes a process from the kernel process list
+     * @param process Process to remove
+     */
+    void RemoveProcess(std::shared_ptr<Process> process);
+
+    /**
      * Creates and returns a new thread. The new thread is immediately scheduled
      * @param name The friendly name desired for the thread
      * @param entry_point The address at which the thread should start execution

@@ -565,6 +565,9 @@ void SVC::ExitProcess() {
     // Kill the current thread
     kernel.GetCurrentThreadManager().GetCurrentThread()->Stop();
 
+    // Remove kernel reference to process so it can be cleaned up.
+    kernel.RemoveProcess(current_process);
+
     system.PrepareReschedule();
 }
 

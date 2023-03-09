@@ -66,6 +66,7 @@
     </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
+    <addaction name="action_Boot_Home_Menu"/>
     <addaction name="separator"/>
     <addaction name="menu_recent_files"/>
     <addaction name="separator"/>
@@ -207,6 +208,11 @@
   <action name="action_Install_CIA">
    <property name="text">
     <string>Install CIA...</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu">
+   <property name="text">
+    <string>Boot Home Menu</string>
    </property>
   </action>
   <action name="action_Exit">

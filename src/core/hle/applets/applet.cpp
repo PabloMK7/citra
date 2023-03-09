@@ -70,7 +70,7 @@ ResultCode Applet::Create(Service::APT::AppletId id, Service::APT::AppletId pare
     }
 
     Service::APT::AppletAttributes attributes;
-    attributes.applet_pos.Assign(static_cast<u32>(Service::APT::AppletPos::AutoLibrary));
+    attributes.applet_pos.Assign(Service::APT::AppletPos::AutoLibrary);
     attributes.is_home_menu.Assign(false);
     const auto lock_handle_data = manager->GetLockHandle(attributes);
 

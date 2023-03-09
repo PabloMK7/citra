@@ -423,11 +423,6 @@ void ConfigureInput::OnHotkeysChanged(QList<QKeySequence> new_key_list) {
 QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
     QList<QKeySequence> list;
     for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
-        // TODO(adityaruplaha): Add home button to list when we finally emulate it
-        if (button == Settings::NativeButton::Home) {
-            continue;
-        }
-
         const auto& button_param = buttons_param[button];
         if (button_param.Get("engine", "") == "keyboard") {
             list << QKeySequence(button_param.Get("code", 0));

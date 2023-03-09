@@ -19,12 +19,12 @@ NS_S::NS_S(std::shared_ptr<Service::APT::Module> apt)
         {0x00070042, nullptr, "CardUpdateInitialize"},
         {0x00080000, nullptr, "CardUpdateShutdown"},
         {0x000D0140, nullptr, "SetTWLBannerHMAC"},
-        {0x000E0000, nullptr, "ShutdownAsync"},
-        {0x00100180, nullptr, "RebootSystem"},
+        {0x000E0000, &NS_S::ShutdownAsync, "ShutdownAsync"},
+        {0x00100180, &NS_S::RebootSystem, "RebootSystem"},
         {0x00110100, nullptr, "TerminateTitle"},
         {0x001200C0, nullptr, "SetApplicationCpuTimeLimit"},
         {0x00150140, nullptr, "LaunchApplication"},
-        {0x00160000, nullptr, "RebootSystemClean"},
+        {0x00160000, &NS_S::RebootSystemClean, "RebootSystemClean"},
     };
     RegisterHandlers(functions);
 }

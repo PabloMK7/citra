@@ -192,6 +192,7 @@ private slots:
     void OnConfigurePerGame();
     void OnMenuLoadFile();
     void OnMenuInstallCIA();
+    void OnMenuBootHomeMenu();
     void OnUpdateProgress(std::size_t written, std::size_t total);
     void OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath);
     void OnCIAInstallFinished();
@@ -238,6 +239,7 @@ private slots:
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
+    void UpdateBootHomeMenuState();
     void LoadTranslation();
     void UpdateWindowTitle();
     void UpdateUISettings();

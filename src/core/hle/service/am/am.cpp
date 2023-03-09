@@ -1140,6 +1140,7 @@ void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
 
     // TODO(shinyquagsire23): Read tickets for this instead?
     bool has_rights =
+        FileUtil::Exists(GetTitleContentPath(Service::FS::MediaType::NAND, tid, content_index)) ||
         FileUtil::Exists(GetTitleContentPath(Service::FS::MediaType::SDMC, tid, content_index));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);

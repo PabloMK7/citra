@@ -272,6 +272,7 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
         case StateChange::Sleep:
             LOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
             UNIMPLEMENTED();
+            AudioPipeWriteStructAddresses();
             dsp_state = DspState::Sleeping;
             break;
         default:
@@ -438,7 +439,7 @@ bool DspHle::Impl::Tick() {
 
     parent.OutputFrame(std::move(current_frame));
 
-    return true;
+    return GetDspState() == DspState::On;
 }
 
 void DspHle::Impl::AudioTickCallback(s64 cycles_late) {

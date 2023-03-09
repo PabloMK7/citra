@@ -56,6 +56,11 @@ void Apply() {
             hid->ReloadInputDevices();
         }
 
+        auto apt = Service::APT::GetModule(system);
+        if (apt) {
+            apt->GetAppletManager()->ReloadInputDevices();
+        }
+
         auto sm = system.ServiceManager();
         auto ir_user = sm.GetService<Service::IR::IR_USER>("ir:USER");
         if (ir_user)

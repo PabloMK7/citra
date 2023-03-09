@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -238,6 +239,13 @@ public:
      */
     FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
 
+    /**
+     * Retreives the ID of the thread with GPU rights.
+     */
+    u32 GetActiveThreadId() {
+        return active_thread_id;
+    }
+
 private:
     /**
      * Signals that the specified interrupt type has occurred to userland code for the specified GSP
@@ -403,6 +411,32 @@ private:
     void ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx);
 
     /**
+     * GSP_GPU::SaveVramSysArea service function
+     *
+     * Returns information about the current framebuffer state
+     *
+     *  Inputs:
+     *      0: Header 0x00190000
+     *  Outputs:
+     *      0: Header Code[0x00190040]
+     *      1: Result code
+     */
+    void SaveVramSysArea(Kernel::HLERequestContext& ctx);
+
+    /**
+     * GSP_GPU::RestoreVramSysArea service function
+     *
+     * Returns information about the current framebuffer state
+     *
+     *  Inputs:
+     *      0: Header 0x001A0000
+     *  Outputs:
+     *      0: Header Code[0x001A0040]
+     *      1: Result code
+     */
+    void RestoreVramSysArea(Kernel::HLERequestContext& ctx);
+
+    /**
      * GSP_GPU::StoreDataCache service function
      *
      * This Function is a no-op, We aren't emulating the CPU cache any time soon.
@@ -438,6 +472,9 @@ private:
 
     bool first_initialization = true;
 
+    /// VRAM copy saved using SaveVramSysArea.
+    boost::optional<std::vector<u8>> saved_vram;
+
     /// Maximum number of threads that can be registered at the same time in the GSP module.
     static constexpr u32 MaxGSPThreads = 4;
 
@@ -453,6 +490,7 @@ private:
         ar& active_thread_id;
         ar& first_initialization;
         ar& used_thread_ids;
+        ar& saved_vram;
     }
 
     friend class boost::serialization::access;

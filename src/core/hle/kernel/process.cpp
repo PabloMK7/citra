@@ -79,6 +79,10 @@ std::shared_ptr<Process> KernelSystem::CreateProcess(std::shared_ptr<CodeSet> co
     return process;
 }
 
+void KernelSystem::RemoveProcess(std::shared_ptr<Process> process) {
+    std::erase(process_list, process);
+}
+
 void Process::ParseKernelCaps(const u32* kernel_caps, std::size_t len) {
     for (std::size_t i = 0; i < len; ++i) {
         u32 descriptor = kernel_caps[i];
@@ -208,9 +212,6 @@ void Process::Exit() {
     if (plgldr) {
         plgldr->OnProcessExit(*this, kernel);
     }
-
-    // Clear the process's open handles.
-    handle_table.Clear();
 }
 
 VAddr Process::GetLinearHeapAreaAddress() const {
@@ -474,6 +475,8 @@ Kernel::Process::Process(KernelSystem& kernel)
     kernel.memory.RegisterPageTable(vm_manager.page_table);
 }
 Kernel::Process::~Process() {
+    LOG_INFO(Kernel, "Cleaning up process {}", process_id);
+
     // Release all objects this process owns first so that their potential destructor can do clean
     // up with this process before further destruction.
     // TODO(wwylele): explicitly destroy or invalidate objects this process owns (threads, shared
