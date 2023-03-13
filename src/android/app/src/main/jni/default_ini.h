@@ -168,8 +168,11 @@ factor_3d =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
-# Loaded from shaders/anaglyph if render_3d is anaglyph
 pp_shader_name =
+
+# The name of the shader to apply when render_3d is anaglyph.
+# Loaded from shaders/anaglyph
+anaglyph_shader_name =
 
 # Whether to enable linear filtering or not
 # This is required for some shaders to work correctly

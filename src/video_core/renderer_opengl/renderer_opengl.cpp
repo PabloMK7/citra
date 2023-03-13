@@ -687,11 +687,11 @@ void RendererOpenGL::ReloadShader() {
     }
 
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
-        if (Settings::values.pp_shader_name.GetValue() == "dubois (builtin)") {
+        if (Settings::values.anaglyph_shader_name.GetValue() == "dubois (builtin)") {
             shader_data += fragment_shader_anaglyph;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
-                true, Settings::values.pp_shader_name.GetValue());
+                true, Settings::values.anaglyph_shader_name.GetValue());
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += fragment_shader_anaglyph;
@@ -702,18 +702,7 @@ void RendererOpenGL::ReloadShader() {
     } else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced ||
                Settings::values.render_3d.GetValue() ==
                    Settings::StereoRenderOption::ReverseInterlaced) {
-        if (Settings::values.pp_shader_name.GetValue() == "horizontal (builtin)") {
-            shader_data += fragment_shader_interlaced;
-        } else {
-            std::string shader_text = OpenGL::GetPostProcessingShaderCode(
-                false, Settings::values.pp_shader_name.GetValue());
-            if (shader_text.empty()) {
-                // Should probably provide some information that the shader couldn't load
-                shader_data += fragment_shader_interlaced;
-            } else {
-                shader_data += shader_text;
-            }
-        }
+        shader_data += fragment_shader_interlaced;
     } else {
         if (Settings::values.pp_shader_name.GetValue() == "none (builtin)") {
             shader_data += fragment_shader;

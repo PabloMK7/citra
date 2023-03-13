@@ -84,21 +84,31 @@ void ConfigureEnhancements::SetConfiguration() {
 
 void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_option) {
     ui->shader_combobox->clear();
+    ui->shader_combobox->setEnabled(true);
 
-    if (stereo_option == Settings::StereoRenderOption::Anaglyph)
-        ui->shader_combobox->addItem(QStringLiteral("dubois (builtin)"));
-    else if (stereo_option == Settings::StereoRenderOption::Interlaced ||
-             stereo_option == Settings::StereoRenderOption::ReverseInterlaced)
+    if (stereo_option == Settings::StereoRenderOption::Interlaced ||
+        stereo_option == Settings::StereoRenderOption::ReverseInterlaced) {
         ui->shader_combobox->addItem(QStringLiteral("horizontal (builtin)"));
-    else
+        ui->shader_combobox->setCurrentIndex(0);
+        ui->shader_combobox->setEnabled(false);
+        return;
+    }
+
+    std::string current_shader;
+    if (stereo_option == Settings::StereoRenderOption::Anaglyph) {
+        ui->shader_combobox->addItem(QStringLiteral("dubois (builtin)"));
+        current_shader = Settings::values.anaglyph_shader_name.GetValue();
+    } else {
         ui->shader_combobox->addItem(QStringLiteral("none (builtin)"));
+        current_shader = Settings::values.pp_shader_name.GetValue();
+    }
 
     ui->shader_combobox->setCurrentIndex(0);
 
     for (const auto& shader : OpenGL::GetPostProcessingShaderList(
              stereo_option == Settings::StereoRenderOption::Anaglyph)) {
         ui->shader_combobox->addItem(QString::fromStdString(shader));
-        if (Settings::values.pp_shader_name.GetValue() == shader)
+        if (current_shader == shader)
             ui->shader_combobox->setCurrentIndex(ui->shader_combobox->count() - 1);
     }
 }
@@ -115,8 +125,13 @@ void ConfigureEnhancements::ApplyConfiguration() {
     Settings::values.factor_3d = ui->factor_3d->value();
     Settings::values.mono_render_option =
         static_cast<Settings::MonoRenderOption>(ui->mono_rendering_eye->currentIndex());
-    Settings::values.pp_shader_name =
-        ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
+    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
+        Settings::values.anaglyph_shader_name =
+            ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
+    } else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
+        Settings::values.pp_shader_name =
+            ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
+    }
     Settings::values.filter_mode = ui->toggle_linear_filter->isChecked();
     Settings::values.texture_filter_name = ui->texture_filter_combobox->currentText().toStdString();
     Settings::values.layout_option =
