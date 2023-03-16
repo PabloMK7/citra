@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="Theme.Citra.Splash.Main" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/citra_surface</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_citra</item>
+        <item name="postSplashScreenTheme">@style/Theme.Citra.Main</item>
+    </style>
+
     <style name="Theme.Citra.Main" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Main theme colors -->
         <item name="colorPrimary">@color/citra_primary</item>
