@@ -1245,7 +1245,7 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
         // processorid. If this is implemented, make sure to check process->no_thread_restrictions.
         break;
     default:
-        ASSERT_MSG(false, "Unsupported thread processor ID: {}", processor_id);
+        return ERR_OUT_OF_RANGE;
         break;
     }
 
