@@ -58,6 +58,7 @@ add_library(common STATIC
     aarch64/cpu_detect.h
     alignment.h
     announce_multiplayer_room.h
+    arch.h
     archives.h
     assert.h
     atomic_ops.h
