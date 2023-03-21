@@ -882,7 +882,12 @@ ResultCode AppletManager::PrepareToCloseApplication(bool return_to_sys) {
     }
 
     if (application_close_target == AppletSlot::HomeMenu) {
-        EnsureHomeMenuLoaded();
+        // Real APT would make sure home menu is loaded here. However, this is only really
+        // needed if the home menu wasn't loaded in the first place. Since we want to
+        // preserve normal behavior when the user loaded the game directly without going
+        // through home menu, we skip this. Then, later we just close to the game list
+        // when the application finishes closing.
+        // EnsureHomeMenuLoaded();
     }
 
     return RESULT_SUCCESS;
@@ -896,15 +901,21 @@ ResultCode AppletManager::CloseApplication(std::shared_ptr<Kernel::Object> objec
     GetAppletSlot(AppletSlot::Application)->Reset();
 
     if (application_close_target != AppletSlot::Error) {
-        active_slot = application_close_target;
+        // If exiting to the home menu and it is not loaded, exit to game list.
+        if (application_close_target == AppletSlot::HomeMenu &&
+            !GetAppletSlot(application_close_target)->registered) {
+            system.RequestShutdown();
+        } else {
+            active_slot = application_close_target;
 
-        CancelAndSendParameter({
-            .sender_id = AppletId::Application,
-            .destination_id = GetAppletSlot(application_close_target)->applet_id,
-            .signal = SignalType::WakeupByExit,
-            .object = std::move(object),
-            .buffer = buffer,
-        });
+            CancelAndSendParameter({
+                .sender_id = AppletId::Application,
+                .destination_id = GetAppletSlot(application_close_target)->applet_id,
+                .signal = SignalType::WakeupByExit,
+                .object = std::move(object),
+                .buffer = buffer,
+            });
+        }
     }
 
     // TODO: Terminate the application process.

@@ -108,8 +108,9 @@ void Thread::Stop() {
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::CITRA_PAGE_SIZE;
     u32 tls_slot =
         ((tls_address - Memory::TLS_AREA_VADDR) % Memory::CITRA_PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
-    ASSERT(owner_process.lock());
-    owner_process.lock()->tls_slots[tls_page].reset(tls_slot);
+    if (auto process = owner_process.lock()) {
+        process->tls_slots[tls_page].reset(tls_slot);
+    }
 }
 
 void ThreadManager::SwitchContext(Thread* new_thread) {
