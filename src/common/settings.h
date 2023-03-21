@@ -54,9 +54,16 @@ enum class StereoRenderOption : u32 {
 
 // Which eye to render when 3d is off. 800px wide mode could be added here in the future, when
 // implemented
-enum class MonoRenderOption : u32 { LeftEye = 0, RightEye = 1 };
+enum class MonoRenderOption : u32 {
+    LeftEye = 0,
+    RightEye = 1,
+};
 
-enum class AudioEmulation : u32 { HLE = 0, LLE = 1, LLEMultithreaded = 2 };
+enum class AudioEmulation : u32 {
+    HLE = 0,
+    LLE = 1,
+    LLEMultithreaded = 2,
+};
 
 namespace NativeButton {
 
@@ -361,38 +368,6 @@ protected:
     Type custom{};         ///< The custom value of the setting
 };
 
-/**
- * The InputSetting class allows for getting a reference to either the global or custom members.
- * This is required as we cannot easily modify the values of user-defined types within containers
- * using the SetValue() member function found in the Setting class. The primary purpose of this
- * class is to store an array of 10 PlayerInput structs for both the global and custom setting and
- * allows for easily accessing and modifying both settings.
- */
-template <typename Type>
-class InputSetting final {
-public:
-    InputSetting() = default;
-    explicit InputSetting(Type val) : Setting<Type>(val) {}
-    ~InputSetting() = default;
-    void SetGlobal(bool to_global) {
-        use_global = to_global;
-    }
-    [[nodiscard]] bool UsingGlobal() const {
-        return use_global;
-    }
-    [[nodiscard]] Type& GetValue(bool need_global = false) {
-        if (use_global || need_global) {
-            return global;
-        }
-        return custom;
-    }
-
-private:
-    bool use_global{true}; ///< The setting's global state
-    Type global{};         ///< The setting
-    Type custom{};         ///< The custom setting value
-};
-
 struct InputProfile {
     std::string name;
     std::array<std::string, NativeButton::NumButtons> buttons;
@@ -485,9 +460,9 @@ struct Values {
     SwitchableSetting<std::string> pp_shader_name{"none (builtin)", "pp_shader_name"};
     SwitchableSetting<std::string> anaglyph_shader_name{"dubois (builtin)", "anaglyph_shader_name"};
 
-    Setting<bool> dump_textures{false, "dump_textures"};
-    Setting<bool> custom_textures{false, "custom_textures"};
-    Setting<bool> preload_textures{false, "preload_textures"};
+    SwitchableSetting<bool> dump_textures{false, "dump_textures"};
+    SwitchableSetting<bool> custom_textures{false, "custom_textures"};
+    SwitchableSetting<bool> preload_textures{false, "preload_textures"};
 
     // Audio
     bool audio_muted;

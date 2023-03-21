@@ -10,6 +10,7 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_audio.h"
 #include "citra_qt/configuration/configure_debug.h"
+#include "citra_qt/configuration/configure_enhancements.h"
 #include "citra_qt/configuration/configure_general.h"
 #include "citra_qt/configuration/configure_graphics.h"
 #include "citra_qt/configuration/configure_per_game.h"
@@ -30,6 +31,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
 
     audio_tab = std::make_unique<ConfigureAudio>(this);
     general_tab = std::make_unique<ConfigureGeneral>(this);
+    enhancements_tab = std::make_unique<ConfigureEnhancements>(this);
     graphics_tab = std::make_unique<ConfigureGraphics>(this);
     system_tab = std::make_unique<ConfigureSystem>(this);
     debug_tab = std::make_unique<ConfigureDebug>(this);
@@ -38,6 +40,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
 
     ui->tabWidget->addTab(general_tab.get(), tr("General"));
     ui->tabWidget->addTab(system_tab.get(), tr("System"));
+    ui->tabWidget->addTab(enhancements_tab.get(), tr("Enhancements"));
     ui->tabWidget->addTab(graphics_tab.get(), tr("Graphics"));
     ui->tabWidget->addTab(audio_tab.get(), tr("Audio"));
     ui->tabWidget->addTab(debug_tab.get(), tr("Debug"));
@@ -81,10 +84,12 @@ void ConfigurePerGame::ResetDefaults() {
 void ConfigurePerGame::ApplyConfiguration() {
     general_tab->ApplyConfiguration();
     system_tab->ApplyConfiguration();
+    enhancements_tab->ApplyConfiguration();
     graphics_tab->ApplyConfiguration();
     audio_tab->ApplyConfiguration();
     debug_tab->ApplyConfiguration();
 
+    Settings::Apply();
     Settings::LogSettings();
 
     game_config->Save();

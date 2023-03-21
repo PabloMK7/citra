@@ -12,6 +12,10 @@ namespace Settings {
 enum class StereoRenderOption : u32;
 }
 
+namespace ConfigurationShared {
+enum class CheckState;
+}
+
 namespace Ui {
 class ConfigureEnhancements;
 }
@@ -27,10 +31,18 @@ public:
     void RetranslateUI();
     void SetConfiguration();
 
+    void SetupPerGameUI();
+
 private:
     void updateShaders(Settings::StereoRenderOption stereo_option);
     void updateTextureFilter(int index);
 
     std::unique_ptr<Ui::ConfigureEnhancements> ui;
+    ConfigurationShared::CheckState linear_filter;
+    ConfigurationShared::CheckState swap_screen;
+    ConfigurationShared::CheckState upright_screen;
+    ConfigurationShared::CheckState dump_textures;
+    ConfigurationShared::CheckState custom_textures;
+    ConfigurationShared::CheckState preload_textures;
     QColor bg_color;
 };

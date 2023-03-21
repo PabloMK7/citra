@@ -256,7 +256,6 @@ void Config::ReadValues() {
         ReadDebuggingValues();
         ReadWebServiceValues();
         ReadVideoDumpingValues();
-        ReadUtilityValues();
     }
 
     ReadUIValues();
@@ -265,6 +264,7 @@ void Config::ReadValues() {
     ReadLayoutValues();
     ReadAudioValues();
     ReadSystemValues();
+    ReadUtilityValues();
 }
 
 void Config::ReadAudioValues() {
@@ -436,9 +436,9 @@ void Config::ReadControlValues() {
 void Config::ReadUtilityValues() {
     qt_config->beginGroup(QStringLiteral("Utility"));
 
-    ReadBasicSetting(Settings::values.dump_textures);
-    ReadBasicSetting(Settings::values.custom_textures);
-    ReadBasicSetting(Settings::values.preload_textures);
+    ReadGlobalSetting(Settings::values.dump_textures);
+    ReadGlobalSetting(Settings::values.custom_textures);
+    ReadGlobalSetting(Settings::values.preload_textures);
 
     qt_config->endGroup();
 }
@@ -497,9 +497,9 @@ void Config::ReadLayoutValues() {
 
     ReadGlobalSetting(Settings::values.render_3d);
     ReadGlobalSetting(Settings::values.factor_3d);
+    ReadGlobalSetting(Settings::values.filter_mode);
     ReadGlobalSetting(Settings::values.pp_shader_name);
     ReadGlobalSetting(Settings::values.anaglyph_shader_name);
-    ReadGlobalSetting(Settings::values.filter_mode);
     ReadGlobalSetting(Settings::values.layout_option);
     ReadGlobalSetting(Settings::values.swap_screen);
     ReadGlobalSetting(Settings::values.upright_screen);
@@ -830,7 +830,6 @@ void Config::SaveValues() {
         SaveDebuggingValues();
         SaveWebServiceValues();
         SaveVideoDumpingValues();
-        SaveUtilityValues();
     }
 
     SaveUIValues();
@@ -839,6 +838,7 @@ void Config::SaveValues() {
     SaveLayoutValues();
     SaveAudioValues();
     SaveSystemValues();
+    SaveUtilityValues();
     qt_config->sync();
 }
 
@@ -951,9 +951,9 @@ void Config::SaveControlValues() {
 void Config::SaveUtilityValues() {
     qt_config->beginGroup(QStringLiteral("Utility"));
 
-    WriteBasicSetting(Settings::values.dump_textures);
-    WriteBasicSetting(Settings::values.custom_textures);
-    WriteBasicSetting(Settings::values.preload_textures);
+    WriteGlobalSetting(Settings::values.dump_textures);
+    WriteGlobalSetting(Settings::values.custom_textures);
+    WriteGlobalSetting(Settings::values.preload_textures);
 
     qt_config->endGroup();
 }
@@ -1007,9 +1007,9 @@ void Config::SaveLayoutValues() {
 
     WriteGlobalSetting(Settings::values.render_3d);
     WriteGlobalSetting(Settings::values.factor_3d);
+    WriteGlobalSetting(Settings::values.filter_mode);
     WriteGlobalSetting(Settings::values.pp_shader_name);
     WriteGlobalSetting(Settings::values.anaglyph_shader_name);
-    WriteGlobalSetting(Settings::values.filter_mode);
     WriteGlobalSetting(Settings::values.layout_option);
     WriteGlobalSetting(Settings::values.swap_screen);
     WriteGlobalSetting(Settings::values.upright_screen);

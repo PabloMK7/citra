@@ -78,6 +78,11 @@ void SetPerGameSetting(QComboBox* combobox,
                                                            ConfigurationShared::USE_GLOBAL_OFFSET);
 }
 
+/// Specialization for string settings
+template <>
+void SetPerGameSetting(QComboBox* combobox,
+                       const Settings::SwitchableSetting<std::string>* setting);
+
 /// Given a Qt widget sets the background color to indicate whether the setting
 /// is per-game overriden (highlighted) or global (non-highlighted)
 void SetHighlight(QWidget* widget, bool highlighted);
