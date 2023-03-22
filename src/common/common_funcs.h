@@ -35,16 +35,16 @@
 #define CITRA_NO_INLINE __attribute__((noinline))
 #endif
 
-#ifndef _MSC_VER
-
-#if CITRA_ARCH(x86_64)
-#define Crash() __asm__ __volatile__("int $3")
+#ifdef _MSC_VER
+extern "C" {
+__declspec(dllimport) void __stdcall DebugBreak(void);
+}
+#define Crash() DebugBreak()
 #else
-#define Crash() exit(1)
+#define Crash() __builtin_trap()
 #endif
 
-#else // _MSC_VER
-
+#ifdef _MSC_VER
 #if (_MSC_VER < 1900)
 // Function Cross-Compatibility
 #define snprintf _snprintf
@@ -53,12 +53,7 @@
 // Locale Cross-Compatibility
 #define locale_t _locale_t
 
-extern "C" {
-__declspec(dllimport) void __stdcall DebugBreak(void);
-}
-#define Crash() DebugBreak()
-
-#endif // _MSC_VER ndef
+#endif // _MSC_VER
 
 // Generic function to get last error message.
 // Call directly after the command or use the error num.
