@@ -100,7 +100,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">게임 폴더 선택</string>
-    <string name="add_directory_title">폴더를 라이브러리에 추가</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">설정</string>

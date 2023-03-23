@@ -1,5 +1,6 @@
 package org.citra.citra_emu.ui.main;
 
+import android.content.Context;
 import android.os.SystemClock;
 
 import org.citra.citra_emu.BuildConfig;
@@ -9,10 +10,12 @@ import org.citra.citra_emu.features.settings.model.Settings;
 import org.citra.citra_emu.features.settings.utils.SettingsFile;
 import org.citra.citra_emu.model.GameDatabase;
 import org.citra.citra_emu.utils.AddDirectoryHelper;
+import org.citra.citra_emu.utils.PermissionsHandler;
 
 public final class MainPresenter {
     public static final int REQUEST_ADD_DIRECTORY = 1;
     public static final int REQUEST_INSTALL_CIA = 2;
+    public static final int REQUEST_SELECT_CITRA_DIRECTORY = 3;
 
     private final MainView mView;
     private String mDirToAdd;
@@ -25,7 +28,7 @@ public final class MainPresenter {
     public void onCreate() {
         String versionName = BuildConfig.VERSION_NAME;
         mView.setVersionString(versionName);
-        refeshGameList();
+        refreshGameList();
     }
 
     public void launchFileListActivity(int request) {
@@ -44,6 +47,10 @@ public final class MainPresenter {
         switch (itemId) {
             case R.id.menu_settings_core:
                 mView.launchSettingsActivity(SettingsFile.FILE_NAME_CONFIG);
+                return true;
+
+            case R.id.button_select_root:
+                mView.launchFileListActivity(REQUEST_SELECT_CITRA_DIRECTORY);
                 return true;
 
             case R.id.button_add_directory:
@@ -74,9 +81,12 @@ public final class MainPresenter {
         mDirToAdd = dir;
     }
 
-    public void refeshGameList() {
-        GameDatabase databaseHelper = CitraApplication.databaseHelper;
-        databaseHelper.scanLibrary(databaseHelper.getWritableDatabase());
-        mView.refresh();
+    public void refreshGameList() {
+        Context context = CitraApplication.getAppContext();
+        if (PermissionsHandler.hasWriteAccess(context)) {
+            GameDatabase databaseHelper = CitraApplication.databaseHelper;
+            databaseHelper.scanLibrary(databaseHelper.getWritableDatabase());
+            mView.refresh();
+        }
     }
 }

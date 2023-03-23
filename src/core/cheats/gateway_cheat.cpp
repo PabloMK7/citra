@@ -8,6 +8,8 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -473,9 +475,9 @@ std::string GatewayCheat::ToString() const {
 std::vector<std::unique_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string& filepath) {
     std::vector<std::unique_ptr<CheatBase>> cheats;
 
-    std::ifstream file;
-    OpenFStream(file, filepath, std::ios_base::in);
-    if (!file) {
+    boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
+    FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
+    if (!file.is_open()) {
         return cheats;
     }
 

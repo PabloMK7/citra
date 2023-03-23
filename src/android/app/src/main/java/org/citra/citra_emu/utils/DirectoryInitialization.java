@@ -9,19 +9,18 @@ package org.citra.citra_emu.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import org.citra.citra_emu.NativeLibrary;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.citra.citra_emu.CitraApplication;
+import org.citra.citra_emu.NativeLibrary;
 
 /**
  * A service that spawns its own thread in order to copy several binary and shader files
@@ -49,6 +48,9 @@ public final class DirectoryInitialization {
             if (PermissionsHandler.hasWriteAccess(context)) {
                 if (setCitraUserDirectory()) {
                     initializeInternalStorage(context);
+                    CitraApplication.documentsTree.setRoot(Uri.parse(userPath));
+                    NativeLibrary.CreateLogFile();
+                    NativeLibrary.LogUserDirectory(userPath);
                     NativeLibrary.CreateConfigFile();
                     directoryState = DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED;
                 } else {
@@ -75,6 +77,11 @@ public final class DirectoryInitialization {
         return directoryState == DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED;
     }
 
+    public static void resetCitraDirectoryState() {
+        directoryState = null;
+        isCitraDirectoryInitializationRunning.compareAndSet(true, false);
+    }
+
     public static String getUserDirectory() {
         if (directoryState == null) {
             throw new IllegalStateException("DirectoryInitialization has to run at least once!");
@@ -88,15 +95,11 @@ public final class DirectoryInitialization {
     private static native void SetSysDirectory(String path);
 
     private static boolean setCitraUserDirectory() {
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            File externalPath = Environment.getExternalStorageDirectory();
-            if (externalPath != null) {
-                userPath = externalPath.getAbsolutePath() + "/citra-emu";
-                Log.debug("[DirectoryInitialization] User Dir: " + userPath);
-                // NativeLibrary.SetUserDirectory(userPath);
-                return true;
-            }
-
+        Uri dataPath = PermissionsHandler.getCitraDirectory();
+        if (dataPath != null) {
+            userPath = dataPath.toString();
+            Log.debug("[DirectoryInitialization] User Dir: " + userPath);
+            return true;
         }
 
         return false;

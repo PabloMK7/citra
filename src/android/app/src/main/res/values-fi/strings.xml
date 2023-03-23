@@ -63,7 +63,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Valitse pelikansio</string>
-    <string name="add_directory_title">Lisää kansio kirjastoosi</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Asetukset</string>

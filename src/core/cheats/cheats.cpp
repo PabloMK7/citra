@@ -71,16 +71,12 @@ void CheatEngine::SaveCheatFile() const {
     if (!FileUtil::IsDirectory(cheat_dir)) {
         FileUtil::CreateDir(cheat_dir);
     }
-
-    std::ofstream file;
-    OpenFStream(file, filepath, std::ios_base::out);
+    FileUtil::IOFile file(filepath, "w");
 
     auto cheats = GetCheats();
     for (const auto& cheat : cheats) {
-        file << cheat->ToString();
+        file.WriteString(cheat->ToString());
     }
-
-    file.flush();
 }
 
 void CheatEngine::LoadCheatFile() {

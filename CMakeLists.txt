@@ -386,10 +386,11 @@ endforeach()
 
 # Boost
 if (USE_SYSTEM_BOOST)
-    find_package(Boost 1.70.0 COMPONENTS serialization REQUIRED)
+    find_package(Boost 1.70.0 COMPONENTS serialization iostreams REQUIRED)
 else()
     add_library(Boost::boost ALIAS boost)
     add_library(Boost::serialization ALIAS boost_serialization)
+    add_library(Boost::iostreams ALIAS boost_iostreams)
 endif()
 
 # SDL2

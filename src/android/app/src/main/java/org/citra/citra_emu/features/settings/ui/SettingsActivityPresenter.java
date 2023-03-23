@@ -3,9 +3,9 @@ package org.citra.citra_emu.features.settings.ui;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.TextUtils;
-
 import androidx.appcompat.app.AppCompatActivity;
-
+import androidx.documentfile.provider.DocumentFile;
+import java.io.File;
 import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.features.settings.model.Settings;
 import org.citra.citra_emu.features.settings.utils.SettingsFile;
@@ -14,8 +14,6 @@ import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryStateReceiver;
 import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.ThemeUtil;
-
-import java.io.File;
 
 public final class SettingsActivityPresenter {
     private static final String KEY_SHOULD_SAVE = "should_save";
@@ -62,8 +60,8 @@ public final class SettingsActivityPresenter {
     }
 
     private void prepareCitraDirectoriesIfNeeded() {
-        File configFile = new File(DirectoryInitialization.getUserDirectory() + "/config/" + SettingsFile.FILE_NAME_CONFIG + ".ini");
-        if (!configFile.exists()) {
+        DocumentFile configFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG);
+        if (configFile == null || !configFile.exists()) {
             Log.error("Citra config file could not be found!");
         }
         if (DirectoryInitialization.areCitraDirectoriesReady()) {

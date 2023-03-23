@@ -24,10 +24,6 @@
 #define MACOS_EMU_DATA_DIR "Library" DIR_SEP "Application Support" DIR_SEP "Citra"
 // For compatibility with XDG paths.
 #define EMU_DATA_DIR "citra-emu"
-#elif ANDROID
-// On Android internal storage is mounted as "/sdcard"
-#define SDCARD_DIR "sdcard"
-#define EMU_DATA_DIR "citra-emu"
 #else
 #define EMU_DATA_DIR "citra-emu"
 #endif

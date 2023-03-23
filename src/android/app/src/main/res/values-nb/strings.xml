@@ -98,7 +98,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Velg Spill Mappe</string>
-    <string name="add_directory_title">Lett til Mappe til Bibliotek </string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Innstillinger </string>

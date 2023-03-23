@@ -28,6 +28,7 @@ import androidx.fragment.app.DialogFragment;
 import org.citra.citra_emu.activities.EmulationActivity;
 import org.citra.citra_emu.applets.SoftwareKeyboard;
 import org.citra.citra_emu.utils.EmulationMenuSettings;
+import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.PermissionsHandler;
 
@@ -164,6 +165,10 @@ public final class NativeLibrary {
     // Create the config.ini file.
     public static native void CreateConfigFile();
 
+    public static native void CreateLogFile();
+
+    public static native void LogUserDirectory(String directory);
+
     public static native int DefaultCPUCore();
 
     /**
@@ -262,11 +267,11 @@ public final class NativeLibrary {
                             coreErrorAlertLock.notify();
                         }
                     }).setOnDismissListener(dialog -> {
-                coreErrorAlertResult = true;
-                synchronized (coreErrorAlertLock) {
-                    coreErrorAlertLock.notify();
-                }
-            }).create();
+                        coreErrorAlertResult = true;
+                        synchronized (coreErrorAlertLock) {
+                            coreErrorAlertLock.notify();
+                        }
+                    }).create();
         }
     }
 
@@ -664,5 +669,74 @@ public final class NativeLibrary {
     public static final class ButtonState {
         public static final int RELEASED = 0;
         public static final int PRESSED = 1;
+    }
+    public static boolean createFile(String directory, String filename) {
+        if (FileUtil.isNativePath(directory)) {
+            return CitraApplication.documentsTree.createFile(directory, filename);
+        }
+        return FileUtil.createFile(CitraApplication.getAppContext(), directory, filename) != null;
+    }
+
+    public static boolean createDir(String directory, String directoryName) {
+        if (FileUtil.isNativePath(directory)) {
+            return CitraApplication.documentsTree.createDir(directory, directoryName);
+        }
+        return FileUtil.createDir(CitraApplication.getAppContext(), directory, directoryName) != null;
+    }
+
+    public static int openContentUri(String path, String openMode) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.openContentUri(path, openMode);
+        }
+        return FileUtil.openContentUri(CitraApplication.getAppContext(), path, openMode);
+    }
+
+    public static String[] getFilesName(String path) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.getFilesName(path);
+        }
+        return FileUtil.getFilesName(CitraApplication.getAppContext(), path);
+    }
+
+    public static long getSize(String path) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.getFileSize(path);
+        }
+        return FileUtil.getFileSize(CitraApplication.getAppContext(), path);
+    }
+
+    public static boolean fileExists(String path) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.Exists(path);
+        }
+        return FileUtil.Exists(CitraApplication.getAppContext(), path);
+    }
+
+    public static boolean isDirectory(String path) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.isDirectory(path);
+        }
+        return FileUtil.isDirectory(CitraApplication.getAppContext(), path);
+    }
+
+    public static boolean copyFile(String sourcePath, String destinationParentPath, String destinationFilename) {
+        if (FileUtil.isNativePath(sourcePath) && FileUtil.isNativePath(destinationParentPath)) {
+            return CitraApplication.documentsTree.copyFile(sourcePath, destinationParentPath, destinationFilename);
+        }
+        return FileUtil.copyFile(CitraApplication.getAppContext(), sourcePath, destinationParentPath, destinationFilename);
+    }
+
+    public static boolean renameFile(String path, String destinationFilename) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.renameFile(path, destinationFilename);
+        }
+        return FileUtil.renameFile(CitraApplication.getAppContext(), path, destinationFilename);
+    }
+
+    public static boolean deleteDocument(String path) {
+        if (FileUtil.isNativePath(path)) {
+            return CitraApplication.documentsTree.deleteDocument(path);
+        }
+        return FileUtil.deleteDocument(CitraApplication.getAppContext(), path);
     }
 }

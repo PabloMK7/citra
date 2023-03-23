@@ -12,7 +12,9 @@
 
 #include "audio_core/dsp_interface.h"
 #include "common/aarch64/cpu_detect.h"
+#include "common/common_paths.h"
 #include "common/file_util.h"
+#include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -319,6 +321,8 @@ jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetInstalledGamePaths(
                 path += '/';
                 FileUtil::ForeachDirectoryEntry(nullptr, path, ScanDir);
             } else {
+                if (!FileUtil::Exists(path))
+                    return false;
                 auto loader = Loader::GetLoader(path);
                 if (loader) {
                     bool executable{};
@@ -490,6 +494,23 @@ jstring Java_org_citra_citra_1emu_NativeLibrary_GetGitRevision(JNIEnv* env,
 void Java_org_citra_citra_1emu_NativeLibrary_CreateConfigFile(JNIEnv* env,
                                                               [[maybe_unused]] jclass clazz) {
     Config{};
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_CreateLogFile(JNIEnv* env,
+                                                           [[maybe_unused]] jclass clazz) {
+    Log::RemoveBackend(Log::FileBackend::Name());
+    FileUtil::CreateFullPath(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
+    Log::AddBackend(std::make_unique<Log::FileBackend>(
+        FileUtil::GetUserPath(FileUtil::UserPath::LogDir) + LOG_FILE));
+    LOG_INFO(Frontend, "Logging backend initialised");
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_LogUserDirectory(JNIEnv* env,
+                                                              [[maybe_unused]] jclass clazz,
+                                                              jstring j_path) {
+    std::string_view path = env->GetStringUTFChars(j_path, 0);
+    LOG_INFO(Frontend, "User directory path: {}", path);
+    env->ReleaseStringUTFChars(j_path, path.data());
 }
 
 jint Java_org_citra_citra_1emu_NativeLibrary_DefaultCPUCore(JNIEnv* env,

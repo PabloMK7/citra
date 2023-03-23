@@ -10,6 +10,9 @@
 #include "common/string_util.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
+
 namespace OpenGL {
 
 // The Dolphin shader header is added here for drop-in compatibility with most
@@ -193,9 +196,9 @@ std::string GetPostProcessingShaderCode(bool anaglyph, std::string_view shader) 
         return "";
     }
 
-    std::ifstream file;
-    OpenFStream(file, shader_path, std::ios_base::in);
-    if (!file) {
+    boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
+    FileUtil::OpenFStream<std::ios_base::in>(file, shader_path);
+    if (!file.is_open()) {
         return "";
     }
 

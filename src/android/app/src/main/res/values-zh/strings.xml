@@ -98,7 +98,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">选择游戏目录</string>
-    <string name="add_directory_title">添加文件夹到库中</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">设置</string>

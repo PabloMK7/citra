@@ -336,6 +336,15 @@ public:
     [[nodiscard]] bool IsGood() const {
         return m_good;
     }
+    [[nodiscard]] int GetFd() const {
+#ifdef ANDROID
+        return m_fd;
+#else
+        if (m_file == nullptr)
+            return -1;
+        return fileno(m_file);
+#endif
+    }
     [[nodiscard]] explicit operator bool() const {
         return IsGood();
     }
@@ -359,6 +368,7 @@ private:
     bool Open();
 
     std::FILE* m_file = nullptr;
+    int m_fd = -1;
     bool m_good = true;
 
     std::string filename;
@@ -383,6 +393,8 @@ private:
     friend class boost::serialization::access;
 };
 
+template <std::ios_base::openmode o, typename T>
+void OpenFStream(T& fstream, const std::string& filename);
 } // namespace FileUtil
 
 // To deal with Windows being dumb at unicode:

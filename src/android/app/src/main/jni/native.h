@@ -83,6 +83,13 @@ JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_SetSysDirectory(J
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_CreateConfigFile(JNIEnv* env,
                                                                                 jclass clazz);
 
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_CreateLogFile(JNIEnv* env,
+                                                                             jclass clazz);
+
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_LogUserDirectory(JNIEnv* env,
+                                                                                jclass clazz,
+                                                                                jstring path);
+
 JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_NativeLibrary_DefaultCPUCore(JNIEnv* env,
                                                                               jclass clazz);
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_SetProfiling(JNIEnv* env,

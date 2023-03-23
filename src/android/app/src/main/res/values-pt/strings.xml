@@ -98,7 +98,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Escolher pasta de jogos</string>
-    <string name="add_directory_title">Adicionar pasta à biblioteca</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Configurações</string>

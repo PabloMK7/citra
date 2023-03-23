@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="Theme.Citra.Splash.Main" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/citra_surface</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_citra</item>
+        <item name="postSplashScreenTheme">@style/Theme.Citra.Main</item>
+    </style>
+
+
     <style name="Theme.Citra.Main" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Main theme colors -->
         <item name="colorPrimary">@color/citra_primary</item>
@@ -37,19 +44,6 @@
         <item name="popupMenuStyle">@style/CitraShapedPopup</item>
         <item name="popupTheme">@style/CitraPopup</item>
         <item name="sliderStyle">@style/CitraSlider</item>
-    </style>
-
-    <!-- Inherit from a base file picker theme that handles day/night -->
-    <style name="FilePickerTheme" parent="FilePickerBaseTheme">
-        <item name="colorPrimary">@color/citra_primary</item>
-        <item name="colorPrimaryDark">@color/citra_primary</item>
-        <item name="colorAccent">@color/citra_primary</item>
-
-        <!-- Need to set this also to style create folder dialog -->
-        <item name="alertDialogTheme">@style/FilePickerAlertDialogTheme</item>
-
-        <item name="nnf_list_item_divider">@drawable/gamelist_divider</item>
-        <item name="nnf_toolbarTheme">@style/ThemeOverlay.AppCompat.DayNight.ActionBar</item>
     </style>
 
 </resources>

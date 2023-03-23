@@ -32,7 +32,7 @@ android {
         // TODO If this is ever modified, change application_id in strings.xml
         applicationId "org.citra.citra_emu"
         minSdkVersion 28
-        targetSdkVersion 29
+        targetSdkVersion 31
         versionCode autoVersion
         versionName getVersion()
         ndk.abiFilters abiFilter
@@ -117,22 +117,25 @@ android {
 }
 
 dependencies {
+    implementation "androidx.activity:activity:1.5.1"
+    implementation "androidx.fragment:fragment:1.5.5"
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.exifinterface:exifinterface:1.3.4'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation "androidx.documentfile:documentfile:1.0.1"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.5.1'
     implementation 'androidx.fragment:fragment:1.5.3'
     implementation "androidx.slidingpanelayout:slidingpanelayout:1.2.0"
     implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.core:core-splashscreen:1.0.0'
 
     // For loading huge screenshots from the disk.
     implementation 'com.squareup.picasso:picasso:2.71828'
 
     // Allows FRP-style asynchronous operations in Android.
     implementation 'io.reactivex:rxandroid:1.2.1'
-    implementation 'com.nononsenseapps:filepicker:4.2.1'
     implementation 'org.ini4j:ini4j:0.5.4'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
@@ -140,6 +143,10 @@ dependencies {
 
     // Please don't upgrade the billing library as the newer version is not GPL-compatible
     implementation 'com.android.billingclient:billing:2.0.3'
+
+    // To use the androidx.test.core APIs
+    androidTestImplementation "androidx.test:core:1.5.0"
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
 }
 
 def getVersion() {

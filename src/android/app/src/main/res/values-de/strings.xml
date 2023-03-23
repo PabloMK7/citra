@@ -98,7 +98,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
-    <string name="add_directory_title">Ordner zur Bibliothek hinzufügen</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Einstellungen</string>

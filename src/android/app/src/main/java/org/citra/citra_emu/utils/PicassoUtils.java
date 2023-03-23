@@ -31,7 +31,7 @@ public class PicassoUtils {
     public static void loadGameIcon(ImageView imageView, String gamePath) {
         Picasso
                 .get()
-                .load(Uri.parse("iso:/" + gamePath))
+                .load(Uri.parse(gamePath))
                 .fit()
                 .centerInside()
                 .config(Bitmap.Config.RGB_565)

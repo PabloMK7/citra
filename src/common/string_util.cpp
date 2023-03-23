@@ -123,6 +123,12 @@ std::string TabsToSpaces(int tab_size, std::string in) {
     return in;
 }
 
+bool EndsWith(const std::string& value, const std::string& ending) {
+    if (ending.size() > value.size())
+        return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 std::string ReplaceAll(std::string result, const std::string& src, const std::string& dest) {
     std::size_t pos = 0;
 

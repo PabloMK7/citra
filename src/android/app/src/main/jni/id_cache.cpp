@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/android_storage.h"
 #include "common/common_paths.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
@@ -159,10 +160,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Log::SetGlobalFilter(log_filter);
     Log::AddBackend(std::make_unique<Log::LogcatBackend>());
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
-    Log::AddBackend(std::make_unique<Log::FileBackend>(
-        FileUtil::GetUserPath(FileUtil::UserPath::LogDir) + LOG_FILE));
-    LOG_INFO(Frontend, "Logging backend initialised");
 
     // Initialize misc classes
     s_savestate_info_class = reinterpret_cast<jclass>(
@@ -230,6 +227,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     MiiSelector::InitJNI(env);
     SoftwareKeyboard::InitJNI(env);
     Camera::StillImage::InitJNI(env);
+    AndroidStorage::InitJNI(env, s_native_library_class);
 
     return JNI_VERSION;
 }
@@ -254,6 +252,7 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
     MiiSelector::CleanupJNI(env);
     SoftwareKeyboard::CleanupJNI(env);
     Camera::StillImage::CleanupJNI(env);
+    AndroidStorage::CleanupJNI();
 }
 
 #ifdef __cplusplus

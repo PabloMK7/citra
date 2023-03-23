@@ -102,7 +102,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directorio de Juego</string>
-    <string name="add_directory_title">Añadir Carpeta a la Librería de Juegos</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Configuración</string>

@@ -12,10 +12,12 @@ import android.os.Build;
 
 import org.citra.citra_emu.model.GameDatabase;
 import org.citra.citra_emu.utils.DirectoryInitialization;
+import org.citra.citra_emu.utils.DocumentsTree;
 import org.citra.citra_emu.utils.PermissionsHandler;
 
 public class CitraApplication extends Application {
     public static GameDatabase databaseHelper;
+    public static DocumentsTree documentsTree;
     private static CitraApplication application;
 
     private void createNotificationChannel() {
@@ -39,6 +41,7 @@ public class CitraApplication extends Application {
     public void onCreate() {
         super.onCreate();
         application = this;
+        documentsTree = new DocumentsTree();
 
         if (PermissionsHandler.hasWriteAccess(getApplicationContext())) {
             DirectoryInitialization.start(getApplicationContext());

@@ -98,7 +98,6 @@
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleziona Cartella di Gioco</string>
-    <string name="add_directory_title">Aggiungi una Cartella alla Libreria</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Impostazioni</string>

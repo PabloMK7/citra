@@ -3,11 +3,12 @@
 
     <!-- General application strings -->
     <string name="app_name" translatable="false">Citra</string>
-    <string name="app_disclaimer">This software will run games for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you run, please place your rightfully owned 3DS game files onto your device storage.</string>
+    <string name="app_disclaimer">This software will run games for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you can begin with emulating, please select a folder to store Citra\'s user data in.\n\nWhat\'s this:\n<a href='https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android user data and storage</a></string>
     <string name="app_notification_channel_name" translatable="false">Citra</string>
     <string name="app_notification_channel_id" translatable="false">Citra</string>
     <string name="app_notification_channel_description">Citra 3DS emulator notifications</string>
     <string name="app_notification_running">Citra is running</string>
+    <string name="app_game_install_description">Next, you will need to select a Game Folder. Citra will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
 
     <!-- Input related strings -->
     <string name="controller_circlepad">Circle Pad</string>
@@ -138,6 +139,7 @@
     <string name="grid_menu_core_settings">Settings</string>
 
     <!-- Add Directory Screen-->
+    <string name="select_citra_user_folder">Select Citra User Folder</string>
     <string name="select_game_folder">Select Game Folder</string>
     <string name="install_cia_title">Install CIA</string>
 
@@ -198,6 +200,10 @@
     <string name="empty_gamelist">No files were found or no game directory has been selected yet.</string>
 
     <string name="do_not_show_this_again">Do not show this again</string>
+    <string name="searching_direcotry">Searching directory: %s</string>
+    <string name="move_data">Move Data</string>
+    <string name="copy_file_name">Copy file: %s</string>
+    <string name="free_space">Free space: %.2f GB</string>
     <string name="savestate_warning_title">Savestates</string>
     <string name="savestate_warning_message">Warning: Savestates are NOT a replacement for in-game saves, and are not meant to be reliable.\n\nUse at your own risk!</string>
 
@@ -227,6 +233,7 @@
     <string name="continue_button">Continue</string>
     <string name="system_archive_not_found">System Archive Not Found</string>
     <string name="system_archive_not_found_message">%s is missing. Please dump your system archives.\nContinuing emulation may result in crashes and bugs.</string>
+    <string name="cia_file_not_found">Installation Failed. CIA file not found.</string>
     <string name="system_archive_general">A system archive</string>
     <string name="save_load_error">Save/Load Error</string>
     <string name="fatal_error">Fatal Error</string>

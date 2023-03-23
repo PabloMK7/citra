@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="FilePickerAlertDialogTheme" parent="Theme.AppCompat.DayNight.Dialog.Alert">
-        <item name="colorPrimary">@color/citra_primary</item>
-        <item name="colorPrimaryDark">@color/citra_secondary</item>
-        <item name="colorAccent">@color/citra_primaryContainer</item>
-    </style>
-
     <style name="CitraMaterialDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="colorPrimary">@color/citra_surface</item>
         <item name="colorSurface">@color/citra_surface</item>

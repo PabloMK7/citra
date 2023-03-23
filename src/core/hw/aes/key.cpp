@@ -6,6 +6,8 @@
 #include <exception>
 #include <optional>
 #include <sstream>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
@@ -428,9 +430,10 @@ void LoadNativeFirmKeysNew3DS() {
 void LoadPresetKeys() {
     const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + AES_KEYS;
     FileUtil::CreateFullPath(filepath); // Create path if not already created
-    std::ifstream file;
-    OpenFStream(file, filepath, std::ios_base::in);
-    if (!file) {
+
+    boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
+    FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
+    if (!file.is_open()) {
         return;
     }
 
