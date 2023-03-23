@@ -211,6 +211,10 @@ if (ENABLE_QT)
 
     find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia Concurrent ${QT_PREFIX_HINT})
 
+    if (UNIX AND NOT APPLE)
+        find_package(Qt5 REQUIRED COMPONENTS DBus ${QT_PREFIX_HINT})
+    endif()
+
     if (ENABLE_QT_TRANSLATION)
         find_package(Qt5 REQUIRED COMPONENTS LinguistTools ${QT_PREFIX_HINT})
     endif()

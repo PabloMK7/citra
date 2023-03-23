@@ -269,6 +269,10 @@ target_link_libraries(citra-qt PRIVATE audio_core common core input_common netwo
 target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::Widgets Qt5::Multimedia Qt5::Concurrent)
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
+if (UNIX AND NOT APPLE)
+    target_link_libraries(citra-qt PRIVATE Qt5::DBus)
+endif()
+
 target_compile_definitions(citra-qt PRIVATE
     # Use QStringBuilder for string concatenation to reduce
     # the overall number of temporary strings created.
