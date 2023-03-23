@@ -8,13 +8,19 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import org.citra.citra_emu.NativeLibrary;
@@ -22,6 +28,7 @@ import org.citra.citra_emu.R;
 import org.citra.citra_emu.utils.DirectoryInitialization;
 import org.citra.citra_emu.utils.DirectoryStateReceiver;
 import org.citra.citra_emu.utils.EmulationMenuSettings;
+import org.citra.citra_emu.utils.InsetsHelper;
 import org.citra.citra_emu.utils.ThemeUtil;
 
 public final class SettingsActivity extends AppCompatActivity implements SettingsActivityView {
@@ -44,8 +51,9 @@ public final class SettingsActivity extends AppCompatActivity implements Setting
         ThemeUtil.applyTheme(this);
 
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_settings);
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         Intent launcher = getIntent();
         String gameID = launcher.getStringExtra(ARG_GAME_ID);
@@ -57,6 +65,8 @@ public final class SettingsActivity extends AppCompatActivity implements Setting
         MaterialToolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        setInsets();
     }
 
     @Override
@@ -218,5 +228,15 @@ public final class SettingsActivity extends AppCompatActivity implements Setting
 
     private SettingsFragment getFragment() {
         return (SettingsFragment) getSupportFragmentManager().findFragmentByTag(FRAGMENT_TAG);
+    }
+
+    private void setInsets() {
+        AppBarLayout appBar = findViewById(R.id.appbar_settings);
+        FrameLayout frame = findViewById(R.id.frame_content);
+        ViewCompat.setOnApplyWindowInsetsListener(frame, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            InsetsHelper.insetAppBar(insets, appBar);
+            return windowInsets;
+        });
     }
 }

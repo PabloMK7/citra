@@ -10,17 +10,25 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsAnimationCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.slidingpanelayout.widget.SlidingPaneLayout;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.features.cheats.model.Cheat;
 import org.citra.citra_emu.features.cheats.model.CheatsViewModel;
 import org.citra.citra_emu.ui.TwoPaneOnBackPressedCallback;
+import org.citra.citra_emu.utils.InsetsHelper;
 import org.citra.citra_emu.utils.ThemeUtil;
+
+import java.util.List;
 
 public class CheatsActivity extends AppCompatActivity
         implements SlidingPaneLayout.PanelSlideListener {
@@ -44,14 +52,16 @@ public class CheatsActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
 
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         mViewModel = new ViewModelProvider(this).get(CheatsViewModel.class);
         mViewModel.load();
 
         setContentView(R.layout.activity_cheats);
 
         mSlidingPaneLayout = findViewById(R.id.sliding_pane_layout);
-        mCheatList = findViewById(R.id.cheat_list);
-        mCheatDetails = findViewById(R.id.cheat_details);
+        mCheatList = findViewById(R.id.cheat_list_container);
+        mCheatDetails = findViewById(R.id.cheat_details_container);
 
         mCheatListLastFocus = mCheatList;
         mCheatDetailsLastFocus = mCheatDetails;
@@ -71,6 +81,8 @@ public class CheatsActivity extends AppCompatActivity
         MaterialToolbar toolbar = findViewById(R.id.toolbar_cheats);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        setInsets();
     }
 
     @Override
@@ -153,8 +165,7 @@ public class CheatsActivity extends AppCompatActivity
         }
     }
 
-    public static void setOnFocusChangeListenerRecursively(@NonNull View view,
-                                                           View.OnFocusChangeListener listener) {
+    public static void setOnFocusChangeListenerRecursively(@NonNull View view, View.OnFocusChangeListener listener) {
         view.setOnFocusChangeListener(listener);
 
         if (view instanceof ViewGroup) {
@@ -163,6 +174,58 @@ public class CheatsActivity extends AppCompatActivity
                 View child = viewGroup.getChildAt(i);
                 setOnFocusChangeListenerRecursively(child, listener);
             }
+        }
+    }
+
+    private void setInsets() {
+        AppBarLayout appBarLayout = findViewById(R.id.appbar_cheats);
+        ViewCompat.setOnApplyWindowInsetsListener(mSlidingPaneLayout, (v, windowInsets) -> {
+            Insets barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets keyboardInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime());
+
+            InsetsHelper.insetAppBar(barInsets, appBarLayout);
+            mSlidingPaneLayout.setPadding(barInsets.left, 0, barInsets.right, 0);
+
+            // Set keyboard insets if the system supports smooth keyboard animations
+            ViewGroup.MarginLayoutParams mlpDetails =
+                    (ViewGroup.MarginLayoutParams) mCheatDetails.getLayoutParams();
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R) {
+                if (keyboardInsets.bottom > 0) {
+                    mlpDetails.bottomMargin = keyboardInsets.bottom;
+                } else {
+                    mlpDetails.bottomMargin = barInsets.bottom;
+                }
+            } else {
+                if (mlpDetails.bottomMargin == 0) {
+                    mlpDetails.bottomMargin = barInsets.bottom;
+                }
+            }
+            mCheatDetails.setLayoutParams(mlpDetails);
+
+            return windowInsets;
+        });
+
+        // Update the layout for every frame that the keyboard animates in
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            ViewCompat.setWindowInsetsAnimationCallback(mCheatDetails,
+                    new WindowInsetsAnimationCompat.Callback(
+                            WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP) {
+                        int keyboardInsets = 0;
+                        int barInsets = 0;
+
+                        @NonNull
+                        @Override
+                        public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets,
+                                                             @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                            ViewGroup.MarginLayoutParams mlpDetails =
+                                    (ViewGroup.MarginLayoutParams) mCheatDetails.getLayoutParams();
+                            keyboardInsets = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                            barInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+                            mlpDetails.bottomMargin = Math.max(keyboardInsets, barInsets);
+                            mCheatDetails.setLayoutParams(mlpDetails);
+                            return insets;
+                        }
+                    });
         }
     }
 }

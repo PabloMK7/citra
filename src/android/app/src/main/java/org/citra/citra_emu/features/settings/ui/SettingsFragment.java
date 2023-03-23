@@ -8,6 +8,9 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,6 +31,8 @@ public final class SettingsFragment extends Fragment implements SettingsFragment
     private SettingsActivityView mActivity;
 
     private SettingsAdapter mAdapter;
+
+    private RecyclerView mRecyclerView;
 
     public static Fragment newInstance(String menuTag, String gameId) {
         SettingsFragment fragment = new SettingsFragment();
@@ -71,15 +76,17 @@ public final class SettingsFragment extends Fragment implements SettingsFragment
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
 
-        RecyclerView recyclerView = view.findViewById(R.id.list_settings);
+        mRecyclerView = view.findViewById(R.id.list_settings);
 
-        recyclerView.setAdapter(mAdapter);
-        recyclerView.setLayoutManager(manager);
-        recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), null));
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(manager);
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), null));
 
         SettingsActivityView activity = (SettingsActivityView) getActivity();
 
         mPresenter.onViewCreated(activity.getSettings());
+
+        setInsets();
     }
 
     @Override
@@ -132,5 +139,13 @@ public final class SettingsFragment extends Fragment implements SettingsFragment
     @Override
     public void onSettingChanged() {
         mActivity.onSettingChanged();
+    }
+
+    private void setInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(mRecyclerView, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, 0, insets.right, insets.bottom);
+            return windowInsets;
+        });
     }
 }
