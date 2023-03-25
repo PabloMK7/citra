@@ -80,6 +80,9 @@ ResultCode Applet::Create(Service::APT::AppletId id, Service::APT::AppletId pare
         manager->FinishPreloadingLibraryApplet(id);
     }
 
+    // Schedule the update event
+    Core::System::GetInstance().CoreTiming().ScheduleEvent(
+        usToCycles(applet_update_interval_us), applet_update_event, static_cast<u64>(id));
     return RESULT_SUCCESS;
 }
 
@@ -96,7 +99,9 @@ static void AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
     const auto applet = Applet::Get(id);
     ASSERT_MSG(applet != nullptr, "Applet doesn't exist! applet_id={:08X}", id);
 
-    applet->Update();
+    if (applet->IsActive()) {
+        applet->Update();
+    }
 
     // If the applet is still running after the last update, reschedule the event
     if (applet->IsRunning()) {
@@ -112,14 +117,16 @@ bool Applet::IsRunning() const {
     return is_running;
 }
 
+bool Applet::IsActive() const {
+    return is_active;
+}
+
 ResultCode Applet::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
     switch (parameter.signal) {
     case Service::APT::SignalType::Wakeup: {
         ResultCode result = Start(parameter);
         if (!result.IsError()) {
-            // Schedule the update event
-            Core::System::GetInstance().CoreTiming().ScheduleEvent(
-                usToCycles(applet_update_interval_us), applet_update_event, static_cast<u64>(id));
+            is_active = true;
         }
         return result;
     }
@@ -146,6 +153,7 @@ void Applet::CloseApplet(std::shared_ptr<Kernel::Object> object, const std::vect
         LOG_ERROR(Service_APT, "called after destructing applet manager");
     }
 
+    is_active = false;
     is_running = false;
 }
 

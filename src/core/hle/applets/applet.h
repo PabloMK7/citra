@@ -40,9 +40,14 @@ public:
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter);
 
     /**
-     * Whether the applet is currently executing instead of the host application or not.
+     * Whether the applet is currently running.
      */
     [[nodiscard]] bool IsRunning() const;
+
+    /**
+     * Whether the applet is currently active instead of the host application or not.
+     */
+    [[nodiscard]] bool IsActive() const;
 
     /**
      * Handles an update tick for the Applet, lets it update the screen, send commands, etc.
@@ -79,8 +84,11 @@ protected:
     bool preload;                                 ///< Whether the Applet is being preloaded.
     std::shared_ptr<std::vector<u8>> heap_memory; ///< Heap memory for this Applet
 
-    /// Whether this applet is currently running instead of the host application or not.
-    bool is_running = false;
+    /// Whether this applet is running.
+    bool is_running = true;
+
+    /// Whether this applet is currently active instead of the host application or not.
+    bool is_active = false;
 
     void SendParameter(const Service::APT::MessageParameter& parameter);
     void CloseApplet(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);

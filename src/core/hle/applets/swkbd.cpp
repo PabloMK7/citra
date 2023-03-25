@@ -106,7 +106,6 @@ ResultCode SoftwareKeyboard::Start(Service::APT::MessageParameter const& paramet
 
     frontend_applet->Execute(ToFrontendConfig(config));
 
-    is_running = true;
     return RESULT_SUCCESS;
 }
 

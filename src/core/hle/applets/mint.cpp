@@ -44,7 +44,6 @@ ResultCode Mint::ReceiveParameterImpl(const Service::APT::MessageParameter& para
 }
 
 ResultCode Mint::Start(const Service::APT::MessageParameter& parameter) {
-    is_running = true;
     startup_param = parameter.buffer;
 
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the

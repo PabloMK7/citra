@@ -65,7 +65,6 @@ ResultCode MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
     MiiSelectorConfig frontend_config = ToFrontendConfig(config);
     frontend_applet->Setup(frontend_config);
 
-    is_running = true;
     return RESULT_SUCCESS;
 }
 
