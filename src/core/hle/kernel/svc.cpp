@@ -1137,6 +1137,7 @@ void SVC::Break(u8 break_reason) {
         break;
     }
     LOG_CRITICAL(Debug_Emulated, "Break reason: {}", reason_str);
+    system.SetStatus(Core::System::ResultStatus::ErrorUnknown);
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
