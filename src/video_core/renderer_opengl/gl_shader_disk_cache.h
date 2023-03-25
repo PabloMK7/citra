@@ -19,6 +19,7 @@
 
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "common/file_util.h"
 #include "video_core/regs.h"
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
@@ -141,8 +142,11 @@ private:
     /// Returns if the cache can be used
     bool IsUsable() const;
 
-    /// Opens current game's transferable file and write it's header if it doesn't exist
+    /// Opens current game's transferable file and write it's header if it doesn't exist.
     FileUtil::IOFile AppendTransferableFile();
+
+    /// Opens current game's precompiled file and write it's header if it doesn't exist
+    FileUtil::IOFile AppendPrecompiledFile(bool write_header);
 
     /// Save precompiled header to precompiled_cache_in_memory
     void SavePrecompiledHeaderToVirtualPrecompiledCache();
@@ -223,7 +227,8 @@ private:
     u64 program_id{};
     std::string title_id;
 
-    FileUtil::IOFile AppendPrecompiledFile();
+    FileUtil::IOFile transferable_file;
+    FileUtil::IOFile precompiled_file;
 };
 
 } // namespace OpenGL
