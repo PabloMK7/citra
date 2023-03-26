@@ -125,9 +125,8 @@ public final class GameDatabase extends SQLiteOpenHelper {
 
         while (fileCursor.moveToNext()) {
             String gamePath = fileCursor.getString(GAME_COLUMN_PATH);
-            File game = new File(gamePath);
 
-            if (!game.exists()) {
+            if (!FileUtil.Exists(mContext, gamePath)) {
                 Log.error("[GameDatabase] Game file no longer exists. Removing from the library: " +
                         gamePath);
                 database.delete(TABLE_NAME_GAMES,
