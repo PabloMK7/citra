@@ -7,40 +7,14 @@
 #include <string>
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
-#include <fmt/format.h>
-#include <glad/glad.h>
 #include "citra/emu_window/emu_window_sdl2.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
-#include "common/settings.h"
-#include "core/3ds.h"
 #include "core/core.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
-#include "input_common/sdl/sdl.h"
 #include "network/network.h"
-#include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
-
-SharedContext_SDL2::SharedContext_SDL2() {
-    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-                              SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);
-    context = SDL_GL_CreateContext(window);
-}
-
-SharedContext_SDL2::~SharedContext_SDL2() {
-    SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(window);
-}
-
-void SharedContext_SDL2::MakeCurrent() {
-    SDL_GL_MakeCurrent(window, context);
-}
-
-void SharedContext_SDL2::DoneCurrent() {
-    SDL_GL_MakeCurrent(window, nullptr);
-}
 
 void EmuWindow_SDL2::OnMouseMotion(s32 x, s32 y) {
     TouchMoved((unsigned)std::max(x, 0), (unsigned)std::max(y, 0));
@@ -135,78 +109,9 @@ void EmuWindow_SDL2::Fullscreen() {
     SDL_MaximizeWindow(render_window);
 }
 
-EmuWindow_SDL2::EmuWindow_SDL2(bool fullscreen, bool is_secondary) : EmuWindow(is_secondary) {
-    // Initialize the window
-    if (Settings::values.use_gles) {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    } else {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    }
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
-    // Enable context sharing for the shared context
-    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-    // Enable vsync
-    SDL_GL_SetSwapInterval(1);
-
-    std::string window_title = fmt::format("Citra {} | {}-{}", Common::g_build_fullname,
-                                           Common::g_scm_branch, Common::g_scm_desc);
-    render_window =
-        SDL_CreateWindow(window_title.c_str(),
-                         SDL_WINDOWPOS_UNDEFINED, // x position
-                         SDL_WINDOWPOS_UNDEFINED, // y position
-                         Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight,
-                         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-
-    if (render_window == nullptr) {
-        LOG_CRITICAL(Frontend, "Failed to create SDL2 window: {}", SDL_GetError());
-        exit(1);
-    }
-
-    dummy_window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
-                                    SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);
-
-    if (fullscreen) {
-        Fullscreen();
-    }
-
-    window_context = SDL_GL_CreateContext(render_window);
-    core_context = CreateSharedContext();
-    last_saved_context = nullptr;
-
-    if (window_context == nullptr) {
-        LOG_CRITICAL(Frontend, "Failed to create SDL2 GL context: {}", SDL_GetError());
-        exit(1);
-    }
-    if (core_context == nullptr) {
-        LOG_CRITICAL(Frontend, "Failed to create shared SDL2 GL context: {}", SDL_GetError());
-        exit(1);
-    }
-
-    render_window_id = SDL_GetWindowID(render_window);
-    auto gl_load_func = Settings::values.use_gles ? gladLoadGLES2Loader : gladLoadGLLoader;
-
-    if (!gl_load_func(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
-        LOG_CRITICAL(Frontend, "Failed to initialize GL functions: {}", SDL_GetError());
-        exit(1);
-    }
-
-    OnResize();
-    OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
-    SDL_PumpEvents();
-}
+EmuWindow_SDL2::EmuWindow_SDL2(bool is_secondary) : EmuWindow(is_secondary) {}
 
 EmuWindow_SDL2::~EmuWindow_SDL2() {
-    core_context.reset();
-    SDL_GL_DeleteContext(window_context);
     SDL_Quit();
 }
 
@@ -220,28 +125,6 @@ void EmuWindow_SDL2::InitializeSDL2() {
     Network::Init();
 
     SDL_SetMainReady();
-}
-
-std::unique_ptr<Frontend::GraphicsContext> EmuWindow_SDL2::CreateSharedContext() const {
-    return std::make_unique<SharedContext_SDL2>();
-}
-
-void EmuWindow_SDL2::SaveContext() {
-    last_saved_context = SDL_GL_GetCurrentContext();
-}
-
-void EmuWindow_SDL2::RestoreContext() {
-    SDL_GL_MakeCurrent(render_window, last_saved_context);
-}
-
-void EmuWindow_SDL2::Present() {
-    SDL_GL_MakeCurrent(render_window, window_context);
-    SDL_GL_SetSwapInterval(1);
-    while (IsOpen()) {
-        VideoCore::g_renderer->TryPresent(100, is_secondary);
-        SDL_GL_SwapWindow(render_window);
-    }
-    SDL_GL_MakeCurrent(render_window, nullptr);
 }
 
 void EmuWindow_SDL2::PollEvents() {
@@ -310,14 +193,6 @@ void EmuWindow_SDL2::PollEvents() {
     if (!is_secondary) {
         UpdateFramerateCounter();
     }
-}
-
-void EmuWindow_SDL2::MakeCurrent() {
-    core_context->MakeCurrent();
-}
-
-void EmuWindow_SDL2::DoneCurrent() {
-    core_context->DoneCurrent();
 }
 
 void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) {

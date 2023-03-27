@@ -72,14 +72,15 @@
 
     <!-- Graphics settings strings -->
     <string name="renderer">Renderer</string>
+    <string name="graphics_api">Graphics API</string>
+    <string name="renderer_debug">Enable debug renderer</string>
+    <string name="renderer_debug_description">Log additional graphics related debug information. When enabled, game performance will be significantly reduced</string>
     <string name="vsync">Enable V-Sync</string>
     <string name="vsync_description">Synchronizes the game frame rate to the refresh rate of your device.</string>
     <string name="linear_filtering">Enable linear filtering</string>
     <string name="linear_filtering_description">Enables linear filtering, which causes game visuals to appear smoother.</string>
     <string name="texture_filter_name">Texture Filter</string>
     <string name="texture_filter_description">Enhances the visuals of games by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, and xBRZ freescale.</string>
-    <string name="hw_renderer">Enable hardware renderer</string>
-    <string name="hw_renderer_description">Uses hardware to emulate 3DS graphics. When enabled, game performance will be significantly improved.</string>
     <string name="hw_shaders">Enable hardware shader</string>
     <string name="hw_shaders_description">Uses hardware to emulate 3DS shaders. When enabled, game performance will be significantly improved.</string>
     <string name="shaders_accurate_mul">Enable accurate shader multiplication</string>

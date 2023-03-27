@@ -58,8 +58,6 @@
     <string name="linear_filtering_description">Ativa a filtragem linear, que suaviza o visual do jogo.</string>
     <string name="texture_filter_name">Filtro de texturas</string>
     <string name="texture_filter_description">Aprimora o visual dos jogos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce e xBRZ Freescale.</string>
-    <string name="hw_renderer">Ativar renderizador por hardware</string>
-    <string name="hw_renderer_description">Utiliza o hardware para emular os gráficos do 3DS. Quando ativado, o desempenho de jogo será consideravelmente melhorado.</string>
     <string name="hw_shaders">Ativar shaders via hardware</string>
     <string name="hw_shaders_description">Utiliza o hardware para emular os shaders do 3DS. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
     <string name="shaders_accurate_mul">Ativar multiplicação precisa de shaders</string>

@@ -3,12 +3,11 @@
 // Refer to the license.txt file included.
 
 #pragma once
-#include "common/vector_math.h"
+
 #include "core/hw/gpu.h"
-#include "video_core/pica_types.h"
+#include "video_core/rasterizer_accelerated.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/rasterizer_interface.h"
-#include "video_core/regs_lighting.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
@@ -20,20 +19,20 @@ class EmuWindow;
 }
 
 namespace OpenGL {
+
+class Driver;
 class ShaderProgramManager;
 
-class RasterizerOpenGL : public VideoCore::RasterizerInterface {
+class RasterizerOpenGL : public VideoCore::RasterizerAccelerated {
 public:
-    explicit RasterizerOpenGL(Frontend::EmuWindow& emu_window);
+    explicit RasterizerOpenGL(Memory::MemorySystem& memory, Frontend::EmuWindow& emu_window,
+                              Driver& driver);
     ~RasterizerOpenGL() override;
 
     void LoadDiskResources(const std::atomic_bool& stop_loading,
                            const VideoCore::DiskResourceLoadCallback& callback) override;
 
-    void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
-                     const Pica::Shader::OutputVertex& v2) override;
     void DrawTriangles() override;
-    void NotifyPicaRegisterChanged(u32 id) override;
     void FlushAll() override;
     void FlushRegion(PAddr addr, u32 size) override;
     void InvalidateRegion(PAddr addr, u32 size) override;
@@ -46,10 +45,10 @@ public:
                            u32 pixel_stride, ScreenInfo& screen_info) override;
     bool AccelerateDrawBatch(bool is_indexed) override;
 
-    /// Syncs entire status to match PICA registers
-    void SyncEntireState() override;
-
 private:
+    void SyncFixedState() override;
+    void NotifyFixedFunctionPicaRegisterChanged(u32 id) override;
+
     struct SamplerInfo {
         using TextureConfig = Pica::TexturingRegs::TextureConfig;
 
@@ -76,65 +75,14 @@ private:
         bool supress_mipmap_for_cube = false;
     };
 
-    /// Structure that the hardware rendered vertices are composed of
-    struct HardwareVertex {
-        HardwareVertex() = default;
-        HardwareVertex(const Pica::Shader::OutputVertex& v, bool flip_quaternion) {
-            position[0] = v.pos.x.ToFloat32();
-            position[1] = v.pos.y.ToFloat32();
-            position[2] = v.pos.z.ToFloat32();
-            position[3] = v.pos.w.ToFloat32();
-            color[0] = v.color.x.ToFloat32();
-            color[1] = v.color.y.ToFloat32();
-            color[2] = v.color.z.ToFloat32();
-            color[3] = v.color.w.ToFloat32();
-            tex_coord0[0] = v.tc0.x.ToFloat32();
-            tex_coord0[1] = v.tc0.y.ToFloat32();
-            tex_coord1[0] = v.tc1.x.ToFloat32();
-            tex_coord1[1] = v.tc1.y.ToFloat32();
-            tex_coord2[0] = v.tc2.x.ToFloat32();
-            tex_coord2[1] = v.tc2.y.ToFloat32();
-            tex_coord0_w = v.tc0_w.ToFloat32();
-            normquat[0] = v.quat.x.ToFloat32();
-            normquat[1] = v.quat.y.ToFloat32();
-            normquat[2] = v.quat.z.ToFloat32();
-            normquat[3] = v.quat.w.ToFloat32();
-            view[0] = v.view.x.ToFloat32();
-            view[1] = v.view.y.ToFloat32();
-            view[2] = v.view.z.ToFloat32();
-
-            if (flip_quaternion) {
-                normquat = -normquat;
-            }
-        }
-
-        Common::Vec4f position;
-        Common::Vec4f color;
-        Common::Vec2f tex_coord0;
-        Common::Vec2f tex_coord1;
-        Common::Vec2f tex_coord2;
-        float tex_coord0_w;
-        Common::Vec4f normquat;
-        Common::Vec3f view;
-    };
-
     /// Syncs the clip enabled status to match the PICA register
     void SyncClipEnabled();
-
-    /// Syncs the clip coefficients to match the PICA register
-    void SyncClipCoef();
 
     /// Sets the OpenGL shader in accordance with the current PICA register state
     void SetShader();
 
     /// Syncs the cull mode to match the PICA register
     void SyncCullMode();
-
-    /// Syncs the depth scale to match the PICA register
-    void SyncDepthScale();
-
-    /// Syncs the depth offset to match the PICA register
-    void SyncDepthOffset();
 
     /// Syncs the blend enabled status to match the PICA register
     void SyncBlendEnabled();
@@ -144,18 +92,6 @@ private:
 
     /// Syncs the blend color to match the PICA register
     void SyncBlendColor();
-
-    /// Syncs the fog states to match the PICA register
-    void SyncFogColor();
-
-    /// Sync the procedural texture noise configuration to match the PICA register
-    void SyncProcTexNoise();
-
-    /// Sync the procedural texture bias configuration to match the PICA register
-    void SyncProcTexBias();
-
-    /// Syncs the alpha test states to match the PICA register
-    void SyncAlphaTest();
 
     /// Syncs the logic op states to match the PICA register
     void SyncLogicOp();
@@ -175,46 +111,6 @@ private:
     /// Syncs the depth test states to match the PICA register
     void SyncDepthTest();
 
-    /// Syncs the TEV combiner color buffer to match the PICA register
-    void SyncCombinerColor();
-
-    /// Syncs the TEV constant color to match the PICA register
-    void SyncTevConstColor(std::size_t tev_index,
-                           const Pica::TexturingRegs::TevStageConfig& tev_stage);
-
-    /// Syncs the lighting global ambient color to match the PICA register
-    void SyncGlobalAmbient();
-
-    /// Syncs the specified light's specular 0 color to match the PICA register
-    void SyncLightSpecular0(int light_index);
-
-    /// Syncs the specified light's specular 1 color to match the PICA register
-    void SyncLightSpecular1(int light_index);
-
-    /// Syncs the specified light's diffuse color to match the PICA register
-    void SyncLightDiffuse(int light_index);
-
-    /// Syncs the specified light's ambient color to match the PICA register
-    void SyncLightAmbient(int light_index);
-
-    /// Syncs the specified light's position to match the PICA register
-    void SyncLightPosition(int light_index);
-
-    /// Syncs the specified spot light direcition to match the PICA register
-    void SyncLightSpotDirection(int light_index);
-
-    /// Syncs the specified light's distance attenuation bias to match the PICA register
-    void SyncLightDistanceAttenuationBias(int light_index);
-
-    /// Syncs the specified light's distance attenuation scale to match the PICA register
-    void SyncLightDistanceAttenuationScale(int light_index);
-
-    /// Syncs the shadow rendering bias to match the PICA register
-    void SyncShadowBias();
-
-    /// Syncs the shadow texture bias to match the PICA register
-    void SyncShadowTextureBias();
-
     /// Syncs and uploads the lighting, fog and proctex LUTs
     void SyncAndUploadLUTs();
     void SyncAndUploadLUTsLF();
@@ -228,15 +124,6 @@ private:
     /// Internal implementation for AccelerateDrawBatch
     bool AccelerateDrawBatchInternal(bool is_indexed);
 
-    struct VertexArrayInfo {
-        u32 vs_input_index_min;
-        u32 vs_input_index_max;
-        u32 vs_input_size;
-    };
-
-    /// Retrieve the range and the size of the input vertex
-    VertexArrayInfo AnalyzeVertexArray(bool is_indexed);
-
     /// Setup vertex array for AccelerateDrawBatch
     void SetupVertexArray(u8* array_ptr, GLintptr buffer_offset, GLuint vs_input_index_min,
                           GLuint vs_input_index_max);
@@ -247,37 +134,12 @@ private:
     /// Setup geometry shader for AccelerateDrawBatch
     bool SetupGeometryShader();
 
-    bool is_amd;
-
+private:
+    Driver& driver;
     OpenGLState state;
     GLuint default_texture;
-
     RasterizerCacheOpenGL res_cache;
-
-    std::vector<HardwareVertex> vertex_batch;
-
-    bool shader_dirty = true;
-
-    struct {
-        UniformData data;
-        std::array<bool, Pica::LightingRegs::NumLightingSampler> lighting_lut_dirty;
-        bool lighting_lut_dirty_any;
-        bool fog_lut_dirty;
-        bool proctex_noise_lut_dirty;
-        bool proctex_color_map_dirty;
-        bool proctex_alpha_map_dirty;
-        bool proctex_lut_dirty;
-        bool proctex_diff_lut_dirty;
-        bool dirty;
-    } uniform_block_data = {};
-
     std::unique_ptr<ShaderProgramManager> shader_program_manager;
-
-    // They shall be big enough for about one frame.
-    static constexpr std::size_t VERTEX_BUFFER_SIZE = 16 * 1024 * 1024;
-    static constexpr std::size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
-    static constexpr std::size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
-    static constexpr std::size_t TEXTURE_BUFFER_SIZE = 1 * 1024 * 1024;
 
     OGLVertexArray sw_vao; // VAO for software shader draw
     OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
@@ -299,15 +161,6 @@ private:
     OGLTexture texture_buffer_lut_lf;
     OGLTexture texture_buffer_lut_rg;
     OGLTexture texture_buffer_lut_rgba;
-
-    std::array<std::array<Common::Vec2f, 256>, Pica::LightingRegs::NumLightingSampler>
-        lighting_lut_data{};
-    std::array<Common::Vec2f, 128> fog_lut_data{};
-    std::array<Common::Vec2f, 128> proctex_noise_lut_data{};
-    std::array<Common::Vec2f, 128> proctex_color_map_data{};
-    std::array<Common::Vec2f, 128> proctex_alpha_map_data{};
-    std::array<Common::Vec4f, 256> proctex_lut_data{};
-    std::array<Common::Vec4f, 256> proctex_diff_lut_data{};
 };
 
 } // namespace OpenGL

@@ -133,8 +133,8 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
              Settings::values.resolution_factor.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_FrameLimit",
              Settings::values.frame_limit.GetValue());
-    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseHwRenderer",
-             Settings::values.use_hw_renderer.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_Backend",
+             static_cast<int>(Settings::values.graphics_api.GetValue()));
     AddField(Telemetry::FieldType::UserConfig, "Renderer_UseHwShader",
              Settings::values.use_hw_shader.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_ShadersAccurateMul",

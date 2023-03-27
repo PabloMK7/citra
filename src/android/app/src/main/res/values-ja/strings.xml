@@ -40,8 +40,6 @@
     <string name="linear_filtering">リニアフィルタリングを有効化</string>
     <string name="linear_filtering_description">有効にすると、よりなめらかな画質が期待できます。</string>
     <string name="texture_filter_name">テクスチャフィルタ</string>
-    <string name="hw_renderer">ハードウェアレンダラを有効にする</string>
-    <string name="hw_renderer_description">グラフィックエミュレーションにハードウェアを使用します。有効にすると、パフォーマンスが大幅に向上します。</string>
     <string name="hw_shaders">ハードウェアシェーダを有効にする</string>
     <string name="hw_shaders_description">シェーダエミュレーションにハードウェアを使用します。有効にすると、パフォーマンスが大幅に向上します。</string>
     <string name="shaders_accurate_mul">正確なシェーダ乗算を有効にする</string>

@@ -1,5 +1,4 @@
 #include <memory>
-#include <boost/range/algorithm/fill.hpp>
 #include "common/alignment.h"
 #include "common/assert.h"
 #include "common/bit_field.h"
@@ -23,7 +22,7 @@ void VertexLoader::Setup(const PipelineRegs& regs) {
     const auto& attribute_config = regs.vertex_attributes;
     num_total_attributes = attribute_config.GetNumTotalAttributes();
 
-    boost::fill(vertex_attribute_sources, 0xdeadbeef);
+    vertex_attribute_sources.fill(0xdeadbeef);
 
     for (int i = 0; i < 16; i++) {
         vertex_attribute_is_default[i] = attribute_config.IsDefaultAttribute(i);

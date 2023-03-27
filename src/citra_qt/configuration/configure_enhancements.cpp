@@ -22,7 +22,9 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
 
     ui->layout_group->setEnabled(!Settings::values.custom_layout);
 
-    ui->resolution_factor_combobox->setEnabled(Settings::values.use_hw_renderer.GetValue());
+    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const bool res_scale_enabled = graphics_api != Settings::GraphicsAPI::Software;
+    ui->resolution_factor_combobox->setEnabled(res_scale_enabled);
 
     connect(ui->render_3d_combobox,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,

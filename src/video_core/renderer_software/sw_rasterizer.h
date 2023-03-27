@@ -13,7 +13,7 @@ struct OutputVertex;
 
 namespace VideoCore {
 
-class SWRasterizer : public RasterizerInterface {
+class RasterizerSoftware : public RasterizerInterface {
     void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
                      const Pica::Shader::OutputVertex& v2) override;
     void DrawTriangles() override {}

@@ -4,25 +4,36 @@
 
 #pragma once
 
-#include <memory>
 #include "common/common_types.h"
+#include "core/frontend/framebuffer_layout.h"
 #include "video_core/rasterizer_interface.h"
-#include "video_core/video_core.h"
 
 namespace Frontend {
 class EmuWindow;
 }
 
+namespace Core {
+class System;
+}
+
+namespace VideoCore {
+
+struct RendererSettings {
+    // Screenshot
+    std::atomic_bool screenshot_requested{false};
+    void* screenshot_bits{};
+    std::function<void()> screenshot_complete_callback;
+    Layout::FramebufferLayout screenshot_framebuffer_layout;
+};
+
 class RendererBase : NonCopyable {
 public:
-    explicit RendererBase(Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window);
+    explicit RendererBase(Core::System& system, Frontend::EmuWindow& window,
+                          Frontend::EmuWindow* secondary_window);
     virtual ~RendererBase();
 
-    /// Initialize the renderer
-    virtual VideoCore::ResultStatus Init() = 0;
-
-    /// Shutdown the renderer
-    virtual void ShutDown() = 0;
+    /// Returns the rasterizer owned by the renderer
+    virtual VideoCore::RasterizerInterface* Rasterizer() const = 0;
 
     /// Finalize rendering the guest frame and draw into the presentation texture
     virtual void SwapBuffers() = 0;
@@ -35,27 +46,29 @@ public:
     }
 
     /// Prepares for video dumping (e.g. create necessary buffers, etc)
-    virtual void PrepareVideoDumping() = 0;
+    virtual void PrepareVideoDumping() {}
 
     /// Cleans up after video dumping is ended
-    virtual void CleanupVideoDumping() = 0;
+    virtual void CleanupVideoDumping() {}
+
+    /// Synchronizes fixed function renderer state
+    virtual void Sync() {}
 
     /// Updates the framebuffer layout of the contained render window handle.
     void UpdateCurrentFramebufferLayout(bool is_portrait_mode = {});
+
+    /// Ends the current frame
+    void EndFrame();
 
     // Getter/setter functions:
     // ------------------------
 
     f32 GetCurrentFPS() const {
-        return m_current_fps;
+        return current_fps;
     }
 
     int GetCurrentFrame() const {
-        return m_current_frame;
-    }
-
-    VideoCore::RasterizerInterface* Rasterizer() const {
-        return rasterizer.get();
+        return current_frame;
     }
 
     Frontend::EmuWindow& GetRenderWindow() {
@@ -66,16 +79,28 @@ public:
         return render_window;
     }
 
-    void RefreshRasterizerSetting();
-    void Sync();
+    [[nodiscard]] RendererSettings& Settings() {
+        return renderer_settings;
+    }
+
+    [[nodiscard]] const RendererSettings& Settings() const {
+        return renderer_settings;
+    }
+
+    /// Returns true if a screenshot is being processed
+    [[nodiscard]] bool IsScreenshotPending() const;
+
+    /// Request a screenshot of the next frame
+    void RequestScreenshot(void* data, std::function<void()> callback,
+                           const Layout::FramebufferLayout& layout);
 
 protected:
+    Core::System& system;
+    RendererSettings renderer_settings;
     Frontend::EmuWindow& render_window;    ///< Reference to the render window handle.
     Frontend::EmuWindow* secondary_window; ///< Reference to the secondary render window handle.
-    std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
-    f32 m_current_fps = 0.0f; ///< Current framerate, should be set by the renderer
-    int m_current_frame = 0;  ///< Current frame, should be set by the renderer
-
-private:
-    bool opengl_rasterizer_active = false;
+    f32 current_fps = 0.0f;                ///< Current framerate, should be set by the renderer
+    int current_frame = 0;                 ///< Current frame, should be set by the renderer
 };
+
+} // namespace VideoCore

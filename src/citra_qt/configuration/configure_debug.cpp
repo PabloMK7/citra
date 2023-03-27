@@ -37,6 +37,7 @@ ConfigureDebug::ConfigureDebug(QWidget* parent)
 
     const bool is_powered_on = Core::System::GetInstance().IsPoweredOn();
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
+    ui->toggle_renderer_debug->setEnabled(!is_powered_on);
 
     // Set a minimum width for the label to prevent the slider from changing size.
     // This scales across DPIs. (This value should be enough for "xxx%")
@@ -62,6 +63,7 @@ void ConfigureDebug::SetConfiguration() {
     ui->toggle_console->setChecked(UISettings::values.show_console.GetValue());
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
+    ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
         if (Settings::values.cpu_clock_percentage.UsingGlobal()) {
@@ -91,6 +93,7 @@ void ConfigureDebug::ApplyConfiguration() {
     filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Log::SetGlobalFilter(filter);
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
+    Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
 
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.cpu_clock_percentage, ui->clock_speed_combo,

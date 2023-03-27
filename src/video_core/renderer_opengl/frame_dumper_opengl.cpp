@@ -4,7 +4,6 @@
 
 #include <glad/glad.h>
 #include "core/frontend/emu_window.h"
-#include "core/frontend/scope_acquire_context.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 
@@ -39,7 +38,7 @@ void FrameDumperOpenGL::StopDumping() {
 }
 
 void FrameDumperOpenGL::PresentLoop() {
-    Frontend::ScopeAcquireContext scope{*context};
+    const auto scope = context->Acquire();
     InitializeOpenGLObjects();
 
     const auto& layout = GetLayout();

@@ -496,9 +496,6 @@ public final class NativeLibrary {
         final int ErrorLoader_ErrorEncrypted = 5;
         final int ErrorLoader_ErrorInvalidFormat = 6;
         final int ErrorSystemFiles = 7;
-        final int ErrorVideoCore = 8;
-        final int ErrorVideoCore_ErrorGenericDrivers = 9;
-        final int ErrorVideoCore_ErrorBelowGL33 = 10;
         final int ShutdownRequested = 11;
         final int ErrorUnknown = 12;
 

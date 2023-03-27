@@ -269,6 +269,10 @@ target_link_libraries(citra-qt PRIVATE audio_core common core input_common netwo
 target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::Widgets Qt5::Multimedia Qt5::Concurrent)
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
+if (NOT WIN32)
+    target_include_directories(citra-qt PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+endif()
+
 if (UNIX AND NOT APPLE)
     target_link_libraries(citra-qt PRIVATE Qt5::DBus)
 endif()
@@ -323,6 +327,10 @@ if (MSVC)
         include(CopyCitraFFmpegDeps)
         copy_citra_FFmpeg_deps(citra-qt)
     endif()
+endif()
+
+if (NOT APPLE)
+    target_compile_definitions(citra-qt PRIVATE HAS_OPENGL)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

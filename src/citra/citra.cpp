@@ -13,6 +13,8 @@
 
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_sdl2.h"
+#include "citra/emu_window/emu_window_sdl2_gl.h"
+#include "citra/emu_window/emu_window_sdl2_sw.h"
 #include "citra/lodepng_image_interface.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
@@ -29,7 +31,6 @@
 #include "core/file_sys/cia_container.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/framebuffer_layout.h"
-#include "core/frontend/scope_acquire_context.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -38,6 +39,7 @@
 #include "input_common/main.h"
 #include "network/network.h"
 #include "video_core/renderer_base.h"
+#include "video_core/video_core.h"
 
 #undef _UNICODE
 #include <getopt.h>
@@ -362,13 +364,23 @@ int main(int argc, char** argv) {
 
     EmuWindow_SDL2::InitializeSDL2();
 
-    const auto emu_window{std::make_unique<EmuWindow_SDL2>(fullscreen, false)};
-    const bool use_secondary_window{Settings::values.layout_option.GetValue() ==
-                                    Settings::LayoutOption::SeparateWindows};
-    const auto secondary_window =
-        use_secondary_window ? std::make_unique<EmuWindow_SDL2>(false, true) : nullptr;
+    const auto CreateEmuWindow = [](bool fullscreen,
+                                    bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
+        switch (Settings::values.graphics_api.GetValue()) {
+        case Settings::GraphicsAPI::OpenGL:
+            return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
+        case Settings::GraphicsAPI::Software:
+            return std::make_unique<EmuWindow_SDL2_SW>(fullscreen, is_secondary);
+        }
+    };
 
-    Frontend::ScopeAcquireContext scope(*emu_window);
+    const auto emu_window{CreateEmuWindow(fullscreen, false)};
+    const bool use_secondary_window{
+        Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows &&
+        Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::Software};
+    const auto secondary_window = use_secondary_window ? CreateEmuWindow(false, true) : nullptr;
+
+    const auto scope = emu_window->Acquire();
 
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
@@ -399,9 +411,6 @@ int main(int argc, char** argv) {
         return -1;
     case Core::System::ResultStatus::ErrorSystemMode:
         LOG_CRITICAL(Frontend, "Failed to determine system mode!");
-        return -1;
-    case Core::System::ResultStatus::ErrorVideoCore:
-        LOG_CRITICAL(Frontend, "VideoCore not initialized");
         return -1;
     case Core::System::ResultStatus::Success:
         break; // Expected case

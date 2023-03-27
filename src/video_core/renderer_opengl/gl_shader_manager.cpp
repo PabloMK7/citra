@@ -6,13 +6,13 @@
 #include <set>
 #include <thread>
 #include <unordered_map>
-#include <boost/variant.hpp>
-#include "core/frontend/scope_acquire_context.h"
+#include <variant>
+#include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
-#include "video_core/renderer_opengl/gl_vars.h"
+#include "video_core/shader/shader_uniforms.h"
 #include "video_core/video_core.h"
 
 namespace OpenGL {
@@ -85,7 +85,8 @@ static std::tuple<PicaVSConfig, Pica::Shader::ShaderSetup> BuildVSConfigFromRaw(
     return {PicaVSConfig{raw.GetRawShaderConfig().vs, setup}, setup};
 }
 
-static void SetShaderUniformBlockBinding(GLuint shader, const char* name, UniformBindings binding,
+static void SetShaderUniformBlockBinding(GLuint shader, const char* name,
+                                         Pica::Shader::UniformBindings binding,
                                          std::size_t expected_size) {
     const GLuint ub_index = glGetUniformBlockIndex(shader, name);
     if (ub_index == GL_INVALID_INDEX) {
@@ -100,9 +101,10 @@ static void SetShaderUniformBlockBinding(GLuint shader, const char* name, Unifor
 }
 
 static void SetShaderUniformBlockBindings(GLuint shader) {
-    SetShaderUniformBlockBinding(shader, "shader_data", UniformBindings::Common,
-                                 sizeof(UniformData));
-    SetShaderUniformBlockBinding(shader, "vs_config", UniformBindings::VS, sizeof(VSUniformData));
+    SetShaderUniformBlockBinding(shader, "shader_data", Pica::Shader::UniformBindings::Common,
+                                 sizeof(Pica::Shader::UniformData));
+    SetShaderUniformBlockBinding(shader, "vs_config", Pica::Shader::UniformBindings::VS,
+                                 sizeof(Pica::Shader::VSUniformData));
 }
 
 static void SetShaderSamplerBinding(GLuint shader, const char* name,
@@ -148,21 +150,6 @@ static void SetShaderSamplerBindings(GLuint shader) {
     cur_state.Apply();
 }
 
-void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs,
-                                   const Pica::Shader::ShaderSetup& setup) {
-    std::transform(std::begin(setup.uniforms.b), std::end(setup.uniforms.b), std::begin(bools),
-                   [](bool value) -> BoolAligned { return {value ? GL_TRUE : GL_FALSE}; });
-    std::transform(std::begin(regs.int_uniforms), std::end(regs.int_uniforms), std::begin(i),
-                   [](const auto& value) -> Common::Vec4u {
-                       return {value.x.Value(), value.y.Value(), value.z.Value(), value.w.Value()};
-                   });
-    std::transform(std::begin(setup.uniforms.f), std::end(setup.uniforms.f), std::begin(f),
-                   [](const auto& value) -> Common::Vec4f {
-                       return {value.x.ToFloat32(), value.y.ToFloat32(), value.z.ToFloat32(),
-                               value.w.ToFloat32()};
-                   });
-}
-
 /**
  * An object representing a shader program staging. It can be either a shader object or a program
  * object, depending on whether separable program is used.
@@ -178,12 +165,12 @@ public:
     }
 
     void Create(const char* source, GLenum type) {
-        if (shader_or_program.which() == 0) {
-            boost::get<OGLShader>(shader_or_program).Create(source, type);
+        if (shader_or_program.index() == 0) {
+            std::get<OGLShader>(shader_or_program).Create(source, type);
         } else {
             OGLShader shader;
             shader.Create(source, type);
-            OGLProgram& program = boost::get<OGLProgram>(shader_or_program);
+            OGLProgram& program = std::get<OGLProgram>(shader_or_program);
             program.Create(true, {shader.handle});
             SetShaderUniformBlockBindings(program.handle);
 
@@ -194,10 +181,10 @@ public:
     }
 
     GLuint GetHandle() const {
-        if (shader_or_program.which() == 0) {
-            return boost::get<OGLShader>(shader_or_program).handle;
+        if (shader_or_program.index() == 0) {
+            return std::get<OGLShader>(shader_or_program).handle;
         } else {
-            return boost::get<OGLProgram>(shader_or_program).handle;
+            return std::get<OGLProgram>(shader_or_program).handle;
         }
     }
 
@@ -208,7 +195,7 @@ public:
     }
 
 private:
-    boost::variant<OGLShader, OGLProgram> shader_or_program;
+    std::variant<OGLShader, OGLProgram> shader_or_program;
 };
 
 class TrivialVertexShader {
@@ -329,8 +316,8 @@ using FragmentShaders = ShaderCache<PicaFSConfig, &GenerateFragmentShader, GL_FR
 
 class ShaderProgramManager::Impl {
 public:
-    explicit Impl(bool separable, bool is_amd)
-        : is_amd(is_amd), separable(separable), programmable_vertex_shaders(separable),
+    explicit Impl(bool separable)
+        : separable(separable), programmable_vertex_shaders(separable),
           trivial_vertex_shader(separable), fixed_geometry_shaders(separable),
           fragment_shaders(separable), disk_cache(separable) {
         if (separable)
@@ -363,7 +350,6 @@ public:
     static_assert(offsetof(ShaderTuple, fs_hash) == sizeof(std::size_t) * 2,
                   "ShaderTuple layout changed!");
 
-    bool is_amd;
     bool separable;
 
     ShaderTuple current;
@@ -379,9 +365,9 @@ public:
     ShaderDiskCache disk_cache;
 };
 
-ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, bool separable,
-                                           bool is_amd)
-    : impl(std::make_unique<Impl>(separable, is_amd)), emu_window{emu_window_} {}
+ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, const Driver& driver_,
+                                           bool separable)
+    : impl(std::make_unique<Impl>(separable)), emu_window{emu_window_}, driver{driver_} {}
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
@@ -443,10 +429,7 @@ void ShaderProgramManager::UseFragmentShader(const Pica::Regs& regs) {
 
 void ShaderProgramManager::ApplyTo(OpenGLState& state) {
     if (impl->separable) {
-        if (impl->is_amd) {
-            // Without this reseting, AMD sometimes freezes when one stage is changed but not
-            // for the others. On the other hand, including this reset seems to introduce memory
-            // leak in Intel Graphics.
+        if (driver.HasBug(DriverBug::ShaderStageChangeFreeze)) {
             glUseProgramStages(
                 impl->pipeline.handle,
                 GL_VERTEX_SHADER_BIT | GL_GEOMETRY_SHADER_BIT | GL_FRAGMENT_SHADER_BIT, 0);
@@ -641,7 +624,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     std::size_t built_shaders = 0; // It doesn't have be atomic since it's used behind a mutex
     const auto LoadRawSepareble = [&](Frontend::GraphicsContext* context, std::size_t begin,
                                       std::size_t end) {
-        Frontend::ScopeAcquireContext scope(*context);
+        const auto scope = context->Acquire();
         for (std::size_t i = begin; i < end; ++i) {
             if (stop_loading || compilation_failed) {
                 return;

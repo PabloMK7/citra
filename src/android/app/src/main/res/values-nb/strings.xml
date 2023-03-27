@@ -58,8 +58,6 @@
     <string name="linear_filtering_description">Aktiverer lineær filtrering, noe som får spillvisualer til å vises jevnere.</string>
     <string name="texture_filter_name">Tekstur Filter</string>
     <string name="texture_filter_description">Forbedrer det visuelle i spill ved å bruke et filter på teksturer. De støttede filtrene er Anime4K Ultrafast, Bicubic, ScaleForce og xBRZ freescale.</string>
-    <string name="hw_renderer">Aktiver maskinvaregjengivelse</string>
-    <string name="hw_renderer_description">Bruker maskinvare til å emulere 3DS grafikk. Når dette er aktivert, vil spillytelsen bli betydelig forbedret.</string>
     <string name="hw_shaders">Aktiver maskinvare shader</string>
     <string name="hw_shaders_description">Bruker maskinvare for å etterligne 3DS shaders. Når dette er aktivert, vil spillytelsen bli betydelig forbedret.</string>
     <string name="shaders_accurate_mul">Aktiver nøyaktig shader-multiplikasjon</string>

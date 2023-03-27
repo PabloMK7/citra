@@ -8,6 +8,10 @@ add_executable(citra
     default_ini.h
     emu_window/emu_window_sdl2.cpp
     emu_window/emu_window_sdl2.h
+    emu_window/emu_window_sdl2_gl.cpp
+    emu_window/emu_window_sdl2_gl.h
+    emu_window/emu_window_sdl2_sw.cpp
+    emu_window/emu_window_sdl2_sw.h
     lodepng_image_interface.cpp
     lodepng_image_interface.h
     precompiled_headers.h

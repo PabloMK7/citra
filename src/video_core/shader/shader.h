@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <span>
 #include <type_traits>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/array.hpp>
@@ -113,7 +114,7 @@ struct GSEmitter {
 
     GSEmitter();
     ~GSEmitter();
-    void Emit(Common::Vec4<float24> (&output_regs)[16]);
+    void Emit(std::span<Common::Vec4<float24>, 16> output_regs);
 
 private:
     friend class boost::serialization::access;
@@ -140,9 +141,9 @@ struct UnitState {
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
-        alignas(16) Common::Vec4<float24> input[16];
-        alignas(16) Common::Vec4<float24> temporary[16];
-        alignas(16) Common::Vec4<float24> output[16];
+        alignas(16) std::array<Common::Vec4<float24>, 16> input;
+        alignas(16) std::array<Common::Vec4<float24>, 16> temporary;
+        alignas(16) std::array<Common::Vec4<float24>, 16> output;
 
     private:
         friend class boost::serialization::access;

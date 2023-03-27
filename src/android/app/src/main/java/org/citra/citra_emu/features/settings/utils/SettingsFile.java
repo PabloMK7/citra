@@ -44,7 +44,8 @@ public final class SettingsFile {
 
     public static final String KEY_PREMIUM = "premium";
 
-    public static final String KEY_HW_RENDERER = "use_hw_renderer";
+    public static final String KEY_GRAPHICS_API = "graphics_api";
+    public static final String KEY_RENDERER_DEBUG = "renderer_debug";
     public static final String KEY_HW_SHADER = "use_hw_shader";
     public static final String KEY_SHADERS_ACCURATE_MUL = "shaders_accurate_mul";
     public static final String KEY_USE_SHADER_JIT = "use_shader_jit";

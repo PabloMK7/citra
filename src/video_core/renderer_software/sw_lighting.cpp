@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include "video_core/swrasterizer/lighting.h"
+#include "video_core/renderer_software/sw_lighting.h"
 
 namespace Pica {
 

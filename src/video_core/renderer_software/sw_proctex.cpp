@@ -5,7 +5,7 @@
 #include <array>
 #include <cmath>
 #include "common/math_util.h"
-#include "video_core/swrasterizer/proctex.h"
+#include "video_core/renderer_software/sw_proctex.h"
 
 namespace Pica::Rasterizer {
 

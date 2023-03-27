@@ -98,13 +98,13 @@ use_cpu_jit =
 cpu_clock_percentage =
 
 [Renderer]
+# Whether to render using OpenGL or Software
+# 0: Software, 1: OpenGL (default)
+graphics_api =
+
 # Whether to render using GLES or OpenGL
 # 0 (default): OpenGL, 1: GLES
 use_gles =
-
-# Whether to use software or hardware rendering.
-# 0: Software, 1 (default): Hardware
-use_hw_renderer =
 
 # Whether to use hardware shaders to emulate 3DS shaders
 # 0: Software, 1 (default): Hardware
@@ -328,9 +328,15 @@ log_filter = *:Info
 [Debugging]
 # Record frame time data, can be found in the log directory. Boolean value
 record_frame_times =
+
 # Port for listening to GDB connections.
 use_gdbstub=false
 gdbstub_port=24689
+
+# Whether to enable additional debugging information during emulation
+# 0 (default): Off, 1: On
+renderer_debug =
+
 # To LLE a service module add "LLE\<module name>=true"
 
 [WebService]

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>443</width>
-    <height>358</height>
+    <width>523</width>
+    <height>447</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -112,11 +112,33 @@
       <string>CPU</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="toggle_cpu_jit">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the use of the ARM JIT compiler for emulating the 3DS CPUs. Don't disable unless for debugging purposes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Enable CPU JIT</string>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="0">
        <widget class="QWidget" name="clock_speed_widget" native="true">
         <layout class="QHBoxLayout" name="clock_speed_layout">
          <property name="spacing">
           <number>7</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
          </property>
          <item>
           <widget class="QComboBox" name="clock_speed_combo">
@@ -180,13 +202,10 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="toggle_cpu_jit">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the use of the ARM JIT compiler for emulating the 3DS CPUs. Don't disable unless for debugging purposes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="toggle_renderer_debug">
         <property name="text">
-         <string>Enable CPU JIT</string>
+         <string>Enable debug renderer</string>
         </property>
        </widget>
       </item>

@@ -13,8 +13,6 @@
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
-#include "core/tracer/recorder.h"
-#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_state.h"
@@ -352,14 +350,17 @@ static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, cons
     return matrix;
 }
 
-RendererOpenGL::RendererOpenGL(Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window)
-    : RendererBase{window, secondary_window},
-      frame_dumper(Core::System::GetInstance().VideoDumper(), window) {
+RendererOpenGL::RendererOpenGL(Core::System& system, Frontend::EmuWindow& window,
+                               Frontend::EmuWindow* secondary_window)
+    : VideoCore::RendererBase{system, window, secondary_window}, driver{system.TelemetrySession()},
+      frame_dumper{system.VideoDumper(), window} {
     window.mailbox = std::make_unique<OGLTextureMailbox>();
     if (secondary_window) {
         secondary_window->mailbox = std::make_unique<OGLTextureMailbox>();
     }
     frame_dumper.mailbox = std::make_unique<OGLVideoDumpingMailbox>();
+    InitOpenGLObjects();
+    rasterizer = std::make_unique<RasterizerOpenGL>(system.Memory(), render_window, driver);
 }
 
 RendererOpenGL::~RendererOpenGL() = default;
@@ -374,7 +375,6 @@ void RendererOpenGL::SwapBuffers() {
     state.Apply();
 
     PrepareRendertarget();
-
     RenderScreenshot();
 
     const auto& main_layout = render_window.GetFramebufferLayout();
@@ -396,26 +396,12 @@ void RendererOpenGL::SwapBuffers() {
         }
     }
 
-    m_current_frame++;
-
-    Core::System::GetInstance().perf_stats->EndSystemFrame();
-
-    render_window.PollEvents();
-
-    Core::System::GetInstance().frame_limiter.DoFrameLimiting(
-        Core::System::GetInstance().CoreTiming().GetGlobalTimeUs());
-    Core::System::GetInstance().perf_stats->BeginSystemFrame();
-
+    EndFrame();
     prev_state.Apply();
-    RefreshRasterizerSetting();
-
-    if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
-        Pica::g_debug_context->recorder->FrameFinished();
-    }
 }
 
 void RendererOpenGL::RenderScreenshot() {
-    if (VideoCore::g_renderer_screenshot_requested) {
+    if (renderer_settings.screenshot_requested.exchange(false)) {
         // Draw this frame to the screenshot framebuffer
         screenshot_framebuffer.Create();
         GLuint old_read_fb = state.draw.read_framebuffer;
@@ -423,7 +409,7 @@ void RendererOpenGL::RenderScreenshot() {
         state.draw.read_framebuffer = state.draw.draw_framebuffer = screenshot_framebuffer.handle;
         state.Apply();
 
-        Layout::FramebufferLayout layout{VideoCore::g_screenshot_framebuffer_layout};
+        const auto layout{renderer_settings.screenshot_framebuffer_layout};
 
         GLuint renderbuffer;
         glGenRenderbuffers(1, &renderbuffer);
@@ -435,7 +421,7 @@ void RendererOpenGL::RenderScreenshot() {
         DrawScreens(layout, false);
 
         glReadPixels(0, 0, layout.width, layout.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                     VideoCore::g_screenshot_bits);
+                     renderer_settings.screenshot_bits);
 
         screenshot_framebuffer.Release();
         state.draw.read_framebuffer = old_read_fb;
@@ -443,8 +429,7 @@ void RendererOpenGL::RenderScreenshot() {
         state.Apply();
         glDeleteRenderbuffers(1, &renderbuffer);
 
-        VideoCore::g_screenshot_complete_callback();
-        VideoCore::g_renderer_screenshot_requested = false;
+        renderer_settings.screenshot_complete_callback();
     }
 }
 
@@ -1226,109 +1211,8 @@ void RendererOpenGL::CleanupVideoDumping() {
     mailbox->free_cv.notify_one();
 }
 
-static const char* GetSource(GLenum source) {
-#define RET(s)                                                                                     \
-    case GL_DEBUG_SOURCE_##s:                                                                      \
-        return #s
-    switch (source) {
-        RET(API);
-        RET(WINDOW_SYSTEM);
-        RET(SHADER_COMPILER);
-        RET(THIRD_PARTY);
-        RET(APPLICATION);
-        RET(OTHER);
-    default:
-        UNREACHABLE();
-    }
-#undef RET
-
-    return "";
+void RendererOpenGL::Sync() {
+    rasterizer->SyncEntireState();
 }
-
-static const char* GetType(GLenum type) {
-#define RET(t)                                                                                     \
-    case GL_DEBUG_TYPE_##t:                                                                        \
-        return #t
-    switch (type) {
-        RET(ERROR);
-        RET(DEPRECATED_BEHAVIOR);
-        RET(UNDEFINED_BEHAVIOR);
-        RET(PORTABILITY);
-        RET(PERFORMANCE);
-        RET(OTHER);
-        RET(MARKER);
-    default:
-        UNREACHABLE();
-    }
-#undef RET
-
-    return "";
-}
-
-static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity,
-                                  GLsizei length, const GLchar* message, const void* user_param) {
-    Log::Level level;
-    switch (severity) {
-    case GL_DEBUG_SEVERITY_HIGH:
-        level = Log::Level::Critical;
-        break;
-    case GL_DEBUG_SEVERITY_MEDIUM:
-        level = Log::Level::Warning;
-        break;
-    case GL_DEBUG_SEVERITY_NOTIFICATION:
-    case GL_DEBUG_SEVERITY_LOW:
-        level = Log::Level::Debug;
-        break;
-    }
-    LOG_GENERIC(Log::Class::Render_OpenGL, level, "{} {} {}: {}", GetSource(source), GetType(type),
-                id, message);
-}
-
-/// Initialize the renderer
-VideoCore::ResultStatus RendererOpenGL::Init() {
-#ifndef ANDROID
-    if (!gladLoadGL()) {
-        return VideoCore::ResultStatus::ErrorBelowGL43;
-    }
-
-    // Qualcomm has some spammy info messages that are marked as errors but not important
-    // https://developer.qualcomm.com/comment/11845
-    if (GLAD_GL_KHR_debug) {
-        glEnable(GL_DEBUG_OUTPUT);
-        glDebugMessageCallback(DebugHandler, nullptr);
-    }
-#endif
-
-    const std::string_view gl_version{reinterpret_cast<char const*>(glGetString(GL_VERSION))};
-    const std::string_view gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
-    const std::string_view gpu_model{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
-
-    LOG_INFO(Render_OpenGL, "GL_VERSION: {}", gl_version);
-    LOG_INFO(Render_OpenGL, "GL_VENDOR: {}", gpu_vendor);
-    LOG_INFO(Render_OpenGL, "GL_RENDERER: {}", gpu_model);
-
-    auto& telemetry_session = Core::System::GetInstance().TelemetrySession();
-    constexpr auto user_system = Common::Telemetry::FieldType::UserSystem;
-    telemetry_session.AddField(user_system, "GPU_Vendor", std::string(gpu_vendor));
-    telemetry_session.AddField(user_system, "GPU_Model", std::string(gpu_model));
-    telemetry_session.AddField(user_system, "GPU_OpenGL_Version", std::string(gl_version));
-
-    if (gpu_vendor == "GDI Generic") {
-        return VideoCore::ResultStatus::ErrorGenericDrivers;
-    }
-
-    if (!(GLAD_GL_VERSION_4_3 || GLAD_GL_ES_VERSION_3_1)) {
-        return VideoCore::ResultStatus::ErrorBelowGL43;
-    }
-
-    InitOpenGLObjects();
-
-    RefreshRasterizerSetting();
-
-    return VideoCore::ResultStatus::Success;
-}
-
-/// Shutdown the renderer
-void RendererOpenGL::ShutDown() {}
 
 } // namespace OpenGL

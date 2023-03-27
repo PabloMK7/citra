@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 #include "common/vector_math.h"
 #include "video_core/regs_texturing.h"
-#include "video_core/swrasterizer/texturing.h"
+#include "video_core/renderer_software/sw_texturing.h"
 
 namespace Pica::Rasterizer {
 

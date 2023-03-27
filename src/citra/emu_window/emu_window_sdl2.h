@@ -10,40 +10,19 @@
 
 struct SDL_Window;
 
-class SharedContext_SDL2 : public Frontend::GraphicsContext {
-public:
-    using SDL_GLContext = void*;
-
-    SharedContext_SDL2();
-
-    ~SharedContext_SDL2() override;
-
-    void MakeCurrent() override;
-
-    void DoneCurrent() override;
-
-private:
-    SDL_GLContext context;
-    SDL_Window* window;
-};
-
 class EmuWindow_SDL2 : public Frontend::EmuWindow {
 public:
-    explicit EmuWindow_SDL2(bool fullscreen, bool is_secondary);
+    explicit EmuWindow_SDL2(bool is_secondary);
     ~EmuWindow_SDL2();
 
+    /// Initializes SDL2
     static void InitializeSDL2();
 
-    void Present();
+    /// Presents the most recent frame from the video backend
+    virtual void Present() {}
 
     /// Polls window events
     void PollEvents() override;
-
-    /// Makes the graphics context current for the caller thread
-    void MakeCurrent() override;
-
-    /// Releases the GL context from the caller thread
-    void DoneCurrent() override;
 
     /// Whether the window is still open, and a close request hasn't yet been sent
     bool IsOpen() const;
@@ -51,15 +30,7 @@ public:
     /// Close the window.
     void RequestClose();
 
-    /// Creates a new context that is shared with the current context
-    std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
-
-    /// Saves the current context, for the purpose of e.g. creating new shared contexts
-    void SaveContext() override;
-    /// Restores the context previously saved
-    void RestoreContext() override;
-
-private:
+protected:
     /// Called by PollEvents when a key is pressed or released.
     void OnKeyEvent(int key, u8 state);
 
@@ -104,17 +75,6 @@ private:
 
     /// Fake hidden window for the core context
     SDL_Window* dummy_window;
-
-    using SDL_GLContext = void*;
-
-    /// The OpenGL context associated with the window
-    SDL_GLContext window_context;
-
-    /// Used by SaveContext and RestoreContext
-    SDL_GLContext last_saved_context;
-
-    /// The OpenGL context associated with the core
-    std::unique_ptr<Frontend::GraphicsContext> core_context;
 
     /// Keeps track of how often to update the title bar during gameplay
     u32 last_time = 0;

@@ -98,13 +98,9 @@ use_cpu_jit =
 cpu_clock_percentage =
 
 [Renderer]
-# Whether to render using GLES or OpenGL
-# 0: OpenGL, 1 (default): GLES
-use_gles =
-
-# Whether to use software or hardware rendering.
-# 0: Software, 1 (default): Hardware
-use_hw_renderer =
+# Whether to render using OpenGL
+# 1: OpenGLES (default)
+graphics_api =
 
 # Whether to use hardware shaders to emulate 3DS shaders
 # 0: Software, 1 (default): Hardware
@@ -117,10 +113,6 @@ separable_shader =
 # Whether to use accurate multiplication in hardware shaders
 # 0: Off (Default. Faster, but causes issues in some games) 1: On (Slower, but correct)
 shaders_accurate_mul =
-
-# Enable asynchronous GPU emulation
-# 0: Off (Slower, but more accurate) 1: On (Default. Faster, but may cause issues in some games)
-use_asynchronous_gpu_emulation =
 
 # Whether to use the Just-In-Time (JIT) compiler for shader emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
@@ -325,9 +317,15 @@ log_filter = *:Info
 [Debugging]
 # Record frame time data, can be found in the log directory. Boolean value
 record_frame_times =
+
+# Whether to enable additional debugging information during emulation
+# 0 (default): Off, 1: On
+renderer_debug =
+
 # Port for listening to GDB connections.
 use_gdbstub=false
 gdbstub_port=24689
+
 # To LLE a service module add "LLE\<module name>=true"
 
 [WebService]

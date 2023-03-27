@@ -58,8 +58,6 @@
     <string name="linear_filtering_description">게임 필터링이 매끄럽게 보이도록 선형 필터링을 활성화합니다.</string>
     <string name="texture_filter_name">텍스처 필터</string>
     <string name="texture_filter_description">텍스처에 필터를 적용하여 게임의 시각적 효과를 향상시킵니다. 지원되는 필터는 Anime4K Ultrafast, Bicubic, ScaleForce 및 xBRZ 프리스케일입니다.</string>
-    <string name="hw_renderer">하드웨어 렌더러 사용</string>
-    <string name="hw_renderer_description">하드웨어를 사용하여 3DS 그래픽을 에뮬레이션합니다. 활성화하면 게임 성능이 크게 향상됩니다.</string>
     <string name="hw_shaders">하드웨어 쉐이더 사용</string>
     <string name="hw_shaders_description">하드웨어를 사용하여 3DS 쉐이더를 에뮬레이션합니다. 활성화하면 게임 성능이 크게 향상됩니다.</string>
     <string name="shaders_accurate_mul">정확한 쉐이더 곱셉 사용</string>

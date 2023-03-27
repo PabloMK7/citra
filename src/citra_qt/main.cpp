@@ -12,7 +12,6 @@
 #include <QFutureWatcher>
 #include <QLabel>
 #include <QMessageBox>
-#include <QOpenGLFunctions_4_3_Core>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
@@ -88,7 +87,6 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
-#include "core/frontend/scope_acquire_context.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
@@ -1026,16 +1024,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     render_window->InitRenderTarget();
     secondary_window->InitRenderTarget();
 
-    Frontend::ScopeAcquireContext scope(*render_window);
-
-    const QString below_gl43_title = tr("OpenGL 4.3 Unsupported");
-    const QString below_gl43_message = tr("Your GPU may not support OpenGL 4.3, or you do not "
-                                          "have the latest graphics driver.");
-
-    if (!QOpenGLContext::globalShareContext()->versionFunctions<QOpenGLFunctions_4_3_Core>()) {
-        QMessageBox::critical(this, below_gl43_title, below_gl43_message);
-        return false;
-    }
+    const auto scope = render_window->Acquire();
 
     Core::System& system{Core::System::GetInstance()};
 
@@ -1089,28 +1078,6 @@ bool GMainWindow::LoadROM(const QString& filename) {
         case Core::System::ResultStatus::ErrorLoader_ErrorGbaTitle:
             QMessageBox::critical(this, tr("Unsupported ROM"),
                                   tr("GBA Virtual Console ROMs are not supported by Citra."));
-            break;
-
-        case Core::System::ResultStatus::ErrorVideoCore:
-            QMessageBox::critical(
-                this, tr("Video Core Error"),
-                tr("An error has occurred. Please <a "
-                   "href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>see "
-                   "the "
-                   "log</a> for more details. "
-                   "Ensure that you have the latest graphics drivers for your GPU."));
-            break;
-
-        case Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers:
-            QMessageBox::critical(
-                this, tr("Video Core Error"),
-                tr("You are running default Windows drivers "
-                   "for your GPU. You need to install the "
-                   "proper drivers for your graphics card from the manufacturer's website."));
-            break;
-
-        case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL43:
-            QMessageBox::critical(this, below_gl43_title, below_gl43_message);
             break;
 
         default:
@@ -2785,14 +2752,6 @@ int main(int argc, char* argv[]) {
     // Init settings params
     QCoreApplication::setOrganizationName(QStringLiteral("Citra team"));
     QCoreApplication::setApplicationName(QStringLiteral("Citra"));
-
-    QSurfaceFormat format;
-    format.setVersion(4, 3);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSwapInterval(0);
-    // TODO: expose a setting for buffer value (ie default/single/double/triple)
-    format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
-    QSurfaceFormat::setDefaultFormat(format);
 
     SetHighDPIAttributes();
 

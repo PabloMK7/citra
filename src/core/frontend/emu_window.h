@@ -14,6 +14,17 @@
 
 namespace Frontend {
 
+/// Information for the Graphics Backends signifying what type of screen pointer is in
+/// WindowInformation
+enum class WindowSystemType : u8 {
+    Headless,
+    Android,
+    Windows,
+    MacOS,
+    X11,
+    Wayland,
+};
+
 struct Frame;
 /**
  * For smooth Vsync rendering, we want to always present the latest frame that the core generates,
@@ -62,11 +73,33 @@ class GraphicsContext {
 public:
     virtual ~GraphicsContext();
 
+    /// Inform the driver to swap the front/back buffers and present the current image
+    virtual void SwapBuffers(){};
+
     /// Makes the graphics context current for the caller thread
-    virtual void MakeCurrent() = 0;
+    virtual void MakeCurrent(){};
 
     /// Releases (dunno if this is the "right" word) the context from the caller thread
-    virtual void DoneCurrent() = 0;
+    virtual void DoneCurrent(){};
+
+    class Scoped {
+    public:
+        explicit Scoped(GraphicsContext& context_) : context(context_) {
+            context.MakeCurrent();
+        }
+        ~Scoped() {
+            context.DoneCurrent();
+        }
+
+    private:
+        GraphicsContext& context;
+    };
+
+    /// Calls MakeCurrent on the context and calls DoneCurrent when the scope for the returned value
+    /// ends
+    [[nodiscard]] Scoped Acquire() {
+        return Scoped{*this};
+    }
 };
 
 /**
@@ -98,6 +131,23 @@ public:
         int res_height = 0;
         std::pair<unsigned, unsigned> min_client_area_size{
             Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight};
+    };
+
+    /// Data describing host window system information
+    struct WindowSystemInfo {
+        // Window system type. Determines which GL context or Vulkan WSI is used.
+        WindowSystemType type = WindowSystemType::Headless;
+
+        // Connection to a display server. This is used on X11 and Wayland platforms.
+        void* display_connection = nullptr;
+
+        // Render surface. This is a pointer to the native window handle, which depends
+        // on the platform. e.g. HWND for Windows, Window for X11. If the surface is
+        // set to nullptr, the video backend will run in headless mode.
+        void* render_surface = nullptr;
+
+        // Scale of the render surface. For hidpi systems, this will be >1.
+        float render_surface_scale = 1.0f;
     };
 
     /// Polls window events
@@ -164,6 +214,13 @@ public:
     }
 
     /**
+     * Returns system information about the drawing area.
+     */
+    const WindowSystemInfo& GetWindowInfo() const {
+        return window_info;
+    }
+
+    /**
      * Gets the framebuffer layout (width, height, and screen regions)
      * @note This method is thread-safe
      */
@@ -211,6 +268,7 @@ protected:
     }
 
     bool is_secondary{};
+    WindowSystemInfo window_info;
 
 private:
     /**

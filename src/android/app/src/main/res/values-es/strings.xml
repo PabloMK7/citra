@@ -62,8 +62,6 @@
     <string name="linear_filtering_description">Activa el filtro linear, que hace que los gráficos del juego se vean más suaves.</string>
     <string name="texture_filter_name">Filtro de Texturas</string>
     <string name="texture_filter_description">Mejora los gráficos visuales de los juegos al aplicar un filtro a las texturas. Los filtros soportados son Anime4K Ultrafast, Bicubic, ScaleForce, y xBRZ freescale.</string>
-    <string name="hw_renderer">Activar renderizador de hardware</string>
-    <string name="hw_renderer_description">Usa el hardware para emular los gráficos de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="hw_shaders">Activar sombreador de hardware</string>
     <string name="hw_shaders_description">Usa el hardware para emular los sombreadores de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="shaders_accurate_mul">Activar multiplicación precisa de sombreado</string>

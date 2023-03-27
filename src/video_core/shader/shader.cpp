@@ -86,7 +86,7 @@ void UnitState::LoadInput(const ShaderRegs& config, const AttributeBuffer& input
     }
 }
 
-static void CopyRegistersToOutput(const Common::Vec4<float24>* regs, u32 mask,
+static void CopyRegistersToOutput(std::span<Common::Vec4<float24>, 16> regs, u32 mask,
                                   AttributeBuffer& buffer) {
     int output_i = 0;
     for (int reg : Common::BitSet<u32>(mask)) {
@@ -108,7 +108,7 @@ GSEmitter::~GSEmitter() {
     delete handlers;
 }
 
-void GSEmitter::Emit(Common::Vec4<float24> (&output_regs)[16]) {
+void GSEmitter::Emit(std::span<Common::Vec4<float24>, 16> output_regs) {
     ASSERT(vertex_id < 3);
     // TODO: This should be merged with UnitState::WriteOutput somehow
     CopyRegistersToOutput(output_regs, output_mask, buffer[vertex_id]);

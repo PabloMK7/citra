@@ -6,11 +6,13 @@
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/renderer_software/renderer_software.h"
 #include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,9 +20,8 @@
 
 namespace VideoCore {
 
-std::unique_ptr<RendererBase> g_renderer; ///< Renderer plugin
+std::unique_ptr<RendererBase> g_renderer{}; ///< Renderer plugin
 
-std::atomic<bool> g_hw_renderer_enabled;
 std::atomic<bool> g_shader_jit_enabled;
 std::atomic<bool> g_hw_shader_enabled;
 std::atomic<bool> g_separable_shader_enabled;
@@ -30,65 +31,49 @@ std::atomic<bool> g_renderer_bg_color_update_requested;
 std::atomic<bool> g_renderer_sampler_update_requested;
 std::atomic<bool> g_renderer_shader_update_requested;
 std::atomic<bool> g_texture_filter_update_requested;
-// Screenshot
-std::atomic<bool> g_renderer_screenshot_requested;
-void* g_screenshot_bits;
-std::function<void()> g_screenshot_complete_callback;
-Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
 Memory::MemorySystem* g_memory;
 
 /// Initialize the video core
-ResultStatus Init(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window,
-                  Memory::MemorySystem& memory) {
-    g_memory = &memory;
+void Init(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window,
+          Core::System& system) {
+    g_memory = &system.Memory();
     Pica::Init();
 
+    const Settings::GraphicsAPI graphics_api = Settings::values.graphics_api.GetValue();
     OpenGL::GLES = Settings::values.use_gles.GetValue();
 
-    g_renderer = std::make_unique<OpenGL::RendererOpenGL>(emu_window, secondary_window);
-    ResultStatus result = g_renderer->Init();
-
-    if (result != ResultStatus::Success) {
-        LOG_ERROR(Render, "initialization failed !");
-    } else {
-        LOG_DEBUG(Render, "initialized OK");
+    switch (graphics_api) {
+    case Settings::GraphicsAPI::Software:
+        g_renderer = std::make_unique<VideoCore::RendererSoftware>(system, emu_window);
+        break;
+    case Settings::GraphicsAPI::OpenGL:
+        g_renderer = std::make_unique<OpenGL::RendererOpenGL>(system, emu_window, secondary_window);
+        break;
+    default:
+        LOG_CRITICAL(Render, "Unknown graphics API {}, using OpenGL", graphics_api);
+        g_renderer = std::make_unique<OpenGL::RendererOpenGL>(system, emu_window, secondary_window);
     }
-
-    return result;
 }
 
 /// Shutdown the video core
 void Shutdown() {
     Pica::Shutdown();
-
-    g_renderer->ShutDown();
     g_renderer.reset();
 
     LOG_DEBUG(Render, "shutdown OK");
 }
 
-void RequestScreenshot(void* data, std::function<void()> callback,
-                       const Layout::FramebufferLayout& layout) {
-    if (g_renderer_screenshot_requested) {
-        LOG_ERROR(Render, "A screenshot is already requested or in progress, ignoring the request");
-        return;
-    }
-    g_screenshot_bits = data;
-    g_screenshot_complete_callback = std::move(callback);
-    g_screenshot_framebuffer_layout = layout;
-    g_renderer_screenshot_requested = true;
-}
-
 u16 GetResolutionScaleFactor() {
-    if (g_hw_renderer_enabled) {
-        return Settings::values.resolution_factor.GetValue()
-                   ? Settings::values.resolution_factor.GetValue()
-                   : g_renderer->GetRenderWindow().GetFramebufferLayout().GetScalingRatio();
-    } else {
+    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    if (graphics_api == Settings::GraphicsAPI::Software) {
         // Software renderer always render at native resolution
         return 1;
     }
+
+    return Settings::values.resolution_factor.GetValue()
+               ? Settings::values.resolution_factor.GetValue()
+               : g_renderer->GetRenderWindow().GetFramebufferLayout().GetScalingRatio();
 }
 
 template <class Archive>

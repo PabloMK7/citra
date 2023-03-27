@@ -171,4 +171,12 @@
         <item>4</item>
         <item>5</item>
     </integer-array>
+
+    <string-array name="graphicsApiNames">
+        <item>OpenGLES</item>
+    </string-array>
+
+    <integer-array name="graphicsApiValues">
+        <item>1</item>
+    </integer-array>
 </resources>

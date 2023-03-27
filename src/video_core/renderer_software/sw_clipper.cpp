@@ -12,9 +12,9 @@
 #include "common/vector_math.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/renderer_software/rasterizer.h"
+#include "video_core/renderer_software/sw_clipper.h"
 #include "video_core/shader/shader.h"
-#include "video_core/swrasterizer/clipper.h"
-#include "video_core/swrasterizer/rasterizer.h"
 
 using Pica::Rasterizer::Vertex;
 

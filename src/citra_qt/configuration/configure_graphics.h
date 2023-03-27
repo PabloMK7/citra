@@ -28,9 +28,9 @@ public:
 
     void UpdateBackgroundColorButton(const QColor& color);
 
+private:
     void SetupPerGameUI();
 
-    ConfigurationShared::CheckState use_hw_renderer;
     ConfigurationShared::CheckState use_hw_shader;
     ConfigurationShared::CheckState separable_shader;
     ConfigurationShared::CheckState shaders_accurate_mul;

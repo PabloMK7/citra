@@ -82,6 +82,30 @@ void Config::UpdateCFG() {
     cfg->UpdateConfigNANDSavegame();
 }
 
+template <>
+void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
+    std::string setting_value = sdl2_config->Get(group, setting.GetLabel(), setting.GetDefault());
+    if (setting_value.empty()) {
+        setting_value = setting.GetDefault();
+    }
+    setting = std::move(setting_value);
+}
+
+template <>
+void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
+    setting = sdl2_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
+}
+
+template <typename Type, bool ranged>
+void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
+    if constexpr (std::is_floating_point_v<Type>) {
+        setting = sdl2_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
+    } else {
+        setting = static_cast<Type>(sdl2_config->GetInteger(
+            group, setting.GetLabel(), static_cast<long>(setting.GetDefault())));
+    }
+}
+
 void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
@@ -112,39 +136,32 @@ void Config::ReadValues() {
                                                  InputCommon::CemuhookUDP::DEFAULT_PORT));
 
     // Core
-    Settings::values.use_cpu_jit = sdl2_config->GetBoolean("Core", "use_cpu_jit", true);
-    Settings::values.cpu_clock_percentage =
-        static_cast<int>(sdl2_config->GetInteger("Core", "cpu_clock_percentage", 100));
+    ReadSetting("Core", Settings::values.use_cpu_jit);
+    ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
     // Premium
-    Settings::values.texture_filter_name =
-        sdl2_config->GetString("Premium", "texture_filter_name", "none");
+    ReadSetting("Premium", Settings::values.texture_filter_name);
 
     // Renderer
     Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", true);
-    Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", true);
-    Settings::values.use_hw_shader = sdl2_config->GetBoolean("Renderer", "use_hw_shader", true);
     Settings::values.shaders_accurate_mul =
         sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
-    Settings::values.use_shader_jit = sdl2_config->GetBoolean("Renderer", "use_shader_jit", true);
-    Settings::values.resolution_factor =
-        static_cast<u16>(sdl2_config->GetInteger("Renderer", "resolution_factor", 1));
-    Settings::values.use_disk_shader_cache =
-        sdl2_config->GetBoolean("Renderer", "use_disk_shader_cache", true);
-    Settings::values.use_vsync_new = sdl2_config->GetBoolean("Renderer", "use_vsync_new", true);
+    ReadSetting("Renderer", Settings::values.graphics_api);
+    ReadSetting("Renderer", Settings::values.use_hw_shader);
+    ReadSetting("Renderer", Settings::values.use_shader_jit);
+    ReadSetting("Renderer", Settings::values.resolution_factor);
+    ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
+    ReadSetting("Renderer", Settings::values.use_vsync_new);
 
     // Work around to map Android setting for enabling the frame limiter to the format Citra expects
     if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {
-        Settings::values.frame_limit =
-            static_cast<u16>(sdl2_config->GetInteger("Renderer", "frame_limit", 100));
+        ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
         Settings::values.frame_limit = 0;
     }
 
-    Settings::values.render_3d = static_cast<Settings::StereoRenderOption>(
-        sdl2_config->GetInteger("Renderer", "render_3d", 0));
-    Settings::values.factor_3d =
-        static_cast<u8>(sdl2_config->GetInteger("Renderer", "factor_3d", 0));
+    ReadSetting("Renderer", Settings::values.render_3d);
+    ReadSetting("Renderer", Settings::values.factor_3d);
     std::string default_shader = "none (builtin)";
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph)
         default_shader = "dubois (builtin)";
@@ -152,70 +169,49 @@ void Config::ReadValues() {
         default_shader = "horizontal (builtin)";
     Settings::values.pp_shader_name =
         sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);
-    Settings::values.filter_mode = sdl2_config->GetBoolean("Renderer", "filter_mode", true);
+    ReadSetting("Renderer", Settings::values.filter_mode);
 
-    Settings::values.bg_red = static_cast<float>(sdl2_config->GetReal("Renderer", "bg_red", 0.0));
-    Settings::values.bg_green =
-        static_cast<float>(sdl2_config->GetReal("Renderer", "bg_green", 0.0));
-    Settings::values.bg_blue = static_cast<float>(sdl2_config->GetReal("Renderer", "bg_blue", 0.0));
+    ReadSetting("Renderer", Settings::values.bg_red);
+    ReadSetting("Renderer", Settings::values.bg_green);
+    ReadSetting("Renderer", Settings::values.bg_blue);
 
     // Layout
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(sdl2_config->GetInteger(
         "Layout", "layout_option", static_cast<int>(Settings::LayoutOption::MobileLandscape)));
-    Settings::values.custom_layout = sdl2_config->GetBoolean("Layout", "custom_layout", false);
-    Settings::values.custom_top_left =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_left", 0));
-    Settings::values.custom_top_top =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_top", 0));
-    Settings::values.custom_top_right =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_right", 400));
-    Settings::values.custom_top_bottom =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_bottom", 240));
-    Settings::values.custom_bottom_left =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_left", 40));
-    Settings::values.custom_bottom_top =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_top", 240));
-    Settings::values.custom_bottom_right =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_right", 360));
-    Settings::values.custom_bottom_bottom =
-        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_bottom", 480));
-    Settings::values.cardboard_screen_size =
-        static_cast<int>(sdl2_config->GetInteger("Layout", "cardboard_screen_size", 85));
-    Settings::values.cardboard_x_shift =
-        static_cast<int>(sdl2_config->GetInteger("Layout", "cardboard_x_shift", 0));
-    Settings::values.cardboard_y_shift =
-        static_cast<int>(sdl2_config->GetInteger("Layout", "cardboard_y_shift", 0));
+    ReadSetting("Layout", Settings::values.custom_layout);
+    ReadSetting("Layout", Settings::values.custom_top_left);
+    ReadSetting("Layout", Settings::values.custom_top_top);
+    ReadSetting("Layout", Settings::values.custom_top_right);
+    ReadSetting("Layout", Settings::values.custom_top_bottom);
+    ReadSetting("Layout", Settings::values.custom_bottom_left);
+    ReadSetting("Layout", Settings::values.custom_bottom_top);
+    ReadSetting("Layout", Settings::values.custom_bottom_right);
+    ReadSetting("Layout", Settings::values.custom_bottom_bottom);
+    ReadSetting("Layout", Settings::values.cardboard_screen_size);
+    ReadSetting("Layout", Settings::values.cardboard_x_shift);
+    ReadSetting("Layout", Settings::values.cardboard_y_shift);
 
     // Utility
-    Settings::values.dump_textures = sdl2_config->GetBoolean("Utility", "dump_textures", false);
-    Settings::values.custom_textures = sdl2_config->GetBoolean("Utility", "custom_textures", false);
-    Settings::values.preload_textures =
-        sdl2_config->GetBoolean("Utility", "preload_textures", false);
+    ReadSetting("Utility", Settings::values.dump_textures);
+    ReadSetting("Utility", Settings::values.custom_textures);
+    ReadSetting("Utility", Settings::values.preload_textures);
 
     // Audio
-    Settings::values.audio_emulation =
-        static_cast<Settings::AudioEmulation>(sdl2_config->GetInteger(
-            "Audio", "audio_emulation", static_cast<int>(Settings::AudioEmulation::HLE)));
-    Settings::values.sink_id = sdl2_config->GetString("Audio", "output_engine", "auto");
-    Settings::values.enable_audio_stretching =
-        sdl2_config->GetBoolean("Audio", "enable_audio_stretching", true);
-    Settings::values.audio_device_id = sdl2_config->GetString("Audio", "output_device", "auto");
-    Settings::values.volume = static_cast<float>(sdl2_config->GetReal("Audio", "volume", 1));
-    Settings::values.mic_input_device =
-        sdl2_config->GetString("Audio", "mic_input_device", "Default");
-    Settings::values.mic_input_type =
-        static_cast<Settings::MicInputType>(sdl2_config->GetInteger("Audio", "mic_input_type", 1));
+    ReadSetting("Audio", Settings::values.audio_emulation);
+    ReadSetting("Audio", Settings::values.sink_id);
+    ReadSetting("Audio", Settings::values.enable_audio_stretching);
+    ReadSetting("Audio", Settings::values.audio_device_id);
+    ReadSetting("Audio", Settings::values.volume);
+    ReadSetting("Audio", Settings::values.mic_input_device);
+    ReadSetting("Audio", Settings::values.mic_input_type);
 
     // Data Storage
-    Settings::values.use_virtual_sd =
-        sdl2_config->GetBoolean("Data Storage", "use_virtual_sd", true);
+    ReadSetting("Data Storage", Settings::values.use_virtual_sd);
 
     // System
-    Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", true);
-    Settings::values.region_value =
-        sdl2_config->GetInteger("System", "region_value", Settings::REGION_VALUE_AUTO_SELECT);
-    Settings::values.init_clock =
-        static_cast<Settings::InitClock>(sdl2_config->GetInteger("System", "init_clock", 0));
+    ReadSetting("System", Settings::values.is_new_3ds);
+    ReadSetting("System", Settings::values.region_value);
+    ReadSetting("System", Settings::values.init_clock);
     {
         std::tm t;
         t.tm_sec = 1;
@@ -236,10 +232,8 @@ void Config::ReadValues() {
                 std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
                 .count();
     }
-    Settings::values.plugin_loader_enabled =
-        sdl2_config->GetBoolean("System", "plugin_loader", false);
-    Settings::values.allow_plugin_loader =
-        sdl2_config->GetBoolean("System", "allow_plugin_loader", true);
+    ReadSetting("System", Settings::values.plugin_loader_enabled);
+    ReadSetting("System", Settings::values.allow_plugin_loader);
 
     // Camera
     using namespace Service::CAM;
@@ -263,14 +257,14 @@ void Config::ReadValues() {
         sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
 
     // Miscellaneous
-    Settings::values.log_filter = sdl2_config->GetString("Miscellaneous", "log_filter", "*:Info");
+    ReadSetting("Miscellaneous", Settings::values.log_filter);
 
     // Debugging
     Settings::values.record_frame_times =
         sdl2_config->GetBoolean("Debugging", "record_frame_times", false);
-    Settings::values.use_gdbstub = sdl2_config->GetBoolean("Debugging", "use_gdbstub", false);
-    Settings::values.gdbstub_port =
-        static_cast<u16>(sdl2_config->GetInteger("Debugging", "gdbstub_port", 24689));
+    ReadSetting("Debugging", Settings::values.renderer_debug);
+    ReadSetting("Debugging", Settings::values.use_gdbstub);
+    ReadSetting("Debugging", Settings::values.gdbstub_port);
 
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle = sdl2_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);

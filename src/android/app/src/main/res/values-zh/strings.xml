@@ -58,8 +58,6 @@
     <string name="linear_filtering_description">开启后，游戏视觉效果会更加平滑。</string>
     <string name="texture_filter_name">纹理滤镜</string>
     <string name="texture_filter_description">通过对纹理使用滤镜来增强游戏的视觉效果。支持的滤镜有 Anime4K Ultrafast, Bicubic, ScaleForce 和 xBRZ freescale。</string>
-    <string name="hw_renderer">启用硬件渲染器</string>
-    <string name="hw_renderer_description">使用硬件模拟 3DS 图形。启用后，游戏性能将显著提高。</string>
     <string name="hw_shaders">启用硬件着色器</string>
     <string name="hw_shaders_description">使用硬件模拟 3DS 着色器。启用后，游戏性能将显著提高。</string>
     <string name="shaders_accurate_mul">启用精确乘法运算</string>

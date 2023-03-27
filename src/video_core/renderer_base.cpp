@@ -2,15 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <memory>
+#include "core/core.h"
 #include "core/frontend/emu_window.h"
+#include "core/tracer/recorder.h"
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/renderer_base.h"
-#include "video_core/renderer_opengl/gl_rasterizer.h"
-#include "video_core/swrasterizer/swrasterizer.h"
-#include "video_core/video_core.h"
 
-RendererBase::RendererBase(Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window_)
-    : render_window{window}, secondary_window{secondary_window_} {}
+namespace VideoCore {
+
+RendererBase::RendererBase(Core::System& system_, Frontend::EmuWindow& window,
+                           Frontend::EmuWindow* secondary_window_)
+    : system{system_}, render_window{window}, secondary_window{secondary_window_} {}
 
 RendererBase::~RendererBase() = default;
 
@@ -25,19 +27,35 @@ void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
     }
 }
 
-void RendererBase::RefreshRasterizerSetting() {
-    bool hw_renderer_enabled = VideoCore::g_hw_renderer_enabled;
-    if (rasterizer == nullptr || opengl_rasterizer_active != hw_renderer_enabled) {
-        opengl_rasterizer_active = hw_renderer_enabled;
+void RendererBase::EndFrame() {
+    current_frame++;
 
-        if (hw_renderer_enabled) {
-            rasterizer = std::make_unique<OpenGL::RasterizerOpenGL>(render_window);
-        } else {
-            rasterizer = std::make_unique<VideoCore::SWRasterizer>();
-        }
+    system.perf_stats->EndSystemFrame();
+
+    render_window.PollEvents();
+
+    system.frame_limiter.DoFrameLimiting(system.CoreTiming().GetGlobalTimeUs());
+    system.perf_stats->BeginSystemFrame();
+
+    if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
+        Pica::g_debug_context->recorder->FrameFinished();
     }
 }
 
-void RendererBase::Sync() {
-    rasterizer->SyncEntireState();
+bool RendererBase::IsScreenshotPending() const {
+    return renderer_settings.screenshot_requested;
 }
+
+void RendererBase::RequestScreenshot(void* data, std::function<void()> callback,
+                                     const Layout::FramebufferLayout& layout) {
+    if (renderer_settings.screenshot_requested) {
+        LOG_ERROR(Render, "A screenshot is already requested or in progress, ignoring the request");
+        return;
+    }
+    renderer_settings.screenshot_bits = data;
+    renderer_settings.screenshot_complete_callback = callback;
+    renderer_settings.screenshot_framebuffer_layout = layout;
+    renderer_settings.screenshot_requested = true;
+}
+
+} // namespace VideoCore

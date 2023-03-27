@@ -46,8 +46,6 @@
     <!-- Graphics settings strings -->
     <string name="vsync">Aktivoi V-Sync</string>
     <string name="vsync_description">Synkronoi pelin virkistystaajuus laitteesi virkistystaajuuteen.</string>
-    <string name="hw_renderer">Aktivoi Laitteistorenderöinti</string>
-    <string name="hw_renderer_description">Käyttää laitteistoa emuloidakseen 3DS-grafiikoita. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="hw_shaders">Aktivoi Laitteistovarjostin</string>
     <string name="hw_shaders_description">Käyttää laitteistoa emuloidakseen 3DS:n varjostimia. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="frame_limit_enable">Aktivoi nopeuden rajoitus</string>

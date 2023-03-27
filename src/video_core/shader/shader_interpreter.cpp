@@ -7,7 +7,6 @@
 #include <cmath>
 #include <numeric>
 #include <boost/container/static_vector.hpp>
-#include <boost/range/algorithm/fill.hpp>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -688,7 +687,7 @@ DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
     DebugData<true> debug_data;
 
     // Setup input register table
-    boost::fill(state.registers.input, Common::Vec4<float24>::AssignToAll(float24::Zero()));
+    state.registers.input.fill(Common::Vec4<float24>::AssignToAll(float24::Zero()));
     state.LoadInput(config, input);
     RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
     return debug_data;

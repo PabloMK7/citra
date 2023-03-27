@@ -25,7 +25,6 @@
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
 #include "core/frontend/mic.h"
-#include "core/frontend/scope_acquire_context.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/savestate.h"
@@ -46,6 +45,7 @@
 #include "jni/ndk_motion.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
+#include "video_core/video_core.h"
 
 namespace {
 
@@ -149,7 +149,15 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         return Core::System::ResultStatus::ErrorLoader;
     }
 
-    window = std::make_unique<EmuWindow_Android>(s_surf);
+    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    switch (graphics_api) {
+    case Settings::GraphicsAPI::OpenGL:
+        window = std::make_unique<EmuWindow_Android>(s_surf);
+        break;
+    default:
+        LOG_CRITICAL(Frontend, "Unknown graphics API {}, using OpenGL", graphics_api);
+        window = std::make_unique<EmuWindow_Android>(s_surf);
+    }
 
     Core::System& system{Core::System::GetInstance()};
 

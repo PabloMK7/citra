@@ -12,7 +12,7 @@
 #include "core/memory.h"
 #include "video_core/pica_state.h"
 #include "video_core/regs_framebuffer.h"
-#include "video_core/swrasterizer/framebuffer.h"
+#include "video_core/renderer_software/sw_framebuffer.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
