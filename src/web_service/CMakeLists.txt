@@ -3,7 +3,6 @@ add_library(web_service STATIC
     announce_room_json.h
     nus_download.cpp
     nus_download.h
-    nus_titles.h
     precompiled_headers.h
     telemetry_json.cpp
     telemetry_json.h

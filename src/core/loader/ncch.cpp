@@ -25,6 +25,7 @@
 #include "core/loader/ncch.h"
 #include "core/loader/smdh.h"
 #include "core/memory.h"
+#include "core/system_titles.h"
 #include "network/network.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +163,10 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
     return ResultStatus::Error;
 }
 
-void AppLoader_NCCH::ParseRegionLockoutInfo() {
+void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
+    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    ASSERT_MSG(cfg, "CFG Module missing!");
+
     std::vector<u8> smdh_buffer;
     if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
         SMDH smdh;
@@ -176,9 +180,12 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
             }
             region_lockout >>= 1;
         }
-        auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
-        ASSERT_MSG(cfg, "CFG Module missing!");
         cfg->SetPreferredRegionCodes(regions);
+    } else {
+        const auto region = Core::GetSystemTitleRegion(program_id);
+        if (region.has_value()) {
+            cfg->SetPreferredRegionCodes({region.value()});
+        }
     }
 }
 
@@ -229,7 +236,7 @@ ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
 
     system.ArchiveManager().RegisterSelfNCCH(*this);
 
-    ParseRegionLockoutInfo();
+    ParseRegionLockoutInfo(ncch_program_id);
 
     return ResultStatus::Success;
 }

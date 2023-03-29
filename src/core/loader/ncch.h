@@ -76,7 +76,9 @@ private:
     ResultStatus LoadExec(std::shared_ptr<Kernel::Process>& process);
 
     /// Reads the region lockout info in the SMDH and send it to CFG service
-    void ParseRegionLockoutInfo();
+    /// If an SMDH is not present, the program ID is compared against a list
+    /// of known system titles to determine the region.
+    void ParseRegionLockoutInfo(u64 program_id);
 
     /// Detects whether the NCCH contains GBA Virtual Console.
     bool IsGbaVirtualConsole(const std::vector<u8>& code);

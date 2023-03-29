@@ -15,10 +15,8 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hw/aes/key.h"
+#include "core/system_titles.h"
 #include "ui_configure_system.h"
-#ifdef ENABLE_WEB_SERVICE
-#include "web_service/nus_titles.h"
-#endif
 
 static const std::array<int, 12> days_in_month = {{
     31,
@@ -246,7 +244,9 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
 
     SetupPerGameUI();
 
-    ui->combo_download_mode->setCurrentIndex(1); // set to Recommended
+    ui->combo_download_set->setCurrentIndex(0);    // set to Minimal
+    ui->combo_download_region->setCurrentIndex(0); // set to the base region
+
     bool keys_available = true;
     HW::AES::InitKeys(true);
     for (u8 i = 0; i < HW::AES::MaxCommonKeySlot; i++) {
@@ -258,11 +258,13 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
     }
     if (keys_available) {
         ui->button_start_download->setEnabled(true);
-        ui->combo_download_mode->setEnabled(true);
+        ui->combo_download_set->setEnabled(true);
+        ui->combo_download_region->setEnabled(true);
         ui->label_nus_download->setText(tr("Download System Files from Nintendo servers"));
     } else {
         ui->button_start_download->setEnabled(false);
-        ui->combo_download_mode->setEnabled(false);
+        ui->combo_download_set->setEnabled(false);
+        ui->combo_download_region->setEnabled(false);
         ui->label_nus_download->setTextInteractionFlags(Qt::TextBrowserInteraction);
         ui->label_nus_download->setOpenExternalLinks(true);
         ui->label_nus_download->setText(
@@ -343,6 +345,9 @@ void ConfigureSystem::ReadSystemSettings() {
     // set play coin
     play_coin = Service::PTM::Module::GetPlayCoins();
     ui->spinBox_play_coins->setValue(play_coin);
+
+    // set firmware download region
+    ui->combo_download_region->setCurrentIndex(static_cast<int>(cfg->GetRegionValue()));
 }
 
 void ConfigureSystem::ApplyConfiguration() {
@@ -535,8 +540,10 @@ void ConfigureSystem::DownloadFromNUS() {
 #ifdef ENABLE_WEB_SERVICE
     ui->button_start_download->setEnabled(false);
 
-    const auto mode = static_cast<Title::Mode>(ui->combo_download_mode->currentIndex());
-    const std::vector<u64> titles = BuildFirmwareTitleList(mode, cfg->GetRegionValue());
+    const auto mode =
+        static_cast<Core::SystemTitleSet>(1 << ui->combo_download_set->currentIndex());
+    const auto region = static_cast<u32>(ui->combo_download_region->currentIndex());
+    const std::vector<u64> titles = Core::GetSystemTitleIds(mode, region);
 
     QProgressDialog progress(tr("Downloading files..."), tr("Cancel"), 0,
                              static_cast<int>(titles.size()), this);

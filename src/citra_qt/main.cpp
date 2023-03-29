@@ -94,6 +94,7 @@
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/savestate.h"
+#include "core/system_titles.h"
 #include "game_list_p.h"
 #include "input_common/main.h"
 #include "network/network_settings.h"
@@ -747,7 +748,10 @@ void GMainWindow::ConnectMenuEvents() {
     // File
     connect_menu(ui->action_Load_File, &GMainWindow::OnMenuLoadFile);
     connect_menu(ui->action_Install_CIA, &GMainWindow::OnMenuInstallCIA);
-    connect_menu(ui->action_Boot_Home_Menu, &GMainWindow::OnMenuBootHomeMenu);
+    for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
+        connect_menu(ui->menu_Boot_Home_Menu->actions().at(region),
+                     [this, region] { OnMenuBootHomeMenu(region); });
+    }
     connect_menu(ui->action_Exit, &QMainWindow::close);
     connect_menu(ui->action_Load_Amiibo, &GMainWindow::OnLoadAmiibo);
     connect_menu(ui->action_Remove_Amiibo, &GMainWindow::OnRemoveAmiibo);
@@ -1633,18 +1637,8 @@ void GMainWindow::OnMenuInstallCIA() {
     InstallCIA(filepaths);
 }
 
-static std::string GetHomeMenuPath() {
-    static const std::array<u64, 7> home_menu_tids = {
-        0x0004003000008202, 0x0004003000008F02, 0x0004003000009802, 0x0004003000009802,
-        0x000400300000A102, 0x000400300000A902, 0x000400300000B102};
-
-    Service::CFG::Module cfg{};
-    return Service::AM::GetTitleContentPath(Service::FS::MediaType::NAND,
-                                            home_menu_tids[cfg.GetRegionValue()]);
-}
-
-void GMainWindow::OnMenuBootHomeMenu() {
-    BootGame(QString::fromStdString(GetHomeMenuPath()));
+void GMainWindow::OnMenuBootHomeMenu(u32 region) {
+    BootGame(QString::fromStdString(Core::GetHomeMenuNcchPath(region)));
 }
 
 void GMainWindow::InstallCIA(QStringList filepaths) {
@@ -2292,9 +2286,13 @@ void GMainWindow::UpdateStatusBar() {
 }
 
 void GMainWindow::UpdateBootHomeMenuState() {
-    const std::string home_menu_path = GetHomeMenuPath();
-    ui->action_Boot_Home_Menu->setEnabled(!home_menu_path.empty() &&
-                                          FileUtil::Exists(GetHomeMenuPath()));
+    const auto current_region = Settings::values.region_value.GetValue();
+    for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
+        const auto path = Core::GetHomeMenuNcchPath(region);
+        ui->menu_Boot_Home_Menu->actions().at(region)->setEnabled(
+            (current_region == Settings::REGION_VALUE_AUTO_SELECT || current_region == region) &&
+            !path.empty() && FileUtil::Exists(path));
+    }
 }
 
 void GMainWindow::HideMouseCursor() {

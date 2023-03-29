@@ -52,6 +52,18 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menu_Boot_Home_Menu">
+     <property name="title">
+      <string>Boot Home Menu</string>
+     </property>
+     <addaction name="action_Boot_Home_Menu_JPN"/>
+     <addaction name="action_Boot_Home_Menu_USA"/>
+     <addaction name="action_Boot_Home_Menu_EUR"/>
+     <addaction name="action_Boot_Home_Menu_AUS"/>
+     <addaction name="action_Boot_Home_Menu_CHN"/>
+     <addaction name="action_Boot_Home_Menu_KOR"/>
+     <addaction name="action_Boot_Home_Menu_TWN"/>
+    </widget>
     <widget class="QMenu" name="menu_recent_files">
      <property name="title">
       <string>Recent Files</string>
@@ -66,7 +78,7 @@
     </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
-    <addaction name="action_Boot_Home_Menu"/>
+    <addaction name="menu_Boot_Home_Menu"/>
     <addaction name="separator"/>
     <addaction name="menu_recent_files"/>
     <addaction name="separator"/>
@@ -210,9 +222,39 @@
     <string>Install CIA...</string>
    </property>
   </action>
-  <action name="action_Boot_Home_Menu">
+  <action name="action_Boot_Home_Menu_JPN">
    <property name="text">
-    <string>Boot Home Menu</string>
+    <string>JPN</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu_USA">
+   <property name="text">
+    <string>USA</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu_EUR">
+   <property name="text">
+    <string>EUR</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu_AUS">
+   <property name="text">
+    <string>AUS</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu_CHN">
+   <property name="text">
+    <string>CHN</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu_KOR">
+   <property name="text">
+    <string>KOR</string>
+   </property>
+  </action>
+  <action name="action_Boot_Home_Menu_TWN">
+   <property name="text">
+    <string>TWN</string>
    </property>
   </action>
   <action name="action_Exit">
