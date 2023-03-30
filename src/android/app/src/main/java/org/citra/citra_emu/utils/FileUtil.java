@@ -380,8 +380,9 @@ public class FileUtil {
         return false;
     }
 
-    public static byte[] getBytesFromFile(File file) throws IOException {
-        final long length = file.length();
+    public static byte[] getBytesFromFile(Context context, DocumentFile file) throws IOException {
+        final Uri uri = file.getUri();
+        final long length = FileUtil.getFileSize(context, uri.toString());
 
         // You cannot create an array using a long type.
         if (length > Integer.MAX_VALUE) {
@@ -394,7 +395,7 @@ public class FileUtil {
         int offset = 0;
         int numRead;
 
-        try (InputStream is = new FileInputStream(file)) {
+        try (InputStream is = context.getContentResolver().openInputStream(uri)) {
             while (offset < bytes.length &&
                    (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
                 offset += numRead;

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Pair;
@@ -28,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentActivity;
 
 import org.citra.citra_emu.CitraApplication;
@@ -568,10 +570,11 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void onAmiiboSelected(String selectedFile) {
-        File file = new File(selectedFile);
         boolean success = false;
         try {
-            byte[] bytes = FileUtil.getBytesFromFile(file);
+            Uri uri = Uri.parse(selectedFile);
+            DocumentFile file = DocumentFile.fromSingleUri(this, uri);
+            byte[] bytes = FileUtil.getBytesFromFile(this, file);
             success = NativeLibrary.LoadAmiibo(bytes);
         } catch (IOException e) {
             e.printStackTrace();
