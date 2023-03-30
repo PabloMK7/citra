@@ -1,7 +1,13 @@
 package org.citra.citra_emu.ui.platform;
 
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +17,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,11 +32,12 @@ import org.citra.citra_emu.adapters.GameAdapter;
 import org.citra.citra_emu.model.GameDatabase;
 
 public final class PlatformGamesFragment extends Fragment implements PlatformGamesView {
-    private PlatformGamesPresenter mPresenter = new PlatformGamesPresenter(this);
+    private final PlatformGamesPresenter mPresenter = new PlatformGamesPresenter(this);
 
     private GameAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private TextView mTextView;
+    private SwipeRefreshLayout mPullToRefresh;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +55,24 @@ public final class PlatformGamesFragment extends Fragment implements PlatformGam
         return rootView;
     }
 
+    private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+
+    private void onPullToRefresh() {
+        Runnable onPostRunnable = () -> {
+            updateTextView();
+            mPullToRefresh.setRefreshing(false);
+        };
+        Runnable scanLibraryRunnable = () -> {
+            GameDatabase databaseHelper = CitraApplication.databaseHelper;
+            databaseHelper.scanLibrary(databaseHelper.getWritableDatabase());
+            mPresenter.refresh();
+            mHandler.post(onPostRunnable);
+        };
+
+        mExecutor.execute(scanLibraryRunnable);
+    }
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         int columns = getResources().getInteger(R.integer.game_grid_columns);
@@ -60,16 +86,9 @@ public final class PlatformGamesFragment extends Fragment implements PlatformGam
         mRecyclerView.addItemDecoration(divider);
 
         // Add swipe down to refresh gesture
-        final SwipeRefreshLayout pullToRefresh = view.findViewById(R.id.refresh_grid_games);
-        pullToRefresh.setOnRefreshListener(() -> {
-            GameDatabase databaseHelper = CitraApplication.databaseHelper;
-            databaseHelper.scanLibrary(databaseHelper.getWritableDatabase());
-            refresh();
-            pullToRefresh.setRefreshing(false);
-        });
-
-        pullToRefresh.setProgressBackgroundColorSchemeColor(MaterialColors.getColor(pullToRefresh, R.attr.colorPrimary));
-        pullToRefresh.setColorSchemeColors(MaterialColors.getColor(pullToRefresh, R.attr.colorOnPrimary));
+        mPullToRefresh.setOnRefreshListener(this::onPullToRefresh);
+        mPullToRefresh.setProgressBackgroundColorSchemeColor(MaterialColors.getColor(mPullToRefresh, R.attr.colorPrimary));
+        mPullToRefresh.setColorSchemeColors(MaterialColors.getColor(mPullToRefresh, R.attr.colorOnPrimary));
 
         setInsets();
     }
@@ -95,6 +114,7 @@ public final class PlatformGamesFragment extends Fragment implements PlatformGam
     private void findViews(View root) {
         mRecyclerView = root.findViewById(R.id.grid_games);
         mTextView = root.findViewById(R.id.gamelist_empty_text);
+        mPullToRefresh = root.findViewById(R.id.refresh_grid_games);
     }
 
     private void setInsets() {
