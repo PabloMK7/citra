@@ -14,8 +14,8 @@
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
 #include "video_core/shader/shader.h"
 
-namespace Frontend {
-class EmuWindow;
+namespace VideoCore {
+class RendererBase;
 }
 
 namespace OpenGL {
@@ -25,7 +25,7 @@ class ShaderProgramManager;
 
 class RasterizerOpenGL : public VideoCore::RasterizerAccelerated {
 public:
-    explicit RasterizerOpenGL(Memory::MemorySystem& memory, Frontend::EmuWindow& emu_window,
+    explicit RasterizerOpenGL(Memory::MemorySystem& memory, VideoCore::RendererBase& renderer,
                               Driver& driver);
     ~RasterizerOpenGL() override;
 

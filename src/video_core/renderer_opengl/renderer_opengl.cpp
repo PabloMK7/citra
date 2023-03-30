@@ -360,7 +360,7 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Frontend::EmuWindow& window
     }
     frame_dumper.mailbox = std::make_unique<OGLVideoDumpingMailbox>();
     InitOpenGLObjects();
-    rasterizer = std::make_unique<RasterizerOpenGL>(system.Memory(), render_window, driver);
+    rasterizer = std::make_unique<RasterizerOpenGL>(system.Memory(), *this, driver);
 }
 
 RendererOpenGL::~RendererOpenGL() = default;
@@ -401,7 +401,7 @@ void RendererOpenGL::SwapBuffers() {
 }
 
 void RendererOpenGL::RenderScreenshot() {
-    if (renderer_settings.screenshot_requested.exchange(false)) {
+    if (settings.screenshot_requested.exchange(false)) {
         // Draw this frame to the screenshot framebuffer
         screenshot_framebuffer.Create();
         GLuint old_read_fb = state.draw.read_framebuffer;
@@ -409,7 +409,7 @@ void RendererOpenGL::RenderScreenshot() {
         state.draw.read_framebuffer = state.draw.draw_framebuffer = screenshot_framebuffer.handle;
         state.Apply();
 
-        const auto layout{renderer_settings.screenshot_framebuffer_layout};
+        const Layout::FramebufferLayout layout{settings.screenshot_framebuffer_layout};
 
         GLuint renderbuffer;
         glGenRenderbuffers(1, &renderbuffer);
@@ -421,7 +421,7 @@ void RendererOpenGL::RenderScreenshot() {
         DrawScreens(layout, false);
 
         glReadPixels(0, 0, layout.width, layout.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                     renderer_settings.screenshot_bits);
+                     settings.screenshot_bits);
 
         screenshot_framebuffer.Release();
         state.draw.read_framebuffer = old_read_fb;
@@ -429,7 +429,7 @@ void RendererOpenGL::RenderScreenshot() {
         state.Apply();
         glDeleteRenderbuffers(1, &renderbuffer);
 
-        renderer_settings.screenshot_complete_callback();
+        settings.screenshot_complete_callback();
     }
 }
 
@@ -808,7 +808,7 @@ void RendererOpenGL::DrawSingleScreenRotated(const ScreenInfo& screen_info, floa
     // As this is the "DrawSingleScreenRotated" function, the output resolution dimensions have been
     // swapped. If a non-rotated draw-screen function were to be added for book-mode games, those
     // should probably be set to the standard (w, h, 1.0 / w, 1.0 / h) ordering.
-    const u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    const u32 scale_factor = GetResolutionScaleFactor();
     glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
                 static_cast<float>(screen_info.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
@@ -837,7 +837,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
     }};
 
-    const u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    const u32 scale_factor = GetResolutionScaleFactor();
     glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
                 static_cast<float>(screen_info.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
@@ -871,7 +871,7 @@ void RendererOpenGL::DrawSingleScreenStereoRotated(const ScreenInfo& screen_info
         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
     }};
 
-    const u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    const u32 scale_factor = GetResolutionScaleFactor();
     glUniform4f(uniform_i_resolution,
                 static_cast<float>(screen_info_l.texture.width * scale_factor),
                 static_cast<float>(screen_info_l.texture.height * scale_factor),
@@ -906,7 +906,7 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
     }};
 
-    const u16 scale_factor = VideoCore::GetResolutionScaleFactor();
+    const u32 scale_factor = GetResolutionScaleFactor();
     glUniform4f(uniform_i_resolution,
                 static_cast<float>(screen_info_l.texture.width * scale_factor),
                 static_cast<float>(screen_info_l.texture.height * scale_factor),
@@ -933,18 +933,18 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
  * Draws the emulated screens to the emulator window.
  */
 void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool flipped) {
-    if (VideoCore::g_renderer_bg_color_update_requested.exchange(false)) {
+    if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
                      Settings::values.bg_blue.GetValue(), 0.0f);
     }
 
-    if (VideoCore::g_renderer_sampler_update_requested.exchange(false)) {
+    if (settings.sampler_update_requested.exchange(false)) {
         // Set the new filtering mode for the sampler
         ReloadSampler();
     }
 
-    if (VideoCore::g_renderer_shader_update_requested.exchange(false)) {
+    if (settings.shader_update_requested.exchange(false)) {
         // Update fragment shader before drawing
         shader.Release();
         // Link shaders and get variable locations

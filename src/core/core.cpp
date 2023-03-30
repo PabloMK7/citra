@@ -74,8 +74,7 @@ System::~System() = default;
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
-    if (std::any_of(cpu_cores.begin(), cpu_cores.end(),
-                    [](std::shared_ptr<ARM_Interface> ptr) { return ptr == nullptr; })) {
+    if (!IsPoweredOn()) {
         return ResultStatus::ErrorNotInitialized;
     }
 
@@ -435,7 +434,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     LOG_DEBUG(Core, "Initialized OK");
 
-    initalized = true;
+    is_powered_on = true;
 
     return ResultStatus::Success;
 }
@@ -537,6 +536,8 @@ void System::Shutdown(bool is_deserializing) {
                                 perf_stats ? perf_stats->GetMeanFrametime() : 0);
 
     // Shutdown emulation session
+    is_powered_on = false;
+
     VideoCore::Shutdown();
     HW::Shutdown();
     if (!is_deserializing) {

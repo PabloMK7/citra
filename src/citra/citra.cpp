@@ -364,8 +364,8 @@ int main(int argc, char** argv) {
 
     EmuWindow_SDL2::InitializeSDL2();
 
-    const auto CreateEmuWindow = [](bool fullscreen,
-                                    bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
+    const auto create_emu_window = [](bool fullscreen,
+                                      bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
         switch (Settings::values.graphics_api.GetValue()) {
         case Settings::GraphicsAPI::OpenGL:
             return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
@@ -374,11 +374,11 @@ int main(int argc, char** argv) {
         }
     };
 
-    const auto emu_window{CreateEmuWindow(fullscreen, false)};
+    const auto emu_window{create_emu_window(fullscreen, false)};
     const bool use_secondary_window{
         Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows &&
         Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::Software};
-    const auto secondary_window = use_secondary_window ? CreateEmuWindow(false, true) : nullptr;
+    const auto secondary_window = use_secondary_window ? create_emu_window(false, true) : nullptr;
 
     const auto scope = emu_window->Acquire();
 
@@ -448,8 +448,8 @@ int main(int argc, char** argv) {
         Core::Movie::GetInstance().StartRecording(movie_record, movie_record_author);
     }
     if (!dump_video.empty()) {
-        Layout::FramebufferLayout layout{
-            Layout::FrameLayoutFromResolutionScale(VideoCore::GetResolutionScaleFactor())};
+        Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
+            VideoCore::g_renderer->GetResolutionScaleFactor())};
         system.VideoDumper().StartDumping(dump_video, layout);
     }
 

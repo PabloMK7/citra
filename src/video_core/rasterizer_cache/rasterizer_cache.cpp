@@ -9,6 +9,7 @@
 #include "common/microprofile.h"
 #include "video_core/pica_state.h"
 #include "video_core/rasterizer_cache/rasterizer_cache.h"
+#include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
 #include "video_core/renderer_opengl/texture_downloader_es.h"
 #include "video_core/renderer_opengl/texture_filters/texture_filterer.h"
@@ -239,8 +240,9 @@ static Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams&
     return match_surface;
 }
 
-RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
-    resolution_scale_factor = VideoCore::GetResolutionScaleFactor();
+RasterizerCacheOpenGL::RasterizerCacheOpenGL(VideoCore::RendererBase& renderer_)
+    : renderer{renderer_} {
+    resolution_scale_factor = renderer.GetResolutionScaleFactor();
     texture_filterer = std::make_unique<TextureFilterer>(
         Settings::values.texture_filter_name.GetValue(), resolution_scale_factor);
     format_reinterpreter = std::make_unique<FormatReinterpreterOpenGL>();
@@ -588,15 +590,14 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     const auto& config = regs.framebuffer.framebuffer;
 
     // Update resolution_scale_factor and reset cache if changed
-    const bool resolution_scale_changed =
-        resolution_scale_factor != VideoCore::GetResolutionScaleFactor();
+    const u32 scale_factor = renderer.GetResolutionScaleFactor();
+    const bool resolution_scale_changed = resolution_scale_factor != scale_factor;
     const bool texture_filter_changed =
-        VideoCore::g_texture_filter_update_requested.exchange(false) &&
-        texture_filterer->Reset(Settings::values.texture_filter_name.GetValue(),
-                                VideoCore::GetResolutionScaleFactor());
+        renderer.Settings().texture_filter_update_requested.exchange(false) &&
+        texture_filterer->Reset(Settings::values.texture_filter_name.GetValue(), scale_factor);
 
     if (resolution_scale_changed || texture_filter_changed) {
-        resolution_scale_factor = VideoCore::GetResolutionScaleFactor();
+        resolution_scale_factor = scale_factor;
         FlushAll();
         while (!surface_cache.empty())
             UnregisterSurface(*surface_cache.begin()->second.begin());

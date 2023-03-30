@@ -64,11 +64,10 @@ GLenum MakeAttributeType(Pica::PipelineRegs::VertexAttributeFormat format) {
 
 } // Anonymous namespace
 
-RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Frontend::EmuWindow& emu_window,
+RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, VideoCore::RendererBase& renderer,
                                    Driver& driver_)
-    : VideoCore::RasterizerAccelerated{memory}, driver{driver_}, vertex_buffer{driver,
-                                                                               GL_ARRAY_BUFFER,
-                                                                               VERTEX_BUFFER_SIZE},
+    : VideoCore::RasterizerAccelerated{memory}, driver{driver_}, res_cache{renderer},
+      vertex_buffer{driver, GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE},
       uniform_buffer{driver, GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE},
       index_buffer{driver, GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE},
       texture_buffer{driver, GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE}, texture_lf_buffer{
@@ -167,12 +166,14 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Frontend::EmuWi
 #ifdef __APPLE__
     if (driver.GetVendor() == Vendor::Intel) {
         shader_program_manager = std::make_unique<ShaderProgramManager>(
-            emu_window, driver, VideoCore::g_separable_shader_enabled);
+            renderer.GetRenderWindow(), driver, VideoCore::g_separable_shader_enabled);
     } else {
-        shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, driver, true);
+        shader_program_manager =
+            std::make_unique<ShaderProgramManager>(renderer.GetRenderWindow(), driver, true);
     }
 #else
-    shader_program_manager = std::make_unique<ShaderProgramManager>(emu_window, driver, !GLES);
+    shader_program_manager =
+        std::make_unique<ShaderProgramManager>(renderer.GetRenderWindow(), driver, !GLES);
 #endif
 
     glEnable(GL_BLEND);

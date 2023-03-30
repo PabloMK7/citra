@@ -26,11 +26,6 @@ std::atomic<bool> g_shader_jit_enabled;
 std::atomic<bool> g_hw_shader_enabled;
 std::atomic<bool> g_separable_shader_enabled;
 std::atomic<bool> g_hw_shader_accurate_mul;
-std::atomic<bool> g_use_disk_shader_cache;
-std::atomic<bool> g_renderer_bg_color_update_requested;
-std::atomic<bool> g_renderer_sampler_update_requested;
-std::atomic<bool> g_renderer_shader_update_requested;
-std::atomic<bool> g_texture_filter_update_requested;
 
 Memory::MemorySystem* g_memory;
 
@@ -62,18 +57,6 @@ void Shutdown() {
     g_renderer.reset();
 
     LOG_DEBUG(Render, "shutdown OK");
-}
-
-u16 GetResolutionScaleFactor() {
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
-    if (graphics_api == Settings::GraphicsAPI::Software) {
-        // Software renderer always render at native resolution
-        return 1;
-    }
-
-    return Settings::values.resolution_factor.GetValue()
-               ? Settings::values.resolution_factor.GetValue()
-               : g_renderer->GetRenderWindow().GetFramebufferLayout().GetScalingRatio();
 }
 
 template <class Archive>

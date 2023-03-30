@@ -176,7 +176,7 @@ public:
     }
 
     ~OpenGLSharedContext() {
-        context->doneCurrent();
+        OpenGLSharedContext::DoneCurrent();
     }
 
     void SwapBuffers() override {
@@ -196,7 +196,9 @@ public:
     }
 
     void DoneCurrent() override {
-        context->doneCurrent();
+        if (QOpenGLContext::currentContext() == context.get()) {
+            context->doneCurrent();
+        }
     }
 
     QOpenGLContext* GetShareContext() const {
@@ -257,7 +259,9 @@ public:
         }
         context->MakeCurrent();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        VideoCore::g_renderer->TryPresent(100, is_secondary);
+        if (VideoCore::g_renderer) {
+            VideoCore::g_renderer->TryPresent(100, is_secondary);
+        }
         context->SwapBuffers();
         glFinish();
     }
@@ -633,7 +637,7 @@ void GRenderWindow::ReleaseRenderTarget() {
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
     if (res_scale == 0) {
-        res_scale = VideoCore::GetResolutionScaleFactor();
+        res_scale = VideoCore::g_renderer->GetResolutionScaleFactor();
     }
 
     const auto layout{Layout::FrameLayoutFromResolutionScale(res_scale, is_secondary)};

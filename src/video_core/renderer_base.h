@@ -24,6 +24,11 @@ struct RendererSettings {
     void* screenshot_bits{};
     std::function<void()> screenshot_complete_callback;
     Layout::FramebufferLayout screenshot_framebuffer_layout;
+    // Renderer
+    std::atomic_bool texture_filter_update_requested{false};
+    std::atomic_bool bg_color_update_requested{false};
+    std::atomic_bool sampler_update_requested{false};
+    std::atomic_bool shader_update_requested{false};
 };
 
 class RendererBase : NonCopyable {
@@ -54,6 +59,9 @@ public:
     /// Synchronizes fixed function renderer state
     virtual void Sync() {}
 
+    /// Returns the resolution scale factor relative to the native 3DS screen resolution
+    u32 GetResolutionScaleFactor();
+
     /// Updates the framebuffer layout of the contained render window handle.
     void UpdateCurrentFramebufferLayout(bool is_portrait_mode = {});
 
@@ -80,11 +88,11 @@ public:
     }
 
     [[nodiscard]] RendererSettings& Settings() {
-        return renderer_settings;
+        return settings;
     }
 
     [[nodiscard]] const RendererSettings& Settings() const {
-        return renderer_settings;
+        return settings;
     }
 
     /// Returns true if a screenshot is being processed
@@ -96,7 +104,7 @@ public:
 
 protected:
     Core::System& system;
-    RendererSettings renderer_settings;
+    RendererSettings settings;
     Frontend::EmuWindow& render_window;    ///< Reference to the render window handle.
     Frontend::EmuWindow* secondary_window; ///< Reference to the secondary render window handle.
     f32 current_fps = 0.0f;                ///< Current framerate, should be set by the renderer

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -151,10 +152,7 @@ public:
      * @returns True if the emulated system is powered on, otherwise false.
      */
     [[nodiscard]] bool IsPoweredOn() const {
-        return cpu_cores.size() > 0 &&
-               std::all_of(cpu_cores.begin(), cpu_cores.end(),
-                           [](std::shared_ptr<ARM_Interface> ptr) { return ptr != nullptr; });
-        ;
+        return is_powered_on;
     }
 
     /**
@@ -383,7 +381,7 @@ private:
 private:
     static System s_instance;
 
-    bool initalized = false;
+    std::atomic_bool is_powered_on{};
 
     ResultStatus status = ResultStatus::Success;
     std::string status_details = "";
