@@ -626,6 +626,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
     out += "vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec3 light_vector = vec3(0.0);\n"
+           "float light_distance = 0.0;\n"
            "vec3 refl_value = vec3(0.0);\n"
            "vec3 spot_dir = vec3(0.0);\n"
            "vec3 half_vector = vec3(0.0);\n"
@@ -752,10 +753,12 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
 
         // Compute light vector (directional or positional)
         if (light_config.directional) {
-            out += fmt::format("light_vector = normalize({}.position);\n", light_src);
+            out += fmt::format("light_vector = {}.position;\n", light_src);
         } else {
-            out += fmt::format("light_vector = normalize({}.position + view);\n", light_src);
+            out += fmt::format("light_vector = {}.position + view;\n", light_src);
         }
+        out += fmt::format("light_distance = length(light_vector);\n", light_src);
+        out += fmt::format("light_vector = normalize(light_vector);\n", light_src);
 
         out += fmt::format("spot_dir = {}.spot_direction;\n", light_src);
         out += "half_vector = normalize(view) + light_vector;\n";
@@ -785,8 +788,8 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
         // If enabled, compute distance attenuation value
         std::string dist_atten = "1.0";
         if (light_config.dist_atten_enable) {
-            const std::string index = fmt::format("clamp({}.dist_atten_scale * length(-view - "
-                                                  "{}.position) + {}.dist_atten_bias, 0.0, 1.0)",
+            const std::string index = fmt::format("clamp({}.dist_atten_scale * light_distance "
+                                                  "+ {}.dist_atten_bias, 0.0, 1.0)",
                                                   light_src, light_src, light_src);
             const auto sampler = LightingRegs::DistanceAttenuationSampler(light_config.num);
             dist_atten = fmt::format("LookupLightingLUTUnsigned({}, {})", sampler, index);
