@@ -322,7 +322,7 @@ camera_inner_flip =
 
 [Miscellaneous]
 # A filter which removes logs below a certain logging level.
-# Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
+# Examples: *:Debug Kernel.SVC:Trace Service:Critical
 log_filter = *:Info
 
 [Debugging]
