@@ -846,7 +846,7 @@ static void ReadMemory() {
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
 
-    LOG_DEBUG(Debug_GDBStub, "ReadMemory result: {}", reply);
+    LOG_DEBUG(Debug_GDBStub, "ReadMemory result: {}", (char*)reply);
 
     SendReply(reinterpret_cast<char*>(reply));
 }
@@ -1038,6 +1038,12 @@ void HandlePacket() {
         return;
     }
 
+    if (HasPendingHioRequest()) {
+        const auto request_packet = BuildHioRequestPacket();
+        SendReply(request_packet.data());
+        return;
+    }
+
     if (!IsDataAvailable()) {
         return;
     }
@@ -1047,7 +1053,7 @@ void HandlePacket() {
         return;
     }
 
-    LOG_DEBUG(Debug_GDBStub, "Packet: {}", command_buffer[0]);
+    LOG_DEBUG(Debug_GDBStub, "Packet: {0:d} ('{0:c}')", command_buffer[0]);
 
     switch (command_buffer[0]) {
     case 'q':
@@ -1065,7 +1071,12 @@ void HandlePacket() {
         return;
     case 'F':
         if (HandleHioReply(command_buffer, command_length)) {
-            // TODO figure out how to "resume" the last command
+            // TODO: technically if we were paused when the reply came in, we
+            // shouldn't continue here. Could recurse back into HandlePacket() maybe??
+            Continue();
+        } else {
+            // TODO reply with errno if relevant. Maybe that code should live in
+            // HandleHioReply
         }
         break;
     case 'g':
@@ -1263,12 +1274,7 @@ void SendTrap(Kernel::Thread* thread, int trap) {
 
     current_thread = thread;
 
-    if (HasPendingHioRequest()) {
-        const auto request_packet = BuildHioRequestPacket();
-        SendReply(request_packet.data());
-    } else {
-        SendSignal(thread, trap);
-    }
+    SendSignal(thread, trap);
 
     halt_loop = true;
     send_trap = false;

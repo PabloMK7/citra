@@ -10,6 +10,10 @@
 
 namespace GDBStub {
 
+/**
+ * Based on the Rosalina implementation:
+ * https://github.com/LumaTeam/Luma3DS/blob/master/sysmodules/rosalina/include/gdb.h#L46C27-L62
+ */
 struct PackedGdbHioRequest {
     char magic[4]; // "GDB\x00"
     u32 version;

@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fmt/ranges.h>
+#include "common/string_util.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/gdbstub/hio.h"
@@ -29,37 +31,40 @@ void SetHioRequest(const VAddr addr) {
         return;
     }
 
-    if (current_hio_request_addr != 0) {
+    if (HasPendingHioRequest() || WaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "HIO requested while already in progress!");
         return;
     }
 
+    auto& memory = Core::System::GetInstance().Memory();
     const auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
-    if (!Memory::IsValidVirtualAddress(*process, addr)) {
+
+    if (!memory.IsValidVirtualAddress(*process, addr)) {
         LOG_WARNING(Debug_GDBStub, "Invalid address for HIO request");
         return;
     }
 
-    auto& memory = Core::System::GetInstance().Memory();
     memory.ReadBlock(*process, addr, &current_hio_request, sizeof(PackedGdbHioRequest));
 
-    if (std::string_view{current_hio_request.magic} != "GDB") {
-        LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application");
+    std::string_view magic{current_hio_request.magic};
+    if (magic != "GDB") {
+        LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application: magic '{}'", magic);
         current_hio_request_addr = 0;
         current_hio_request = {};
         request_status = Status::NoRequest;
-    } else {
-        LOG_DEBUG(Debug_GDBStub, "HIO request initiated at 0x{:X}", addr);
-        current_hio_request_addr = addr;
-        request_status = Status::NotSent;
-
-        // Now halt, so that no further instructions are executed until the request
-        // is processed by the client. We auto-continue after the reply comes back
-        Break();
-        SetCpuHaltFlag(true);
-        SetCpuStepFlag(false);
-        Core::GetRunningCore().ClearInstructionCache();
+        return;
     }
+
+    LOG_DEBUG(Debug_GDBStub, "HIO request initiated at 0x{:X}", addr);
+    current_hio_request_addr = addr;
+    request_status = Status::NotSent;
+
+    // Now halt, so that no further instructions are executed until the request
+    // is processed by the client. We will continue after the reply comes back
+    Break();
+    SetCpuHaltFlag(true);
+    SetCpuStepFlag(false);
+    Core::GetRunningCore().ClearInstructionCache();
 }
 
 bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
@@ -69,6 +74,7 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
         return false;
     }
 
+    // Skip 'F' header
     auto* command_pos = command_buffer + 1;
 
     if (*command_pos == 0 || *command_pos == ',') {
@@ -80,57 +86,65 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     if (*command_pos == '-') {
         command_pos++;
         current_hio_request.retval = -1;
-    } else if (*command_pos == '+') {
-        command_pos++;
-        current_hio_request.retval = 1;
     } else {
+        if (*command_pos == '+') {
+            command_pos++;
+        }
+
         current_hio_request.retval = 1;
     }
 
-    const auto retval_end = std::find(command_pos, command_buffer + command_length, ',');
-    u64 retval = (u64)HexToInt(command_pos, retval_end - command_pos);
-    command_pos = retval_end + 1;
+    const std::string command_str{command_pos, command_buffer + command_length};
+    std::vector<std::string> command_parts;
+    Common::SplitString(command_str, ',', command_parts);
 
-    current_hio_request.retval *= retval;
-    current_hio_request.gdb_errno = 0;
-    current_hio_request.ctrl_c = 0;
+    if (command_parts.empty() || command_parts.size() > 3) {
+        LOG_WARNING(Debug_GDBStub, "unexpected reply packet size: {}", command_parts);
+        // return GDB_ReplyErrno(ctx, EILSEQ);
+        return false;
+    }
 
-    if (*command_pos != 0) {
-        u32 errno_;
-        // GDB protocol technically allows errno to have a +/- prefix but this should never happen.
-        const auto errno_end = std::find(command_pos, command_buffer + command_length, ',');
-        errno_ = HexToInt(command_pos, errno_end - command_pos);
-        command_pos = errno_end + 1;
+    u64 unsigned_retval = HexToInt((u8*)command_parts[0].data(), command_parts[0].size());
+    current_hio_request.retval *= unsigned_retval;
 
-        current_hio_request.gdb_errno = (int)errno_;
+    if (command_parts.size() > 1) {
+        // Technically the errno could be signed but in practice this doesn't happen
+        current_hio_request.gdb_errno =
+            HexToInt((u8*)command_parts[1].data(), command_parts[1].size());
+    } else {
+        current_hio_request.gdb_errno = 0;
+    }
 
-        if (*command_pos != 0) {
-            if (*command_pos != 'C') {
-                return false;
-                // return GDB_ReplyErrno(ctx, EILSEQ);
-            }
+    current_hio_request.ctrl_c = false;
 
-            current_hio_request.ctrl_c = true;
+    if (command_parts.size() > 2 && !command_parts[2].empty()) {
+        if (command_parts[2][0] != 'C') {
+            return false;
+            // return GDB_ReplyErrno(ctx, EILSEQ);
         }
+
+        // for now we just ignore any trailing ";..." attachments
+        current_hio_request.ctrl_c = true;
     }
 
     std::fill(std::begin(current_hio_request.param_format),
               std::end(current_hio_request.param_format), 0);
 
-    LOG_DEBUG(Debug_GDBStub, "HIO reply: {{retval = {}, errno = {}, ctrl_c = {}}}",
+    LOG_TRACE(Debug_GDBStub, "HIO reply: {{retval = {}, errno = {}, ctrl_c = {}}}",
               current_hio_request.retval, current_hio_request.gdb_errno,
               current_hio_request.ctrl_c);
 
     const auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+    auto& memory = Core::System::GetInstance().Memory();
+
     // should have been checked when we first initialized the request,
     // but just double check again before we write to memory
-    if (!Memory::IsValidVirtualAddress(*process, current_hio_request_addr)) {
-        LOG_WARNING(Debug_GDBStub, "Invalid address {:X} to write HIO request",
+    if (!memory.IsValidVirtualAddress(*process, current_hio_request_addr)) {
+        LOG_WARNING(Debug_GDBStub, "Invalid address {:#X} to write HIO reply",
                     current_hio_request_addr);
         return false;
     }
 
-    auto& memory = Core::System::GetInstance().Memory();
     memory.WriteBlock(*process, current_hio_request_addr, &current_hio_request,
                       sizeof(PackedGdbHioRequest));
 
@@ -150,38 +164,45 @@ bool WaitingForHioReply() {
 }
 
 std::string BuildHioRequestPacket() {
-    std::stringstream packet;
-    // TODO:use the IntToGdbHex funcs instead std::hex ?
-    packet << "F" << current_hio_request.function_name << std::hex;
+    std::string packet = fmt::format("F{}", current_hio_request.function_name);
+    // TODO: should we use the IntToGdbHex funcs instead of fmt::format_to ?
 
     u32 nStr = 0;
 
     for (u32 i = 0; i < 8 && current_hio_request.param_format[i] != 0; i++) {
+        u64 param = current_hio_request.parameters[i];
+
         switch (current_hio_request.param_format[i]) {
         case 'i':
         case 'I':
         case 'p':
-            packet << "," << (u32)current_hio_request.parameters[i];
-            break;
+            // For pointers and 32-bit ints, truncate before sending
+            param = static_cast<u32>(param);
+
         case 'l':
         case 'L':
-            packet << "," << current_hio_request.parameters[i];
+            fmt::format_to(std::back_inserter(packet), ",{:x}", param);
             break;
+
         case 's':
-            packet << "," << (u32)current_hio_request.parameters[i] << "/"
-                   << current_hio_request.string_lengths[nStr++];
+            // strings are written as {pointer}/{length}
+            fmt::format_to(std::back_inserter(packet), ",{:x}/{:x}",
+                           (u32)current_hio_request.parameters[i],
+                           current_hio_request.string_lengths[nStr++]);
             break;
+
         default:
-            packet << '\0';
+            // TODO: early return? Or break out of this loop?
             break;
         }
     }
 
-    LOG_DEBUG(Debug_GDBStub, "HIO request packet: {}", packet.str());
+    LOG_TRACE(Debug_GDBStub, "HIO request packet: {}", packet);
 
+    // technically we should set this _after_ the reply is sent...
     request_status = Status::SentWaitingReply;
 
-    return packet.str();
+    return packet;
 }
 
 } // namespace GDBStub

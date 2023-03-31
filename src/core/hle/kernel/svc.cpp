@@ -1144,7 +1144,7 @@ void SVC::Break(u8 break_reason) {
 /// Used to output a message on a debug hardware unit, or for the GDB HIO
 // protocol - does nothing on a retail unit.
 void SVC::OutputDebugString(VAddr address, s32 len) {
-    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), address)) {
+    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), address)) {
         LOG_WARNING(Kernel_SVC, "OutputDebugString called with invalid address {:X}", address);
         return;
     }
