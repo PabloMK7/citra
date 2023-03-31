@@ -1066,12 +1066,15 @@ void HandlePacket() {
         SendSignal(current_thread, latest_signal);
         break;
     case 'k':
-        Shutdown();
+        ToggleServer(false);
+        // Continue execution so we don't hang forever after shutting down the
+        // server
+        Continue();
         LOG_INFO(Debug_GDBStub, "killed by gdb");
         return;
     case 'F':
         if (HandleHioReply(command_buffer, command_length)) {
-            // TODO: technically if we were paused when the reply came in, we
+            // TODO: technically if we were paused when the request came in, we
             // shouldn't continue here. Could recurse back into HandlePacket() maybe??
             Continue();
         } else {
