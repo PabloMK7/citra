@@ -218,10 +218,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Update Translation
         run: ./.ci/transifex/docker.sh
         env:
-          TRANSIFEX_API_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}
+          TX_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}
   release:
     runs-on: ubuntu-latest
     needs: [build, android, macos-universal, source, windows]
