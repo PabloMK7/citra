@@ -81,7 +81,16 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 loader->ReadIcon(smdh);
             }
 
-            if (!Loader::IsValidSMDH(smdh) && UISettings::values.game_list_hide_no_icon) {
+            const auto system_title = ((program_id >> 32) & 0xFFFFFFFF) == 0x00040010;
+            if (Loader::IsValidSMDH(smdh)) {
+                if (system_title) {
+                    auto smdh_struct = reinterpret_cast<Loader::SMDH*>(smdh.data());
+                    if (!(smdh_struct->flags & Loader::SMDH::Flags::Visible)) {
+                        // Skip system titles without the visible flag.
+                        return true;
+                    }
+                }
+            } else if (UISettings::values.game_list_hide_no_icon || system_title) {
                 // Skip this invalid entry
                 return true;
             }

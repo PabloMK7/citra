@@ -72,6 +72,10 @@ struct SMDH {
         Taiwan = 6,
     };
 
+    enum Flags {
+        Visible = 1 << 0,
+    };
+
     /**
      * Gets game icon from SMDH
      * @param large If true, returns large icon (48x48), otherwise returns small icon (24x24)
