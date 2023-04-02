@@ -12,6 +12,7 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
@@ -88,8 +89,17 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
     NCCHFilePath openfile_path;
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
 
-    std::string file_path =
-        Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
+    std::string file_path;
+    if (Settings::values.is_new_3ds) {
+        // Try the New 3DS specific variant first.
+        file_path = Service::AM::GetTitleContentPath(media_type, title_id | 0x20000000,
+                                                     openfile_path.content_index);
+    }
+    if (!Settings::values.is_new_3ds || !FileUtil::Exists(file_path)) {
+        file_path =
+            Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
+    }
+
     auto ncch_container = NCCHContainer(file_path, 0, openfile_path.content_index);
 
     Loader::ResultStatus result;
