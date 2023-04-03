@@ -46,10 +46,10 @@ public:
     void ApplyTo(OpenGLState& state);
 
 private:
-    class Impl;
-    std::unique_ptr<Impl> impl;
-
     Frontend::EmuWindow& emu_window;
     const Driver& driver;
+    bool strict_context_required;
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 } // namespace OpenGL

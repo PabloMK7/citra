@@ -407,6 +407,7 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread, bool is_se
     setLayout(layout);
 
     this->setMouseTracking(true);
+    strict_context_required = QGuiApplication::platformName() == QStringLiteral("wayland");
 
     GMainWindow* parent = GetMainWindow();
     connect(this, &GRenderWindow::FirstFrameDisplayed, parent, &GMainWindow::OnLoadComplete);
