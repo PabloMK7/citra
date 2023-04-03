@@ -386,7 +386,7 @@ static Frontend::EmuWindow::WindowSystemInfo GetWindowSystemInfo(QWindow* window
     return wsi;
 }
 
-std::shared_ptr<Frontend::GraphicsContext> GRenderWindow::main_context;
+std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::main_context;
 
 GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread, bool is_secondary_)
     : QWidget(parent_), EmuWindow(is_secondary_), emu_thread(emu_thread) {
@@ -667,7 +667,7 @@ bool GRenderWindow::InitializeOpenGL() {
     child_widget->windowHandle()->create();
 
     if (!main_context) {
-        main_context = std::make_shared<OpenGLSharedContext>();
+        main_context = std::make_unique<OpenGLSharedContext>();
     }
 
     auto child_context = CreateSharedContext();
