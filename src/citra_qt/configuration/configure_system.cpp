@@ -531,6 +531,9 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_plugin_loader->setVisible(false);
     ui->plugin_loader->setVisible(false);
     ui->allow_plugin_loader->setVisible(false);
+    // Disable the system firmware downloader.
+    ui->label_nus_download->setVisible(false);
+    ui->body_nus_download->setVisible(false);
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);
