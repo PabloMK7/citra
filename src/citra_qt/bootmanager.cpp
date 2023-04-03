@@ -162,7 +162,7 @@ public:
 
         // disable vsync for any shared contexts
         auto format = share_context->format();
-        format.setSwapInterval(main_surface ? Settings::values.use_vsync_new.GetValue() : 0);
+        format.setSwapInterval(0);
 
         context = std::make_unique<QOpenGLContext>();
         context->setShareContext(share_context);
@@ -672,6 +672,10 @@ bool GRenderWindow::InitializeOpenGL() {
 
     auto child_context = CreateSharedContext();
     child->SetContext(std::move(child_context));
+
+    auto format = child_widget->windowHandle()->format();
+    format.setSwapInterval(Settings::values.use_vsync_new.GetValue());
+    child_widget->windowHandle()->setFormat(format);
 
     return true;
 #else
