@@ -41,6 +41,8 @@
 #include <qpa/qplatformnativeinterface.h>
 #endif
 
+static Frontend::WindowSystemType GetWindowSystemType();
+
 EmuThread::EmuThread(Frontend::GraphicsContext& core_context) : core_context(core_context) {}
 
 EmuThread::~EmuThread() = default;
@@ -243,6 +245,9 @@ public:
         : RenderWidget(parent), is_secondary(is_secondary) {
         setAttribute(Qt::WA_NativeWindow);
         setAttribute(Qt::WA_PaintOnScreen);
+        if (GetWindowSystemType() == Frontend::WindowSystemType::Wayland) {
+            setAttribute(Qt::WA_DontCreateNativeAncestors);
+        }
         windowHandle()->setSurfaceType(QWindow::OpenGLSurface);
     }
 
