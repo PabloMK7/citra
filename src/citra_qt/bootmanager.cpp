@@ -667,6 +667,12 @@ void GRenderWindow::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal
 
 bool GRenderWindow::InitializeOpenGL() {
 #ifdef HAS_OPENGL
+    if (!QOpenGLContext::supportsThreadedOpenGL()) {
+        QMessageBox::warning(this, tr("OpenGL not available!"),
+                             tr("OpenGL shared contexts are not supported."));
+        return false;
+    }
+
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
     // WA_DontShowOnScreen, WA_DeleteOnClose
     auto child = new OpenGLRenderWidget(this, is_secondary);
