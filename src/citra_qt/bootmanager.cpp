@@ -5,12 +5,11 @@
 #include <glad/glad.h>
 
 #include <QApplication>
-#include <QDragEnterEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QPainter>
-#include <fmt/format.h>
+#include <QWindow>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/main.h"
 #include "common/color.h"

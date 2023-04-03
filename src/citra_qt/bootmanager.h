@@ -10,17 +10,12 @@
 #include <mutex>
 #include <QThread>
 #include <QWidget>
-#include <QWindow>
-#include "common/thread.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 
 class QKeyEvent;
 class QTouchEvent;
-class QOffscreenSurface;
-class QOpenGLContext;
 
-class GMainWindow;
 class GRenderWindow;
 
 namespace VideoCore {
