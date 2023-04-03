@@ -119,7 +119,8 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_accurate_mul->setEnabled(Settings::values.shaders_accurate_mul.UsingGlobal());
         ui->toggle_disk_shader_cache->setEnabled(
             Settings::values.use_disk_shader_cache.UsingGlobal());
-        ui->toggle_vsync_new->setEnabled(Settings::values.use_vsync_new.UsingGlobal());
+        ui->toggle_vsync_new->setEnabled(ui->toggle_vsync_new->isEnabled() &&
+                                         Settings::values.use_vsync_new.UsingGlobal());
         return;
     }
 
