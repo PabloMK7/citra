@@ -22,6 +22,7 @@
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
+#include "core/hle/service/apt/ns_c.h"
 #include "core/hle/service/apt/ns_s.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
@@ -1240,6 +1241,7 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<APT_S>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_A>(apt)->InstallAsService(service_manager);
     std::make_shared<Service::NS::NS_S>(apt)->InstallAsService(service_manager);
+    std::make_shared<Service::NS::NS_C>(apt)->InstallAsService(service_manager);
 }
 
 } // namespace Service::APT

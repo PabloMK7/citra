@@ -220,6 +220,8 @@ add_library(core STATIC
     hle/service/apt/apt_u.h
     hle/service/apt/ns.cpp
     hle/service/apt/ns.h
+    hle/service/apt/ns_c.cpp
+    hle/service/apt/ns_c.h
     hle/service/apt/ns_s.cpp
     hle/service/apt/ns_s.h
     hle/service/apt/bcfnt/bcfnt.cpp
