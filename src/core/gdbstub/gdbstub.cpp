@@ -851,9 +851,10 @@ static void ReadMemory() {
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
 
-    LOG_DEBUG(Debug_GDBStub, "ReadMemory result: {}", (char*)reply);
+    auto reply_str = reinterpret_cast<char*>(reply);
 
-    SendReply(reinterpret_cast<char*>(reply));
+    LOG_DEBUG(Debug_GDBStub, "ReadMemory result: {}", reply_str);
+    SendReply(reply_str);
 }
 
 /// Modify location in memory with data received from the gdb client.

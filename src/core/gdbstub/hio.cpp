@@ -140,13 +140,14 @@ void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
         return;
     }
 
-    u64 unsigned_retval = HexToInt((u8*)command_parts[0].data(), command_parts[0].size());
+    u64 unsigned_retval =
+        HexToInt(reinterpret_cast<const u8*>(command_parts[0].data()), command_parts[0].size());
     current_hio_request.retval *= unsigned_retval;
 
     if (command_parts.size() > 1) {
         // Technically the errno could be signed but in practice this doesn't happen
         current_hio_request.gdb_errno =
-            HexToInt((u8*)command_parts[1].data(), command_parts[1].size());
+            HexToInt(reinterpret_cast<const u8*>(command_parts[1].data()), command_parts[1].size());
     } else {
         current_hio_request.gdb_errno = 0;
     }
@@ -228,7 +229,7 @@ bool HandlePendingHioRequestPacket() {
         case 's':
             // strings are written as {pointer}/{length}
             fmt::format_to(std::back_inserter(packet), ",{:x}/{:x}",
-                           (u32)current_hio_request.parameters[i],
+                           static_cast<u32>(current_hio_request.parameters[i]),
                            current_hio_request.string_lengths[nStr++]);
             break;
 
