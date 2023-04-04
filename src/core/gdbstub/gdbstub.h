@@ -90,6 +90,11 @@ bool CheckBreakpoint(VAddr addr, GDBStub::BreakpointType type);
 // If set to true, the CPU will halt at the beginning of the next CPU loop.
 bool GetCpuHaltFlag();
 
+/**
+ * If set to true, the CPU will halt at the beginning of the next CPU loop.
+ *
+ * @param halt whether to halt on the next loop
+ */
 void SetCpuHaltFlag(bool halt);
 
 // If set to true and the CPU is halted, the CPU will step one instruction.
@@ -111,7 +116,13 @@ void SetCpuStepFlag(bool is_step);
 void SendTrap(Kernel::Thread* thread, int trap);
 
 /**
-u32 HexToInt(const u8* src, std::size_t len) {
+ * Send reply to gdb client.
+ *
+ * @param reply Reply to be sent to client.
+ */
+void SendReply(const char* reply);
+
+/**
  * Converts input hex string characters into an array of equivalent of u8 bytes.
  *
  * @param src Pointer to array of output hex string characters.

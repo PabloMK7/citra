@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,7 +23,36 @@ enum class Status {
 
 static std::atomic<Status> request_status{Status::NoRequest};
 
+static std::atomic<bool> was_halted = false;
+static std::atomic<bool> was_stepping = false;
+
 } // namespace
+
+/**
+ * @return Whether the application has requested I/O, and it has not been sent.
+ */
+static bool HasPendingHioRequest() {
+    return current_hio_request_addr != 0 && request_status == Status::NotSent;
+}
+
+/**
+ * @return Whether the GDB stub is awaiting a reply from the client.
+ */
+static bool WaitingForHioReply() {
+    return current_hio_request_addr != 0 && request_status == Status::SentWaitingReply;
+}
+
+/**
+ * Send a response indicating an error back to the application.
+ *
+ * @param error_code The error code to respond back to the app. This typically corresponds to errno.
+ *
+ * @param retval The return value of the syscall the app requested.
+ */
+static void SendErrorReply(int error_code, int retval = -1) {
+    auto packet = fmt::format("F{:x},{:x}", retval, error_code);
+    SendReply(packet.data());
+}
 
 void SetHioRequest(const VAddr addr) {
     if (!IsServerEnabled()) {
@@ -31,9 +60,13 @@ void SetHioRequest(const VAddr addr) {
         return;
     }
 
-    if (HasPendingHioRequest() || WaitingForHioReply()) {
+    if (WaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "HIO requested while already in progress!");
         return;
+    }
+
+    if (HasPendingHioRequest()) {
+        LOG_INFO(Debug_GDBStub, "overwriting existing HIO request that was not sent yet");
     }
 
     auto& memory = Core::System::GetInstance().Memory();
@@ -59,6 +92,9 @@ void SetHioRequest(const VAddr addr) {
     current_hio_request_addr = addr;
     request_status = Status::NotSent;
 
+    was_halted = GetCpuHaltFlag();
+    was_stepping = GetCpuStepFlag();
+
     // Now halt, so that no further instructions are executed until the request
     // is processed by the client. We will continue after the reply comes back
     Break();
@@ -67,19 +103,19 @@ void SetHioRequest(const VAddr addr) {
     Core::GetRunningCore().ClearInstructionCache();
 }
 
-bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
+void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     if (!WaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "Got HIO reply but never sent a request");
-        // TODO send error reply packet?
-        return false;
+        return;
     }
 
     // Skip 'F' header
     auto* command_pos = command_buffer + 1;
 
     if (*command_pos == 0 || *command_pos == ',') {
-        // return GDB_ReplyErrno(ctx, EILSEQ);
-        return false;
+        LOG_WARNING(Debug_GDBStub, "bad HIO packet format position 0: {}", *command_pos);
+        SendErrorReply(EILSEQ);
+        return;
     }
 
     // Set the sign of the retval
@@ -100,8 +136,8 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
 
     if (command_parts.empty() || command_parts.size() > 3) {
         LOG_WARNING(Debug_GDBStub, "unexpected reply packet size: {}", command_parts);
-        // return GDB_ReplyErrno(ctx, EILSEQ);
-        return false;
+        SendErrorReply(EILSEQ);
+        return;
     }
 
     u64 unsigned_retval = HexToInt((u8*)command_parts[0].data(), command_parts[0].size());
@@ -119,8 +155,9 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
 
     if (command_parts.size() > 2 && !command_parts[2].empty()) {
         if (command_parts[2][0] != 'C') {
-            return false;
-            // return GDB_ReplyErrno(ctx, EILSEQ);
+            LOG_WARNING(Debug_GDBStub, "expected ctrl-c flag got '{}'", command_parts[2][0]);
+            SendErrorReply(EILSEQ);
+            return;
         }
 
         // for now we just ignore any trailing ";..." attachments
@@ -142,7 +179,7 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     if (!memory.IsValidVirtualAddress(*process, current_hio_request_addr)) {
         LOG_WARNING(Debug_GDBStub, "Invalid address {:#X} to write HIO reply",
                     current_hio_request_addr);
-        return false;
+        return;
     }
 
     memory.WriteBlock(*process, current_hio_request_addr, &current_hio_request,
@@ -152,18 +189,22 @@ bool HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     current_hio_request_addr = 0;
     request_status = Status::NoRequest;
 
-    return true;
+    // Restore state from before the request came in
+    SetCpuStepFlag(was_stepping);
+    SetCpuHaltFlag(was_halted);
+    Core::GetRunningCore().ClearInstructionCache();
 }
 
-bool HasPendingHioRequest() {
-    return current_hio_request_addr != 0 && request_status == Status::NotSent;
-}
+bool HandlePendingHioRequestPacket() {
+    if (!HasPendingHioRequest()) {
+        return false;
+    }
 
-bool WaitingForHioReply() {
-    return current_hio_request_addr != 0 && request_status == Status::SentWaitingReply;
-}
+    if (WaitingForHioReply()) {
+        // We already sent it, continue waiting for a reply
+        return true;
+    }
 
-std::string BuildHioRequestPacket() {
     std::string packet = fmt::format("F{}", current_hio_request.function_name);
     // TODO: should we use the IntToGdbHex funcs instead of fmt::format_to ?
 
@@ -192,17 +233,18 @@ std::string BuildHioRequestPacket() {
             break;
 
         default:
-            // TODO: early return? Or break out of this loop?
-            break;
+            LOG_WARNING(Debug_GDBStub, "unexpected hio request param format '{}'",
+                        current_hio_request.param_format[i]);
+            SendErrorReply(EILSEQ);
+            return false;
         }
     }
 
     LOG_TRACE(Debug_GDBStub, "HIO request packet: {}", packet);
 
-    // technically we should set this _after_ the reply is sent...
+    SendReply(packet.data());
     request_status = Status::SentWaitingReply;
-
-    return packet;
+    return true;
 }
 
 } // namespace GDBStub

@@ -487,12 +487,7 @@ static void SendPacket(const char packet) {
     }
 }
 
-/**
- * Send reply to gdb client.
- *
- * @param reply Reply to be sent to client.
- */
-static void SendReply(const char* reply) {
+void SendReply(const char* reply) {
     if (!IsConnected()) {
         return;
     }
@@ -1048,9 +1043,8 @@ void HandlePacket() {
         return;
     }
 
-    if (HasPendingHioRequest()) {
-        const auto request_packet = BuildHioRequestPacket();
-        SendReply(request_packet.data());
+    if (HandlePendingHioRequestPacket()) {
+        // Don't do anything else while we wait for the client to respond
         return;
     }
 
@@ -1076,21 +1070,13 @@ void HandlePacket() {
         SendSignal(current_thread, latest_signal);
         break;
     case 'k':
-        ToggleServer(false);
-        // Continue execution so we don't hang forever after shutting down the
-        // server
-        Continue();
         LOG_INFO(Debug_GDBStub, "killed by gdb");
+        ToggleServer(false);
+        // Continue execution so we don't hang forever after shutting down the server
+        Continue();
         return;
     case 'F':
-        if (HandleHioReply(command_buffer, command_length)) {
-            // TODO: technically if we were paused when the request came in, we
-            // shouldn't continue here. Could recurse back into HandlePacket() maybe??
-            Continue();
-        } else {
-            // TODO reply with errno if relevant. Maybe that code should live in
-            // HandleHioReply
-        }
+        HandleHioReply(command_buffer, command_length);
         break;
     case 'g':
         ReadRegisters();
