@@ -6,6 +6,7 @@
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/hle/kernel/resource_limit.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::ResourceLimit)
@@ -94,9 +95,11 @@ u32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
 ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the four resource limits that the system uses
     // Create the APPLICATION resource limit
+    const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
+
     std::shared_ptr<ResourceLimit> resource_limit = ResourceLimit::Create(kernel, "Applications");
     resource_limit->max_priority = 0x18;
-    resource_limit->max_commit = 0x4000000;
+    resource_limit->max_commit = is_new_3ds ? 0x7C00000 : 0x4000000;
     resource_limit->max_threads = 0x20;
     resource_limit->max_events = 0x20;
     resource_limit->max_mutexes = 0x20;
@@ -104,15 +107,15 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     resource_limit->max_timers = 0x8;
     resource_limit->max_shared_mems = 0x10;
     resource_limit->max_address_arbiters = 0x2;
-    resource_limit->max_cpu_time = 0x1E;
+    resource_limit->max_cpu_time = 0x0;
     resource_limits[static_cast<u8>(ResourceLimitCategory::APPLICATION)] = resource_limit;
 
     // Create the SYS_APPLET resource limit
     resource_limit = ResourceLimit::Create(kernel, "System Applets");
     resource_limit->max_priority = 0x4;
-    resource_limit->max_commit = 0x5E00000;
-    resource_limit->max_threads = 0x1D;
-    resource_limit->max_events = 0xB;
+    resource_limit->max_commit = is_new_3ds ? 0x5E06000 : 0x2606000;
+    resource_limit->max_threads = is_new_3ds ? 0x1D : 0xE;
+    resource_limit->max_events = is_new_3ds ? 0xB : 0x8;
     resource_limit->max_mutexes = 0x8;
     resource_limit->max_semaphores = 0x4;
     resource_limit->max_timers = 0x4;
@@ -124,7 +127,7 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the LIB_APPLET resource limit
     resource_limit = ResourceLimit::Create(kernel, "Library Applets");
     resource_limit->max_priority = 0x4;
-    resource_limit->max_commit = 0x600000;
+    resource_limit->max_commit = 0x602000;
     resource_limit->max_threads = 0xE;
     resource_limit->max_events = 0x8;
     resource_limit->max_mutexes = 0x8;
@@ -138,14 +141,14 @@ ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the OTHER resource limit
     resource_limit = ResourceLimit::Create(kernel, "Others");
     resource_limit->max_priority = 0x4;
-    resource_limit->max_commit = 0x2180000;
-    resource_limit->max_threads = 0xE1;
-    resource_limit->max_events = 0x108;
-    resource_limit->max_mutexes = 0x25;
-    resource_limit->max_semaphores = 0x43;
-    resource_limit->max_timers = 0x2C;
-    resource_limit->max_shared_mems = 0x1F;
-    resource_limit->max_address_arbiters = 0x2D;
+    resource_limit->max_commit = is_new_3ds ? 0x2182000 : 0x1682000;
+    resource_limit->max_threads = is_new_3ds ? 0xE1 : 0xCA;
+    resource_limit->max_events = is_new_3ds ? 0x108 : 0xF8;
+    resource_limit->max_mutexes = is_new_3ds ? 0x25 : 0x23;
+    resource_limit->max_semaphores = is_new_3ds ? 0x43 : 0x40;
+    resource_limit->max_timers = is_new_3ds ? 0x2C : 0x2B;
+    resource_limit->max_shared_mems = is_new_3ds ? 0x1F : 0x1E;
+    resource_limit->max_address_arbiters = is_new_3ds ? 0x2D : 0x2B;
     resource_limit->max_cpu_time = 0x3E8;
     resource_limits[static_cast<u8>(ResourceLimitCategory::OTHER)] = resource_limit;
 }
