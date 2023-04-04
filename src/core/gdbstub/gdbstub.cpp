@@ -313,7 +313,12 @@ static void IntToGdbHex(u8* dest, u32 v) {
     }
 }
 
-u32 GdbHexToInt(const u8* src) {
+/**
+ * Convert a gdb-formatted hex string into a u32.
+ *
+ * @param src Pointer to hex string.
+ */
+static u32 GdbHexToInt(const u8* src) {
     u32 output = 0;
 
     for (int i = 0; i < 8; i += 2) {
@@ -337,7 +342,12 @@ static void LongToGdbHex(u8* dest, u64 v) {
     }
 }
 
-u64 GdbHexToLong(const u8* src) {
+/**
+ * Convert a gdb-formatted hex string into a u64.
+ *
+ * @param src Pointer to hex string.
+ */
+static u64 GdbHexToLong(const u8* src) {
     u64 output = 0;
 
     for (int i = 0; i < 16; i += 2) {
