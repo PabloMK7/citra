@@ -427,7 +427,24 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
     u32 min_width = info.width >> max_level;
     u32 min_height = info.height >> max_level;
     if (min_width % 8 != 0 || min_height % 8 != 0) {
-        LOG_CRITICAL(Render_OpenGL, "Texture size ({}x{}) is not multiple of 8", min_width,
+        // This code is Temponary for 8x4 / 4x4 texture (commonly used by Health bar) support
+        // implementation might not be accurate and needs further testing
+        if (min_width % 4 == 0 && min_height % 4 == 0 && min_width * min_height <= 32) {
+            Surface src_surface;
+            Common::Rectangle<u32> rect;
+            std::tie(src_surface, rect) = GetSurfaceSubRect(params, ScaleMatch::Ignore, true);
+
+            params.res_scale = src_surface->res_scale;
+            Surface tmp_surface = CreateSurface(params);
+            const Aspect aspect = ToAspect(tmp_surface->type);
+            runtime.BlitTextures(src_surface->texture, {aspect, rect}, tmp_surface->texture,
+                                 {aspect, tmp_surface->GetScaledRect(), 0});
+
+            remove_surfaces.emplace(tmp_surface);
+            return tmp_surface;
+        }
+
+        LOG_CRITICAL(Render_OpenGL, "Texture size ({}x{}) is not multiple of 4", min_width,
                      min_height);
         return nullptr;
     }
