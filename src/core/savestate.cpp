@@ -49,6 +49,30 @@ std::string GetSaveStatePath(u64 program_id, u32 slot) {
     }
 }
 
+static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 program_id,
+                              u32 slot) {
+    const auto path = GetSaveStatePath(program_id, slot);
+    if (header.filetype != header_magic_bytes) {
+        LOG_WARNING(Core, "Invalid save state file {}", path);
+        return false;
+    }
+    info.time = header.time;
+
+    if (header.program_id != program_id) {
+        LOG_WARNING(Core, "Save state file isn't for the current game {}", path);
+        return false;
+    }
+    const std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
+    if (revision == Common::g_scm_rev) {
+        info.status = SaveStateInfo::ValidationStatus::OK;
+    } else {
+        LOG_WARNING(Core, "Save state file {} created from a different revision {}", path,
+                    revision);
+        info.status = SaveStateInfo::ValidationStatus::RevisionDismatch;
+    }
+    return true;
+}
+
 std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
     std::vector<SaveStateInfo> result;
     for (u32 slot = 1; slot <= SaveStateSlotCount; ++slot) {
@@ -74,24 +98,10 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
             LOG_ERROR(Core, "Could not read from file {}", path);
             continue;
         }
-        if (header.filetype != header_magic_bytes) {
-            LOG_WARNING(Core, "Invalid save state file {}", path);
+        if (!ValidateSaveState(header, info, program_id, slot)) {
             continue;
         }
-        info.time = header.time;
 
-        if (header.program_id != program_id) {
-            LOG_WARNING(Core, "Save state file isn't for the current game {}", path);
-            continue;
-        }
-        const std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
-        if (revision == Common::g_scm_rev) {
-            info.status = SaveStateInfo::ValidationStatus::OK;
-        } else {
-            LOG_WARNING(Core, "Save state file {} created from a different revision {}", path,
-                        revision);
-            info.status = SaveStateInfo::ValidationStatus::RevisionDismatch;
-        }
         result.emplace_back(std::move(info));
     }
     return result;
@@ -146,7 +156,19 @@ void System::LoadState(u32 slot) {
         std::vector<u8> buffer(FileUtil::GetSize(path) - sizeof(CSTHeader));
 
         FileUtil::IOFile file(path, "rb");
-        file.Seek(sizeof(CSTHeader), SEEK_SET); // Skip header
+
+        // load header
+        CSTHeader header;
+        if (file.ReadBytes(&header, sizeof(header)) != sizeof(header)) {
+            throw std::runtime_error("Could not read from file at " + path);
+        }
+
+        // validate header
+        SaveStateInfo info;
+        if (!ValidateSaveState(header, info, title_id, slot)) {
+            throw std::runtime_error("Invalid savestate");
+        }
+
         if (file.ReadBytes(buffer.data(), buffer.size()) != buffer.size()) {
             throw std::runtime_error("Could not read from file at " + path);
         }
