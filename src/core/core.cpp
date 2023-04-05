@@ -113,9 +113,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     case Signal::Shutdown:
         return ResultStatus::ShutdownRequested;
     case Signal::Load: {
-        LOG_INFO(Core, "Begin load");
+        const u32 slot = param;
+        LOG_INFO(Core, "Begin load of slot {}", slot);
         try {
-            System::LoadState(param);
+            System::LoadState(slot);
             LOG_INFO(Core, "Load completed");
         } catch (const std::exception& e) {
             LOG_ERROR(Core, "Error loading: {}", e.what());
@@ -126,9 +127,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         return ResultStatus::Success;
     }
     case Signal::Save: {
-        LOG_INFO(Core, "Begin save");
+        const u32 slot = param;
+        LOG_INFO(Core, "Begin save to slot {}", slot);
         try {
-            System::SaveState(param);
+            System::SaveState(slot);
             LOG_INFO(Core, "Save completed");
         } catch (const std::exception& e) {
             LOG_ERROR(Core, "Error saving: {}", e.what());
