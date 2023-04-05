@@ -9,8 +9,6 @@
 
 namespace Core {
 
-struct CSTHeader;
-
 struct SaveStateInfo {
     u32 slot;
     u64 time;

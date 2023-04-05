@@ -3,18 +3,15 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
-#include <boost/serialization/binary_object.hpp>
 #include <cryptopp/hex.h>
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/zstd_compression.h"
-#include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/movie.h"
 #include "core/savestate.h"
 #include "network/network.h"
-#include "video_core/video_core.h"
 
 namespace Core {
 
@@ -25,19 +22,14 @@ struct CSTHeader {
     std::array<u8, 20> revision; /// Git hash of the revision this savestate was created with
     u64_le time;                 /// The time when this save state was created
 
-    std::array<u8, 216> reserved; /// Make heading 256 bytes so it has consistent size
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::binary_object(this, sizeof(CSTHeader));
-    }
+    std::array<u8, 216> reserved{}; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CSTHeader) == 256, "CSTHeader should be 256 bytes");
 #pragma pack(pop)
 
 constexpr std::array<u8, 4> header_magic_bytes{{'C', 'S', 'T', 0x1B}};
 
-std::string GetSaveStatePath(u64 program_id, u32 slot) {
+static std::string GetSaveStatePath(u64 program_id, u32 slot) {
     const u64 movie_id = Movie::GetInstance().GetCurrentMovieID();
     if (movie_id) {
         return fmt::format("{}{:016X}.movie{:016X}.{:02d}.cst",
@@ -131,8 +123,8 @@ void System::SaveState(u32 slot) const {
     header.filetype = header_magic_bytes;
     header.program_id = title_id;
     std::string rev_bytes;
-    CryptoPP::StringSource(Common::g_scm_rev, true,
-                           new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));
+    CryptoPP::StringSource ss(Common::g_scm_rev, true,
+                              new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));
     std::memcpy(header.revision.data(), rev_bytes.data(), sizeof(header.revision));
     header.time = std::chrono::duration_cast<std::chrono::seconds>(
                       std::chrono::system_clock::now().time_since_epoch())
