@@ -425,9 +425,12 @@ public class FileUtil {
     }
 
     public static String getFilenameWithExtensions(Uri uri) {
-        final String path = uri.getPath();
-        final int index = path.lastIndexOf('/');
-        return path.substring(index + 1);
+        String path = uri.getPath();
+        final int slashIndex = path.lastIndexOf('/');
+        path = path.substring(slashIndex + 1);
+        // On Android versions below 10, it is possible to select the storage root, which might result in filenames with a colon.
+        final int colonIndex = path.indexOf(':');
+        return path.substring(colonIndex + 1);
     }
 
     public static double getFreeSpace(Context context, Uri uri) {
