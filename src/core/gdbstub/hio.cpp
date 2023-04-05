@@ -38,7 +38,7 @@ static bool HasPendingHioRequest() {
 /**
  * @return Whether the GDB stub is awaiting a reply from the client.
  */
-static bool WaitingForHioReply() {
+static bool IsWaitingForHioReply() {
     return current_hio_request_addr != 0 && request_status == Status::SentWaitingReply;
 }
 
@@ -60,8 +60,8 @@ void SetHioRequest(const VAddr addr) {
         return;
     }
 
-    if (WaitingForHioReply()) {
-        LOG_WARNING(Debug_GDBStub, "HIO requested while already in progress!");
+    if (IsWaitingForHioReply()) {
+        LOG_WARNING(Debug_GDBStub, "HIO requested while already in progress");
         return;
     }
 
@@ -79,9 +79,14 @@ void SetHioRequest(const VAddr addr) {
 
     memory.ReadBlock(*process, addr, &current_hio_request, sizeof(PackedGdbHioRequest));
 
-    std::string_view magic{current_hio_request.magic};
-    if (magic != "GDB") {
-        LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application: magic '{}'", magic);
+    if (current_hio_request.magic != std::array{'G', 'D', 'B', '\0'}) {
+        std::string_view bad_magic{
+            std::begin(current_hio_request.magic),
+            std::end(current_hio_request.magic),
+        };
+        LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application: bad magic '{}'",
+                    bad_magic);
+
         current_hio_request_addr = 0;
         current_hio_request = {};
         request_status = Status::NoRequest;
@@ -104,7 +109,7 @@ void SetHioRequest(const VAddr addr) {
 }
 
 void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
-    if (!WaitingForHioReply()) {
+    if (!IsWaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "Got HIO reply but never sent a request");
         return;
     }
@@ -135,7 +140,7 @@ void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     Common::SplitString(command_str, ',', command_parts);
 
     if (command_parts.empty() || command_parts.size() > 3) {
-        LOG_WARNING(Debug_GDBStub, "unexpected reply packet size: {}", command_parts);
+        LOG_WARNING(Debug_GDBStub, "Unexpected reply packet size: {}", command_parts);
         SendErrorReply(EILSEQ);
         return;
     }
@@ -201,25 +206,30 @@ bool HandlePendingHioRequestPacket() {
         return false;
     }
 
-    if (WaitingForHioReply()) {
+    if (IsWaitingForHioReply()) {
         // We already sent it, continue waiting for a reply
         return true;
     }
 
-    std::string packet = fmt::format("F{}", current_hio_request.function_name);
-    // TODO: should we use the IntToGdbHex funcs instead of fmt::format_to ?
+    // We need a null-terminated string from char* instead of using
+    // the full length of the array (like {.begin(), .end()} constructor would)
+    std::string_view function_name{current_hio_request.function_name.data()};
 
-    u32 nStr = 0;
+    std::string packet = fmt::format("F{}", function_name);
+
+    u32 str_length_idx = 0;
 
     for (u32 i = 0; i < 8 && current_hio_request.param_format[i] != 0; i++) {
         u64 param = current_hio_request.parameters[i];
 
+        // TODO: should we use the IntToGdbHex funcs instead of fmt::format_to ?
         switch (current_hio_request.param_format[i]) {
         case 'i':
         case 'I':
         case 'p':
-            // For pointers and 32-bit ints, truncate before sending
+            // For pointers and 32-bit ints, truncate down to size before sending
             param = static_cast<u32>(param);
+            [[fallthrough]];
 
         case 'l':
         case 'L':
@@ -230,7 +240,7 @@ bool HandlePendingHioRequestPacket() {
             // strings are written as {pointer}/{length}
             fmt::format_to(std::back_inserter(packet), ",{:x}/{:x}",
                            static_cast<u32>(current_hio_request.parameters[i]),
-                           current_hio_request.string_lengths[nStr++]);
+                           current_hio_request.string_lengths[str_length_idx++]);
             break;
 
         default:
@@ -241,7 +251,7 @@ bool HandlePendingHioRequestPacket() {
         }
     }
 
-    LOG_TRACE(Debug_GDBStub, "HIO request packet: {}", packet);
+    LOG_TRACE(Debug_GDBStub, "HIO request packet: '{}'", packet);
 
     SendReply(packet.data());
     request_status = Status::SentWaitingReply;

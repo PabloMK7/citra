@@ -14,25 +14,34 @@ namespace GDBStub {
  * A request from a debugged application to perform some I/O with the GDB client.
  * This structure is also used to encode the reply back to the application.
  *
- * Based on the Rosalina implementation:
+ * Based on the Rosalina + libctru implementations:
  * https://github.com/LumaTeam/Luma3DS/blob/master/sysmodules/rosalina/include/gdb.h#L46C27-L62
+ * https://github.com/devkitPro/libctru/blob/master/libctru/source/gdbhio.c#L71-L87
  */
 struct PackedGdbHioRequest {
-    char magic[4]; // "GDB\0"
+    std::array<char, 4> magic; // "GDB\0"
     u32 version;
 
-    // Request
-    char function_name[16 + 1];
-    char param_format[8 + 1];
+private:
+    static inline constexpr std::size_t MAX_FUNCNAME_LEN = 16;
+    static inline constexpr std::size_t PARAM_COUNT = 8;
 
-    u64 parameters[8];
-    u32 string_lengths[8];
+public:
+    // Request. Char arrays have +1 entry for null terminator
+    std::array<char, MAX_FUNCNAME_LEN + 1> function_name;
+    std::array<char, PARAM_COUNT + 1> param_format;
+
+    std::array<u64, PARAM_COUNT> parameters;
+    std::array<u32, PARAM_COUNT> string_lengths;
 
     // Return
     s64 retval;
     s32 gdb_errno;
     bool ctrl_c;
 };
+
+static_assert(sizeof(PackedGdbHioRequest) == 152,
+              "HIO request size must match libctru implementation");
 
 /**
  * Set the current HIO request to the given address. This is how the debugged
