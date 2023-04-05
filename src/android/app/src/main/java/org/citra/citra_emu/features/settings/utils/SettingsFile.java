@@ -233,7 +233,7 @@ public final class SettingsFile {
                 writeSection(writer, section);
             }
             inputStream.close();
-            OutputStream outputStream = context.getContentResolver().openOutputStream(ini.getUri());
+            OutputStream outputStream = context.getContentResolver().openOutputStream(ini.getUri(), "wt");
             writer.store(outputStream);
             outputStream.flush();
             outputStream.close();

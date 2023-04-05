@@ -273,7 +273,7 @@ public class FileUtil {
             }
             if (destination == null) return false;
             InputStream input = context.getContentResolver().openInputStream(sourceUri);
-            OutputStream output = context.getContentResolver().openOutputStream(destination.getUri());
+            OutputStream output = context.getContentResolver().openOutputStream(destination.getUri(), "wt");
             byte[] buffer = new byte[1024];
             int len;
             while ((len = input.read(buffer)) != -1) {

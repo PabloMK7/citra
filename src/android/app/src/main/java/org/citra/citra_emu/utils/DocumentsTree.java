@@ -144,7 +144,7 @@ public class DocumentsTree {
             document.isDirectory = destination.isDirectory();
             document.loaded = true;
             InputStream input = context.getContentResolver().openInputStream(sourceNode.uri);
-            OutputStream output = context.getContentResolver().openOutputStream(destination.getUri());
+            OutputStream output = context.getContentResolver().openOutputStream(destination.getUri(), "wt");
             byte[] buffer = new byte[1024];
             int len;
             while ((len = input.read(buffer)) != -1) {
