@@ -81,8 +81,8 @@ void SetHioRequest(const VAddr addr) {
 
     if (current_hio_request.magic != std::array{'G', 'D', 'B', '\0'}) {
         std::string_view bad_magic{
-            std::begin(current_hio_request.magic),
-            std::end(current_hio_request.magic),
+            current_hio_request.magic.data(),
+            current_hio_request.magic.size(),
         };
         LOG_WARNING(Debug_GDBStub, "Invalid HIO request sent by application: bad magic '{}'",
                     bad_magic);
