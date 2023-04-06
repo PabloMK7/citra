@@ -67,18 +67,18 @@ endif()
 # fmt and Xbyak need to be added before dynarmic
 # libfmt
 option(FMT_INSTALL "" ON)
-add_subdirectory(fmt)
+add_subdirectory(fmt EXCLUDE_FROM_ALL)
 
 # Xbyak
 if ("x86_64" IN_LIST ARCHITECTURE)
-    add_subdirectory(xbyak)
+    add_subdirectory(xbyak EXCLUDE_FROM_ALL)
 endif()
 
 # Dynarmic
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
     set(DYNARMIC_TESTS OFF)
     set(DYNARMIC_FRONTENDS "A32")
-    add_subdirectory(dynarmic)
+    add_subdirectory(dynarmic EXCLUDE_FROM_ALL)
 endif()
 
 # getopt
