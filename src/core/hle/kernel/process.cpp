@@ -377,19 +377,13 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
                         bool privileged) {
     LOG_DEBUG(Kernel, "Map memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
               source, size, perms);
-    if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
-        source + size < source) {
+    if (!privileged && (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
+                        source + size < source)) {
         LOG_ERROR(Kernel, "Invalid source address");
         return ERR_INVALID_ADDRESS;
     }
 
     // TODO(wwylele): check target address range. Is it also restricted to heap region?
-
-    auto vma = vm_manager.FindVMA(target);
-    if (vma->second.type != VMAType::Free || vma->second.base + vma->second.size < target + size) {
-        LOG_ERROR(Kernel, "Trying to map to already allocated memory");
-        return ERR_INVALID_ADDRESS_STATE;
-    }
 
     // Check range overlapping
     if (source - target < size || target - source < size) {
@@ -406,6 +400,12 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
         } else {
             return ERR_INVALID_ADDRESS_STATE;
         }
+    }
+
+    auto vma = vm_manager.FindVMA(target);
+    if (vma->second.type != VMAType::Free || vma->second.base + vma->second.size < target + size) {
+        LOG_ERROR(Kernel, "Trying to map to already allocated memory");
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
     MemoryState source_state = privileged ? MemoryState::Locked : MemoryState::Aliased;
@@ -432,16 +432,13 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
                           bool privileged) {
     LOG_DEBUG(Kernel, "Unmap memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}",
               target, source, size, perms);
-    if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
-        source + size < source) {
+    if (!privileged && (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
+                        source + size < source)) {
         LOG_ERROR(Kernel, "Invalid source address");
         return ERR_INVALID_ADDRESS;
     }
 
     // TODO(wwylele): check target address range. Is it also restricted to heap region?
-
-    // TODO(wwylele): check that the source and the target are actually a pair created by Map
-    // Should return error 0xD8E007F5 in this case
 
     if (source - target < size || target - source < size) {
         if (privileged) {
@@ -458,6 +455,9 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
             return ERR_INVALID_ADDRESS_STATE;
         }
     }
+
+    // TODO(wwylele): check that the source and the target are actually a pair created by Map
+    // Should return error 0xD8E007F5 in this case
 
     MemoryState source_state = privileged ? MemoryState::Locked : MemoryState::Aliased;
 
