@@ -3,8 +3,8 @@ $GITDATE = $(git show -s --date=short --format='%ad') -replace "-", ""
 $GITREV = $(git show -s --format='%h')
 
 # Find out what release we are building
-if ( $GIT_TAG_NAME ) {
-    $RELEASE_NAME = ${GIT_TAG_NAME}.split("-")[0]
+if ( $env:GITHUB_REF_NAME -like "*canary-*" -or $env:GITHUB_REF_NAME -like "*nightly-*" ) {
+    $RELEASE_NAME = ${env:GITHUB_REF_NAME}.split("-")[0]
     $RELEASE_NAME = "${RELEASE_NAME}-msvc"
 }
 else {

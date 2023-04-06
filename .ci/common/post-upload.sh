@@ -10,13 +10,13 @@ cp -r dist/scripting "$REV_NAME"
 tar $COMPRESSION_FLAGS "$ARCHIVE_NAME" "$REV_NAME"
 
 # Find out what release we are building
-if [ -z $GIT_TAG_NAME ]; then
-    RELEASE_NAME=head
-else
-    RELEASE_NAME=$(echo $GIT_TAG_NAME | cut -d- -f1)
+if [[ "$GITHUB_REF_NAME" =~ ^canary- ]] || [[ "$GITHUB_REF_NAME" =~ ^nightly- ]]; then
+    RELEASE_NAME=$(echo $GITHUB_REF_NAME | cut -d- -f1)
     if [ "$NAME" = "linux-mingw" ]; then
         RELEASE_NAME="${RELEASE_NAME}-mingw"
     fi
+else
+    RELEASE_NAME=head
 fi
 
 mv "$REV_NAME" $RELEASE_NAME

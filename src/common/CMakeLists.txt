@@ -3,15 +3,6 @@
 # could affect the result, but much more unlikely than the following files. Keeping a list of files
 # like this allows for much better caching since it doesn't force the user to recompile binary shaders every update
 set(VIDEO_CORE "${CMAKE_SOURCE_DIR}/src/video_core")
-if (DEFINED ENV{CI})
-  if (DEFINED ENV{TRAVIS})
-    set(BUILD_REPOSITORY $ENV{TRAVIS_REPO_SLUG})
-    set(BUILD_TAG $ENV{TRAVIS_TAG})
-  elseif(DEFINED ENV{APPVEYOR})
-    set(BUILD_REPOSITORY $ENV{APPVEYOR_REPO_NAME})
-    set(BUILD_TAG $ENV{APPVEYOR_REPO_TAG_NAME})
-  endif()
-endif()
 
 # Pass the path to git to the GenerateSCMRev.cmake as well
 find_package(Git QUIET)
@@ -19,8 +10,6 @@ find_package(Git QUIET)
 add_custom_command(OUTPUT scm_rev.cpp
     COMMAND ${CMAKE_COMMAND}
       -DSRC_DIR="${CMAKE_SOURCE_DIR}"
-      -DBUILD_REPOSITORY="${BUILD_REPOSITORY}"
-      -DBUILD_TAG="${BUILD_TAG}"
       -DGIT_EXECUTABLE="${GIT_EXECUTABLE}"
       -P "${CMAKE_SOURCE_DIR}/CMakeModules/GenerateSCMRev.cmake"
     DEPENDS

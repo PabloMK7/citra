@@ -24,7 +24,7 @@ jobs:
         name: Pre-checkout
         with:
           submodules: false
-      - uses: actions/github-script@v5
+      - uses: actions/github-script@v6
         id: check-changes
         name: 'Check for new changes'
         env:
@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
           submodules: true
           token: ${{ secrets.ALT_GITHUB_TOKEN }}
-      - uses: actions/github-script@v5
+      - uses: actions/github-script@v6
         name: 'Update and tag new commits'
         if: ${{ steps.check-changes.outputs.result == 'true' }}
         env:
@@ -66,7 +66,7 @@ jobs:
         name: Pre-checkout
         with:
           submodules: false
-      - uses: actions/github-script@v5
+      - uses: actions/github-script@v6
         id: check-changes
         name: 'Check for new changes'
         env:
@@ -87,7 +87,7 @@ jobs:
           fetch-depth: 0
           submodules: true
           token: ${{ secrets.ALT_GITHUB_TOKEN }}
-      - uses: actions/github-script@v5
+      - uses: actions/github-script@v6
         name: 'Check and merge canary changes'
         if: ${{ steps.check-changes.outputs.result == 'true' }}
         env:
