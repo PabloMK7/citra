@@ -5,12 +5,11 @@
 #include <glad/glad.h>
 
 #include <QApplication>
-#include <QDragEnterEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QPainter>
-#include <fmt/format.h>
+#include <QWindow>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/main.h"
 #include "common/color.h"
@@ -163,7 +162,7 @@ public:
 
         // disable vsync for any shared contexts
         auto format = share_context->format();
-        format.setSwapInterval(main_surface ? Settings::values.use_vsync_new.GetValue() : 0);
+        format.setSwapInterval(0);
 
         context = std::make_unique<QOpenGLContext>();
         context->setShareContext(share_context);
@@ -387,7 +386,7 @@ static Frontend::EmuWindow::WindowSystemInfo GetWindowSystemInfo(QWindow* window
     return wsi;
 }
 
-std::shared_ptr<Frontend::GraphicsContext> GRenderWindow::main_context;
+std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::main_context;
 
 GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread, bool is_secondary_)
     : QWidget(parent_), EmuWindow(is_secondary_), emu_thread(emu_thread) {
@@ -668,11 +667,15 @@ bool GRenderWindow::InitializeOpenGL() {
     child_widget->windowHandle()->create();
 
     if (!main_context) {
-        main_context = std::make_shared<OpenGLSharedContext>();
+        main_context = std::make_unique<OpenGLSharedContext>();
     }
 
     auto child_context = CreateSharedContext();
     child->SetContext(std::move(child_context));
+
+    auto format = child_widget->windowHandle()->format();
+    format.setSwapInterval(Settings::values.use_vsync_new.GetValue());
+    child_widget->windowHandle()->setFormat(format);
 
     return true;
 #else
