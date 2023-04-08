@@ -7,6 +7,7 @@
 #include <thread>
 #include <unordered_map>
 #include <variant>
+#include "common/scope_exit.h"
 #include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
@@ -367,7 +368,9 @@ public:
 
 ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, const Driver& driver_,
                                            bool separable)
-    : impl(std::make_unique<Impl>(separable)), emu_window{emu_window_}, driver{driver_} {}
+    : emu_window{emu_window_}, driver{driver_},
+      strict_context_required{emu_window.StrictContextRequired()}, impl{std::make_unique<Impl>(
+                                                                       separable)} {}
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
@@ -622,8 +625,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     compilation_failed = false;
 
     std::size_t built_shaders = 0; // It doesn't have be atomic since it's used behind a mutex
-    const auto LoadRawSepareble = [&](Frontend::GraphicsContext* context, std::size_t begin,
-                                      std::size_t end) {
+    const auto LoadRawSepareble = [&](std::size_t begin, std::size_t end,
+                                      Frontend::GraphicsContext* context = nullptr) {
         const auto scope = context->Acquire();
         for (std::size_t i = begin; i < end; ++i) {
             if (stop_loading || compilation_failed) {
@@ -683,27 +686,32 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
         }
     };
 
-    const std::size_t num_workers{std::max(1U, std::thread::hardware_concurrency())};
-    const std::size_t bucket_size{load_raws_size / num_workers};
-    std::vector<std::unique_ptr<Frontend::GraphicsContext>> contexts(num_workers);
-    std::vector<std::thread> threads(num_workers);
+    if (!strict_context_required) {
+        const std::size_t num_workers{std::max(1U, std::thread::hardware_concurrency())};
+        const std::size_t bucket_size{load_raws_size / num_workers};
+        std::vector<std::unique_ptr<Frontend::GraphicsContext>> contexts(num_workers);
+        std::vector<std::thread> threads(num_workers);
 
-    emu_window.SaveContext();
-    for (std::size_t i = 0; i < num_workers; ++i) {
-        const bool is_last_worker = i + 1 == num_workers;
-        const std::size_t start{bucket_size * i};
-        const std::size_t end{is_last_worker ? load_raws_size : start + bucket_size};
+        emu_window.SaveContext();
+        for (std::size_t i = 0; i < num_workers; ++i) {
+            const bool is_last_worker = i + 1 == num_workers;
+            const std::size_t start{bucket_size * i};
+            const std::size_t end{is_last_worker ? load_raws_size : start + bucket_size};
 
-        // On some platforms the shared context has to be created from the GUI thread
-        contexts[i] = emu_window.CreateSharedContext();
-        // Release the context, so it can be immediately used by the spawned thread
-        contexts[i]->DoneCurrent();
-        threads[i] = std::thread(LoadRawSepareble, contexts[i].get(), start, end);
+            // On some platforms the shared context has to be created from the GUI thread
+            contexts[i] = emu_window.CreateSharedContext();
+            // Release the context, so it can be immediately used by the spawned thread
+            contexts[i]->DoneCurrent();
+            threads[i] = std::thread(LoadRawSepareble, start, end, contexts[i].get());
+        }
+        for (auto& thread : threads) {
+            thread.join();
+        }
+        emu_window.RestoreContext();
+    } else {
+        const auto dummy_context{std::make_unique<Frontend::GraphicsContext>()};
+        LoadRawSepareble(0, load_raws_size, dummy_context.get());
     }
-    for (auto& thread : threads) {
-        thread.join();
-    }
-    emu_window.RestoreContext();
 
     if (compilation_failed) {
         disk_cache.InvalidateAll();

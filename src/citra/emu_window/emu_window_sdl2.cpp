@@ -84,7 +84,7 @@ void EmuWindow_SDL2::RequestClose() {
 
 void EmuWindow_SDL2::OnResize() {
     int width, height;
-    SDL_GetWindowSize(render_window, &width, &height);
+    SDL_GL_GetDrawableSize(render_window, &width, &height);
     UpdateCurrentFramebufferLayout(width, height);
 }
 
