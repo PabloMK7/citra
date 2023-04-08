@@ -296,7 +296,7 @@ struct SoftwareRenderWidget : public RenderWidget {
 
         const auto draw_screen = [&](int fb_id) {
             const auto rect = fb_id == 0 ? layout.top_screen : layout.bottom_screen;
-            const QImage screen = LoadFramebuffer(fb_id);
+            const QImage screen = LoadFramebuffer(fb_id).scaled(rect.GetWidth(), rect.GetHeight());
             painter.drawImage(rect.left, rect.top, screen);
         };
 
