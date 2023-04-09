@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <vector>
 #include "common/common_types.h"
 
 namespace HW::AES {
@@ -27,17 +28,14 @@ enum KeySlotID : std::size_t {
     // AES Keyslot used to encrypt the BOSS container data.
     BOSSDataKey = 0x38,
 
-    // AES Keyslot used to calculate DLP data frame checksum.
-    DLPDataKey = 0x39,
+    // AES Keyslot used to calculate DLP data frame checksum and encrypt Amiibo key data.
+    DLPNFCDataKey = 0x39,
 
     // AES Keyslot used to generate the StreetPass CCMP key.
     CECDDataKey = 0x2E,
 
     // AES Keyslot used by the friends module.
     FRDKey = 0x36,
-
-    // AES Keyslot used by the NFC module.
-    NFCKey = 0x39,
 
     // AES keyslot used for APT:Wrap/Unwrap functions
     APTWrap = 0x31,
@@ -48,11 +46,28 @@ enum KeySlotID : std::size_t {
     MaxKeySlotID = 0x40,
 };
 
+enum DlpNfcKeyY : std::size_t {
+    // Download Play KeyY
+    Dlp = 0,
+
+    // NFC (Amiibo) KeyY
+    Nfc = 1
+};
+
+struct NfcSecret {
+    std::vector<u8> phrase;
+    std::vector<u8> seed;
+    std::vector<u8> hmac_key;
+};
+
 constexpr std::size_t MaxCommonKeySlot = 6;
+constexpr std::size_t NumDlpNfcKeyYs = 2;
+constexpr std::size_t NumNfcSecrets = 2;
 
 constexpr std::size_t AES_BLOCK_SIZE = 16;
 
 using AESKey = std::array<u8, AES_BLOCK_SIZE>;
+using AESIV = std::array<u8, AES_BLOCK_SIZE>;
 
 void InitKeys(bool force = false);
 
@@ -65,5 +80,9 @@ bool IsNormalKeyAvailable(std::size_t slot_id);
 AESKey GetNormalKey(std::size_t slot_id);
 
 void SelectCommonKeyIndex(u8 index);
+void SelectDlpNfcKeyYIndex(u8 index);
+
+const NfcSecret& GetNfcSecret(u8 index);
+const AESIV& GetNfcIv();
 
 } // namespace HW::AES

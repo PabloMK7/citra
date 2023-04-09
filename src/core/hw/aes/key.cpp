@@ -55,6 +55,15 @@ AESKey HexToKey(const std::string& hex) {
     return key;
 }
 
+std::vector<u8> HexToVector(const std::string& hex) {
+    std::vector<u8> vector(hex.size() / 2);
+    for (std::size_t i = 0; i < vector.size(); ++i) {
+        vector[i] = static_cast<u8>(std::stoi(hex.substr(i * 2, 2), nullptr, 16));
+    }
+
+    return vector;
+}
+
 struct KeySlot {
     std::optional<AESKey> x;
     std::optional<AESKey> y;
@@ -91,6 +100,9 @@ struct KeySlot {
 
 std::array<KeySlot, KeySlotID::MaxKeySlotID> key_slots;
 std::array<std::optional<AESKey>, MaxCommonKeySlot> common_key_y_slots;
+std::array<std::optional<AESKey>, NumDlpNfcKeyYs> dlp_nfc_key_y_slots;
+std::array<NfcSecret, NumNfcSecrets> nfc_secrets;
+AESIV nfc_iv;
 
 enum class FirmwareType : u32 {
     ARM9 = 0,  // uses NDMA
@@ -440,6 +452,12 @@ void LoadPresetKeys() {
     while (!file.eof()) {
         std::string line;
         std::getline(file, line);
+
+        // Ignore empty or commented lines.
+        if (line.empty() || line.starts_with("#")) {
+            continue;
+        }
+
         std::vector<std::string> parts;
         Common::SplitString(line, '=', parts);
         if (parts.size() != 2) {
@@ -448,6 +466,24 @@ void LoadPresetKeys() {
         }
 
         const std::string& name = parts[0];
+
+        std::size_t nfc_secret_index;
+        if (std::sscanf(name.c_str(), "nfcSecret%zd", &nfc_secret_index) == 1) {
+            auto value = HexToVector(parts[1]);
+            if (nfc_secret_index >= nfc_secrets.size()) {
+                LOG_ERROR(HW_AES, "Invalid NFC secret index {}", nfc_secret_index);
+            } else if (name.ends_with("Phrase")) {
+                nfc_secrets[nfc_secret_index].phrase = value;
+            } else if (name.ends_with("Seed")) {
+                nfc_secrets[nfc_secret_index].seed = value;
+            } else if (name.ends_with("HmacKey")) {
+                nfc_secrets[nfc_secret_index].hmac_key = value;
+            } else {
+                LOG_ERROR(HW_AES, "Invalid NFC secret {}", name);
+            }
+            continue;
+        }
+
         AESKey key;
         try {
             key = HexToKey(parts[1]);
@@ -463,6 +499,21 @@ void LoadPresetKeys() {
             } else {
                 common_key_y_slots[common_key_index] = key;
             }
+            continue;
+        }
+
+        if (name == "dlpKeyY") {
+            dlp_nfc_key_y_slots[DlpNfcKeyY::Dlp] = key;
+            continue;
+        }
+
+        if (name == "nfcKeyY") {
+            dlp_nfc_key_y_slots[DlpNfcKeyY::Nfc] = key;
+            continue;
+        }
+
+        if (name == "nfcIv") {
+            nfc_iv = key;
             continue;
         }
 
@@ -532,6 +583,18 @@ AESKey GetNormalKey(std::size_t slot_id) {
 
 void SelectCommonKeyIndex(u8 index) {
     key_slots[KeySlotID::TicketCommonKey].SetKeyY(common_key_y_slots.at(index));
+}
+
+void SelectDlpNfcKeyYIndex(u8 index) {
+    key_slots[KeySlotID::DLPNFCDataKey].SetKeyY(dlp_nfc_key_y_slots.at(index));
+}
+
+const NfcSecret& GetNfcSecret(u8 index) {
+    return nfc_secrets[index];
+}
+
+const AESIV& GetNfcIv() {
+    return nfc_iv;
 }
 
 } // namespace HW::AES

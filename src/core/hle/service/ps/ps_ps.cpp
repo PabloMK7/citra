@@ -31,13 +31,12 @@ constexpr std::array<u8, 10> KeyTypes{{
     HW::AES::APTWrap,
     HW::AES::BOSSDataKey,
     0x32, // unknown
-    HW::AES::DLPDataKey,
+    HW::AES::DLPNFCDataKey,
     HW::AES::CECDDataKey,
     0, // invalid
     HW::AES::FRDKey,
     // Note: According to 3dbrew the KeyY is overridden by Process9 when using this key type.
-    // TODO: implement this behaviour?
-    HW::AES::NFCKey,
+    HW::AES::DLPNFCDataKey,
 }};
 
 void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
@@ -59,6 +58,12 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     // TODO(zhaowenlan1779): Tests on a real 3DS shows that no error is returned in this case
     // and encrypted data is actually returned, but the key used is unknown.
     ASSERT_MSG(key_type != 7 && key_type < 10, "Key type is invalid");
+
+    if (key_type == 0x5) {
+        HW::AES::SelectDlpNfcKeyYIndex(HW::AES::DlpNfcKeyY::Dlp);
+    } else if (key_type == 0x9) {
+        HW::AES::SelectDlpNfcKeyYIndex(HW::AES::DlpNfcKeyY::Nfc);
+    }
 
     if (!HW::AES::IsNormalKeyAvailable(KeyTypes[key_type])) {
         LOG_ERROR(Service_PS,
