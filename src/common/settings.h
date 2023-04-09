@@ -458,7 +458,7 @@ struct Values {
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
                                                            "mono_render_option"};
 
-    Setting<s32> cardboard_screen_size{85, "cardboard_screen_size"};
+    Setting<u32> cardboard_screen_size{85, "cardboard_screen_size"};
     Setting<s32> cardboard_x_shift{0, "cardboard_x_shift"};
     Setting<s32> cardboard_y_shift{0, "cardboard_y_shift"};
 

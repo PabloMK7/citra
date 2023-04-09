@@ -11,9 +11,9 @@ namespace Layout {
 
 /// Describes the horizontal coordinates for the right eye screen when using Cardboard VR
 struct CardboardSettings {
-    float top_screen_right_eye;
-    float bottom_screen_right_eye;
-    float user_x_shift;
+    u32 top_screen_right_eye;
+    u32 bottom_screen_right_eye;
+    s32 user_x_shift;
 };
 
 /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
@@ -130,7 +130,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
  * @param layout frame layout to transform
  * @return layout transformed with the user cardboard settings
  */
-FramebufferLayout GetCardboardSettings(FramebufferLayout layout);
+FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout);
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
                                                        bool upright_screen);
