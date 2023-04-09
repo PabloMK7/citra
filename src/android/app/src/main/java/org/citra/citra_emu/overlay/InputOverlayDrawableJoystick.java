@@ -21,10 +21,12 @@ import org.citra.citra_emu.utils.EmulationMenuSettings;
  * of storing it's own ID.
  */
 public final class InputOverlayDrawableJoystick {
-    private final int[] axisIDs = {0, 0, 0, 0};
-    private final float[] axises = {0f, 0f};
-    private int trackId = -1;
-    private int mJoystickType;
+    // The ID value what type of joystick this Drawable represents.
+    private int mJoystickId;
+    // The ID value what motion event is tracking
+    private int mTrackId = -1;
+    private float mXAxis;
+    private float mYAxis;
     private int mControlPositionX, mControlPositionY;
     private int mPreviousTouchX, mPreviousTouchY;
     private int mWidth;
@@ -51,11 +53,7 @@ public final class InputOverlayDrawableJoystick {
     public InputOverlayDrawableJoystick(Resources res, Bitmap bitmapOuter,
                                         Bitmap bitmapInnerDefault, Bitmap bitmapInnerPressed,
                                         Rect rectOuter, Rect rectInner, int joystick) {
-        axisIDs[0] = joystick + 1; // Up
-        axisIDs[1] = joystick + 2; // Down
-        axisIDs[2] = joystick + 3; // Left
-        axisIDs[3] = joystick + 4; // Right
-        mJoystickType = joystick;
+        mJoystickId = joystick;
 
         mOuterBitmap = new BitmapDrawable(res, bitmapOuter);
         mDefaultStateInnerBitmap = new BitmapDrawable(res, bitmapInnerDefault);
@@ -74,84 +72,87 @@ public final class InputOverlayDrawableJoystick {
         SetInnerBounds();
     }
 
-    /**
-     * Gets this InputOverlayDrawableJoystick's button ID.
-     *
-     * @return this InputOverlayDrawableJoystick's button ID.
-     */
-    public int getId() {
-        return mJoystickType;
-    }
-
     public void draw(Canvas canvas) {
         mOuterBitmap.draw(canvas);
         getCurrentStateBitmapDrawable().draw(canvas);
         mBoundsBoxBitmap.draw(canvas);
     }
 
-    public void TrackEvent(MotionEvent event) {
+    public boolean updateStatus(MotionEvent event) {
         int pointerIndex = event.getActionIndex();
+        int xPosition = (int) event.getX(pointerIndex);
+        int yPosition = (int) event.getY(pointerIndex);
+        int pointerId = event.getPointerId(pointerIndex);
+        int motionEvent = event.getAction() & MotionEvent.ACTION_MASK;
+        boolean isActionDown = motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN;
+        boolean isActionUp = motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP;
 
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_POINTER_DOWN:
-                if (getBounds().contains((int) event.getX(pointerIndex), (int) event.getY(pointerIndex))) {
-                    mPressedState = true;
-                    mOuterBitmap.setAlpha(0);
-                    mBoundsBoxBitmap.setAlpha(255);
-                    if (EmulationMenuSettings.getJoystickRelCenter()) {
-                        getVirtBounds().offset((int) event.getX(pointerIndex) - getVirtBounds().centerX(),
-                                (int) event.getY(pointerIndex) - getVirtBounds().centerY());
-                    }
-                    mBoundsBoxBitmap.setBounds(getVirtBounds());
-                    trackId = event.getPointerId(pointerIndex);
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_POINTER_UP:
-                if (trackId == event.getPointerId(pointerIndex)) {
-                    mPressedState = false;
-                    axises[0] = axises[1] = 0.0f;
-                    mOuterBitmap.setAlpha(255);
-                    mBoundsBoxBitmap.setAlpha(0);
-                    setVirtBounds(new Rect(mOrigBounds.left, mOrigBounds.top, mOrigBounds.right,
-                            mOrigBounds.bottom));
-                    setBounds(new Rect(mOrigBounds.left, mOrigBounds.top, mOrigBounds.right,
-                            mOrigBounds.bottom));
-                    SetInnerBounds();
-                    trackId = -1;
-                }
-                break;
+        if (isActionDown) {
+            if (!getBounds().contains(xPosition, yPosition)) {
+                return false;
+            }
+            mPressedState = true;
+            mOuterBitmap.setAlpha(0);
+            mBoundsBoxBitmap.setAlpha(255);
+            if (EmulationMenuSettings.getJoystickRelCenter()) {
+                getVirtBounds().offset(xPosition - getVirtBounds().centerX(),
+                        yPosition - getVirtBounds().centerY());
+            }
+            mBoundsBoxBitmap.setBounds(getVirtBounds());
+            mTrackId = pointerId;
         }
 
-        if (trackId == -1)
-            return;
+        if (isActionUp) {
+            if (mTrackId != pointerId) {
+                return false;
+            }
+            mPressedState = false;
+            mXAxis = 0.0f;
+            mYAxis = 0.0f;
+            mOuterBitmap.setAlpha(255);
+            mBoundsBoxBitmap.setAlpha(0);
+            setVirtBounds(new Rect(mOrigBounds.left, mOrigBounds.top, mOrigBounds.right,
+                    mOrigBounds.bottom));
+            setBounds(new Rect(mOrigBounds.left, mOrigBounds.top, mOrigBounds.right,
+                    mOrigBounds.bottom));
+            SetInnerBounds();
+            mTrackId = -1;
+            return true;
+        }
+
+        if (mTrackId == -1)
+            return false;
 
         for (int i = 0; i < event.getPointerCount(); i++) {
-            if (trackId == event.getPointerId(i)) {
-                float touchX = event.getX(i);
-                float touchY = event.getY(i);
-                float maxY = getVirtBounds().bottom;
-                float maxX = getVirtBounds().right;
-                touchX -= getVirtBounds().centerX();
-                maxX -= getVirtBounds().centerX();
-                touchY -= getVirtBounds().centerY();
-                maxY -= getVirtBounds().centerY();
-                final float AxisX = touchX / maxX;
-                final float AxisY = touchY / maxY;
-
-                // Clamp the circle pad input to a circle
-                final float angle = (float) Math.atan2(AxisY, AxisX);
-                float radius = (float) Math.sqrt(AxisX * AxisX + AxisY * AxisY);
-                if(radius > 1.0f)
-                {
-                    radius = 1.0f;
-                }
-                axises[0] = ((float)Math.cos(angle) * radius);
-                axises[1] = ((float)Math.sin(angle) * radius);
-                SetInnerBounds();
+            if (mTrackId != event.getPointerId(i)) {
+                continue;
             }
+            float touchX = event.getX(i);
+            float touchY = event.getY(i);
+            float maxY = getVirtBounds().bottom;
+            float maxX = getVirtBounds().right;
+            touchX -= getVirtBounds().centerX();
+            maxX -= getVirtBounds().centerX();
+            touchY -= getVirtBounds().centerY();
+            maxY -= getVirtBounds().centerY();
+            final float AxisX = touchX / maxX;
+            final float AxisY = touchY / maxY;
+            final float oldXAxis = mXAxis;
+            final float oldYAxis = mYAxis;
+
+            // Clamp the circle pad input to a circle
+            final float angle = (float) Math.atan2(AxisY, AxisX);
+            float radius = (float) Math.sqrt(AxisX * AxisX + AxisY * AxisY);
+            if (radius > 1.0f) {
+                radius = 1.0f;
+            }
+            mXAxis = ((float) Math.cos(angle) * radius);
+            mYAxis = ((float) Math.sin(angle) * radius);
+            SetInnerBounds();
+            return oldXAxis != mXAxis && oldYAxis != mYAxis;
         }
+
+        return false;
     }
 
     public boolean onConfigureTouch(MotionEvent event) {
@@ -160,7 +161,7 @@ public final class InputOverlayDrawableJoystick {
         int fingerPositionY = (int) event.getY(pointerIndex);
 
         int scale = 1;
-        if (mJoystickType == ButtonType.STICK_C) {
+        if (mJoystickId == ButtonType.STICK_C) {
             // C-stick is scaled down to be half the size of the circle pad
             scale = 2;
         }
@@ -192,23 +193,25 @@ public final class InputOverlayDrawableJoystick {
         return true;
     }
 
-
-    public float[] getAxisValues() {
-        return axises;
+    public int getJoystickId() {
+        return mJoystickId;
     }
 
-    public int[] getAxisIDs() {
-        return axisIDs;
+    public float getXAxis() {
+        return mXAxis;
+    }
+
+    public float getYAxis() {
+        return mYAxis;
+    }
+
+    public int getTrackId() {
+        return mTrackId;
     }
 
     private void SetInnerBounds() {
-        int X = getVirtBounds().centerX() + (int) ((axises[0]) * (getVirtBounds().width() / 2));
-        int Y = getVirtBounds().centerY() + (int) ((axises[1]) * (getVirtBounds().height() / 2));
-
-        if (mJoystickType == ButtonType.STICK_LEFT) {
-            X += 1;
-            Y += 1;
-        }
+        int X = getVirtBounds().centerX() + (int) ((mXAxis) * (getVirtBounds().width() / 2));
+        int Y = getVirtBounds().centerY() + (int) ((mYAxis) * (getVirtBounds().height() / 2));
 
         if (X > getVirtBounds().centerX() + (getVirtBounds().width() / 2))
             X = getVirtBounds().centerX() + (getVirtBounds().width() / 2);

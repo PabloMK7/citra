@@ -13,6 +13,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.MotionEvent;
 
+import org.citra.citra_emu.NativeLibrary;
+
 /**
  * Custom {@link BitmapDrawable} that is capable
  * of storing it's own ID.
@@ -42,26 +44,45 @@ public final class InputOverlayDrawableButton {
         mDefaultStateBitmap = new BitmapDrawable(res, defaultStateBitmap);
         mPressedStateBitmap = new BitmapDrawable(res, pressedStateBitmap);
         mButtonType = buttonType;
+        mTrackId = -1;
 
         mWidth = mDefaultStateBitmap.getIntrinsicWidth();
         mHeight = mDefaultStateBitmap.getIntrinsicHeight();
     }
 
     /**
-     * Gets this InputOverlayDrawableButton's button ID.
+     * Updates button status based on the motion event.
      *
-     * @return this InputOverlayDrawableButton's button ID.
+     * @return true if value was changed
      */
-    public int getId() {
-        return mButtonType;
-    }
+    public boolean updateStatus(MotionEvent event) {
+        int pointerIndex = event.getActionIndex();
+        int xPosition = (int) event.getX(pointerIndex);
+        int yPosition = (int) event.getY(pointerIndex);
+        int pointerId = event.getPointerId(pointerIndex);
+        int motionEvent = event.getAction() & MotionEvent.ACTION_MASK;
+        boolean isActionDown = motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN;
+        boolean isActionUp = motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP;
 
-    public int getTrackId() {
-        return mTrackId;
-    }
+        if (isActionDown) {
+            if (!getBounds().contains(xPosition, yPosition)) {
+                return false;
+            }
+            mPressedState = true;
+            mTrackId = pointerId;
+            return true;
+        }
 
-    public void setTrackId(int trackId) {
-        mTrackId = trackId;
+        if (isActionUp) {
+            if (mTrackId != pointerId) {
+                return false;
+            }
+            mPressedState = false;
+            mTrackId = -1;
+            return true;
+        }
+
+        return false;
     }
 
     public boolean onConfigureTouch(MotionEvent event) {
@@ -102,6 +123,22 @@ public final class InputOverlayDrawableButton {
     public void setBounds(int left, int top, int right, int bottom) {
         mDefaultStateBitmap.setBounds(left, top, right, bottom);
         mPressedStateBitmap.setBounds(left, top, right, bottom);
+    }
+
+    public int getId() {
+        return mButtonType;
+    }
+
+    public int getTrackId() {
+        return mTrackId;
+    }
+
+    public void setTrackId(int trackId) {
+        mTrackId = trackId;
+    }
+
+    public int getStatus() {
+        return mPressedState ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED;
     }
 
     public Rect getBounds() {
