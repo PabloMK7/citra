@@ -4,7 +4,6 @@
 
 #include <cstring>
 #include <dynarmic/interface/A32/a32.h>
-#include <dynarmic/interface/A32/context.h>
 #include <dynarmic/interface/optimization_flags.h>
 #include "common/assert.h"
 #include "common/microprofile.h"
@@ -26,36 +25,36 @@ public:
     ~DynarmicThreadContext() override = default;
 
     void Reset() override {
-        ctx.Regs() = {};
-        ctx.SetCpsr(0);
-        ctx.ExtRegs() = {};
-        ctx.SetFpscr(0);
+        regs = {};
+        ext_regs = {};
+        cpsr = 0;
+        fpscr = 0;
         fpexc = 0;
     }
 
     u32 GetCpuRegister(std::size_t index) const override {
-        return ctx.Regs()[index];
+        return regs[index];
     }
     void SetCpuRegister(std::size_t index, u32 value) override {
-        ctx.Regs()[index] = value;
+        regs[index] = value;
     }
     u32 GetCpsr() const override {
-        return ctx.Cpsr();
+        return cpsr;
     }
     void SetCpsr(u32 value) override {
-        ctx.SetCpsr(value);
+        cpsr = value;
     }
     u32 GetFpuRegister(std::size_t index) const override {
-        return ctx.ExtRegs()[index];
+        return ext_regs[index];
     }
     void SetFpuRegister(std::size_t index, u32 value) override {
-        ctx.ExtRegs()[index] = value;
+        ext_regs[index] = value;
     }
     u32 GetFpscr() const override {
-        return ctx.Fpscr();
+        return fpscr;
     }
     void SetFpscr(u32 value) override {
-        ctx.SetFpscr(value);
+        fpscr = value;
     }
     u32 GetFpexc() const override {
         return fpexc;
@@ -67,7 +66,10 @@ public:
 private:
     friend class ARM_Dynarmic;
 
-    Dynarmic::A32::Context ctx;
+    std::array<u32, 16> regs;
+    std::array<u32, 64> ext_regs;
+    u32 cpsr;
+    u32 fpscr;
     u32 fpexc;
 };
 
@@ -291,7 +293,10 @@ void ARM_Dynarmic::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
     DynarmicThreadContext* ctx = dynamic_cast<DynarmicThreadContext*>(arg.get());
     ASSERT(ctx);
 
-    jit->SaveContext(ctx->ctx);
+    ctx->regs = jit->Regs();
+    ctx->ext_regs = jit->ExtRegs();
+    ctx->cpsr = jit->Cpsr();
+    ctx->fpscr = jit->Fpscr();
     ctx->fpexc = fpexc;
 }
 
@@ -299,7 +304,10 @@ void ARM_Dynarmic::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
     const DynarmicThreadContext* ctx = dynamic_cast<DynarmicThreadContext*>(arg.get());
     ASSERT(ctx);
 
-    jit->LoadContext(ctx->ctx);
+    jit->Regs() = ctx->regs;
+    jit->ExtRegs() = ctx->ext_regs;
+    jit->SetCpsr(ctx->cpsr);
+    jit->SetFpscr(ctx->fpscr);
     fpexc = ctx->fpexc;
 }
 
@@ -329,21 +337,21 @@ std::shared_ptr<Memory::PageTable> ARM_Dynarmic::GetPageTable() const {
 
 void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) {
     current_page_table = page_table;
-    Dynarmic::A32::Context ctx{};
+    auto ctx{NewContext()};
     if (jit) {
-        jit->SaveContext(ctx);
+        SaveContext(ctx);
     }
 
     auto iter = jits.find(current_page_table);
     if (iter != jits.end()) {
         jit = iter->second.get();
-        jit->LoadContext(ctx);
+        LoadContext(ctx);
         return;
     }
 
     auto new_jit = MakeJit();
     jit = new_jit.get();
-    jit->LoadContext(ctx);
+    LoadContext(ctx);
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
