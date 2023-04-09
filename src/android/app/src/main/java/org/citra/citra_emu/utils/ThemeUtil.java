@@ -3,6 +3,7 @@ package org.citra.citra_emu.utils;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -41,16 +42,18 @@ public class ThemeUtil {
                 break;
         }
 
-        int systemReportedThemeMode = activity.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        WindowInsetsControllerCompat windowController = WindowCompat.getInsetsController(activity.getWindow(), activity.getWindow().getDecorView());
-        windowController.setAppearanceLightStatusBars(systemReportedThemeMode == Configuration.UI_MODE_NIGHT_NO);
-        windowController.setAppearanceLightNavigationBars(systemReportedThemeMode == Configuration.UI_MODE_NIGHT_NO);
-
+        setSystemBarMode(activity, getIsLightMode(activity.getResources()));
         setNavigationBarColor(activity, MaterialColors.getColor(activity.getWindow().getDecorView(), R.attr.colorSurface));
     }
 
     public static void applyTheme(AppCompatActivity activity) {
         applyTheme(mPreferences.getInt(SettingsFile.KEY_DESIGN, 0), activity);
+    }
+
+    public static void setSystemBarMode(AppCompatActivity activity, boolean isLightMode) {
+        WindowInsetsControllerCompat windowController = WindowCompat.getInsetsController(activity.getWindow(), activity.getWindow().getDecorView());
+        windowController.setAppearanceLightStatusBars(isLightMode);
+        windowController.setAppearanceLightNavigationBars(isLightMode);
     }
 
     public static void setNavigationBarColor(@NonNull Activity activity, @ColorInt int color) {
@@ -79,5 +82,9 @@ public class ThemeUtil {
     public static int getColorWithOpacity(@ColorInt int color, float alphaFactor) {
         return Color.argb(Math.round(alphaFactor * Color.alpha(color)), Color.red(color),
                 Color.green(color), Color.blue(color));
+    }
+
+    public static boolean getIsLightMode(Resources resources) {
+        return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO;
     }
 }

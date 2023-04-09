@@ -169,6 +169,8 @@ public final class MainActivity extends AppCompatActivity implements MainView {
     protected void onResume() {
         super.onResume();
         mPresenter.addDirIfNeeded(new AddDirectoryHelper(this));
+
+        ThemeUtil.setSystemBarMode(this, ThemeUtil.getIsLightMode(getResources()));
     }
 
     // TODO: Replace with a ButterKnife injection.
