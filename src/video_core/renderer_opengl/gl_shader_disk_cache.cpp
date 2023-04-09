@@ -126,8 +126,9 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
     u32 version{};
     if (transferable_file.ReadBytes(&version, sizeof(version)) != sizeof(version)) {
         LOG_ERROR(Render_OpenGL,
-                  "Failed to get transferable cache version for title id={} - skipping",
+                  "Failed to get transferable cache version for title id={} - removing",
                   GetTitleID());
+        InvalidateAll();
         return std::nullopt;
     }
 
@@ -147,7 +148,8 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
     while (transferable_file.Tell() < transferable_file.GetSize()) {
         TransferableEntryKind kind{};
         if (transferable_file.ReadBytes(&kind, sizeof(u32)) != sizeof(u32)) {
-            LOG_ERROR(Render_OpenGL, "Failed to read transferable file - skipping");
+            LOG_ERROR(Render_OpenGL, "Failed to read transferable file - removing");
+            InvalidateAll();
             return std::nullopt;
         }
 
@@ -155,7 +157,8 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
         case TransferableEntryKind::Raw: {
             ShaderDiskCacheRaw entry;
             if (!entry.Load(transferable_file)) {
-                LOG_ERROR(Render_OpenGL, "Failed to load transferable raw entry - skipping");
+                LOG_ERROR(Render_OpenGL, "Failed to load transferable raw entry - removing");
+                InvalidateAll();
                 return std::nullopt;
             }
             transferable.emplace(entry.GetUniqueIdentifier(), ShaderDiskCacheRaw{});
@@ -163,8 +166,9 @@ std::optional<std::vector<ShaderDiskCacheRaw>> ShaderDiskCache::LoadTransferable
             break;
         }
         default:
-            LOG_ERROR(Render_OpenGL, "Unknown transferable shader cache entry kind={} - skipping",
+            LOG_ERROR(Render_OpenGL, "Unknown transferable shader cache entry kind={} - removing",
                       kind);
+            InvalidateAll();
             return std::nullopt;
         }
     }
@@ -516,6 +520,8 @@ void ShaderDiskCache::SaveVirtualPrecompiledFile() {
                   precompiled_path);
         return;
     }
+
+    precompiled_file.Flush();
 }
 
 bool ShaderDiskCache::EnsureDirectories() const {
