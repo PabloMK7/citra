@@ -115,6 +115,8 @@ add_library(core STATIC
     frontend/mic.h
     gdbstub/gdbstub.cpp
     gdbstub/gdbstub.h
+    gdbstub/hio.cpp
+    gdbstub/hio.h
     hle/applets/applet.cpp
     hle/applets/applet.h
     hle/applets/erreula.cpp

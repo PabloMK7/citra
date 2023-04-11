@@ -35,6 +35,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/gdbstub/hio.h"
 #include "core/hle/kernel/process.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
@@ -261,13 +262,7 @@ static u8 NibbleToHex(u8 n) {
     }
 }
 
-/**
- * Converts input hex string characters into an array of equivalent of u8 bytes.
- *
- * @param src Pointer to array of output hex string characters.
- * @param len Length of src array.
- */
-static u32 HexToInt(const u8* src, std::size_t len) {
+u32 HexToInt(const u8* src, std::size_t len) {
     u32 output = 0;
     while (len-- > 0) {
         output = (output << 4) | HexCharToValue(src[0]);
@@ -492,12 +487,7 @@ static void SendPacket(const char packet) {
     }
 }
 
-/**
- * Send reply to gdb client.
- *
- * @param reply Reply to be sent to client.
- */
-static void SendReply(const char* reply) {
+void SendReply(const char* reply) {
     if (!IsConnected()) {
         return;
     }
@@ -653,7 +643,7 @@ static void ReadCommand() {
     memset(command_buffer, 0, sizeof(command_buffer));
 
     u8 c = ReadByte();
-    if (c == '+') {
+    if (c == GDB_STUB_ACK) {
         // ignore ack
         return;
     } else if (c == 0x03) {
@@ -843,7 +833,7 @@ static void ReadMemory() {
     u32 len =
         HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
-    LOG_DEBUG(Debug_GDBStub, "gdb: addr: {:08x} len: {:08x}\n", addr, len);
+    LOG_DEBUG(Debug_GDBStub, "ReadMemory addr: {:08x} len: {:08x}", addr, len);
 
     if (len * 2 > sizeof(reply)) {
         SendReply("E01");
@@ -860,7 +850,11 @@ static void ReadMemory() {
 
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
-    SendReply(reinterpret_cast<char*>(reply));
+
+    auto reply_str = reinterpret_cast<char*>(reply);
+
+    LOG_DEBUG(Debug_GDBStub, "ReadMemory result: {}", reply_str);
+    SendReply(reply_str);
 }
 
 /// Modify location in memory with data received from the gdb client.
@@ -1050,6 +1044,11 @@ void HandlePacket() {
         return;
     }
 
+    if (HandlePendingHioRequestPacket()) {
+        // Don't do anything else while we wait for the client to respond
+        return;
+    }
+
     if (!IsDataAvailable()) {
         return;
     }
@@ -1059,7 +1058,7 @@ void HandlePacket() {
         return;
     }
 
-    LOG_DEBUG(Debug_GDBStub, "Packet: {}", command_buffer[0]);
+    LOG_DEBUG(Debug_GDBStub, "Packet: {0:d} ('{0:c}')", command_buffer[0]);
 
     switch (command_buffer[0]) {
     case 'q':
@@ -1072,9 +1071,14 @@ void HandlePacket() {
         SendSignal(current_thread, latest_signal);
         break;
     case 'k':
-        Shutdown();
         LOG_INFO(Debug_GDBStub, "killed by gdb");
+        ToggleServer(false);
+        // Continue execution so we don't hang forever after shutting down the server
+        Continue();
         return;
+    case 'F':
+        HandleHioReply(command_buffer, command_length);
+        break;
     case 'g':
         ReadRegisters();
         break;
@@ -1251,6 +1255,10 @@ bool GetCpuHaltFlag() {
     return halt_loop;
 }
 
+void SetCpuHaltFlag(bool halt) {
+    halt_loop = halt;
+}
+
 bool GetCpuStepFlag() {
     return step_loop;
 }
@@ -1265,6 +1273,7 @@ void SendTrap(Kernel::Thread* thread, int trap) {
     }
 
     current_thread = thread;
+
     SendSignal(thread, trap);
 
     halt_loop = true;
