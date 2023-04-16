@@ -2,7 +2,7 @@
 
 . ./.ci/common/pre-upload.sh
 
-REV_NAME="citra-${GITDATE}-${GITREV}"
+REV_NAME="citra-android-${GITDATE}-${GITREV}"
 [ "${GITHUB_REPOSITORY}" = "citra-emu/citra-canary" ] &&
    BUILD_FLAVOR=canary ||
    BUILD_FLAVOR=nightly
