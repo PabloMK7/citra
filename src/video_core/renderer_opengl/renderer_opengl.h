@@ -84,10 +84,9 @@ private:
     void ApplySecondLayerOpacity();
     void ResetSecondLayerOpacity();
     void DrawBottomScreen(const Layout::FramebufferLayout& layout,
-                          const Common::Rectangle<u32>& bottom_screen,
-                          const bool stereo_single_screen);
+                          const Common::Rectangle<u32>& bottom_screen);
     void DrawTopScreen(const Layout::FramebufferLayout& layout,
-                       const Common::Rectangle<u32>& top_screen, const bool stereo_single_screen);
+                       const Common::Rectangle<u32>& top_screen);
     void DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w, float h);
     void DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w, float h);
     void DrawSingleScreenStereoRotated(const ScreenInfo& screen_info_l,
