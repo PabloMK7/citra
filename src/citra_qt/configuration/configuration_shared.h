@@ -78,11 +78,6 @@ void SetPerGameSetting(QComboBox* combobox,
                                                            ConfigurationShared::USE_GLOBAL_OFFSET);
 }
 
-/// Specialization for string settings
-template <>
-void SetPerGameSetting(QComboBox* combobox,
-                       const Settings::SwitchableSetting<std::string>* setting);
-
 /// Given an index of a combobox setting extracts the setting taking into
 /// account per-game status
 template <typename Type, bool ranged>

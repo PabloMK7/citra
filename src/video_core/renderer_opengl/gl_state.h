@@ -116,12 +116,17 @@ public:
 
     // GL_IMAGE_BINDING_NAME
     GLuint image_shadow_buffer;
-    GLuint image_shadow_texture_px;
-    GLuint image_shadow_texture_nx;
-    GLuint image_shadow_texture_py;
-    GLuint image_shadow_texture_ny;
-    GLuint image_shadow_texture_pz;
-    GLuint image_shadow_texture_nz;
+    union {
+        std::array<GLuint, 6> image_shadow_texture;
+        struct {
+            GLuint image_shadow_texture_px;
+            GLuint image_shadow_texture_nx;
+            GLuint image_shadow_texture_py;
+            GLuint image_shadow_texture_ny;
+            GLuint image_shadow_texture_pz;
+            GLuint image_shadow_texture_nz;
+        };
+    };
 
     struct {
         GLuint read_framebuffer; // GL_READ_FRAMEBUFFER_BINDING

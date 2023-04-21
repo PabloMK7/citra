@@ -138,9 +138,6 @@ JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_GetUserSetting
 JNIEXPORT jdoubleArray JNICALL Java_org_citra_citra_1emu_NativeLibrary_GetPerfStats(JNIEnv* env,
                                                                                     jclass clazz);
 
-JNIEXPORT jobjectArray JNICALL
-Java_org_citra_citra_1emu_NativeLibrary_GetTextureFilterNames(JNIEnv* env, jclass clazz);
-
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_ReloadCameraDevices(JNIEnv* env,
                                                                                    jclass clazz);
 

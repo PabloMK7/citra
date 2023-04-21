@@ -6,8 +6,8 @@
 
 #include <array>
 #include "common/bit_field.h"
-#include "common/common_funcs.h"
-#include "common/common_types.h"
+#include "common/math_util.h"
+#include "common/vector_math.h"
 #include "video_core/pica_types.h"
 
 namespace Pica {
@@ -39,6 +39,18 @@ struct RasterizerRegs {
     Common::Vec4<float24> GetClipCoef() const {
         return {float24::FromRaw(clip_coef[0]), float24::FromRaw(clip_coef[1]),
                 float24::FromRaw(clip_coef[2]), float24::FromRaw(clip_coef[3])};
+    }
+
+    Common::Rectangle<s32> GetViewportRect() const {
+        return {
+            // These registers hold half-width and half-height, so must be multiplied by 2
+            viewport_corner.x,  // left
+            viewport_corner.y + // top
+                static_cast<s32>(float24::FromRaw(viewport_size_y).ToFloat32() * 2),
+            viewport_corner.x + // right
+                static_cast<s32>(float24::FromRaw(viewport_size_x).ToFloat32() * 2),
+            viewport_corner.y // bottom
+        };
     }
 
     INSERT_PADDING_WORDS(0x1);

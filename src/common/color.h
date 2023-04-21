@@ -52,6 +52,11 @@ namespace Common::Color {
     return value >> 2;
 }
 
+/// Averages the RGB components of a color
+[[nodiscard]] constexpr u8 AverageRgbComponents(const Common::Vec4<u8>& color) {
+    return (static_cast<u32>(color.r()) + color.g() + color.b()) / 3;
+}
+
 /**
  * Decode a color stored in RGBA8 format
  * @param bytes Pointer to encoded source color
@@ -116,6 +121,44 @@ namespace Common::Color {
 }
 
 /**
+ * Decode a color stored in IA8 format
+ * @param bytes Pointer to encoded source color
+ * @return Result color decoded as Common::Vec4<u8>
+ */
+[[nodiscard]] inline Common::Vec4<u8> DecodeIA8(const u8* bytes) {
+    return {bytes[1], bytes[1], bytes[1], bytes[0]};
+}
+
+/**
+ * Decode a color stored in I8 format
+ * @param bytes Pointer to encoded source color
+ * @return Result color decoded as Common::Vec4<u8>
+ */
+[[nodiscard]] inline Common::Vec4<u8> DecodeI8(const u8* bytes) {
+    return {bytes[0], bytes[0], bytes[0], 255};
+}
+
+/**
+ * Decode a color stored in A8 format
+ * @param bytes Pointer to encoded source color
+ * @return Result color decoded as Common::Vec4<u8>
+ */
+[[nodiscard]] inline Common::Vec4<u8> DecodeA8(const u8* bytes) {
+    return {0, 0, 0, bytes[0]};
+}
+
+/**
+ * Decode a color stored in IA4 format
+ * @param bytes Pointer to encoded source color
+ * @return Result color decoded as Common::Vec4<u8>
+ */
+[[nodiscard]] inline Common::Vec4<u8> DecodeIA4(const u8* bytes) {
+    u8 i = Common::Color::Convert4To8((bytes[0] & 0xF0) >> 4);
+    u8 a = Common::Color::Convert4To8(bytes[0] & 0x0F);
+    return {i, i, i, a};
+}
+
+/**
  * Decode a depth value stored in D16 format
  * @param bytes Pointer to encoded source value
  * @return Depth value as an u32
@@ -176,6 +219,7 @@ inline void EncodeRG8(const Common::Vec4<u8>& color, u8* bytes) {
     bytes[1] = color.r();
     bytes[0] = color.g();
 }
+
 /**
  * Encode a color as RGB565 format
  * @param color Source color to encode
@@ -210,6 +254,43 @@ inline void EncodeRGBA4(const Common::Vec4<u8>& color, u8* bytes) {
                      (Convert8To4(color.b()) << 4) | Convert8To4(color.a());
 
     std::memcpy(bytes, &data, sizeof(data));
+}
+
+/**
+ * Encode a color as IA8 format
+ * @param color Source color to encode
+ * @param bytes Destination pointer to store encoded color
+ */
+inline void EncodeIA8(const Common::Vec4<u8>& color, u8* bytes) {
+    bytes[1] = AverageRgbComponents(color);
+    bytes[0] = color.a();
+}
+
+/**
+ * Encode a color as I8 format
+ * @param color Source color to encode
+ * @param bytes Destination pointer to store encoded color
+ */
+inline void EncodeI8(const Common::Vec4<u8>& color, u8* bytes) {
+    bytes[0] = AverageRgbComponents(color);
+}
+
+/**
+ * Encode a color as A8 format
+ * @param color Source color to encode
+ * @param bytes Destination pointer to store encoded color
+ */
+inline void EncodeA8(const Common::Vec4<u8>& color, u8* bytes) {
+    bytes[0] = color.a();
+}
+
+/**
+ * Encode a color as IA4 format
+ * @param color Source color to encode
+ * @param bytes Destination pointer to store encoded color
+ */
+inline void EncodeIA4(const Common::Vec4<u8>& color, u8* bytes) {
+    bytes[0] = (Convert8To4(AverageRgbComponents(color)) << 4) | Convert8To4(color.a());
 }
 
 /**

@@ -41,6 +41,13 @@ inline u64 HashCombine(std::size_t& seed, const u64 hash) {
     return seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
+template <typename T>
+struct IdentityHash {
+    std::size_t operator()(const T& value) const {
+        return value;
+    }
+};
+
 /// A helper template that ensures the padding in a struct is initialized by memsetting to 0.
 template <typename T>
 struct HashableStruct {

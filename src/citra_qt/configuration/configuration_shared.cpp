@@ -33,16 +33,6 @@ void ConfigurationShared::SetPerGameSetting(QCheckBox* checkbox,
     }
 }
 
-template <>
-void ConfigurationShared::SetPerGameSetting(
-    QComboBox* combobox, const Settings::SwitchableSetting<std::string>* setting) {
-    const int index =
-        static_cast<int>(combobox->findText(QString::fromStdString(setting->GetValue())));
-    combobox->setCurrentIndex(setting->UsingGlobal()
-                                  ? ConfigurationShared::USE_GLOBAL_INDEX
-                                  : index + ConfigurationShared::USE_GLOBAL_OFFSET);
-}
-
 void ConfigurationShared::SetHighlight(QWidget* widget, bool highlighted) {
     if (highlighted) {
         widget->setStyleSheet(QStringLiteral("QWidget#%1 { background-color:rgba(0,203,255,0.5) }")

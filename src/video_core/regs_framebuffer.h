@@ -281,6 +281,14 @@ struct FramebufferRegs {
         return 0;
     }
 
+    [[nodiscard]] bool IsShadowRendering() const {
+        return output_merger.fragment_operation_mode == FragmentOperationMode::Shadow;
+    }
+
+    [[nodiscard]] bool HasStencil() const {
+        return framebuffer.depth_format == DepthFormat::D24S8;
+    };
+
     INSERT_PADDING_WORDS(0x10); // Gas related registers
 
     union {

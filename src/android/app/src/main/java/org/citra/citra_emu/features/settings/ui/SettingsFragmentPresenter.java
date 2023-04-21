@@ -168,9 +168,8 @@ public final class SettingsFragmentPresenter {
             sl.add(new PremiumSingleChoiceSetting(SettingsFile.KEY_DESIGN, Settings.SECTION_PREMIUM, R.string.design, 0, R.array.designNamesOld, R.array.designValuesOld, 0, design, mView));
         }
 
-        String[] textureFilterNames = NativeLibrary.GetTextureFilterNames();
         Setting textureFilterName = premiumSection.getSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME);
-        sl.add(new StringSingleChoiceSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME, Settings.SECTION_PREMIUM, R.string.texture_filter_name, R.string.texture_filter_description, textureFilterNames, textureFilterNames, "none", textureFilterName));
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME, Settings.SECTION_PREMIUM, R.string.texture_filter_name, 0, R.array.textureFilterNames, R.array.textureFilterValues, 0, textureFilterName));
     }
 
     private void addGeneralSettings(ArrayList<SettingsItem> sl) {

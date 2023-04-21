@@ -12,7 +12,7 @@
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
-#include "video_core/shader/shader.h"
+#include "video_core/renderer_opengl/gl_texture_runtime.h"
 
 namespace VideoCore {
 class RendererBase;
@@ -69,10 +69,6 @@ private:
         u32 border_color;
         u32 lod_min;
         u32 lod_max;
-        s32 lod_bias;
-
-        // TODO(wwylele): remove this once mipmap for cube is implemented
-        bool supress_mipmap_for_cube = false;
     };
 
     /// Syncs the clip enabled status to match the PICA register
@@ -115,6 +111,21 @@ private:
     void SyncAndUploadLUTs();
     void SyncAndUploadLUTsLF();
 
+    /// Syncs all enabled PICA texture units
+    void SyncTextureUnits(const Framebuffer& framebuffer);
+
+    /// Binds the PICA shadow cube required for shadow mapping
+    void BindShadowCube(const Pica::TexturingRegs::FullTextureConfig& texture);
+
+    /// Binds a texture cube to texture unit 0
+    void BindTextureCube(const Pica::TexturingRegs::FullTextureConfig& texture);
+
+    /// Makes a temporary copy of the framebuffer if a feedback loop is detected
+    bool IsFeedbackLoop(u32 texture_index, const Framebuffer& framebuffer, Surface& surface);
+
+    /// Unbinds all special texture unit 0 texture configurations
+    void UnbindSpecial();
+
     /// Upload the uniform blocks to the uniform buffer object
     void UploadUniforms(bool accelerate_draw);
 
@@ -138,7 +149,8 @@ private:
     Driver& driver;
     OpenGLState state;
     GLuint default_texture;
-    RasterizerCacheOpenGL res_cache;
+    TextureRuntime runtime;
+    VideoCore::RasterizerCache res_cache;
     std::unique_ptr<ShaderProgramManager> shader_program_manager;
 
     OGLVertexArray sw_vao; // VAO for software shader draw
@@ -146,6 +158,7 @@ private:
     std::array<bool, 16> hw_vao_enabled_attributes{};
 
     std::array<SamplerInfo, 3> texture_samplers;
+    GLsizeiptr texture_buffer_size;
     OGLStreamBuffer vertex_buffer;
     OGLStreamBuffer uniform_buffer;
     OGLStreamBuffer index_buffer;

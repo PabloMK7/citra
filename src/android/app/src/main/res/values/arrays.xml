@@ -179,4 +179,22 @@
     <integer-array name="graphicsApiValues">
         <item>1</item>
     </integer-array>
+
+    <string-array name="textureFilterNames">
+        <item>None</item>
+        <item>Anime4K</item>
+        <item>Bicubic</item>
+        <item>Nearest Neighbor</item>
+        <item>ScaleForce</item>
+        <item>xBRZ</item>
+    </string-array>
+
+    <integer-array name="textureFilterValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </integer-array>
 </resources>

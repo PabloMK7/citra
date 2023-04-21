@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>657</height>
+    <width>440</width>
+    <height>748</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -168,7 +168,38 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="texture_filter_combobox"/>
+          <widget class="QComboBox" name="texture_filter_combobox">
+           <item>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Anime4K</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Bicubic</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Nearest Neighbor</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ScaleForce</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>xBRZ</string>
+            </property>
+           </item>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -352,7 +383,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="" native="true">
+       <widget class="QWidget" name="widget" native="true">
         <layout class="QHBoxLayout" name="proportion_layout">
          <property name="leftMargin">
           <number>0</number>

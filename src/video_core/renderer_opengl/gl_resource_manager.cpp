@@ -83,20 +83,6 @@ void OGLTexture::Allocate(GLenum target, GLsizei levels, GLenum internalformat, 
     glBindTexture(GL_TEXTURE_2D, old_tex);
 }
 
-void OGLTexture::CopyFrom(const OGLTexture& other, GLenum target, GLsizei levels, GLsizei width,
-                          GLsizei height) {
-    GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle);
-
-    for (GLsizei level = 0; level < levels; level++) {
-        glCopyImageSubData(other.handle, target, level, 0, 0, 0, handle, target, level, 0, 0, 0,
-                           width >> level, height >> level, 1);
-    }
-
-    glBindTexture(GL_TEXTURE_2D, old_tex);
-}
-
 void OGLSampler::Create() {
     if (handle != 0) {
         return;
@@ -117,10 +103,10 @@ void OGLSampler::Release() {
     handle = 0;
 }
 
-void OGLShader::Create(const char* source, GLenum type) {
+void OGLShader::Create(std::string_view source, GLenum type) {
     if (handle != 0)
         return;
-    if (source == nullptr)
+    if (source.empty())
         return;
 
     MICROPROFILE_SCOPE(OpenGL_ResourceCreation);
@@ -144,7 +130,7 @@ void OGLProgram::Create(bool separable_program, const std::vector<GLuint>& shade
     handle = LoadProgram(separable_program, shaders);
 }
 
-void OGLProgram::Create(const char* vert_shader, const char* frag_shader) {
+void OGLProgram::Create(std::string_view vert_shader, std::string_view frag_shader) {
     OGLShader vert, frag;
     vert.Create(vert_shader, GL_VERTEX_SHADER);
     frag.Create(frag_shader, GL_FRAGMENT_SHADER);

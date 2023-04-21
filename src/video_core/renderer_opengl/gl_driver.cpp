@@ -71,10 +71,11 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
                 id, message);
 }
 
-Driver::Driver(Core::TelemetrySession& telemetry_session_) : telemetry_session{telemetry_session_} {
+Driver::Driver(Core::TelemetrySession& telemetry_session_)
+    : telemetry_session{telemetry_session_}, is_gles{Settings::values.use_gles.GetValue()} {
     const bool enable_debug = Settings::values.renderer_debug.GetValue();
     if (enable_debug) {
-        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(DebugHandler, nullptr);
     }
 
@@ -88,6 +89,18 @@ Driver::~Driver() = default;
 
 bool Driver::HasBug(DriverBug bug) const {
     return True(bugs & bug);
+}
+
+bool Driver::HasDebugTool() {
+    GLint num_extensions;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
+    for (GLuint index = 0; index < static_cast<GLuint>(num_extensions); ++index) {
+        const auto name = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, index));
+        if (!std::strcmp(name, "GL_EXT_debug_tool")) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Driver::ReportDriverInfo() {

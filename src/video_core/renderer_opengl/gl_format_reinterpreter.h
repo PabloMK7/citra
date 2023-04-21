@@ -11,7 +11,7 @@
 
 namespace OpenGL {
 
-class RasterizerCacheOpenGL;
+class Surface;
 
 class FormatReinterpreterBase {
 public:
@@ -22,9 +22,9 @@ public:
 
     virtual ~FormatReinterpreterBase() = default;
 
-    virtual PixelFormat GetSourceFormat() const = 0;
-    virtual void Reinterpret(const OGLTexture& src_tex, Common::Rectangle<u32> src_rect,
-                             const OGLTexture& dst_tex, Common::Rectangle<u32> dst_rect) = 0;
+    virtual VideoCore::PixelFormat GetSourceFormat() const = 0;
+    virtual void Reinterpret(Surface& source, Common::Rectangle<u32> src_rect, Surface& dest,
+                             Common::Rectangle<u32> dst_rect) = 0;
 
 protected:
     OGLFramebuffer read_fbo;
@@ -33,15 +33,45 @@ protected:
 
 using ReinterpreterList = std::vector<std::unique_ptr<FormatReinterpreterBase>>;
 
-class FormatReinterpreterOpenGL : NonCopyable {
+class RGBA4toRGB5A1 final : public FormatReinterpreterBase {
 public:
-    FormatReinterpreterOpenGL();
-    ~FormatReinterpreterOpenGL() = default;
+    RGBA4toRGB5A1();
 
-    const ReinterpreterList& GetPossibleReinterpretations(PixelFormat dst_format);
+    VideoCore::PixelFormat GetSourceFormat() const override {
+        return VideoCore::PixelFormat::RGBA4;
+    }
+
+    void Reinterpret(Surface& source, Common::Rectangle<u32> src_rect, Surface& dest,
+                     Common::Rectangle<u32> dst_rect) override;
 
 private:
-    std::array<ReinterpreterList, PIXEL_FORMAT_COUNT> reinterpreters;
+    OGLProgram program;
+    GLint dst_size_loc{-1};
+    GLint src_size_loc{-1};
+    GLint src_offset_loc{-1};
+    OGLVertexArray vao;
+};
+
+class ShaderD24S8toRGBA8 final : public FormatReinterpreterBase {
+public:
+    ShaderD24S8toRGBA8();
+
+    VideoCore::PixelFormat GetSourceFormat() const override {
+        return VideoCore::PixelFormat::D24S8;
+    }
+
+    void Reinterpret(Surface& source, Common::Rectangle<u32> src_rect, Surface& dest,
+                     Common::Rectangle<u32> dst_rect) override;
+
+private:
+    bool use_texture_view{};
+    OGLProgram program{};
+    GLint dst_size_loc{-1};
+    GLint src_size_loc{-1};
+    GLint src_offset_loc{-1};
+    OGLVertexArray vao{};
+    OGLTexture temp_tex{};
+    Common::Rectangle<u32> temp_rect{0, 0, 0, 0};
 };
 
 } // namespace OpenGL

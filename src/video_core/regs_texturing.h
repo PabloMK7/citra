@@ -99,29 +99,25 @@ struct TexturingRegs {
         ETC1A4 = 13, // compressed
     };
 
-    static unsigned NibblesPerPixel(TextureFormat format) {
+    static u32 NibblesPerPixel(TextureFormat format) {
         switch (format) {
         case TextureFormat::RGBA8:
             return 8;
-
         case TextureFormat::RGB8:
             return 6;
-
         case TextureFormat::RGB5A1:
         case TextureFormat::RGB565:
         case TextureFormat::RGBA4:
         case TextureFormat::IA8:
         case TextureFormat::RG8:
             return 4;
-
         case TextureFormat::I4:
         case TextureFormat::A4:
             return 1;
-
         case TextureFormat::I8:
         case TextureFormat::A8:
         case TextureFormat::IA4:
-
+            return 2;
         default: // placeholder for yet unknown formats
             UNIMPLEMENTED();
             return 0;

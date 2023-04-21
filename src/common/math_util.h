@@ -23,6 +23,22 @@ struct Rectangle {
     constexpr Rectangle(T left, T top, T right, T bottom)
         : left(left), top(top), right(right), bottom(bottom) {}
 
+    [[nodiscard]] constexpr bool operator==(const Rectangle<T>& rhs) const {
+        return (left == rhs.left) && (top == rhs.top) && (right == rhs.right) &&
+               (bottom == rhs.bottom);
+    }
+
+    [[nodiscard]] constexpr bool operator!=(const Rectangle<T>& rhs) const {
+        return !operator==(rhs);
+    }
+
+    [[nodiscard]] constexpr Rectangle<T> operator*(const T value) const {
+        return Rectangle{left * value, top * value, right * value, bottom * value};
+    }
+    [[nodiscard]] constexpr Rectangle<T> operator/(const T value) const {
+        return Rectangle{left / value, top / value, right / value, bottom / value};
+    }
+
     [[nodiscard]] T GetWidth() const {
         return std::abs(static_cast<std::make_signed_t<T>>(right - left));
     }

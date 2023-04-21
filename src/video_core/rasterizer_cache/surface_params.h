@@ -4,74 +4,88 @@
 
 #pragma once
 
-#include <array>
-#include <climits>
-#include "video_core/rasterizer_cache/pixel_format.h"
-#include "video_core/rasterizer_cache/rasterizer_cache_types.h"
+#include "video_core/rasterizer_cache/utils.h"
 
-namespace OpenGL {
+namespace VideoCore {
+
+constexpr std::size_t MAX_PICA_LEVELS = 8;
 
 class SurfaceParams {
 public:
-    // Surface match traits
+    /// Returns true if other_surface matches exactly params
     bool ExactMatch(const SurfaceParams& other_surface) const;
+
+    /// Returns true if sub_surface is a subrect of params
     bool CanSubRect(const SurfaceParams& sub_surface) const;
+
+    /// Returns true if params can be expanded to match expanded_surface
     bool CanExpand(const SurfaceParams& expanded_surface) const;
+
+    /// Returns true if params can be used for texcopy
     bool CanTexCopy(const SurfaceParams& texcopy_params) const;
 
+    /// Updates remaining members from the already set addr, width, height and pixel_format
+    void UpdateParams();
+
+    /// Returns the unscaled rectangle referenced by sub_surface
     Common::Rectangle<u32> GetSubRect(const SurfaceParams& sub_surface) const;
+
+    /// Returns the scaled rectangle referenced by sub_surface
     Common::Rectangle<u32> GetScaledSubRect(const SurfaceParams& sub_surface) const;
 
-    // Returns the outer rectangle containing "interval"
+    /// Returns the outer rectangle containing interval
     SurfaceParams FromInterval(SurfaceInterval interval) const;
-    SurfaceInterval GetSubRectInterval(Common::Rectangle<u32> unscaled_rect) const;
 
-    // Returns the region of the biggest valid rectange within interval
-    SurfaceInterval GetCopyableInterval(const Surface& src_surface) const;
+    /// Returns the address interval referenced by unscaled_rect
+    SurfaceInterval GetSubRectInterval(Common::Rectangle<u32> unscaled_rect, u32 level = 0) const;
 
-    /// Updates remaining members from the already set addr, width, height and pixel_format
-    void UpdateParams() {
-        if (stride == 0) {
-            stride = width;
-        }
+    /// Return the address interval of the provided level
+    SurfaceInterval LevelInterval(u32 level) const;
 
-        type = GetFormatType(pixel_format);
-        size = !is_tiled ? BytesInPixels(stride * (height - 1) + width)
-                         : BytesInPixels(stride * 8 * (height / 8 - 1) + width * 8);
-        end = addr + size;
+    /// Returns the level of the provided address
+    u32 LevelOf(PAddr addr) const;
+
+    /// Returns a string identifier of the params object
+    std::string DebugName(bool scaled) const noexcept;
+
+    [[nodiscard]] SurfaceInterval GetInterval() const noexcept {
+        return SurfaceInterval{addr, end};
     }
 
-    SurfaceInterval GetInterval() const {
-        return SurfaceInterval(addr, end);
+    [[nodiscard]] u32 GetFormatBpp() const noexcept {
+        return VideoCore::GetFormatBpp(pixel_format);
     }
 
-    u32 GetFormatBpp() const {
-        return OpenGL::GetFormatBpp(pixel_format);
-    }
-
-    u32 GetScaledWidth() const {
+    [[nodiscard]] u32 GetScaledWidth() const noexcept {
         return width * res_scale;
     }
 
-    u32 GetScaledHeight() const {
+    [[nodiscard]] u32 GetScaledHeight() const noexcept {
         return height * res_scale;
     }
 
-    Common::Rectangle<u32> GetRect() const {
+    [[nodiscard]] Common::Rectangle<u32> GetRect() const noexcept {
         return {0, height, width, 0};
     }
 
-    Common::Rectangle<u32> GetScaledRect() const {
+    [[nodiscard]] Common::Rectangle<u32> GetScaledRect() const noexcept {
         return {0, GetScaledHeight(), GetScaledWidth(), 0};
     }
 
-    u32 PixelsInBytes(u32 size) const {
+    [[nodiscard]] u32 PixelsInBytes(u32 size) const noexcept {
         return size * 8 / GetFormatBpp();
     }
 
-    u32 BytesInPixels(u32 pixels) const {
+    [[nodiscard]] u32 BytesInPixels(u32 pixels) const noexcept {
         return pixels * GetFormatBpp() / 8;
     }
+
+private:
+    /// Computes the offset of each mipmap level
+    void CalculateMipLevelOffsets();
+
+    /// Calculates total surface size taking mipmaps into account
+    u32 CalculateSurfaceSize() const;
 
 public:
     PAddr addr = 0;
@@ -81,11 +95,15 @@ public:
     u32 width = 0;
     u32 height = 0;
     u32 stride = 0;
-    u16 res_scale = 1;
+    u32 levels = 1;
+    u32 res_scale = 1;
 
     bool is_tiled = false;
+    TextureType texture_type = TextureType::Texture2D;
     PixelFormat pixel_format = PixelFormat::Invalid;
     SurfaceType type = SurfaceType::Invalid;
+
+    std::array<u32, MAX_PICA_LEVELS> mipmap_offsets{};
 };
 
-} // namespace OpenGL
+} // namespace VideoCore

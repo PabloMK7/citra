@@ -54,7 +54,7 @@ GLsizeiptr OGLStreamBuffer::GetSize() const {
 }
 
 std::tuple<u8*, GLintptr, bool> OGLStreamBuffer::Map(GLsizeiptr size, GLintptr alignment) {
-    ASSERT(size <= buffer_size);
+    ASSERT_MSG(size <= buffer_size, "Requested size {} exceeds buffer size {}", size, buffer_size);
     ASSERT(alignment <= buffer_size);
     mapped_size = size;
 

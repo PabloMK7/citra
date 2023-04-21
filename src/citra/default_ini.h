@@ -136,8 +136,9 @@ use_disk_shader_cache =
 # factor for the 3DS resolution
 resolution_factor =
 
-# Texture filter name
-texture_filter_name =
+# Texture filter
+# 0: None, 1: Anime4K, 2: Bicubic, 3: Nearest Neighbor, 4: ScaleForce, 5: xBRZ
+texture_filter =
 
 # Limits the speed of the game to run no faster than this value as a percentage of target speed.
 # Will not have an effect if unthrottled is enabled.
