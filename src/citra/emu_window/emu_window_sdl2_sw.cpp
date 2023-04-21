@@ -37,6 +37,11 @@ EmuWindow_SDL2_SW::EmuWindow_SDL2_SW(bool fullscreen, bool is_secondary)
     window_surface = SDL_GetWindowSurface(render_window);
     renderer = SDL_CreateSoftwareRenderer(window_surface);
 
+    if (renderer == nullptr) {
+        LOG_CRITICAL(Frontend, "Failed to create SDL2 software renderer: {}", SDL_GetError());
+        exit(1);
+    }
+
     if (fullscreen) {
         Fullscreen();
     }
