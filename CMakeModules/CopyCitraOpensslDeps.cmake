@@ -1,0 +1,6 @@
+function(copy_citra_openssl_deps target_dir)
+    include(WindowsCopyFiles)
+    set(DLL_DEST "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/")
+    windows_copy_files(${target_dir} ${OPENSSL_DLL_DIR} ${DLL_DEST} libcrypto-1_1-x64.dll)
+    windows_copy_files(${target_dir} ${OPENSSL_DLL_DIR} ${DLL_DEST} libssl-1_1-x64.dll)
+endfunction(copy_citra_openssl_deps)
