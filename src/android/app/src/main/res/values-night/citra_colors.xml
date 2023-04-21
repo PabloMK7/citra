@@ -19,7 +19,7 @@
     <color name="citra_onErrorContainer">#FFDAD6</color>
     <color name="citra_background">#1E1B16</color>
     <color name="citra_onBackground">#E9E1D9</color>
-    <color name="citra_surface">#1E1B16</color>
+    <color name="citra_surface">#1C1C1B</color>
     <color name="citra_onSurface">#E9E1D9</color>
     <color name="citra_surfaceVariant">#4D4639</color>
     <color name="citra_onSurfaceVariant">#D0C5B4</color>

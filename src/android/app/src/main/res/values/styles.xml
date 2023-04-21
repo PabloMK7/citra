@@ -28,4 +28,13 @@
         <item name="labelBehavior">gone</item>
     </style>
 
+    <style name="Widget.Citra.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.Citra.FloatingActionButton</item>
+    </style>
+
+    <style name="ThemeOverlay.Citra.FloatingActionButton" parent="">
+        <item name="colorContainer">@color/citra_primary</item>
+        <item name="colorOnContainer">@color/citra_onPrimary</item>
+    </style>
+
 </resources>

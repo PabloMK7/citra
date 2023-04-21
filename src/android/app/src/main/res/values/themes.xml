@@ -45,6 +45,7 @@
         <item name="popupMenuStyle">@style/CitraShapedPopup</item>
         <item name="popupTheme">@style/CitraPopup</item>
         <item name="sliderStyle">@style/CitraSlider</item>
+        <item name="floatingActionButtonStyle">@style/Widget.Citra.FloatingActionButton</item>
     </style>
 
 </resources>
