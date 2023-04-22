@@ -126,7 +126,9 @@ void ShaderD24S8toRGBA8::Reinterpret(Surface& source, Common::Rectangle<u32> src
     glUniform2i(src_offset_loc, src_rect.left, src_rect.bottom);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    temp_tex.Release();
+    if (use_texture_view) {
+        temp_tex.Release();
+    }
 }
 
 } // namespace OpenGL
