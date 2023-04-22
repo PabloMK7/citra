@@ -68,8 +68,7 @@ GLenum MakeAttributeType(Pica::PipelineRegs::VertexAttributeFormat format) {
     // which corresponds to GL_RG32F
     GLint max_texel_buffer_size;
     glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &max_texel_buffer_size);
-    LOG_INFO(Render_OpenGL, "Max texture buffer size: {}", max_texel_buffer_size);
-    return std::min<GLsizeiptr>(max_texel_buffer_size * 8, TEXTURE_BUFFER_SIZE);
+    return std::min<GLsizeiptr>(max_texel_buffer_size * 8ULL, TEXTURE_BUFFER_SIZE);
 }
 
 } // Anonymous namespace
