@@ -34,6 +34,8 @@ endif()
 
 option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
 
+CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
+
 option(ENABLE_FFMPEG_AUDIO_DECODER "Enable FFmpeg audio (AAC) decoder" OFF)
 option(ENABLE_FFMPEG_VIDEO_DUMPER "Enable FFmpeg video dumper" OFF)
 
@@ -224,14 +226,16 @@ if (ENABLE_QT)
 endif()
 
 # Ensure libusb is properly configured (based on dolphin libusb include)
-if(NOT APPLE)
-    include(FindPkgConfig)
-    find_package(LibUSB)
-endif()
-if (NOT LIBUSB_FOUND)
-    add_subdirectory(externals/libusb)
-    set(LIBUSB_INCLUDE_DIR "")
-    set(LIBUSB_LIBRARIES usb)
+if (ENABLE_LIBUSB)
+    if(NOT APPLE)
+        include(FindPkgConfig)
+        find_package(LibUSB)
+    endif()
+    if (NOT LIBUSB_FOUND)
+        add_subdirectory(externals/libusb)
+        set(LIBUSB_INCLUDE_DIR "")
+        set(LIBUSB_LIBRARIES usb)
+    endif()
 endif()
 
 if (ENABLE_FFMPEG)
