@@ -14,7 +14,7 @@
 
 #define ASSERT(_a_)                                                                                \
     do                                                                                             \
-        if (!(_a_)) {                                                                              \
+        if (!(_a_)) [[unlikely]] {                                                                 \
             []() CITRA_NO_INLINE {                                                                 \
                 LOG_CRITICAL(Debug, "Assertion Failed!");                                          \
                 Crash();                                                                           \
@@ -25,7 +25,7 @@
 
 #define ASSERT_MSG(_a_, ...)                                                                       \
     do                                                                                             \
-        if (!(_a_)) {                                                                              \
+        if (!(_a_)) [[unlikely]] {                                                                 \
             [&]() CITRA_NO_INLINE {                                                                \
                 LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__);                            \
                 Crash();                                                                           \
