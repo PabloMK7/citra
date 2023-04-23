@@ -166,6 +166,7 @@ void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& b
 }
 
 void BlitHelper::FilterNearest(Surface& surface, const VideoCore::TextureBlit& blit) {
+    state.texture_units[2].texture_2d = surface.Handle(false);
     SetParams(nearest_program, surface.width, surface.height, blit.src_rect);
     Draw(nearest_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
 }

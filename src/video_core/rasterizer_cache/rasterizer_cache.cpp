@@ -725,8 +725,8 @@ void RasterizerCache::DuplicateSurface(const SurfaceRef& src_surface,
     const TextureCopy copy = {
         .src_level = 0,
         .dst_level = 0,
-        .src_offset = {0, 0},
-        .dst_offset = {0, 0},
+        .src_offset = {src_rect.left, src_rect.bottom},
+        .dst_offset = {dst_rect.left, dst_rect.bottom},
         .extent = {src_rect.GetWidth(), src_rect.GetHeight()},
     };
     runtime.CopyTextures(*src_surface, *dest_surface, copy);

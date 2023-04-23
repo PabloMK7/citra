@@ -305,7 +305,9 @@ static constexpr void MortonCopy(u32 width, u32 height, u32 start_offset, u32 en
 
     // If the copy spans multiple tiles, copy the fully aligned tiles in between.
     if (aligned_start_offset < aligned_end_offset) {
-        const u32 buffer_end = tiled_offset + aligned_end_offset - aligned_start_offset;
+        const u32 tile_buffer_size = static_cast<u32>(tiled_buffer.size());
+        const u32 buffer_end =
+            std::min(tiled_offset + aligned_end_offset - aligned_start_offset, tile_buffer_size);
         while (tiled_offset < buffer_end) {
             auto linear_data = linear_buffer.subspan(linear_offset, linear_tile_stride);
             auto tiled_data = tiled_buffer.subspan(tiled_offset, tile_size);

@@ -199,7 +199,7 @@ Allocation TextureRuntime::Allocate(const VideoCore::SurfaceParams& params) {
         handles[1] = textures[1].handle;
     }
 
-    glBindTexture(target, old_tex);
+    glBindTexture(GL_TEXTURE_2D, old_tex);
 
     return Allocation{
         .textures = std::move(textures),

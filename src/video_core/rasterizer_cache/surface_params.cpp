@@ -11,7 +11,7 @@ bool SurfaceParams::ExactMatch(const SurfaceParams& other_surface) const {
     return std::tie(other_surface.addr, other_surface.width, other_surface.height,
                     other_surface.stride, other_surface.pixel_format, other_surface.is_tiled) ==
                std::tie(addr, width, height, stride, pixel_format, is_tiled) &&
-           pixel_format != PixelFormat::Invalid;
+           pixel_format != PixelFormat::Invalid && levels >= other_surface.levels;
 }
 
 bool SurfaceParams::CanSubRect(const SurfaceParams& sub_surface) const {
