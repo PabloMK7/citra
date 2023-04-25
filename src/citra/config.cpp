@@ -136,12 +136,6 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.use_gles);
     ReadSetting("Renderer", Settings::values.use_hw_shader);
-#ifdef __APPLE__
-    // Separable shader is broken on macos with Intel GPU thanks to poor drivers.
-    // We still want to provide this option for test/development purposes, but disable it by
-    // default.
-    ReadSetting("Renderer", Settings::values.separable_shader);
-#endif
     ReadSetting("Renderer", Settings::values.shaders_accurate_mul);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
     ReadSetting("Renderer", Settings::values.resolution_factor);

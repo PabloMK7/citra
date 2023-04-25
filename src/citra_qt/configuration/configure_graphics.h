@@ -32,7 +32,6 @@ private:
     void SetupPerGameUI();
 
     ConfigurationShared::CheckState use_hw_shader;
-    ConfigurationShared::CheckState separable_shader;
     ConfigurationShared::CheckState shaders_accurate_mul;
     ConfigurationShared::CheckState use_disk_shader_cache;
     ConfigurationShared::CheckState use_vsync_new;

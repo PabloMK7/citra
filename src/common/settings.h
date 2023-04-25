@@ -433,7 +433,6 @@ struct Values {
     Setting<bool> use_gles{false, "use_gles"};
     Setting<bool> renderer_debug{false, "renderer_debug"};
     SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
-    SwitchableSetting<bool> separable_shader{false, "use_separable_shader"};
     SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};
     SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
     SwitchableSetting<bool> use_vsync_new{true, "use_vsync_new"};

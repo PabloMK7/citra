@@ -173,18 +173,8 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, VideoCore::Rend
     state.Apply();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.GetHandle());
 
-#ifdef __APPLE__
-    if (driver.GetVendor() == Vendor::Intel) {
-        shader_program_manager = std::make_unique<ShaderProgramManager>(
-            renderer.GetRenderWindow(), driver, VideoCore::g_separable_shader_enabled);
-    } else {
-        shader_program_manager =
-            std::make_unique<ShaderProgramManager>(renderer.GetRenderWindow(), driver, true);
-    }
-#else
     shader_program_manager =
         std::make_unique<ShaderProgramManager>(renderer.GetRenderWindow(), driver, !GLES);
-#endif
 
     glEnable(GL_BLEND);
 

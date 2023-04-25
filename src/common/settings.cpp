@@ -70,7 +70,6 @@ void Apply() {
 
     VideoCore::g_shader_jit_enabled = values.use_shader_jit.GetValue();
     VideoCore::g_hw_shader_enabled = values.use_hw_shader.GetValue();
-    VideoCore::g_separable_shader_enabled = values.separable_shader.GetValue();
     VideoCore::g_hw_shader_accurate_mul = values.shaders_accurate_mul.GetValue();
 
 #ifndef ANDROID
@@ -135,7 +134,6 @@ void LogSettings() {
     log_setting("Renderer_GraphicsAPI", GetGraphicsAPIName(values.graphics_api.GetValue()));
     log_setting("Renderer_Debug", values.renderer_debug.GetValue());
     log_setting("Renderer_UseHwShader", values.use_hw_shader.GetValue());
-    log_setting("Renderer_SeparableShader", values.separable_shader.GetValue());
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
     log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
@@ -220,7 +218,6 @@ void RestoreGlobalState(bool is_powered_on) {
     // Renderer
     values.graphics_api.SetGlobal(true);
     values.use_hw_shader.SetGlobal(true);
-    values.separable_shader.SetGlobal(true);
     values.use_disk_shader_cache.SetGlobal(true);
     values.shaders_accurate_mul.SetGlobal(true);
     values.use_vsync_new.SetGlobal(true);

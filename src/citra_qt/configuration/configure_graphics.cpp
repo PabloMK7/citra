@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <QColorDialog>
-#ifdef __APPLE__
-#include <QMessageBox>
-#endif
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_graphics.h"
 #include "common/settings.h"
@@ -37,28 +34,6 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         ui->toggle_disk_shader_cache->setEnabled(checked);
     });
 
-#ifdef __APPLE__
-    connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, this, [this](int state) {
-        if (state == Qt::Checked) {
-            ui->toggle_separable_shader->setEnabled(true);
-        }
-    });
-    connect(ui->toggle_separable_shader, &QCheckBox::stateChanged, this, [this](int state) {
-        if (state == Qt::Checked) {
-            QMessageBox::warning(
-                this, tr("Hardware Shader Warning"),
-                tr("Separable Shader support is broken on macOS with Intel GPUs, and will cause "
-                   "graphical issues "
-                   "like showing a black screen.<br><br>The option is only there for "
-                   "test/development purposes. If you experience graphical issues with Hardware "
-                   "Shader, please turn it off."));
-        }
-    });
-#else
-    // TODO(B3N30): Hide this for macs with none Intel GPUs, too.
-    ui->toggle_separable_shader->setVisible(false);
-#endif
-
     SetupPerGameUI();
     SetConfiguration();
 }
@@ -77,7 +52,6 @@ void ConfigureGraphics::SetConfiguration() {
     }
 
     ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader.GetValue());
-    ui->toggle_separable_shader->setChecked(Settings::values.separable_shader.GetValue());
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul.GetValue());
     ui->toggle_disk_shader_cache->setChecked(Settings::values.use_disk_shader_cache.GetValue());
     ui->toggle_vsync_new->setChecked(Settings::values.use_vsync_new.GetValue());
@@ -92,8 +66,6 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->graphics_api_combo);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_hw_shader, ui->toggle_hw_shader,
                                              use_hw_shader);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.separable_shader,
-                                             ui->toggle_separable_shader, separable_shader);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.shaders_accurate_mul,
                                              ui->toggle_accurate_mul, shaders_accurate_mul);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_disk_shader_cache,
@@ -115,7 +87,6 @@ void ConfigureGraphics::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
         ui->graphics_api_group->setEnabled(Settings::values.graphics_api.UsingGlobal());
         ui->toggle_hw_shader->setEnabled(Settings::values.use_hw_shader.UsingGlobal());
-        ui->toggle_separable_shader->setEnabled(Settings::values.separable_shader.UsingGlobal());
         ui->toggle_accurate_mul->setEnabled(Settings::values.shaders_accurate_mul.UsingGlobal());
         ui->toggle_disk_shader_cache->setEnabled(
             Settings::values.use_disk_shader_cache.UsingGlobal());
@@ -132,8 +103,6 @@ void ConfigureGraphics::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredTristate(ui->toggle_hw_shader, Settings::values.use_hw_shader,
                                             use_hw_shader);
-    ConfigurationShared::SetColoredTristate(ui->toggle_separable_shader,
-                                            Settings::values.separable_shader, separable_shader);
     ConfigurationShared::SetColoredTristate(
         ui->toggle_accurate_mul, Settings::values.shaders_accurate_mul, shaders_accurate_mul);
     ConfigurationShared::SetColoredTristate(ui->toggle_disk_shader_cache,

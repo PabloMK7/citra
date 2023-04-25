@@ -628,12 +628,6 @@ void Config::ReadRendererValues() {
 
     ReadGlobalSetting(Settings::values.graphics_api);
     ReadGlobalSetting(Settings::values.use_hw_shader);
-#ifdef __APPLE__
-    // Hardware shader is broken on macos with Intel GPUs thanks to poor drivers.
-    // We still want to provide this option for test/development purposes, but disable it by
-    // default.
-    ReadGlobalSetting(Settings::values.separable_shader);
-#endif
     ReadGlobalSetting(Settings::values.shaders_accurate_mul);
     ReadGlobalSetting(Settings::values.use_disk_shader_cache);
     ReadGlobalSetting(Settings::values.use_vsync_new);
@@ -1107,11 +1101,6 @@ void Config::SaveRendererValues() {
 
     WriteGlobalSetting(Settings::values.graphics_api);
     WriteGlobalSetting(Settings::values.use_hw_shader);
-#ifdef __APPLE__
-    // Hardware shader is broken on macos thanks to poor drivers.
-    // TODO: enable this for none Intel GPUs
-    WriteGlobalSetting(Settings::values.separable_shader);
-#endif
     WriteGlobalSetting(Settings::values.shaders_accurate_mul);
     WriteGlobalSetting(Settings::values.use_disk_shader_cache);
     WriteGlobalSetting(Settings::values.use_vsync_new);

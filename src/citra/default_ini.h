@@ -110,10 +110,6 @@ use_gles =
 # 0: Software, 1 (default): Hardware
 use_hw_shader =
 
-# Whether to use separable shaders to emulate 3DS shaders (macOS only)
-# 0: Off (Default), 1 : On
-separable_shader =
-
 # Whether to use accurate multiplication in hardware shaders
 # 0: Off (Faster, but causes issues in some games) 1: On (Default. Slower, but correct)
 shaders_accurate_mul =
