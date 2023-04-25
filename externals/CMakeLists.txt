@@ -104,9 +104,11 @@ target_include_directories(nihstro-headers INTERFACE ./nihstro/include)
 add_subdirectory(open_source_archives)
 
 # SoundTouch
+
+set(INTEGER_SAMPLES ON CACHE BOOL "")
+set(SOUNDSTRETCH OFF CACHE BOOL "")
+set(SOUNDTOUCH_DLL OFF CACHE BOOL "")
 add_subdirectory(soundtouch)
-# The SoundTouch target doesn't export the necessary include paths as properties by default
-target_include_directories(SoundTouch INTERFACE ./soundtouch/include)
 
 # Teakra
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
