@@ -11,6 +11,7 @@
 #include <vector>
 #include <fmt/format.h>
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
@@ -164,6 +165,10 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
 }
 
 void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
+    if (Settings::values.region_value.GetValue() != Settings::REGION_VALUE_AUTO_SELECT) {
+        return;
+    }
+
     auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
     ASSERT_MSG(cfg, "CFG Module missing!");
 
