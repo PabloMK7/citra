@@ -11,6 +11,10 @@ namespace Core {
 class TelemetrySession;
 }
 
+namespace VideoCore {
+enum class CustomPixelFormat : u32;
+}
+
 namespace OpenGL {
 
 enum class Vendor {
@@ -50,6 +54,9 @@ public:
 
     /// Returns true if any debug tool is attached
     bool HasDebugTool();
+
+    /// Returns true if the driver supports the provided custom format
+    bool IsCustomFormatSupported(VideoCore::CustomPixelFormat format) const;
 
     /// Returns the vendor of the currently selected physical device
     Vendor GetVendor() const {
@@ -114,6 +121,8 @@ private:
     bool arb_clear_texture{};
     bool arb_get_texture_sub_image{};
     bool ext_clip_cull_distance{};
+    bool ext_texture_compression_s3tc{};
+    bool arb_texture_compression_bptc{};
 
     std::string_view gl_version{};
     std::string_view gpu_vendor{};

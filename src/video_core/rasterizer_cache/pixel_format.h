@@ -44,7 +44,7 @@ enum class SurfaceType : u32 {
     Invalid = 5,
 };
 
-enum class TextureType : u32 {
+enum class TextureType : u16 {
     Texture2D = 0,
     CubeMap = 1,
 };
@@ -99,9 +99,9 @@ constexpr SurfaceType GetFormatType(PixelFormat format) {
     return FORMAT_MAP[index].type;
 }
 
-std::string_view PixelFormatAsString(PixelFormat format);
-
 bool CheckFormatsBlittable(PixelFormat source_format, PixelFormat dest_format);
+
+std::string_view PixelFormatAsString(PixelFormat format);
 
 PixelFormat PixelFormatFromTextureFormat(Pica::TexturingRegs::TextureFormat format);
 

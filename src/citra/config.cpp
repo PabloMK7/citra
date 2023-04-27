@@ -175,6 +175,7 @@ void Config::ReadValues() {
     ReadSetting("Utility", Settings::values.dump_textures);
     ReadSetting("Utility", Settings::values.custom_textures);
     ReadSetting("Utility", Settings::values.preload_textures);
+    ReadSetting("Utility", Settings::values.async_custom_loading);
 
     // Audio
     ReadSetting("Audio", Settings::values.audio_emulation);

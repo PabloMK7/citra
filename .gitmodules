@@ -61,3 +61,6 @@
 [submodule "cryptopp"]
 	path = externals/cryptopp
 	url = https://github.com/weidai11/cryptopp.git
+[submodule "dds-ktx"]
+    path = externals/dds-ktx
+    url = https://github.com/septag/dds-ktx

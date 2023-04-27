@@ -5,11 +5,13 @@
 #pragma once
 
 #include <map>
+#include <QKeySequence>
+#include <QString>
 
 class QDialog;
-class QKeySequence;
 class QSettings;
 class QShortcut;
+class QWidget;
 
 class HotkeyRegistry final {
 public:

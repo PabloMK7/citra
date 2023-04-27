@@ -578,6 +578,8 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect_shortcut(QStringLiteral("Toggle Texture Dumping"),
                      [&] { Settings::values.dump_textures = !Settings::values.dump_textures; });
+    connect_shortcut(QStringLiteral("Toggle Custom Textures"),
+                     [&] { Settings::values.custom_textures = !Settings::values.custom_textures; });
     // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes
     // the variable hold a garbage value after this function exits
     static constexpr u16 SPEED_LIMIT_STEP = 5;

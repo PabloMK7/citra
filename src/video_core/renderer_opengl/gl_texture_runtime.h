@@ -10,8 +10,9 @@
 #include "video_core/renderer_opengl/gl_format_reinterpreter.h"
 
 namespace VideoCore {
+struct Material;
 class RendererBase;
-}
+} // namespace VideoCore
 
 namespace OpenGL {
 
@@ -27,17 +28,19 @@ struct FormatTuple {
 };
 
 struct HostTextureTag {
-    FormatTuple tuple{};
-    VideoCore::TextureType type{};
-    u32 width = 0;
-    u32 height = 0;
-    u32 levels = 1;
-    u32 res_scale = 1;
+    u32 width;
+    u32 height;
+    u32 levels;
+    u32 res_scale;
+    FormatTuple tuple;
+    VideoCore::TextureType type;
+    bool is_custom;
+    bool has_normal;
 
     bool operator==(const HostTextureTag& other) const noexcept {
-        return std::tie(tuple, type, width, height, levels, res_scale) ==
+        return std::tie(tuple, type, width, height, levels, res_scale, is_custom, has_normal) ==
                std::tie(other.tuple, other.type, other.width, other.height, other.levels,
-                        other.res_scale);
+                        other.res_scale, other.is_custom, other.has_normal);
     }
 
     struct Hash {
@@ -46,10 +49,12 @@ struct HostTextureTag {
         }
     };
 };
+static_assert(std::has_unique_object_representations_v<HostTextureTag>,
+              "HostTextureTag is not suitable for hashing!");
 
 struct Allocation {
-    std::array<OGLTexture, 2> textures;
-    std::array<GLuint, 2> handles;
+    std::array<OGLTexture, 3> textures;
+    std::array<GLuint, 3> handles;
     FormatTuple tuple;
     u32 width;
     u32 height;
@@ -59,15 +64,10 @@ struct Allocation {
     operator bool() const noexcept {
         return textures[0].handle;
     }
-
-    bool Matches(u32 width_, u32 height_, u32 levels_, const FormatTuple& tuple_) const {
-        return std::tie(width, height, levels, tuple) == std::tie(width_, height_, levels_, tuple_);
-    }
 };
 
 class Surface;
 class Driver;
-struct CachedTextureCube;
 
 /**
  * Provides texture manipulation functions to the rasterizer cache
@@ -82,6 +82,9 @@ public:
     explicit TextureRuntime(const Driver& driver, VideoCore::RendererBase& renderer);
     ~TextureRuntime();
 
+    /// Clears all cached runtime resources
+    void Reset();
+
     /// Returns true if the provided pixel format cannot be used natively by the runtime.
     bool NeedsConversion(VideoCore::PixelFormat pixel_format) const;
 
@@ -90,12 +93,14 @@ public:
 
     /// Returns the OpenGL format tuple associated with the provided pixel format
     const FormatTuple& GetFormatTuple(VideoCore::PixelFormat pixel_format) const;
+    const FormatTuple& GetFormatTuple(VideoCore::CustomPixelFormat pixel_format);
 
     /// Takes back ownership of the allocation for recycling
     void Recycle(const HostTextureTag tag, Allocation&& alloc);
 
-    /// Allocates an OpenGL texture with the specified dimentions and format
-    Allocation Allocate(const VideoCore::SurfaceParams& params);
+    /// Allocates a texture with the specified dimentions and format
+    Allocation Allocate(const VideoCore::SurfaceParams& params,
+                        const VideoCore::Material* material = nullptr);
 
     /// Fills the rectangle of the texture with the clear value provided
     bool ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);
@@ -107,7 +112,7 @@ public:
     bool BlitTextures(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
 
     /// Generates mipmaps for all the available levels of the texture
-    void GenerateMipmaps(Surface& surface, u32 max_level);
+    void GenerateMipmaps(Surface& surface);
 
     /// Returns all source formats that support reinterpretation to the dest format
     const ReinterpreterList& GetPossibleReinterpretations(VideoCore::PixelFormat dest_format) const;
@@ -123,7 +128,7 @@ private:
     BlitHelper blit_helper;
     std::vector<u8> staging_buffer;
     std::array<ReinterpreterList, VideoCore::PIXEL_FORMAT_COUNT> reinterpreters;
-    std::unordered_multimap<HostTextureTag, Allocation, HostTextureTag::Hash> recycler;
+    std::unordered_multimap<HostTextureTag, Allocation, HostTextureTag::Hash> alloc_cache;
     std::unordered_map<u64, OGLFramebuffer, Common::IdentityHash<u64>> framebuffer_cache;
     std::array<OGLFramebuffer, 3> draw_fbos;
     std::array<OGLFramebuffer, 3> read_fbos;
@@ -140,9 +145,9 @@ public:
     Surface(Surface&& o) noexcept = default;
     Surface& operator=(Surface&& o) noexcept = default;
 
-    /// Returns the surface image handle
-    GLuint Handle(bool scaled = true) const noexcept {
-        return alloc.handles[static_cast<u32>(scaled)];
+    /// Returns the surface image handle at the provided index.
+    GLuint Handle(u32 index = 1) const noexcept {
+        return alloc.handles[index];
     }
 
     /// Returns the tuple of the surface allocation.
@@ -150,8 +155,19 @@ public:
         return alloc.tuple;
     }
 
+    /// Returns the extent of the underlying surface allocation
+    VideoCore::Extent Extent() const noexcept {
+        return {
+            .width = alloc.width,
+            .height = alloc.height,
+        };
+    }
+
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
+
+    /// Uploads the custom material to the surface allocation.
+    void UploadCustom(const VideoCore::Material* material, u32 level);
 
     /// Downloads pixel data to staging from a rectangle region of the surface texture
     void Download(const VideoCore::BufferTextureCopy& download,
@@ -159,6 +175,9 @@ public:
 
     /// Attaches a handle of surface to the specified framebuffer target
     void Attach(GLenum target, u32 level, u32 layer, bool scaled = true);
+
+    /// Swaps the internal allocation to match the provided material
+    bool Swap(const VideoCore::Material* material);
 
     /// Returns the bpp of the internal surface format
     u32 GetInternalBytesPerPixel() const;
@@ -170,6 +189,9 @@ private:
     /// Attempts to download without using an fbo
     bool DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
                             const VideoCore::StagingData& staging);
+
+    /// Returns the texture tag of the current allocation
+    HostTextureTag MakeTag() const noexcept;
 
 private:
     const Driver* driver;

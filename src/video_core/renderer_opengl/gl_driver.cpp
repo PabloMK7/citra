@@ -6,6 +6,7 @@
 #include "common/assert.h"
 #include "common/settings.h"
 #include "core/telemetry_session.h"
+#include "video_core/custom_textures/custom_format.h"
 #include "video_core/renderer_opengl/gl_driver.h"
 
 namespace OpenGL {
@@ -103,6 +104,25 @@ bool Driver::HasDebugTool() {
     return false;
 }
 
+bool Driver::IsCustomFormatSupported(VideoCore::CustomPixelFormat format) const {
+    switch (format) {
+    case VideoCore::CustomPixelFormat::RGBA8:
+        return true;
+    case VideoCore::CustomPixelFormat::BC1:
+    case VideoCore::CustomPixelFormat::BC3:
+    case VideoCore::CustomPixelFormat::BC5:
+        return ext_texture_compression_s3tc;
+    case VideoCore::CustomPixelFormat::BC7:
+        return arb_texture_compression_bptc;
+    case VideoCore::CustomPixelFormat::ASTC4:
+    case VideoCore::CustomPixelFormat::ASTC6:
+    case VideoCore::CustomPixelFormat::ASTC8:
+        return is_gles;
+    default:
+        return false;
+    }
+}
+
 void Driver::ReportDriverInfo() {
     // Report the context version and the vendor string
     gl_version = std::string_view{reinterpret_cast<const char*>(glGetString(GL_VERSION))};
@@ -145,7 +165,9 @@ void Driver::CheckExtensionSupport() {
     arb_buffer_storage = GLAD_GL_ARB_buffer_storage;
     arb_clear_texture = GLAD_GL_ARB_clear_texture;
     arb_get_texture_sub_image = GLAD_GL_ARB_get_texture_sub_image;
+    arb_texture_compression_bptc = GLAD_GL_ARB_texture_compression_bptc;
     ext_clip_cull_distance = GLAD_GL_EXT_clip_cull_distance;
+    ext_texture_compression_s3tc = GLAD_GL_EXT_texture_compression_s3tc;
     is_suitable = GLAD_GL_VERSION_4_3 || GLAD_GL_ES_VERSION_3_1;
 }
 

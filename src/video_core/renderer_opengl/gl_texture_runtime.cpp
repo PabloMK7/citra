@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/scope_exit.h"
-#include "common/settings.h"
+#include "video_core/custom_textures/material.h"
 #include "video_core/regs.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_driver.h"
@@ -14,8 +14,10 @@ namespace OpenGL {
 
 namespace {
 
+using VideoCore::MapType;
 using VideoCore::PixelFormat;
 using VideoCore::SurfaceType;
+using VideoCore::TextureType;
 
 constexpr FormatTuple DEFAULT_TUPLE = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 
@@ -40,6 +42,17 @@ static constexpr std::array<FormatTuple, 5> COLOR_TUPLES_OES = {{
     {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // RGB5A1
     {GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},     // RGB565
     {GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4},   // RGBA4
+}};
+
+static constexpr std::array<FormatTuple, 8> CUSTOM_TUPLES = {{
+    DEFAULT_TUPLE,
+    {GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, GL_UNSIGNED_BYTE},
+    {GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, GL_UNSIGNED_BYTE},
+    {GL_COMPRESSED_RG_RGTC2, GL_COMPRESSED_RG_RGTC2, GL_UNSIGNED_BYTE},
+    {GL_COMPRESSED_RGBA_BPTC_UNORM_ARB, GL_COMPRESSED_RGBA_BPTC_UNORM_ARB, GL_UNSIGNED_BYTE},
+    {GL_COMPRESSED_RGBA_ASTC_4x4, GL_COMPRESSED_RGBA_ASTC_4x4, GL_UNSIGNED_BYTE},
+    {GL_COMPRESSED_RGBA_ASTC_6x6, GL_COMPRESSED_RGBA_ASTC_6x6, GL_UNSIGNED_BYTE},
+    {GL_COMPRESSED_RGBA_ASTC_8x6, GL_COMPRESSED_RGBA_ASTC_8x6, GL_UNSIGNED_BYTE},
 }};
 
 struct FramebufferInfo {
@@ -109,16 +122,22 @@ TextureRuntime::TextureRuntime(const Driver& driver_, VideoCore::RendererBase& r
         read_fbos[i].Create();
     }
 
-    auto Register = [this](PixelFormat dest, std::unique_ptr<FormatReinterpreterBase>&& obj) {
+    auto add_reinterpreter = [this](PixelFormat dest,
+                                    std::unique_ptr<FormatReinterpreterBase>&& obj) {
         const u32 dst_index = static_cast<u32>(dest);
         return reinterpreters[dst_index].push_back(std::move(obj));
     };
 
-    Register(PixelFormat::RGBA8, std::make_unique<ShaderD24S8toRGBA8>());
-    Register(PixelFormat::RGB5A1, std::make_unique<RGBA4toRGB5A1>());
+    add_reinterpreter(PixelFormat::RGBA8, std::make_unique<ShaderD24S8toRGBA8>());
+    add_reinterpreter(PixelFormat::RGB5A1, std::make_unique<RGBA4toRGB5A1>());
 }
 
 TextureRuntime::~TextureRuntime() = default;
+
+void TextureRuntime::Reset() {
+    alloc_cache.clear();
+    framebuffer_cache.clear();
+}
 
 bool TextureRuntime::NeedsConversion(VideoCore::PixelFormat pixel_format) const {
     const bool should_convert = pixel_format == PixelFormat::RGBA8 || // Needs byteswap
@@ -153,50 +172,63 @@ const FormatTuple& TextureRuntime::GetFormatTuple(PixelFormat pixel_format) cons
     return DEFAULT_TUPLE;
 }
 
-void TextureRuntime::Recycle(const HostTextureTag tag, Allocation&& alloc) {
-    recycler.emplace(tag, std::move(alloc));
+const FormatTuple& TextureRuntime::GetFormatTuple(VideoCore::CustomPixelFormat pixel_format) {
+    const std::size_t format_index = static_cast<std::size_t>(pixel_format);
+    return CUSTOM_TUPLES[format_index];
 }
 
-Allocation TextureRuntime::Allocate(const VideoCore::SurfaceParams& params) {
-    const u32 width = params.width;
-    const u32 height = params.height;
-    const u32 levels = params.levels;
+void TextureRuntime::Recycle(const HostTextureTag tag, Allocation&& alloc) {
+    alloc_cache.emplace(tag, std::move(alloc));
+}
+
+Allocation TextureRuntime::Allocate(const VideoCore::SurfaceParams& params,
+                                    const VideoCore::Material* material) {
     const GLenum target = params.texture_type == VideoCore::TextureType::CubeMap
                               ? GL_TEXTURE_CUBE_MAP
                               : GL_TEXTURE_2D;
-    const auto& tuple = GetFormatTuple(params.pixel_format);
-
+    const bool is_custom = material != nullptr;
+    const bool has_normal = material && material->Map(MapType::Normal);
+    const auto& tuple =
+        is_custom ? GetFormatTuple(params.custom_format) : GetFormatTuple(params.pixel_format);
     const HostTextureTag key = {
+        .width = params.width,
+        .height = params.height,
+        .levels = params.levels,
+        .res_scale = params.res_scale,
         .tuple = tuple,
         .type = params.texture_type,
-        .width = width,
-        .height = height,
-        .levels = levels,
-        .res_scale = params.res_scale,
+        .is_custom = is_custom,
+        .has_normal = has_normal,
     };
 
-    if (auto it = recycler.find(key); it != recycler.end()) {
-        Allocation alloc = std::move(it->second);
-        ASSERT(alloc.res_scale == params.res_scale);
-        recycler.erase(it);
+    if (auto it = alloc_cache.find(key); it != alloc_cache.end()) {
+        auto alloc{std::move(it->second)};
+        alloc_cache.erase(it);
         return alloc;
     }
 
     const GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
     glActiveTexture(GL_TEXTURE0);
 
-    std::array<OGLTexture, 2> textures{};
-    std::array<GLuint, 2> handles{};
+    std::array<OGLTexture, 3> textures{};
+    std::array<GLuint, 3> handles{};
 
-    textures[0] = MakeHandle(target, width, height, levels, tuple, params.DebugName(false));
+    textures[0] = MakeHandle(target, params.width, params.height, params.levels, tuple,
+                             params.DebugName(false));
     handles.fill(textures[0].handle);
 
     if (params.res_scale != 1) {
-        const u32 scaled_width = params.GetScaledWidth();
-        const u32 scaled_height = params.GetScaledHeight();
-        textures[1] =
-            MakeHandle(target, scaled_width, scaled_height, levels, tuple, params.DebugName(true));
+        const u32 scaled_width = is_custom ? params.width : params.GetScaledWidth();
+        const u32 scaled_height = is_custom ? params.height : params.GetScaledHeight();
+        const auto& scaled_tuple = is_custom ? GetFormatTuple(PixelFormat::RGBA8) : tuple;
+        textures[1] = MakeHandle(target, scaled_width, scaled_height, params.levels, scaled_tuple,
+                                 params.DebugName(true, is_custom));
         handles[1] = textures[1].handle;
+    }
+    if (has_normal) {
+        textures[2] = MakeHandle(target, params.width, params.height, params.levels, tuple,
+                                 params.DebugName(true, is_custom));
+        handles[2] = textures[2].handle;
     }
 
     glBindTexture(GL_TEXTURE_2D, old_tex);
@@ -311,15 +343,20 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     return true;
 }
 
-void TextureRuntime::GenerateMipmaps(Surface& surface, u32 max_level) {
+void TextureRuntime::GenerateMipmaps(Surface& surface) {
     OpenGLState state = OpenGLState::GetCurState();
-    state.texture_units[0].texture_2d = surface.Handle();
-    state.Apply();
 
-    glActiveTexture(GL_TEXTURE0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
+    const auto generate = [&](u32 index) {
+        state.texture_units[0].texture_2d = surface.Handle(index);
+        state.Apply();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, surface.levels - 1);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    };
 
-    glGenerateMipmap(GL_TEXTURE_2D);
+    generate(1);
+    if (surface.HasNormalMap()) {
+        generate(2);
+    }
 }
 
 const ReinterpreterList& TextureRuntime::GetPossibleReinterpretations(
@@ -340,21 +377,11 @@ Surface::~Surface() {
     if (pixel_format == PixelFormat::Invalid || !alloc) {
         return;
     }
-
-    const HostTextureTag tag = {
-        .tuple = alloc.tuple,
-        .type = texture_type,
-        .width = alloc.width,
-        .height = alloc.height,
-        .levels = alloc.levels,
-        .res_scale = alloc.res_scale,
-    };
-    runtime->Recycle(tag, std::move(alloc));
+    runtime->Recycle(MakeTag(), std::move(alloc));
 }
 
 void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
                      const VideoCore::StagingData& staging) {
-    // Ensure no bad interactions with GL_UNPACK_ALIGNMENT
     ASSERT(stride * GetFormatBytesPerPixel(pixel_format) % 4 == 0);
 
     const GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
@@ -362,12 +389,10 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
     const u32 unscaled_height = upload.texture_rect.GetHeight();
     glPixelStorei(GL_UNPACK_ROW_LENGTH, unscaled_width);
 
-    // Bind the unscaled texture
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, Handle(false));
+    glBindTexture(GL_TEXTURE_2D, Handle(0));
 
-    // Upload the requested rectangle of pixels
-    const auto& tuple = runtime->GetFormatTuple(pixel_format);
+    const auto& tuple = alloc.tuple;
     glTexSubImage2D(GL_TEXTURE_2D, upload.texture_level, upload.texture_rect.left,
                     upload.texture_rect.bottom, unscaled_width, unscaled_height, tuple.format,
                     tuple.type, staging.mapped.data());
@@ -381,17 +406,61 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
         .src_rect = upload.texture_rect,
         .dst_rect = upload.texture_rect * res_scale,
     };
-
-    // If texture filtering is enabled attempt to upscale with that, otherwise fallback
-    // to normal blit.
     if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
         BlitScale(blit, true);
     }
 }
 
+void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
+    const GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
+    const auto& tuple = alloc.tuple;
+    const u32 width = material->width;
+    const u32 height = material->height;
+    const auto color = material->textures[0];
+    const Common::Rectangle filter_rect{0U, height, width, 0U};
+
+    glActiveTexture(GL_TEXTURE0);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
+
+    glBindTexture(GL_TEXTURE_2D, Handle(0));
+    if (VideoCore::IsCustomFormatCompressed(custom_format)) {
+        const GLsizei image_size = static_cast<GLsizei>(color->data.size());
+        glCompressedTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format,
+                                  image_size, color->data.data());
+    } else {
+        glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format, tuple.type,
+                        color->data.data());
+    }
+
+    const VideoCore::TextureBlit blit = {
+        .src_rect = filter_rect,
+        .dst_rect = filter_rect,
+    };
+    if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+        BlitScale(blit, true);
+    }
+    for (u32 i = 1; i < VideoCore::MAX_MAPS; i++) {
+        const auto texture = material->textures[i];
+        if (!texture) {
+            continue;
+        }
+        glBindTexture(GL_TEXTURE_2D, Handle(i + 1));
+        if (VideoCore::IsCustomFormatCompressed(custom_format)) {
+            const GLsizei image_size = static_cast<GLsizei>(texture->data.size());
+            glCompressedTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format,
+                                      image_size, texture->data.data());
+        } else {
+            glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format, tuple.type,
+                            texture->data.data());
+        }
+    }
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glBindTexture(GL_TEXTURE_2D, old_tex);
+}
+
 void Surface::Download(const VideoCore::BufferTextureCopy& download,
                        const VideoCore::StagingData& staging) {
-    // Ensure no bad interactions with GL_PACK_ALIGNMENT
     ASSERT(stride * GetFormatBytesPerPixel(pixel_format) % 4 == 0);
 
     const u32 unscaled_width = download.texture_rect.GetWidth();
@@ -414,11 +483,9 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
         return;
     }
 
-    const u32 fbo_index = FboIndex(type);
-
     OpenGLState state = OpenGLState::GetCurState();
     state.scissor.enabled = false;
-    state.draw.read_framebuffer = runtime->read_fbos[fbo_index].handle;
+    state.draw.read_framebuffer = runtime->read_fbos[FboIndex(type)].handle;
     state.Apply();
 
     Attach(GL_READ_FRAMEBUFFER, download.texture_level, 0, false);
@@ -428,14 +495,11 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
     glReadPixels(download.texture_rect.left, download.texture_rect.bottom, unscaled_width,
                  unscaled_height, tuple.format, tuple.type, staging.mapped.data());
 
-    // Restore previous state
     glPixelStorei(GL_PACK_ROW_LENGTH, 0);
 }
 
 bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
                                  const VideoCore::StagingData& staging) {
-    // If a partial download is requested and ARB_get_texture_sub_image (core in 4.5)
-    // is not available we cannot proceed further.
     const bool is_full_download = download.texture_rect == GetRect();
     const bool has_sub_image = driver->HasArbGetTextureSubImage();
     if (driver->IsOpenGLES() || (!is_full_download && !has_sub_image)) {
@@ -452,7 +516,7 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
     // Prefer glGetTextureSubImage in most cases since it's the fastest and most convenient option
     if (has_sub_image) {
         const GLsizei buf_size = static_cast<GLsizei>(staging.mapped.size());
-        glGetTextureSubImage(Handle(false), download.texture_level, download.texture_rect.left,
+        glGetTextureSubImage(Handle(0), download.texture_level, download.texture_rect.left,
                              download.texture_rect.bottom, 0, download.texture_rect.GetWidth(),
                              download.texture_rect.GetHeight(), 1, tuple.format, tuple.type,
                              buf_size, staging.mapped.data());
@@ -461,7 +525,7 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
 
     // This should only trigger for full texture downloads in oldish intel drivers
     // that only support up to 4.3
-    glBindTexture(GL_TEXTURE_2D, Handle(false));
+    glBindTexture(GL_TEXTURE_2D, Handle(0));
     glGetTexImage(GL_TEXTURE_2D, download.texture_level, tuple.format, tuple.type,
                   staging.mapped.data());
     glBindTexture(GL_TEXTURE_2D, old_tex);
@@ -470,25 +534,49 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
 }
 
 void Surface::Attach(GLenum target, u32 level, u32 layer, bool scaled) {
-    const GLuint handle = Handle(scaled);
-    const GLenum textarget = texture_type == VideoCore::TextureType::CubeMap
+    const GLuint handle = Handle(static_cast<u32>(scaled));
+    const GLenum textarget = texture_type == TextureType::CubeMap
                                  ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + layer
                                  : GL_TEXTURE_2D;
 
     switch (type) {
-    case VideoCore::SurfaceType::Color:
-    case VideoCore::SurfaceType::Texture:
+    case SurfaceType::Color:
+    case SurfaceType::Texture:
         glFramebufferTexture2D(target, GL_COLOR_ATTACHMENT0, textarget, handle, level);
         break;
-    case VideoCore::SurfaceType::Depth:
+    case SurfaceType::Depth:
         glFramebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget, handle, level);
         break;
-    case VideoCore::SurfaceType::DepthStencil:
+    case SurfaceType::DepthStencil:
         glFramebufferTexture2D(target, GL_DEPTH_STENCIL_ATTACHMENT, textarget, handle, level);
         break;
     default:
         UNREACHABLE_MSG("Invalid surface type!");
     }
+}
+
+bool Surface::Swap(const VideoCore::Material* mat) {
+    const VideoCore::CustomPixelFormat format{mat->format};
+    if (!driver->IsCustomFormatSupported(format)) {
+        return false;
+    }
+    runtime->Recycle(MakeTag(), std::move(alloc));
+
+    SurfaceParams params = *this;
+    params.width = mat->width;
+    params.height = mat->height;
+    params.custom_format = mat->format;
+    alloc = runtime->Allocate(params, mat);
+
+    LOG_DEBUG(Render_OpenGL, "Swapped {}x{} {} surface at address {:#x} to {}x{} {}",
+              GetScaledWidth(), GetScaledHeight(), VideoCore::PixelFormatAsString(pixel_format),
+              addr, width, height, VideoCore::CustomPixelFormatAsString(format));
+
+    is_custom = true;
+    custom_format = format;
+    material = mat;
+
+    return true;
 }
 
 u32 Surface::GetInternalBytesPerPixel() const {
@@ -518,6 +606,19 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
                       blit.dst_rect.right, blit.dst_rect.top, buffer_mask, filter);
 }
 
+HostTextureTag Surface::MakeTag() const noexcept {
+    return HostTextureTag{
+        .width = alloc.width,
+        .height = alloc.height,
+        .levels = alloc.levels,
+        .res_scale = alloc.res_scale,
+        .tuple = alloc.tuple,
+        .type = texture_type,
+        .is_custom = is_custom,
+        .has_normal = HasNormalMap(),
+    };
+}
+
 Framebuffer::Framebuffer(TextureRuntime& runtime, Surface* const color, u32 color_level,
                          Surface* const depth_stencil, u32 depth_level, const Pica::Regs& regs,
                          Common::Rectangle<u32> surfaces_rect)
@@ -527,7 +628,7 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, Surface* const color, u32 colo
     const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
     const bool has_stencil = regs.framebuffer.HasStencil();
     if (shadow_rendering && !color) {
-        return; // Framebuffer won't get used
+        return;
     }
 
     if (color) {
@@ -574,19 +675,15 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, Surface* const color, u32 colo
                                color ? color->Handle() : 0, color_level);
         if (depth_stencil) {
             if (has_stencil) {
-                // Attach both depth and stencil
                 glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                                        GL_TEXTURE_2D, depth_stencil->Handle(), depth_level);
             } else {
-                // Attach depth
                 glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
                                        depth_stencil->Handle(), depth_level);
-                // Clear stencil attachment
                 glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
                                        0);
             }
         } else {
-            // Clear both depth and stencil attachment
             glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
                                    0, 0);
         }

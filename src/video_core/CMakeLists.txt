@@ -3,6 +3,12 @@ add_subdirectory(host_shaders)
 add_library(video_core STATIC
     command_processor.cpp
     command_processor.h
+    custom_textures/custom_format.cpp
+    custom_textures/custom_format.h
+    custom_textures/custom_tex_manager.cpp
+    custom_textures/custom_tex_manager.h
+    custom_textures/material.cpp
+    custom_textures/material.h
     debug_utils/debug_utils.cpp
     debug_utils/debug_utils.h
     geometry_pipeline.cpp
@@ -120,7 +126,7 @@ target_include_directories(video_core PRIVATE ${HOST_SHADERS_INCLUDE})
 create_target_directory_groups(video_core)
 
 target_link_libraries(video_core PUBLIC common core)
-target_link_libraries(video_core PRIVATE glad nihstro-headers Boost::serialization)
+target_link_libraries(video_core PRIVATE glad json-headers dds-ktx nihstro-headers Boost::serialization)
 set_target_properties(video_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if ("x86_64" IN_LIST ARCHITECTURE)

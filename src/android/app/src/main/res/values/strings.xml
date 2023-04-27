@@ -116,6 +116,8 @@
     <string name="custom_textures_description">Uses custom textures found in load/textures/[GAME ID]</string>
     <string name="preload_textures">Preload custom textures</string>
     <string name="preload_textures_description">Loads all custom textures into memory. This feature can use a lot of memory.</string>
+    <string name="async_custom_loading">Async custom texture loading</string>
+    <string name="async_custom_loading_description">Loads custom textures in the background with worker threads to reduce loading stutter.</string>
     <!-- Premium strings -->
     <string name="premium_text">Premium</string>
     <string name="premium_settings_upsell">Upgrade to Premium and support Citra!</string>

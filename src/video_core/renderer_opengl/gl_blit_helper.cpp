@@ -13,7 +13,6 @@
 #include "video_core/host_shaders/texture_filtering/nearest_neighbor_frag.h"
 #include "video_core/host_shaders/texture_filtering/refine_frag.h"
 #include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
-#include "video_core/host_shaders/texture_filtering/tex_coord_vert.h"
 #include "video_core/host_shaders/texture_filtering/x_gradient_frag.h"
 #include "video_core/host_shaders/texture_filtering/xbrz_freescale_frag.h"
 #include "video_core/host_shaders/texture_filtering/y_gradient_frag.h"
@@ -81,7 +80,7 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
     }
 
     const OpenGLState prev_state = OpenGLState::GetCurState();
-    state.texture_units[0].texture_2d = surface.Handle(false);
+    state.texture_units[0].texture_2d = surface.Handle(0);
 
     const auto filter{Settings::values.texture_filter.GetValue()};
     switch (filter) {
@@ -135,7 +134,7 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
     auto LUMAD = setup_temp_tex(GL_R16F, GL_RED, temp_rect.GetWidth(), temp_rect.GetHeight());
 
     // Copy to SRC
-    glCopyImageSubData(surface.Handle(false), GL_TEXTURE_2D, 0, blit.src_rect.left,
+    glCopyImageSubData(surface.Handle(0), GL_TEXTURE_2D, 0, blit.src_rect.left,
                        blit.src_rect.bottom, 0, SRC.tex.handle, GL_TEXTURE_2D, 0, 0, 0, 0,
                        src_width, src_height, 1);
 
@@ -161,47 +160,42 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
 }
 
 void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit) {
-    SetParams(bicubic_program, surface.width, surface.height, blit.src_rect);
+    SetParams(bicubic_program, surface.Extent(), blit.src_rect);
     Draw(bicubic_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterNearest(Surface& surface, const VideoCore::TextureBlit& blit) {
-    state.texture_units[2].texture_2d = surface.Handle(false);
-    SetParams(nearest_program, surface.width, surface.height, blit.src_rect);
+    state.texture_units[2].texture_2d = surface.Handle(0);
+    SetParams(nearest_program, surface.Extent(), blit.src_rect);
     Draw(nearest_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit& blit) {
-    SetParams(scale_force_program, surface.width, surface.height, blit.src_rect);
+    SetParams(scale_force_program, surface.Extent(), blit.src_rect);
     Draw(scale_force_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit) {
     glProgramUniform1f(xbrz_program.handle, 2, static_cast<GLfloat>(surface.res_scale));
-    SetParams(xbrz_program, surface.width, surface.height, blit.src_rect);
+    SetParams(xbrz_program, surface.Extent(), blit.src_rect);
     Draw(xbrz_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
-void BlitHelper::SetParams(OGLProgram& program, u32 src_width, u32 src_height,
+void BlitHelper::SetParams(OGLProgram& program, const VideoCore::Extent& src_extent,
                            Common::Rectangle<u32> src_rect) {
     glProgramUniform2f(
         program.handle, 0,
-        static_cast<float>(src_rect.right - src_rect.left) / static_cast<float>(src_width),
-        static_cast<float>(src_rect.top - src_rect.bottom) / static_cast<float>(src_height));
+        static_cast<float>(src_rect.right - src_rect.left) / static_cast<float>(src_extent.width),
+        static_cast<float>(src_rect.top - src_rect.bottom) / static_cast<float>(src_extent.height));
     glProgramUniform2f(program.handle, 1,
-                       static_cast<float>(src_rect.left) / static_cast<float>(src_width),
-                       static_cast<float>(src_rect.bottom) / static_cast<float>(src_height));
+                       static_cast<float>(src_rect.left) / static_cast<float>(src_extent.width),
+                       static_cast<float>(src_rect.bottom) / static_cast<float>(src_extent.height));
 }
 
 void BlitHelper::Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 dst_level,
                       Common::Rectangle<u32> dst_rect) {
     state.draw.draw_framebuffer = dst_fbo;
     state.draw.shader_program = program.handle;
-    state.scissor.enabled = true;
-    state.scissor.x = dst_rect.left;
-    state.scissor.y = dst_rect.bottom;
-    state.scissor.width = dst_rect.GetWidth();
-    state.scissor.height = dst_rect.GetHeight();
     state.viewport.x = dst_rect.left;
     state.viewport.y = dst_rect.bottom;
     state.viewport.width = dst_rect.GetWidth();
@@ -212,7 +206,6 @@ void BlitHelper::Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 d
                            dst_level);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-    glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 

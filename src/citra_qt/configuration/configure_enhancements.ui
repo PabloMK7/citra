@@ -494,6 +494,16 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="toggle_async_custom_loading">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load custom textures asynchronously with background threads to reduce loading stutter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Async Custom Texture Loading</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

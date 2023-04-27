@@ -813,8 +813,7 @@ std::vector<FormatInfo> ListFormats() {
     void* data = nullptr; // For libavformat to save the iteration state
     while ((current = av_muxer_iterate(&data))) {
 #endif
-        std::vector<std::string> extensions;
-        Common::SplitString(ToStdString(current->extensions), ',', extensions);
+        const auto extensions = Common::SplitString(ToStdString(current->extensions), ',');
 
         std::set<AVCodecID> supported_video_codecs;
         std::set<AVCodecID> supported_audio_codecs;

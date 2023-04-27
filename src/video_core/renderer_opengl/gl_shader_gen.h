@@ -117,6 +117,7 @@ struct PicaFSConfigState {
 
     bool shadow_rendering;
     bool shadow_texture_orthographic;
+    bool use_custom_normal_map;
 };
 
 /**
@@ -130,7 +131,7 @@ struct PicaFSConfigState {
 struct PicaFSConfig : Common::HashableStruct<PicaFSConfigState> {
 
     /// Construct a PicaFSConfig with the given Pica register configuration.
-    static PicaFSConfig BuildFromRegs(const Pica::Regs& regs);
+    static PicaFSConfig BuildFromRegs(const Pica::Regs& regs, bool use_normal = false);
 
     bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
         return (stage_index < 4) && (state.combiner_buffer_input & (1 << stage_index));

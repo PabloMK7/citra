@@ -62,8 +62,7 @@ JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_Cheat_set
 JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_features_cheats_model_Cheat_isValidGatewayCode(
     JNIEnv* env, jclass, jstring j_code) {
     const std::string code = GetJString(env, j_code);
-    std::vector<std::string> code_lines;
-    Common::SplitString(code, '\n', code_lines);
+    const auto code_lines = Common::SplitString(code, '\n');
 
     for (int i = 0; i < code_lines.size(); ++i) {
         Cheats::GatewayCheat::CheatLine cheat_line(code_lines[i]);

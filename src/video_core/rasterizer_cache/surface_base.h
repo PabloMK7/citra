@@ -11,6 +11,8 @@ namespace VideoCore {
 
 using SurfaceRegions = boost::icl::interval_set<PAddr, std::less, SurfaceInterval>;
 
+struct Material;
+
 class SurfaceBase : public SurfaceParams {
 public:
     SurfaceBase(const SurfaceParams& params);
@@ -28,8 +30,15 @@ public:
     /// Returns the clear value used to validate another surface from this fill surface
     ClearValue MakeClearValue(PAddr copy_addr, PixelFormat dst_format);
 
+    /// Returns true if the surface contains a custom material with a normal map.
+    bool HasNormalMap() const noexcept;
+
     u64 ModificationTick() const noexcept {
         return modification_tick;
+    }
+
+    bool IsCustom() const noexcept {
+        return is_custom && custom_format != CustomPixelFormat::Invalid;
     }
 
     bool IsRegionValid(SurfaceInterval interval) const {
@@ -57,6 +66,8 @@ private:
 
 public:
     bool registered = false;
+    bool is_custom = false;
+    const Material* material = nullptr;
     SurfaceRegions invalid_regions;
     u32 fill_size = 0;
     std::array<u8, 4> fill_data;

@@ -215,12 +215,12 @@ u32 SurfaceParams::LevelOf(PAddr level_addr) const {
     return level;
 }
 
-std::string SurfaceParams::DebugName(bool scaled) const noexcept {
+std::string SurfaceParams::DebugName(bool scaled, bool custom) const noexcept {
     const u32 scaled_width = scaled ? GetScaledWidth() : width;
     const u32 scaled_height = scaled ? GetScaledHeight() : height;
-    return fmt::format("Surface: {}x{} {} {} levels from {:#x} to {:#x} ({})", scaled_width,
+    return fmt::format("Surface: {}x{} {} {} levels from {:#x} to {:#x} ({}{})", scaled_width,
                        scaled_height, PixelFormatAsString(pixel_format), levels, addr, end,
-                       scaled ? "scaled" : "unscaled");
+                       custom ? "custom," : "", scaled ? "scaled" : "unscaled");
 }
 
 } // namespace VideoCore

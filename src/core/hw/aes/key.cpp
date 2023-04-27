@@ -458,8 +458,7 @@ void LoadPresetKeys() {
             continue;
         }
 
-        std::vector<std::string> parts;
-        Common::SplitString(line, '=', parts);
+        const auto parts = Common::SplitString(line, '=');
         if (parts.size() != 2) {
             LOG_ERROR(HW_AES, "Failed to parse {}", line);
             continue;

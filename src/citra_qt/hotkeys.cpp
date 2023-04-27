@@ -2,13 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QKeySequence>
 #include <QShortcut>
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/uisettings.h"
 
 HotkeyRegistry::HotkeyRegistry() = default;
+
 HotkeyRegistry::~HotkeyRegistry() = default;
 
 void HotkeyRegistry::SaveHotkeys() {

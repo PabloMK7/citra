@@ -18,6 +18,10 @@ namespace VideoCore {
 class RendererBase;
 }
 
+namespace VideoCore {
+class CustomTexManager;
+}
+
 namespace OpenGL {
 
 class Driver;
@@ -25,10 +29,12 @@ class ShaderProgramManager;
 
 class RasterizerOpenGL : public VideoCore::RasterizerAccelerated {
 public:
-    explicit RasterizerOpenGL(Memory::MemorySystem& memory, VideoCore::RendererBase& renderer,
-                              Driver& driver);
+    explicit RasterizerOpenGL(Memory::MemorySystem& memory,
+                              VideoCore::CustomTexManager& custom_tex_manager,
+                              VideoCore::RendererBase& renderer, Driver& driver);
     ~RasterizerOpenGL() override;
 
+    void TickFrame();
     void LoadDiskResources(const std::atomic_bool& stop_loading,
                            const VideoCore::DiskResourceLoadCallback& callback) override;
 
@@ -73,9 +79,6 @@ private:
 
     /// Syncs the clip enabled status to match the PICA register
     void SyncClipEnabled();
-
-    /// Sets the OpenGL shader in accordance with the current PICA register state
-    void SetShader();
 
     /// Syncs the cull mode to match the PICA register
     void SyncCullMode();
@@ -126,6 +129,9 @@ private:
     /// Unbinds all special texture unit 0 texture configurations
     void UnbindSpecial();
 
+    /// Binds the custom material referenced by surface if it exists.
+    void BindMaterial(u32 texture_index, Surface& surface);
+
     /// Upload the uniform blocks to the uniform buffer object
     void UploadUniforms(bool accelerate_draw);
 
@@ -174,6 +180,7 @@ private:
     OGLTexture texture_buffer_lut_lf;
     OGLTexture texture_buffer_lut_rg;
     OGLTexture texture_buffer_lut_rgba;
+    bool use_custom_normal{};
 };
 
 } // namespace OpenGL

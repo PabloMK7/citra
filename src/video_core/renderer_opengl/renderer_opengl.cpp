@@ -313,7 +313,8 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Frontend::EmuWindow& window
     }
     frame_dumper.mailbox = std::make_unique<OGLVideoDumpingMailbox>();
     InitOpenGLObjects();
-    rasterizer = std::make_unique<RasterizerOpenGL>(system.Memory(), *this, driver);
+    rasterizer = std::make_unique<RasterizerOpenGL>(system.Memory(), system.CustomTexManager(),
+                                                    *this, driver);
 }
 
 RendererOpenGL::~RendererOpenGL() = default;
@@ -347,6 +348,8 @@ void RendererOpenGL::SwapBuffers() {
 
     EndFrame();
     prev_state.Apply();
+
+    rasterizer->TickFrame();
 }
 
 void RendererOpenGL::RenderScreenshot() {
@@ -1168,9 +1171,6 @@ void RendererOpenGL::TryPresent(int timeout_ms, bool is_secondary) {
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
-
-/// Updates the framerate
-void RendererOpenGL::UpdateFramerate() {}
 
 void RendererOpenGL::PrepareVideoDumping() {
     auto* mailbox = static_cast<OGLVideoDumpingMailbox*>(frame_dumper.mailbox.get());

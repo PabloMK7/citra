@@ -8,7 +8,7 @@
 
 class QtImageInterface final : public Frontend::ImageInterface {
 public:
-    bool DecodePNG(std::vector<u8>& dst, u32& width, u32& height, const std::string& path) override;
-    bool EncodePNG(const std::string& path, const std::vector<u8>& src, u32 width,
-                   u32 height) override;
+    bool DecodePNG(std::vector<u8>& dst, u32& width, u32& height, std::span<const u8> src) override;
+    bool EncodePNG(const std::string& path, u32 width, u32 height,
+                   std::span<const u8> src) override;
 };

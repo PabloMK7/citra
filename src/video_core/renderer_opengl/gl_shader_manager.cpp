@@ -133,6 +133,7 @@ static void SetShaderSamplerBindings(GLuint shader) {
     SetShaderSamplerBinding(shader, "tex1", TextureUnits::PicaTexture(1));
     SetShaderSamplerBinding(shader, "tex2", TextureUnits::PicaTexture(2));
     SetShaderSamplerBinding(shader, "tex_cube", TextureUnits::TextureCube);
+    SetShaderSamplerBinding(shader, "tex_normal", TextureUnits::TextureNormalMap);
 
     // Set the texture samplers to correspond to different lookup table texture units
     SetShaderSamplerBinding(shader, "texture_buffer_lut_lf", TextureUnits::TextureBufferLUT_LF);
@@ -415,8 +416,8 @@ void ShaderProgramManager::UseTrivialGeometryShader() {
     impl->current.gs_hash = 0;
 }
 
-void ShaderProgramManager::UseFragmentShader(const Pica::Regs& regs) {
-    PicaFSConfig config = PicaFSConfig::BuildFromRegs(regs);
+void ShaderProgramManager::UseFragmentShader(const Pica::Regs& regs, bool use_normal) {
+    PicaFSConfig config = PicaFSConfig::BuildFromRegs(regs, use_normal);
     auto [handle, result] = impl->fragment_shaders.Get(config);
     impl->current.fs = handle;
     impl->current.fs_hash = config.Hash();

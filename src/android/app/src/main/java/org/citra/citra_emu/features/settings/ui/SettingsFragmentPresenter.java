@@ -368,6 +368,7 @@ public final class SettingsFragmentPresenter {
         SettingSection utilitySection = mSettings.getSection(Settings.SECTION_UTILITY);
         Setting dumpTextures = utilitySection.getSetting(SettingsFile.KEY_DUMP_TEXTURES);
         Setting customTextures = utilitySection.getSetting(SettingsFile.KEY_CUSTOM_TEXTURES);
+        Setting asyncCustomLoading = utilitySection.getSetting(SettingsFile.KEY_ASYNC_CUSTOM_LOADING);
         //Setting preloadTextures = utilitySection.getSetting(SettingsFile.KEY_PRELOAD_TEXTURES);
 
         sl.add(new HeaderSetting(null, null, R.string.renderer, 0));
@@ -389,6 +390,7 @@ public final class SettingsFragmentPresenter {
         sl.add(new HeaderSetting(null, null, R.string.utility, 0));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_DUMP_TEXTURES, Settings.SECTION_UTILITY, R.string.dump_textures, R.string.dump_textures_description, false, dumpTextures));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_CUSTOM_TEXTURES, Settings.SECTION_UTILITY, R.string.custom_textures, R.string.custom_textures_description, false, customTextures));
+        sl.add(new CheckBoxSetting(SettingsFile.KEY_ASYNC_CUSTOM_LOADING, Settings.SECTION_UTILITY, R.string.async_custom_loading, R.string.async_custom_loading_description, true, asyncCustomLoading));
         //Disabled until custom texture implementation gets rewrite, current one overloads RAM and crashes Citra.
         //sl.add(new CheckBoxSetting(SettingsFile.KEY_PRELOAD_TEXTURES, Settings.SECTION_UTILITY, R.string.preload_textures, R.string.preload_textures_description, false, preloadTextures));
     }

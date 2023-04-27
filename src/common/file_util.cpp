@@ -960,7 +960,7 @@ std::string_view GetFilename(std::string_view path) {
     const auto name_index = path.find_last_of("\\/");
 
     if (name_index == std::string_view::npos) {
-        return {};
+        return path;
     }
 
     return path.substr(name_index + 1);

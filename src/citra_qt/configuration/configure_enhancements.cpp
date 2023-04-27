@@ -41,8 +41,10 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     });
 
     ui->toggle_preload_textures->setEnabled(ui->toggle_custom_textures->isChecked());
+    ui->toggle_async_custom_loading->setEnabled(ui->toggle_custom_textures->isChecked());
     connect(ui->toggle_custom_textures, &QCheckBox::toggled, this, [this] {
         ui->toggle_preload_textures->setEnabled(ui->toggle_custom_textures->isChecked());
+        ui->toggle_async_custom_loading->setEnabled(ui->toggle_custom_textures->isChecked());
         if (!ui->toggle_preload_textures->isEnabled())
             ui->toggle_preload_textures->setChecked(false);
     });
@@ -83,6 +85,7 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->toggle_dump_textures->setChecked(Settings::values.dump_textures.GetValue());
     ui->toggle_custom_textures->setChecked(Settings::values.custom_textures.GetValue());
     ui->toggle_preload_textures->setChecked(Settings::values.preload_textures.GetValue());
+    ui->toggle_async_custom_loading->setChecked(Settings::values.async_custom_loading.GetValue());
     bg_color =
         QColor::fromRgbF(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
                          Settings::values.bg_blue.GetValue());
@@ -159,6 +162,8 @@ void ConfigureEnhancements::ApplyConfiguration() {
                                              ui->toggle_custom_textures, custom_textures);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.preload_textures,
                                              ui->toggle_preload_textures, preload_textures);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_custom_loading,
+                                             ui->toggle_async_custom_loading, async_custom_loading);
 
     Settings::values.bg_red = static_cast<float>(bg_color.redF());
     Settings::values.bg_green = static_cast<float>(bg_color.greenF());
@@ -176,6 +181,8 @@ void ConfigureEnhancements::SetupPerGameUI() {
         ui->toggle_dump_textures->setEnabled(Settings::values.dump_textures.UsingGlobal());
         ui->toggle_custom_textures->setEnabled(Settings::values.custom_textures.UsingGlobal());
         ui->toggle_preload_textures->setEnabled(Settings::values.preload_textures.UsingGlobal());
+        ui->toggle_async_custom_loading->setEnabled(
+            Settings::values.async_custom_loading.UsingGlobal());
         return;
     }
 
@@ -195,6 +202,9 @@ void ConfigureEnhancements::SetupPerGameUI() {
                                             Settings::values.custom_textures, custom_textures);
     ConfigurationShared::SetColoredTristate(ui->toggle_preload_textures,
                                             Settings::values.preload_textures, preload_textures);
+    ConfigurationShared::SetColoredTristate(ui->toggle_async_custom_loading,
+                                            Settings::values.async_custom_loading,
+                                            async_custom_loading);
 
     ConfigurationShared::SetColoredComboBox(
         ui->resolution_factor_combobox, ui->widget_resolution,

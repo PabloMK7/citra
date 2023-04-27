@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "video_core/custom_textures/material.h"
 #include "video_core/rasterizer_cache/surface_base.h"
 #include "video_core/texture/texture_decode.h"
 
@@ -99,6 +100,10 @@ SurfaceInterval SurfaceBase::GetCopyableInterval(const SurfaceParams& params) co
         }
     }
     return result;
+}
+
+bool SurfaceBase::HasNormalMap() const noexcept {
+    return material && material->Map(MapType::Normal) != nullptr;
 }
 
 ClearValue SurfaceBase::MakeClearValue(PAddr copy_addr, PixelFormat dst_format) {

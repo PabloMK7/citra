@@ -44,5 +44,6 @@ private:
     ConfigurationShared::CheckState dump_textures;
     ConfigurationShared::CheckState custom_textures;
     ConfigurationShared::CheckState preload_textures;
+    ConfigurationShared::CheckState async_custom_loading;
     QColor bg_color;
 };

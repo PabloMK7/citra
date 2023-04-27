@@ -1,0 +1,94 @@
+// Copyright 2023 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#pragma once
+
+#include <list>
+#include <span>
+#include <unordered_map>
+#include <unordered_set>
+#include "common/thread_worker.h"
+#include "video_core/custom_textures/material.h"
+
+namespace Core {
+class System;
+}
+
+namespace FileUtil {
+struct FSTEntry;
+}
+
+namespace VideoCore {
+
+class SurfaceParams;
+
+struct AsyncUpload {
+    const Material* material;
+    std::function<bool()> func;
+};
+
+class CustomTexManager {
+public:
+    explicit CustomTexManager(Core::System& system);
+    ~CustomTexManager();
+
+    /// Processes queued texture uploads
+    void TickFrame();
+
+    /// Searches the load directory assigned to program_id for any custom textures and loads them
+    void FindCustomTextures();
+
+    /// Saves the pack configuration file template to the dump directory if it doesn't exist.
+    void WriteConfig();
+
+    /// Preloads all registered custom textures
+    void PreloadTextures();
+
+    /// Saves the provided pixel data described by params to disk as png
+    void DumpTexture(const SurfaceParams& params, u32 level, std::span<u8> data, u64 data_hash);
+
+    /// Returns the material assigned to the provided data hash
+    Material* GetMaterial(u64 data_hash);
+
+    /// Decodes the textures in material to a consumable format and uploads it.
+    bool Decode(Material* material, std::function<bool()>&& upload);
+
+    /// True when mipmap uploads should be skipped (legacy packs only)
+    bool SkipMipmaps() const noexcept {
+        return skip_mipmap;
+    }
+
+    /// Returns true if the pack uses the new hashing method.
+    bool UseNewHash() const noexcept {
+        return use_new_hash;
+    }
+
+private:
+    /// Parses the custom texture filename (hash, material type, etc).
+    bool ParseFilename(const FileUtil::FSTEntry& file, CustomTexture* texture);
+
+    /// Reads the pack configuration file
+    void ReadConfig(const std::string& load_path);
+
+    /// Creates the thread workers.
+    void CreateWorkers();
+
+private:
+    Core::System& system;
+    Frontend::ImageInterface& image_interface;
+    std::unordered_set<u64> dumped_textures;
+    std::unordered_map<u64, std::unique_ptr<Material>> material_map;
+    std::unordered_map<std::string, u64> path_to_hash_map;
+    std::vector<std::unique_ptr<CustomTexture>> custom_textures;
+    std::list<AsyncUpload> async_uploads;
+    std::unique_ptr<Common::ThreadWorker> workers;
+    bool textures_loaded{false};
+    bool async_custom_loading{true};
+    bool skip_mipmap{true};
+    bool flip_png_files{true};
+    bool use_new_hash{false};
+    bool refuse_dds{false};
+};
+
+} // namespace VideoCore

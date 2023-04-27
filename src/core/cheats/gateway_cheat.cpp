@@ -216,13 +216,12 @@ GatewayCheat::GatewayCheat(std::string name_, std::vector<CheatLine> cheat_lines
 GatewayCheat::GatewayCheat(std::string name_, std::string code, std::string comments_)
     : name(std::move(name_)), comments(std::move(comments_)) {
 
-    std::vector<std::string> code_lines;
-    Common::SplitString(code, '\n', code_lines);
+    const auto code_lines = Common::SplitString(code, '\n');
 
     std::vector<CheatLine> temp_cheat_lines;
-    for (std::size_t i = 0; i < code_lines.size(); ++i) {
-        if (!code_lines[i].empty())
-            temp_cheat_lines.emplace_back(code_lines[i]);
+    for (const std::string& line : code_lines) {
+        if (!line.empty())
+            temp_cheat_lines.emplace_back(line);
     }
     cheat_lines = std::move(temp_cheat_lines);
 }
@@ -464,10 +463,10 @@ std::string GatewayCheat::ToString() const {
         result += EnabledText;
         result += '\n';
     }
-    std::vector<std::string> comment_lines;
-    Common::SplitString(comments, '\n', comment_lines);
-    for (const auto& comment_line : comment_lines)
+    const auto comment_lines = Common::SplitString(comments, '\n');
+    for (const auto& comment_line : comment_lines) {
         result += "*" + comment_line + '\n';
+    }
     result += GetCode() + '\n';
     return result;
 }

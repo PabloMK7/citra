@@ -64,6 +64,10 @@ if(ANDROID)
     endforeach()
 endif()
 
+# dds-ktx
+add_library(dds-ktx INTERFACE)
+target_include_directories(dds-ktx INTERFACE ./dds-ktx)
+
 # fmt and Xbyak need to be added before dynarmic
 # libfmt
 option(FMT_INSTALL "" ON)
@@ -141,6 +145,10 @@ if (USE_DISCORD_PRESENCE)
     target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
 endif()
 
+# JSON
+add_library(json-headers INTERFACE)
+target_include_directories(json-headers INTERFACE ./json)
+
 if (ENABLE_WEB_SERVICE)
     find_package(OpenSSL 1.1)
     if (OPENSSL_FOUND)
@@ -156,9 +164,6 @@ if (ENABLE_WEB_SERVICE)
             DIRECTORY libressl
             DEFINITION OPENSSL_LIBS)
     endif()
-    # JSON
-    add_library(json-headers INTERFACE)
-    target_include_directories(json-headers INTERFACE ./json)
 
     if(ANDROID)
         add_subdirectory(android-ifaddrs)

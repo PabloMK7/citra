@@ -10,13 +10,15 @@
 #include <cstddef>
 #include <mutex>
 #include <thread>
+#include "common/common_types.h"
+#include "common/polyfill_thread.h"
 
 namespace Common {
 
 class Event {
 public:
     void Set() {
-        std::lock_guard lk{mutex};
+        std::scoped_lock lk{mutex};
         if (!is_set) {
             is_set = true;
             condvar.notify_one();
@@ -54,6 +56,10 @@ public:
         is_set = false;
     }
 
+    [[nodiscard]] bool IsSet() {
+        return is_set;
+    }
+
 private:
     std::condition_variable condvar;
     std::mutex mutex;
@@ -65,7 +71,7 @@ public:
     explicit Barrier(std::size_t count_) : count(count_) {}
 
     /// Blocks until all "count" threads have called Sync()
-    void Sync() {
+    bool Sync(std::stop_token token = {}) {
         std::unique_lock lk{mutex};
         const std::size_t current_generation = generation;
 
@@ -73,24 +79,36 @@ public:
             generation++;
             waiting = 0;
             condvar.notify_all();
+            return true;
         } else {
-            condvar.wait(lk,
-                         [this, current_generation] { return current_generation != generation; });
+            CondvarWait(condvar, lk, token,
+                        [this, current_generation] { return current_generation != generation; });
+            return !token.stop_requested();
         }
     }
 
-    std::size_t Generation() const {
-        std::unique_lock lk(mutex);
+    std::size_t Generation() {
+        std::unique_lock lk{mutex};
         return generation;
     }
 
 private:
-    std::condition_variable condvar;
-    mutable std::mutex mutex;
+    std::condition_variable_any condvar;
+    std::mutex mutex;
     std::size_t count;
     std::size_t waiting = 0;
     std::size_t generation = 0; // Incremented once each time the barrier is used
 };
+
+enum class ThreadPriority : u32 {
+    Low = 0,
+    Normal = 1,
+    High = 2,
+    VeryHigh = 3,
+    Critical = 4,
+};
+
+void SetCurrentThreadPriority(ThreadPriority new_priority);
 
 void SetCurrentThreadName(const char* name);
 

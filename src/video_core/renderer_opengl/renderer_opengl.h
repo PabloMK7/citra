@@ -94,7 +94,6 @@ private:
                                        float h);
     void DrawSingleScreenStereo(const ScreenInfo& screen_info_l, const ScreenInfo& screen_info_r,
                                 float x, float y, float w, float h);
-    void UpdateFramerate();
 
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,

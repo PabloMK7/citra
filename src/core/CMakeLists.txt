@@ -36,8 +36,6 @@ add_library(core STATIC
     core.h
     core_timing.cpp
     core_timing.h
-    custom_tex_cache.cpp
-    custom_tex_cache.h
     dumping/backend.cpp
     dumping/backend.h
     file_sys/archive_backend.cpp
@@ -109,6 +107,7 @@ add_library(core STATIC
     frontend/emu_window.h
     frontend/framebuffer_layout.cpp
     frontend/framebuffer_layout.h
+    frontend/image_interface.cpp
     frontend/image_interface.h
     frontend/input.h
     frontend/mic.cpp
@@ -481,7 +480,8 @@ endif()
 create_target_directory_groups(core)
 
 target_link_libraries(core PUBLIC common PRIVATE audio_core network video_core)
-target_link_libraries(core PUBLIC Boost::boost PRIVATE cryptopp fmt::fmt open_source_archives Boost::serialization Boost::iostreams)
+target_link_libraries(core PRIVATE Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(core PUBLIC dds-ktx PRIVATE cryptopp fmt::fmt lodepng open_source_archives)
 set_target_properties(core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if (ENABLE_WEB_SERVICE)

@@ -65,6 +65,8 @@ add_library(common STATIC
     common_precompiled_headers.h
     common_types.h
     construct.h
+    error.cpp
+    error.h
     file_util.cpp
     file_util.h
     hash.h
@@ -89,6 +91,7 @@ add_library(common STATIC
     misc.cpp
     param_package.cpp
     param_package.h
+    polyfill_thread.h
     precompiled_headers.h
     quaternion.h
     ring_buffer.h
@@ -113,9 +116,11 @@ add_library(common STATIC
     thread.cpp
     thread.h
     thread_queue_list.h
+    thread_worker.h
     threadsafe_queue.h
     timer.cpp
     timer.h
+    unique_function.h
     vector_math.h
     web_result.h
     x64/cpu_detect.cpp

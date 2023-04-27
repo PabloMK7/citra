@@ -73,6 +73,7 @@ public final class SettingsFile {
     public static final String KEY_DUMP_TEXTURES = "dump_textures";
     public static final String KEY_CUSTOM_TEXTURES = "custom_textures";
     public static final String KEY_PRELOAD_TEXTURES = "preload_textures";
+    public static final String KEY_ASYNC_CUSTOM_LOADING = "async_custom_loading";
 
     public static final String KEY_AUDIO_OUTPUT_ENGINE = "output_engine";
     public static final String KEY_ENABLE_AUDIO_STRETCHING = "enable_audio_stretching";

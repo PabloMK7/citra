@@ -213,6 +213,10 @@ custom_textures =
 # 0 (default): Off, 1: On
 preload_textures =
 
+# Loads custom textures asynchronously with background threads.
+# 0: Off, 1 (default): On
+async_custom_loading =
+
 [Audio]
 # Whether or not to enable DSP LLE
 # 0 (default): No, 1: Yes

@@ -102,15 +102,16 @@ void BuildCompleteFilename(std::string& _CompleteFilename, const std::string& _P
     _CompleteFilename += _Filename;
 }
 
-void SplitString(const std::string& str, const char delim, std::vector<std::string>& output) {
+std::vector<std::string> SplitString(const std::string& str, const char delim) {
     std::istringstream iss(str);
-    output.resize(1);
+    std::vector<std::string> output(1);
 
     while (std::getline(iss, *output.rbegin(), delim)) {
         output.emplace_back();
     }
 
     output.pop_back();
+    return output;
 }
 
 std::string TabsToSpaces(int tab_size, std::string in) {
