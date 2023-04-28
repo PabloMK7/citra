@@ -11,19 +11,20 @@ namespace Service::HID {
 
 Spvr::Spvr(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid:SPVR", 6) {
     static const FunctionInfo functions[] = {
-        {0x00010200, nullptr, "CalibrateTouchScreen"},
-        {0x00020000, nullptr, "UpdateTouchConfig"},
-        {0x000A0000, &Spvr::GetIPCHandles, "GetIPCHandles"},
-        {0x000B0000, nullptr, "StartAnalogStickCalibration"},
-        {0x000E0000, nullptr, "GetAnalogStickCalibrateParam"},
-        {0x00110000, &Spvr::EnableAccelerometer, "EnableAccelerometer"},
-        {0x00120000, &Spvr::DisableAccelerometer, "DisableAccelerometer"},
-        {0x00130000, &Spvr::EnableGyroscopeLow, "EnableGyroscopeLow"},
-        {0x00140000, &Spvr::DisableGyroscopeLow, "DisableGyroscopeLow"},
-        {0x00150000, &Spvr::GetGyroscopeLowRawToDpsCoefficient,
-         "GetGyroscopeLowRawToDpsCoefficient"},
-        {0x00160000, &Spvr::GetGyroscopeLowCalibrateParam, "GetGyroscopeLowCalibrateParam"},
-        {0x00170000, &Spvr::GetSoundVolume, "GetSoundVolume"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 8, 0), nullptr, "CalibrateTouchScreen"},
+        {IPC::MakeHeader(0x0002, 0, 0), nullptr, "UpdateTouchConfig"},
+        {IPC::MakeHeader(0x000A, 0, 0), &Spvr::GetIPCHandles, "GetIPCHandles"},
+        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "StartAnalogStickCalibration"},
+        {IPC::MakeHeader(0x000E, 0, 0), nullptr, "GetAnalogStickCalibrateParam"},
+        {IPC::MakeHeader(0x0011, 0, 0), &Spvr::EnableAccelerometer, "EnableAccelerometer"},
+        {IPC::MakeHeader(0x0012, 0, 0), &Spvr::DisableAccelerometer, "DisableAccelerometer"},
+        {IPC::MakeHeader(0x0013, 0, 0), &Spvr::EnableGyroscopeLow, "EnableGyroscopeLow"},
+        {IPC::MakeHeader(0x0014, 0, 0), &Spvr::DisableGyroscopeLow, "DisableGyroscopeLow"},
+        {IPC::MakeHeader(0x0015, 0, 0), &Spvr::GetGyroscopeLowRawToDpsCoefficient, "GetGyroscopeLowRawToDpsCoefficient"},
+        {IPC::MakeHeader(0x0016, 0, 0), &Spvr::GetGyroscopeLowCalibrateParam, "GetGyroscopeLowCalibrateParam"},
+        {IPC::MakeHeader(0x0017, 0, 0), &Spvr::GetSoundVolume, "GetSoundVolume"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

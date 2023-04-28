@@ -12,15 +12,17 @@ namespace Service::GSP {
 
 GSP_LCD::GSP_LCD() : ServiceFramework("gsp::Lcd") {
     static const FunctionInfo functions[] = {
-        {0x000A0080, nullptr, "SetBrightnessRaw"},
-        {0x000B0080, nullptr, "SetBrightness"},
-        {0x000F0000, nullptr, "PowerOnAllBacklights"},
-        {0x00100000, nullptr, "PowerOffAllBacklights"},
-        {0x00110040, nullptr, "PowerOnBacklight"},
-        {0x00120040, nullptr, "PowerOffBacklight"},
-        {0x00130040, nullptr, "SetLedForceOff"},
-        {0x00140000, nullptr, "GetVendor"},
-        {0x00150040, nullptr, "GetBrightness"},
+        // clang-format off
+        {IPC::MakeHeader(0x000A, 2, 0), nullptr, "SetBrightnessRaw"},
+        {IPC::MakeHeader(0x000B, 2, 0), nullptr, "SetBrightness"},
+        {IPC::MakeHeader(0x000F, 0, 0), nullptr, "PowerOnAllBacklights"},
+        {IPC::MakeHeader(0x0010, 0, 0), nullptr, "PowerOffAllBacklights"},
+        {IPC::MakeHeader(0x0011, 1, 0), nullptr, "PowerOnBacklight"},
+        {IPC::MakeHeader(0x0012, 1, 0), nullptr, "PowerOffBacklight"},
+        {IPC::MakeHeader(0x0013, 1, 0), nullptr, "SetLedForceOff"},
+        {IPC::MakeHeader(0x0014, 0, 0), nullptr, "GetVendor"},
+        {IPC::MakeHeader(0x0015, 1, 0), nullptr, "GetBrightness"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 };

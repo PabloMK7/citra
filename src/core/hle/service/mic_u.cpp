@@ -488,22 +488,24 @@ void MIC_U::SetClientVersion(Kernel::HLERequestContext& ctx) {
 MIC_U::MIC_U(Core::System& system)
     : ServiceFramework{"mic:u", 1}, impl{std::make_unique<Impl>(system)} {
     static const FunctionInfo functions[] = {
-        {0x00010042, &MIC_U::MapSharedMem, "MapSharedMem"},
-        {0x00020000, &MIC_U::UnmapSharedMem, "UnmapSharedMem"},
-        {0x00030140, &MIC_U::StartSampling, "StartSampling"},
-        {0x00040040, &MIC_U::AdjustSampling, "AdjustSampling"},
-        {0x00050000, &MIC_U::StopSampling, "StopSampling"},
-        {0x00060000, &MIC_U::IsSampling, "IsSampling"},
-        {0x00070000, &MIC_U::GetBufferFullEvent, "GetBufferFullEvent"},
-        {0x00080040, &MIC_U::SetGain, "SetGain"},
-        {0x00090000, &MIC_U::GetGain, "GetGain"},
-        {0x000A0040, &MIC_U::SetPower, "SetPower"},
-        {0x000B0000, &MIC_U::GetPower, "GetPower"},
-        {0x000C0042, &MIC_U::SetIirFilterMic, "SetIirFilterMic"},
-        {0x000D0040, &MIC_U::SetClamp, "SetClamp"},
-        {0x000E0000, &MIC_U::GetClamp, "GetClamp"},
-        {0x000F0040, &MIC_U::SetAllowShellClosed, "SetAllowShellClosed"},
-        {0x00100040, &MIC_U::SetClientVersion, "SetClientVersion"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 1, 2), &MIC_U::MapSharedMem, "MapSharedMem"},
+        {IPC::MakeHeader(0x0002, 0, 0), &MIC_U::UnmapSharedMem, "UnmapSharedMem"},
+        {IPC::MakeHeader(0x0003, 5, 0), &MIC_U::StartSampling, "StartSampling"},
+        {IPC::MakeHeader(0x0004, 1, 0), &MIC_U::AdjustSampling, "AdjustSampling"},
+        {IPC::MakeHeader(0x0005, 0, 0), &MIC_U::StopSampling, "StopSampling"},
+        {IPC::MakeHeader(0x0006, 0, 0), &MIC_U::IsSampling, "IsSampling"},
+        {IPC::MakeHeader(0x0007, 0, 0), &MIC_U::GetBufferFullEvent, "GetBufferFullEvent"},
+        {IPC::MakeHeader(0x0008, 1, 0), &MIC_U::SetGain, "SetGain"},
+        {IPC::MakeHeader(0x0009, 0, 0), &MIC_U::GetGain, "GetGain"},
+        {IPC::MakeHeader(0x000A, 1, 0), &MIC_U::SetPower, "SetPower"},
+        {IPC::MakeHeader(0x000B, 0, 0), &MIC_U::GetPower, "GetPower"},
+        {IPC::MakeHeader(0x000C, 1, 2), &MIC_U::SetIirFilterMic, "SetIirFilterMic"},
+        {IPC::MakeHeader(0x000D, 1, 0), &MIC_U::SetClamp, "SetClamp"},
+        {IPC::MakeHeader(0x000E, 0, 0), &MIC_U::GetClamp, "GetClamp"},
+        {IPC::MakeHeader(0x000F, 1, 0), &MIC_U::SetAllowShellClosed, "SetAllowShellClosed"},
+        {IPC::MakeHeader(0x0010, 1, 0), &MIC_U::SetClientVersion, "SetClientVersion"},
+        // clang-format on
     };
 
     impl->CreateMic();

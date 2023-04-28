@@ -12,21 +12,23 @@ namespace Service::PXI {
 DEV::DEV() : ServiceFramework("pxi:dev", 1) {
     // clang-format off
     static const FunctionInfo functions[] = {
-        {0x000101C2, nullptr, "ReadHostIO"},
-        {0x000201C2, nullptr, "WriteHostIO"},
-        {0x00030102, nullptr, "ReadHostEx"},
-        {0x00040102, nullptr, "WriteHostEx"},
-        {0x00050102, nullptr, "WriteHostExStart"},
-        {0x00060102, nullptr, "WriteHostExChunk"},
-        {0x00070000, nullptr, "WriteHostExEnd"},
-        {0x00080000, nullptr, "InitializeMIDI"},
-        {0x00090000, nullptr, "FinalizeMIDI"},
-        {0x000A0000, nullptr, "GetMIDIInfo"},
-        {0x000B0000, nullptr, "GetMIDIBufferSize"},
-        {0x000C0042, nullptr, "ReadMIDI"},
-        {0x000D0688, nullptr, "SPIMultiWriteRead"},
-        {0x000E0284, nullptr, "SPIWriteRead"},
-        {0x000F0000, nullptr, "GetCardDevice"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 7, 2), nullptr, "ReadHostIO"},
+        {IPC::MakeHeader(0x0002, 7, 2), nullptr, "WriteHostIO"},
+        {IPC::MakeHeader(0x0003, 4, 2), nullptr, "ReadHostEx"},
+        {IPC::MakeHeader(0x0004, 4, 2), nullptr, "WriteHostEx"},
+        {IPC::MakeHeader(0x0005, 4, 2), nullptr, "WriteHostExStart"},
+        {IPC::MakeHeader(0x0006, 4, 2), nullptr, "WriteHostExChunk"},
+        {IPC::MakeHeader(0x0007, 0, 0), nullptr, "WriteHostExEnd"},
+        {IPC::MakeHeader(0x0008, 0, 0), nullptr, "InitializeMIDI"},
+        {IPC::MakeHeader(0x0009, 0, 0), nullptr, "FinalizeMIDI"},
+        {IPC::MakeHeader(0x000A, 0, 0), nullptr, "GetMIDIInfo"},
+        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "GetMIDIBufferSize"},
+        {IPC::MakeHeader(0x000C, 1, 2), nullptr, "ReadMIDI"},
+        {IPC::MakeHeader(0x000D, 26, 8), nullptr, "SPIMultiWriteRead"},
+        {IPC::MakeHeader(0x000E, 10, 4), nullptr, "SPIWriteRead"},
+        {IPC::MakeHeader(0x000F, 0, 0), nullptr, "GetCardDevice"},
+        // clang-format on
     };
     // clang-format on
     RegisterHandlers(functions);

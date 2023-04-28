@@ -11,24 +11,26 @@ namespace Service::IR {
 
 IR_U::IR_U() : ServiceFramework("ir:u", 1) {
     static const FunctionInfo functions[] = {
-        {0x00010000, nullptr, "Initialize"},
-        {0x00020000, nullptr, "Shutdown"},
-        {0x00030042, nullptr, "StartSendTransfer"},
-        {0x00040000, nullptr, "WaitSendTransfer"},
-        {0x000500C2, nullptr, "StartRecvTransfer"},
-        {0x00060000, nullptr, "WaitRecvTransfer"},
-        {0x00070080, nullptr, "GetRecvTransferCount"},
-        {0x00080000, nullptr, "GetSendState"},
-        {0x00090040, nullptr, "SetBitRate"},
-        {0x000A0000, nullptr, "GetBitRate"},
-        {0x000B0040, nullptr, "SetIRLEDState"},
-        {0x000C0000, nullptr, "GetIRLEDRecvState"},
-        {0x000D0000, nullptr, "GetSendFinishedEvent"},
-        {0x000E0000, nullptr, "GetRecvFinishedEvent"},
-        {0x000F0000, nullptr, "GetTransferState"},
-        {0x00100000, nullptr, "GetErrorStatus"},
-        {0x00110040, nullptr, "SetSleepModeActive"},
-        {0x00120040, nullptr, "SetSleepModeState"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 0, 0), nullptr, "Initialize"},
+        {IPC::MakeHeader(0x0002, 0, 0), nullptr, "Shutdown"},
+        {IPC::MakeHeader(0x0003, 1, 2), nullptr, "StartSendTransfer"},
+        {IPC::MakeHeader(0x0004, 0, 0), nullptr, "WaitSendTransfer"},
+        {IPC::MakeHeader(0x0005, 3, 2), nullptr, "StartRecvTransfer"},
+        {IPC::MakeHeader(0x0006, 0, 0), nullptr, "WaitRecvTransfer"},
+        {IPC::MakeHeader(0x0007, 2, 0), nullptr, "GetRecvTransferCount"},
+        {IPC::MakeHeader(0x0008, 0, 0), nullptr, "GetSendState"},
+        {IPC::MakeHeader(0x0009, 1, 0), nullptr, "SetBitRate"},
+        {IPC::MakeHeader(0x000A, 0, 0), nullptr, "GetBitRate"},
+        {IPC::MakeHeader(0x000B, 1, 0), nullptr, "SetIRLEDState"},
+        {IPC::MakeHeader(0x000C, 0, 0), nullptr, "GetIRLEDRecvState"},
+        {IPC::MakeHeader(0x000D, 0, 0), nullptr, "GetSendFinishedEvent"},
+        {IPC::MakeHeader(0x000E, 0, 0), nullptr, "GetRecvFinishedEvent"},
+        {IPC::MakeHeader(0x000F, 0, 0), nullptr, "GetTransferState"},
+        {IPC::MakeHeader(0x0010, 0, 0), nullptr, "GetErrorStatus"},
+        {IPC::MakeHeader(0x0011, 1, 0), nullptr, "SetSleepModeActive"},
+        {IPC::MakeHeader(0x0012, 1, 0), nullptr, "SetSleepModeState"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

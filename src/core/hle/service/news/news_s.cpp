@@ -23,19 +23,21 @@ void NEWS_S::GetTotalNotifications(Kernel::HLERequestContext& ctx) {
 
 NEWS_S::NEWS_S() : ServiceFramework("news:s", 2) {
     const FunctionInfo functions[] = {
-        {0x000100C6, nullptr, "AddNotification"},
-        {0x00050000, &NEWS_S::GetTotalNotifications, "GetTotalNotifications"},
-        {0x00060042, nullptr, "SetNewsDBHeader"},
-        {0x00070082, nullptr, "SetNotificationHeader"},
-        {0x00080082, nullptr, "SetNotificationMessage"},
-        {0x00090082, nullptr, "SetNotificationImage"},
-        {0x000A0042, nullptr, "GetNewsDBHeader"},
-        {0x000B0082, nullptr, "GetNotificationHeader"},
-        {0x000C0082, nullptr, "GetNotificationMessage"},
-        {0x000D0082, nullptr, "GetNotificationImage"},
-        {0x000E0040, nullptr, "SetInfoLEDPattern"},
-        {0x00120082, nullptr, "GetNotificationHeaderOther"},
-        {0x00130000, nullptr, "WriteNewsDBSavedata"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 3, 6), nullptr, "AddNotification"},
+        {IPC::MakeHeader(0x0005, 0, 0), &NEWS_S::GetTotalNotifications, "GetTotalNotifications"},
+        {IPC::MakeHeader(0x0006, 1, 2), nullptr, "SetNewsDBHeader"},
+        {IPC::MakeHeader(0x0007, 2, 2), nullptr, "SetNotificationHeader"},
+        {IPC::MakeHeader(0x0008, 2, 2), nullptr, "SetNotificationMessage"},
+        {IPC::MakeHeader(0x0009, 2, 2), nullptr, "SetNotificationImage"},
+        {IPC::MakeHeader(0x000A, 1, 2), nullptr, "GetNewsDBHeader"},
+        {IPC::MakeHeader(0x000B, 2, 2), nullptr, "GetNotificationHeader"},
+        {IPC::MakeHeader(0x000C, 2, 2), nullptr, "GetNotificationMessage"},
+        {IPC::MakeHeader(0x000D, 2, 2), nullptr, "GetNotificationImage"},
+        {IPC::MakeHeader(0x000E, 1, 0), nullptr, "SetInfoLEDPattern"},
+        {IPC::MakeHeader(0x0012, 2, 2), nullptr, "GetNotificationHeaderOther"},
+        {IPC::MakeHeader(0x0013, 0, 0), nullptr, "WriteNewsDBSavedata"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

@@ -516,15 +516,17 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
 
 RO::RO(Core::System& system) : ServiceFramework("ldr:ro", 2), system(system) {
     static const FunctionInfo functions[] = {
-        {0x000100C2, &RO::Initialize, "Initialize"},
-        {0x00020082, &RO::LoadCRR, "LoadCRR"},
-        {0x00030042, &RO::UnloadCRR, "UnloadCRR"},
-        {0x000402C2, &RO::LoadCRO<false>, "LoadCRO"},
-        {0x000500C2, &RO::UnloadCRO, "UnloadCRO"},
-        {0x00060042, &RO::LinkCRO, "LinkCRO"},
-        {0x00070042, &RO::UnlinkCRO, "UnlinkCRO"},
-        {0x00080042, &RO::Shutdown, "Shutdown"},
-        {0x000902C2, &RO::LoadCRO<true>, "LoadCRO_New"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 3, 2), &RO::Initialize, "Initialize"},
+        {IPC::MakeHeader(0x0002, 2, 2), &RO::LoadCRR, "LoadCRR"},
+        {IPC::MakeHeader(0x0003, 1, 2), &RO::UnloadCRR, "UnloadCRR"},
+        {IPC::MakeHeader(0x0004, 11, 2), &RO::LoadCRO<false>, "LoadCRO"},
+        {IPC::MakeHeader(0x0005, 3, 2), &RO::UnloadCRO, "UnloadCRO"},
+        {IPC::MakeHeader(0x0006, 1, 2), &RO::LinkCRO, "LinkCRO"},
+        {IPC::MakeHeader(0x0007, 1, 2), &RO::UnlinkCRO, "UnlinkCRO"},
+        {IPC::MakeHeader(0x0008, 1, 2), &RO::Shutdown, "Shutdown"},
+        {IPC::MakeHeader(0x0009, 11, 2), &RO::LoadCRO<true>, "LoadCRO_New"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

@@ -508,18 +508,18 @@ void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
 CSND_SND::CSND_SND(Core::System& system) : ServiceFramework("csnd:SND", 4), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {0x00010140, &CSND_SND::Initialize, "Initialize"},
-        {0x00020000, &CSND_SND::Shutdown, "Shutdown"},
-        {0x00030040, &CSND_SND::ExecuteCommands, "ExecuteCommands"},
-        {0x00040080, nullptr, "ExecuteType1Commands"},
-        {0x00050000, &CSND_SND::AcquireSoundChannels, "AcquireSoundChannels"},
-        {0x00060000, &CSND_SND::ReleaseSoundChannels, "ReleaseSoundChannels"},
-        {0x00070000, &CSND_SND::AcquireCapUnit, "AcquireCapUnit"},
-        {0x00080040, &CSND_SND::ReleaseCapUnit, "ReleaseCapUnit"},
-        {0x00090082, &CSND_SND::FlushDataCache, "FlushDataCache"},
-        {0x000A0082, &CSND_SND::StoreDataCache, "StoreDataCache"},
-        {0x000B0082, &CSND_SND::InvalidateDataCache, "InvalidateDataCache"},
-        {0x000C0000, &CSND_SND::Reset, "Reset"},
+        {IPC::MakeHeader(0x0001, 5, 0), &CSND_SND::Initialize, "Initialize"},
+        {IPC::MakeHeader(0x0002, 0, 0), &CSND_SND::Shutdown, "Shutdown"},
+        {IPC::MakeHeader(0x0003, 1, 0), &CSND_SND::ExecuteCommands, "ExecuteCommands"},
+        {IPC::MakeHeader(0x0004, 2, 0), nullptr, "ExecuteType1Commands"},
+        {IPC::MakeHeader(0x0005, 0, 0), &CSND_SND::AcquireSoundChannels, "AcquireSoundChannels"},
+        {IPC::MakeHeader(0x0006, 0, 0), &CSND_SND::ReleaseSoundChannels, "ReleaseSoundChannels"},
+        {IPC::MakeHeader(0x0007, 0, 0), &CSND_SND::AcquireCapUnit, "AcquireCapUnit"},
+        {IPC::MakeHeader(0x0008, 1, 0), &CSND_SND::ReleaseCapUnit, "ReleaseCapUnit"},
+        {IPC::MakeHeader(0x0009, 2, 2), &CSND_SND::FlushDataCache, "FlushDataCache"},
+        {IPC::MakeHeader(0x000A, 2, 2), &CSND_SND::StoreDataCache, "StoreDataCache"},
+        {IPC::MakeHeader(0x000B, 2, 2), &CSND_SND::InvalidateDataCache, "InvalidateDataCache"},
+        {IPC::MakeHeader(0x000C, 0, 0), &CSND_SND::Reset, "Reset"},
         // clang-format on
     };
 

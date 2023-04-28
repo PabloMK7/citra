@@ -249,8 +249,10 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
 
 ERR_F::ERR_F(Core::System& system) : ServiceFramework("err:f", 1), system(system) {
     static const FunctionInfo functions[] = {
-        {0x00010800, &ERR_F::ThrowFatalError, "ThrowFatalError"},
-        {0x00020042, nullptr, "SetUserString"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 32, 0), &ERR_F::ThrowFatalError, "ThrowFatalError"},
+        {IPC::MakeHeader(0x0002, 1, 2), nullptr, "SetUserString"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

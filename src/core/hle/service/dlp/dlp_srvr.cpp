@@ -27,22 +27,22 @@ void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
 DLP_SRVR::DLP_SRVR() : ServiceFramework("dlp:SRVR", 1) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {0x00010183, nullptr, "Initialize"},
-        {0x00020000, nullptr, "Finalize"},
-        {0x00030000, nullptr, "GetServerState"},
-        {0x00040000, nullptr, "GetEventDescription"},
-        {0x00050080, nullptr, "StartAccepting"},
-        {0x00060000, nullptr, "EndAccepting"},
-        {0x00070000, nullptr, "StartDistribution"},
-        {0x000800C0, nullptr, "SendWirelessRebootPassphrase"},
-        {0x00090040, nullptr, "AcceptClient"},
-        {0x000A0040, nullptr, "DisconnectClient"},
-        {0x000B0042, nullptr, "GetConnectingClients"},
-        {0x000C0040, nullptr, "GetClientInfo"},
-        {0x000D0040, nullptr, "GetClientState"},
-        {0x000E0040, &DLP_SRVR::IsChild, "IsChild"},
-        {0x000F0303, nullptr, "InitializeWithName"},
-        {0x00100000, nullptr, "GetDupNoticeNeed"},
+        {IPC::MakeHeader(0x0001, 6, 3), nullptr, "Initialize"},
+        {IPC::MakeHeader(0x0002, 0, 0), nullptr, "Finalize"},
+        {IPC::MakeHeader(0x0003, 0, 0), nullptr, "GetServerState"},
+        {IPC::MakeHeader(0x0004, 0, 0), nullptr, "GetEventDescription"},
+        {IPC::MakeHeader(0x0005, 2, 0), nullptr, "StartAccepting"},
+        {IPC::MakeHeader(0x0006, 0, 0), nullptr, "EndAccepting"},
+        {IPC::MakeHeader(0x0007, 0, 0), nullptr, "StartDistribution"},
+        {IPC::MakeHeader(0x0008, 3, 0), nullptr, "SendWirelessRebootPassphrase"},
+        {IPC::MakeHeader(0x0009, 1, 0), nullptr, "AcceptClient"},
+        {IPC::MakeHeader(0x000A, 1, 0), nullptr, "DisconnectClient"},
+        {IPC::MakeHeader(0x000B, 1, 2), nullptr, "GetConnectingClients"},
+        {IPC::MakeHeader(0x000C, 1, 0), nullptr, "GetClientInfo"},
+        {IPC::MakeHeader(0x000D, 1, 0), nullptr, "GetClientState"},
+        {IPC::MakeHeader(0x000E, 1, 0), &DLP_SRVR::IsChild, "IsChild"},
+        {IPC::MakeHeader(0x000F, 12, 3), nullptr, "InitializeWithName"},
+        {IPC::MakeHeader(0x0010, 0, 0), nullptr, "GetDupNoticeNeed"},
         // clang-format on
     };
 

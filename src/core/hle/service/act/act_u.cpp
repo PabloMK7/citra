@@ -10,11 +10,11 @@ namespace Service::ACT {
 ACT_U::ACT_U(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "act:u") {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {0x00010084, nullptr, "Initialize"},
-        {0x00020040, nullptr, "GetErrorCode"},
-        {0x000600C2, nullptr, "GetAccountDataBlock"},
-        {0x000B0042, nullptr, "AcquireEulaList"},
-        {0x000D0040, nullptr, "GenerateUuid"},
+        {IPC::MakeHeader(0x0001, 2, 4), nullptr, "Initialize"},
+        {IPC::MakeHeader(0x0002, 1, 0), nullptr, "GetErrorCode"},
+        {IPC::MakeHeader(0x0006, 3, 2), nullptr, "GetAccountDataBlock"},
+        {IPC::MakeHeader(0x000B, 1, 2), nullptr, "AcquireEulaList"},
+        {IPC::MakeHeader(0x000D, 1, 0), nullptr, "GenerateUuid"},
         // clang-format on
     };
     RegisterHandlers(functions);

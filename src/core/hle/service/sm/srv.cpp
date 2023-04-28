@@ -288,20 +288,22 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
 
 SRV::SRV(Core::System& system) : ServiceFramework("srv:", 4), system(system) {
     static const FunctionInfo functions[] = {
-        {0x00010002, &SRV::RegisterClient, "RegisterClient"},
-        {0x00020000, &SRV::EnableNotification, "EnableNotification"},
-        {0x00030100, &SRV::RegisterService, "RegisterService"},
-        {0x000400C0, nullptr, "UnregisterService"},
-        {0x00050100, &SRV::GetServiceHandle, "GetServiceHandle"},
-        {0x000600C2, nullptr, "RegisterPort"},
-        {0x000700C0, nullptr, "UnregisterPort"},
-        {0x00080100, nullptr, "GetPort"},
-        {0x00090040, &SRV::Subscribe, "Subscribe"},
-        {0x000A0040, &SRV::Unsubscribe, "Unsubscribe"},
-        {0x000B0000, nullptr, "ReceiveNotification"},
-        {0x000C0080, &SRV::PublishToSubscriber, "PublishToSubscriber"},
-        {0x000D0040, nullptr, "PublishAndGetSubscriber"},
-        {0x000E00C0, nullptr, "IsServiceRegistered"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 0, 2), &SRV::RegisterClient, "RegisterClient"},
+        {IPC::MakeHeader(0x0002, 0, 0), &SRV::EnableNotification, "EnableNotification"},
+        {IPC::MakeHeader(0x0003, 4, 0), &SRV::RegisterService, "RegisterService"},
+        {IPC::MakeHeader(0x0004, 3, 0), nullptr, "UnregisterService"},
+        {IPC::MakeHeader(0x0005, 4, 0), &SRV::GetServiceHandle, "GetServiceHandle"},
+        {IPC::MakeHeader(0x0006, 3, 2), nullptr, "RegisterPort"},
+        {IPC::MakeHeader(0x0007, 3, 0), nullptr, "UnregisterPort"},
+        {IPC::MakeHeader(0x0008, 4, 0), nullptr, "GetPort"},
+        {IPC::MakeHeader(0x0009, 1, 0), &SRV::Subscribe, "Subscribe"},
+        {IPC::MakeHeader(0x000A, 1, 0), &SRV::Unsubscribe, "Unsubscribe"},
+        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "ReceiveNotification"},
+        {IPC::MakeHeader(0x000C, 2, 0), &SRV::PublishToSubscriber, "PublishToSubscriber"},
+        {IPC::MakeHeader(0x000D, 1, 0), nullptr, "PublishAndGetSubscriber"},
+        {IPC::MakeHeader(0x000E, 3, 0), nullptr, "IsServiceRegistered"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

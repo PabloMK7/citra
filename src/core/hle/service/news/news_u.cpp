@@ -11,7 +11,9 @@ namespace Service::NEWS {
 
 NEWS_U::NEWS_U() : ServiceFramework("news:u", 1) {
     const FunctionInfo functions[] = {
-        {0x000100C8, nullptr, "AddNotification"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 3, 8), nullptr, "AddNotification"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

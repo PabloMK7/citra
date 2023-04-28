@@ -12,10 +12,10 @@ namespace Service::QTM {
 
 QTM_C::QTM_C() : ServiceFramework("qtm:c", 2) {
     static const FunctionInfo functions[] = {
-        // clang-format off
         // qtm calibration commands
-        {0x00010000, nullptr, "InitializeHardwareCheck"},
-        {0x00050040, nullptr, "SetIrLedCheck"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 0, 0), nullptr, "InitializeHardwareCheck"},
+        {IPC::MakeHeader(0x0005, 1, 0), nullptr, "SetIrLedCheck"},
         // clang-format on
     };
 

@@ -152,8 +152,10 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     int num_params = header.normal_params_size + header.translate_params_size;
     std::string function_name = info == nullptr ? fmt::format("{:#08x}", cmd_buf[0]) : info->name;
 
-    std::string result = fmt::format("function '{}': port='{}' cmd_buf={{[0]={:#x}", function_name,
-                                     service_name, cmd_buf[0]);
+    std::string result =
+        fmt::format("function '{}': port='{}' cmd_buf={{[0]={:#x} (0x{:04X}, {}, {})",
+                    function_name, service_name, header.raw, header.command_id,
+                    header.normal_params_size, header.translate_params_size);
     for (int i = 1; i <= num_params; ++i) {
         result += fmt::format(", [{}]={:#x}", i, cmd_buf[i]);
     }

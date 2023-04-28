@@ -180,10 +180,12 @@ IR_RST::IR_RST(Core::System& system) : ServiceFramework("ir:rst", 1), system(sys
         });
 
     static const FunctionInfo functions[] = {
-        {0x00010000, &IR_RST::GetHandles, "GetHandles"},
-        {0x00020080, &IR_RST::Initialize, "Initialize"},
-        {0x00030000, &IR_RST::Shutdown, "Shutdown"},
-        {0x00090000, nullptr, "WriteToTwoFields"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 0, 0), &IR_RST::GetHandles, "GetHandles"},
+        {IPC::MakeHeader(0x0002, 2, 0), &IR_RST::Initialize, "Initialize"},
+        {IPC::MakeHeader(0x0003, 0, 0), &IR_RST::Shutdown, "Shutdown"},
+        {IPC::MakeHeader(0x0009, 0, 0), nullptr, "WriteToTwoFields"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

@@ -13,26 +13,28 @@ PTM_Play::PTM_Play(std::shared_ptr<Module> ptm)
     : Module::Interface(std::move(ptm), "ptm:play", 26) {
     static const FunctionInfo functions[] = {
         // ptm:u common commands
-        {0x00010002, nullptr, "RegisterAlarmClient"},
-        {0x00020080, nullptr, "SetRtcAlarm"},
-        {0x00030000, nullptr, "GetRtcAlarm"},
-        {0x00040000, nullptr, "CancelRtcAlarm"},
-        {0x00050000, &PTM_Play::GetAdapterState, "GetAdapterState"},
-        {0x00060000, &PTM_Play::GetShellState, "GetShellState"},
-        {0x00070000, &PTM_Play::GetBatteryLevel, "GetBatteryLevel"},
-        {0x00080000, &PTM_Play::GetBatteryChargeState, "GetBatteryChargeState"},
-        {0x00090000, nullptr, "GetPedometerState"},
-        {0x000A0042, nullptr, "GetStepHistoryEntry"},
-        {0x000B00C2, &PTM_Play::GetStepHistory, "GetStepHistory"},
-        {0x000C0000, &PTM_Play::GetTotalStepCount, "GetTotalStepCount"},
-        {0x000D0040, nullptr, "SetPedometerRecordingMode"},
-        {0x000E0000, nullptr, "GetPedometerRecordingMode"},
-        {0x000F0084, nullptr, "GetStepHistoryAll"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 0, 2), nullptr, "RegisterAlarmClient"},
+        {IPC::MakeHeader(0x0002, 2, 0), nullptr, "SetRtcAlarm"},
+        {IPC::MakeHeader(0x0003, 0, 0), nullptr, "GetRtcAlarm"},
+        {IPC::MakeHeader(0x0004, 0, 0), nullptr, "CancelRtcAlarm"},
+        {IPC::MakeHeader(0x0005, 0, 0), &PTM_Play::GetAdapterState, "GetAdapterState"},
+        {IPC::MakeHeader(0x0006, 0, 0), &PTM_Play::GetShellState, "GetShellState"},
+        {IPC::MakeHeader(0x0007, 0, 0), &PTM_Play::GetBatteryLevel, "GetBatteryLevel"},
+        {IPC::MakeHeader(0x0008, 0, 0), &PTM_Play::GetBatteryChargeState, "GetBatteryChargeState"},
+        {IPC::MakeHeader(0x0009, 0, 0), nullptr, "GetPedometerState"},
+        {IPC::MakeHeader(0x000A, 1, 2), nullptr, "GetStepHistoryEntry"},
+        {IPC::MakeHeader(0x000B, 3, 2), &PTM_Play::GetStepHistory, "GetStepHistory"},
+        {IPC::MakeHeader(0x000C, 0, 0), &PTM_Play::GetTotalStepCount, "GetTotalStepCount"},
+        {IPC::MakeHeader(0x000D, 1, 0), nullptr, "SetPedometerRecordingMode"},
+        {IPC::MakeHeader(0x000E, 0, 0), nullptr, "GetPedometerRecordingMode"},
+        {IPC::MakeHeader(0x000F, 2, 4), nullptr, "GetStepHistoryAll"},
         // ptm:play
-        {0x08070082, nullptr, "GetPlayHistory"},
-        {0x08080000, nullptr, "GetPlayHistoryStart"},
-        {0x08090000, nullptr, "GetPlayHistoryLength"},
-        {0x080B0080, nullptr, "CalcPlayHistoryStart"},
+        {IPC::MakeHeader(0x0807, 2, 2), nullptr, "GetPlayHistory"},
+        {IPC::MakeHeader(0x0808, 0, 0), nullptr, "GetPlayHistoryStart"},
+        {IPC::MakeHeader(0x0809, 0, 0), nullptr, "GetPlayHistoryLength"},
+        {IPC::MakeHeader(0x080B, 2, 0), nullptr, "CalcPlayHistoryStart"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

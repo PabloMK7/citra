@@ -10,21 +10,23 @@ namespace Service::NS {
 NS_S::NS_S(std::shared_ptr<Service::APT::Module> apt)
     : Service::APT::Module::NSInterface(std::move(apt), "ns:s", 3) {
     static const FunctionInfo functions[] = {
-        {0x000100C0, nullptr, "LaunchFIRM"},
-        {0x000200C0, nullptr, "LaunchTitle"},
-        {0x00030000, nullptr, "TerminateApplication"},
-        {0x00040040, nullptr, "TerminateProcess"},
-        {0x000500C0, nullptr, "LaunchApplicationFIRM"},
-        {0x00060042, &NS_S::SetWirelessRebootInfo, "SetWirelessRebootInfo"},
-        {0x00070042, nullptr, "CardUpdateInitialize"},
-        {0x00080000, nullptr, "CardUpdateShutdown"},
-        {0x000D0140, nullptr, "SetTWLBannerHMAC"},
-        {0x000E0000, &NS_S::ShutdownAsync, "ShutdownAsync"},
-        {0x00100180, &NS_S::RebootSystem, "RebootSystem"},
-        {0x00110100, nullptr, "TerminateTitle"},
-        {0x001200C0, nullptr, "SetApplicationCpuTimeLimit"},
-        {0x00150140, nullptr, "LaunchApplication"},
-        {0x00160000, &NS_S::RebootSystemClean, "RebootSystemClean"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 3, 0), nullptr, "LaunchFIRM"},
+        {IPC::MakeHeader(0x0002, 3, 0), nullptr, "LaunchTitle"},
+        {IPC::MakeHeader(0x0003, 0, 0), nullptr, "TerminateApplication"},
+        {IPC::MakeHeader(0x0004, 1, 0), nullptr, "TerminateProcess"},
+        {IPC::MakeHeader(0x0005, 3, 0), nullptr, "LaunchApplicationFIRM"},
+        {IPC::MakeHeader(0x0006, 1, 2), &NS_S::SetWirelessRebootInfo, "SetWirelessRebootInfo"},
+        {IPC::MakeHeader(0x0007, 1, 2), nullptr, "CardUpdateInitialize"},
+        {IPC::MakeHeader(0x0008, 0, 0), nullptr, "CardUpdateShutdown"},
+        {IPC::MakeHeader(0x000D, 5, 0), nullptr, "SetTWLBannerHMAC"},
+        {IPC::MakeHeader(0x000E, 0, 0), &NS_S::ShutdownAsync, "ShutdownAsync"},
+        {IPC::MakeHeader(0x0010, 6, 0), &NS_S::RebootSystem, "RebootSystem"},
+        {IPC::MakeHeader(0x0011, 4, 0), nullptr, "TerminateTitle"},
+        {IPC::MakeHeader(0x0012, 3, 0), nullptr, "SetApplicationCpuTimeLimit"},
+        {IPC::MakeHeader(0x0015, 5, 0), nullptr, "LaunchApplication"},
+        {IPC::MakeHeader(0x0016, 0, 0), &NS_S::RebootSystemClean, "RebootSystemClean"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }

@@ -10,16 +10,18 @@ namespace Service::ACT {
 ACT_A::ACT_A(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "act:a") {
     const FunctionInfo functions[] = {
         // act:u shared commands
-        {0x00010084, nullptr, "Initialize"},
-        {0x00020040, nullptr, "GetErrorCode"},
-        {0x000600C2, nullptr, "GetAccountDataBlock"},
-        {0x000B0042, nullptr, "AcquireEulaList"},
-        {0x000D0040, nullptr, "GenerateUuid"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 2, 4), nullptr, "Initialize"},
+        {IPC::MakeHeader(0x0002, 1, 0), nullptr, "GetErrorCode"},
+        {IPC::MakeHeader(0x0006, 3, 2), nullptr, "GetAccountDataBlock"},
+        {IPC::MakeHeader(0x000B, 1, 2), nullptr, "AcquireEulaList"},
+        {IPC::MakeHeader(0x000D, 1, 0), nullptr, "GenerateUuid"},
         // act:a
-        {0x041300C2, nullptr, "UpdateMiiImage"},
-        {0x041B0142, nullptr, "AgreeEula"},
-        {0x04210042, nullptr, "UploadMii"},
-        {0x04230082, nullptr, "ValidateMailAddress"},
+        {IPC::MakeHeader(0x0413, 3, 2), nullptr, "UpdateMiiImage"},
+        {IPC::MakeHeader(0x041B, 5, 2), nullptr, "AgreeEula"},
+        {IPC::MakeHeader(0x0421, 1, 2), nullptr, "UploadMii"},
+        {IPC::MakeHeader(0x0423, 2, 2), nullptr, "ValidateMailAddress"},
+        // clang-format on
     };
     RegisterHandlers(functions);
 }
