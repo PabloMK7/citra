@@ -152,6 +152,11 @@ foreach(c ${_FFmpeg_ALL_COMPONENTS})
       IMPORTED_LOCATION ${FFmpeg_LIBRARY_${c}}
       INTERFACE_INCLUDE_DIRECTORIES ${FFmpeg_INCLUDE_${c}}
     )
+    if(APPLE)
+      set_target_properties(FFmpeg::${c} PROPERTIES
+        MACOSX_RPATH 1
+      )
+    endif()
     if(_FFmpeg_DEPS_${c})
       set(deps)
       foreach(dep ${_FFmpeg_DEPS_${c}})

@@ -43,7 +43,7 @@ if (ENABLE_FFMPEG_AUDIO_DECODER OR ENABLE_FFMPEG_VIDEO_DUMPER)
     set(ENABLE_FFMPEG ON)
 endif()
 
-CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_FFMPEG "Download bundled FFmpeg binaries" ON "ENABLE_FFMPEG;MSVC" OFF)
+CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_FFMPEG "Download bundled FFmpeg binaries" ON "ENABLE_FFMPEG;MSVC OR APPLE" OFF)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
@@ -56,6 +56,8 @@ CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ON "
 option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_FDK "Use FDK AAC decoder" OFF "NOT ENABLE_FFMPEG_AUDIO_DECODER;NOT ENABLE_MF" OFF)
+
+CMAKE_DEPENDENT_OPTION(CITRA_BUNDLE_LIBRARIES "Bundle dependent libraries with the output executables" ON "APPLE" OFF)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     if (MSVC AND CCACHE)
@@ -197,31 +199,25 @@ find_package(Threads REQUIRED)
 
 if (ENABLE_QT)
     if (CITRA_USE_BUNDLED_QT)
-        if (MSVC_VERSION GREATER_EQUAL 1920 AND "x86_64" IN_LIST ARCHITECTURE)
-            set(QT_VER qt-5.15.7-msvc2019_64)
-        else()
-            message(FATAL_ERROR "No bundled Qt binaries for your toolchain. Disable CITRA_USE_BUNDLED_QT and provide your own.")
-        endif()
-
-        if (DEFINED QT_VER)
-            download_bundled_external("qt/" ${QT_VER} QT_PREFIX)
-        endif()
-
-        set(QT_PREFIX_HINT HINTS "${QT_PREFIX}")
-    else()
-        # Passing an empty HINTS seems to cause default system paths to get ignored in CMake 2.8 so
-        # make sure to not pass anything if we don't have one.
-        set(QT_PREFIX_HINT)
+        download_qt_external(5.15.2 QT_PREFIX)
+        list(APPEND CMAKE_PREFIX_PATH ${QT_PREFIX})
     endif()
 
-    find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia Concurrent ${QT_PREFIX_HINT})
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
 
     if (UNIX AND NOT APPLE)
-        find_package(Qt5 REQUIRED COMPONENTS DBus ${QT_PREFIX_HINT})
+        find_package(Qt5 REQUIRED COMPONENTS DBus)
     endif()
 
     if (ENABLE_QT_TRANSLATION)
-        find_package(Qt5 REQUIRED COMPONENTS LinguistTools ${QT_PREFIX_HINT})
+        find_package(Qt5 REQUIRED COMPONENTS LinguistTools)
+    endif()
+
+    if (NOT CITRA_USE_BUNDLED_QT)
+        # Make sure the Qt bin directory is in the prefix path for later consumers.
+        get_target_property(qmake_executable Qt5::qmake IMPORTED_LOCATION)
+        get_filename_component(qt_bin_dir "${qmake_executable}" DIRECTORY)
+        list(APPEND CMAKE_PREFIX_PATH ${qt_bin_dir})
     endif()
 endif()
 
@@ -242,6 +238,8 @@ if (ENABLE_FFMPEG)
     if (CITRA_USE_BUNDLED_FFMPEG)
         if ((MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1940) AND "x86_64" IN_LIST ARCHITECTURE)
             set(FFmpeg_VER "ffmpeg-4.1-win64")
+        elseif (APPLE)
+            set(FFmpeg_VER "ffmpeg-6.0")
         else()
             message(FATAL_ERROR "No bundled FFmpeg binaries for your toolchain. Disable CITRA_USE_BUNDLED_FFMPEG and provide your own.")
         endif()

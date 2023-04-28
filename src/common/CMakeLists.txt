@@ -42,7 +42,7 @@ add_custom_command(OUTPUT scm_rev.cpp
       "${CMAKE_SOURCE_DIR}/CMakeModules/GenerateSCMRev.cmake"
 )
 
-add_library(common STATIC
+add_library(citra_common STATIC
     aarch64/cpu_detect.cpp
     aarch64/cpu_detect.h
     alignment.h
@@ -131,16 +131,16 @@ add_library(common STATIC
     zstd_compression.h
 )
 
-create_target_directory_groups(common)
+create_target_directory_groups(citra_common)
 
-target_link_libraries(common PUBLIC fmt::fmt microprofile Boost::boost Boost::serialization Boost::iostreams)
-target_link_libraries(common PRIVATE libzstd_static)
-set_target_properties(common PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
+target_link_libraries(citra_common PUBLIC fmt::fmt microprofile Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(citra_common PRIVATE libzstd_static)
+set_target_properties(citra_common PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if ("x86_64" IN_LIST ARCHITECTURE)
-    target_link_libraries(common PRIVATE xbyak)
+    target_link_libraries(citra_common PRIVATE xbyak)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
-    target_precompile_headers(common PRIVATE precompiled_headers.h)
+    target_precompile_headers(citra_common PRIVATE precompiled_headers.h)
 endif()

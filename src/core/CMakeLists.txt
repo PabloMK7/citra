@@ -1,4 +1,4 @@
-add_library(core STATIC
+add_library(citra_core STATIC
     3ds.h
     arm/arm_interface.h
     arm/dyncom/arm_dyncom.cpp
@@ -471,29 +471,29 @@ add_library(core STATIC
 )
 
 if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_sources(core PRIVATE
+    target_sources(citra_core PRIVATE
         dumping/ffmpeg_backend.cpp
         dumping/ffmpeg_backend.h
     )
 endif()
 
-create_target_directory_groups(core)
+create_target_directory_groups(citra_core)
 
-target_link_libraries(core PUBLIC common PRIVATE audio_core network video_core)
-target_link_libraries(core PRIVATE Boost::boost Boost::serialization Boost::iostreams)
-target_link_libraries(core PUBLIC dds-ktx PRIVATE cryptopp fmt::fmt lodepng open_source_archives)
-set_target_properties(core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
+target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
+target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt::fmt lodepng open_source_archives)
+set_target_properties(citra_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if (ENABLE_WEB_SERVICE)
-    target_compile_definitions(core PRIVATE -DENABLE_WEB_SERVICE -DCPPHTTPLIB_OPENSSL_SUPPORT)
-    target_link_libraries(core PRIVATE web_service ${OPENSSL_LIBS} httplib)
+    target_compile_definitions(citra_core PRIVATE -DENABLE_WEB_SERVICE -DCPPHTTPLIB_OPENSSL_SUPPORT)
+    target_link_libraries(citra_core PRIVATE web_service ${OPENSSL_LIBS} httplib)
     if (ANDROID)
-        target_link_libraries(core PRIVATE ifaddrs)
+        target_link_libraries(citra_core PRIVATE ifaddrs)
     endif()
 endif()
 
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
-    target_sources(core PRIVATE
+    target_sources(citra_core PRIVATE
         arm/dynarmic/arm_dynarmic.cpp
         arm/dynarmic/arm_dynarmic.h
         arm/dynarmic/arm_dynarmic_cp15.cpp
@@ -503,13 +503,13 @@ if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
         arm/dynarmic/arm_tick_counts.cpp
         arm/dynarmic/arm_tick_counts.h
     )
-    target_link_libraries(core PRIVATE dynarmic)
+    target_link_libraries(citra_core PRIVATE dynarmic)
 endif()
 
 if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_link_libraries(core PUBLIC FFmpeg::avcodec FFmpeg::avformat FFmpeg::swscale FFmpeg::swresample FFmpeg::avutil)
+    target_link_libraries(citra_core PUBLIC FFmpeg::avcodec FFmpeg::avformat FFmpeg::swscale FFmpeg::swresample FFmpeg::avutil)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
-    target_precompile_headers(core PRIVATE precompiled_headers.h)
+    target_precompile_headers(citra_core PRIVATE precompiled_headers.h)
 endif()

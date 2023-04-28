@@ -125,7 +125,7 @@ target_include_directories(video_core PRIVATE ${HOST_SHADERS_INCLUDE})
 
 create_target_directory_groups(video_core)
 
-target_link_libraries(video_core PUBLIC common core)
+target_link_libraries(video_core PUBLIC citra_common citra_core)
 target_link_libraries(video_core PRIVATE glad json-headers dds-ktx nihstro-headers Boost::serialization)
 set_target_properties(video_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 

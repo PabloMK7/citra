@@ -246,12 +246,14 @@ target_sources(citra-qt
 if (APPLE)
     set(MACOSX_ICON "../../dist/citra.icns")
     set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    target_sources(citra-qt PRIVATE ${MACOSX_ICON})
-    set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE TRUE)
-    set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
     target_sources(citra-qt PRIVATE
+        ${MACOSX_ICON}
         macos_authorization.h
         macos_authorization.mm
+    )
+    set_target_properties(citra-qt PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
     )
 elseif(WIN32)
     # compile as a win32 gui application instead of a console application
@@ -263,9 +265,25 @@ elseif(WIN32)
     endif()
 endif()
 
+if (CITRA_BUNDLE_LIBRARIES)
+    if (APPLE)
+        set(BUNDLE_DIR "$<TARGET_BUNDLE_DIR:citra-qt>")
+    endif()
+
+    add_custom_command(TARGET citra-qt
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+        -DTYPE=qt
+        -DEXECUTABLE_PATH=$<TARGET_FILE:citra-qt>
+        -DBUNDLE_PATH=${BUNDLE_DIR}
+        -P ${CMAKE_SOURCE_DIR}/CMakeModules/BundleLibraries.cmake
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif()
+
 create_target_directory_groups(citra-qt)
 
-target_link_libraries(citra-qt PRIVATE audio_core common core input_common network video_core)
+target_link_libraries(citra-qt PRIVATE audio_core citra_common citra_core input_common network video_core)
 target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::Widgets Qt5::Multimedia Qt5::Concurrent)
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 

@@ -18,7 +18,7 @@ add_executable(citra
 
 create_target_directory_groups(citra)
 
-target_link_libraries(citra PRIVATE common core input_common network)
+target_link_libraries(citra PRIVATE citra_common citra_core input_common network)
 target_link_libraries(citra PRIVATE inih glad)
 if (MSVC)
     target_link_libraries(citra PRIVATE getopt)
@@ -40,4 +40,15 @@ endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra PRIVATE precompiled_headers.h)
+endif()
+
+if (CITRA_BUNDLE_LIBRARIES)
+    add_custom_command(TARGET citra
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+        -DTYPE=standalone
+        -DEXECUTABLE_PATH=$<TARGET_FILE:citra>
+        -P ${CMAKE_SOURCE_DIR}/CMakeModules/BundleLibraries.cmake
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
