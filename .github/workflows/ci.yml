@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["linux-fresh", "linux-frozen", "linux-mingw"]
+        image: ["linux-appimage", "linux-fresh", "linux-frozen", "linux-mingw"]
     container:
       image: citraemu/build-environments:${{ matrix.image }}
       options: -u 1001
@@ -234,4 +234,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          asset_paths: '["./**/*.tar.*","./**/*.7z","./**/*.zip","./**/*.apk","./**/*.aab"]'
+          asset_paths: '["./**/*.tar.*","./**/*.AppImage","./**/*.7z","./**/*.zip","./**/*.apk","./**/*.aab"]'
