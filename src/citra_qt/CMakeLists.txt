@@ -28,9 +28,6 @@ add_executable(citra-qt
     camera/qt_camera_base.h
     camera/qt_multimedia_camera.cpp
     camera/qt_multimedia_camera.h
-    cheats.cpp
-    cheats.h
-    cheats.ui
     citra-qt.rc
     compatdb.cpp
     compatdb.h
@@ -88,6 +85,9 @@ add_executable(citra-qt
     configuration/configure_web.cpp
     configuration/configure_web.h
     configuration/configure_web.ui
+    configuration/configure_cheats.cpp
+    configuration/configure_cheats.h
+    configuration/configure_cheats.ui
     debugger/console.h
     debugger/console.cpp
     debugger/graphics/graphics.cpp

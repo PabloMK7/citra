@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CheatDialog</class>
- <widget class="QDialog" name="CheatDialog">
+ <class>ConfigureCheats</class>
+ <widget class="QWidget" name="ConfigureCheats">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -25,18 +25,6 @@
   <layout class="QVBoxLayout">
    <item>
     <layout class="QHBoxLayout">
-     <item>
-      <widget class="QLabel" name="labelTitle">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Title ID:</string>
-       </property>
-      </widget>
-     </item>
      <item>
       <spacer>
        <property name="orientation">
@@ -208,13 +196,6 @@
        </property>
       </spacer>
      </item>
-     <item>
-      <widget class="QPushButton" name="buttonClose">
-       <property name="text">
-        <string>Close</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
   </layout>
@@ -227,7 +208,6 @@
   <tabstop>textCode</tabstop>
   <tabstop>buttonSave</tabstop>
   <tabstop>buttonDelete</tabstop>
-  <tabstop>buttonClose</tabstop>
  </tabstops>
  <resources/>
  <connections/>

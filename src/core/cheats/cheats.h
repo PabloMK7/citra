@@ -24,7 +24,7 @@ class CheatBase;
 
 class CheatEngine {
 public:
-    explicit CheatEngine(Core::System& system);
+    explicit CheatEngine(u64 title_id_, Core::System& system);
     ~CheatEngine();
     void Connect();
     std::vector<std::shared_ptr<CheatBase>> GetCheats() const;
@@ -40,5 +40,6 @@ private:
     mutable std::shared_mutex cheats_list_mutex;
     Core::TimingEventType* event;
     Core::System& system;
+    u64 title_id;
 };
 } // namespace Cheats

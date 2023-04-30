@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -115,7 +115,6 @@
     <addaction name="separator"/>
     <addaction name="action_Configure"/>
     <addaction name="action_Configure_Current_Game"/>
-    <addaction name="action_Cheats"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -331,11 +330,6 @@
    </property>
    <property name="menuRole">
     <enum>QAction::PreferencesRole</enum>
-   </property>
-  </action>
-  <action name="action_Cheats">
-   <property name="text">
-    <string>Cheats...</string>
    </property>
   </action>
   <action name="action_Display_Dock_Widget_Headers">

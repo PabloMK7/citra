@@ -19,9 +19,12 @@ namespace Cheats {
 // we use the same value
 constexpr u64 run_interval_ticks = 50'000'000;
 
-CheatEngine::CheatEngine(Core::System& system_) : system(system_) {
+CheatEngine::CheatEngine(u64 title_id_, Core::System& system_)
+    : system(system_), title_id{title_id_} {
     LoadCheatFile();
-    Connect();
+    if (system.IsPoweredOn()) {
+        Connect();
+    }
 }
 
 void CheatEngine::Connect() {
@@ -32,7 +35,9 @@ void CheatEngine::Connect() {
 }
 
 CheatEngine::~CheatEngine() {
-    system.CoreTiming().UnscheduleEvent(event, 0);
+    if (system.IsPoweredOn()) {
+        system.CoreTiming().UnscheduleEvent(event, 0);
+    }
 }
 
 std::vector<std::shared_ptr<CheatBase>> CheatEngine::GetCheats() const {
@@ -65,8 +70,7 @@ void CheatEngine::UpdateCheat(std::size_t index, const std::shared_ptr<CheatBase
 
 void CheatEngine::SaveCheatFile() const {
     const std::string cheat_dir = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
-    const std::string filepath = fmt::format(
-        "{}{:016X}.txt", cheat_dir, system.Kernel().GetCurrentProcess()->codeset->program_id);
+    const std::string filepath = fmt::format("{}{:016X}.txt", cheat_dir, title_id);
 
     if (!FileUtil::IsDirectory(cheat_dir)) {
         FileUtil::CreateDir(cheat_dir);
@@ -81,8 +85,7 @@ void CheatEngine::SaveCheatFile() const {
 
 void CheatEngine::LoadCheatFile() {
     const std::string cheat_dir = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
-    const std::string filepath = fmt::format(
-        "{}{:016X}.txt", cheat_dir, system.Kernel().GetCurrentProcess()->codeset->program_id);
+    const std::string filepath = fmt::format("{}{:016X}.txt", cheat_dir, title_id);
 
     if (!FileUtil::IsDirectory(cheat_dir)) {
         FileUtil::CreateDir(cheat_dir);

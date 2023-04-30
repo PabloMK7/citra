@@ -217,7 +217,6 @@ private slots:
     void OnRotateScreens();
     void TriggerSwapScreens();
     void TriggerRotateScreens();
-    void OnCheats();
     void ShowFullscreen();
     void HideFullscreen();
     void ToggleWindowMode();

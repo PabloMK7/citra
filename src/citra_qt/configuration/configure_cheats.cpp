@@ -5,16 +5,16 @@
 #include <QCheckBox>
 #include <QMessageBox>
 #include <QTableWidgetItem>
-#include "citra_qt/cheats.h"
+#include "configure_cheats.h"
 #include "core/cheats/cheat_base.h"
 #include "core/cheats/cheats.h"
 #include "core/cheats/gateway_cheat.h"
 #include "core/core.h"
 #include "core/hle/kernel/process.h"
-#include "ui_cheats.h"
+#include "ui_configure_cheats.h"
 
-CheatDialog::CheatDialog(QWidget* parent)
-    : QDialog(parent), ui(std::make_unique<Ui::CheatDialog>()) {
+ConfigureCheats::ConfigureCheats(u64 title_id_, QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureCheats>()), title_id{title_id_} {
     // Setup gui control settings
     ui->setupUi(this);
     ui->tableCheats->setColumnWidth(0, 30);
@@ -25,28 +25,26 @@ CheatDialog::CheatDialog(QWidget* parent)
     ui->lineName->setEnabled(false);
     ui->textCode->setEnabled(false);
     ui->textNotes->setEnabled(false);
-    const auto game_id = fmt::format(
-        "{:016X}", Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id);
-    ui->labelTitle->setText(tr("Title ID: %1").arg(QString::fromStdString(game_id)));
 
-    connect(ui->buttonClose, &QPushButton::clicked, this, &CheatDialog::OnCancel);
-    connect(ui->buttonAddCheat, &QPushButton::clicked, this, &CheatDialog::OnAddCheat);
-    connect(ui->tableCheats, &QTableWidget::cellClicked, this, &CheatDialog::OnRowSelected);
-    connect(ui->lineName, &QLineEdit::textEdited, this, &CheatDialog::OnTextEdited);
-    connect(ui->textNotes, &QPlainTextEdit::textChanged, this, &CheatDialog::OnTextEdited);
-    connect(ui->textCode, &QPlainTextEdit::textChanged, this, &CheatDialog::OnTextEdited);
+    connect(ui->buttonAddCheat, &QPushButton::clicked, this, &ConfigureCheats::OnAddCheat);
+    connect(ui->tableCheats, &QTableWidget::cellClicked, this, &ConfigureCheats::OnRowSelected);
+    connect(ui->lineName, &QLineEdit::textEdited, this, &ConfigureCheats::OnTextEdited);
+    connect(ui->textNotes, &QPlainTextEdit::textChanged, this, &ConfigureCheats::OnTextEdited);
+    connect(ui->textCode, &QPlainTextEdit::textChanged, this, &ConfigureCheats::OnTextEdited);
 
     connect(ui->buttonSave, &QPushButton::clicked, this,
             [this] { SaveCheat(ui->tableCheats->currentRow()); });
-    connect(ui->buttonDelete, &QPushButton::clicked, this, &CheatDialog::OnDeleteCheat);
+    connect(ui->buttonDelete, &QPushButton::clicked, this, &ConfigureCheats::OnDeleteCheat);
+
+    cheat_engine = std::make_unique<Cheats::CheatEngine>(title_id, Core::System::GetInstance());
 
     LoadCheats();
 }
 
-CheatDialog::~CheatDialog() = default;
+ConfigureCheats::~ConfigureCheats() = default;
 
-void CheatDialog::LoadCheats() {
-    cheats = Core::System::GetInstance().CheatEngine().GetCheats();
+void ConfigureCheats::LoadCheats() {
+    cheats = cheat_engine->GetCheats();
     const int cheats_count = static_cast<int>(cheats.size());
 
     ui->tableCheats->setRowCount(cheats_count);
@@ -63,11 +61,11 @@ void CheatDialog::LoadCheats() {
             i, 2, new QTableWidgetItem(QString::fromStdString(cheats[i]->GetType())));
         enabled->setProperty("row", static_cast<int>(i));
 
-        connect(enabled, &QCheckBox::stateChanged, this, &CheatDialog::OnCheckChanged);
+        connect(enabled, &QCheckBox::stateChanged, this, &ConfigureCheats::OnCheckChanged);
     }
 }
 
-bool CheatDialog::CheckSaveCheat() {
+bool ConfigureCheats::CheckSaveCheat() {
     auto answer = QMessageBox::warning(
         this, tr("Cheats"), tr("Would you like to save the current cheat?"),
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Cancel);
@@ -79,7 +77,7 @@ bool CheatDialog::CheckSaveCheat() {
     }
 }
 
-bool CheatDialog::SaveCheat(int row) {
+bool ConfigureCheats::SaveCheat(int row) {
     if (ui->lineName->text().isEmpty()) {
         QMessageBox::critical(this, tr("Save Cheat"), tr("Please enter a cheat name."));
         return false;
@@ -110,12 +108,12 @@ bool CheatDialog::SaveCheat(int row) {
                                                         ui->textNotes->toPlainText().toStdString());
 
     if (newly_created) {
-        Core::System::GetInstance().CheatEngine().AddCheat(cheat);
+        cheat_engine->AddCheat(cheat);
         newly_created = false;
     } else {
-        Core::System::GetInstance().CheatEngine().UpdateCheat(row, cheat);
+        cheat_engine->UpdateCheat(row, cheat);
     }
-    Core::System::GetInstance().CheatEngine().SaveCheatFile();
+    cheat_engine->SaveCheatFile();
 
     int previous_row = ui->tableCheats->currentRow();
     int previous_col = ui->tableCheats->currentColumn();
@@ -128,19 +126,7 @@ bool CheatDialog::SaveCheat(int row) {
     return true;
 }
 
-void CheatDialog::closeEvent(QCloseEvent* event) {
-    if (edited && !CheckSaveCheat()) {
-        event->ignore();
-        return;
-    }
-    event->accept();
-}
-
-void CheatDialog::OnCancel() {
-    close();
-}
-
-void CheatDialog::OnRowSelected(int row, int column) {
+void ConfigureCheats::OnRowSelected(int row, int column) {
     if (row == last_row) {
         return;
     }
@@ -173,25 +159,24 @@ void CheatDialog::OnRowSelected(int row, int column) {
     last_col = column;
 }
 
-void CheatDialog::OnCheckChanged(int state) {
+void ConfigureCheats::OnCheckChanged(int state) {
     const QCheckBox* checkbox = qobject_cast<QCheckBox*>(sender());
     int row = static_cast<int>(checkbox->property("row").toInt());
     cheats[row]->SetEnabled(state);
-    Core::System::GetInstance().CheatEngine().SaveCheatFile();
+    cheat_engine->SaveCheatFile();
 }
 
-void CheatDialog::OnTextEdited() {
+void ConfigureCheats::OnTextEdited() {
     edited = true;
     ui->buttonSave->setEnabled(true);
 }
 
-void CheatDialog::OnDeleteCheat() {
+void ConfigureCheats::OnDeleteCheat() {
     if (newly_created) {
         newly_created = false;
     } else {
-        auto& cheat_engine = Core::System::GetInstance().CheatEngine();
-        cheat_engine.RemoveCheat(ui->tableCheats->currentRow());
-        cheat_engine.SaveCheatFile();
+        cheat_engine->RemoveCheat(ui->tableCheats->currentRow());
+        cheat_engine->SaveCheatFile();
     }
 
     LoadCheats();
@@ -221,7 +206,14 @@ void CheatDialog::OnDeleteCheat() {
     ui->buttonAddCheat->setEnabled(true);
 }
 
-void CheatDialog::OnAddCheat() {
+bool ConfigureCheats::ApplyConfiguration() {
+    if (edited) {
+        return SaveCheat(ui->tableCheats->currentRow());
+    }
+    return true;
+}
+
+void ConfigureCheats::OnAddCheat() {
     if (edited && !CheckSaveCheat()) {
         return;
     }

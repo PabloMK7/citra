@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_audio.h"
+#include "citra_qt/configuration/configure_cheats.h"
 #include "citra_qt/configuration/configure_debug.h"
 #include "citra_qt/configuration/configure_enhancements.h"
 #include "citra_qt/configuration/configure_general.h"
@@ -35,6 +36,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
     graphics_tab = std::make_unique<ConfigureGraphics>(this);
     system_tab = std::make_unique<ConfigureSystem>(this);
     debug_tab = std::make_unique<ConfigureDebug>(this);
+    cheat_tab = std::make_unique<ConfigureCheats>(title_id, this);
 
     ui->setupUi(this);
 
@@ -44,6 +46,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
     ui->tabWidget->addTab(graphics_tab.get(), tr("Graphics"));
     ui->tabWidget->addTab(audio_tab.get(), tr("Audio"));
     ui->tabWidget->addTab(debug_tab.get(), tr("Debug"));
+    ui->tabWidget->addTab(cheat_tab.get(), tr("Cheats"));
 
     setFocusPolicy(Qt::ClickFocus);
     setWindowTitle(tr("Properties"));
@@ -59,6 +62,9 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
 
     connect(ui->button_reset_per_game, &QPushButton::clicked, this,
             &ConfigurePerGame::ResetDefaults);
+
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
+            &ConfigurePerGame::HandleAcceptedEvent);
 
     LoadConfiguration();
 }
@@ -79,6 +85,13 @@ void ConfigurePerGame::ResetDefaults() {
                                  FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir),
                                  config_file_name));
     close();
+}
+
+void ConfigurePerGame::HandleAcceptedEvent() {
+    if (ui->tabWidget->currentWidget() == cheat_tab.get()) {
+        cheat_tab->ApplyConfiguration();
+    }
+    accept();
 }
 
 void ConfigurePerGame::ApplyConfiguration() {
@@ -109,6 +122,9 @@ void ConfigurePerGame::RetranslateUI() {
 
 void ConfigurePerGame::HandleApplyButtonClicked() {
     ApplyConfiguration();
+    if (ui->tabWidget->currentWidget() == cheat_tab.get()) {
+        cheat_tab->ApplyConfiguration();
+    }
 }
 
 static QPixmap GetQPixmapFromSMDH(std::vector<u8>& smdh_data) {
