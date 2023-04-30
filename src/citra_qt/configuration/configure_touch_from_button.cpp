@@ -511,7 +511,7 @@ void TouchScreenPreview::mouseMoveEvent(QMouseEvent* event) {
     }
     const auto pos = MapToDeviceCoords(event->x(), event->y());
     if (pos) {
-        coord_label->setText(QStringLiteral("X: %1, Y: %2").arg(pos->x(), pos->y()));
+        coord_label->setText(QStringLiteral("X: %1, Y: %2").arg(pos->x()).arg(pos->y()));
     } else {
         coord_label->clear();
     }
@@ -572,7 +572,7 @@ bool TouchScreenPreview::eventFilter(QObject* obj, QEvent* event) {
             emit DotMoved(drag_state.dot->property(PropId).toInt(), *device_coord);
             if (coord_label) {
                 coord_label->setText(
-                    QStringLiteral("X: %1, Y: %2").arg(device_coord->x(), device_coord->y()));
+                    QStringLiteral("X: %1, Y: %2").arg(device_coord->x()).arg(device_coord->y()));
             }
         }
         return true;
