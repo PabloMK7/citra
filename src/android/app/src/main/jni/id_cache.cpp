@@ -8,6 +8,7 @@
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "core/hle/service/am/am.h"
 #include "jni/applets/mii_selector.h"
 #include "jni/applets/swkbd.h"
 #include "jni/camera/still_image_camera.h"
@@ -44,6 +45,10 @@ static jfieldID s_game_info_pointer;
 static jclass s_disk_cache_progress_class;
 static jmethodID s_disk_cache_load_progress;
 static std::unordered_map<VideoCore::LoadCallbackStage, jobject> s_java_load_callback_stages;
+
+static jclass s_cia_install_helper_class;
+static jmethodID s_cia_install_helper_set_progress;
+static std::unordered_map<Service::AM::InstallStatus, jobject> s_java_cia_install_status;
 
 namespace IDCache {
 
@@ -149,6 +154,19 @@ jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage) {
     return it->second;
 }
 
+jclass GetCiaInstallHelperClass() {
+    return s_cia_install_helper_class;
+}
+
+jmethodID GetCiaInstallHelperSetProgress() {
+    return s_cia_install_helper_set_progress;
+}
+jobject GetJavaCiaInstallStatus(Service::AM::InstallStatus status) {
+    const auto it = s_java_cia_install_status.find(status);
+    ASSERT_MSG(it != s_java_cia_install_status.end(), "Invalid InstallStatus: {}", status);
+
+    return it->second;
+}
 } // namespace IDCache
 
 #ifdef __cplusplus
@@ -217,15 +235,16 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     env->DeleteLocalRef(game_info_class);
 
     // Initialize Disk Shader Cache Progress Dialog
-    s_disk_cache_progress_class = reinterpret_cast<jclass>(env->NewGlobalRef(
-            env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress")));
-    jclass load_callback_stage_class = env->FindClass(
-            "org/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage");
+    s_disk_cache_progress_class = reinterpret_cast<jclass>(
+        env->NewGlobalRef(env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress")));
+    jclass load_callback_stage_class =
+        env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage");
     s_disk_cache_load_progress = env->GetStaticMethodID(
-            s_disk_cache_progress_class, "loadProgress",
-            "(Lorg/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage;II)V");
+        s_disk_cache_progress_class, "loadProgress",
+        "(Lorg/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage;II)V");
     // Initialize LoadCallbackStage map
-    const auto to_java_load_callback_stage = [env, load_callback_stage_class](const std::string& stage) {
+    const auto to_java_load_callback_stage = [env,
+                                              load_callback_stage_class](const std::string& stage) {
         return env->NewGlobalRef(env->GetStaticObjectField(
             load_callback_stage_class,
             env->GetStaticFieldID(load_callback_stage_class, stage.c_str(),
@@ -241,6 +260,36 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_java_load_callback_stages.emplace(VideoCore::LoadCallbackStage::Complete,
                                         to_java_load_callback_stage("Complete"));
     env->DeleteLocalRef(load_callback_stage_class);
+
+    // CIA Install
+    s_cia_install_helper_class = reinterpret_cast<jclass>(
+        env->NewGlobalRef(env->FindClass("org/citra/citra_emu/utils/CiaInstallWorker")));
+    s_cia_install_helper_set_progress =
+        env->GetMethodID(s_cia_install_helper_class, "setProgressCallback", "(II)V");
+    // Initialize CIA InstallStatus map
+    jclass cia_install_status_class =
+        env->FindClass("org/citra/citra_emu/utils/CiaInstallWorker$InstallStatus");
+    const auto to_java_cia_install_status = [env,
+                                             cia_install_status_class](const std::string& stage) {
+        return env->NewGlobalRef(env->GetStaticObjectField(
+            cia_install_status_class, env->GetStaticFieldID(cia_install_status_class, stage.c_str(),
+                                                            "Lorg/citra/citra_emu/utils/"
+                                                            "CiaInstallWorker$InstallStatus;")));
+    };
+    s_java_cia_install_status.emplace(Service::AM::InstallStatus::Success,
+                                      to_java_cia_install_status("Success"));
+    s_java_cia_install_status.emplace(Service::AM::InstallStatus::ErrorFailedToOpenFile,
+                                      to_java_cia_install_status("ErrorFailedToOpenFile"));
+    s_java_cia_install_status.emplace(Service::AM::InstallStatus::ErrorFileNotFound,
+                                      to_java_cia_install_status("ErrorFileNotFound"));
+    s_java_cia_install_status.emplace(Service::AM::InstallStatus::ErrorAborted,
+                                      to_java_cia_install_status("ErrorAborted"));
+    s_java_cia_install_status.emplace(Service::AM::InstallStatus::ErrorInvalid,
+                                      to_java_cia_install_status("ErrorInvalid"));
+    s_java_cia_install_status.emplace(Service::AM::InstallStatus::ErrorEncrypted,
+                                      to_java_cia_install_status("ErrorEncrypted"));
+    env->DeleteLocalRef(cia_install_status_class);
+
     MiiSelector::InitJNI(env);
     SoftwareKeyboard::InitJNI(env);
     Camera::StillImage::InitJNI(env);
@@ -260,8 +309,13 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
     env->DeleteGlobalRef(s_disk_cache_progress_class);
     env->DeleteGlobalRef(s_native_library_class);
     env->DeleteGlobalRef(s_cheat_class);
+    env->DeleteGlobalRef(s_cia_install_helper_class);
 
     for (auto& [key, object] : s_java_load_callback_stages) {
+        env->DeleteGlobalRef(object);
+    }
+
+    for (auto& [key, object] : s_java_cia_install_status) {
         env->DeleteGlobalRef(object);
     }
 

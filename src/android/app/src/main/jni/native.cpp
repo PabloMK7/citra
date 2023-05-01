@@ -625,29 +625,16 @@ void Java_org_citra_citra_1emu_NativeLibrary_RemoveAmiibo(JNIEnv* env, jclass cl
     nfc->RemoveAmiibo();
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_InstallCIAS(JNIEnv* env, [[maybe_unused]] jclass clazz,
-                                                         jobjectArray path) {
-    const jsize count{env->GetArrayLength(path)};
-    std::vector<std::string> paths;
-    paths.reserve(count);
-    for (jsize idx{0}; idx < count; ++idx) {
-        paths.emplace_back(
-            GetJString(env, static_cast<jstring>(env->GetObjectArrayElement(path, idx))));
-    }
-    std::atomic<jsize> idx{count};
-    std::vector<std::thread> threads;
-    std::generate_n(std::back_inserter(threads),
-                    std::min<jsize>(std::thread::hardware_concurrency(), count), [&] {
-                        return std::thread{[&idx, &paths, env] {
-                            jsize work_idx;
-                            while ((work_idx = --idx) >= 0) {
-                                LOG_INFO(Frontend, "Installing CIA {}", work_idx);
-                                Service::AM::InstallCIA(paths[work_idx]);
-                            }
-                        }};
-                    });
-    for (auto& thread : threads)
-        thread.join();
+JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_InstallCIA(
+    JNIEnv* env, jobject jobj, jstring jpath) {
+    std::string path = GetJString(env, jpath);
+    Service::AM::InstallStatus res =
+        Service::AM::InstallCIA(path, [env, jobj](size_t total_bytes_read, size_t file_size) {
+            env->CallVoidMethod(jobj, IDCache::GetCiaInstallHelperSetProgress(),
+                                static_cast<jint>(file_size), static_cast<jint>(total_bytes_read));
+        });
+
+    return IDCache::GetJavaCiaInstallStatus(res);
 }
 
 jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetSavestateInfo(
