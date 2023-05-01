@@ -1424,8 +1424,8 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx, u16 command_id) 
         auto& node = nodes.emplace_back();
         node.friend_code_seed = info.friend_code_seed;
         node.network_node_id = info.network_node_id;
-        for (std::size_t i = 0; i < info.username.size(); ++i) {
-            node.username[i] = info.username[i];
+        for (std::size_t j = 0; j < info.username.size(); ++j) {
+            node.username[j] = info.username[j];
         }
     }
 

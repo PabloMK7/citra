@@ -71,7 +71,7 @@ protected:
     SDL_Window* render_window;
 
     /// Internal SDL2 window ID
-    int render_window_id{};
+    u32 render_window_id{};
 
     /// Fake hidden window for the core context
     SDL_Window* dummy_window;

@@ -99,7 +99,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
             plugin_root + fmt::format("{:016X}", process.codeset->program_id);
         FileUtil::FSTEntry entry;
         FileUtil::ScanDirectoryTree(plugin_tid, entry);
-        for (const auto child : entry.children) {
+        for (const auto& child : entry.children) {
             if (!child.isDirectory && child.physicalName.ends_with(".3gx")) {
                 plgldr_context.is_default_path = false;
                 plgldr_context.plugin_path = child.physicalName;

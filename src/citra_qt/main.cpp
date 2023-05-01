@@ -2287,7 +2287,8 @@ void GMainWindow::UpdateBootHomeMenuState() {
     for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
         const auto path = Core::GetHomeMenuNcchPath(region);
         ui->menu_Boot_Home_Menu->actions().at(region)->setEnabled(
-            (current_region == Settings::REGION_VALUE_AUTO_SELECT || current_region == region) &&
+            (current_region == Settings::REGION_VALUE_AUTO_SELECT ||
+             current_region == static_cast<int>(region)) &&
             !path.empty() && FileUtil::Exists(path));
     }
 }

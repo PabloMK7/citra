@@ -383,7 +383,7 @@ void FFmpegAudioStream::ProcessFrame(const VariableAudioFrame& channel0,
             LOG_ERROR(Render, "Audio frame dropped: Could not resample data");
             return;
         }
-        if (static_cast<u64>(resampled_count) < frame_size) {
+        if (resampled_count < frame_size) {
             offset = resampled_count;
             break;
         }

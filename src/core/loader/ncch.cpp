@@ -55,7 +55,7 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
     if (!is_loaded) {
         ResultStatus res = base_ncch.Load();
         if (res != ResultStatus::Success) {
-            return std::make_pair(std::optional<u32>{}, res);
+            return std::make_pair(std::nullopt, res);
         }
     }
 
@@ -68,7 +68,7 @@ std::pair<std::optional<u8>, ResultStatus> AppLoader_NCCH::LoadKernelN3dsMode() 
     if (!is_loaded) {
         ResultStatus res = base_ncch.Load();
         if (res != ResultStatus::Success) {
-            return std::make_pair(std::optional<u8>{}, res);
+            return std::make_pair(std::nullopt, res);
         }
     }
 

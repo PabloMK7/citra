@@ -118,7 +118,7 @@ public:
      * @returns A pair with the optional N3ds mode, and the status.
      */
     virtual std::pair<std::optional<u8>, ResultStatus> LoadKernelN3dsMode() {
-        return std::make_pair(0, ResultStatus::Success);
+        return std::make_pair(u8(0), ResultStatus::Success);
     }
 
     /**
@@ -136,7 +136,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadCode(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadCode([[maybe_unused]] std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -145,7 +145,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadIcon(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadIcon([[maybe_unused]] std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -154,7 +154,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadBanner(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadBanner([[maybe_unused]] std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -163,7 +163,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadLogo(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadLogo([[maybe_unused]] std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -172,7 +172,7 @@ public:
      * @param out_program_id Reference to store program id into
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadProgramId(u64& out_program_id) {
+    virtual ResultStatus ReadProgramId([[maybe_unused]] u64& out_program_id) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -181,7 +181,7 @@ public:
      * @param out_extdata_id Reference to store extdata id into
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadExtdataId(u64& out_extdata_id) {
+    virtual ResultStatus ReadExtdataId([[maybe_unused]] u64& out_extdata_id) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -191,7 +191,8 @@ public:
      * @param romfs_file The file containing the RomFS
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+    virtual ResultStatus ReadRomFS(
+        [[maybe_unused]] std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -200,7 +201,7 @@ public:
      * @param target_path The target path to dump to
      * @return ResultStatus result of function
      */
-    virtual ResultStatus DumpRomFS(const std::string& target_path) {
+    virtual ResultStatus DumpRomFS([[maybe_unused]] const std::string& target_path) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -210,7 +211,8 @@ public:
      * @param romfs_file The file containing the RomFS
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+    virtual ResultStatus ReadUpdateRomFS(
+        [[maybe_unused]] std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -219,7 +221,7 @@ public:
      * @param target_path The target path to dump to
      * @return ResultStatus result of function
      */
-    virtual ResultStatus DumpUpdateRomFS(const std::string& target_path) {
+    virtual ResultStatus DumpUpdateRomFS([[maybe_unused]] const std::string& target_path) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -228,7 +230,7 @@ public:
      * @param title Reference to store the application title into
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadTitle(std::string& title) {
+    virtual ResultStatus ReadTitle([[maybe_unused]] std::string& title) {
         return ResultStatus::ErrorNotImplemented;
     }
 

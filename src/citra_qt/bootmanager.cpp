@@ -338,6 +338,7 @@ struct SoftwareRenderWidget : public RenderWidget {
                     case GPU::Regs::PixelFormat::RGBA4:
                         return Common::Color::DecodeRGBA4(pixel);
                     }
+                    UNREACHABLE();
                 }();
 
                 image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));

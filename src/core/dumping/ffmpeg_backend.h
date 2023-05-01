@@ -118,14 +118,14 @@ private:
         }
     };
 
-    u64 frame_size{};
+    int frame_size{};
     u64 frame_count{};
 
     std::unique_ptr<AVFrame, AVFrameDeleter> audio_frame{};
     std::unique_ptr<SwrContext, SwrContextDeleter> swr_context{};
 
     u8** resampled_data{};
-    u64 offset{}; // Number of output samples that are currently in resampled_data.
+    int offset{}; // Number of output samples that are currently in resampled_data.
 };
 
 /**

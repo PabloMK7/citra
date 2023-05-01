@@ -67,9 +67,10 @@ void EmuWindow_SDL2_SW::Present() {
         Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight, false, false)};
 
     while (IsOpen()) {
-        SDL_SetRenderDrawColor(renderer, Settings::values.bg_red.GetValue() * 255,
-                               Settings::values.bg_green.GetValue() * 255,
-                               Settings::values.bg_blue.GetValue() * 255, 0xFF);
+        SDL_SetRenderDrawColor(renderer,
+                               static_cast<Uint8>(Settings::values.bg_red.GetValue() * 255),
+                               static_cast<Uint8>(Settings::values.bg_green.GetValue() * 255),
+                               static_cast<Uint8>(Settings::values.bg_blue.GetValue() * 255), 0xFF);
         SDL_RenderClear(renderer);
 
         const auto draw_screen = [&](int fb_id) {
@@ -121,6 +122,7 @@ SDL_Surface* EmuWindow_SDL2_SW::LoadFramebuffer(int fb_id) {
                 case GPU::Regs::PixelFormat::RGBA4:
                     return Common::Color::DecodeRGBA4(pixel);
                 }
+                UNREACHABLE();
             }();
 
             u8* dst_pixel = reinterpret_cast<u8*>(surface->pixels) + (y * width + x) * 4;

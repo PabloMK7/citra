@@ -15,7 +15,7 @@
 #define ASSERT(_a_)                                                                                \
     do                                                                                             \
         if (!(_a_)) [[unlikely]] {                                                                 \
-            []() CITRA_NO_INLINE {                                                                 \
+            []() CITRA_NO_INLINE CITRA_NO_RETURN {                                                 \
                 LOG_CRITICAL(Debug, "Assertion Failed!");                                          \
                 Crash();                                                                           \
                 exit(1);                                                                           \
@@ -26,7 +26,7 @@
 #define ASSERT_MSG(_a_, ...)                                                                       \
     do                                                                                             \
         if (!(_a_)) [[unlikely]] {                                                                 \
-            [&]() CITRA_NO_INLINE {                                                                \
+            [&]() CITRA_NO_INLINE CITRA_NO_RETURN {                                                \
                 LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__);                            \
                 Crash();                                                                           \
                 exit(1);                                                                           \
@@ -35,14 +35,14 @@
     while (0)
 
 #define UNREACHABLE()                                                                              \
-    ([]() CITRA_NO_INLINE {                                                                        \
+    ([]() CITRA_NO_INLINE CITRA_NO_RETURN {                                                        \
         LOG_CRITICAL(Debug, "Unreachable code!");                                                  \
         Crash();                                                                                   \
         exit(1);                                                                                   \
     }())
 
 #define UNREACHABLE_MSG(...)                                                                       \
-    ([&]() CITRA_NO_INLINE {                                                                       \
+    ([&]() CITRA_NO_INLINE CITRA_NO_RETURN {                                                       \
         LOG_CRITICAL(Debug, "Unreachable code!\n" __VA_ARGS__);                                    \
         Crash();                                                                                   \
         exit(1);                                                                                   \

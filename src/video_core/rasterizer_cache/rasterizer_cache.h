@@ -31,7 +31,7 @@ enum class ScaleMatch {
 };
 
 class CustomTexManager;
-struct CustomTexture;
+class CustomTexture;
 class RendererBase;
 
 class RasterizerCache : NonCopyable {

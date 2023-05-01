@@ -14,6 +14,12 @@
 
 namespace Common {
 
+/// Make a char lowercase
+[[nodiscard]] char ToLower(char c);
+
+/// Make a char uppercase
+[[nodiscard]] char ToUpper(char c);
+
 /// Make a string lowercase
 [[nodiscard]] std::string ToLower(std::string str);
 

@@ -173,20 +173,19 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
                                                bool is_portrait_mode) {
     Layout::FramebufferLayout layout;
-    const auto layout_option = Settings::values.layout_option;
-    const auto min_size = Layout::GetMinimumSizeFromLayout(
-        layout_option.GetValue(), Settings::values.upright_screen.GetValue());
+
+    // If in portrait mode, only the MobilePortrait option really makes sense
+    const Settings::LayoutOption layout_option = is_portrait_mode
+                                                     ? Settings::LayoutOption::MobilePortrait
+                                                     : Settings::values.layout_option.GetValue();
+    const auto min_size =
+        Layout::GetMinimumSizeFromLayout(layout_option, Settings::values.upright_screen.GetValue());
 
     if (Settings::values.custom_layout.GetValue() == true) {
         layout = Layout::CustomFrameLayout(width, height, Settings::values.swap_screen.GetValue());
     } else {
         width = std::max(width, min_size.first);
         height = std::max(height, min_size.second);
-
-        // If in portrait mode, only the MobilePortrait option really makes sense
-        const Settings::LayoutOption layout_option =
-            is_portrait_mode ? Settings::LayoutOption::MobilePortrait
-                             : Settings::values.layout_option.GetValue();
 
         switch (layout_option) {
         case Settings::LayoutOption::SingleScreen:

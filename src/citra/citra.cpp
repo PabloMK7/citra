@@ -368,6 +368,8 @@ int main(int argc, char** argv) {
         case Settings::GraphicsAPI::Software:
             return std::make_unique<EmuWindow_SDL2_SW>(fullscreen, is_secondary);
         }
+        LOG_ERROR(Frontend, "Invalid Graphics API, using OpenGL");
+        return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
     };
 
     const auto emu_window{create_emu_window(fullscreen, false)};

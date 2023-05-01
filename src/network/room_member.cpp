@@ -158,7 +158,7 @@ bool RoomMember::RoomMemberImpl::IsConnected() const {
 void RoomMember::RoomMemberImpl::MemberLoop() {
     // Receive packets while the connection is open
     while (IsConnected()) {
-        std::lock_guard lock(network_mutex);
+        std::lock_guard network_lock(network_mutex);
         ENetEvent event;
         if (enet_host_service(client, &event, 16) > 0) {
             switch (event.type) {
@@ -255,7 +255,7 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
 
         std::list<Packet> packets;
         {
-            std::lock_guard lock(send_list_mutex);
+            std::lock_guard send_list_lock(send_list_mutex);
             packets.swap(send_list);
         }
         for (const auto& packet : packets) {

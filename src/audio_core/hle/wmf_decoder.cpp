@@ -138,9 +138,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
 
 MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
                                              std::array<std::vector<u8>, 2>& out_streams) {
-    MFOutputState output_status = MFOutputState::OK;
     std::optional<std::vector<f32>> output_buffer;
-    unique_mfptr<IMFSample> output;
 
     while (true) {
         auto [output_status, output] = ReceiveSample(transform.get(), out_stream_id);

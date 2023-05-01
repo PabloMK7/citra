@@ -59,34 +59,37 @@ public:
     virtual void ClearAll(bool flush) = 0;
 
     /// Attempt to use a faster method to perform a display transfer with is_texture_copy = 0
-    virtual bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+    virtual bool AccelerateDisplayTransfer(
+        [[maybe_unused]] const GPU::Regs::DisplayTransferConfig& config) {
         return false;
     }
 
     /// Attempt to use a faster method to perform a display transfer with is_texture_copy = 1
-    virtual bool AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
+    virtual bool AccelerateTextureCopy(
+        [[maybe_unused]] const GPU::Regs::DisplayTransferConfig& config) {
         return false;
     }
 
     /// Attempt to use a faster method to fill a region
-    virtual bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+    virtual bool AccelerateFill([[maybe_unused]] const GPU::Regs::MemoryFillConfig& config) {
         return false;
     }
 
     /// Attempt to use a faster method to display the framebuffer to screen
-    virtual bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
-                                   PAddr framebuffer_addr, u32 pixel_stride,
-                                   OpenGL::ScreenInfo& screen_info) {
+    virtual bool AccelerateDisplay([[maybe_unused]] const GPU::Regs::FramebufferConfig& config,
+                                   [[maybe_unused]] PAddr framebuffer_addr,
+                                   [[maybe_unused]] u32 pixel_stride,
+                                   [[maybe_unused]] OpenGL::ScreenInfo& screen_info) {
         return false;
     }
 
     /// Attempt to draw using hardware shaders
-    virtual bool AccelerateDrawBatch(bool is_indexed) {
+    virtual bool AccelerateDrawBatch([[maybe_unused]] bool is_indexed) {
         return false;
     }
 
-    virtual void LoadDiskResources(const std::atomic_bool& stop_loading,
-                                   const DiskResourceLoadCallback& callback) {}
+    virtual void LoadDiskResources([[maybe_unused]] const std::atomic_bool& stop_loading,
+                                   [[maybe_unused]] const DiskResourceLoadCallback& callback) {}
 
     virtual void SyncEntireState() {}
 };

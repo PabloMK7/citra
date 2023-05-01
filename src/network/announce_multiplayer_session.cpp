@@ -135,9 +135,9 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
         if (result.result_string == "404") {
             registered = false;
             // Needs to register the room again
-            Common::WebResult result = Register();
-            if (result.result_code != Common::WebResult::Code::Success) {
-                ErrorCallback(result);
+            Common::WebResult new_result = Register();
+            if (new_result.result_code != Common::WebResult::Code::Success) {
+                ErrorCallback(new_result);
             }
         }
     }

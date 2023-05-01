@@ -31,8 +31,8 @@ struct MiiSelectorData {
 class MiiSelector {
 public:
     virtual ~MiiSelector() = default;
-    virtual void Setup(const MiiSelectorConfig& config) {
-        this->config = MiiSelectorConfig(config);
+    virtual void Setup(const MiiSelectorConfig& config_) {
+        config = MiiSelectorConfig(config_);
     }
 
     const MiiSelectorData& ReceiveData() const {

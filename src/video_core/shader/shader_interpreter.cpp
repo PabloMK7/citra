@@ -456,7 +456,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
         case OpCode::Type::MultiplyAdd: {
             if ((instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) ||
                 (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI)) {
-                const SwizzlePattern& swizzle = *reinterpret_cast<const SwizzlePattern*>(
+                const SwizzlePattern& mad_swizzle = *reinterpret_cast<const SwizzlePattern*>(
                     &swizzle_data[instr.mad.operand_desc_id]);
 
                 bool is_inverted = (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI);
@@ -472,15 +472,15 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 const float24* src3_ = LookupSourceRegister(instr.mad.GetSrc3(is_inverted) +
                                                             (is_inverted * address_offset));
 
-                const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
-                const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
-                const bool negate_src3 = ((bool)swizzle.negate_src3 != false);
+                const bool negate_src1 = ((bool)mad_swizzle.negate_src1 != false);
+                const bool negate_src2 = ((bool)mad_swizzle.negate_src2 != false);
+                const bool negate_src3 = ((bool)mad_swizzle.negate_src3 != false);
 
                 float24 src1[4] = {
-                    src1_[(int)swizzle.src1_selector_0.Value()],
-                    src1_[(int)swizzle.src1_selector_1.Value()],
-                    src1_[(int)swizzle.src1_selector_2.Value()],
-                    src1_[(int)swizzle.src1_selector_3.Value()],
+                    src1_[(int)mad_swizzle.src1_selector_0.Value()],
+                    src1_[(int)mad_swizzle.src1_selector_1.Value()],
+                    src1_[(int)mad_swizzle.src1_selector_2.Value()],
+                    src1_[(int)mad_swizzle.src1_selector_3.Value()],
                 };
                 if (negate_src1) {
                     src1[0] = -src1[0];
@@ -489,10 +489,10 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     src1[3] = -src1[3];
                 }
                 float24 src2[4] = {
-                    src2_[(int)swizzle.src2_selector_0.Value()],
-                    src2_[(int)swizzle.src2_selector_1.Value()],
-                    src2_[(int)swizzle.src2_selector_2.Value()],
-                    src2_[(int)swizzle.src2_selector_3.Value()],
+                    src2_[(int)mad_swizzle.src2_selector_0.Value()],
+                    src2_[(int)mad_swizzle.src2_selector_1.Value()],
+                    src2_[(int)mad_swizzle.src2_selector_2.Value()],
+                    src2_[(int)mad_swizzle.src2_selector_3.Value()],
                 };
                 if (negate_src2) {
                     src2[0] = -src2[0];
@@ -501,10 +501,10 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     src2[3] = -src2[3];
                 }
                 float24 src3[4] = {
-                    src3_[(int)swizzle.src3_selector_0.Value()],
-                    src3_[(int)swizzle.src3_selector_1.Value()],
-                    src3_[(int)swizzle.src3_selector_2.Value()],
-                    src3_[(int)swizzle.src3_selector_3.Value()],
+                    src3_[(int)mad_swizzle.src3_selector_0.Value()],
+                    src3_[(int)mad_swizzle.src3_selector_1.Value()],
+                    src3_[(int)mad_swizzle.src3_selector_2.Value()],
+                    src3_[(int)mad_swizzle.src3_selector_3.Value()],
                 };
                 if (negate_src3) {
                     src3[0] = -src3[0];
@@ -525,7 +525,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 Record<DebugDataRecord::SRC3>(debug_data, iteration, src3);
                 Record<DebugDataRecord::DEST_IN>(debug_data, iteration, dest);
                 for (int i = 0; i < 4; ++i) {
-                    if (!swizzle.DestComponentEnabled(i))
+                    if (!mad_swizzle.DestComponentEnabled(i))
                         continue;
 
                     dest[i] = src1[i] * src2[i] + src3[i];

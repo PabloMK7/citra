@@ -20,17 +20,27 @@
 
 namespace Common {
 
+/// Make a char lowercase
+char ToLower(char c) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+}
+
+/// Make a char uppercase
+char ToUpper(char c) {
+    return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+}
+
 /// Make a string lowercase
 std::string ToLower(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return str;
 }
 
 /// Make a string uppercase
 std::string ToUpper(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return str;
 }
 

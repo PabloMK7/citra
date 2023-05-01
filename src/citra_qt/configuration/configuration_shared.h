@@ -6,6 +6,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include "common/assert.h"
 #include "common/settings.h"
 
 namespace ConfigurationShared {
@@ -91,6 +92,7 @@ Type GetComboboxSetting(int index, const Settings::SwitchableSetting<Type, range
             return static_cast<Type>(index - ConfigurationShared::USE_GLOBAL_OFFSET);
         }
     }
+    UNREACHABLE();
 }
 
 /// Given a Qt widget sets the background color to indicate whether the setting

@@ -679,7 +679,8 @@ void RasterizerAccelerated::SyncProcTexBias() {
 }
 
 void RasterizerAccelerated::SyncAlphaTest() {
-    if (regs.framebuffer.output_merger.alpha_test.ref != uniform_block_data.data.alphatest_ref) {
+    if (regs.framebuffer.output_merger.alpha_test.ref !=
+        static_cast<u32>(uniform_block_data.data.alphatest_ref)) {
         uniform_block_data.data.alphatest_ref = regs.framebuffer.output_merger.alpha_test.ref;
         uniform_block_data.dirty = true;
     }

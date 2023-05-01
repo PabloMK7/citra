@@ -398,8 +398,8 @@ void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil) {
         } else {
             float16 constant = float16::FromRaw(shadow.constant);
             float16 linear = float16::FromRaw(shadow.linear);
-            float16 x = float16::FromFloat32(static_cast<float>(depth) / ref_z);
-            float16 stencil_new = float16::FromFloat32(stencil) / (constant + linear * x);
+            float16 x_ = float16::FromFloat32(static_cast<float>(depth) / ref_z);
+            float16 stencil_new = float16::FromFloat32(stencil) / (constant + linear * x_);
             stencil = static_cast<u8>(std::clamp(stencil_new.ToFloat32(), 0.0f, 255.0f));
 
             if (stencil < ref_s)

@@ -85,6 +85,7 @@ std::u16string Path::AsU16Str() const {
         return {};
     case LowPathType::Invalid:
     case LowPathType::Binary:
+    default:
         // TODO(yuriks): Add assert
         LOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
         return {};

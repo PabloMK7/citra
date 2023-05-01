@@ -28,8 +28,8 @@ public:
     std::string GetName() const override {
         return name;
     }
-    void SetName(std::string name) {
-        this->name = std::move(name);
+    void SetName(std::string name_) {
+        name = std::move(name_);
     }
 
     static constexpr HandleType HANDLE_TYPE = HandleType::SharedMemory;

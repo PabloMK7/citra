@@ -298,13 +298,13 @@ void LoadSafeModeNativeFirmKeysOld3DS() {
     std::vector<u8> firm_buffer(size);
     firm->Read(0, firm_buffer.size(), firm_buffer.data());
     firm->Close();
-
-    AESKey key;
-    constexpr std::size_t SLOT_0x31_KEY_Y_OFFSET = 817672;
-    std::memcpy(key.data(), firm_buffer.data() + SLOT_0x31_KEY_Y_OFFSET, sizeof(key));
-    key_slots.at(0x31).SetKeyY(key);
-    LOG_DEBUG(HW_AES, "Loaded Slot0x31 KeyY: {}", KeyToString(key));
-
+    {
+        AESKey key;
+        constexpr std::size_t SLOT_0x31_KEY_Y_OFFSET = 817672;
+        std::memcpy(key.data(), firm_buffer.data() + SLOT_0x31_KEY_Y_OFFSET, sizeof(key));
+        key_slots.at(0x31).SetKeyY(key);
+        LOG_DEBUG(HW_AES, "Loaded Slot0x31 KeyY: {}", KeyToString(key));
+    }
     auto LoadCommonKey = [&firm_buffer](std::size_t key_slot) -> AESKey {
         constexpr std::size_t START_OFFSET = 836533;
         constexpr std::size_t OFFSET = 0x14; // 0x10 bytes for key + 4 bytes between keys
@@ -417,13 +417,13 @@ void LoadNativeFirmKeysNew3DS() {
     d2.SetKeyWithIV(normal_key_slot0x15->data(), normal_key_slot0x15->size(),
                     arm9_header.CTR.data(), arm9_header.CTR.size());
     d2.ProcessData(arm9_binary.data(), enc_arm9_binary.data(), enc_arm9_binary.size());
-
-    AESKey key;
-    constexpr std::size_t SLOT_0x31_KEY_Y_OFFSET = 517368;
-    std::memcpy(key.data(), arm9_binary.data() + SLOT_0x31_KEY_Y_OFFSET, sizeof(key));
-    key_slots.at(0x31).SetKeyY(key);
-    LOG_DEBUG(HW_AES, "Loaded Slot0x31 KeyY: {}", KeyToString(key));
-
+    {
+        AESKey key;
+        constexpr std::size_t SLOT_0x31_KEY_Y_OFFSET = 517368;
+        std::memcpy(key.data(), arm9_binary.data() + SLOT_0x31_KEY_Y_OFFSET, sizeof(key));
+        key_slots.at(0x31).SetKeyY(key);
+        LOG_DEBUG(HW_AES, "Loaded Slot0x31 KeyY: {}", KeyToString(key));
+    }
     auto LoadCommonKey = [&arm9_binary](std::size_t key_slot) -> AESKey {
         constexpr std::size_t START_OFFSET = 541065;
         constexpr std::size_t OFFSET = 0x14; // 0x10 bytes for key + 4 bytes between keys

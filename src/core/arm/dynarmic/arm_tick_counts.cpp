@@ -28,8 +28,9 @@ constexpr u32 DepositBits(u32 val) {
     u32 mask = mask_;
     u32 res = 0;
     for (u32 bb = 1; mask; bb += bb) {
+        u32 neg_mask = 0 - mask;
         if (val & bb)
-            res |= mask & -mask;
+            res |= mask & neg_mask;
         mask &= mask - 1;
     }
     return res;

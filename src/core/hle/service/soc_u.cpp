@@ -794,8 +794,6 @@ void SOC_U::Poll(Kernel::HLERequestContext& ctx) {
         ret = TranslateError(GET_ERRNO);
     }
 
-    size_t test = platform_pollfd.size();
-
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
     rb.Push(ret);

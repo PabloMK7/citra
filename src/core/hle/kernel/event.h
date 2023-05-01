@@ -24,8 +24,8 @@ public:
     std::string GetName() const override {
         return name;
     }
-    void SetName(const std::string& name) {
-        this->name = name;
+    void SetName(const std::string& name_) {
+        name = name_;
     }
 
     static constexpr HandleType HANDLE_TYPE = HandleType::Event;

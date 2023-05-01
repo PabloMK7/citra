@@ -24,67 +24,62 @@ if (MSVC)
     # /W3                 - Level 3 warnings
     # /MP                 - Multi-threaded compilation
     # /Zi                 - Output debugging information
+    # /Zm                 - Specifies the precompiled header memory allocation limit
     # /Zo                 - Enhanced debug info for optimized builds
     # /permissive-        - Enables stricter C++ standards conformance checks
     # /EHsc               - C++-only exception handling semantics
+    # /utf-8              - Set source and execution character sets to UTF-8
     # /volatile:iso       - Use strict standards-compliant volatile semantics.
     # /Zc:externConstexpr - Allow extern constexpr variables to have external linkage, like the standard mandates
     # /Zc:inline          - Let codegen omit inline functions in object files
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
-    # /external:*         - Suppress warnings from external headers
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        # Ignore /Zc:externConstexpr /Zc:throwingNew /experimental:external when using clang-cl
-        add_compile_options(
-            /MP
-            /permissive-
-            /EHsc
-            /volatile:iso
-            /Zc:inline
-            /external:I "${CMAKE_SOURCE_DIR}/externals"
-            /external:anglebrackets
-            /external:W0
+    # /GT                 - Supports fiber safety for data allocated using static thread-local storage
+    add_compile_options(
+        /MP
+        /Zm200
+        /Zo
+        /permissive-
+        /EHsc
+        /std:c++latest
+        /utf-8
+        /volatile:iso
+        /Zc:externConstexpr
+        /Zc:inline
+        /Zc:throwingNew
+        /GT
 
-            # Warnings
-            /W3
-            /we4062 # enumerator 'identifier' in a switch of enum 'enumeration' is not handled
-            /we4101 # 'identifier': unreferenced local variable
-            /we4265 # 'class': class has virtual functions, but destructor is not virtual
-            /we4267 # 'var': conversion from 'size_t' to 'type', possible loss of data
-            /we4388 # signed/unsigned mismatch
-            /we4547 # 'operator' : operator before comma has no effect; expected operator with side-effect
-            /we4549 # 'operator1': operator before comma has no effect; did you intend 'operator2'?
-            /we4555 # Expression has no effect; expected expression with side-effect
-            /we4834 # Discarding return value of function with 'nodiscard' attribute
-            /we5038 # data member 'member1' will be initialized after data member 'member2'
-        )
-    else()
-        add_compile_options(
-            /MP
-            /Zo
-            /permissive-
-            /EHsc
-            /volatile:iso
-            /Zc:externConstexpr
-            /Zc:inline
-            /Zc:throwingNew
-            /experimental:external
-            /external:I "${CMAKE_SOURCE_DIR}/externals"
-            /external:anglebrackets
-            /external:W0
+        # External headers diagnostics
+        /experimental:external  # Enables the external headers options. This option isn't required in Visual Studio 2019 version 16.10 and later
+        /external:anglebrackets # Treats all headers included by #include <header>, where the header file is enclosed in angle brackets (< >), as external headers
+        /external:W0            # Sets the default warning level to 0 for external headers, effectively turning off warnings for external headers
 
-            # Warnings
-            /W3
-            /we4062 # enumerator 'identifier' in a switch of enum 'enumeration' is not handled
-            /we4101 # 'identifier': unreferenced local variable
-            /we4265 # 'class': class has virtual functions, but destructor is not virtual
-            /we4267 # 'var': conversion from 'size_t' to 'type', possible loss of data
-            /we4388 # signed/unsigned mismatch
-            /we4547 # 'operator' : operator before comma has no effect; expected operator with side-effect
-            /we4549 # 'operator1': operator before comma has no effect; did you intend 'operator2'?
-            /we4555 # Expression has no effect; expected expression with side-effect
-            /we4834 # Discarding return value of function with 'nodiscard' attribute
-            /we5038 # data member 'member1' will be initialized after data member 'member2'
-        )
+        # Warnings
+        /W3
+
+        /we4062 # Enumerator 'identifier' in a switch of enum 'enumeration' is not handled
+        /we4189 # 'identifier': local variable is initialized but not referenced
+        /we4265 # 'class': class has virtual functions, but destructor is not virtual
+        /we4388 # 'expression': signed/unsigned mismatch
+        /we4389 # 'operator': signed/unsigned mismatch
+        /we4456 # Declaration of 'identifier' hides previous local declaration
+        /we4457 # Declaration of 'identifier' hides function parameter
+        # /we4458 TODO: Enable me # Declaration of 'identifier' hides class member
+        /we4459 # Declaration of 'identifier' hides global declaration
+        /we4505 # 'function': unreferenced local function has been removed
+        /we4547 # 'operator': operator before comma has no effect; expected operator with side-effect
+        /we4549 # 'operator1': operator before comma has no effect; did you intend 'operator2'?
+        /we4555 # Expression has no effect; expected expression with side-effect
+        /we4826 # Conversion from 'type1' to 'type2' is sign-extended. This may cause unexpected runtime behavior.
+        /we5038 # data member 'member1' will be initialized after data member 'member2'
+        /we5233 # explicit lambda capture 'identifier' is not used
+        /we5245 # 'function': unreferenced function with internal linkage has been removed
+
+        /wd4100 # 'identifier': unreferenced formal parameter
+        /wd4324 # 'struct_name': structure was padded due to __declspec(align())
+    )
+
+    if (CITRA_WARNINGS_AS_ERRORS)
+        add_compile_options(/WX)
     endif()
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it

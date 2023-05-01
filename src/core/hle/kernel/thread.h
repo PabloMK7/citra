@@ -115,8 +115,8 @@ public:
      */
     const std::vector<std::shared_ptr<Thread>>& GetThreadList();
 
-    void SetCPU(ARM_Interface& cpu) {
-        this->cpu = &cpu;
+    void SetCPU(ARM_Interface& cpu_) {
+        cpu = &cpu_;
     }
 
     std::unique_ptr<ARM_Interface::ThreadContext> NewContext() {

@@ -31,6 +31,12 @@
 #endif
 
 #ifdef _MSC_VER
+#define CITRA_NO_RETURN __declspec(noreturn)
+#else
+#define CITRA_NO_RETURN __attribute__((noreturn))
+#endif
+
+#ifdef _MSC_VER
 extern "C" {
 __declspec(dllimport) void __stdcall DebugBreak(void);
 }

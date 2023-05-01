@@ -234,8 +234,6 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
     std::function<void(u16, u16, u16, u16)> data_callback) {
 
     std::thread([=, this] {
-        constexpr u16 CALIBRATION_THRESHOLD = 100;
-
         u16 min_x{UINT16_MAX};
         u16 min_y{UINT16_MAX};
         u16 max_x{};
@@ -244,6 +242,8 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
         Status current_status{Status::Initialized};
         SocketCallback callback{[](Response::Version version) {}, [](Response::PortInfo info) {},
                                 [&](Response::PadData data) {
+                                    constexpr u16 CALIBRATION_THRESHOLD = 100;
+
                                     if (current_status == Status::Initialized) {
                                         // Receiving data means the communication is ready now
                                         current_status = Status::Ready;

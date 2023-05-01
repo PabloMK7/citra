@@ -259,10 +259,10 @@ const char* GetLogClassName(Class log_class) {
 #undef CLS
 #undef SUB
     case Class::Count:
+    default:
         break;
     }
     UNREACHABLE();
-    return "Invalid";
 }
 
 const char* GetLevelName(Level log_level) {
@@ -277,11 +277,11 @@ const char* GetLevelName(Level log_level) {
         LVL(Error);
         LVL(Critical);
     case Level::Count:
+    default:
         break;
     }
 #undef LVL
     UNREACHABLE();
-    return "Invalid";
 }
 
 void AddBackend(std::unique_ptr<Backend> backend) {

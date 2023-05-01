@@ -1962,7 +1962,7 @@ ResultCode SVC::GetProcessList(s32* process_count, VAddr out_process_array,
     }
 
     s32 written = 0;
-    for (const auto process : kernel.GetProcessList()) {
+    for (const auto& process : kernel.GetProcessList()) {
         if (written >= out_process_array_count) {
             break;
         }

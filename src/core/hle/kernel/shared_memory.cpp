@@ -157,14 +157,16 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
         // APT:GetSharedFont for detail.
         target_address = linear_heap_phys_offset + Memory::LINEAR_HEAP_VADDR;
     }
-
-    auto vma = target_process.vm_manager.FindVMA(target_address);
-    if (vma->second.type != VMAType::Free ||
-        vma->second.base + vma->second.size < target_address + size) {
-        LOG_ERROR(Kernel,
-                  "cannot map id={}, address=0x{:08X} name={}, mapping to already allocated memory",
-                  GetObjectId(), address, name);
-        return ERR_INVALID_ADDRESS_STATE;
+    {
+        auto vma = target_process.vm_manager.FindVMA(target_address);
+        if (vma->second.type != VMAType::Free ||
+            vma->second.base + vma->second.size < target_address + size) {
+            LOG_ERROR(
+                Kernel,
+                "cannot map id={}, address=0x{:08X} name={}, mapping to already allocated memory",
+                GetObjectId(), address, name);
+            return ERR_INVALID_ADDRESS_STATE;
+        }
     }
 
     // Map the memory block into the target process

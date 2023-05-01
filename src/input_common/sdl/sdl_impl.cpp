@@ -1007,14 +1007,14 @@ public:
                             // event was press and the second was release; This should handle most
                             // digital axes while deferring to the direction of travel for analog
                             // axes
-                            event.jaxis.value = std::copysign(
-                                32767, axis_memory[event.jaxis.which][event.jaxis.axis]);
+                            event.jaxis.value = static_cast<Sint16>(std::copysign(
+                                32767, axis_memory[event.jaxis.which][event.jaxis.axis]));
                         } else {
                             // There are more than two events, so this is likely a true analog axis,
                             // check the direction it travelled
-                            event.jaxis.value = std::copysign(
+                            event.jaxis.value = static_cast<Sint16>(std::copysign(
                                 32767, event.jaxis.value -
-                                           axis_memory[event.jaxis.which][event.jaxis.axis]);
+                                           axis_memory[event.jaxis.which][event.jaxis.axis]));
                         }
                         axis_memory.clear();
                         axis_event_count.clear();

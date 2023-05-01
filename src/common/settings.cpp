@@ -30,7 +30,10 @@ std::string_view GetAudioEmulationName(AudioEmulation emulation) {
         return "LLE";
     case AudioEmulation::LLEMultithreaded:
         return "LLE Multithreaded";
+    default:
+        return "Invalid";
     }
+    UNREACHABLE();
 };
 
 std::string_view GetGraphicsAPIName(GraphicsAPI api) {
@@ -39,7 +42,10 @@ std::string_view GetGraphicsAPIName(GraphicsAPI api) {
         return "Software";
     case GraphicsAPI::OpenGL:
         return "OpenGL";
+    default:
+        return "Invalid";
     }
+    UNREACHABLE();
 }
 
 std::string_view GetTextureFilterName(TextureFilter filter) {
@@ -56,7 +62,10 @@ std::string_view GetTextureFilterName(TextureFilter filter) {
         return "ScaleForce";
     case TextureFilter::xBRZ:
         return "xBRZ";
+    default:
+        return "Invalid";
     }
+    UNREACHABLE();
 }
 
 } // Anonymous namespace

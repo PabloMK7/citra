@@ -60,6 +60,8 @@ CMAKE_DEPENDENT_OPTION(ENABLE_FDK "Use FDK AAC decoder" OFF "NOT ENABLE_FFMPEG_A
 
 CMAKE_DEPENDENT_OPTION(CITRA_BUNDLE_LIBRARIES "Bundle dependent libraries with the output executables" ON "APPLE" OFF)
 
+option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+
 if (CITRA_USE_PRECOMPILED_HEADERS)
     if (MSVC AND CCACHE)
         # buildcache does not properly cache PCH files, leading to compilation errors.

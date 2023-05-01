@@ -131,6 +131,25 @@ add_library(citra_common STATIC
     zstd_compression.h
 )
 
+if (MSVC)
+  target_compile_definitions(citra_common PRIVATE
+    # The standard library doesn't provide any replacement for codecvt yet
+    # so we can disable this deprecation warning for the time being.
+    _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+  )
+  target_compile_options(citra_common PRIVATE
+    /W4
+
+    /we4242 # 'identifier': conversion from 'type1' to 'type2', possible loss of data
+    /we4254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
+    /we4800 # Implicit conversion from 'type' to bool. Possible information loss
+  )
+else()
+  target_compile_options(citra_common PRIVATE
+    $<$<CXX_COMPILER_ID:Clang>:-fsized-deallocation>
+  )
+endif()
+
 create_target_directory_groups(citra_common)
 
 target_link_libraries(citra_common PUBLIC fmt::fmt microprofile Boost::boost Boost::serialization Boost::iostreams)

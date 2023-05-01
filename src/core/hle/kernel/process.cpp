@@ -238,13 +238,14 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
             return ERR_INVALID_ADDRESS;
         }
     }
-
-    auto vma = vm_manager.FindVMA(target);
-    if (vma->second.type != VMAType::Free || vma->second.base + vma->second.size < target + size) {
-        LOG_ERROR(Kernel, "Trying to allocate already allocated memory");
-        return ERR_INVALID_ADDRESS_STATE;
+    {
+        auto vma = vm_manager.FindVMA(target);
+        if (vma->second.type != VMAType::Free ||
+            vma->second.base + vma->second.size < target + size) {
+            LOG_ERROR(Kernel, "Trying to allocate already allocated memory");
+            return ERR_INVALID_ADDRESS_STATE;
+        }
     }
-
     auto allocated_fcram = memory_region->HeapAllocate(size);
     if (allocated_fcram.empty()) {
         LOG_ERROR(Kernel, "Not enough space");

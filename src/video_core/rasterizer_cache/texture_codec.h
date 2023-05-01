@@ -161,7 +161,7 @@ constexpr void EncodePixel(const u8* source, u8* dest) {
     } else if constexpr (format == PixelFormat::D24 && converted) {
         float d32;
         std::memcpy(&d32, source, sizeof(d32));
-        EncodeD24(d32 * 0xFFFFFF, dest);
+        EncodeD24(static_cast<u32>(d32 * 0xFFFFFF), dest);
     } else if constexpr (format == PixelFormat::D24S8) {
         const u32 s8d24 = std::rotr(MakeInt<u32>(source), 8);
         std::memcpy(dest, &s8d24, sizeof(u32));

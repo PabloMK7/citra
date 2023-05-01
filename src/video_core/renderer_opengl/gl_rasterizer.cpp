@@ -413,10 +413,10 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Sync the viewport
     const auto viewport = framebuffer.Viewport();
-    state.viewport.x = viewport.x;
-    state.viewport.y = viewport.y;
-    state.viewport.width = viewport.width;
-    state.viewport.height = viewport.height;
+    state.viewport.x = static_cast<GLint>(viewport.x);
+    state.viewport.y = static_cast<GLint>(viewport.y);
+    state.viewport.width = static_cast<GLsizei>(viewport.width);
+    state.viewport.height = static_cast<GLsizei>(viewport.height);
 
     // Viewport can have negative offsets or larger dimensions than our framebuffer sub-rect.
     // Enable scissor test to prevent drawing outside of the framebuffer region
@@ -427,7 +427,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     state.scissor.width = draw_rect.GetWidth();
     state.scissor.height = draw_rect.GetHeight();
 
-    const u32 res_scale = framebuffer.ResolutionScale();
+    const int res_scale = static_cast<int>(framebuffer.ResolutionScale());
     if (uniform_block_data.data.framebuffer_scale != res_scale) {
         uniform_block_data.data.framebuffer_scale = res_scale;
         uniform_block_data.dirty = true;

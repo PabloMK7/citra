@@ -103,7 +103,9 @@ target_include_directories(microprofile INTERFACE ./microprofile)
 # Nihstro
 add_library(nihstro-headers INTERFACE)
 target_include_directories(nihstro-headers INTERFACE ./nihstro/include)
-
+if (MSVC)
+    target_compile_options(nihstro-headers INTERFACE /W0)
+endif()
 # Open Source Archives
 add_subdirectory(open_source_archives)
 

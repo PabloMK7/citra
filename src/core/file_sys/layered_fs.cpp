@@ -144,45 +144,45 @@ void LayeredFS::LoadRelocations() {
         return;
     }
 
-    const FileUtil::DirectoryEntryCallable callback = [this,
-                                                       &callback](u64* /*num_entries_out*/,
-                                                                  const std::string& directory,
-                                                                  const std::string& virtual_name) {
-        auto* parent = directory_path_map.at(directory.substr(patch_path.size() - 1));
+    const FileUtil::DirectoryEntryCallable callback =
+        [this, &callback]([[maybe_unused]] u64* num_entries_out, const std::string& directory,
+                          const std::string& virtual_name) {
+            auto* parent = directory_path_map.at(directory.substr(patch_path.size() - 1));
 
-        if (FileUtil::IsDirectory(directory + virtual_name + DIR_SEP)) {
-            const auto path = (directory + virtual_name + DIR_SEP).substr(patch_path.size() - 1);
-            if (!directory_path_map.count(path)) { // Add this directory
-                auto directory = std::make_unique<Directory>();
-                directory->name = virtual_name;
-                directory->path = path;
-                directory->parent = parent;
-                directory_path_map.emplace(path, directory.get());
-                parent->directories.emplace_back(std::move(directory));
-                LOG_INFO(Service_FS, "LayeredFS created directory {}", path);
+            if (FileUtil::IsDirectory(directory + virtual_name + DIR_SEP)) {
+                const auto path =
+                    (directory + virtual_name + DIR_SEP).substr(patch_path.size() - 1);
+                if (!directory_path_map.count(path)) { // Add this directory
+                    auto child_dir = std::make_unique<Directory>();
+                    child_dir->name = virtual_name;
+                    child_dir->path = path;
+                    child_dir->parent = parent;
+                    directory_path_map.emplace(path, child_dir.get());
+                    parent->directories.emplace_back(std::move(child_dir));
+                    LOG_INFO(Service_FS, "LayeredFS created directory {}", path);
+                }
+                return FileUtil::ForeachDirectoryEntry(nullptr, directory + virtual_name + DIR_SEP,
+                                                       callback);
             }
-            return FileUtil::ForeachDirectoryEntry(nullptr, directory + virtual_name + DIR_SEP,
-                                                   callback);
-        }
 
-        const auto path = (directory + virtual_name).substr(patch_path.size() - 1);
-        if (!file_path_map.count(path)) { // Newly created file
-            auto file = std::make_unique<File>();
-            file->name = virtual_name;
-            file->path = path;
-            file->parent = parent;
-            file_path_map.emplace(path, file.get());
-            parent->files.emplace_back(std::move(file));
-            LOG_INFO(Service_FS, "LayeredFS created file {}", path);
-        }
+            const auto path = (directory + virtual_name).substr(patch_path.size() - 1);
+            if (!file_path_map.count(path)) { // Newly created file
+                auto file = std::make_unique<File>();
+                file->name = virtual_name;
+                file->path = path;
+                file->parent = parent;
+                file_path_map.emplace(path, file.get());
+                parent->files.emplace_back(std::move(file));
+                LOG_INFO(Service_FS, "LayeredFS created file {}", path);
+            }
 
-        auto* file = file_path_map.at(path);
-        file->relocation.type = 1;
-        file->relocation.replace_file_path = directory + virtual_name;
-        file->relocation.size = FileUtil::GetSize(directory + virtual_name);
-        LOG_INFO(Service_FS, "LayeredFS replacement file in use for {}", path);
-        return true;
-    };
+            auto* file = file_path_map.at(path);
+            file->relocation.type = 1;
+            file->relocation.replace_file_path = directory + virtual_name;
+            file->relocation.size = FileUtil::GetSize(directory + virtual_name);
+            LOG_INFO(Service_FS, "LayeredFS replacement file in use for {}", path);
+            return true;
+        };
 
     FileUtil::ForeachDirectoryEntry(nullptr, patch_path, callback);
 }

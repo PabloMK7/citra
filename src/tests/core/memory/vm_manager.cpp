@@ -81,10 +81,12 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
                                       Kernel::MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
-        ResultCode code =
-            manager->ReprotectRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()),
-                                    Kernel::VMAPermission::ReadWrite);
-        REQUIRE(code == RESULT_SUCCESS);
+        SECTION("reprotect memory range") {
+            ResultCode code =
+                manager->ReprotectRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()),
+                                        Kernel::VMAPermission::ReadWrite);
+            REQUIRE(code == RESULT_SUCCESS);
+        }
 
         SECTION("with invalid address") {
             ResultCode code = manager->ChangeMemoryState(
@@ -146,7 +148,8 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
             CHECK(vma->second.meminfo_state == Kernel::MemoryState::Private);
         }
 
-        code = manager->UnmapRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()));
+        ResultCode code =
+            manager->UnmapRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()));
         REQUIRE(code == RESULT_SUCCESS);
     }
 }

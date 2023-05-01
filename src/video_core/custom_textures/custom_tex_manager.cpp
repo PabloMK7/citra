@@ -290,14 +290,14 @@ bool CustomTexManager::Decode(Material* material, std::function<bool()>&& upload
 
 void CustomTexManager::ReadConfig(const std::string& load_path) {
     const std::string config_path = load_path + "pack.json";
-    FileUtil::IOFile file{config_path, "r"};
-    if (!file.IsOpen()) {
+    FileUtil::IOFile config_file{config_path, "r"};
+    if (!config_file.IsOpen()) {
         LOG_INFO(Render, "Unable to find pack config file, using legacy defaults");
         refuse_dds = true;
         return;
     }
-    std::string config(file.GetSize(), '\0');
-    const std::size_t read_size = file.ReadBytes(config.data(), config.size());
+    std::string config(config_file.GetSize(), '\0');
+    const std::size_t read_size = config_file.ReadBytes(config.data(), config.size());
     if (!read_size) {
         return;
     }

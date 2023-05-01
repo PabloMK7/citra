@@ -119,12 +119,12 @@ NCCHContainer::NCCHContainer(const std::string& filepath, u32 ncch_offset, u32 p
     file = FileUtil::IOFile(filepath, "rb");
 }
 
-Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath, u32 ncch_offset,
-                                             u32 partition) {
-    this->filepath = filepath;
-    this->ncch_offset = ncch_offset;
-    this->partition = partition;
-    file = FileUtil::IOFile(filepath, "rb");
+Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath_, u32 ncch_offset_,
+                                             u32 partition_) {
+    filepath = filepath_;
+    ncch_offset = ncch_offset_;
+    partition = partition_;
+    file = FileUtil::IOFile(filepath_, "rb");
 
     if (!file.IsOpen()) {
         LOG_WARNING(Service_FS, "Failed to open {}", filepath);
@@ -597,12 +597,12 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
     }};
 
     for (const PatchLocation& info : patch_paths) {
-        FileUtil::IOFile file{info.path, "rb"};
-        if (!file)
+        FileUtil::IOFile patch_file{info.path, "rb"};
+        if (!patch_file)
             continue;
 
-        std::vector<u8> patch(file.GetSize());
-        if (file.ReadBytes(patch.data(), patch.size()) != patch.size())
+        std::vector<u8> patch(patch_file.GetSize());
+        if (patch_file.ReadBytes(patch.data(), patch.size()) != patch.size())
             return Loader::ResultStatus::Error;
 
         LOG_INFO(Service_FS, "File {} patching code.bin", info.path);

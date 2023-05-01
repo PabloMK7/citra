@@ -929,7 +929,7 @@ void Module::APTInterface::StoreSysMenuArg(Kernel::HLERequestContext& ctx) {
 
 void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x40, 1, 2); // 0x00400042
-    const auto size = rp.Pop<u32>();
+    [[maybe_unused]] const auto size = rp.Pop<u32>();
     const auto buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT, "called");

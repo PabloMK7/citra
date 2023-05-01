@@ -1197,8 +1197,8 @@ static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr s
     auto dst_vaddr = screen_capture_base_vaddr + capture_offset;
     auto dst_ptr = system.Memory().GetPointer(dst_vaddr);
     const auto src_ptr = system.Memory().GetPointer(src);
-    for (auto y = 0; y < height; y++) {
-        for (auto x = 0; x < screen_width; x++) {
+    for (u32 y = 0; y < height; y++) {
+        for (u32 x = 0; x < screen_width; x++) {
             auto dst_offset =
                 VideoCore::GetMortonOffset(x, y, bpp) + (y & ~7) * screen_width_pow2 * bpp;
             auto src_offset = bpp * (screen_width * y + x);

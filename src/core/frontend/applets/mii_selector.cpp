@@ -40,7 +40,7 @@ std::vector<HLE::Applets::MiiData> LoadMiis() {
                 std::array<u8, sizeof(mii)> mii_raw;
                 file->Read(saved_miis_offset, sizeof(mii), mii_raw.data());
                 std::memcpy(&mii, mii_raw.data(), sizeof(mii));
-                if (mii.mii_id != 0) {
+                if (mii.mii_id != 0u) {
                     miis.push_back(mii);
                 }
                 saved_miis_offset += sizeof(mii);

@@ -23,7 +23,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {}
+    void serialize(Archive&, const unsigned int) {}
     friend class boost::serialization::access;
 };
 

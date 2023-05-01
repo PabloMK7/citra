@@ -421,28 +421,32 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             if (Settings::values.upright_screen.GetValue()) {
                 if (Settings::values.swap_screen.GetValue()) {
                     width = Core::kScreenBottomHeight * res_scale;
-                    height = (Core::kScreenBottomWidth +
-                              Core::kScreenTopWidth /
-                                  Settings::values.large_screen_proportion.GetValue()) *
-                             res_scale;
+                    height =
+                        (Core::kScreenBottomWidth +
+                         static_cast<int>(Core::kScreenTopWidth /
+                                          Settings::values.large_screen_proportion.GetValue())) *
+                        res_scale;
                 } else {
                     width = Core::kScreenTopHeight * res_scale;
-                    height = (Core::kScreenTopWidth +
-                              Core::kScreenBottomWidth /
-                                  Settings::values.large_screen_proportion.GetValue()) *
-                             res_scale;
+                    height =
+                        (Core::kScreenTopWidth +
+                         static_cast<int>(Core::kScreenBottomWidth /
+                                          Settings::values.large_screen_proportion.GetValue())) *
+                        res_scale;
                 }
             } else {
                 if (Settings::values.swap_screen.GetValue()) {
                     width = (Core::kScreenBottomWidth +
                              Core::kScreenTopWidth /
-                                 Settings::values.large_screen_proportion.GetValue()) *
+                                 static_cast<int>(
+                                     Settings::values.large_screen_proportion.GetValue())) *
                             res_scale;
                     height = Core::kScreenBottomHeight * res_scale;
                 } else {
                     width = (Core::kScreenTopWidth +
                              Core::kScreenBottomWidth /
-                                 Settings::values.large_screen_proportion.GetValue()) *
+                                 static_cast<int>(
+                                     Settings::values.large_screen_proportion.GetValue())) *
                             res_scale;
                     height = Core::kScreenTopHeight * res_scale;
                 }
@@ -470,10 +474,14 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             break;
         case Settings::LayoutOption::MobileLandscape:
             if (Settings::values.swap_screen.GetValue()) {
-                width = (Core::kScreenBottomWidth + Core::kScreenTopWidth / 2.25f) * res_scale;
+                width =
+                    (Core::kScreenBottomWidth + static_cast<int>(Core::kScreenTopWidth / 2.25f)) *
+                    res_scale;
                 height = Core::kScreenBottomHeight * res_scale;
             } else {
-                width = (Core::kScreenTopWidth + Core::kScreenBottomWidth / 2.25f) * res_scale;
+                width =
+                    (Core::kScreenTopWidth + static_cast<int>(Core::kScreenBottomWidth / 2.25f)) *
+                    res_scale;
                 height = Core::kScreenTopHeight * res_scale;
             }
             layout = MobileLandscapeFrameLayout(
@@ -586,7 +594,7 @@ FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout) {
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
                                                        bool upright_screen) {
-    unsigned min_width, min_height;
+    u32 min_width, min_height;
 
     switch (layout) {
     case Settings::LayoutOption::SingleScreen:
@@ -597,12 +605,12 @@ std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption la
         min_height = Core::kScreenBottomHeight;
         break;
     case Settings::LayoutOption::LargeScreen:
-        min_width =
+        min_width = static_cast<u32>(
             Settings::values.swap_screen
                 ? Core::kScreenTopWidth / Settings::values.large_screen_proportion.GetValue() +
                       Core::kScreenBottomWidth
                 : Core::kScreenTopWidth + Core::kScreenBottomWidth /
-                                              Settings::values.large_screen_proportion.GetValue();
+                                              Settings::values.large_screen_proportion.GetValue());
         min_height = Core::kScreenBottomHeight;
         break;
     case Settings::LayoutOption::SideScreen:

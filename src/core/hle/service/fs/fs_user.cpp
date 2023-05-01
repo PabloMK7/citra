@@ -855,7 +855,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromGameCard(u64 title_id, Special
     case SpecialContentType::DLPChild:
         return MakeResult(static_cast<u16>(NCSDContentIndex::DLP));
     default:
-        ASSERT(false);
+        UNREACHABLE();
     }
 }
 

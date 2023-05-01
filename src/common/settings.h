@@ -453,9 +453,9 @@ struct Values {
     Setting<u16> custom_bottom_bottom{480, "custom_bottom_bottom"};
     Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
 
-    SwitchableSetting<double> bg_red{0.f, "bg_red"};
-    SwitchableSetting<double> bg_green{0.f, "bg_green"};
-    SwitchableSetting<double> bg_blue{0.f, "bg_blue"};
+    SwitchableSetting<float> bg_red{0.f, "bg_red"};
+    SwitchableSetting<float> bg_green{0.f, "bg_green"};
+    SwitchableSetting<float> bg_blue{0.f, "bg_blue"};
 
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
     SwitchableSetting<u32> factor_3d{0, "factor_3d"};

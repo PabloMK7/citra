@@ -111,7 +111,7 @@ void PrintColoredMessage(const Entry& entry) {
 #endif
 }
 
-void PrintMessageToLogcat(const Entry& entry) {
+void PrintMessageToLogcat([[maybe_unused]] const Entry& entry) {
 #ifdef ANDROID
     const auto str = FormatLogMessage(entry);
 
