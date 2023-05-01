@@ -87,13 +87,11 @@ private:
                           const Common::Rectangle<u32>& bottom_screen);
     void DrawTopScreen(const Layout::FramebufferLayout& layout,
                        const Common::Rectangle<u32>& top_screen);
-    void DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y, float w, float h);
-    void DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w, float h);
-    void DrawSingleScreenStereoRotated(const ScreenInfo& screen_info_l,
-                                       const ScreenInfo& screen_info_r, float x, float y, float w,
-                                       float h);
+    void DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w, float h,
+                          Layout::DisplayOrientation orientation);
     void DrawSingleScreenStereo(const ScreenInfo& screen_info_l, const ScreenInfo& screen_info_r,
-                                float x, float y, float w, float h);
+                                float x, float y, float w, float h,
+                                Layout::DisplayOrientation orientation);
 
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,

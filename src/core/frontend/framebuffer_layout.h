@@ -9,6 +9,14 @@
 
 namespace Layout {
 
+/// Orientation of the 3DS displays
+enum class DisplayOrientation {
+    Landscape,        // Default orientation of the 3DS
+    Portrait,         // 3DS rotated 90 degrees counter-clockwise
+    LandscapeFlipped, // 3DS rotated 180 degrees counter-clockwise
+    PortraitFlipped,  // 3DS rotated 270 degrees counter-clockwise
+};
+
 /// Describes the horizontal coordinates for the right eye screen when using Cardboard VR
 struct CardboardSettings {
     u32 top_screen_right_eye;

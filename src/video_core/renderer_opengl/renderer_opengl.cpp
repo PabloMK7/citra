@@ -261,6 +261,7 @@ public:
  * Vertex structure that the drawn screen rectangles are composed of.
  */
 struct ScreenRectVertex {
+    ScreenRectVertex() = default;
     ScreenRectVertex(GLfloat x, GLfloat y, GLfloat u, GLfloat v) {
         position[0] = x;
         position[1] = y;
@@ -268,8 +269,8 @@ struct ScreenRectVertex {
         tex_coord[1] = v;
     }
 
-    GLfloat position[2];
-    GLfloat tex_coord[2];
+    std::array<GLfloat, 2> position{};
+    std::array<GLfloat, 2> tex_coord{};
 };
 
 /**
@@ -746,55 +747,57 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
  * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
  * rotation.
  */
-void RendererOpenGL::DrawSingleScreenRotated(const ScreenInfo& screen_info, float x, float y,
-                                             float w, float h) {
+void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w,
+                                      float h, Layout::DisplayOrientation orientation) {
     const auto& texcoords = screen_info.display_texcoords;
 
-    const std::array<ScreenRectVertex, 4> vertices = {{
-        ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
-        ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
-        ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
-        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
-    }};
+    std::array<ScreenRectVertex, 4> vertices;
+    switch (orientation) {
+    case Layout::DisplayOrientation::Landscape:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
+            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+        }};
+        break;
+    case Layout::DisplayOrientation::Portrait:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
+            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+        }};
+        std::swap(h, w);
+        break;
+    case Layout::DisplayOrientation::LandscapeFlipped:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
+            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
+            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
+        }};
+        break;
+    case Layout::DisplayOrientation::PortraitFlipped:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
+            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
+            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
+        }};
+        std::swap(h, w);
+        break;
+    default:
+        LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
+        break;
+    }
 
-    // As this is the "DrawSingleScreenRotated" function, the output resolution dimensions have been
-    // swapped. If a non-rotated draw-screen function were to be added for book-mode games, those
-    // should probably be set to the standard (w, h, 1.0 / w, 1.0 / h) ordering.
     const u32 scale_factor = GetResolutionScaleFactor();
     glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
                 static_cast<float>(screen_info.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
-    state.texture_units[0].texture_2d = screen_info.display_texture;
-    state.texture_units[0].sampler = filter_sampler.handle;
-    state.Apply();
-
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    state.texture_units[0].texture_2d = 0;
-    state.texture_units[0].sampler = 0;
-    state.Apply();
-}
-
-void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w,
-                                      float h) {
-    const auto& texcoords = screen_info.display_texcoords;
-
-    const std::array<ScreenRectVertex, 4> vertices = {{
-        ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-        ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-        ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
-    }};
-
-    const u32 scale_factor = GetResolutionScaleFactor();
-    glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
-                static_cast<float>(screen_info.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.height * scale_factor));
-    glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = filter_sampler.handle;
     state.Apply();
@@ -811,17 +814,52 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
  * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
  * rotation.
  */
-void RendererOpenGL::DrawSingleScreenStereoRotated(const ScreenInfo& screen_info_l,
-                                                   const ScreenInfo& screen_info_r, float x,
-                                                   float y, float w, float h) {
+void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
+                                            const ScreenInfo& screen_info_r, float x, float y,
+                                            float w, float h,
+                                            Layout::DisplayOrientation orientation) {
     const auto& texcoords = screen_info_l.display_texcoords;
 
-    const std::array<ScreenRectVertex, 4> vertices = {{
-        ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
-        ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
-        ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
-        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
-    }};
+    std::array<ScreenRectVertex, 4> vertices;
+    switch (orientation) {
+    case Layout::DisplayOrientation::Landscape:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
+            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+        }};
+        break;
+    case Layout::DisplayOrientation::Portrait:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
+            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+        }};
+        std::swap(h, w);
+        break;
+    case Layout::DisplayOrientation::LandscapeFlipped:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
+            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
+            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
+        }};
+        break;
+    case Layout::DisplayOrientation::PortraitFlipped:
+        vertices = {{
+            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
+            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
+            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
+        }};
+        std::swap(h, w);
+        break;
+    default:
+        LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
+        break;
+    }
 
     const u32 scale_factor = GetResolutionScaleFactor();
     glUniform4f(uniform_i_resolution,
@@ -830,41 +868,6 @@ void RendererOpenGL::DrawSingleScreenStereoRotated(const ScreenInfo& screen_info
                 1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor),
                 1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
-    state.texture_units[0].texture_2d = screen_info_l.display_texture;
-    state.texture_units[1].texture_2d = screen_info_r.display_texture;
-    state.texture_units[0].sampler = filter_sampler.handle;
-    state.texture_units[1].sampler = filter_sampler.handle;
-    state.Apply();
-
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    state.texture_units[0].texture_2d = 0;
-    state.texture_units[1].texture_2d = 0;
-    state.texture_units[0].sampler = 0;
-    state.texture_units[1].sampler = 0;
-    state.Apply();
-}
-
-void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
-                                            const ScreenInfo& screen_info_r, float x, float y,
-                                            float w, float h) {
-    const auto& texcoords = screen_info_l.display_texcoords;
-
-    const std::array<ScreenRectVertex, 4> vertices = {{
-        ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-        ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-        ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-        ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
-    }};
-
-    const u32 scale_factor = GetResolutionScaleFactor();
-    glUniform4f(uniform_i_resolution,
-                static_cast<float>(screen_info_l.texture.width * scale_factor),
-                static_cast<float>(screen_info_l.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor));
-    glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
     state.texture_units[0].sampler = filter_sampler.handle;
@@ -975,76 +978,41 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     const float top_screen_width = static_cast<float>(top_screen.GetWidth());
     const float top_screen_height = static_cast<float>(top_screen.GetHeight());
 
-    if (layout.is_rotated) {
-        switch (Settings::values.render_3d.GetValue()) {
-        case Settings::StereoRenderOption::Off: {
-            int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
-            DrawSingleScreenRotated(screen_infos[eye], top_screen_left, top_screen_top,
-                                    top_screen_width, top_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::SideBySide: {
-            DrawSingleScreenRotated(screen_infos[0], top_screen_left / 2, top_screen_top,
-                                    top_screen_width / 2, top_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreenRotated(screen_infos[1],
-                                    static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
-                                    top_screen_top, top_screen_width / 2, top_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::CardboardVR: {
-            DrawSingleScreenRotated(screen_infos[0], top_screen_left, top_screen_top,
-                                    top_screen_width, top_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreenRotated(
-                screen_infos[1],
-                static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
-                top_screen_top, top_screen_width, top_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::Anaglyph:
-        case Settings::StereoRenderOption::Interlaced:
-        case Settings::StereoRenderOption::ReverseInterlaced: {
-            DrawSingleScreenStereoRotated(screen_infos[0], screen_infos[1], top_screen_left,
-                                          top_screen_top, top_screen_width, top_screen_height);
-            break;
-        }
-        }
-    } else {
-        switch (Settings::values.render_3d.GetValue()) {
-        case Settings::StereoRenderOption::Off: {
-            int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
-            DrawSingleScreen(screen_infos[eye], top_screen_left, top_screen_top, top_screen_width,
-                             top_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::SideBySide: {
-            DrawSingleScreen(screen_infos[0], top_screen_left / 2, top_screen_top,
-                             top_screen_width / 2, top_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreen(screen_infos[1],
-                             static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
-                             top_screen_top, top_screen_width / 2, top_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::CardboardVR: {
-            DrawSingleScreen(screen_infos[0], (float)top_screen.left, top_screen_top,
-                             top_screen_width, top_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreen(
-                screen_infos[1],
-                static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
-                top_screen_top, top_screen_width, top_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::Anaglyph:
-        case Settings::StereoRenderOption::Interlaced:
-        case Settings::StereoRenderOption::ReverseInterlaced: {
-            DrawSingleScreenStereo(screen_infos[0], screen_infos[1], top_screen_left,
-                                   top_screen_top, top_screen_width, top_screen_height);
-            break;
-        }
-        }
+    const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
+                                               : Layout::DisplayOrientation::Portrait;
+    switch (Settings::values.render_3d.GetValue()) {
+    case Settings::StereoRenderOption::Off: {
+        const int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
+        DrawSingleScreen(screen_infos[eye], top_screen_left, top_screen_top, top_screen_width,
+                         top_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::SideBySide: {
+        DrawSingleScreen(screen_infos[0], top_screen_left / 2, top_screen_top, top_screen_width / 2,
+                         top_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(screen_infos[1],
+                         static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
+                         top_screen_top, top_screen_width / 2, top_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::CardboardVR: {
+        DrawSingleScreen(screen_infos[0], top_screen_left, top_screen_top, top_screen_width,
+                         top_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(
+            screen_infos[1],
+            static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
+            top_screen_top, top_screen_width, top_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::Anaglyph:
+    case Settings::StereoRenderOption::Interlaced:
+    case Settings::StereoRenderOption::ReverseInterlaced: {
+        DrawSingleScreenStereo(screen_infos[0], screen_infos[1], top_screen_left, top_screen_top,
+                               top_screen_width, top_screen_height, orientation);
+        break;
+    }
     }
 }
 
@@ -1059,75 +1027,42 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     const float bottom_screen_width = static_cast<float>(bottom_screen.GetWidth());
     const float bottom_screen_height = static_cast<float>(bottom_screen.GetHeight());
 
-    if (layout.is_rotated) {
-        switch (Settings::values.render_3d.GetValue()) {
-        case Settings::StereoRenderOption::Off: {
-            DrawSingleScreenRotated(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                                    bottom_screen_width, bottom_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::SideBySide: {
-            DrawSingleScreenRotated(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
-                                    bottom_screen_width / 2, bottom_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreenRotated(
-                screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-                bottom_screen_top, bottom_screen_width / 2, bottom_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::CardboardVR: {
-            DrawSingleScreenRotated(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                                    bottom_screen_width, bottom_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreenRotated(
-                screen_infos[2],
-                static_cast<float>(layout.cardboard.bottom_screen_right_eye + (layout.width / 2)),
-                bottom_screen_top, bottom_screen_width, bottom_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::Anaglyph:
-        case Settings::StereoRenderOption::Interlaced:
-        case Settings::StereoRenderOption::ReverseInterlaced: {
-            DrawSingleScreenStereoRotated(screen_infos[2], screen_infos[2], bottom_screen_left,
-                                          bottom_screen_top, bottom_screen_width,
-                                          bottom_screen_height);
-            break;
-        }
-        }
-    } else {
-        switch (Settings::values.render_3d.GetValue()) {
-        case Settings::StereoRenderOption::Off: {
-            DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                             bottom_screen_width, bottom_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::SideBySide: {
-            DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
-                             bottom_screen_width / 2, bottom_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreen(screen_infos[2],
-                             static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-                             bottom_screen_top, bottom_screen_width / 2, bottom_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::CardboardVR: {
-            DrawSingleScreen(screen_infos[2], (float)layout.bottom_screen.left, bottom_screen_top,
-                             bottom_screen_width, bottom_screen_height);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreen(
-                screen_infos[2],
-                static_cast<float>(layout.cardboard.bottom_screen_right_eye + (layout.width / 2)),
-                bottom_screen_top, bottom_screen_width, bottom_screen_height);
-            break;
-        }
-        case Settings::StereoRenderOption::Anaglyph:
-        case Settings::StereoRenderOption::Interlaced:
-        case Settings::StereoRenderOption::ReverseInterlaced: {
-            DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
-                                   bottom_screen_top, bottom_screen_width, bottom_screen_height);
-            break;
-        }
-        }
+    const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
+                                               : Layout::DisplayOrientation::Portrait;
+
+    switch (Settings::values.render_3d.GetValue()) {
+    case Settings::StereoRenderOption::Off: {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::SideBySide: {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
+                         bottom_screen_width / 2, bottom_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(
+            screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
+            bottom_screen_top, bottom_screen_width / 2, bottom_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::CardboardVR: {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(
+            screen_infos[2],
+            static_cast<float>(layout.cardboard.bottom_screen_right_eye + (layout.width / 2)),
+            bottom_screen_top, bottom_screen_width, bottom_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::Anaglyph:
+    case Settings::StereoRenderOption::Interlaced:
+    case Settings::StereoRenderOption::ReverseInterlaced: {
+        DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
+                               bottom_screen_top, bottom_screen_width, bottom_screen_height,
+                               orientation);
+        break;
+    }
     }
 }
 
