@@ -15,8 +15,6 @@ JNIEnv* GetEnvForThread();
 
 jclass GetCoreErrorClass();
 jclass GetSavestateInfoClass();
-jclass GetDiskCacheProgressClass();
-jclass GetDiskCacheLoadCallbackStageClass();
 
 jclass GetNativeLibraryClass();
 jmethodID GetOnCoreError();
@@ -28,7 +26,6 @@ jmethodID GetLandscapeScreenLayout();
 jmethodID GetExitEmulationActivity();
 jmethodID GetRequestCameraPermission();
 jmethodID GetRequestMicPermission();
-jmethodID GetDiskCacheLoadProgress();
 
 jclass GetCheatClass();
 jfieldID GetCheatPointer();
@@ -38,6 +35,8 @@ jfieldID GetCheatEnginePointer();
 
 jfieldID GetGameInfoPointer();
 
+jclass GetDiskCacheProgressClass();
+jmethodID GetDiskCacheLoadProgress();
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage);
 
 } // namespace IDCache
