@@ -10,7 +10,6 @@
 #include "citra_qt/configuration/config.h"
 #include "common/file_util.h"
 #include "common/settings.h"
-#include "core/frontend/mic.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
@@ -276,10 +275,10 @@ void Config::ReadAudioValues() {
     ReadGlobalSetting(Settings::values.volume);
 
     if (global) {
-        ReadBasicSetting(Settings::values.sink_id);
-        ReadBasicSetting(Settings::values.audio_device_id);
-        ReadBasicSetting(Settings::values.mic_input_device);
-        ReadBasicSetting(Settings::values.mic_input_type);
+        ReadBasicSetting(Settings::values.output_type);
+        ReadBasicSetting(Settings::values.output_device);
+        ReadBasicSetting(Settings::values.input_type);
+        ReadBasicSetting(Settings::values.input_device);
     }
 
     qt_config->endGroup();
@@ -847,10 +846,10 @@ void Config::SaveAudioValues() {
     WriteGlobalSetting(Settings::values.volume);
 
     if (global) {
-        WriteBasicSetting(Settings::values.sink_id);
-        WriteBasicSetting(Settings::values.audio_device_id);
-        WriteBasicSetting(Settings::values.mic_input_device);
-        WriteBasicSetting(Settings::values.mic_input_type);
+        WriteBasicSetting(Settings::values.output_type);
+        WriteBasicSetting(Settings::values.output_device);
+        WriteBasicSetting(Settings::values.input_type);
+        WriteBasicSetting(Settings::values.input_device);
     }
 
     qt_config->endGroup();

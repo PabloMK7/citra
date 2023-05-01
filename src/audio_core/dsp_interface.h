@@ -20,6 +20,7 @@ class DSP_DSP;
 namespace AudioCore {
 
 class Sink;
+enum class SinkType : u32;
 
 class DspInterface {
 public:
@@ -93,8 +94,8 @@ public:
     /// Unloads the DSP program
     virtual void UnloadComponent() = 0;
 
-    /// Select the sink to use based on sink id.
-    void SetSink(std::string_view sink_id, std::string_view audio_device);
+    /// Select the sink to use based on sink type.
+    void SetSink(SinkType sink_type, std::string_view audio_device);
     /// Get the current sink
     Sink& GetSink();
     /// Enable/Disable audio stretching.

@@ -24,7 +24,6 @@
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
-#include "core/frontend/mic.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/savestate.h"
@@ -39,7 +38,6 @@
 #include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
-#include "jni/mic.h"
 #include "jni/native.h"
 #include "jni/ndk_motion.h"
 #include "video_core/renderer_base.h"
@@ -134,6 +132,11 @@ static void TryShutdown() {
     MicroProfileShutdown();
 }
 
+static bool CheckMicPermission() {
+    return IDCache::GetEnvForThread()->CallStaticBooleanMethod(IDCache::GetNativeLibraryClass(),
+                                                               IDCache::GetRequestMicPermission());
+}
+
 static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Citra core only supports a single running instance
     std::lock_guard<std::mutex> lock(running_mutex);
@@ -183,8 +186,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     system.RegisterMiiSelector(std::make_shared<MiiSelector::AndroidMiiSelector>());
     system.RegisterSoftwareKeyboard(std::make_shared<SoftwareKeyboard::AndroidKeyboard>());
 
-    // Register real Mic factory
-    Frontend::Mic::RegisterRealMicFactory(std::make_unique<Mic::AndroidFactory>());
+    // Register microphone permission check
+    Core::System::GetInstance().RegisterMicPermissionCheck(&CheckMicPermission);
 
     InputManager::Init();
 

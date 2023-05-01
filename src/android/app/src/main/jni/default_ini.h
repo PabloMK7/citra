@@ -226,27 +226,31 @@ enable_dsp_lle =
 # 0 (default): No, 1: Yes
 enable_dsp_lle_thread =
 
-# Which audio output engine to use.
-# auto (default): Auto-select, null: No audio output, sdl2: SDL2 (if available)
-output_engine =
-
 # Whether or not to enable the audio-stretching post-processing effect.
 # This effect adjusts audio speed to match emulation speed and helps prevent audio stutter,
 # at the cost of increasing audio latency.
 # 0: No, 1 (default): Yes
 enable_audio_stretching =
 
-# Which audio device to use.
-# auto (default): Auto-select
-output_device =
-
-# Which mic input type to use.
-# 0: None, 1 (default): Real device, 2: Static noise
-mic_input_type =
-
 # Output volume.
 # 1.0 (default): 100%, 0.0; mute
 volume =
+
+# Which audio output type to use.
+# 0 (default): Auto-select, 1: No audio output, 2: Cubeb (if available), 3: OpenAL (if available), 4: SDL2 (if available)
+output_type =
+
+# Which audio output device to use.
+# auto (default): Auto-select
+output_device =
+
+# Which audio input type to use.
+# 0 (default): Auto-select, 1: No audio input, 2: Static noise, 3: Cubeb (if available), 4: OpenAL (if available)
+input_type =
+
+# Which audio input device to use.
+# auto (default): Auto-select
+input_device =
 
 [Data Storage]
 # Whether to create a virtual SD card.

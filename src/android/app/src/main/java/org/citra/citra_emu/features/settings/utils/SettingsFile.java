@@ -75,10 +75,10 @@ public final class SettingsFile {
     public static final String KEY_PRELOAD_TEXTURES = "preload_textures";
     public static final String KEY_ASYNC_CUSTOM_LOADING = "async_custom_loading";
 
-    public static final String KEY_AUDIO_OUTPUT_ENGINE = "output_engine";
+    public static final String KEY_AUDIO_OUTPUT_TYPE = "output_type";
     public static final String KEY_ENABLE_AUDIO_STRETCHING = "enable_audio_stretching";
     public static final String KEY_VOLUME = "volume";
-    public static final String KEY_MIC_INPUT_TYPE = "mic_input_type";
+    public static final String KEY_AUDIO_INPUT_TYPE = "input_type";
 
     public static final String KEY_USE_VIRTUAL_SD = "use_virtual_sd";
 

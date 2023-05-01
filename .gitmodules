@@ -64,3 +64,6 @@
 [submodule "dds-ktx"]
     path = externals/dds-ktx
     url = https://github.com/septag/dds-ktx
+[submodule "externals/openal-soft"]
+	path = externals/openal-soft
+	url = https://github.com/kcat/openal-soft

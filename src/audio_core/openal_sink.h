@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,10 +11,10 @@
 
 namespace AudioCore {
 
-class CubebSink final : public Sink {
+class OpenALSink final : public Sink {
 public:
-    explicit CubebSink(std::string_view device_id);
-    ~CubebSink() override;
+    explicit OpenALSink(std::string device_id);
+    ~OpenALSink() override;
 
     unsigned int GetNativeSampleRate() const override;
 
@@ -25,6 +25,6 @@ private:
     std::unique_ptr<Impl> impl;
 };
 
-std::vector<std::string> ListCubebSinkDevices();
+std::vector<std::string> ListOpenALSinkDevices();
 
 } // namespace AudioCore

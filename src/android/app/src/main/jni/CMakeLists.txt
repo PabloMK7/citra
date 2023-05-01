@@ -25,8 +25,6 @@ add_library(citra-android SHARED
     game_settings.h
     id_cache.cpp
     id_cache.h
-    mic.cpp
-    mic.h
     native.cpp
     native.h
     ndk_motion.cpp

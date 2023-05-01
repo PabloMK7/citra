@@ -26,7 +26,6 @@
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/file_sys/plugin_3gx.h"
-#include "core/frontend/mic.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"

@@ -411,8 +411,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     memory->SetDSP(*dsp_core);
 
-    dsp_core->SetSink(Settings::values.sink_id.GetValue(),
-                      Settings::values.audio_device_id.GetValue());
+    dsp_core->SetSink(Settings::values.output_type.GetValue(),
+                      Settings::values.output_device.GetValue());
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();

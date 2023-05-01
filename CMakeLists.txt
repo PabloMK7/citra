@@ -33,6 +33,7 @@ if (MSVC)
 endif()
 
 option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
+option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 

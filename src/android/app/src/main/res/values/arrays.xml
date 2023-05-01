@@ -143,15 +143,19 @@
     </integer-array>
 
     <string-array name="audioInputTypeNames">
+        <item>Auto</item>
         <item>None</item>
-        <item>Real Device</item>
         <item>Static Noise</item>
+        <item>Real Device (Cubeb)</item>
+        <item>Real Device (OpenAL)</item>
     </string-array>
 
     <integer-array name="audioInputTypeValues">
         <item>0</item>
         <item>1</item>
         <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </integer-array>
 
     <string-array name="render3dModes">

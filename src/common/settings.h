@@ -10,6 +10,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "audio_core/input_details.h"
+#include "audio_core/sink_details.h"
 #include "common/common_types.h"
 #include "core/hle/service/cam/cam_params.h"
 
@@ -40,12 +42,6 @@ enum class LayoutOption : u32 {
     // Similiar to LargeScreen, but better for mobile devices in landscape mode. The screens are
     // clamped to the top of the frame, and the bottom screen is a bit bigger.
     MobileLandscape,
-};
-
-enum class MicInputType : u32 {
-    None = 0,
-    Real = 1,
-    Static = 2,
 };
 
 enum class StereoRenderOption : u32 {
@@ -482,12 +478,12 @@ struct Values {
     // Audio
     bool audio_muted;
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, "audio_emulation"};
-    Setting<std::string> sink_id{"auto", "output_engine"};
     SwitchableSetting<bool> enable_audio_stretching{true, "enable_audio_stretching"};
-    Setting<std::string> audio_device_id{"auto", "output_device"};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
-    Setting<MicInputType> mic_input_type{MicInputType::None, "mic_input_type"};
-    Setting<std::string> mic_input_device{"Default", "mic_input_device"};
+    Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
+    Setting<std::string> output_device{"auto", "output_device"};
+    Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, "input_type"};
+    Setting<std::string> input_device{"auto", "input_device"};
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;

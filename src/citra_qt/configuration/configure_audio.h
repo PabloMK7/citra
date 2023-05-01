@@ -30,8 +30,10 @@ private:
     void UpdateAudioOutputDevices(int sink_index);
     void UpdateAudioInputDevices(int index);
 
-    void SetOutputSinkFromSinkID();
-    void SetAudioDeviceFromDeviceID();
+    void SetOutputTypeFromSinkType();
+    void SetOutputDeviceFromDeviceID();
+    void SetInputTypeFromInputType();
+    void SetInputDeviceFromDeviceID();
     void SetVolumeIndicatorText(int percentage);
 
     void SetupPerGameUI();

@@ -199,12 +199,12 @@ void Config::ReadValues() {
 
     // Audio
     ReadSetting("Audio", Settings::values.audio_emulation);
-    ReadSetting("Audio", Settings::values.sink_id);
     ReadSetting("Audio", Settings::values.enable_audio_stretching);
-    ReadSetting("Audio", Settings::values.audio_device_id);
     ReadSetting("Audio", Settings::values.volume);
-    ReadSetting("Audio", Settings::values.mic_input_device);
-    ReadSetting("Audio", Settings::values.mic_input_type);
+    ReadSetting("Audio", Settings::values.output_type);
+    ReadSetting("Audio", Settings::values.output_device);
+    ReadSetting("Audio", Settings::values.input_type);
+    ReadSetting("Audio", Settings::values.input_device);
 
     // Data Storage
     ReadSetting("Data Storage", Settings::values.use_virtual_sd);

@@ -14,7 +14,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Audio</string>
+      <string>Output</string>
      </property>
      <layout class="QVBoxLayout">
       <item>
@@ -62,16 +62,26 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="output_engine_layout">
-        <item>
-         <widget class="QLabel" name="output_sink_label">
+       <layout class="QGridLayout" name="output_layout" columnstretch="1,1">
+        <item row="0" column="0">
+         <widget class="QLabel" name="output_type_label">
           <property name="text">
-           <string>Output Engine</string>
+           <string>Output Type</string>
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QComboBox" name="output_sink_combo_box"/>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="output_type_combo_box"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="output_device_label">
+          <property name="text">
+           <string>Output Device</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="output_device_combo_box"/>
         </item>
        </layout>
       </item>
@@ -84,20 +94,6 @@
          <string>Enable audio stretching</string>
         </property>
        </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="audio_device_layout">
-        <item>
-         <widget class="QLabel" name="audio_device_label">
-          <property name="text">
-           <string>Audio Device</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="audio_device_combo_box"/>
-        </item>
-       </layout>
       </item>
       <item>
        <widget class="QWidget" name="volume_layout" native="true">
@@ -190,54 +186,30 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="microphone_layout">
+    <widget class="QGroupBox" name="input_layout">
      <property name="title">
       <string>Microphone</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLabel" name="input_type_label">
-          <property name="text">
-           <string>Input Type</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="input_type_combo_box">
-          <item>
-           <property name="text">
-            <string>None</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Real Device</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Static Noise</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-       </layout>
+     <layout class="QGridLayout" name="input_inner_layout" columnstretch="1,1">
+      <item row="0" column="0">
+       <widget class="QLabel" name="input_type_label">
+        <property name="text">
+         <string>Input Type</string>
+        </property>
+       </widget>
       </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="input_device_label">
-          <property name="text">
-           <string>Input Device</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="input_device_combo_box"/>
-        </item>
-       </layout>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="input_type_combo_box"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="input_device_label">
+        <property name="text">
+         <string>Input Device</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="input_device_combo_box"/>
       </item>
      </layout>
     </widget>
@@ -259,10 +231,10 @@
  </widget>
  <tabstops>
   <tabstop>emulation_combo_box</tabstop>
-  <tabstop>output_sink_combo_box</tabstop>
   <tabstop>toggle_audio_stretching</tabstop>
-  <tabstop>audio_device_combo_box</tabstop>
   <tabstop>volume_slider</tabstop>
+  <tabstop>output_type_combo_box</tabstop>
+  <tabstop>output_device_combo_box</tabstop>
   <tabstop>input_type_combo_box</tabstop>
   <tabstop>input_device_combo_box</tabstop>
  </tabstops>

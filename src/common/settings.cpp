@@ -89,7 +89,7 @@ void Apply() {
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
         system.CoreTiming().UpdateClockSpeed(values.cpu_clock_percentage.GetValue());
-        Core::DSP().SetSink(values.sink_id.GetValue(), values.audio_device_id.GetValue());
+        Core::DSP().SetSink(values.output_type.GetValue(), values.output_device.GetValue());
         Core::DSP().EnableStretching(values.enable_audio_stretching.GetValue());
 
         auto hid = Service::HID::GetModule(system);
@@ -156,11 +156,11 @@ void LogSettings() {
     log_setting("Utility_CustomTextures", values.custom_textures.GetValue());
     log_setting("Utility_UseDiskShaderCache", values.use_disk_shader_cache.GetValue());
     log_setting("Audio_Emulation", GetAudioEmulationName(values.audio_emulation.GetValue()));
-    log_setting("Audio_OutputEngine", values.sink_id.GetValue());
+    log_setting("Audio_OutputType", values.output_type.GetValue());
+    log_setting("Audio_OutputDevice", values.output_device.GetValue());
+    log_setting("Audio_InputType", values.input_type.GetValue());
+    log_setting("Audio_InputDevice", values.input_device.GetValue());
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());
-    log_setting("Audio_OutputDevice", values.audio_device_id.GetValue());
-    log_setting("Audio_InputDeviceType", values.mic_input_type.GetValue());
-    log_setting("Audio_InputDevice", values.mic_input_device.GetValue());
     using namespace Service::CAM;
     log_setting("Camera_OuterRightName", values.camera_name[OuterRightCamera]);
     log_setting("Camera_OuterRightConfig", values.camera_config[OuterRightCamera]);

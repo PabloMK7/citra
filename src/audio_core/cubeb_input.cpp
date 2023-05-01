@@ -6,11 +6,14 @@
 #include <vector>
 #include <cubeb/cubeb.h>
 #include "audio_core/cubeb_input.h"
+#include "audio_core/input.h"
+#include "audio_core/sink.h"
 #include "common/logging/log.h"
+#include "common/threadsafe_queue.h"
 
 namespace AudioCore {
 
-using SampleQueue = Common::SPSCQueue<Frontend::Mic::Samples>;
+using SampleQueue = Common::SPSCQueue<Samples>;
 
 struct CubebInput::Impl {
     cubeb* ctx = nullptr;
@@ -48,10 +51,10 @@ CubebInput::~CubebInput() {
     cubeb_destroy(impl->ctx);
 }
 
-void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
+void CubebInput::StartSampling(const InputParameters& params) {
     // Cubeb apparently only supports signed 16 bit PCM (and float32 which the 3ds doesn't support)
     // TODO resample the input stream
-    if (params.sign == Frontend::Mic::Signedness::Unsigned) {
+    if (params.sign == Signedness::Unsigned) {
         LOG_ERROR(Audio,
                   "Application requested unsupported unsigned pcm format. Falling back to signed");
     }
@@ -62,7 +65,7 @@ void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
     is_sampling = true;
 
     cubeb_devid input_device = nullptr;
-    if (device_id != Frontend::Mic::default_device_name && !device_id.empty()) {
+    if (device_id != auto_device_name && !device_id.empty()) {
         cubeb_device_collection collection;
         if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) != CUBEB_OK) {
             LOG_WARNING(Audio, "Audio input device enumeration not supported");
@@ -122,9 +125,9 @@ void CubebInput::AdjustSampleRate(u32 sample_rate) {
     LOG_ERROR(Audio, "AdjustSampleRate unimplemented!");
 }
 
-Frontend::Mic::Samples CubebInput::Read() {
-    Frontend::Mic::Samples samples{};
-    Frontend::Mic::Samples queue;
+Samples CubebInput::Read() {
+    Samples samples{};
+    Samples queue;
     while (impl->sample_queue->Pop(queue)) {
         samples.insert(samples.end(), queue.begin(), queue.end());
     }
@@ -188,12 +191,6 @@ std::vector<std::string> ListCubebInputDevices() {
 
     cubeb_destroy(ctx);
     return device_list;
-}
-
-CubebFactory::~CubebFactory() = default;
-
-std::unique_ptr<Frontend::Mic::Interface> CubebFactory::Create(std::string mic_device_name) {
-    return std::make_unique<CubebInput>(std::move(mic_device_name));
 }
 
 } // namespace AudioCore

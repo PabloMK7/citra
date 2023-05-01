@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,10 +11,10 @@
 
 namespace AudioCore {
 
-class CubebInput final : public Input {
+class OpenALInput final : public Input {
 public:
-    explicit CubebInput(std::string device_id);
-    ~CubebInput() override;
+    explicit OpenALInput(std::string device_id);
+    ~OpenALInput() override;
 
     void StartSampling(const InputParameters& params) override;
 
@@ -30,6 +30,6 @@ private:
     std::string device_id;
 };
 
-std::vector<std::string> ListCubebInputDevices();
+std::vector<std::string> ListOpenALInputDevices();
 
 } // namespace AudioCore

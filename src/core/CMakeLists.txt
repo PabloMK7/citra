@@ -110,8 +110,6 @@ add_library(citra_core STATIC
     frontend/image_interface.cpp
     frontend/image_interface.h
     frontend/input.h
-    frontend/mic.cpp
-    frontend/mic.h
     gdbstub/gdbstub.cpp
     gdbstub/gdbstub.h
     gdbstub/hio.cpp

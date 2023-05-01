@@ -304,6 +304,17 @@ public:
         return registered_image_interface;
     }
 
+    /// Function for checking OS microphone permissions.
+
+    void RegisterMicPermissionCheck(const std::function<bool()>& permission_func) {
+        mic_permission_func = permission_func;
+    }
+
+    [[nodiscard]] bool HasMicPermission() {
+        return !mic_permission_func || mic_permission_granted ||
+               (mic_permission_granted = mic_permission_func());
+    }
+
     void SaveState(u32 slot) const;
 
     void LoadState(u32 slot);
@@ -396,6 +407,9 @@ private:
     std::mutex signal_mutex;
     Signal current_signal;
     u32 signal_param;
+
+    std::function<bool()> mic_permission_func;
+    bool mic_permission_granted = false;
 
     friend class boost::serialization::access;
     template <typename Archive>
