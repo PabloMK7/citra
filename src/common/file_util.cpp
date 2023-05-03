@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <fstream>
 #include <limits>
 #include <memory>
 #include <sstream>

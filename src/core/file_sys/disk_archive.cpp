@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <cstdio>
 #include <memory>
 #include "common/archives.h"
 #include "common/common_types.h"

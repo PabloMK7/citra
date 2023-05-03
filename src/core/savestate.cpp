@@ -67,6 +67,7 @@ static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 
 
 std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
     std::vector<SaveStateInfo> result;
+    result.reserve(SaveStateSlotCount);
     for (u32 slot = 1; slot <= SaveStateSlotCount; ++slot) {
         const auto path = GetSaveStatePath(program_id, slot);
         if (!FileUtil::Exists(path)) {

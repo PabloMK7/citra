@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cinttypes>
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/ns.h"

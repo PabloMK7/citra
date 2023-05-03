@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cinttypes>
 #include <cryptopp/sha.h>
 #include "common/alignment.h"
 #include "common/file_util.h"

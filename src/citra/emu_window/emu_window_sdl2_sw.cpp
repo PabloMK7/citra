@@ -11,6 +11,7 @@
 #include "citra/emu_window/emu_window_sdl2_sw.h"
 #include "common/color.h"
 #include "common/scm_rev.h"
+#include "common/settings.h"
 #include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"

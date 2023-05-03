@@ -141,7 +141,8 @@ std::vector<std::string> GetFilesName(const std::string& filepath) {
     jstring j_filepath = env->NewStringUTF(filepath.c_str());
     auto j_object =
         (jobjectArray)env->CallStaticObjectMethod(native_library, get_files_name, j_filepath);
-    jsize j_size = env->GetArrayLength(j_object);
+    const jsize j_size = env->GetArrayLength(j_object);
+    vector.reserve(j_size);
     for (int i = 0; i < j_size; i++) {
         auto string = (jstring)(env->GetObjectArrayElement(j_object, i));
         vector.emplace_back(env->GetStringUTFChars(string, nullptr));

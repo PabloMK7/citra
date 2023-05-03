@@ -10,6 +10,7 @@
 #include <glad/glad.h>
 #include "citra/emu_window/emu_window_sdl2_gl.h"
 #include "common/scm_rev.h"
+#include "common/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 

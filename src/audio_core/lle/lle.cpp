@@ -69,6 +69,7 @@ Dsp1::Dsp1(const std::vector<u8>& raw) {
     Header header;
     std::memcpy(&header, raw.data(), sizeof(header));
     recv_data_on_start = header.recv_data_on_start != 0;
+    segments.reserve(header.num_segments);
     for (u32 i = 0; i < header.num_segments; ++i) {
         Segment segment;
         segment.data =

@@ -9,7 +9,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include <QKeySequence>
 #include <QWidget>
 #include "common/param_package.h"

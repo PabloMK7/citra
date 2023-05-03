@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <unordered_map>
 #include "common/math_util.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"

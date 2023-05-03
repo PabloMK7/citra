@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/tracer/recorder.h"

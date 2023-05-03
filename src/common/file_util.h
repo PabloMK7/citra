@@ -6,8 +6,8 @@
 
 #include <array>
 #include <cstdio>
-#include <fstream>
 #include <functional>
+#include <ios>
 #include <limits>
 #include <optional>
 #include <string>

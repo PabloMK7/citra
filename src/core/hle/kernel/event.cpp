@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <map>
 #include <vector>
 #include "common/archives.h"
 #include "common/assert.h"

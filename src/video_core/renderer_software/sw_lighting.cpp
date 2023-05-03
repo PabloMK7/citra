@@ -35,8 +35,8 @@ std::tuple<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
         shadow = Common::MakeVec(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    Common::Vec3<float> surface_normal;
-    Common::Vec3<float> surface_tangent;
+    Common::Vec3<float> surface_normal{};
+    Common::Vec3<float> surface_tangent{};
 
     if (lighting.config0.bump_mode != LightingRegs::LightingBumpMode::None) {
         Common::Vec3<float> perturbation =

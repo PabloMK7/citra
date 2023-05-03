@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <atomic>
-#include <climits>
 #include <csignal>
 #include <cstdarg>
 #include <cstdio>

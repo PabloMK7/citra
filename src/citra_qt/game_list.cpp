@@ -32,6 +32,7 @@
 #include "common/settings.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
 #include "qcursor.h"
 

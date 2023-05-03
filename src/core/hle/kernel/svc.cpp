@@ -4,8 +4,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cinttypes>
-#include <map>
 #include <fmt/format.h>
 #include "common/logging/log.h"
 #include "common/microprofile.h"

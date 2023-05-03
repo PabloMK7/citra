@@ -214,6 +214,7 @@ void MicroProfileDrawLine2D(u32 vertices_length, float* vertices, u32 hex_color)
     // the allocation across calls.
     static std::vector<QPointF> point_buf;
 
+    point_buf.reserve(vertices_length);
     for (u32 i = 0; i < vertices_length; ++i) {
         point_buf.emplace_back(vertices[i * 2 + 0], vertices[i * 2 + 1]);
     }

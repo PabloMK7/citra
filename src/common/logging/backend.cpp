@@ -3,12 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <regex>
 #include <thread>
 #include <vector>
 #ifdef _WIN32

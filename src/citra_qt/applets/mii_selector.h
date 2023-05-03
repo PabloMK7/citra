@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <QDialog>
 #include "core/frontend/applets/mii_selector.h"
 

@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <array>
-#include <unordered_map>
 #include <QKeySequence>
 #include <QSettings>
 #include "citra_qt/configuration/config.h"

@@ -112,6 +112,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
                          header.targets.count * sizeof(u32))) {
             return Loader::ResultStatus::Error;
         }
+        compatible_TID.reserve(header.targets.count); // compatible_TID should be empty right now
         for (u32 i = 0; i < u32(header.targets.count); i++) {
             compatible_TID.push_back(
                 u32_le(*reinterpret_cast<u32*>(raw_TID_data.data() + i * sizeof(u32))));

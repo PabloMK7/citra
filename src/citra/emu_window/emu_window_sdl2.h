@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <memory>
 #include <utility>
+#include "common/common_types.h"
 #include "core/frontend/emu_window.h"
 
 struct SDL_Window;

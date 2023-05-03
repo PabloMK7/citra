@@ -6,7 +6,6 @@
 #include <memory>
 #include <sstream>
 #include <type_traits>
-#include <unordered_map>
 #include <SDL.h>
 #include <inih/cpp/INIReader.h>
 #include "citra/config.h"

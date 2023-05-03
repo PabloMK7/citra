@@ -3,8 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <iostream>
-#include <regex>
 #include <thread>
 
 #include <android/api-level.h>
@@ -666,6 +664,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_InstallCIAS(JNIEnv* env, [[maybe_un
                                                          jobjectArray path) {
     const jsize count{env->GetArrayLength(path)};
     std::vector<std::string> paths;
+    paths.reserve(count);
     for (jsize idx{0}; idx < count; ++idx) {
         paths.emplace_back(
             GetJString(env, static_cast<jstring>(env->GetObjectArrayElement(path, idx))));

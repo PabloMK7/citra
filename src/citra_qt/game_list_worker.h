@@ -5,10 +5,8 @@
 #pragma once
 
 #include <atomic>
-#include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <QList>
 #include <QObject>
 #include <QRunnable>

@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <array>
-#include <cinttypes>
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"

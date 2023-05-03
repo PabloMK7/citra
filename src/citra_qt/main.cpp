@@ -3,8 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <clocale>
-#include <filesystem>
-#include <fstream>
 #include <memory>
 #include <thread>
 #include <QDesktopWidget>
@@ -87,6 +85,7 @@
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"

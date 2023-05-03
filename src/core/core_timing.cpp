@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <cinttypes>
 #include <tuple>
 #include "common/assert.h"
 #include "common/logging/log.h"

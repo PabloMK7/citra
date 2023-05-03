@@ -18,23 +18,6 @@
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Specializes std::hash for AppletId, so that we can use it in std::unordered_map.
-// Workaround for libstdc++ bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=60970
-namespace std {
-template <>
-struct hash<Service::APT::AppletId> {
-    typedef Service::APT::AppletId argument_type;
-    typedef std::size_t result_type;
-
-    result_type operator()(const argument_type& id_code) const {
-        typedef std::underlying_type<argument_type>::type Type;
-        return std::hash<Type>()(static_cast<Type>(id_code));
-    }
-};
-} // namespace std
-
 namespace HLE::Applets {
 
 static std::unordered_map<Service::APT::AppletId, std::shared_ptr<Applet>> applets;

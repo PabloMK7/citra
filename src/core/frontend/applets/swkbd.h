@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "common/assert.h"

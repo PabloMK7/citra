@@ -313,7 +313,7 @@ void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x05, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    u32 data;
+    u32 data{};
 
     // TODO(Subv): Find out the correct error codes
     rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
@@ -879,13 +879,13 @@ ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
 }
 
 u64 Module::GetConsoleUniqueId() {
-    u64_le console_id_le;
+    u64_le console_id_le{};
     GetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
     return console_id_le;
 }
 
 EULAVersion Module::GetEULAVersion() {
-    u32_le data;
+    u32_le data{};
     GetConfigInfoBlock(EULAVersionBlockID, sizeof(data), 0xE, &data);
     EULAVersion version;
     version.minor = data & 0xFF;

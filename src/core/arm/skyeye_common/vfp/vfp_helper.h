@@ -32,7 +32,6 @@
 
 #pragma once
 
-#include <cstdio>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"

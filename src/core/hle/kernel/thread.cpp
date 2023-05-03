@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <list>
-#include <unordered_map>
 #include <vector>
 #include <boost/serialization/string.hpp>
 #include "common/archives.h"

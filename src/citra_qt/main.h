@@ -13,7 +13,6 @@
 #include "citra_qt/hotkeys.h"
 #include "common/announce_multiplayer_room.h"
 #include "core/core.h"
-#include "core/hle/service/am/am.h"
 #include "core/savestate.h"
 
 #ifdef __unix__
@@ -56,6 +55,10 @@ class DiscordInterface;
 
 namespace Ui {
 class MainWindow;
+}
+
+namespace Service::AM {
+enum class InstallStatus : u32;
 }
 
 class GMainWindow : public QMainWindow {

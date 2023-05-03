@@ -6,9 +6,7 @@
 
 #include <atomic>
 #include <functional>
-#include <iostream>
 #include <memory>
-#include "core/frontend/emu_window.h"
 
 namespace Frontend {
 class EmuWindow;
