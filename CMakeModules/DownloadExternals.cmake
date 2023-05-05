@@ -70,7 +70,7 @@ function(download_qt_external target prefix_var)
         set(install_args install-tool --outputdir ${base_path} ${host} desktop ${target})
     else()
         set(prefix "${base_path}/${target}/${arch_path}")
-        set(install_args install-qt --outputdir ${base_path} ${host} desktop ${target} ${arch})
+        set(install_args install-qt --outputdir ${base_path} ${host} desktop ${target} ${arch} -m qtmultimedia)
     endif()
 
     if (NOT EXISTS "${prefix}")

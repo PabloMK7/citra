@@ -26,9 +26,9 @@ struct SMDH {
     INSERT_PADDING_BYTES(2);
 
     struct Title {
-        std::array<u16, 0x40> short_title;
-        std::array<u16, 0x80> long_title;
-        std::array<u16, 0x40> publisher;
+        std::array<char16_t, 0x40> short_title;
+        std::array<char16_t, 0x80> long_title;
+        std::array<char16_t, 0x40> publisher;
     };
     std::array<Title, 16> titles;
 
@@ -88,14 +88,14 @@ struct SMDH {
      * @param language title language
      * @return UTF-16 array of the short title
      */
-    std::array<u16, 0x40> GetShortTitle(Loader::SMDH::TitleLanguage language) const;
+    std::array<char16_t, 0x40> GetShortTitle(Loader::SMDH::TitleLanguage language) const;
 
     /**
      * Gets the long game title from SMDH
      * @param language title language
      * @return UTF-16 array of the long title
      */
-    std::array<u16, 0x80> GetLongTitle(Loader::SMDH::TitleLanguage language) const;
+    std::array<char16_t, 0x80> GetLongTitle(Loader::SMDH::TitleLanguage language) const;
 
     std::vector<GameRegion> GetRegions() const;
 };

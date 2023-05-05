@@ -26,7 +26,7 @@ void HotkeyRegistry::SaveHotkeys() {
 void HotkeyRegistry::LoadHotkeys() {
     // Make sure NOT to use a reference here because it would become invalid once we call
     // beginGroup()
-    for (auto shortcut : UISettings::values.shortcuts) {
+    for (const auto shortcut : UISettings::values.shortcuts) {
         Hotkey& hk = hotkey_groups[shortcut.group][shortcut.name];
         if (!shortcut.shortcut.keyseq.isEmpty()) {
             hk.keyseq =
@@ -40,7 +40,7 @@ void HotkeyRegistry::LoadHotkeys() {
     }
 }
 
-QShortcut* HotkeyRegistry::GetHotkey(const QString& group, const QString& action, QWidget* widget) {
+QShortcut* HotkeyRegistry::GetHotkey(const QString& group, const QString& action, QObject* widget) {
     Hotkey& hk = hotkey_groups[group][action];
 
     if (!hk.shortcut) {

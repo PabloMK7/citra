@@ -234,6 +234,8 @@ void ConfigureMotionTouch::ConnectEvents() {
             &ConfigureMotionTouch::OnConfigureTouchCalibration);
     connect(ui->touch_from_button_config_btn, &QPushButton::clicked, this,
             &ConfigureMotionTouch::OnConfigureTouchFromButton);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
+            &ConfigureMotionTouch::ApplyConfiguration);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, [this] {
         if (CanCloseDialog()) {
             reject();

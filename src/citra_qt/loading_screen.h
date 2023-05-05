@@ -73,5 +73,3 @@ private:
     std::chrono::duration<double> rolling_average = {};
     bool eta_shown = false;
 };
-
-Q_DECLARE_METATYPE(VideoCore::LoadCallbackStage);

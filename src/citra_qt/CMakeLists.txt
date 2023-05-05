@@ -209,7 +209,7 @@ if (ENABLE_QT_TRANSLATION)
     # Update source TS file if enabled
     if (GENERATE_QT_TRANSLATION)
         get_target_property(SRCS citra-qt SOURCES)
-        qt5_create_translation(QM_FILES ${SRCS} ${UIS} ${CITRA_QT_LANGUAGES}/en.ts)
+        qt6_create_translation(QM_FILES ${SRCS} ${UIS} ${CITRA_QT_LANGUAGES}/en.ts)
         add_custom_target(translation ALL DEPENDS ${CITRA_QT_LANGUAGES}/en.ts)
     endif()
 
@@ -218,7 +218,7 @@ if (ENABLE_QT_TRANSLATION)
     list(REMOVE_ITEM LANGUAGES_TS ${CITRA_QT_LANGUAGES}/en.ts)
 
     # Compile TS files to QM files
-    qt5_add_translation(LANGUAGES_QM ${LANGUAGES_TS})
+    qt6_add_translation(LANGUAGES_QM ${LANGUAGES_TS})
 
     # Build a QRC file from the QM file list
     set(LANGUAGES_QRC ${CMAKE_CURRENT_BINARY_DIR}/languages.qrc)
@@ -230,7 +230,7 @@ if (ENABLE_QT_TRANSLATION)
     file(APPEND ${LANGUAGES_QRC} "</qresource></RCC>")
 
     # Add the QRC file to package in all QM files
-    qt5_add_resources(LANGUAGES ${LANGUAGES_QRC})
+    qt6_add_resources(LANGUAGES ${LANGUAGES_QRC})
 else()
     set(LANGUAGES)
 endif()
@@ -257,7 +257,7 @@ if (APPLE)
     )
 elseif(WIN32)
     # compile as a win32 gui application instead of a console application
-    target_link_libraries(citra-qt PRIVATE Qt5::WinMain)
+    target_link_libraries(citra-qt PRIVATE Qt6::EntryPointImplementation)
     if(MSVC)
         set_target_properties(citra-qt PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
     elseif(MINGW)
@@ -284,15 +284,15 @@ endif()
 create_target_directory_groups(citra-qt)
 
 target_link_libraries(citra-qt PRIVATE audio_core citra_common citra_core input_common network video_core)
-target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::Widgets Qt5::Multimedia Qt5::Concurrent)
+target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
 if (NOT WIN32)
-    target_include_directories(citra-qt PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+    target_include_directories(citra-qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
 endif()
 
 if (UNIX AND NOT APPLE)
-    target_link_libraries(citra-qt PRIVATE Qt5::DBus)
+    target_link_libraries(citra-qt PRIVATE Qt6::DBus)
 endif()
 
 target_compile_definitions(citra-qt PRIVATE
@@ -336,9 +336,9 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if (MSVC)
-    include(CopyCitraQt5Deps)
+    include(CopyCitraQt6Deps)
     include(CopyCitraSDLDeps)
-    copy_citra_Qt5_deps(citra-qt)
+    copy_citra_Qt6_deps(citra-qt)
     copy_citra_SDL_deps(citra-qt)
     if (ENABLE_WEB_SERVICE AND OPENSSL_DLL_DIR)
         include(CopyCitraOpensslDeps)

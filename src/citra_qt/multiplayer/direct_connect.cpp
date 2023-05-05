@@ -5,7 +5,7 @@
 #include <QComboBox>
 #include <QFuture>
 #include <QIntValidator>
-#include <QRegExpValidator>
+#include <QRegularExpression>
 #include <QString>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/main.h"

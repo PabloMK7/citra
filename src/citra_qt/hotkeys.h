@@ -47,7 +47,7 @@ public:
      *          will be the same. Thus, you shouldn't rely on the caller really being the
      *          QShortcut's parent.
      */
-    QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widget);
+    QShortcut* GetHotkey(const QString& group, const QString& action, QObject* widget);
 
     /**
      * Returns a QKeySequence object whose signal can be connected to QAction::setShortcut.

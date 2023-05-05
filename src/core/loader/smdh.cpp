@@ -44,11 +44,11 @@ std::vector<u16> SMDH::GetIcon(bool large) const {
     return icon;
 }
 
-std::array<u16, 0x40> SMDH::GetShortTitle(Loader::SMDH::TitleLanguage language) const {
+std::array<char16_t, 0x40> SMDH::GetShortTitle(Loader::SMDH::TitleLanguage language) const {
     return titles[static_cast<int>(language)].short_title;
 }
 
-std::array<u16, 0x80> SMDH::GetLongTitle(Loader::SMDH::TitleLanguage language) const {
+std::array<char16_t, 0x80> SMDH::GetLongTitle(Loader::SMDH::TitleLanguage language) const {
     return titles[static_cast<int>(language)].long_title;
 }
 

@@ -239,7 +239,8 @@ void GameList::OnTextChanged(const QString& new_text) {
                     file_path.mid(file_path.lastIndexOf(QLatin1Char{'/'}) + 1) + QLatin1Char{' '} +
                     file_title;
                 if (ContainsAllWords(file_name, edit_filter_text) ||
-                    (file_program_id.count() == 16 && edit_filter_text.contains(file_program_id))) {
+                    (file_program_id.length() == 16 &&
+                     edit_filter_text.contains(file_program_id))) {
                     tree_view->setRowHidden(j, folder_index, false);
                     ++result_count;
                 } else {
@@ -419,10 +420,10 @@ void GameList::DonePopulating(const QStringList& watch_list) {
     // Workaround: Add the watch paths in chunks to allow the gui to refresh
     // This prevents the UI from stalling when a large number of watch paths are added
     // Also artificially caps the watcher to a certain number of directories
-    constexpr int LIMIT_WATCH_DIRECTORIES = 5000;
+    constexpr qsizetype LIMIT_WATCH_DIRECTORIES = 5000;
     constexpr int SLICE_SIZE = 25;
-    int len = std::min(watch_list.length(), LIMIT_WATCH_DIRECTORIES);
-    for (int i = 0; i < len; i += SLICE_SIZE) {
+    const qsizetype len = std::min(watch_list.length(), LIMIT_WATCH_DIRECTORIES);
+    for (qsizetype i = 0; i < len; i += SLICE_SIZE) {
         watcher->addPaths(watch_list.mid(i, i + SLICE_SIZE));
         QCoreApplication::processEvents();
     }

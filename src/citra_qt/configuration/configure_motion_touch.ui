@@ -324,22 +324,4 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>ConfigureMotionTouch</receiver>
-   <slot>ApplyConfiguration()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>220</x>
-     <y>380</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>220</x>
-     <y>200</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

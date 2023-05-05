@@ -2,16 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QCameraInfo>
+#include <QCameraDevice>
 #include <QDirIterator>
 #include <QFileDialog>
 #include <QImageReader>
+#include <QMediaDevices>
 #include <QMessageBox>
 #include <QWidget>
 #include "citra_qt/configuration/configure_camera.h"
 #include "common/settings.h"
 #include "core/frontend/camera/factory.h"
-#include "core/frontend/camera/interface.h"
 #include "core/hle/service/cam/cam.h"
 #include "ui_configure_camera.h"
 
@@ -32,9 +32,9 @@ ConfigureCamera::ConfigureCamera(QWidget* parent)
     camera_name = Settings::values.camera_name;
     camera_config = Settings::values.camera_config;
     camera_flip = Settings::values.camera_flip;
-    QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
-    for (const QCameraInfo& cameraInfo : cameras) {
-        ui->system_camera->addItem(cameraInfo.deviceName());
+    const QList<QCameraDevice> cameras = QMediaDevices::videoInputs();
+    for (const QCameraDevice& camera : cameras) {
+        ui->system_camera->addItem(camera.description());
     }
     UpdateCameraMode();
     SetConfiguration();

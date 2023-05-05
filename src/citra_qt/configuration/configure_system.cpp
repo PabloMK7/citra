@@ -283,7 +283,7 @@ void ConfigureSystem::SetConfiguration() {
 
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock.GetValue()));
     QDateTime date_time;
-    date_time.setTime_t(Settings::values.init_time.GetValue());
+    date_time.setSecsSinceEpoch(Settings::values.init_time.GetValue());
     ui->edit_init_time->setDateTime(date_time);
 
     long long init_time_offset = Settings::values.init_time_offset.GetValue();
@@ -406,7 +406,7 @@ void ConfigureSystem::ApplyConfiguration() {
 
         Settings::values.init_clock =
             static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
-        Settings::values.init_time = ui->edit_init_time->dateTime().toTime_t();
+        Settings::values.init_time = ui->edit_init_time->dateTime().toSecsSinceEpoch();
 
         s64 time_offset_time = ui->edit_init_time_offset_time->time().msecsSinceStartOfDay() / 1000;
         s64 time_offset_days = ui->edit_init_time_offset_days->value() * 86400;

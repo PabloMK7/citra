@@ -17,15 +17,14 @@ echo 'Prepare binaries...'
 cd ..
 mkdir package
 
-QT_PLATFORM_DLL_PATH='/usr/x86_64-w64-mingw32/lib/qt/plugins/platforms/'
+QT_PLATFORM_DLL_PATH='/usr/x86_64-w64-mingw32/lib/qt6/plugins/platforms/'
 find build/ -name "citra*.exe" -exec cp {} 'package' \;
 
 # copy Qt plugins
 mkdir package/platforms
 cp "${QT_PLATFORM_DLL_PATH}/qwindows.dll" package/platforms/
-cp -rv "${QT_PLATFORM_DLL_PATH}/../mediaservice/" package/
+cp -rv "${QT_PLATFORM_DLL_PATH}/../multimedia/" package/
 cp -rv "${QT_PLATFORM_DLL_PATH}/../imageformats/" package/
 cp -rv "${QT_PLATFORM_DLL_PATH}/../styles/" package/
-rm -f package/mediaservice/*d.dll
 
 python3 .ci/linux-mingw/scan_dll.py package/*.exe package/imageformats/*.dll "package/"

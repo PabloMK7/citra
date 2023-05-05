@@ -4,99 +4,113 @@
 
 #pragma once
 
-#include <array>
 #include <string>
 #include <unordered_map>
-#include <vector>
-#include <QAbstractVideoSurface>
 #include <QCamera>
-#include <QCameraViewfinderSettings>
 #include <QImage>
-#include <QMutex>
+#include <QMediaCaptureSession>
+#include <QVideoSink>
 #include "citra_qt/camera/camera_util.h"
 #include "citra_qt/camera/qt_camera_base.h"
 #include "core/frontend/camera/interface.h"
 
-class GMainWindow;
-
 namespace Camera {
 
-class QtCameraSurface final : public QAbstractVideoSurface {
+// NOTE: Must be created on the Qt thread. QtMultimediaCameraHandlerFactory ensures this.
+class QtMultimediaCameraHandler final : public QObject {
+    Q_OBJECT
+
 public:
-    QList<QVideoFrame::PixelFormat> supportedPixelFormats(
-        QAbstractVideoBuffer::HandleType) const override;
-    bool present(const QVideoFrame&) override;
+    explicit QtMultimediaCameraHandler(const std::string& camera_name);
+    ~QtMultimediaCameraHandler();
+
+    void StartCapture();
+    void StopCapture();
+
+    QImage QtReceiveFrame() {
+        return camera_surface->videoFrame().toImage();
+    }
+
+    bool IsPreviewAvailable() {
+        return camera->isAvailable();
+    }
+
+    bool IsActive() {
+        return camera->isActive();
+    }
+
+    [[nodiscard]] bool IsPaused() {
+        return paused;
+    }
+
+    void PauseCapture() {
+        StopCapture();
+        paused = true;
+    }
 
 private:
-    QMutex mutex;
-    QImage current_frame;
-
-    friend class QtMultimediaCamera; // For access to current_frame
+    std::unique_ptr<QCamera> camera;
+    std::unique_ptr<QVideoSink> camera_surface;
+    QMediaCaptureSession capture_session{};
+    bool paused = false; // was previously started but was paused, to be resumed
 };
 
-class QtMultimediaCameraHandler;
+// NOTE: Must be created on the Qt thread.
+class QtMultimediaCameraHandlerFactory final : public QObject {
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE std::shared_ptr<QtMultimediaCameraHandler> Create(const std::string& camera_name);
+    void PauseCameras();
+    void ResumeCameras();
+
+private:
+    std::unordered_map<std::string, std::weak_ptr<QtMultimediaCameraHandler>> handlers;
+};
 
 /// This class is only an interface. It just calls QtMultimediaCameraHandler.
 class QtMultimediaCamera final : public QtCameraInterface {
 public:
-    QtMultimediaCamera(const std::string& camera_name, const Service::CAM::Flip& flip);
-    ~QtMultimediaCamera();
-    void StartCapture() override;
-    void StopCapture() override;
-    void SetFrameRate(Service::CAM::FrameRate frame_rate) override;
-    QImage QtReceiveFrame() override;
-    bool IsPreviewAvailable() override;
+    QtMultimediaCamera(const std::shared_ptr<QtMultimediaCameraHandler>& handler,
+                       const Service::CAM::Flip& flip)
+        : QtCameraInterface(flip), handler(handler) {}
+
+    void StartCapture() override {
+        handler->StartCapture();
+    }
+
+    void StopCapture() override {
+        handler->StopCapture();
+    }
+
+    void SetFrameRate(Service::CAM::FrameRate frame_rate) override {}
+
+    QImage QtReceiveFrame() override {
+        return handler->QtReceiveFrame();
+    }
+
+    bool IsPreviewAvailable() override {
+        return handler->IsPreviewAvailable();
+    }
 
 private:
     std::shared_ptr<QtMultimediaCameraHandler> handler;
 };
 
+/// This class is only an interface. It just calls QtMultimediaCameraHandlerFactory.
 class QtMultimediaCameraFactory final : public QtCameraFactory {
 public:
+    QtMultimediaCameraFactory(
+        const std::shared_ptr<QtMultimediaCameraHandlerFactory>& handler_factory)
+        : handler_factory(handler_factory) {}
+
     std::unique_ptr<CameraInterface> Create(const std::string& config,
-                                            const Service::CAM::Flip& flip) override;
-};
-
-class QtMultimediaCameraHandler final : public QObject {
-    Q_OBJECT
-
-public:
-    /// Creates the global handler. Must be called in UI thread.
-    static void Init();
-    static std::shared_ptr<QtMultimediaCameraHandler> GetHandler(const std::string& camera_name);
-    static void ReleaseHandler(const std::shared_ptr<QtMultimediaCameraHandler>& handler);
-
-    /**
-     * Creates the camera.
-     * Note: This function must be called via QMetaObject::invokeMethod in UI thread.
-     */
-    Q_INVOKABLE void CreateCamera(const std::string& camera_name);
-
-    /**
-     * Starts the camera.
-     * Note: This function must be called via QMetaObject::invokeMethod in UI thread when
-     *       starting the camera for the first time. 'Resume' calls can be in other threads.
-     */
-    Q_INVOKABLE void StartCamera();
-
-    void StopCamera();
-    bool CameraAvailable() const;
-    static void StopCameras();
-    static void ResumeCameras();
-    static void ReleaseHandlers();
+                                            const Service::CAM::Flip& flip) override {
+        return std::make_unique<QtMultimediaCamera>(handler_factory->Create(config), flip);
+    }
 
 private:
-    std::unique_ptr<QCamera> camera;
-    QtCameraSurface camera_surface{};
-    QCameraViewfinderSettings settings;
-    bool started = false;
-    bool paused = false; // was previously started but was paused, to be resumed
-
-    static std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> handlers;
-    static std::array<bool, 3> status;
-    static std::unordered_map<std::string, std::shared_ptr<QtMultimediaCameraHandler>> loaded;
-
-    friend class QtMultimediaCamera; // For access to camera_surface (and camera)
+    std::shared_ptr<QtMultimediaCameraHandlerFactory> handler_factory;
 };
 
 } // namespace Camera

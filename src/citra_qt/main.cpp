@@ -5,7 +5,6 @@
 #include <clocale>
 #include <memory>
 #include <thread>
-#include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QLabel>
@@ -199,6 +198,11 @@ GMainWindow::GMainWindow()
     // register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
     qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
+
+    // Register CameraFactory
+    qt_cameras = std::make_shared<Camera::QtMultimediaCameraHandlerFactory>();
+    Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
+    Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>(qt_cameras));
 
     LoadTranslation();
 
@@ -647,7 +651,7 @@ void GMainWindow::ShowUpdaterWidgets() {
 
 void GMainWindow::SetDefaultUIGeometry() {
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
-    const QRect screenRect = QApplication::desktop()->screenGeometry(this);
+    const QRect screenRect = screen()->geometry();
 
     const int w = screenRect.width() * 2 / 3;
     const int h = screenRect.height() / 2;
@@ -1284,8 +1288,6 @@ void GMainWindow::ShutdownGame() {
 
     discord_rpc->Update();
 
-    Camera::QtMultimediaCameraHandler::ReleaseHandlers();
-
     // The emulation is stopped, so closing the window or not does not matter anymore
     disconnect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
     disconnect(secondary_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
@@ -1344,7 +1346,7 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
 
 void GMainWindow::UpdateRecentFiles() {
     const int num_recent_files =
-        std::min(UISettings::values.recent_files.size(), max_recent_files_item);
+        std::min(static_cast<int>(UISettings::values.recent_files.size()), max_recent_files_item);
 
     for (int i = 0; i < num_recent_files; i++) {
         const QString text = QStringLiteral("&%1. %2").arg(i + 1).arg(
@@ -1648,7 +1650,7 @@ void GMainWindow::InstallCIA(QStringList filepaths) {
     progress_bar->show();
     progress_bar->setMaximum(INT_MAX);
 
-    QtConcurrent::run([&, filepaths] {
+    (void)QtConcurrent::run([&, filepaths] {
         Service::AM::InstallStatus status;
         const auto cia_progress = [&](std::size_t written, std::size_t total) {
             emit UpdateProgress(written, total);
@@ -1724,7 +1726,7 @@ void GMainWindow::OnMenuRecentFile() {
 }
 
 void GMainWindow::OnStartGame() {
-    Camera::QtMultimediaCameraHandler::ResumeCameras();
+    qt_cameras->ResumeCameras();
 
     PreventOSSleep();
 
@@ -1751,7 +1753,7 @@ void GMainWindow::OnRestartGame() {
 
 void GMainWindow::OnPauseGame() {
     emu_thread->SetRunning(false);
-    Camera::QtMultimediaCameraHandler::StopCameras();
+    qt_cameras->PauseCameras();
 
     UpdateMenuState();
     AllowOSSleep();
@@ -2690,7 +2692,7 @@ void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
 #undef main
 #endif
 
-static void SetHighDPIAttributes() {
+static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 #ifdef _WIN32
     // For Windows, we want to avoid scaling artifacts on fractional scaling ratios.
     // This is done by setting the optimal scaling policy for the primary screen.
@@ -2703,40 +2705,34 @@ static void SetHighDPIAttributes() {
     // Get the current screen geometry.
     const QScreen* primary_screen = QGuiApplication::primaryScreen();
     if (primary_screen == nullptr) {
-        return;
+        return Qt::HighDpiScaleFactorRoundingPolicy::PassThrough;
     }
 
     const QRect screen_rect = primary_screen->geometry();
-    const int real_width = screen_rect.width();
-    const int real_height = screen_rect.height();
-    const float real_ratio = primary_screen->logicalDotsPerInch() / 96.0f;
+    const qreal real_ratio = primary_screen->devicePixelRatio();
+    const qreal real_width = std::trunc(screen_rect.width() * real_ratio);
+    const qreal real_height = std::trunc(screen_rect.height() * real_ratio);
 
     // Recommended minimum width and height for proper window fit.
     // Any screen with a lower resolution than this will still have a scale of 1.
-    constexpr float minimum_width = 1350.0f;
-    constexpr float minimum_height = 900.0f;
+    constexpr qreal minimum_width = 1350.0;
+    constexpr qreal minimum_height = 900.0;
 
-    const float width_ratio = std::max(1.0f, real_width / minimum_width);
-    const float height_ratio = std::max(1.0f, real_height / minimum_height);
+    const qreal width_ratio = std::max(1.0, real_width / minimum_width);
+    const qreal height_ratio = std::max(1.0, real_height / minimum_height);
 
     // Get the lower of the 2 ratios and truncate, this is the maximum integer scale.
-    const float max_ratio = std::trunc(std::min(width_ratio, height_ratio));
+    const qreal max_ratio = std::trunc(std::min(width_ratio, height_ratio));
 
     if (max_ratio > real_ratio) {
-        QApplication::setHighDpiScaleFactorRoundingPolicy(
-            Qt::HighDpiScaleFactorRoundingPolicy::Round);
+        return Qt::HighDpiScaleFactorRoundingPolicy::Round;
     } else {
-        QApplication::setHighDpiScaleFactorRoundingPolicy(
-            Qt::HighDpiScaleFactorRoundingPolicy::Floor);
+        return Qt::HighDpiScaleFactorRoundingPolicy::Floor;
     }
 #else
     // Other OSes should be better than Windows at fractional scaling.
-    QApplication::setHighDpiScaleFactorRoundingPolicy(
-        Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+    return Qt::HighDpiScaleFactorRoundingPolicy::PassThrough;
 #endif
-
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 }
 
 int main(int argc, char* argv[]) {
@@ -2748,16 +2744,14 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setOrganizationName(QStringLiteral("Citra team"));
     QCoreApplication::setApplicationName(QStringLiteral("Citra"));
 
-    SetHighDPIAttributes();
+    auto rounding_policy = GetHighDpiRoundingPolicy();
+    QApplication::setHighDpiScaleFactorRoundingPolicy(rounding_policy);
 
 #ifdef __APPLE__
     std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
     chdir(bin_path.c_str());
 #endif
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    // Disables the "?" button on all dialogs. Disabled by default on Qt6.
-    QCoreApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
-#endif
+
     QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication app(argc, argv);
@@ -2767,11 +2761,6 @@ int main(int argc, char* argv[]) {
     setlocale(LC_ALL, "C");
 
     GMainWindow main_window;
-
-    // Register CameraFactory
-    Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
-    Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>());
-    Camera::QtMultimediaCameraHandler::Init();
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
