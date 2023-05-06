@@ -372,6 +372,7 @@ void ShaderDiskCache::SaveRaw(const ShaderDiskCacheRaw& entry) {
         return;
     }
     transferable.insert({id, entry});
+    transferable_file.Flush();
 }
 
 void ShaderDiskCache::SaveDecompiled(u64 unique_identifier,
@@ -439,6 +440,8 @@ void ShaderDiskCache::SaveDumpToFile(u64 unique_identifier, GLuint program, bool
     // SaveDecompiled is used only to store the accurate multiplication setting, a better way is to
     // probably change the header in SaveDump
     SaveDecompiledToFile(precompiled_file, unique_identifier, {}, sanitize_mul);
+
+    precompiled_file.Flush();
 }
 
 bool ShaderDiskCache::IsUsable() const {
