@@ -190,8 +190,10 @@ void CustomTexManager::WriteConfig() {
     file.WriteString(output);
 }
 
-void CustomTexManager::PreloadTextures() {
+void CustomTexManager::PreloadTextures(const std::atomic_bool& stop_run,
+                                       const VideoCore::DiskResourceLoadCallback& callback) {
     u64 size_sum = 0;
+    size_t preloaded = 0;
     const u64 sys_mem = Common::GetMemInfo().total_physical_memory;
     const u64 recommended_min_mem = 2 * size_t(1024 * 1024 * 1024);
 
@@ -206,8 +208,15 @@ void CustomTexManager::PreloadTextures() {
                 LOG_WARNING(Render, "Aborting texture preload due to insufficient memory");
                 return;
             }
+            if (stop_run) {
+                return;
+            }
             material->LoadFromDisk(flip_png_files);
             size_sum += material->size;
+            if (callback) {
+                callback(VideoCore::LoadCallbackStage::Preload, preloaded, custom_textures.size());
+            }
+            preloaded++;
         }
     });
     workers->WaitForRequests();

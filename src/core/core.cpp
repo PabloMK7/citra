@@ -322,9 +322,6 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     if (Settings::values.custom_textures) {
         custom_tex_manager->FindCustomTextures();
     }
-    if (Settings::values.preload_textures) {
-        custom_tex_manager->PreloadTextures();
-    }
     if (Settings::values.dump_textures) {
         custom_tex_manager->WriteConfig();
     }
@@ -554,6 +551,7 @@ void System::Shutdown(bool is_deserializing) {
         cheat_engine.reset();
         app_loader.reset();
     }
+    custom_tex_manager.reset();
     telemetry_session.reset();
     rpc_server.reset();
     archive_manager.reset();

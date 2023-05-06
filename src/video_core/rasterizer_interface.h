@@ -21,6 +21,7 @@ namespace VideoCore {
 
 enum class LoadCallbackStage {
     Prepare,
+    Preload,
     Decompile,
     Build,
     Complete,

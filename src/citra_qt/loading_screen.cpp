@@ -62,6 +62,8 @@ QProgressBar::chunk {
 // Definitions for the differences in text and styling for each stage
 const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> stage_translations{
     {VideoCore::LoadCallbackStage::Prepare, QT_TRANSLATE_NOOP("LoadingScreen", "Loading...")},
+    {VideoCore::LoadCallbackStage::Preload,
+     QT_TRANSLATE_NOOP("LoadingScreen", "Preloading Textures %1 / %2")},
     {VideoCore::LoadCallbackStage::Decompile,
      QT_TRANSLATE_NOOP("LoadingScreen", "Preparing Shaders %1 / %2")},
     {VideoCore::LoadCallbackStage::Build,
@@ -70,6 +72,7 @@ const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> stage
 };
 const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> progressbar_style{
     {VideoCore::LoadCallbackStage::Prepare, PROGRESSBAR_STYLE_PREPARE},
+    {VideoCore::LoadCallbackStage::Preload, PROGRESSBAR_STYLE_BUILD},
     {VideoCore::LoadCallbackStage::Decompile, PROGRESSBAR_STYLE_DECOMPILE},
     {VideoCore::LoadCallbackStage::Build, PROGRESSBAR_STYLE_BUILD},
     {VideoCore::LoadCallbackStage::Complete, PROGRESSBAR_STYLE_COMPLETE},
@@ -186,7 +189,8 @@ void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size
     // update labels and progress bar
     const auto& stg = tr(stage_translations.at(stage));
     if (stage == VideoCore::LoadCallbackStage::Decompile ||
-        stage == VideoCore::LoadCallbackStage::Build) {
+        stage == VideoCore::LoadCallbackStage::Build ||
+        stage == VideoCore::LoadCallbackStage::Preload) {
         ui->stage->setText(stg.arg(value).arg(total));
     } else {
         ui->stage->setText(stg);
