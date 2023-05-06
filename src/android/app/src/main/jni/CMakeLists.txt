@@ -20,7 +20,6 @@ add_library(citra-android SHARED
     emu_window/emu_window.cpp
     emu_window/emu_window.h
     game_info.cpp
-    game_info.h
     game_settings.cpp
     game_settings.h
     id_cache.cpp

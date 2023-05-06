@@ -32,7 +32,6 @@
 #include "jni/camera/still_image_camera.h"
 #include "jni/config.h"
 #include "jni/emu_window/emu_window.h"
-#include "jni/game_info.h"
 #include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
@@ -434,60 +433,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_onTouchMoved(JNIEnv* env,
                                                           [[maybe_unused]] jclass clazz, jfloat x,
                                                           jfloat y) {
     window->OnTouchMoved((int)x, (int)y);
-}
-
-jintArray Java_org_citra_citra_1emu_NativeLibrary_GetIcon(JNIEnv* env,
-                                                          [[maybe_unused]] jclass clazz,
-                                                          jstring j_file) {
-    std::string filepath = GetJString(env, j_file);
-
-    std::vector<u16> icon_data = GameInfo::GetIcon(filepath);
-    if (icon_data.size() == 0) {
-        return 0;
-    }
-
-    jintArray icon = env->NewIntArray(static_cast<jsize>(icon_data.size() / 2));
-    env->SetIntArrayRegion(icon, 0, env->GetArrayLength(icon),
-                           reinterpret_cast<jint*>(icon_data.data()));
-
-    return icon;
-}
-
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetTitle(JNIEnv* env, [[maybe_unused]] jclass clazz,
-                                                         jstring j_filename) {
-    std::string filepath = GetJString(env, j_filename);
-    auto Title = GameInfo::GetTitle(filepath);
-    return env->NewStringUTF(Common::UTF16ToUTF8(Title).data());
-}
-
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetDescription(JNIEnv* env,
-                                                               [[maybe_unused]] jclass clazz,
-                                                               jstring j_filename) {
-    return j_filename;
-}
-
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetGameId(JNIEnv* env,
-                                                          [[maybe_unused]] jclass clazz,
-                                                          jstring j_filename) {
-    return j_filename;
-}
-
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetRegions(JNIEnv* env,
-                                                           [[maybe_unused]] jclass clazz,
-                                                           jstring j_filename) {
-    std::string filepath = GetJString(env, j_filename);
-
-    std::string regions = GameInfo::GetRegions(filepath);
-
-    return env->NewStringUTF(regions.c_str());
-}
-
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetCompany(JNIEnv* env,
-                                                           [[maybe_unused]] jclass clazz,
-                                                           jstring j_filename) {
-    std::string filepath = GetJString(env, j_filename);
-    auto publisher = GameInfo::GetPublisher(filepath);
-    return env->NewStringUTF(Common::UTF16ToUTF8(publisher).data());
 }
 
 jstring Java_org_citra_citra_1emu_NativeLibrary_GetGitRevision(JNIEnv* env,

@@ -12,12 +12,13 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
-#include "jni/game_info.h"
+#include "jni/android_common/android_common.h"
+#include "jni/id_cache.h"
 
-namespace GameInfo {
+namespace {
 
-std::vector<u8> GetSMDHData(std::string physical_name) {
-    std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
+std::vector<u8> GetSMDHData(const std::string& path) {
+    std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(path);
     if (!loader) {
         return {};
     }
@@ -51,55 +52,55 @@ std::vector<u8> GetSMDHData(std::string physical_name) {
     return smdh;
 }
 
-std::u16string GetTitle(std::string physical_name) {
-    Loader::SMDH::TitleLanguage language = Loader::SMDH::TitleLanguage::English;
-    std::vector<u8> smdh_data = GetSMDHData(physical_name);
+} // namespace
 
-    if (!Loader::IsValidSMDH(smdh_data)) {
-        // SMDH is not valid, return null
-        return {};
+extern "C" {
+
+static Loader::SMDH* GetPointer(JNIEnv* env, jobject obj) {
+    return reinterpret_cast<Loader::SMDH*>(env->GetLongField(obj, IDCache::GetGameInfoPointer()));
+}
+
+JNIEXPORT jlong JNICALL Java_org_citra_citra_1emu_model_GameInfo_initialize(JNIEnv* env, jclass,
+                                                                            jstring j_path) {
+    std::vector<u8> smdh_data = GetSMDHData(GetJString(env, j_path));
+
+    Loader::SMDH* smdh = nullptr;
+    if (Loader::IsValidSMDH(smdh_data)) {
+        smdh = new Loader::SMDH;
+        memcpy(smdh, smdh_data.data(), sizeof(Loader::SMDH));
     }
+    return reinterpret_cast<jlong>(smdh);
+}
 
-    Loader::SMDH smdh;
-    memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_model_GameInfo_finalize(JNIEnv* env, jobject obj) {
+    delete GetPointer(env, obj);
+}
+
+jstring Java_org_citra_citra_1emu_model_GameInfo_getTitle(JNIEnv* env, jobject obj) {
+    Loader::SMDH* smdh = GetPointer(env, obj);
+    Loader::SMDH::TitleLanguage language = Loader::SMDH::TitleLanguage::English;
 
     // Get the title from SMDH in UTF-16 format
     std::u16string title{
-        reinterpret_cast<char16_t*>(smdh.titles[static_cast<int>(language)].long_title.data())};
+        reinterpret_cast<char16_t*>(smdh->titles[static_cast<size_t>(language)].long_title.data())};
 
-    return title;
+    return ToJString(env, Common::UTF16ToUTF8(title).data());
 }
 
-std::u16string GetPublisher(std::string physical_name) {
+jstring Java_org_citra_citra_1emu_model_GameInfo_getCompany(JNIEnv* env, jobject obj) {
+    Loader::SMDH* smdh = GetPointer(env, obj);
     Loader::SMDH::TitleLanguage language = Loader::SMDH::TitleLanguage::English;
-    std::vector<u8> smdh_data = GetSMDHData(physical_name);
-
-    if (!Loader::IsValidSMDH(smdh_data)) {
-        // SMDH is not valid, return null
-        return {};
-    }
-
-    Loader::SMDH smdh;
-    memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
     // Get the Publisher's name from SMDH in UTF-16 format
     char16_t* publisher;
     publisher =
-        reinterpret_cast<char16_t*>(smdh.titles[static_cast<int>(language)].publisher.data());
+        reinterpret_cast<char16_t*>(smdh->titles[static_cast<size_t>(language)].publisher.data());
 
-    return publisher;
+    return ToJString(env, Common::UTF16ToUTF8(publisher).data());
 }
 
-std::string GetRegions(std::string physical_name) {
-    std::vector<u8> smdh_data = GetSMDHData(physical_name);
-
-    if (!Loader::IsValidSMDH(smdh_data)) {
-        // SMDH is not valid, return "Invalid region"
-        return "Invalid region";
-    }
-
-    Loader::SMDH smdh;
-    memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+jstring Java_org_citra_citra_1emu_model_GameInfo_getRegions(JNIEnv* env, jobject obj) {
+    Loader::SMDH* smdh = GetPointer(env, obj);
 
     using GameRegion = Loader::SMDH::GameRegion;
     static const std::map<GameRegion, const char*> regions_map = {
@@ -107,10 +108,10 @@ std::string GetRegions(std::string physical_name) {
         {GameRegion::Europe, "Europe"}, {GameRegion::Australia, "Australia"},
         {GameRegion::China, "China"},   {GameRegion::Korea, "Korea"},
         {GameRegion::Taiwan, "Taiwan"}};
-    std::vector<GameRegion> regions = smdh.GetRegions();
+    std::vector<GameRegion> regions = smdh->GetRegions();
 
     if (regions.empty()) {
-        return "Invalid region";
+        return ToJString(env, "Invalid region");
     }
 
     const bool region_free =
@@ -119,7 +120,7 @@ std::string GetRegions(std::string physical_name) {
         });
 
     if (region_free) {
-        return "Region free";
+        return ToJString(env, "Region free");
     }
 
     const std::string separator = ", ";
@@ -128,23 +129,22 @@ std::string GetRegions(std::string physical_name) {
         result += separator + regions_map.at(*region);
     }
 
-    return result;
+    return ToJString(env, result);
 }
 
-std::vector<u16> GetIcon(std::string physical_name) {
-    std::vector<u8> smdh_data = GetSMDHData(physical_name);
-
-    if (!Loader::IsValidSMDH(smdh_data)) {
-        // SMDH is not valid, return null
-        return std::vector<u16>(0, 0);
-    }
-
-    Loader::SMDH smdh;
-    memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+jintArray Java_org_citra_citra_1emu_model_GameInfo_getIcon(JNIEnv* env, jobject obj) {
+    Loader::SMDH* smdh = GetPointer(env, obj);
 
     // Always get a 48x48(large) icon
-    std::vector<u16> icon_data = smdh.GetIcon(true);
-    return icon_data;
-}
+    std::vector<u16> icon_data = smdh->GetIcon(true);
+    if (icon_data.empty()) {
+        return nullptr;
+    }
 
-} // namespace GameInfo
+    jintArray icon = env->NewIntArray(static_cast<jsize>(icon_data.size() / 2));
+    env->SetIntArrayRegion(icon, 0, env->GetArrayLength(icon),
+                           reinterpret_cast<jint*>(icon_data.data()));
+
+    return icon;
+}
+}

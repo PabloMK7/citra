@@ -12,6 +12,7 @@ import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.Log;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -206,27 +207,26 @@ public final class GameDatabase extends SQLiteOpenHelper {
     }
 
     private static void attemptToAddGame(SQLiteDatabase database, String filePath) {
-        String name = NativeLibrary.GetTitle(filePath);
+        GameInfo gameInfo;
+        try {
+            gameInfo = new GameInfo(filePath);
+        } catch (IOException e) {
+            gameInfo = null;
+        }
+
+        String name = gameInfo != null ? gameInfo.getTitle() : "";
 
         // If the game's title field is empty, use the filename.
         if (name.isEmpty()) {
             name = filePath.substring(filePath.lastIndexOf("/") + 1);
         }
 
-        String gameId = NativeLibrary.GetGameId(filePath);
-
-        // If the game's ID field is empty, use the filename without extension.
-        if (gameId.isEmpty()) {
-            gameId = filePath.substring(filePath.lastIndexOf("/") + 1,
-                    filePath.lastIndexOf("."));
-        }
-
         ContentValues game = Game.asContentValues(name,
-                NativeLibrary.GetDescription(filePath).replace("\n", " "),
-                NativeLibrary.GetRegions(filePath),
+                filePath.replace("\n", " "),
+                gameInfo != null ? gameInfo.getRegions() : "Invalid region",
                 filePath,
-                gameId,
-                NativeLibrary.GetCompany(filePath));
+                filePath,
+                gameInfo != null ? gameInfo.getCompany() : "");
 
         // Try to update an existing game first.
         int rowsMatched = database.update(TABLE_NAME_GAMES,    // Which table to update.

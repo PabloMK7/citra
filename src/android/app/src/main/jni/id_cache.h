@@ -34,6 +34,8 @@ jclass GetCheatClass();
 jfieldID GetCheatPointer();
 jmethodID GetCheatConstructor();
 
+jfieldID GetGameInfoPointer();
+
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage);
 
 } // namespace IDCache

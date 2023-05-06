@@ -40,6 +40,8 @@ static jclass s_cheat_class;
 static jfieldID s_cheat_pointer;
 static jmethodID s_cheat_constructor;
 
+static jfieldID s_game_info_pointer;
+
 static std::unordered_map<VideoCore::LoadCallbackStage, jobject> s_java_load_callback_stages;
 
 namespace IDCache {
@@ -135,6 +137,10 @@ jmethodID GetCheatConstructor() {
     return s_cheat_constructor;
 }
 
+jfieldID GetGameInfoPointer() {
+    return s_game_info_pointer;
+}
+
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage) {
     const auto it = s_java_load_callback_stages.find(stage);
     ASSERT_MSG(it != s_java_load_callback_stages.end(), "Invalid LoadCallbackStage: {}", stage);
@@ -204,6 +210,11 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_cheat_pointer = env->GetFieldID(cheat_class, "mPointer", "J");
     s_cheat_constructor = env->GetMethodID(cheat_class, "<init>", "(J)V");
     env->DeleteLocalRef(cheat_class);
+
+    // Initialize GameInfo
+    const jclass game_info_class = env->FindClass("org/citra/citra_emu/model/GameInfo");
+    s_game_info_pointer = env->GetFieldID(game_info_class, "mPointer", "J");
+    env->DeleteLocalRef(game_info_class);
 
     // Initialize LoadCallbackStage map
     const auto to_java_load_callback_stage = [env](const std::string& stage) {
