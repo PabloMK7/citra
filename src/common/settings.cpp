@@ -163,6 +163,8 @@ void LogSettings() {
     log_setting("Layout_LargeScreenProportion", values.large_screen_proportion.GetValue());
     log_setting("Utility_DumpTextures", values.dump_textures.GetValue());
     log_setting("Utility_CustomTextures", values.custom_textures.GetValue());
+    log_setting("Utility_PreloadTextures", values.preload_textures.GetValue());
+    log_setting("Utility_AsyncCustomLoading", values.async_custom_loading.GetValue());
     log_setting("Utility_UseDiskShaderCache", values.use_disk_shader_cache.GetValue());
     log_setting("Audio_Emulation", GetAudioEmulationName(values.audio_emulation.GetValue()));
     log_setting("Audio_OutputType", values.output_type.GetValue());

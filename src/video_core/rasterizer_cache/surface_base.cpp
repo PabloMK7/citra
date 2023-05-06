@@ -45,13 +45,16 @@ bool SurfaceBase::CanFill(const SurfaceParams& dest_surface, SurfaceInterval fil
 }
 
 bool SurfaceBase::CanCopy(const SurfaceParams& dest_surface, SurfaceInterval copy_interval) const {
-    SurfaceParams subrect_params = dest_surface.FromInterval(copy_interval);
+    const SurfaceParams subrect_params = dest_surface.FromInterval(copy_interval);
     ASSERT(subrect_params.GetInterval() == copy_interval);
-    if (CanSubRect(subrect_params))
-        return true;
 
-    if (CanFill(dest_surface, copy_interval))
+    if (CanSubRect(subrect_params)) {
         return true;
+    }
+
+    if (CanFill(dest_surface, copy_interval)) {
+        return true;
+    }
 
     return false;
 }
@@ -100,6 +103,23 @@ SurfaceInterval SurfaceBase::GetCopyableInterval(const SurfaceParams& params) co
         }
     }
     return result;
+}
+
+Extent SurfaceBase::RealExtent(bool scaled) {
+    const bool is_custom = IsCustom();
+    u32 real_width = width;
+    u32 real_height = height;
+    if (is_custom) {
+        real_width = material->width;
+        real_height = material->height;
+    } else if (scaled) {
+        real_width = GetScaledWidth();
+        real_height = GetScaledHeight();
+    }
+    return Extent{
+        .width = real_width,
+        .height = real_height,
+    };
 }
 
 bool SurfaceBase::HasNormalMap() const noexcept {

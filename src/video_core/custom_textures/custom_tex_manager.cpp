@@ -13,6 +13,7 @@
 #include "core/frontend/image_interface.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/rasterizer_cache/surface_params.h"
+#include "video_core/rasterizer_cache/utils.h"
 
 namespace VideoCore {
 
@@ -21,7 +22,7 @@ namespace {
 MICROPROFILE_DEFINE(CustomTexManager_TickFrame, "CustomTexManager", "TickFrame",
                     MP_RGB(54, 16, 32));
 
-constexpr std::size_t MAX_UPLOADS_PER_TICK = 16;
+constexpr std::size_t MAX_UPLOADS_PER_TICK = 8;
 
 bool IsPow2(u32 value) {
     return value != 0 && (value & (value - 1)) == 0;
@@ -111,11 +112,14 @@ void CustomTexManager::FindCustomTextures() {
         if (!ParseFilename(file, texture)) {
             continue;
         }
-        auto& material = material_map[texture->hash];
-        if (!material) {
-            material = std::make_unique<Material>();
+        for (const u64 hash : texture->hashes) {
+            auto& material = material_map[hash];
+            if (!material) {
+                material = std::make_unique<Material>();
+            }
+            material->hash = hash;
+            material->AddMapTexture(texture);
         }
-        material->AddMapTexture(texture);
     }
     textures_loaded = true;
 }
@@ -145,21 +149,25 @@ bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTextu
         parts.pop_back();
     }
 
-    // First check if the path is mapped directly to a hash
-    // before trying to parse the texture filename.
+    // First look if this file is mapped to any number of hashes.
+    std::vector<u64>& hashes = texture->hashes;
     const auto it = path_to_hash_map.find(file.virtualName);
     if (it != path_to_hash_map.end()) {
-        texture->hash = it->second;
-    } else {
-        u32 width;
-        u32 height;
-        u32 format;
-        unsigned long long hash{};
-        if (std::sscanf(parts.back().c_str(), "tex1_%ux%u_%llX_%u", &width, &height, &hash,
-                        &format) != 4) {
-            return false;
-        }
-        texture->hash = hash;
+        hashes = it->second;
+    }
+
+    // It's also possible for pack creators to retain the default texture name
+    // still map the texture to another hash. Support that as well.
+    u32 width;
+    u32 height;
+    u32 format;
+    unsigned long long hash{};
+    const bool is_parsed = std::sscanf(parts.back().c_str(), "tex1_%ux%u_%llX_%u", &width, &height,
+                                       &hash, &format) == 4;
+    const bool is_mapped =
+        !hashes.empty() && std::find(hashes.begin(), hashes.end(), hash) != hashes.end();
+    if (is_parsed && !is_mapped) {
+        hashes.push_back(hash);
     }
 
     texture->path = file.physicalName;
@@ -181,9 +189,9 @@ void CustomTexManager::WriteConfig() {
     json["description"] = "A graphics pack";
 
     auto& options = json["options"];
-    options["skip_mipmap"] = skip_mipmap;
-    options["flip_png_files"] = flip_png_files;
-    options["use_new_hash"] = use_new_hash;
+    options["skip_mipmap"] = false;
+    options["flip_png_files"] = true;
+    options["use_new_hash"] = true;
 
     FileUtil::IOFile file{pack_config, "w"};
     const std::string output = json.dump(4);
@@ -311,7 +319,7 @@ void CustomTexManager::ReadConfig(const std::string& load_path) {
         return;
     }
 
-    nlohmann::json json = nlohmann::json::parse(config);
+    nlohmann::json json = nlohmann::json::parse(config, nullptr, false, true);
 
     const auto& options = json["options"];
     skip_mipmap = options["skip_mipmap"].get<bool>();
@@ -330,13 +338,7 @@ void CustomTexManager::ReadConfig(const std::string& load_path) {
         const auto parse = [&](const std::string& file) {
             const std::string filename{FileUtil::GetFilename(file)};
             auto [it, new_hash] = path_to_hash_map.try_emplace(filename);
-            if (!new_hash) {
-                LOG_ERROR(Render,
-                          "File {} with key {} already exists and is mapped to {:#016X}, skipping",
-                          file, material.key(), path_to_hash_map[filename]);
-                return;
-            }
-            it->second = hash;
+            it->second.push_back(hash);
         };
         const auto value = material.value();
         if (value.is_string()) {

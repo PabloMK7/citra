@@ -55,6 +55,11 @@ CustomTexture::CustomTexture(Frontend::ImageInterface& image_interface_)
 CustomTexture::~CustomTexture() = default;
 
 void CustomTexture::LoadFromDisk(bool flip_png) {
+    std::scoped_lock lock{decode_mutex};
+    if (IsLoaded()) {
+        return;
+    }
+
     FileUtil::IOFile file{path, "rb"};
     std::vector<u8> input(file.GetSize());
     if (file.ReadBytes(input.data(), input.size()) != input.size()) {
@@ -71,7 +76,6 @@ void CustomTexture::LoadFromDisk(bool flip_png) {
         break;
     default:
         LOG_ERROR(Render, "Unknown file format {}", file_format);
-        return;
     }
 }
 
@@ -102,8 +106,7 @@ void Material::LoadFromDisk(bool flip_png) noexcept {
         }
         texture->LoadFromDisk(flip_png);
         size += texture->data.size();
-        LOG_DEBUG(Render, "Loading {} map {} with hash {:#016X}", MapTypeName(texture->type),
-                  texture->path, texture->hash);
+        LOG_DEBUG(Render, "Loading {} map {}", MapTypeName(texture->type), texture->path);
     }
     if (!textures[0]) {
         LOG_ERROR(Render, "Unable to create material without color texture!");
@@ -121,7 +124,7 @@ void Material::LoadFromDisk(bool flip_png) noexcept {
             LOG_ERROR(Render,
                       "{} map {} of material with hash {:#016X} has dimentions {}x{} "
                       "which do not match the color texture dimentions {}x{}",
-                      MapTypeName(texture->type), texture->path, texture->hash, texture->width,
+                      MapTypeName(texture->type), texture->path, hash, texture->width,
                       texture->height, width, height);
             state = DecodeState::Failed;
             return;

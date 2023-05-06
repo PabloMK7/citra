@@ -40,6 +40,8 @@ add_library(video_core STATIC
     rasterizer_cache/pixel_format.h
     rasterizer_cache/rasterizer_cache.cpp
     rasterizer_cache/rasterizer_cache.h
+    rasterizer_cache/rasterizer_cache_base.h
+    rasterizer_cache/sampler_params.h
     rasterizer_cache/surface_base.cpp
     rasterizer_cache/surface_base.h
     rasterizer_cache/surface_params.cpp
@@ -53,10 +55,9 @@ add_library(video_core STATIC
     renderer_opengl/gl_blit_helper.h
     renderer_opengl/gl_driver.cpp
     renderer_opengl/gl_driver.h
-    renderer_opengl/gl_format_reinterpreter.cpp
-    renderer_opengl/gl_format_reinterpreter.h
     renderer_opengl/gl_rasterizer.cpp
     renderer_opengl/gl_rasterizer.h
+    renderer_opengl/gl_rasterizer_cache.cpp
     renderer_opengl/gl_resource_manager.cpp
     renderer_opengl/gl_resource_manager.h
     renderer_opengl/gl_shader_decompiler.cpp
@@ -126,7 +127,7 @@ target_include_directories(video_core PRIVATE ${HOST_SHADERS_INCLUDE})
 create_target_directory_groups(video_core)
 
 target_link_libraries(video_core PUBLIC citra_common citra_core)
-target_link_libraries(video_core PRIVATE glad json-headers dds-ktx nihstro-headers Boost::serialization)
+target_link_libraries(video_core PRIVATE Boost::serialization dds-ktx glad json-headers nihstro-headers tsl::robin_map)
 set_target_properties(video_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if ("x86_64" IN_LIST ARCHITECTURE)

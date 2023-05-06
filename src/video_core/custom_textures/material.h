@@ -6,6 +6,7 @@
 
 #include <array>
 #include <atomic>
+#include <mutex>
 #include <span>
 #include <string>
 #include <vector>
@@ -39,7 +40,7 @@ public:
     void LoadFromDisk(bool flip_png);
 
     [[nodiscard]] bool IsParsed() const noexcept {
-        return file_format != CustomFileFormat::None && hash != 0;
+        return file_format != CustomFileFormat::None && !hashes.empty();
     }
 
     [[nodiscard]] bool IsLoaded() const noexcept {
@@ -56,7 +57,8 @@ public:
     std::string path;
     u32 width;
     u32 height;
-    u64 hash;
+    std::vector<u64> hashes;
+    std::mutex decode_mutex;
     CustomPixelFormat format;
     CustomFileFormat file_format;
     std::vector<u8> data;
@@ -67,6 +69,7 @@ struct Material {
     u32 width;
     u32 height;
     u64 size;
+    u64 hash;
     CustomPixelFormat format;
     std::array<CustomTexture*, MAX_MAPS> textures;
     std::atomic<DecodeState> state{};

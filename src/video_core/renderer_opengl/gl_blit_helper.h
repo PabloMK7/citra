@@ -15,15 +15,19 @@ struct TextureBlit;
 
 namespace OpenGL {
 
-class TextureRuntime;
+class Driver;
 class Surface;
 
 class BlitHelper {
 public:
-    BlitHelper(TextureRuntime& runtime);
+    explicit BlitHelper(const Driver& driver);
     ~BlitHelper();
 
     bool Filter(Surface& surface, const VideoCore::TextureBlit& blit);
+
+    bool ConvertDS24S8ToRGBA8(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
+
+    bool ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
 
 private:
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -43,10 +47,10 @@ private:
               Common::Rectangle<u32> dst_rect);
 
 private:
-    TextureRuntime& runtime;
+    const Driver& driver;
     OGLVertexArray vao;
     OpenGLState state;
-    OGLFramebuffer filter_fbo;
+    OGLFramebuffer draw_fbo;
     OGLSampler linear_sampler;
     OGLSampler nearest_sampler;
 
@@ -57,6 +61,12 @@ private:
     OGLProgram gradient_x_program;
     OGLProgram gradient_y_program;
     OGLProgram refine_program;
+    OGLProgram d24s8_to_rgba8;
+    OGLProgram rgba4_to_rgb5a1;
+
+    OGLTexture temp_tex;
+    Common::Rectangle<u32> temp_rect{};
+    bool use_texture_view{true};
 };
 
 } // namespace OpenGL

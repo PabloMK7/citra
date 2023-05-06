@@ -16,10 +16,10 @@ namespace VideoCore {
 class SurfaceBase;
 
 struct ViewportInfo {
-    f32 x;
-    f32 y;
-    f32 width;
-    f32 height;
+    s32 x;
+    s32 y;
+    s32 width;
+    s32 height;
 };
 
 /**
@@ -29,8 +29,8 @@ struct ViewportInfo {
 class FramebufferBase {
 public:
     FramebufferBase();
-    FramebufferBase(const Pica::Regs& regs, const SurfaceBase* const color, u32 color_level,
-                    const SurfaceBase* const depth_stencil, u32 depth_level,
+    FramebufferBase(const Pica::Regs& regs, const SurfaceBase* color, u32 color_level,
+                    const SurfaceBase* depth_stencil, u32 depth_level,
                     Common::Rectangle<u32> surfaces_rect);
 
     SurfaceParams ColorParams() const noexcept {
@@ -66,6 +66,7 @@ protected:
         switch (type) {
         case VideoCore::SurfaceType::Color:
             return 0;
+        case VideoCore::SurfaceType::Depth:
         case VideoCore::SurfaceType::DepthStencil:
             return 1;
         default:

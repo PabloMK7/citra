@@ -100,6 +100,7 @@ add_library(citra_common STATIC
     scope_exit.h
     settings.cpp
     settings.h
+    slot_vector.h
     serialization/atomic.h
     serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h

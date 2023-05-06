@@ -10,9 +10,9 @@ namespace VideoCore {
 
 FramebufferBase::FramebufferBase() = default;
 
-FramebufferBase::FramebufferBase(const Pica::Regs& regs, const SurfaceBase* const color,
-                                 u32 color_level, const SurfaceBase* const depth_stencil,
-                                 u32 depth_level, Common::Rectangle<u32> surfaces_rect) {
+FramebufferBase::FramebufferBase(const Pica::Regs& regs, const SurfaceBase* color, u32 color_level,
+                                 const SurfaceBase* depth_stencil, u32 depth_level,
+                                 Common::Rectangle<u32> surfaces_rect) {
     res_scale = color ? color->res_scale : (depth_stencil ? depth_stencil->res_scale : 1u);
 
     // Determine the draw rectangle (render area + scissor)
@@ -31,10 +31,10 @@ FramebufferBase::FramebufferBase(const Pica::Regs& regs, const SurfaceBase* cons
                         surfaces_rect.bottom, surfaces_rect.top);
 
     // Update viewport
-    viewport.x = static_cast<f32>(surfaces_rect.left + viewport_rect.left * res_scale);
-    viewport.y = static_cast<f32>(surfaces_rect.bottom + viewport_rect.bottom * res_scale);
-    viewport.width = static_cast<f32>(viewport_rect.GetWidth() * res_scale);
-    viewport.height = static_cast<f32>(viewport_rect.GetHeight() * res_scale);
+    viewport.x = static_cast<s32>(surfaces_rect.left) + viewport_rect.left * res_scale;
+    viewport.y = static_cast<s32>(surfaces_rect.bottom) + viewport_rect.bottom * res_scale;
+    viewport.width = static_cast<s32>(viewport_rect.GetWidth() * res_scale);
+    viewport.height = static_cast<s32>(viewport_rect.GetHeight() * res_scale);
 
     // Scissor checks are window-, not viewport-relative, which means that if the cached texture
     // sub-rect changes, the scissor bounds also need to be updated.

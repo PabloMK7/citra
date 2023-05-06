@@ -4,10 +4,14 @@
 
 #pragma once
 
+#include <boost/icl/right_open_interval.hpp>
+#include "common/math_util.h"
 #include "video_core/custom_textures/custom_format.h"
-#include "video_core/rasterizer_cache/utils.h"
+#include "video_core/rasterizer_cache/pixel_format.h"
 
 namespace VideoCore {
+
+using SurfaceInterval = boost::icl::right_open_interval<PAddr>;
 
 constexpr std::size_t MAX_PICA_LEVELS = 8;
 
@@ -18,6 +22,9 @@ public:
 
     /// Returns true if sub_surface is a subrect of params
     bool CanSubRect(const SurfaceParams& sub_surface) const;
+
+    /// Returns true if other_surface can be used for reinterpretion.
+    bool CanReinterpret(const SurfaceParams& other_surface);
 
     /// Returns true if params can be expanded to match expanded_surface
     bool CanExpand(const SurfaceParams& expanded_surface) const;

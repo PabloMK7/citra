@@ -5,9 +5,8 @@
 #pragma once
 
 #include "video_core/rasterizer_cache/framebuffer_base.h"
-#include "video_core/rasterizer_cache/surface_base.h"
+#include "video_core/rasterizer_cache/rasterizer_cache_base.h"
 #include "video_core/renderer_opengl/gl_blit_helper.h"
-#include "video_core/renderer_opengl/gl_format_reinterpreter.h"
 
 namespace VideoCore {
 struct Material;
@@ -60,6 +59,7 @@ struct Allocation {
     u32 height;
     u32 levels;
     u32 res_scale;
+    bool is_custom;
 
     operator bool() const noexcept {
         return textures[0].handle;
@@ -76,7 +76,6 @@ class Driver;
 class TextureRuntime {
     friend class Surface;
     friend class Framebuffer;
-    friend class BlitHelper;
 
 public:
     explicit TextureRuntime(const Driver& driver, VideoCore::RendererBase& renderer);
@@ -95,12 +94,8 @@ public:
     const FormatTuple& GetFormatTuple(VideoCore::PixelFormat pixel_format) const;
     const FormatTuple& GetFormatTuple(VideoCore::CustomPixelFormat pixel_format);
 
-    /// Takes back ownership of the allocation for recycling
-    void Recycle(const HostTextureTag tag, Allocation&& alloc);
-
-    /// Allocates a texture with the specified dimentions and format
-    Allocation Allocate(const VideoCore::SurfaceParams& params,
-                        const VideoCore::Material* material = nullptr);
+    /// Attempts to reinterpret a rectangle of source to another rectangle of dest
+    bool Reinterpret(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
 
     /// Fills the rectangle of the texture with the clear value provided
     bool ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);
@@ -114,10 +109,14 @@ public:
     /// Generates mipmaps for all the available levels of the texture
     void GenerateMipmaps(Surface& surface);
 
-    /// Returns all source formats that support reinterpretation to the dest format
-    const ReinterpreterList& GetPossibleReinterpretations(VideoCore::PixelFormat dest_format) const;
-
 private:
+    /// Takes back ownership of the allocation for recycling
+    void Recycle(const HostTextureTag tag, Allocation&& alloc);
+
+    /// Allocates a texture with the specified dimentions and format
+    Allocation Allocate(const VideoCore::SurfaceParams& params,
+                        const VideoCore::Material* material = nullptr);
+
     /// Returns the OpenGL driver class
     const Driver& GetDriver() const {
         return driver;
@@ -127,7 +126,6 @@ private:
     const Driver& driver;
     BlitHelper blit_helper;
     std::vector<u8> staging_buffer;
-    std::array<ReinterpreterList, VideoCore::PIXEL_FORMAT_COUNT> reinterpreters;
     std::unordered_multimap<HostTextureTag, Allocation, HostTextureTag::Hash> alloc_cache;
     std::unordered_map<u64, OGLFramebuffer, Common::IdentityHash<u64>> framebuffer_cache;
     std::array<OGLFramebuffer, 3> draw_fbos;
@@ -145,22 +143,12 @@ public:
     Surface(Surface&& o) noexcept = default;
     Surface& operator=(Surface&& o) noexcept = default;
 
-    /// Returns the surface image handle at the provided index.
-    GLuint Handle(u32 index = 1) const noexcept {
+    [[nodiscard]] GLuint Handle(u32 index = 1) const noexcept {
         return alloc.handles[index];
     }
 
-    /// Returns the tuple of the surface allocation.
-    const FormatTuple& Tuple() const noexcept {
+    [[nodiscard]] const FormatTuple& Tuple() const noexcept {
         return alloc.tuple;
-    }
-
-    /// Returns the extent of the underlying surface allocation
-    VideoCore::Extent Extent() const noexcept {
-        return {
-            .width = alloc.width,
-            .height = alloc.height,
-        };
     }
 
     /// Uploads pixel data in staging to a rectangle region of the surface texture
@@ -201,8 +189,8 @@ private:
 
 class Framebuffer : public VideoCore::FramebufferBase {
 public:
-    explicit Framebuffer(TextureRuntime& runtime, Surface* const color, u32 color_level,
-                         Surface* const depth_stencil, u32 depth_level, const Pica::Regs& regs,
+    explicit Framebuffer(TextureRuntime& runtime, const Surface* color, u32 color_level,
+                         const Surface* depth_stencil, u32 depth_level, const Pica::Regs& regs,
                          Common::Rectangle<u32> surfaces_rect);
     ~Framebuffer();
 
@@ -222,5 +210,33 @@ private:
     std::array<GLuint, 2> attachments{};
     GLuint handle{};
 };
+
+class Sampler {
+public:
+    explicit Sampler(TextureRuntime&, VideoCore::SamplerParams params);
+    ~Sampler();
+
+    Sampler(const Sampler&) = delete;
+    Sampler& operator=(const Sampler&) = delete;
+
+    Sampler(Sampler&&) = default;
+    Sampler& operator=(Sampler&&) = default;
+
+    [[nodiscard]] GLuint Handle() const noexcept {
+        return sampler.handle;
+    }
+
+private:
+    OGLSampler sampler;
+};
+
+struct Traits {
+    using Runtime = OpenGL::TextureRuntime;
+    using Sampler = OpenGL::Sampler;
+    using Surface = OpenGL::Surface;
+    using Framebuffer = OpenGL::Framebuffer;
+};
+
+using RasterizerCache = VideoCore::RasterizerCache<Traits>;
 
 } // namespace OpenGL

@@ -9,6 +9,7 @@
 #include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_texture_runtime.h"
+#include "video_core/renderer_opengl/pica_to_gl.h"
 
 namespace OpenGL {
 
@@ -16,6 +17,7 @@ namespace {
 
 using VideoCore::MapType;
 using VideoCore::PixelFormat;
+using VideoCore::SurfaceFlagBits;
 using VideoCore::SurfaceType;
 using VideoCore::TextureType;
 
@@ -116,20 +118,11 @@ struct FramebufferInfo {
 } // Anonymous namespace
 
 TextureRuntime::TextureRuntime(const Driver& driver_, VideoCore::RendererBase& renderer)
-    : driver{driver_}, blit_helper{*this} {
+    : driver{driver_}, blit_helper{driver} {
     for (std::size_t i = 0; i < draw_fbos.size(); ++i) {
         draw_fbos[i].Create();
         read_fbos[i].Create();
     }
-
-    auto add_reinterpreter = [this](PixelFormat dest,
-                                    std::unique_ptr<FormatReinterpreterBase>&& obj) {
-        const u32 dst_index = static_cast<u32>(dest);
-        return reinterpreters[dst_index].push_back(std::move(obj));
-    };
-
-    add_reinterpreter(PixelFormat::RGBA8, std::make_unique<ShaderD24S8toRGBA8>());
-    add_reinterpreter(PixelFormat::RGB5A1, std::make_unique<RGBA4toRGB5A1>());
 }
 
 TextureRuntime::~TextureRuntime() = default;
@@ -241,14 +234,30 @@ Allocation TextureRuntime::Allocate(const VideoCore::SurfaceParams& params,
         .height = params.height,
         .levels = params.levels,
         .res_scale = params.res_scale,
+        .is_custom = is_custom,
     };
 }
 
-bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClear& clear) {
-    const auto prev_state = OpenGLState::GetCurState();
+bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
+                                 const VideoCore::TextureBlit& blit) {
+    const PixelFormat src_format = source.pixel_format;
+    const PixelFormat dst_format = dest.pixel_format;
+    ASSERT_MSG(src_format != dst_format, "Reinterpretation with the same format is invalid");
+    if (src_format == PixelFormat::D24S8 && dst_format == PixelFormat::RGBA8) {
+        blit_helper.ConvertDS24S8ToRGBA8(source, dest, blit);
+    } else if (src_format == PixelFormat::RGBA4 && dst_format == PixelFormat::RGB5A1) {
+        blit_helper.ConvertRGBA4ToRGB5A1(source, dest, blit);
+    } else {
+        LOG_WARNING(Render_OpenGL, "Unimplemented reinterpretation {} -> {}",
+                    VideoCore::PixelFormatAsString(src_format),
+                    VideoCore::PixelFormatAsString(dst_format));
+        return false;
+    }
+    return true;
+}
 
-    // Setup scissor rectangle according to the clear rectangle
-    OpenGLState state;
+bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClear& clear) {
+    OpenGLState state = OpenGLState::GetCurState();
     state.scissor.enabled = true;
     state.scissor.x = clear.texture_rect.left;
     state.scissor.y = clear.texture_rect.bottom;
@@ -257,42 +266,27 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
     state.draw.draw_framebuffer = draw_fbos[FboIndex(surface.type)].handle;
     state.Apply();
 
+    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+
     switch (surface.type) {
     case SurfaceType::Color:
     case SurfaceType::Texture:
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                               surface.Handle(), clear.texture_level);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
-                               0);
-
         state.color_mask.red_enabled = true;
         state.color_mask.green_enabled = true;
         state.color_mask.blue_enabled = true;
         state.color_mask.alpha_enabled = true;
         state.Apply();
-
         glClearBufferfv(GL_COLOR, 0, clear.value.color.AsArray());
         break;
     case SurfaceType::Depth:
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                               surface.Handle(), clear.texture_level);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-
         state.depth.write_mask = GL_TRUE;
         state.Apply();
-
         glClearBufferfv(GL_DEPTH, 0, &clear.value.depth);
         break;
     case SurfaceType::DepthStencil:
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               surface.Handle(), clear.texture_level);
-
         state.depth.write_mask = GL_TRUE;
         state.stencil.write_mask = -1;
         state.Apply();
-
         glClearBufferfi(GL_DEPTH_STENCIL, 0, clear.value.depth, clear.value.stencil);
         break;
     default:
@@ -300,7 +294,6 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
         return false;
     }
 
-    prev_state.Apply();
     return true;
 }
 
@@ -329,13 +322,12 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     source.Attach(GL_READ_FRAMEBUFFER, blit.src_level, blit.src_layer);
     dest.Attach(GL_DRAW_FRAMEBUFFER, blit.dst_level, blit.dst_layer);
 
-    // TODO (wwylele): use GL_NEAREST for shadow map texture
     // Note: shadow map is treated as RGBA8 format in PICA, as well as in the rasterizer cache, but
-    // doing linear intepolation componentwise would cause incorrect value. However, for a
-    // well-programmed game this code path should be rarely executed for shadow map with
-    // inconsistent scale.
+    // doing linear intepolation componentwise would cause incorrect value.
     const GLbitfield buffer_mask = MakeBufferMask(source.type);
-    const GLenum filter = buffer_mask == GL_COLOR_BUFFER_BIT ? GL_LINEAR : GL_NEAREST;
+    const bool is_shadow_map = True(source.flags & SurfaceFlagBits::ShadowMap);
+    const GLenum filter =
+        buffer_mask == GL_COLOR_BUFFER_BIT && !is_shadow_map ? GL_LINEAR : GL_NEAREST;
     glBlitFramebuffer(blit.src_rect.left, blit.src_rect.bottom, blit.src_rect.right,
                       blit.src_rect.top, blit.dst_rect.left, blit.dst_rect.bottom,
                       blit.dst_rect.right, blit.dst_rect.top, buffer_mask, filter);
@@ -357,11 +349,6 @@ void TextureRuntime::GenerateMipmaps(Surface& surface) {
     if (surface.HasNormalMap()) {
         generate(2);
     }
-}
-
-const ReinterpreterList& TextureRuntime::GetPossibleReinterpretations(
-    PixelFormat dest_format) const {
-    return reinterpreters[static_cast<u32>(dest_format)];
 }
 
 Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& params)
@@ -422,15 +409,19 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
     glActiveTexture(GL_TEXTURE0);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
 
-    glBindTexture(GL_TEXTURE_2D, Handle(0));
-    if (VideoCore::IsCustomFormatCompressed(custom_format)) {
-        const GLsizei image_size = static_cast<GLsizei>(color->data.size());
-        glCompressedTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format,
-                                  image_size, color->data.data());
-    } else {
-        glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format, tuple.type,
-                        color->data.data());
-    }
+    const auto upload = [&](u32 index, VideoCore::CustomTexture* texture) {
+        glBindTexture(GL_TEXTURE_2D, Handle(index));
+        if (VideoCore::IsCustomFormatCompressed(custom_format)) {
+            const GLsizei image_size = static_cast<GLsizei>(texture->data.size());
+            glCompressedTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format,
+                                      image_size, texture->data.data());
+        } else {
+            glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format, tuple.type,
+                            texture->data.data());
+        }
+    };
+
+    upload(0, color);
 
     const VideoCore::TextureBlit blit = {
         .src_rect = filter_rect,
@@ -444,15 +435,7 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
         if (!texture) {
             continue;
         }
-        glBindTexture(GL_TEXTURE_2D, Handle(i + 1));
-        if (VideoCore::IsCustomFormatCompressed(custom_format)) {
-            const GLsizei image_size = static_cast<GLsizei>(texture->data.size());
-            glCompressedTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format,
-                                      image_size, texture->data.data());
-        } else {
-            glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, width, height, tuple.format, tuple.type,
-                            texture->data.data());
-        }
+        upload(i + 1, texture);
     }
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -572,7 +555,6 @@ bool Surface::Swap(const VideoCore::Material* mat) {
               GetScaledWidth(), GetScaledHeight(), VideoCore::PixelFormatAsString(pixel_format),
               addr, width, height, VideoCore::CustomPixelFormatAsString(format));
 
-    is_custom = true;
     custom_format = format;
     material = mat;
 
@@ -614,13 +596,13 @@ HostTextureTag Surface::MakeTag() const noexcept {
         .res_scale = alloc.res_scale,
         .tuple = alloc.tuple,
         .type = texture_type,
-        .is_custom = is_custom,
+        .is_custom = alloc.is_custom,
         .has_normal = HasNormalMap(),
     };
 }
 
-Framebuffer::Framebuffer(TextureRuntime& runtime, Surface* const color, u32 color_level,
-                         Surface* const depth_stencil, u32 depth_level, const Pica::Regs& regs,
+Framebuffer::Framebuffer(TextureRuntime& runtime, const Surface* color, u32 color_level,
+                         const Surface* depth_stencil, u32 depth_level, const Pica::Regs& regs,
                          Common::Rectangle<u32> surfaces_rect)
     : VideoCore::FramebufferBase{regs,          color,       color_level,
                                  depth_stencil, depth_level, surfaces_rect} {
@@ -691,5 +673,31 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, Surface* const color, u32 colo
 }
 
 Framebuffer::~Framebuffer() = default;
+
+Sampler::Sampler(TextureRuntime&, VideoCore::SamplerParams params) {
+    const GLenum mag_filter = PicaToGL::TextureMagFilterMode(params.mag_filter);
+    const GLenum min_filter = PicaToGL::TextureMinFilterMode(params.min_filter, params.mip_filter);
+    const GLenum wrap_s = PicaToGL::WrapMode(params.wrap_s);
+    const GLenum wrap_t = PicaToGL::WrapMode(params.wrap_t);
+    const Common::Vec4f gl_color = PicaToGL::ColorRGBA8(params.border_color);
+    const float lod_min = params.lod_min;
+    const float lod_max = params.lod_max;
+
+    sampler.Create();
+
+    const GLuint handle = sampler.handle;
+    glSamplerParameteri(handle, GL_TEXTURE_MAG_FILTER, mag_filter);
+    glSamplerParameteri(handle, GL_TEXTURE_MIN_FILTER, min_filter);
+
+    glSamplerParameteri(handle, GL_TEXTURE_WRAP_S, wrap_s);
+    glSamplerParameteri(handle, GL_TEXTURE_WRAP_T, wrap_t);
+
+    glSamplerParameterfv(handle, GL_TEXTURE_BORDER_COLOR, gl_color.AsArray());
+
+    glSamplerParameterf(handle, GL_TEXTURE_MIN_LOD, lod_min);
+    glSamplerParameterf(handle, GL_TEXTURE_MAX_LOD, lod_max);
+}
+
+Sampler::~Sampler() = default;
 
 } // namespace OpenGL

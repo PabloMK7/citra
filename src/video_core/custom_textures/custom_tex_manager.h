@@ -81,7 +81,7 @@ private:
     Frontend::ImageInterface& image_interface;
     std::unordered_set<u64> dumped_textures;
     std::unordered_map<u64, std::unique_ptr<Material>> material_map;
-    std::unordered_map<std::string, u64> path_to_hash_map;
+    std::unordered_map<std::string, std::vector<u64>> path_to_hash_map;
     std::vector<std::unique_ptr<CustomTexture>> custom_textures;
     std::list<AsyncUpload> async_uploads;
     std::unique_ptr<Common::ThreadWorker> workers;

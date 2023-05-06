@@ -208,12 +208,13 @@ void ConfigureEnhancements::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredComboBox(
         ui->resolution_factor_combobox, ui->widget_resolution,
-        static_cast<u32>(Settings::values.resolution_factor.GetValue(true)));
+        static_cast<int>(Settings::values.resolution_factor.GetValue(true)));
 
-    ConfigurationShared::SetColoredComboBox(ui->texture_filter_combobox, ui->widget_texture_filter,
-                                            0);
+    ConfigurationShared::SetColoredComboBox(
+        ui->texture_filter_combobox, ui->widget_texture_filter,
+        static_cast<int>(Settings::values.texture_filter.GetValue(true)));
 
     ConfigurationShared::SetColoredComboBox(
         ui->layout_combobox, ui->widget_layout,
-        static_cast<u32>(Settings::values.layout_option.GetValue(true)));
+        static_cast<int>(Settings::values.layout_option.GetValue(true)));
 }

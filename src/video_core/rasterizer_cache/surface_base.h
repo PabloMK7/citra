@@ -6,12 +6,22 @@
 
 #include <boost/icl/interval_set.hpp>
 #include "video_core/rasterizer_cache/surface_params.h"
+#include "video_core/rasterizer_cache/utils.h"
 
 namespace VideoCore {
 
 using SurfaceRegions = boost::icl::interval_set<PAddr, std::less, SurfaceInterval>;
 
 struct Material;
+
+enum class SurfaceFlagBits : u32 {
+    Registered = 1 << 0, ///< Surface is registed in the rasterizer cache.
+    Picked = 1 << 1,     ///< Surface has been picked when searching for a match.
+    Tracked = 1 << 2,    ///< Surface is part of a texture cube and should be tracked.
+    Custom = 1 << 3,     ///< Surface texture has been replaced with a custom texture.
+    ShadowMap = 1 << 4,  ///< Surface is used during shadow rendering.
+};
+DECLARE_ENUM_FLAG_OPERATORS(SurfaceFlagBits);
 
 class SurfaceBase : public SurfaceParams {
 public:
@@ -30,19 +40,27 @@ public:
     /// Returns the clear value used to validate another surface from this fill surface
     ClearValue MakeClearValue(PAddr copy_addr, PixelFormat dst_format);
 
+    /// Returns the internal surface extent.
+    Extent RealExtent(bool scaled = true);
+
     /// Returns true if the surface contains a custom material with a normal map.
     bool HasNormalMap() const noexcept;
+
+    bool Overlaps(PAddr overlap_addr, size_t overlap_size) const noexcept {
+        const PAddr overlap_end = overlap_addr + static_cast<PAddr>(overlap_size);
+        return addr < overlap_end && overlap_addr < end;
+    }
 
     u64 ModificationTick() const noexcept {
         return modification_tick;
     }
 
     bool IsCustom() const noexcept {
-        return is_custom && custom_format != CustomPixelFormat::Invalid;
+        return True(flags & SurfaceFlagBits::Custom) && custom_format != CustomPixelFormat::Invalid;
     }
 
     bool IsRegionValid(SurfaceInterval interval) const {
-        return (invalid_regions.find(interval) == invalid_regions.end());
+        return invalid_regions.find(interval) == invalid_regions.end();
     }
 
     void MarkValid(SurfaceInterval interval) {
@@ -65,8 +83,7 @@ private:
     std::array<u8, 4> MakeFillBuffer(PAddr copy_addr);
 
 public:
-    bool registered = false;
-    bool is_custom = false;
+    SurfaceFlagBits flags{};
     const Material* material = nullptr;
     SurfaceRegions invalid_regions;
     u32 fill_size = 0;

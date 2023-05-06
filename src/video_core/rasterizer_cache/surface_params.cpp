@@ -15,12 +15,21 @@ bool SurfaceParams::ExactMatch(const SurfaceParams& other_surface) const {
 }
 
 bool SurfaceParams::CanSubRect(const SurfaceParams& sub_surface) const {
+    const u32 level = LevelOf(sub_surface.addr);
     return sub_surface.addr >= addr && sub_surface.end <= end &&
            sub_surface.pixel_format == pixel_format && pixel_format != PixelFormat::Invalid &&
            sub_surface.is_tiled == is_tiled &&
-           (sub_surface.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
-           (sub_surface.stride == stride || sub_surface.height <= (is_tiled ? 8u : 1u)) &&
+           (sub_surface.addr - mipmap_offsets[level]) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
+           (sub_surface.stride == (stride >> level) ||
+            sub_surface.height <= (is_tiled ? 8u : 1u)) &&
            GetSubRect(sub_surface).right <= stride;
+}
+
+bool SurfaceParams::CanReinterpret(const SurfaceParams& other_surface) {
+    return other_surface.addr >= addr && other_surface.end <= end &&
+           pixel_format != PixelFormat::Invalid && GetFormatBpp() == other_surface.GetFormatBpp() &&
+           other_surface.is_tiled == is_tiled &&
+           (other_surface.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0;
 }
 
 bool SurfaceParams::CanExpand(const SurfaceParams& expanded_surface) const {
@@ -206,7 +215,9 @@ SurfaceInterval SurfaceParams::LevelInterval(u32 level) const {
 }
 
 u32 SurfaceParams::LevelOf(PAddr level_addr) const {
-    ASSERT(level_addr >= addr && level_addr <= end);
+    if (level_addr < addr || level_addr > end) {
+        return 0;
+    }
 
     u32 level = levels - 1;
     while (mipmap_offsets[level] > level_addr) {

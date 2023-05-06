@@ -2,12 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/scope_exit.h"
 #include "common/settings.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_opengl/gl_blit_helper.h"
+#include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_texture_runtime.h"
 
+#include "video_core/host_shaders/format_reinterpreter/d24s8_to_rgba8_frag.h"
+#include "video_core/host_shaders/format_reinterpreter/rgba4_to_rgb5a1_frag.h"
 #include "video_core/host_shaders/full_screen_triangle_vert.h"
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
 #include "video_core/host_shaders/texture_filtering/nearest_neighbor_frag.h"
@@ -49,8 +53,8 @@ OGLProgram CreateProgram(std::string_view frag) {
 
 } // Anonymous namespace
 
-BlitHelper::BlitHelper(TextureRuntime& runtime_)
-    : runtime{runtime_}, linear_sampler{CreateSampler(GL_LINEAR)},
+BlitHelper::BlitHelper(const Driver& driver_)
+    : driver{driver_}, linear_sampler{CreateSampler(GL_LINEAR)},
       nearest_sampler{CreateSampler(GL_NEAREST)}, bicubic_program{CreateProgram(
                                                       HostShaders::BICUBIC_FRAG)},
       nearest_program{CreateProgram(HostShaders::NEAREST_NEIGHBOR_FRAG)},
@@ -58,34 +62,104 @@ BlitHelper::BlitHelper(TextureRuntime& runtime_)
       xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG)},
       gradient_x_program{CreateProgram(HostShaders::X_GRADIENT_FRAG)},
       gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG)},
-      refine_program{CreateProgram(HostShaders::REFINE_FRAG)} {
+      refine_program{CreateProgram(HostShaders::REFINE_FRAG)},
+      d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG)},
+      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG)} {
     vao.Create();
-    filter_fbo.Create();
+    draw_fbo.Create();
     state.draw.vertex_array = vao.handle;
     for (u32 i = 0; i < 3; i++) {
         state.texture_units[i].sampler = i == 2 ? nearest_sampler.handle : linear_sampler.handle;
+    }
+    if (driver.IsOpenGLES()) {
+        LOG_INFO(Render_OpenGL,
+                 "Texture views are unsupported, reinterpretation will do intermediate copy");
+        temp_tex.Create();
+        use_texture_view = false;
     }
 }
 
 BlitHelper::~BlitHelper() = default;
 
+bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
+                                      const VideoCore::TextureBlit& blit) {
+    OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+
+    state.texture_units[0].texture_2d = source.Handle();
+    state.texture_units[0].sampler = 0;
+    state.texture_units[1].sampler = 0;
+
+    if (use_texture_view) {
+        temp_tex.Create();
+        glActiveTexture(GL_TEXTURE1);
+        glTextureView(temp_tex.handle, GL_TEXTURE_2D, source.Handle(), GL_DEPTH24_STENCIL8, 0, 1, 0,
+                      1);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    } else if (blit.src_rect.top > temp_rect.top || blit.src_rect.right > temp_rect.right) {
+        temp_tex.Release();
+        temp_tex.Create();
+        state.texture_units[1].texture_2d = temp_tex.handle;
+        state.Apply();
+        glActiveTexture(GL_TEXTURE1);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, blit.src_rect.right,
+                       blit.src_rect.top);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        temp_rect = blit.src_rect;
+    }
+    state.texture_units[1].texture_2d = temp_tex.handle;
+    state.Apply();
+
+    glActiveTexture(GL_TEXTURE1);
+    if (!use_texture_view) {
+        glCopyImageSubData(source.Handle(), GL_TEXTURE_2D, 0, blit.src_rect.left,
+                           blit.src_rect.bottom, 0, temp_tex.handle, GL_TEXTURE_2D, 0,
+                           blit.src_rect.left, blit.src_rect.bottom, 0, blit.src_rect.GetWidth(),
+                           blit.src_rect.GetHeight(), 1);
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
+
+    SetParams(d24s8_to_rgba8, source.RealExtent(), blit.src_rect);
+    Draw(d24s8_to_rgba8, dest.Handle(), draw_fbo.handle, 0, blit.dst_rect);
+
+    if (use_texture_view) {
+        temp_tex.Release();
+    }
+
+    // Restore the sampler handles
+    state.texture_units[0].sampler = linear_sampler.handle;
+    state.texture_units[1].sampler = linear_sampler.handle;
+
+    return true;
+}
+
+bool BlitHelper::ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest,
+                                      const VideoCore::TextureBlit& blit) {
+    OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+
+    state.texture_units[0].texture_2d = source.Handle();
+
+    SetParams(rgba4_to_rgb5a1, source.RealExtent(), blit.src_rect);
+    Draw(rgba4_to_rgb5a1, dest.Handle(), draw_fbo.handle, 0, blit.dst_rect);
+
+    return true;
+}
+
 bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
-    // Filtering to depth stencil surfaces isn't supported.
-    if (surface.type == SurfaceType::Depth || surface.type == SurfaceType::DepthStencil) {
+    const auto filter = Settings::values.texture_filter.GetValue();
+    const bool is_depth =
+        surface.type == SurfaceType::Depth || surface.type == SurfaceType::DepthStencil;
+    if (filter == Settings::TextureFilter::None || is_depth) {
         return false;
     }
-    // Avoid filtering for mipmaps as the result often looks terrible.
     if (blit.src_level != 0) {
         return true;
     }
 
-    const OpenGLState prev_state = OpenGLState::GetCurState();
-    state.texture_units[0].texture_2d = surface.Handle(0);
-
-    const auto filter{Settings::values.texture_filter.GetValue()};
     switch (filter) {
-    case TextureFilter::None:
-        break;
     case TextureFilter::Anime4K:
         FilterAnime4K(surface, blit);
         break;
@@ -101,14 +175,18 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
     case TextureFilter::xBRZ:
         FilterXbrz(surface, blit);
         break;
+    default:
+        LOG_ERROR(Render_OpenGL, "Unknown texture filter {}", filter);
     }
 
-    prev_state.Apply();
     return true;
 }
 
 void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit) {
     static constexpr u8 internal_scale_factor = 2;
+
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
 
     const auto& tuple = surface.Tuple();
     const u32 src_width = blit.src_rect.GetWidth();
@@ -149,7 +227,7 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
     Draw(gradient_y_program, LUMAD.tex.handle, LUMAD.fbo.handle, 0, temp_rect);
 
     // refine pass
-    Draw(refine_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
+    Draw(refine_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 
     // These will have handles from the previous texture that was filtered, reset them to avoid
     // binding invalid textures.
@@ -160,25 +238,36 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
 }
 
 void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit) {
-    SetParams(bicubic_program, surface.Extent(), blit.src_rect);
-    Draw(bicubic_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+    state.texture_units[0].texture_2d = surface.Handle(0);
+    SetParams(bicubic_program, surface.RealExtent(false), blit.src_rect);
+    Draw(bicubic_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterNearest(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
     state.texture_units[2].texture_2d = surface.Handle(0);
-    SetParams(nearest_program, surface.Extent(), blit.src_rect);
-    Draw(nearest_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
+    SetParams(nearest_program, surface.RealExtent(false), blit.src_rect);
+    Draw(nearest_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit& blit) {
-    SetParams(scale_force_program, surface.Extent(), blit.src_rect);
-    Draw(scale_force_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+    state.texture_units[0].texture_2d = surface.Handle(0);
+    SetParams(scale_force_program, surface.RealExtent(false), blit.src_rect);
+    Draw(scale_force_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+    state.texture_units[0].texture_2d = surface.Handle(0);
     glProgramUniform1f(xbrz_program.handle, 2, static_cast<GLfloat>(surface.res_scale));
-    SetParams(xbrz_program, surface.Extent(), blit.src_rect);
-    Draw(xbrz_program, surface.Handle(), filter_fbo.handle, blit.dst_level, blit.dst_rect);
+    SetParams(xbrz_program, surface.RealExtent(false), blit.src_rect);
+    Draw(xbrz_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::SetParams(OGLProgram& program, const VideoCore::Extent& src_extent,
@@ -206,7 +295,7 @@ void BlitHelper::Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 d
                            dst_level);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 } // namespace OpenGL

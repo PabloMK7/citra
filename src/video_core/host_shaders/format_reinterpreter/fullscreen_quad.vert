@@ -6,7 +6,7 @@
 
 layout(location = 0) out vec2 dst_coord;
 
-uniform mediump ivec2 dst_size;
+layout(location = 0) uniform mediump ivec2 dst_size;
 
 const vec2 vertices[4] =
 vec2[4](vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, 1.0));

@@ -25,7 +25,7 @@ MICROPROFILE_DEFINE(OpenGL_VAO, "OpenGL", "Vertex Array Setup", MP_RGB(255, 128,
 MICROPROFILE_DEFINE(OpenGL_VS, "OpenGL", "Vertex Shader Setup", MP_RGB(192, 128, 128));
 MICROPROFILE_DEFINE(OpenGL_GS, "OpenGL", "Geometry Shader Setup", MP_RGB(128, 192, 128));
 MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
-MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
+MICROPROFILE_DEFINE(OpenGL_Display, "OpenGL", "Display", MP_RGB(128, 128, 192));
 
 using VideoCore::SurfaceType;
 
@@ -96,16 +96,6 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory,
     // For some reason alpha 0 wraps around to 1.0, so use 1/255 instead
     u8 framebuffer_data[4] = {0, 0, 0, 1};
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, framebuffer_data);
-
-    // Create sampler objects
-    for (std::size_t i = 0; i < texture_samplers.size(); ++i) {
-        texture_samplers[i].Create();
-        state.texture_units[i].sampler = texture_samplers[i].sampler.handle;
-    }
-
-    // Create cubemap texture and sampler objects
-    texture_cube_sampler.Create();
-    state.texture_cube_unit.sampler = texture_cube_sampler.sampler.handle;
 
     // Generate VAO
     sw_vao.Create();
@@ -251,14 +241,14 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
             }
         }
 
-        PAddr data_addr =
+        const PAddr data_addr =
             base_address + loader.data_offset + (vs_input_index_min * loader.byte_count);
 
-        u32 vertex_num = vs_input_index_max - vs_input_index_min + 1;
-        u32 data_size = loader.byte_count * vertex_num;
+        const u32 vertex_num = vs_input_index_max - vs_input_index_min + 1;
+        const u32 data_size = loader.byte_count * vertex_num;
 
-        res_cache.FlushRegion(data_addr, data_size, nullptr);
-        std::memcpy(array_ptr, VideoCore::g_memory->GetPhysicalPointer(data_addr), data_size);
+        res_cache.FlushRegion(data_addr, data_size);
+        std::memcpy(array_ptr, memory.GetPhysicalPointer(data_addr), data_size);
 
         array_ptr += data_size;
         buffer_offset += data_size;
@@ -287,8 +277,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
 
 bool RasterizerOpenGL::SetupVertexShader() {
     MICROPROFILE_SCOPE(OpenGL_VS);
-    return shader_program_manager->UseProgrammableVertexShader(Pica::g_state.regs,
-                                                               Pica::g_state.vs);
+    return shader_program_manager->UseProgrammableVertexShader(regs, Pica::g_state.vs);
 }
 
 bool RasterizerOpenGL::SetupGeometryShader() {
@@ -400,8 +389,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     const Framebuffer framebuffer =
         res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb);
     const bool has_color = framebuffer.HasAttachment(SurfaceType::Color);
-    const bool has_depth_stencil = framebuffer.HasAttachment(SurfaceType::DepthStencil);
-    if (!has_color && (shadow_rendering || !has_depth_stencil)) {
+    if (!has_color && shadow_rendering) {
         return true;
     }
 
@@ -520,8 +508,9 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer& framebuffer) {
         if (texture_index == 0) {
             switch (texture.config.type.Value()) {
             case TextureType::Shadow2D: {
-                auto surface = res_cache.GetTextureSurface(texture);
-                state.image_shadow_texture_px = surface->Handle();
+                Surface& surface = res_cache.GetTextureSurface(texture);
+                surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
+                state.image_shadow_texture_px = surface.Handle();
                 continue;
             }
             case TextureType::ShadowCube: {
@@ -538,22 +527,14 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer& framebuffer) {
         }
 
         // Sync texture unit sampler
-        texture_samplers[texture_index].SyncWithConfig(texture.config);
+        Sampler& sampler = res_cache.GetSampler(texture.config);
+        state.texture_units[texture_index].sampler = sampler.Handle();
 
         // Bind the texture provided by the rasterizer cache
-        auto surface = res_cache.GetTextureSurface(texture);
-        if (!surface) {
-            // Can occur when texture addr is null or its memory is unmapped/invalid
-            // HACK: In this case, the correct behaviour for the PICA is to use the last
-            // rendered colour. But because this would be impractical to implement, the
-            // next best alternative is to use a clear texture, essentially skipping
-            // the geometry in question.
-            // For example: a bug in Pokemon X/Y causes NULL-texture squares to be drawn
-            // on the male character's face, which in the OpenGL default appear black.
-            state.texture_units[texture_index].texture_2d = default_texture;
-        } else if (!IsFeedbackLoop(texture_index, framebuffer, *surface)) {
-            BindMaterial(texture_index, *surface);
-            state.texture_units[texture_index].texture_2d = surface->Handle();
+        Surface& surface = res_cache.GetTextureSurface(texture);
+        if (!IsFeedbackLoop(texture_index, framebuffer, surface)) {
+            BindMaterial(texture_index, surface);
+            state.texture_units[texture_index].texture_2d = surface.Handle();
         }
     }
 }
@@ -570,8 +551,10 @@ void RasterizerOpenGL::BindShadowCube(const Pica::TexturingRegs::FullTextureConf
         const u32 binding = static_cast<u32>(face);
         info.physical_address = regs.texturing.GetCubePhysicalAddress(face);
 
-        auto surface = res_cache.GetTextureSurface(info);
-        state.image_shadow_texture[binding] = surface->Handle();
+        VideoCore::SurfaceId surface_id = res_cache.GetTextureSurface(info);
+        Surface& surface = res_cache.GetSurface(surface_id);
+        surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
+        state.image_shadow_texture[binding] = surface.Handle();
     }
 }
 
@@ -589,10 +572,11 @@ void RasterizerOpenGL::BindTextureCube(const Pica::TexturingRegs::FullTextureCon
         .format = texture.format,
     };
 
-    auto surface = res_cache.GetTextureCube(config);
-    texture_cube_sampler.SyncWithConfig(texture.config);
+    Surface& surface = res_cache.GetTextureCube(config);
+    Sampler& sampler = res_cache.GetSampler(texture.config);
 
-    state.texture_cube_unit.texture_cube = surface->Handle();
+    state.texture_cube_unit.texture_cube = surface.Handle();
+    state.texture_cube_unit.sampler = sampler.Handle();
     state.texture_units[0].texture_2d = 0;
 }
 
@@ -608,7 +592,7 @@ void RasterizerOpenGL::BindMaterial(u32 texture_index, Surface& surface) {
         glBindSampler(unit.id, sampler);
     };
 
-    const GLuint sampler = texture_samplers[texture_index].sampler.handle;
+    const GLuint sampler = state.texture_units[texture_index].sampler;
     if (surface.HasNormalMap()) {
         if (regs.lighting.disable) {
             LOG_WARNING(Render_OpenGL, "Custom normal map used but scene has no light enabled");
@@ -726,24 +710,20 @@ void RasterizerOpenGL::NotifyFixedFunctionPicaRegisterChanged(u32 id) {
 }
 
 void RasterizerOpenGL::FlushAll() {
-    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
     res_cache.FlushAll();
 }
 
 void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
-    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
     res_cache.FlushRegion(addr, size);
 }
 
 void RasterizerOpenGL::InvalidateRegion(PAddr addr, u32 size) {
-    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
-    res_cache.InvalidateRegion(addr, size, nullptr);
+    res_cache.InvalidateRegion(addr, size);
 }
 
 void RasterizerOpenGL::FlushAndInvalidateRegion(PAddr addr, u32 size) {
-    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
     res_cache.FlushRegion(addr, size);
-    res_cache.InvalidateRegion(addr, size, nullptr);
+    res_cache.InvalidateRegion(addr, size);
 }
 
 void RasterizerOpenGL::ClearAll(bool flush) {
@@ -768,7 +748,7 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     if (framebuffer_addr == 0) {
         return false;
     }
-    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
+    MICROPROFILE_SCOPE(OpenGL_Display);
 
     VideoCore::SurfaceParams src_params;
     src_params.addr = framebuffer_addr;
@@ -779,85 +759,27 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     src_params.pixel_format = VideoCore::PixelFormatFromGPUPixelFormat(config.color_format);
     src_params.UpdateParams();
 
-    auto [src_surface, src_rect] =
+    const auto [src_surface_id, src_rect] =
         res_cache.GetSurfaceSubRect(src_params, VideoCore::ScaleMatch::Ignore, true);
-
-    if (src_surface == nullptr) {
+    if (!src_surface_id) {
         return false;
     }
 
-    const u32 scaled_width = src_surface->GetScaledWidth();
-    const u32 scaled_height = src_surface->GetScaledHeight();
+    const Surface& src_surface = res_cache.GetSurface(src_surface_id);
+    const u32 scaled_width = src_surface.GetScaledWidth();
+    const u32 scaled_height = src_surface.GetScaledHeight();
 
     screen_info.display_texcoords = Common::Rectangle<float>(
         (float)src_rect.bottom / (float)scaled_height, (float)src_rect.left / (float)scaled_width,
         (float)src_rect.top / (float)scaled_height, (float)src_rect.right / (float)scaled_width);
 
-    screen_info.display_texture = src_surface->Handle();
+    screen_info.display_texture = src_surface.Handle();
 
     return true;
 }
 
-void RasterizerOpenGL::SamplerInfo::Create() {
-    sampler.Create();
-    mag_filter = min_filter = mip_filter = TextureConfig::Linear;
-    wrap_s = wrap_t = TextureConfig::Repeat;
-    border_color = 0;
-    lod_min = lod_max = 0;
-
-    // default is 1000 and -1000
-    // Other attributes have correct defaults
-    glSamplerParameterf(sampler.handle, GL_TEXTURE_MAX_LOD, static_cast<float>(lod_max));
-    glSamplerParameterf(sampler.handle, GL_TEXTURE_MIN_LOD, static_cast<float>(lod_min));
-}
-
-void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
-    const Pica::TexturingRegs::TextureConfig& config) {
-
-    GLuint s = sampler.handle;
-
-    if (mag_filter != config.mag_filter) {
-        mag_filter = config.mag_filter;
-        glSamplerParameteri(s, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureMagFilterMode(mag_filter));
-    }
-
-    if (min_filter != config.min_filter || mip_filter != config.mip_filter) {
-        min_filter = config.min_filter;
-        mip_filter = config.mip_filter;
-        glSamplerParameteri(s, GL_TEXTURE_MIN_FILTER,
-                            PicaToGL::TextureMinFilterMode(min_filter, mip_filter));
-    }
-
-    if (wrap_s != config.wrap_s) {
-        wrap_s = config.wrap_s;
-        glSamplerParameteri(s, GL_TEXTURE_WRAP_S, PicaToGL::WrapMode(wrap_s));
-    }
-    if (wrap_t != config.wrap_t) {
-        wrap_t = config.wrap_t;
-        glSamplerParameteri(s, GL_TEXTURE_WRAP_T, PicaToGL::WrapMode(wrap_t));
-    }
-
-    if (wrap_s == TextureConfig::ClampToBorder || wrap_t == TextureConfig::ClampToBorder) {
-        if (border_color != config.border_color.raw) {
-            border_color = config.border_color.raw;
-            auto gl_color = PicaToGL::ColorRGBA8(border_color);
-            glSamplerParameterfv(s, GL_TEXTURE_BORDER_COLOR, gl_color.AsArray());
-        }
-    }
-
-    if (lod_min != config.lod.min_level) {
-        lod_min = config.lod.min_level;
-        glSamplerParameterf(s, GL_TEXTURE_MIN_LOD, static_cast<float>(lod_min));
-    }
-
-    if (lod_max != config.lod.max_level) {
-        lod_max = config.lod.max_level;
-        glSamplerParameterf(s, GL_TEXTURE_MAX_LOD, static_cast<float>(lod_max));
-    }
-}
-
 void RasterizerOpenGL::SyncClipEnabled() {
-    state.clip_distance[1] = Pica::g_state.regs.rasterizer.clip_enable != 0;
+    state.clip_distance[1] = regs.rasterizer.clip_enable != 0;
 }
 
 void RasterizerOpenGL::SyncCullMode() {
@@ -885,7 +807,7 @@ void RasterizerOpenGL::SyncCullMode() {
 }
 
 void RasterizerOpenGL::SyncBlendEnabled() {
-    state.blend.enabled = (Pica::g_state.regs.framebuffer.output_merger.alphablend_enable == 1);
+    state.blend.enabled = (regs.framebuffer.output_merger.alphablend_enable == 1);
 }
 
 void RasterizerOpenGL::SyncBlendFuncs() {
@@ -904,8 +826,7 @@ void RasterizerOpenGL::SyncBlendFuncs() {
 }
 
 void RasterizerOpenGL::SyncBlendColor() {
-    auto blend_color =
-        PicaToGL::ColorRGBA8(Pica::g_state.regs.framebuffer.output_merger.blend_const.raw);
+    auto blend_color = PicaToGL::ColorRGBA8(regs.framebuffer.output_merger.blend_const.raw);
     state.blend.color.red = blend_color[0];
     state.blend.color.green = blend_color[1];
     state.blend.color.blue = blend_color[2];
