@@ -1131,38 +1131,30 @@ void RasterizerCache<T>::DownloadFillSurface(Surface& surface, SurfaceInterval i
 template <class T>
 bool RasterizerCache<T>::ValidateByReinterpretation(Surface& surface, SurfaceParams params,
                                                     const SurfaceInterval& interval) {
-    const bool is_gpu_modified = boost::icl::contains(dirty_regions, interval);
     SurfaceId reinterpret_id =
         FindMatch<MatchFlags::Reinterpret>(params, ScaleMatch::Ignore, interval);
     if (reinterpret_id) {
         Surface& src_surface = slot_surfaces[reinterpret_id];
-        if (src_surface.stride == surface.stride) {
-            const SurfaceInterval copy_interval = src_surface.GetCopyableInterval(params);
-            if (boost::icl::is_empty(copy_interval)) {
-                return false;
-            }
-            const PAddr addr = boost::icl::lower(interval);
-            const SurfaceParams copy_params = surface.FromInterval(copy_interval);
-            const TextureBlit reinterpret = {
-                .src_level = src_surface.LevelOf(addr),
-                .dst_level = surface.LevelOf(addr),
-                .src_rect = src_surface.GetScaledSubRect(copy_params),
-                .dst_rect = surface.GetScaledSubRect(copy_params),
-            };
-            return runtime.Reinterpret(src_surface, surface, reinterpret);
+        const SurfaceInterval copy_interval = src_surface.GetCopyableInterval(params);
+        if (boost::icl::is_empty(copy_interval)) {
+            return false;
         }
-        LOG_INFO(HW_GPU, "Unimplemented dimentional reinterpretatation {}x{} -> {}x{}",
-                 src_surface.width, src_surface.height, surface.width, surface.height);
-        // A surface with matching bit width was found but couldn't be reinterpreted
-        // due to mismatching stride. It's probably a developer mistake so skip flushing
-        // if it was created on the GPU.
-        return is_gpu_modified;
+        const PAddr addr = boost::icl::lower(interval);
+        const SurfaceParams copy_params = surface.FromInterval(copy_interval);
+        const TextureBlit reinterpret = {
+            .src_level = src_surface.LevelOf(addr),
+            .dst_level = surface.LevelOf(addr),
+            .src_rect = src_surface.GetScaledSubRect(copy_params),
+            .dst_rect = surface.GetScaledSubRect(copy_params),
+        };
+        return runtime.Reinterpret(src_surface, surface, reinterpret);
     }
 
     // No surfaces were found in the cache that had a matching bit-width.
     // If there's a surface with invalid format it means the region was cleared
     // so we don't want to skip validation in that case.
     const bool has_invalid = IntervalHasInvalidPixelFormat(params, interval);
+    const bool is_gpu_modified = boost::icl::contains(dirty_regions, interval);
     return !has_invalid && is_gpu_modified;
 }
 
