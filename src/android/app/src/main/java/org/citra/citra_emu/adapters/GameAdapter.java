@@ -1,5 +1,6 @@
 package org.citra.citra_emu.adapters;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.os.Build;
@@ -14,10 +15,13 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.citra.citra_emu.CitraApplication;
+import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.activities.EmulationActivity;
+import org.citra.citra_emu.features.cheats.ui.CheatsActivity;
 import org.citra.citra_emu.model.GameDatabase;
 import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.Log;
@@ -31,8 +35,7 @@ import java.util.stream.Stream;
  * ContentProviders and Loaders, allows for efficient display of a limited view into a (possibly)
  * large dataset.
  */
-public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> implements
-        View.OnClickListener {
+public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> {
     private Cursor mCursor;
     private GameDataSetObserver mObserver;
 
@@ -61,7 +64,8 @@ public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> impl
         View gameCard = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.card_game, parent, false);
 
-        gameCard.setOnClickListener(this);
+        gameCard.setOnClickListener(this::onClick);
+        gameCard.setOnLongClickListener(this::onLongClick);
 
         // Use that view to create a ViewHolder.
         return new GameViewHolder(gameCard);
@@ -193,10 +197,9 @@ public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> impl
     /**
      * Launches the game that was clicked on.
      *
-     * @param view The card representing the game the user wants to play.
+     * @param view The view representing the game the user wants to play.
      */
-    @Override
-    public void onClick(View view) {
+    private void onClick(View view) {
         // Double-click prevention, using threshold of 1000 ms
         if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
             return;
@@ -206,6 +209,31 @@ public final class GameAdapter extends RecyclerView.Adapter<GameViewHolder> impl
         GameViewHolder holder = (GameViewHolder) view.getTag();
 
         EmulationActivity.launch((FragmentActivity) view.getContext(), holder.path, holder.title);
+    }
+
+    /**
+     * Opens the cheats settings for the game that was clicked on.
+     *
+     * @param view The view representing the game the user wants to play.
+     */
+    private boolean onLongClick(View view) {
+        Context context = view.getContext();
+        GameViewHolder holder = (GameViewHolder) view.getTag();
+
+        final long titleId = NativeLibrary.GetTitleId(holder.path);
+
+        if (titleId == 0) {
+            new MaterialAlertDialogBuilder(context)
+                    .setIcon(R.mipmap.ic_launcher)
+                    .setTitle(R.string.properties)
+                    .setMessage(R.string.properties_not_loaded)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+        } else {
+            CheatsActivity.launch(context, titleId);
+        }
+
+        return true;
     }
 
     private boolean isValidGame(String path) {

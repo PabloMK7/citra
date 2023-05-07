@@ -1,13 +1,28 @@
 package org.citra.citra_emu.features.cheats.model;
 
+import androidx.annotation.Keep;
+
 public class CheatEngine {
-    public static native Cheat[] getCheats();
+    @Keep
+    private final long mPointer;
 
-    public static native void addCheat(Cheat cheat);
+    @Keep
+    public CheatEngine(long titleId) {
+        mPointer = initialize(titleId);
+    }
 
-    public static native void removeCheat(int index);
+    private static native long initialize(long titleId);
 
-    public static native void updateCheat(int index, Cheat newCheat);
+    @Override
+    protected native void finalize();
 
-    public static native void saveCheatFile();
+    public native Cheat[] getCheats();
+
+    public native void addCheat(Cheat cheat);
+
+    public native void removeCheat(int index);
+
+    public native void updateCheat(int index, Cheat newCheat);
+
+    public native void saveCheatFile();
 }

@@ -32,6 +32,8 @@ import java.util.List;
 
 public class CheatsActivity extends AppCompatActivity
         implements SlidingPaneLayout.PanelSlideListener {
+    private static String ARG_TITLE_ID = "title_id";
+
     private CheatsViewModel mViewModel;
 
     private SlidingPaneLayout mSlidingPaneLayout;
@@ -41,8 +43,9 @@ public class CheatsActivity extends AppCompatActivity
     private View mCheatListLastFocus;
     private View mCheatDetailsLastFocus;
 
-    public static void launch(Context context) {
+    public static void launch(Context context, long titleId) {
         Intent intent = new Intent(context, CheatsActivity.class);
+        intent.putExtra(ARG_TITLE_ID, titleId);
         context.startActivity(intent);
     }
 
@@ -54,8 +57,10 @@ public class CheatsActivity extends AppCompatActivity
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
+        long titleId = getIntent().getLongExtra(ARG_TITLE_ID, -1);
+
         mViewModel = new ViewModelProvider(this).get(CheatsViewModel.class);
-        mViewModel.load();
+        mViewModel.initialize(titleId);
 
         setContentView(R.layout.activity_cheats);
 

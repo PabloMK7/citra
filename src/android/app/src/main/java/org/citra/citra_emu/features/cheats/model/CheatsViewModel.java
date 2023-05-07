@@ -19,11 +19,17 @@ public class CheatsViewModel extends ViewModel {
     private final MutableLiveData<Integer> mCheatDeletedEvent = new MutableLiveData<>(null);
     private final MutableLiveData<Boolean> mOpenDetailsViewEvent = new MutableLiveData<>(false);
 
+    private CheatEngine mCheatEngine;
     private Cheat[] mCheats;
     private boolean mCheatsNeedSaving = false;
 
-    public void load() {
-        mCheats = CheatEngine.getCheats();
+    public void initialize(long titleId) {
+        mCheatEngine = new CheatEngine(titleId);
+        load();
+    }
+
+    private void load() {
+        mCheats = mCheatEngine.getCheats();
 
         for (int i = 0; i < mCheats.length; i++) {
             int position = i;
@@ -36,7 +42,7 @@ public class CheatsViewModel extends ViewModel {
 
     public void saveIfNeeded() {
         if (mCheatsNeedSaving) {
-            CheatEngine.saveCheatFile();
+            mCheatEngine.saveCheatFile();
             mCheatsNeedSaving = false;
         }
     }
@@ -106,7 +112,7 @@ public class CheatsViewModel extends ViewModel {
 
         int position = mCheats.length;
 
-        CheatEngine.addCheat(cheat);
+        mCheatEngine.addCheat(cheat);
 
         mCheatsNeedSaving = true;
         load();
@@ -132,7 +138,7 @@ public class CheatsViewModel extends ViewModel {
     }
 
     public void updateSelectedCheat(Cheat newCheat) {
-        CheatEngine.updateCheat(mSelectedCheatPosition, newCheat);
+        mCheatEngine.updateCheat(mSelectedCheatPosition, newCheat);
 
         mCheatsNeedSaving = true;
         load();
@@ -162,7 +168,7 @@ public class CheatsViewModel extends ViewModel {
 
         setSelectedCheat(null, -1);
 
-        CheatEngine.removeCheat(position);
+        mCheatEngine.removeCheat(position);
 
         mCheatsNeedSaving = true;
         load();

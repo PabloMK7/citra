@@ -40,6 +40,8 @@ static jclass s_cheat_class;
 static jfieldID s_cheat_pointer;
 static jmethodID s_cheat_constructor;
 
+static jfieldID s_cheat_engine_pointer;
+
 static jfieldID s_game_info_pointer;
 
 static std::unordered_map<VideoCore::LoadCallbackStage, jobject> s_java_load_callback_stages;
@@ -137,6 +139,10 @@ jmethodID GetCheatConstructor() {
     return s_cheat_constructor;
 }
 
+jfieldID GetCheatEnginePointer() {
+    return s_cheat_engine_pointer;
+}
+
 jfieldID GetGameInfoPointer() {
     return s_game_info_pointer;
 }
@@ -210,6 +216,12 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_cheat_pointer = env->GetFieldID(cheat_class, "mPointer", "J");
     s_cheat_constructor = env->GetMethodID(cheat_class, "<init>", "(J)V");
     env->DeleteLocalRef(cheat_class);
+
+    // Initialize CheatEngine
+    const jclass cheat_engine_class =
+        env->FindClass("org/citra/citra_emu/features/cheats/model/CheatEngine");
+    s_cheat_engine_pointer = env->GetFieldID(cheat_engine_class, "mPointer", "J");
+    env->DeleteLocalRef(cheat_engine_class);
 
     // Initialize GameInfo
     const jclass game_info_class = env->FindClass("org/citra/citra_emu/model/GameInfo");

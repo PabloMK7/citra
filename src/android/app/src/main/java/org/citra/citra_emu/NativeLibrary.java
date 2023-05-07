@@ -128,6 +128,8 @@ public final class NativeLibrary {
 
     public static native void InitGameIni(String gameID);
 
+    public static native long GetTitleId(String filename);
+
     public static native String GetGitRevision();
 
     /**
@@ -185,6 +187,11 @@ public final class NativeLibrary {
      * Returns true if emulation is running (or is paused).
      */
     public static native boolean IsRunning();
+
+    /**
+     * Returns the title ID of the currently running title, or 0 on failure.
+     */
+    public static native long GetRunningTitleId();
 
     /**
      * Returns the performance stats for the current game

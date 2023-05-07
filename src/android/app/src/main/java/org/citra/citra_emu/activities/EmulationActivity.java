@@ -491,7 +491,7 @@ public final class EmulationActivity extends AppCompatActivity {
                 break;
 
             case MENU_ACTION_OPEN_CHEATS:
-                CheatsActivity.launch(this);
+                CheatsActivity.launch(this, NativeLibrary.GetRunningTitleId());
                 break;
 
             case MENU_ACTION_CLOSE_GAME:

@@ -24,6 +24,7 @@
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/nfc/nfc.h"
+#include "core/loader/loader.h"
 #include "core/savestate.h"
 #include "jni/android_common/android_common.h"
 #include "jni/applets/mii_selector.h"
@@ -379,6 +380,13 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_IsRunning(JNIEnv* env,
     return static_cast<jboolean>(!stop_run);
 }
 
+jlong Java_org_citra_citra_1emu_NativeLibrary_GetRunningTitleId(JNIEnv* env,
+                                                                [[maybe_unused]] jclass clazz) {
+    u64 title_id{};
+    Core::System::GetInstance().GetAppLoader().ReadProgramId(title_id);
+    return static_cast<jlong>(title_id);
+}
+
 jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadEvent(JNIEnv* env,
                                                                 [[maybe_unused]] jclass clazz,
                                                                 jstring j_device, jint j_button,
@@ -433,6 +441,18 @@ void Java_org_citra_citra_1emu_NativeLibrary_onTouchMoved(JNIEnv* env,
                                                           [[maybe_unused]] jclass clazz, jfloat x,
                                                           jfloat y) {
     window->OnTouchMoved((int)x, (int)y);
+}
+
+jlong Java_org_citra_citra_1emu_NativeLibrary_GetTitleId(JNIEnv* env, [[maybe_unused]] jclass clazz,
+                                                         jstring j_filename) {
+    std::string filepath = GetJString(env, j_filename);
+    const auto loader = Loader::GetLoader(filepath);
+
+    u64 title_id{};
+    if (loader) {
+        loader->ReadProgramId(title_id);
+    }
+    return static_cast<jlong>(title_id);
 }
 
 jstring Java_org_citra_citra_1emu_NativeLibrary_GetGitRevision(JNIEnv* env,
