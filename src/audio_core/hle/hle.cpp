@@ -10,6 +10,8 @@
 #include "audio_core/audio_types.h"
 #ifdef HAVE_MF
 #include "audio_core/hle/wmf_decoder.h"
+#elif HAVE_AUDIOTOOLBOX
+#include "audio_core/hle/audiotoolbox_decoder.h"
 #elif HAVE_FFMPEG
 #include "audio_core/hle/ffmpeg_decoder.h"
 #elif ANDROID
@@ -131,6 +133,8 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
     }
 #elif defined(HAVE_MF)
     decoder = std::make_unique<HLE::WMFDecoder>(memory);
+#elif defined(HAVE_AUDIOTOOLBOX)
+    decoder = std::make_unique<HLE::AudioToolboxDecoder>(memory);
 #elif defined(HAVE_FFMPEG)
     decoder = std::make_unique<HLE::FFMPEGDecoder>(memory);
 #elif ANDROID

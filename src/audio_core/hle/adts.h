@@ -6,6 +6,7 @@
 #include "common/common_types.h"
 
 struct ADTSData {
+    u8 header_length;
     bool MPEG2;
     u8 profile;
     u8 channels;

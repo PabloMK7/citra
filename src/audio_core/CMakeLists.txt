@@ -59,6 +59,14 @@ if(ENABLE_MF)
     # just a static library of GUIDS so include that one directly.
     target_link_libraries(audio_core PRIVATE mfuuid.lib)
     target_compile_definitions(audio_core PUBLIC HAVE_MF)
+elseif(ENABLE_AUDIOTOOLBOX)
+    target_sources(audio_core PRIVATE
+        hle/audiotoolbox_decoder.cpp
+        hle/audiotoolbox_decoder.h
+    )
+    find_library(AUDIOTOOLBOX AudioToolbox)
+    target_link_libraries(audio_core PRIVATE ${AUDIOTOOLBOX})
+    target_compile_definitions(audio_core PUBLIC HAVE_AUDIOTOOLBOX)
 elseif(ENABLE_FFMPEG_AUDIO_DECODER)
     target_sources(audio_core PRIVATE
         hle/ffmpeg_decoder.cpp

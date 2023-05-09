@@ -51,6 +51,7 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder (preferred over FFmpeg)" ON "WIN32" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_AUDIOTOOLBOX "Use AudioToolbox decoder (preferred over FFmpeg)" ON "APPLE" OFF)
 
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ON "MINGW" OFF)
 

@@ -36,9 +36,10 @@ private:
     Memory::MemorySystem& mMemory;
     std::unique_ptr<AMediaCodec, AMediaCodecRelease> mDecoder;
     // default: 2 channles, 48000 samplerate
-    ADTSData mADTSData{/* MPEG2 */ false, /*profile*/ 2,       /*channels*/ 2,
-                       /*channel_idx*/ 2, /*framecount*/ 0,    /*samplerate_idx*/ 3,
-                       /*length*/ 0,      /*samplerate*/ 48000};
+    ADTSData mADTSData{
+        /*header_length*/ 7,  /*MPEG2*/ false,   /*profile*/ 2,
+        /*channels*/ 2,       /*channel_idx*/ 2, /*framecount*/ 0,
+        /*samplerate_idx*/ 3, /*length*/ 0,      /*samplerate*/ 48000};
 };
 
 MediaNDKDecoder::Impl::Impl(Memory::MemorySystem& memory) : mMemory(memory) {

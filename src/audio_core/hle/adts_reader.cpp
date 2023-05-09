@@ -18,6 +18,8 @@ ADTSData ParseADTS(const char* buffer) {
         out.length = 0;
         return out;
     }
+    // bit 16 = no CRC
+    out.header_length = (buffer[1] & 0x1) ? 7 : 9;
     out.MPEG2 = (buffer[1] >> 3) & 0x1;
     // bit 17 to 18
     out.profile = (buffer[2] >> 6) + 1;
