@@ -858,10 +858,11 @@ SurfaceId RasterizerCache<T>::FindMatch(const SurfaceParams& params, ScaleMatch 
         });
         IsMatch_Helper(std::integral_constant<MatchFlags, MatchFlags::Reinterpret>{}, [&] {
             ASSERT(validate_interval);
-            const bool matched =
-                !boost::icl::contains(surface.invalid_regions, *validate_interval) &&
-                surface.CanReinterpret(params);
-            return std::make_pair(matched, surface.GetInterval());
+            const SurfaceInterval copy_interval =
+                surface.GetCopyableInterval(params.FromInterval(*validate_interval));
+            const bool matched = boost::icl::length(copy_interval & *validate_interval) != 0 &&
+                                 surface.CanReinterpret(params);
+            return std::make_pair(matched, copy_interval);
         });
         IsMatch_Helper(std::integral_constant<MatchFlags, MatchFlags::Expand>{}, [&] {
             return std::make_pair(surface.CanExpand(params), surface.GetInterval());

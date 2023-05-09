@@ -27,8 +27,9 @@ bool SurfaceParams::CanSubRect(const SurfaceParams& sub_surface) const {
 
 bool SurfaceParams::CanReinterpret(const SurfaceParams& other_surface) {
     return other_surface.addr >= addr && other_surface.end <= end &&
-           pixel_format != PixelFormat::Invalid && GetFormatBpp() == other_surface.GetFormatBpp() &&
-           other_surface.is_tiled == is_tiled && other_surface.stride == stride &&
+           pixel_format != PixelFormat::Invalid && pixel_format != other_surface.pixel_format &&
+           GetFormatBpp() == other_surface.GetFormatBpp() && other_surface.is_tiled == is_tiled &&
+           other_surface.stride == stride &&
            (other_surface.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
            GetSubRect(other_surface).right <= stride;
 }
