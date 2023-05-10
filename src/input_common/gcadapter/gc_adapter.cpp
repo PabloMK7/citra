@@ -19,13 +19,19 @@
 #include "common/param_package.h"
 #include "input_common/gcadapter/gc_adapter.h"
 
+// Workaround for older libusb versions not having libusb_init_context.
+// libusb_init is deprecated and causes a compile error in newer versions.
+#if !defined(LIBUSB_API_VERSION) || (LIBUSB_API_VERSION < 0x0100010A)
+#define libusb_init_context(a, b, c) libusb_init(a)
+#endif
+
 namespace GCAdapter {
 
 Adapter::Adapter() {
     if (usb_adapter_handle != nullptr) {
         return;
     }
-    const int init_res = libusb_init(&libusb_ctx);
+    const int init_res = libusb_init_context(&libusb_ctx, nullptr, 0);
     if (init_res == LIBUSB_SUCCESS) {
         adapter_scan_thread = std::thread(&Adapter::AdapterScanThread, this);
     } else {

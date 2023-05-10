@@ -57,11 +57,35 @@ typedef struct {
 
 } SDL_ExtendedGameControllerBind;
 
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+/* our hard coded list of mapping support */
+typedef enum {
+    SDL_CONTROLLER_MAPPING_PRIORITY_DEFAULT,
+    SDL_CONTROLLER_MAPPING_PRIORITY_API,
+    SDL_CONTROLLER_MAPPING_PRIORITY_USER,
+} SDL_ControllerMappingPriority;
+
+typedef struct _ControllerMapping_t {
+    SDL_JoystickGUID guid;
+    char* name;
+    char* mapping;
+    SDL_ControllerMappingPriority priority;
+    struct _ControllerMapping_t* next;
+} ControllerMapping_t;
+#endif
+
 struct _SDL_GameController {
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+    const void* magic;
+#endif
+
     SDL_Joystick* joystick; /* underlying joystick device */
     int ref_count;
 
     const char* name;
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+    ControllerMapping_t* mapping;
+#endif
     int num_bindings;
     SDL_ExtendedGameControllerBind* bindings;
     SDL_ExtendedGameControllerBind** last_match_axis;

@@ -5,7 +5,6 @@ endif()
 
 add_library(usb STATIC EXCLUDE_FROM_ALL
     libusb/libusb/core.c
-    libusb/libusb/core.c
     libusb/libusb/descriptor.c
     libusb/libusb/hotplug.c
     libusb/libusb/io.c
@@ -42,10 +41,9 @@ endif()
 
 if(WIN32 OR CYGWIN)
     target_sources(usb PRIVATE
-      libusb/libusb/os/threads_windows.c
       libusb/libusb/os/windows_winusb.c
       libusb/libusb/os/windows_usbdk.c
-      libusb/libusb/os/windows_nt_common.c
+      libusb/libusb/os/windows_common.c
     )
     set(OS_WINDOWS TRUE)
 elseif(APPLE)
@@ -54,10 +52,12 @@ elseif(APPLE)
     )
     find_library(COREFOUNDATION_LIBRARY CoreFoundation)
     find_library(IOKIT_LIBRARY IOKit)
+    find_library(SECURITY_LIBRARY Security)
     find_library(OBJC_LIBRARY objc)
     target_link_libraries(usb PRIVATE
         ${COREFOUNDATION_LIBRARY}
         ${IOKIT_LIBRARY}
+        ${SECURITY_LIBRARY}
         ${OBJC_LIBRARY}
     )
     set(OS_DARWIN TRUE)
@@ -102,7 +102,7 @@ endif()
 
 if(UNIX)
     target_sources(usb PRIVATE
-        libusb/libusb/os/poll_posix.c
+        libusb/libusb/os/events_posix.c
         libusb/libusb/os/threads_posix.c
     )
     find_package(Threads REQUIRED)
@@ -112,12 +112,13 @@ if(UNIX)
     if(CMAKE_THREAD_LIBS_INIT)
       target_link_libraries(usb PRIVATE "${CMAKE_THREAD_LIBS_INIT}")
     endif()
-    set(THREADS_POSIX TRUE)
+    set(PLATFORM_POSIX TRUE)
 elseif(WIN32)
     target_sources(usb PRIVATE
-        libusb/libusb/os/poll_windows.c
+        libusb/libusb/os/events_windows.c
         libusb/libusb/os/threads_windows.c
     )
+    set(PLATFORM_WINDOWS TRUE)
 endif()
 
 include(CheckFunctionExists)
@@ -127,7 +128,8 @@ check_include_files(asm/types.h HAVE_ASM_TYPES_H)
 check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
 check_include_files(linux/filter.h HAVE_LINUX_FILTER_H)
 check_include_files(linux/netlink.h HAVE_LINUX_NETLINK_H)
-check_include_files(poll.h HAVE_POLL_H)
+check_function_exists(eventfd HAVE_EVENTFD)
+check_function_exists(timerfd_create HAVE_TIMERFD)
 check_include_files(signal.h HAVE_SIGNAL_H)
 check_include_files(strings.h HAVE_STRINGS_H)
 check_type_size("struct timespec" STRUCT_TIMESPEC)
@@ -136,17 +138,6 @@ check_include_files(syslog.h HAVE_SYSLOG_H)
 check_include_files(sys/socket.h HAVE_SYS_SOCKET_H)
 check_include_files(sys/time.h HAVE_SYS_TIME_H)
 check_include_files(sys/types.h HAVE_SYS_TYPES_H)
-
-set(CMAKE_EXTRA_INCLUDE_FILES poll.h)
-check_type_size("nfds_t" nfds_t)
-unset(CMAKE_EXTRA_INCLUDE_FILES)
-if(HAVE_NFDS_T)
-    set(POLL_NFDS_TYPE "nfds_t")
-else()
-    set(POLL_NFDS_TYPE "unsigned int")
-endif()
-
-check_include_files(sys/timerfd.h USBI_TIMERFD_AVAILABLE)
-
+check_function_exists(clock_gettime HAVE_CLOCK_GETTIME)
 
 configure_file(config.h.in config.h)
