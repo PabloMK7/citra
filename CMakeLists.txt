@@ -274,6 +274,10 @@ if (ENABLE_FDK)
         message(FATAL_ERROR "fdk_aac library not found.")
     endif()
 endif()
+
+# Use system tsl::robin_map if available (otherwise we fallback to version bundled with dynarmic)
+find_package(tsl-robin-map QUIET)
+
 # Platform-specific library requirements
 # ======================================
 
