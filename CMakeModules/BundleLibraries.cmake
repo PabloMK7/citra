@@ -26,6 +26,10 @@ if ("${TYPE}" STREQUAL "qt")
 
         find_program(MACDEPLOYQT_EXECUTABLE macdeployqt)
         execute_process(COMMAND ${MACDEPLOYQT_EXECUTABLE} ${bundle_dir} -executable=${EXECUTABLE_PATH} -always-overwrite)
+
+        # Bundling libraries can rewrite path information and break code signatures of system libraries.
+        # Perform an ad-hoc re-signing on the whole app bundle to fix this.
+        execute_process(COMMAND codesign --deep -fs - ${bundle_dir})
     else()
         message(FATAL_ERROR "Unsupported OS for Qt-based library bundling.")
     endif()
