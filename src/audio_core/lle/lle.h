@@ -6,11 +6,15 @@
 
 #include "audio_core/dsp_interface.h"
 
+namespace Core {
+class Timing;
+}
+
 namespace AudioCore {
 
 class DspLle final : public DspInterface {
 public:
-    explicit DspLle(Memory::MemorySystem& memory, bool multithread);
+    explicit DspLle(Memory::MemorySystem& memory, Core::Timing& timing, bool multithread);
     ~DspLle() override;
 
     u16 RecvData(u32 register_number) override;

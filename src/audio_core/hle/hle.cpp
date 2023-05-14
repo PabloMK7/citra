@@ -40,7 +40,7 @@ using Service::DSP::DSP_DSP;
 
 namespace AudioCore {
 
-DspHle::DspHle() : DspHle(Core::System::GetInstance().Memory()) {}
+DspHle::DspHle() : DspHle(Core::System::GetInstance().Memory(), Core::System::GetInstance().CoreTiming()) {}
 
 template <class Archive>
 void DspHle::serialize(Archive& ar, const unsigned int) {
@@ -58,7 +58,7 @@ static constexpr u64 audio_frame_ticks = samples_per_frame * 4096 * 2ull; ///< U
 
 struct DspHle::Impl final {
 public:
-    explicit Impl(DspHle& parent, Memory::MemorySystem& memory);
+    explicit Impl(DspHle& parent, Memory::MemorySystem& memory, Core::Timing& timing);
     ~Impl();
 
     DspState GetDspState() const;
@@ -100,6 +100,7 @@ private:
     HLE::Mixers mixers{};
 
     DspHle& parent;
+    Core::Timing& core_timing;
     Core::TimingEventType* tick_event{};
 
     std::unique_ptr<HLE::DecoderBase> decoder{};
@@ -118,7 +119,8 @@ private:
     friend class boost::serialization::access;
 };
 
-DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(parent_) {
+DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& timing)
+    : parent(parent_), core_timing(timing) {
     dsp_memory.raw_memory.fill(0);
 
     for (auto& source : sources) {
@@ -152,17 +154,15 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
         decoder = std::make_unique<HLE::NullDecoder>();
     }
 
-    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
     tick_event =
-        timing.RegisterEvent("AudioCore::DspHle::tick_event", [this](u64, s64 cycles_late) {
+        core_timing.RegisterEvent("AudioCore::DspHle::tick_event", [this](u64, s64 cycles_late) {
             this->AudioTickCallback(cycles_late);
         });
-    timing.ScheduleEvent(audio_frame_ticks, tick_event);
+    core_timing.ScheduleEvent(audio_frame_ticks, tick_event);
 }
 
 DspHle::Impl::~Impl() {
-    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
-    timing.UnscheduleEvent(tick_event, 0);
+    core_timing.UnscheduleEvent(tick_event, 0);
 }
 
 DspState DspHle::Impl::GetDspState() const {
@@ -457,11 +457,11 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     }
 
     // Reschedule recurrent event
-    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
-    timing.ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
+    core_timing.ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
 }
 
-DspHle::DspHle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(*this, memory)) {}
+DspHle::DspHle(Memory::MemorySystem& memory, Core::Timing& timing)
+    : impl(std::make_unique<Impl>(*this, memory, timing)) {}
 DspHle::~DspHle() = default;
 
 u16 DspHle::RecvData(u32 register_number) {

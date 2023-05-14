@@ -122,8 +122,8 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
-    Impl(bool multithread) : multithread(multithread) {
-        teakra_slice_event = Core::System::GetInstance().CoreTiming().RegisterEvent(
+    Impl(Core::Timing& timing, bool multithread) : core_timing(timing), multithread(multithread) {
+        teakra_slice_event = core_timing.RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
     }
 
@@ -137,6 +137,7 @@ struct DspLle::Impl final {
     bool semaphore_signaled = false;
     bool data_signaled = false;
 
+    Core::Timing& core_timing;
     Core::TimingEventType* teakra_slice_event;
     std::atomic<bool> loaded = false;
 
@@ -185,7 +186,7 @@ struct DspLle::Impl final {
             next = 0;
         else
             next -= late;
-        Core::System::GetInstance().CoreTiming().ScheduleEvent(next, teakra_slice_event, 0);
+        core_timing.ScheduleEvent(next, teakra_slice_event, 0);
     }
 
     u8* GetDspDataPointer(u32 baddr) {
@@ -326,7 +327,7 @@ struct DspLle::Impl final {
 
         // TODO: load special segment
 
-        Core::System::GetInstance().CoreTiming().ScheduleEvent(TeakraSlice, teakra_slice_event, 0);
+        core_timing.ScheduleEvent(TeakraSlice, teakra_slice_event, 0);
 
         if (multithread) {
             teakra_thread = std::thread(&Impl::TeakraThread, this);
@@ -371,7 +372,7 @@ struct DspLle::Impl final {
 
         teakra.RecvData(2); // discard the value
 
-        Core::System::GetInstance().CoreTiming().UnscheduleEvent(teakra_slice_event, 0);
+        core_timing.UnscheduleEvent(teakra_slice_event, 0);
         StopTeakraThread();
     }
 };
@@ -475,8 +476,8 @@ void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle(Memory::MemorySystem& memory, bool multithread)
-    : impl(std::make_unique<Impl>(multithread)) {
+DspLle::DspLle(Memory::MemorySystem& memory,Core::Timing& timing, bool multithread)
+    : impl(std::make_unique<Impl>(timing, multithread)) {
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);
