@@ -476,7 +476,7 @@ void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle(Memory::MemorySystem& memory,Core::Timing& timing, bool multithread)
+DspLle::DspLle(Memory::MemorySystem& memory, Core::Timing& timing, bool multithread)
     : impl(std::make_unique<Impl>(timing, multithread)) {
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {

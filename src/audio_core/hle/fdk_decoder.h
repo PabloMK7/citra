@@ -12,7 +12,7 @@ class FDKDecoder final : public DecoderBase {
 public:
     explicit FDKDecoder(Memory::MemorySystem& memory);
     ~FDKDecoder() override;
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request) override;
     bool IsValid() const override;
 
 private:

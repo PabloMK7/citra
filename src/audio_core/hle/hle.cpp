@@ -40,7 +40,8 @@ using Service::DSP::DSP_DSP;
 
 namespace AudioCore {
 
-DspHle::DspHle() : DspHle(Core::System::GetInstance().Memory(), Core::System::GetInstance().CoreTiming()) {}
+DspHle::DspHle()
+    : DspHle(Core::System::GetInstance().Memory(), Core::System::GetInstance().CoreTiming()) {}
 
 template <class Archive>
 void DspHle::serialize(Archive& ar, const unsigned int) {
@@ -291,21 +292,21 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
     }
     case DspPipe::Binary: {
         // TODO(B3N30): Make this async, and signal the interrupt
-        HLE::BinaryRequest request;
+        HLE::BinaryMessage request{};
         if (sizeof(request) != buffer.size()) {
             LOG_CRITICAL(Audio_DSP, "got binary pipe with wrong size {}", buffer.size());
             UNIMPLEMENTED();
             return;
         }
         std::memcpy(&request, buffer.data(), buffer.size());
-        if (request.codec != HLE::DecoderCodec::AAC) {
-            LOG_CRITICAL(Audio_DSP, "got unknown codec {}", static_cast<u16>(request.codec));
+        if (request.header.codec != HLE::DecoderCodec::DecodeAAC) {
+            LOG_CRITICAL(Audio_DSP, "got unknown codec {}", static_cast<u16>(request.header.codec));
             UNIMPLEMENTED();
             return;
         }
-        std::optional<HLE::BinaryResponse> response = decoder->ProcessRequest(request);
+        std::optional<HLE::BinaryMessage> response = decoder->ProcessRequest(request);
         if (response) {
-            const HLE::BinaryResponse& value = *response;
+            const HLE::BinaryMessage& value = *response;
             pipe_data[static_cast<u32>(pipe_number)].resize(sizeof(value));
             std::memcpy(pipe_data[static_cast<u32>(pipe_number)].data(), &value, sizeof(value));
         }

@@ -13,15 +13,15 @@ class WMFDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request);
     bool IsValid() const {
         return is_valid;
     }
 
 private:
-    std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
+    std::optional<BinaryMessage> Initalize(const BinaryMessage& request);
 
-    std::optional<BinaryResponse> Decode(const BinaryRequest& request);
+    std::optional<BinaryMessage> Decode(const BinaryMessage& request);
 
     MFOutputState DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
 
@@ -101,36 +101,35 @@ WMFDecoder::Impl::~Impl() {
     }
 }
 
-std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
-    if (request.codec != DecoderCodec::AAC) {
-        LOG_ERROR(Audio_DSP, "Got unknown codec {}", static_cast<u16>(request.codec));
+std::optional<BinaryMessage> WMFDecoder::Impl::ProcessRequest(const BinaryMessage& request) {
+    if (request.header.codec != DecoderCodec::DecodeAAC) {
+        LOG_ERROR(Audio_DSP, "Got unknown codec {}", static_cast<u16>(request.header.codec));
         return std::nullopt;
     }
 
-    switch (request.cmd) {
+    switch (request.header.cmd) {
     case DecoderCommand::Init: {
         LOG_INFO(Audio_DSP, "WMFDecoder initializing");
         return Initalize(request);
     }
-    case DecoderCommand::Decode: {
+    case DecoderCommand::EncodeDecode: {
         return Decode(request);
     }
     case DecoderCommand::Unknown: {
-        BinaryResponse response;
-        std::memcpy(&response, &request, sizeof(response));
-        response.unknown1 = 0x0;
+        BinaryMessage response = request;
+        response.header.result = ResultStatus::Success;
         return response;
     }
     default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
+        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
+                  static_cast<u16>(request.header.cmd));
         return std::nullopt;
     }
 }
 
-std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& request) {
-    BinaryResponse response;
-    std::memcpy(&response, &request, sizeof(response));
-    response.unknown1 = 0x0;
+std::optional<BinaryMessage> WMFDecoder::Impl::Initalize(const BinaryMessage& request) {
+    BinaryMessage response = request;
+    response.header.result = ResultStatus::Success;
 
     format_selected = false; // select format again if application request initialize the DSP
     return response;
@@ -186,13 +185,13 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
     return MFOutputState::FatalError;
 }
 
-std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& request) {
-    BinaryResponse response;
-    response.codec = request.codec;
-    response.cmd = request.cmd;
-    response.size = request.size;
-    response.num_channels = 2;
-    response.num_samples = 1024;
+std::optional<BinaryMessage> WMFDecoder::Impl::Decode(const BinaryMessage& request) {
+    BinaryMessage response{};
+    response.header.codec = request.header.codec;
+    response.header.cmd = request.header.cmd;
+    response.decode_aac_response.size = request.decode_aac_request.size;
+    response.decode_aac_response.num_channels = 2;
+    response.decode_aac_response.num_samples = 1024;
 
     if (!transform_initialized) {
         LOG_DEBUG(Audio_DSP, "Decoder not initialized");
@@ -200,26 +199,29 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         return response;
     }
 
-    if (request.src_addr < Memory::FCRAM_PADDR ||
-        request.src_addr + request.size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}", request.src_addr);
+    if (request.decode_aac_request.src_addr < Memory::FCRAM_PADDR ||
+        request.decode_aac_request.src_addr + request.decode_aac_request.size >
+            Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}",
+                  request.decode_aac_request.src_addr);
         return std::nullopt;
     }
-    u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
+    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<u8>, 2> out_streams;
     unique_mfptr<IMFSample> sample;
     MFInputState input_status = MFInputState::OK;
     MFOutputState output_status = MFOutputState::OK;
-    std::optional<ADTSMeta> adts_meta = DetectMediaType((char*)data, request.size);
+    std::optional<ADTSMeta> adts_meta =
+        DetectMediaType((char*)data, request.decode_aac_request.size);
 
     if (!adts_meta) {
         LOG_ERROR(Audio_DSP, "Unable to deduce decoding parameters from ADTS stream");
         return response;
     }
 
-    response.sample_rate = GetSampleRateEnum(adts_meta->ADTSHeader.samplerate);
-    response.num_channels = adts_meta->ADTSHeader.channels;
+    response.decode_aac_response.sample_rate = GetSampleRateEnum(adts_meta->ADTSHeader.samplerate);
+    response.decode_aac_response.num_channels = adts_meta->ADTSHeader.channels;
 
     if (!format_selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
@@ -234,7 +236,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         format_selected = true;
     }
 
-    sample = CreateSample((void*)data, request.size, 1, 0);
+    sample = CreateSample(data, request.decode_aac_request.size, 1, 0);
     sample->SetUINT32(MFSampleExtension_CleanPoint, 1);
 
     while (true) {
@@ -263,25 +265,29 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     }
 
     if (out_streams[0].size() != 0) {
-        if (request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
-            request.dst_addr_ch0 + out_streams[0].size() >
+        if (request.decode_aac_request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
+            request.decode_aac_request.dst_addr_ch0 + out_streams[0].size() >
                 Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
+            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}",
+                      request.decode_aac_request.dst_addr_ch0);
             return std::nullopt;
         }
-        std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
-                    out_streams[0].data(), out_streams[0].size());
+        std::memcpy(
+            memory.GetFCRAMPointer(request.decode_aac_request.dst_addr_ch0 - Memory::FCRAM_PADDR),
+            out_streams[0].data(), out_streams[0].size());
     }
 
     if (out_streams[1].size() != 0) {
-        if (request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
-            request.dst_addr_ch1 + out_streams[1].size() >
+        if (request.decode_aac_request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
+            request.decode_aac_request.dst_addr_ch1 + out_streams[1].size() >
                 Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
+            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}",
+                      request.decode_aac_request.dst_addr_ch1);
             return std::nullopt;
         }
-        std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch1 - Memory::FCRAM_PADDR),
-                    out_streams[1].data(), out_streams[1].size());
+        std::memcpy(
+            memory.GetFCRAMPointer(request.decode_aac_request.dst_addr_ch1 - Memory::FCRAM_PADDR),
+            out_streams[1].data(), out_streams[1].size());
     }
 
     return response;
@@ -291,7 +297,7 @@ WMFDecoder::WMFDecoder(Memory::MemorySystem& memory) : impl(std::make_unique<Imp
 
 WMFDecoder::~WMFDecoder() = default;
 
-std::optional<BinaryResponse> WMFDecoder::ProcessRequest(const BinaryRequest& request) {
+std::optional<BinaryMessage> WMFDecoder::ProcessRequest(const BinaryMessage& request) {
     return impl->ProcessRequest(request);
 }
 

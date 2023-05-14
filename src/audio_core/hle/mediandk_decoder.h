@@ -11,7 +11,7 @@ class MediaNDKDecoder final : public DecoderBase {
 public:
     explicit MediaNDKDecoder(Memory::MemorySystem& memory);
     ~MediaNDKDecoder() override;
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request) override;
     bool IsValid() const override;
 
 private:

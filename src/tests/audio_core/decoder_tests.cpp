@@ -28,26 +28,26 @@ TEST_CASE("DSP HLE Audio Decoder", "[audio_core]") {
 #elif HAVE_FFMPEG
             std::make_unique<AudioCore::HLE::FFMPEGDecoder>(memory);
 #endif
-        AudioCore::HLE::BinaryRequest request;
+        AudioCore::HLE::BinaryMessage request{};
 
-        request.codec = AudioCore::HLE::DecoderCodec::AAC;
-        request.cmd = AudioCore::HLE::DecoderCommand::Init;
+        request.header.codec = AudioCore::HLE::DecoderCodec::DecodeAAC;
+        request.header.cmd = AudioCore::HLE::DecoderCommand::Init;
         // initialize decoder
-        std::optional<AudioCore::HLE::BinaryResponse> response = decoder->ProcessRequest(request);
+        std::optional<AudioCore::HLE::BinaryMessage> response = decoder->ProcessRequest(request);
 
-        request.cmd = AudioCore::HLE::DecoderCommand::Decode;
+        request.header.cmd = AudioCore::HLE::DecoderCommand::EncodeDecode;
         u8* fcram = memory.GetFCRAMPointer(0);
 
         memcpy(fcram, fixure_buffer, fixure_buffer_size);
-        request.src_addr = Memory::FCRAM_PADDR;
-        request.dst_addr_ch0 = Memory::FCRAM_PADDR + 1024;
-        request.dst_addr_ch1 = Memory::FCRAM_PADDR + 1048576; // 1 MB
-        request.size = fixure_buffer_size;
+        request.decode_aac_request.src_addr = Memory::FCRAM_PADDR;
+        request.decode_aac_request.dst_addr_ch0 = Memory::FCRAM_PADDR + 1024;
+        request.decode_aac_request.dst_addr_ch1 = Memory::FCRAM_PADDR + 1048576; // 1 MB
+        request.decode_aac_request.size = fixure_buffer_size;
 
         response = decoder->ProcessRequest(request);
         response = decoder->ProcessRequest(request);
         // remove this line
-        request.src_addr = Memory::FCRAM_PADDR;
+        request.decode_aac_request.src_addr = Memory::FCRAM_PADDR;
     }
 }
 

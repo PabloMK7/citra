@@ -25,16 +25,16 @@ class MediaNDKDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request);
 
     bool SetMediaType(const ADTSData& adts_data);
 
 private:
-    std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
-    std::optional<BinaryResponse> Decode(const BinaryRequest& request);
+    std::optional<BinaryMessage> Initalize(const BinaryMessage& request);
+    std::optional<BinaryMessage> Decode(const BinaryMessage& request);
 
-    Memory::MemorySystem& mMemory;
-    std::unique_ptr<AMediaCodec, AMediaCodecRelease> mDecoder;
+    Memory::MemorySystem& memory;
+    std::unique_ptr<AMediaCodec, AMediaCodecRelease> decoder;
     // default: 2 channles, 48000 samplerate
     ADTSData mADTSData{
         /*header_length*/ 7,  /*MPEG2*/ false,   /*profile*/ 2,
@@ -42,28 +42,27 @@ private:
         /*samplerate_idx*/ 3, /*length*/ 0,      /*samplerate*/ 48000};
 };
 
-MediaNDKDecoder::Impl::Impl(Memory::MemorySystem& memory) : mMemory(memory) {
+MediaNDKDecoder::Impl::Impl(Memory::MemorySystem& memory_) : memory(memory_) {
     SetMediaType(mADTSData);
 }
 
 MediaNDKDecoder::Impl::~Impl() = default;
 
-std::optional<BinaryResponse> MediaNDKDecoder::Impl::Initalize(const BinaryRequest& request) {
-    BinaryResponse response;
-    std::memcpy(&response, &request, sizeof(response));
-    response.unknown1 = 0x0;
+std::optional<BinaryMessage> MediaNDKDecoder::Impl::Initalize(const BinaryMessage& request) {
+    BinaryMessage response = request;
+    response.header.result = ResultStatus::Success;
     return response;
 }
 
 bool MediaNDKDecoder::Impl::SetMediaType(const ADTSData& adts_data) {
     const char* mime = "audio/mp4a-latm";
-    if (mDecoder && mADTSData.profile == adts_data.profile &&
+    if (decoder && mADTSData.profile == adts_data.profile &&
         mADTSData.channel_idx == adts_data.channel_idx &&
         mADTSData.samplerate_idx == adts_data.samplerate_idx) {
         return true;
     }
-    mDecoder.reset(AMediaCodec_createDecoderByType(mime));
-    if (mDecoder == nullptr) {
+    decoder.reset(AMediaCodec_createDecoderByType(mime));
+    if (decoder == nullptr) {
         return false;
     }
 
@@ -78,17 +77,17 @@ bool MediaNDKDecoder::Impl::SetMediaType(const ADTSData& adts_data) {
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_IS_ADTS, 1);
     AMediaFormat_setBuffer(format, "csd-0", csd_0, sizeof(csd_0));
 
-    media_status_t status = AMediaCodec_configure(mDecoder.get(), format, NULL, NULL, 0);
+    media_status_t status = AMediaCodec_configure(decoder.get(), format, NULL, NULL, 0);
     if (status != AMEDIA_OK) {
         AMediaFormat_delete(format);
-        mDecoder.reset();
+        decoder.reset();
         return false;
     }
 
-    status = AMediaCodec_start(mDecoder.get());
+    status = AMediaCodec_start(decoder.get());
     if (status != AMEDIA_OK) {
         AMediaFormat_delete(format);
-        mDecoder.reset();
+        decoder.reset();
         return false;
     }
 
@@ -97,51 +96,53 @@ bool MediaNDKDecoder::Impl::SetMediaType(const ADTSData& adts_data) {
     return true;
 }
 
-std::optional<BinaryResponse> MediaNDKDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
-    if (request.codec != DecoderCodec::AAC) {
+std::optional<BinaryMessage> MediaNDKDecoder::Impl::ProcessRequest(const BinaryMessage& request) {
+    if (request.header.codec != DecoderCodec::DecodeAAC) {
         LOG_ERROR(Audio_DSP, "AAC Decoder cannot handle such codec: {}",
-                  static_cast<u16>(request.codec));
+                  static_cast<u16>(request.header.codec));
         return {};
     }
 
-    switch (request.cmd) {
+    switch (request.header.cmd) {
     case DecoderCommand::Init: {
         return Initalize(request);
     }
-    case DecoderCommand::Decode: {
+    case DecoderCommand::EncodeDecode: {
         return Decode(request);
     }
     case DecoderCommand::Unknown: {
-        BinaryResponse response;
-        std::memcpy(&response, &request, sizeof(response));
-        response.unknown1 = 0x0;
+        BinaryMessage response = request;
+        response.header.result = ResultStatus::Success;
         return response;
     }
     default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
+        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
+                  static_cast<u16>(request.header.cmd));
         return {};
     }
 }
 
-std::optional<BinaryResponse> MediaNDKDecoder::Impl::Decode(const BinaryRequest& request) {
-    BinaryResponse response;
-    response.codec = request.codec;
-    response.cmd = request.cmd;
-    response.size = request.size;
-    response.num_samples = 1024;
+std::optional<BinaryMessage> MediaNDKDecoder::Impl::Decode(const BinaryMessage& request) {
+    BinaryMessage response{};
+    response.header.codec = request.header.codec;
+    response.header.cmd = request.header.cmd;
+    response.decode_aac_response.size = request.decode_aac_request.size;
+    response.decode_aac_response.num_samples = 1024;
 
-    if (request.src_addr < Memory::FCRAM_PADDR ||
-        request.src_addr + request.size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}", request.src_addr);
+    if (request.decode_aac_request.src_addr < Memory::FCRAM_PADDR ||
+        request.decode_aac_request.src_addr + request.decode_aac_request.size >
+            Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}",
+                  request.decode_aac_request.src_addr);
         return response;
     }
 
-    u8* data = mMemory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
+    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
     ADTSData adts_data = ParseADTS(reinterpret_cast<const char*>(data));
     SetMediaType(adts_data);
-    response.sample_rate = GetSampleRateEnum(adts_data.samplerate);
-    response.num_channels = adts_data.channels;
-    if (!mDecoder) {
+    response.decode_aac_response.sample_rate = GetSampleRateEnum(adts_data.samplerate);
+    response.decode_aac_response.num_channels = adts_data.channels;
+    if (!decoder) {
         LOG_ERROR(Audio_DSP, "Missing decoder for profile: {}, channels: {}, samplerate: {}",
                   adts_data.profile, adts_data.channels, adts_data.samplerate);
         return {};
@@ -151,18 +152,18 @@ std::optional<BinaryResponse> MediaNDKDecoder::Impl::Decode(const BinaryRequest&
     constexpr int timeout = 160;
     std::size_t buffer_size = 0;
     u8* buffer = nullptr;
-    ssize_t buffer_index = AMediaCodec_dequeueInputBuffer(mDecoder.get(), timeout);
+    ssize_t buffer_index = AMediaCodec_dequeueInputBuffer(decoder.get(), timeout);
     if (buffer_index < 0) {
         LOG_ERROR(Audio_DSP, "Failed to enqueue the input samples: {}", buffer_index);
         return response;
     }
-    buffer = AMediaCodec_getInputBuffer(mDecoder.get(), buffer_index, &buffer_size);
-    if (buffer_size < request.size) {
+    buffer = AMediaCodec_getInputBuffer(decoder.get(), buffer_index, &buffer_size);
+    if (buffer_size < request.decode_aac_request.size) {
         return response;
     }
-    std::memcpy(buffer, data, request.size);
-    media_status_t status =
-        AMediaCodec_queueInputBuffer(mDecoder.get(), buffer_index, 0, request.size, 0, 0);
+    std::memcpy(buffer, data, request.decode_aac_request.size);
+    media_status_t status = AMediaCodec_queueInputBuffer(decoder.get(), buffer_index, 0,
+                                                         request.decode_aac_request.size, 0, 0);
     if (status != AMEDIA_OK) {
         LOG_WARNING(Audio_DSP, "Try queue input buffer again later!");
         return response;
@@ -171,7 +172,7 @@ std::optional<BinaryResponse> MediaNDKDecoder::Impl::Decode(const BinaryRequest&
     // output
     AMediaCodecBufferInfo info;
     std::array<std::vector<u16>, 2> out_streams;
-    buffer_index = AMediaCodec_dequeueOutputBuffer(mDecoder.get(), &info, timeout);
+    buffer_index = AMediaCodec_dequeueOutputBuffer(decoder.get(), &info, timeout);
     switch (buffer_index) {
     case AMEDIACODEC_INFO_TRY_AGAIN_LATER:
         LOG_WARNING(Audio_DSP, "Failed to dequeue output buffer: timeout!");
@@ -180,47 +181,53 @@ std::optional<BinaryResponse> MediaNDKDecoder::Impl::Decode(const BinaryRequest&
         LOG_WARNING(Audio_DSP, "Failed to dequeue output buffer: buffers changed!");
         break;
     case AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED: {
-        AMediaFormat* format = AMediaCodec_getOutputFormat(mDecoder.get());
+        AMediaFormat* format = AMediaCodec_getOutputFormat(decoder.get());
         LOG_WARNING(Audio_DSP, "output format: {}", AMediaFormat_toString(format));
         AMediaFormat_delete(format);
-        buffer_index = AMediaCodec_dequeueOutputBuffer(mDecoder.get(), &info, timeout);
+        buffer_index = AMediaCodec_dequeueOutputBuffer(decoder.get(), &info, timeout);
     }
     default: {
         int offset = info.offset;
-        buffer = AMediaCodec_getOutputBuffer(mDecoder.get(), buffer_index, &buffer_size);
+        buffer = AMediaCodec_getOutputBuffer(decoder.get(), buffer_index, &buffer_size);
         while (offset < info.size) {
-            for (int channel = 0; channel < response.num_channels; channel++) {
+            for (int channel = 0; channel < response.decode_aac_response.num_channels; channel++) {
                 u16 pcm_data;
                 std::memcpy(&pcm_data, buffer + offset, sizeof(pcm_data));
                 out_streams[channel].push_back(pcm_data);
                 offset += sizeof(pcm_data);
             }
         }
-        AMediaCodec_releaseOutputBuffer(mDecoder.get(), buffer_index, info.size != 0);
+        AMediaCodec_releaseOutputBuffer(decoder.get(), buffer_index, info.size != 0);
     }
     }
 
     // transfer the decoded buffer from vector to the FCRAM
     size_t stream0_size = out_streams[0].size() * sizeof(u16);
     if (stream0_size != 0) {
-        if (request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
-            request.dst_addr_ch0 + stream0_size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
+        if (request.decode_aac_request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
+            request.decode_aac_request.dst_addr_ch0 + stream0_size >
+                Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}",
+                      request.decode_aac_request.dst_addr_ch0);
             return response;
         }
-        std::memcpy(mMemory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
-                    out_streams[0].data(), stream0_size);
+        std::memcpy(
+            memory.GetFCRAMPointer(request.decode_aac_request.dst_addr_ch0 - Memory::FCRAM_PADDR),
+            out_streams[0].data(), stream0_size);
     }
 
     size_t stream1_size = out_streams[1].size() * sizeof(u16);
     if (stream1_size != 0) {
-        if (request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
-            request.dst_addr_ch1 + stream1_size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
+        if (request.decode_aac_request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
+            request.decode_aac_request.dst_addr_ch1 + stream1_size >
+                Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}",
+                      request.decode_aac_request.dst_addr_ch1);
             return response;
         }
-        std::memcpy(mMemory.GetFCRAMPointer(request.dst_addr_ch1 - Memory::FCRAM_PADDR),
-                    out_streams[1].data(), stream1_size);
+        std::memcpy(
+            memory.GetFCRAMPointer(request.decode_aac_request.dst_addr_ch1 - Memory::FCRAM_PADDR),
+            out_streams[1].data(), stream1_size);
     }
     return response;
 }
@@ -230,7 +237,7 @@ MediaNDKDecoder::MediaNDKDecoder(Memory::MemorySystem& memory)
 
 MediaNDKDecoder::~MediaNDKDecoder() = default;
 
-std::optional<BinaryResponse> MediaNDKDecoder::ProcessRequest(const BinaryRequest& request) {
+std::optional<BinaryMessage> MediaNDKDecoder::ProcessRequest(const BinaryMessage& request) {
     return impl->ProcessRequest(request);
 }
 
