@@ -187,8 +187,8 @@ std::optional<BinaryResponse> AudioToolboxDecoder::Impl::Decode(const BinaryRequ
         return std::nullopt;
     }
 
-    // 1024 samples, up to 2 channels each
-    s16 decoder_output[2048];
+    // Up to 2048 samples, up to 2 channels each
+    s16 decoder_output[4096];
     AudioBufferList out_buffer{1,
                                {{
                                    output_format.mChannelsPerFrame,
@@ -208,8 +208,8 @@ std::optional<BinaryResponse> AudioToolboxDecoder::Impl::Decode(const BinaryRequ
     // De-interleave samples.
     std::array<std::vector<s16>, 2> out_streams;
     auto num_frames = num_packets * output_format.mFramesPerPacket;
-    for (auto frame = 0; frame < num_frames; frame++) {
-        for (auto ch = 0; ch < output_format.mChannelsPerFrame; ch++) {
+    for (u32 frame = 0; frame < num_frames; frame++) {
+        for (u32 ch = 0; ch < output_format.mChannelsPerFrame; ch++) {
             out_streams[ch].push_back(
                 decoder_output[(frame * output_format.mChannelsPerFrame) + ch]);
         }
@@ -223,16 +223,17 @@ std::optional<BinaryResponse> AudioToolboxDecoder::Impl::Decode(const BinaryRequ
     response.num_samples = num_frames;
 
     // transfer the decoded buffer from vector to the FCRAM
-    for (auto ch = 0; ch < out_streams.size(); ch++) {
+    for (std::size_t ch = 0; ch < out_streams.size(); ch++) {
         if (!out_streams[ch].empty()) {
+            auto byte_size = out_streams[ch].size() * bytes_per_sample;
             auto dst = ch == 0 ? request.dst_addr_ch0 : request.dst_addr_ch1;
             if (dst < Memory::FCRAM_PADDR ||
-                dst + out_streams[ch].size() > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+                dst + byte_size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
                 LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch{} {:08x}", ch, dst);
                 return {};
             }
             std::memcpy(memory.GetFCRAMPointer(dst - Memory::FCRAM_PADDR), out_streams[ch].data(),
-                        out_streams[ch].size() * bytes_per_sample);
+                        byte_size);
         }
     }
 

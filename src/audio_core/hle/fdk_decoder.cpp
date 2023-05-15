@@ -143,8 +143,8 @@ std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& requ
 
     // decoding loops
     AAC_DECODER_ERROR result = AAC_DEC_OK;
-    // 8192 units of s16 are enough to hold one frame of AAC-LC or AAC-HE/v2 data
-    s16 decoder_output[8192];
+    // Up to 2048 samples, up to 2 channels each
+    s16 decoder_output[4096];
     // note that we don't free this pointer as it is automatically freed by fdk_aac
     CStreamInfo* stream_info;
     // how many bytes to be queued into the decoder, decrementing from the buffer size
@@ -162,19 +162,21 @@ std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& requ
             return std::nullopt;
         }
         // get output from decoder
-        result = aacDecoder_DecodeFrame(decoder, decoder_output, 8192, 0);
+        result = aacDecoder_DecodeFrame(decoder, decoder_output,
+                                        sizeof(decoder_output) / sizeof(s16), 0);
         if (result == AAC_DEC_OK) {
             // get the stream information
             stream_info = aacDecoder_GetStreamInfo(decoder);
             // fill the stream information for binary response
             response.sample_rate = GetSampleRateEnum(stream_info->sampleRate);
-            response.num_channels = stream_info->aacNumChannels;
+            response.num_channels = stream_info->numChannels;
             response.num_samples = stream_info->frameSize;
             // fill the output
             // the sample size = frame_size * channel_counts
-            for (int sample = 0; sample < (stream_info->frameSize * 2); sample++) {
-                for (int ch = 0; ch < stream_info->aacNumChannels; ch++) {
-                    out_streams[ch].push_back(decoder_output[(sample * 2) + 1]);
+            for (int sample = 0; sample < stream_info->frameSize; sample++) {
+                for (int ch = 0; ch < stream_info->numChannels; ch++) {
+                    out_streams[ch].push_back(
+                        decoder_output[(sample * stream_info->numChannels) + ch]);
                 }
             }
         } else if (result == AAC_DEC_TRANSPORT_SYNC_ERROR) {
@@ -186,28 +188,22 @@ std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& requ
             return std::nullopt;
         }
     }
+
     // transfer the decoded buffer from vector to the FCRAM
-    if (out_streams[0].size() != 0) {
-        if (request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
-            request.dst_addr_ch0 + out_streams[0].size() >
-                Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
-            return {};
+    for (std::size_t ch = 0; ch < out_streams.size(); ch++) {
+        if (!out_streams[ch].empty()) {
+            auto byte_size = out_streams[ch].size() * sizeof(s16);
+            auto dst = ch == 0 ? request.dst_addr_ch0 : request.dst_addr_ch1;
+            if (dst < Memory::FCRAM_PADDR ||
+                dst + byte_size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+                LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch{} {:08x}", ch, dst);
+                return {};
+            }
+            std::memcpy(memory.GetFCRAMPointer(dst - Memory::FCRAM_PADDR), out_streams[ch].data(),
+                        byte_size);
         }
-        std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
-                    out_streams[0].data(), out_streams[0].size());
     }
 
-    if (out_streams[1].size() != 0) {
-        if (request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
-            request.dst_addr_ch1 + out_streams[1].size() >
-                Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
-            return {};
-        }
-        std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch1 - Memory::FCRAM_PADDR),
-                    out_streams[1].data(), out_streams[1].size());
-    }
     return response;
 }
 
