@@ -505,7 +505,7 @@ if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
 endif()
 
 if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_link_libraries(citra_core PUBLIC FFmpeg::avcodec FFmpeg::avformat FFmpeg::swscale FFmpeg::swresample FFmpeg::avutil)
+    target_link_libraries(citra_core PUBLIC FFmpeg::avcodec FFmpeg::avfilter FFmpeg::avformat FFmpeg::swresample FFmpeg::avutil)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

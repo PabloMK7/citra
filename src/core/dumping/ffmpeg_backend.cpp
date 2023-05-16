@@ -7,6 +7,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "core/dumping/ffmpeg_backend.h"
@@ -15,6 +16,9 @@
 #include "video_core/video_core.h"
 
 extern "C" {
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
+#include <libavutil/hwcontext.h>
 #include <libavutil/pixdesc.h>
 }
 
@@ -102,6 +106,43 @@ FFmpegVideoStream::~FFmpegVideoStream() {
     Free();
 }
 
+// This is modified from libavcodec/decode.c
+// The original version was broken
+static AVPixelFormat GetPixelFormat(AVCodecContext* avctx, const AVPixelFormat* fmt) {
+    // Choose a software pixel format if any, prefering those in the front of the list
+    for (int i = 0; fmt[i] != AV_PIX_FMT_NONE; i++) {
+        const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(fmt[i]);
+        if (!(desc->flags & AV_PIX_FMT_FLAG_HWACCEL)) {
+            return fmt[i];
+        }
+    }
+
+    // Finally, traverse the list in order and choose the first entry
+    // with no external dependencies (if there is no hardware configuration
+    // information available then this just picks the first entry).
+    for (int i = 0; fmt[i] != AV_PIX_FMT_NONE; i++) {
+        const AVCodecHWConfig* config;
+        for (int j = 0;; j++) {
+            config = avcodec_get_hw_config(avctx->codec, j);
+            if (!config || config->pix_fmt == fmt[i]) {
+                break;
+            }
+        }
+        if (!config) {
+            // No specific config available, so the decoder must be able
+            // to handle this format without any additional setup.
+            return fmt[i];
+        }
+        if (config->methods & AV_CODEC_HW_CONFIG_METHOD_INTERNAL) {
+            // Usable with only internal setup.
+            return fmt[i];
+        }
+    }
+
+    // Nothing is usable, give up.
+    return AV_PIX_FMT_NONE;
+}
+
 bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout& layout_) {
 
     InitializeFFmpegLibraries();
@@ -125,15 +166,28 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     codec_context->bit_rate = Settings::values.video_bitrate;
     codec_context->width = layout.width;
     codec_context->height = layout.height;
-    // TODO(xperia64): While these numbers from core timing work fine, certain video codecs do not
-    // support the strange resulting timebase (280071/16756991); Addressing this issue would require
-    // resampling the video
-    // List of codecs known broken by this change: mpeg1, mpeg2, mpeg4, libxvid
-    // See https://github.com/citra-emu/citra/pull/5273#issuecomment-643023325 for more information
-    codec_context->time_base.num = static_cast<int>(GPU::frame_ticks);
-    codec_context->time_base.den = static_cast<int>(BASE_CLOCK_RATE_ARM11);
+    // Use 60fps here, since the video is already filtered (resampled)
+    codec_context->time_base.num = 1;
+    codec_context->time_base.den = 60;
     codec_context->gop_size = 12;
-    codec_context->pix_fmt = codec->pix_fmts ? codec->pix_fmts[0] : AV_PIX_FMT_YUV420P;
+
+    // Get pixel format for codec
+    if (codec->pix_fmts) {
+        sw_pixel_format = GetPixelFormat(codec_context.get(), codec->pix_fmts);
+    } else {
+        sw_pixel_format = AV_PIX_FMT_YUV420P;
+    }
+    if (sw_pixel_format == AV_PIX_FMT_NONE) {
+        // This encoder requires HW context configuration.
+        if (!InitHWContext(codec)) {
+            LOG_ERROR(Render, "Failed to initialize HW context");
+            return false;
+        }
+    } else {
+        requires_hw_frames = false;
+        codec_context->pix_fmt = sw_pixel_format;
+    }
+
     if (format_context->oformat->flags & AVFMT_GLOBALHEADER)
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
@@ -160,31 +214,28 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
 
     // Allocate frames
     current_frame.reset(av_frame_alloc());
-    scaled_frame.reset(av_frame_alloc());
-    scaled_frame->format = codec_context->pix_fmt;
-    scaled_frame->width = layout.width;
-    scaled_frame->height = layout.height;
-    if (av_frame_get_buffer(scaled_frame.get(), 0) < 0) {
-        LOG_ERROR(Render, "Could not allocate frame buffer");
-        return false;
+    filtered_frame.reset(av_frame_alloc());
+
+    if (requires_hw_frames) {
+        hw_frame.reset(av_frame_alloc());
+        if (av_hwframe_get_buffer(codec_context->hw_frames_ctx, hw_frame.get(), 0) < 0) {
+            LOG_ERROR(Render, "Could not allocate buffer for HW frame");
+            return false;
+        }
     }
 
-    // Create SWS Context
-    auto* context = sws_getCachedContext(
-        sws_context.get(), layout.width, layout.height, pixel_format, layout.width, layout.height,
-        codec_context->pix_fmt, SWS_BICUBIC, nullptr, nullptr, nullptr);
-    if (context != sws_context.get())
-        sws_context.reset(context);
-
-    return true;
+    return InitFilters();
 }
 
 void FFmpegVideoStream::Free() {
     FFmpegStream::Free();
 
     current_frame.reset();
-    scaled_frame.reset();
-    sws_context.reset();
+    filtered_frame.reset();
+    hw_frame.reset();
+    filter_graph.reset();
+    source_context = nullptr;
+    sink_context = nullptr;
 }
 
 void FFmpegVideoStream::ProcessFrame(VideoFrame& frame) {
@@ -198,20 +249,189 @@ void FFmpegVideoStream::ProcessFrame(VideoFrame& frame) {
     current_frame->format = pixel_format;
     current_frame->width = layout.width;
     current_frame->height = layout.height;
+    current_frame->pts = frame_count++;
 
-    // Scale the frame
-    if (av_frame_make_writable(scaled_frame.get()) < 0) {
-        LOG_ERROR(Render, "Video frame dropped: Could not prepare frame");
+    // Filter the frame
+    if (av_buffersrc_add_frame(source_context, current_frame.get()) < 0) {
+        LOG_ERROR(Render, "Video frame dropped: Could not add frame to filter graph");
         return;
     }
-    if (sws_context) {
-        sws_scale(sws_context.get(), current_frame->data, current_frame->linesize, 0, layout.height,
-                  scaled_frame->data, scaled_frame->linesize);
-    }
-    scaled_frame->pts = frame_count++;
+    while (true) {
+        const int error = av_buffersink_get_frame(sink_context, filtered_frame.get());
+        if (error == AVERROR(EAGAIN) || error == AVERROR_EOF) {
+            return;
+        }
+        if (error < 0) {
+            LOG_ERROR(Render, "Video frame dropped: Could not receive frame from filter graph");
+            return;
+        } else {
+            if (requires_hw_frames) {
+                if (av_hwframe_transfer_data(hw_frame.get(), filtered_frame.get(), 0) < 0) {
+                    LOG_ERROR(Render, "Video frame dropped: Could not upload to HW frame");
+                    return;
+                }
+                SendFrame(hw_frame.get());
+            } else {
+                SendFrame(filtered_frame.get());
+            }
 
-    // Encode frame
-    SendFrame(scaled_frame.get());
+            av_frame_unref(filtered_frame.get());
+        }
+    }
+}
+
+bool FFmpegVideoStream::InitHWContext(const AVCodec* codec) {
+    for (std::size_t i = 0; codec->pix_fmts[i] != AV_PIX_FMT_NONE; ++i) {
+        const AVCodecHWConfig* config;
+        for (int j = 0;; ++j) {
+            config = avcodec_get_hw_config(codec, j);
+            if (!config || config->pix_fmt == codec->pix_fmts[i]) {
+                break;
+            }
+        }
+        // If we are at this point, there should not be any possible HW format that does not
+        // need configuration.
+        ASSERT_MSG(config, "HW pixel format that does not need config should have been selected");
+
+        if (!(config->methods & (AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX |
+                                 AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX))) {
+            // Maybe this format requires ad-hoc configuration, unsupported.
+            continue;
+        }
+
+        codec_context->pix_fmt = codec->pix_fmts[i];
+
+        // Create HW device context
+        AVBufferRef* hw_device_context;
+        SCOPE_EXIT({ av_buffer_unref(&hw_device_context); });
+
+        // TODO: Provide the argument here somehow.
+        // This is necessary for some devices like CUDA where you must supply the GPU name.
+        // This is not necessary for VAAPI, etc.
+        if (av_hwdevice_ctx_create(&hw_device_context, config->device_type, nullptr, nullptr, 0) <
+            0) {
+            LOG_ERROR(Render, "Failed to create HW device context");
+            continue;
+        }
+        codec_context->hw_device_ctx = av_buffer_ref(hw_device_context);
+
+        // Get the SW format
+        AVHWFramesConstraints* constraints =
+            av_hwdevice_get_hwframe_constraints(hw_device_context, nullptr);
+        SCOPE_EXIT({ av_hwframe_constraints_free(&constraints); });
+
+        if (constraints) {
+            sw_pixel_format = constraints->valid_sw_formats ? constraints->valid_sw_formats[0]
+                                                            : AV_PIX_FMT_YUV420P;
+        } else {
+            LOG_WARNING(Render, "Could not query HW device constraints");
+            sw_pixel_format = AV_PIX_FMT_YUV420P;
+        }
+
+        // For encoders that only need the HW device
+        if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX) {
+            requires_hw_frames = false;
+            return true;
+        }
+
+        requires_hw_frames = true;
+
+        // Create HW frames context
+        AVBufferRef* hw_frames_context_ref;
+        SCOPE_EXIT({ av_buffer_unref(&hw_frames_context_ref); });
+
+        if (!(hw_frames_context_ref = av_hwframe_ctx_alloc(hw_device_context))) {
+            LOG_ERROR(Render, "Failed to create HW frames context");
+            continue;
+        }
+
+        AVHWFramesContext* hw_frames_context =
+            reinterpret_cast<AVHWFramesContext*>(hw_frames_context_ref->data);
+        hw_frames_context->format = codec->pix_fmts[i];
+        hw_frames_context->sw_format = sw_pixel_format;
+        hw_frames_context->width = codec_context->width;
+        hw_frames_context->height = codec_context->height;
+        hw_frames_context->initial_pool_size = 20; // value from FFmpeg's example
+
+        if (av_hwframe_ctx_init(hw_frames_context_ref) < 0) {
+            LOG_ERROR(Render, "Failed to initialize HW frames context");
+            continue;
+        }
+
+        codec_context->hw_frames_ctx = av_buffer_ref(hw_frames_context_ref);
+        return true;
+    }
+
+    LOG_ERROR(Render, "Failed to find a usable HW pixel format");
+    return false;
+}
+
+bool FFmpegVideoStream::InitFilters() {
+    filter_graph.reset(avfilter_graph_alloc());
+
+    const AVFilter* source = avfilter_get_by_name("buffer");
+    const AVFilter* sink = avfilter_get_by_name("buffersink");
+    if (!source || !sink) {
+        LOG_ERROR(Render, "Could not find buffer source or sink");
+        return false;
+    }
+
+    // Configure buffer source
+    static constexpr AVRational src_time_base{static_cast<int>(GPU::frame_ticks),
+                                              static_cast<int>(BASE_CLOCK_RATE_ARM11)};
+    const std::string in_args = fmt::format(
+        "video_size={}x{}:pix_fmt={}:time_base={}/{}:pixel_aspect=1", codec_context->width,
+        codec_context->height, pixel_format, src_time_base.num, src_time_base.den);
+    if (avfilter_graph_create_filter(&source_context, source, "in", in_args.c_str(), nullptr,
+                                     filter_graph.get()) < 0) {
+        LOG_ERROR(Render, "Could not create buffer source");
+        return false;
+    }
+
+    // Configure buffer sink
+    if (avfilter_graph_create_filter(&sink_context, sink, "out", nullptr, nullptr,
+                                     filter_graph.get()) < 0) {
+        LOG_ERROR(Render, "Could not create buffer sink");
+        return false;
+    }
+    const AVPixelFormat pix_fmts[] = {sw_pixel_format, AV_PIX_FMT_NONE};
+    if (av_opt_set_int_list(sink_context, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE,
+                            AV_OPT_SEARCH_CHILDREN) < 0) {
+        LOG_ERROR(Render, "Could not set output pixel format");
+        return false;
+    }
+
+    // Initialize filter graph
+    // `outputs` as in outputs of the 'previous' graphs
+    AVFilterInOut* outputs = avfilter_inout_alloc();
+    outputs->name = av_strdup("in");
+    outputs->filter_ctx = source_context;
+    outputs->pad_idx = 0;
+    outputs->next = nullptr;
+
+    // `inputs` as in inputs to the 'next' graphs
+    AVFilterInOut* inputs = avfilter_inout_alloc();
+    inputs->name = av_strdup("out");
+    inputs->filter_ctx = sink_context;
+    inputs->pad_idx = 0;
+    inputs->next = nullptr;
+
+    SCOPE_EXIT({
+        avfilter_inout_free(&outputs);
+        avfilter_inout_free(&inputs);
+    });
+
+    if (avfilter_graph_parse_ptr(filter_graph.get(), filter_graph_desc.data(), &inputs, &outputs,
+                                 nullptr) < 0) {
+        LOG_ERROR(Render, "Could not parse or create filter graph");
+        return false;
+    }
+    if (avfilter_graph_config(filter_graph.get(), nullptr) < 0) {
+        LOG_ERROR(Render, "Could not configure filter graph");
+        return false;
+    }
+
+    return true;
 }
 
 FFmpegAudioStream::~FFmpegAudioStream() {
