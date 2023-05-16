@@ -46,12 +46,12 @@ jobs:
           ENABLE_COMPATIBILITY_REPORTING: "ON"
       - name: Pack
         run: ./.ci/${{ matrix.image }}/upload.sh
-        if: ${{ matrix.image != 'linux-frozen' }}
+        if: ${{ matrix.image == 'linux-appimage' || matrix.image == 'linux-mingw' }}
         env:
           NAME: ${{ matrix.image }}
       - name: Upload
         uses: actions/upload-artifact@v3
-        if: ${{ matrix.image != 'linux-frozen' }}
+        if: ${{ matrix.image == 'linux-appimage' || matrix.image == 'linux-mingw' }}
         with:
           name: ${{ matrix.image }}
           path: artifacts/
