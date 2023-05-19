@@ -172,7 +172,11 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     codec_context->gop_size = 12;
 
     // Get pixel format for codec
-    if (codec->pix_fmts) {
+    auto options = ToAVDictionary(Settings::values.video_encoder_options);
+    auto pixel_format_opt = av_dict_get(options, "pixel_format", nullptr, 0);
+    if (pixel_format_opt) {
+        sw_pixel_format = av_get_pix_fmt(pixel_format_opt->value);
+    } else if (codec->pix_fmts) {
         sw_pixel_format = GetPixelFormat(codec_context.get(), codec->pix_fmts);
     } else {
         sw_pixel_format = AV_PIX_FMT_YUV420P;
@@ -191,7 +195,6 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     if (format_context->oformat->flags & AVFMT_GLOBALHEADER)
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    AVDictionary* options = ToAVDictionary(Settings::values.video_encoder_options);
     if (avcodec_open2(codec_context.get(), codec, &options) < 0) {
         LOG_ERROR(Render, "Could not open video codec");
         return false;
@@ -379,9 +382,9 @@ bool FFmpegVideoStream::InitFilters() {
     // Configure buffer source
     static constexpr AVRational src_time_base{static_cast<int>(GPU::frame_ticks),
                                               static_cast<int>(BASE_CLOCK_RATE_ARM11)};
-    const std::string in_args = fmt::format(
-        "video_size={}x{}:pix_fmt={}:time_base={}/{}:pixel_aspect=1", codec_context->width,
-        codec_context->height, pixel_format, src_time_base.num, src_time_base.den);
+    const std::string in_args =
+        fmt::format("video_size={}x{}:pix_fmt={}:time_base={}/{}:pixel_aspect=1", layout.width,
+                    layout.height, pixel_format, src_time_base.num, src_time_base.den);
     if (avfilter_graph_create_filter(&source_context, source, "in", in_args.c_str(), nullptr,
                                      filter_graph.get()) < 0) {
         LOG_ERROR(Render, "Could not create buffer source");
