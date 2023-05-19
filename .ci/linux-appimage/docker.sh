@@ -8,14 +8,17 @@ ninja
 
 ctest -VV -C Release
 
+#Circumvent missing LibFuse in Docker, by extracting the AppImage
+export APPIMAGE_EXTRACT_AND_RUN=1
+
 #Building AppDir
 DESTDIR="./AppDir" ninja install
 mv ./AppDir/usr/local/bin ./AppDir/usr
 mv ./AppDir/usr/local/share ./AppDir/usr
 rm -rf ./AppDir/usr/local
-
-#Circumvent missing LibFuse in Docker, by extracting the AppImage
-export APPIMAGE_EXTRACT_AND_RUN=1
+QMAKE=/usr/lib/qt6/bin/qmake DEPLOY_PLATFORM_THEMES=1 /linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --plugin checkrt
+sed -i 's/*XFCE*/*X-Cinnamon*|*XFCE*/g' ./AppDir/apprun-hooks/linuxdeploy-plugin-qt-hook.sh
+sed -i '/export QT_QPA_PLATFORMTHEME=gtk3/a \ \ \ \ \ \ \ \ export GDK_BACKEND=x11' ./AppDir/apprun-hooks/linuxdeploy-plugin-qt-hook.sh
 
 #Build AppImage
-QMAKE=/usr/lib/qt6/bin/qmake DEPLOY_PLATFORM_THEMES=1 /linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+QMAKE=/usr/lib/qt6/bin/qmake /linuxdeploy-x86_64.AppImage --appdir AppDir --output appimage
