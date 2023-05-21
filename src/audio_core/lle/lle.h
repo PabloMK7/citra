@@ -28,6 +28,9 @@ public:
 
     void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) override;
 
+    void SetSemaphoreHandler(std::function<void()> handler);
+    void SetRecvDataHandler(u8 index, std::function<void()> handler);
+
     void LoadComponent(const std::vector<u8>& buffer) override;
     void UnloadComponent() override;
 

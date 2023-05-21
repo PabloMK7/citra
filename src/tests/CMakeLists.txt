@@ -11,6 +11,8 @@ add_executable(tests
     core/memory/memory.cpp
     core/memory/vm_manager.cpp
     precompiled_headers.h
+    audio_core/hle/hle.cpp
+    audio_core/lle/lle.cpp
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
     video_core/shader/shader_jit_x64_compiler.cpp

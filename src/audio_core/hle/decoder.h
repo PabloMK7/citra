@@ -123,7 +123,6 @@ struct BinaryMessage {
         EncodeAACResponse encode_aac_response;
     };
 };
-
 static_assert(sizeof(BinaryMessage) == 32, "Unexpected struct size for BinaryMessage");
 
 enum_le<DecoderSampleRate> GetSampleRateEnum(u32 sample_rate);

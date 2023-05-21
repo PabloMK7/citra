@@ -468,6 +468,14 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
     impl->teakra.SetSemaphoreHandler([ProcessPipeEvent]() { ProcessPipeEvent(false); });
 }
 
+void DspLle::SetSemaphoreHandler(std::function<void()> handler) {
+    impl->teakra.SetSemaphoreHandler(handler);
+}
+
+void DspLle::SetRecvDataHandler(u8 index, std::function<void()> handler) {
+    impl->teakra.SetRecvDataHandler(index, handler);
+}
+
 void DspLle::LoadComponent(const std::vector<u8>& buffer) {
     impl->LoadComponent(buffer);
 }
