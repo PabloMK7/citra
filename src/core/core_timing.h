@@ -203,11 +203,6 @@ public:
 
         void MoveEvents();
 
-        // Use these two functions to adjust the guest system tick on host blocking operations, so
-        // that the guest can tell how much time passed during the host call.
-        u32 StartAdjust();
-        void EndAdjust(u32 start_adjust_handle);
-
     private:
         friend class Timing;
         // The queue is a min-heap using std::make_heap/push_heap/pop_heap.
@@ -233,8 +228,6 @@ public:
         s64 executed_ticks = 0;
         u64 idled_cycles = 0;
 
-        std::chrono::time_point<std::chrono::steady_clock> adjust_value_last;
-        u32 adjust_value_curr_handle = 0;
         // Stores a scaling for the internal clockspeed. Changing this number results in
         // under/overclocking the guest cpu
         double cpu_clock_scale = 1.0;

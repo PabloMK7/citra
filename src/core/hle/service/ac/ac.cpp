@@ -6,6 +6,7 @@
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
@@ -15,6 +16,7 @@
 #include "core/hle/service/ac/ac.h"
 #include "core/hle/service/ac/ac_i.h"
 #include "core/hle/service/ac/ac_u.h"
+#include "core/hle/service/soc_u.h"
 #include "core/memory.h"
 
 namespace Service::AC {
@@ -91,15 +93,19 @@ void Module::Interface::GetCloseResult(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xD, 0, 0);
+    bool can_reach_internet = false;
 
-    // TODO(purpasmart96): This function is only a stub,
-    // it returns a valid result without implementing full functionality.
+    std::shared_ptr<SOC::SOC_U> socu_module = SOC::GetService(Core::System::GetInstance());
+    if (socu_module) {
+        can_reach_internet = socu_module->GetDefaultInterfaceInfo().has_value();
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(0); // Connection type set to none
-
-    LOG_WARNING(Service_AC, "(STUBBED) called");
+    rb.Push<u32>(static_cast<u32>(can_reach_internet ? (Settings::values.is_new_3ds
+                                                            ? WifiStatus::STATUS_CONNECTED_N3DS
+                                                            : WifiStatus::STATUS_CONNECTED_O3DS)
+                                                     : WifiStatus::STATUS_DISCONNECTED));
 }
 
 void Module::Interface::GetInfraPriority(Kernel::HLERequestContext& ctx) {

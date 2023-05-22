@@ -35,11 +35,15 @@
 #endif // _MSC_VER
 #else
 #include <cerrno>
+#include <arpa/inet.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
@@ -49,17 +53,105 @@
 #define ERRNO(x) WSA##x
 #define GET_ERRNO WSAGetLastError()
 #define poll(x, y, z) WSAPoll(x, y, z);
+#define SHUT_RD SD_RECEIVE
+#define SHUT_WR SD_SEND
+#define SHUT_RDWR SD_BOTH
 #else
 #define ERRNO(x) x
 #define GET_ERRNO errno
 #define closesocket(x) close(x)
 #endif
+#define MSGCUSTOM_HANDLE_DONTWAIT 0x80000000
 
 SERIALIZE_EXPORT_IMPL(Service::SOC::SOC_U)
 
 namespace Service::SOC {
 
 const s32 SOCKET_ERROR_VALUE = -1;
+
+static u32 SocketProtocolToPlatform(u32 protocol) {
+    switch (protocol) {
+    case 0:
+        return 0;
+    case 6:
+        return IPPROTO_TCP;
+    case 17:
+        return IPPROTO_UDP;
+    default:
+        break;
+    }
+    return -1;
+}
+
+static u32 SocketProtocolFromPlatform(u32 protocol) {
+    switch (protocol) {
+    case 0:
+        return 0;
+    case IPPROTO_TCP:
+        return 6;
+    case IPPROTO_UDP:
+        return 17;
+    default:
+        break;
+    }
+    return -1;
+}
+
+static u32 SocketDomainToPlatform(u32 domain) {
+    switch (domain) {
+    case 0:
+        return AF_UNSPEC;
+    case 2:
+        return AF_INET;
+    case 23:
+        return AF_INET6;
+    default:
+        break;
+    }
+    return -1;
+}
+
+static u32 SocketDomainFromPlatform(u32 domain) {
+    switch (domain) {
+    case AF_UNSPEC:
+        return 0;
+    case AF_INET:
+        return 2;
+    case AF_INET6:
+        return 23;
+    default:
+        break;
+    }
+    return -1;
+}
+
+static u32 SocketTypeToPlatform(u32 type) {
+    switch (type) {
+    case 0:
+        return 0;
+    case 1:
+        return SOCK_STREAM;
+    case 2:
+        return SOCK_DGRAM;
+    default:
+        break;
+    }
+    return -1;
+}
+
+static u32 SocketTypeFromPlatform(u32 type) {
+    switch (type) {
+    case 0:
+        return 0;
+    case SOCK_STREAM:
+        return 1;
+    case SOCK_DGRAM:
+        return 2;
+    default:
+        break;
+    }
+    return -1;
+}
 
 /// Holds the translation from system network errors to 3DS network errors
 static const std::unordered_map<int, int> error_map = {{
@@ -68,7 +160,14 @@ static const std::unordered_map<int, int> error_map = {{
     {ERRNO(EADDRINUSE), 3},
     {ERRNO(EADDRNOTAVAIL), 4},
     {ERRNO(EAFNOSUPPORT), 5},
-    {ERRNO(EAGAIN), 6},
+    {EAGAIN, 6},
+#ifdef _WIN32
+    {WSAEWOULDBLOCK, 6},
+#else
+#if EAGAIN != EWOULDBLOCK
+    {EWOULDBLOCK, 6},
+#endif
+#endif // _WIN32
     {ERRNO(EALREADY), 7},
     {ERRNO(EBADF), 8},
     {EBADMSG, 9},
@@ -153,31 +252,188 @@ static const std::unordered_map<int, int> error_map = {{
 
 /// Converts a network error from platform-specific to 3ds-specific
 static int TranslateError(int error) {
-    auto found = error_map.find(error);
-    if (found != error_map.end())
+    const auto& found = error_map.find(error);
+    if (found != error_map.end()) {
         return -found->second;
-
+    }
     return error;
 }
 
+struct CTRLinger {
+    u32_le l_onoff;
+    u32_le l_linger;
+};
+
 /// Holds the translation from system network socket options to 3DS network socket options
 /// Note: -1 = No effect/unavailable
-static const std::unordered_map<int, int> sockopt_map = {{
-    {0x0004, SO_REUSEADDR},
-    {0x0080, -1},
-    {0x0100, -1},
-    {0x1001, SO_SNDBUF},
-    {0x1002, SO_RCVBUF},
-    {0x1003, -1},
-#ifdef _WIN32
-    /// Unsupported in WinSock2
-    {0x1004, -1},
-#else
-    {0x1004, SO_RCVLOWAT},
-#endif
-    {0x1008, SO_TYPE},
-    {0x1009, SO_ERROR},
+static constexpr u64 sockopt_map_key(int i, int j) {
+    return (u64)i << 32 | (unsigned int)j;
+}
+const std::unordered_map<u64, std::pair<int, int>> SOC_U::sockopt_map = {{
+    {sockopt_map_key(SOC_SOL_IP, 0x0007), {IPPROTO_IP, IP_TOS}},
+    {sockopt_map_key(SOC_SOL_IP, 0x0008), {IPPROTO_IP, IP_TTL}},
+    {sockopt_map_key(SOC_SOL_IP, 0x0009), {IPPROTO_IP, IP_MULTICAST_LOOP}},  // Never used?
+    {sockopt_map_key(SOC_SOL_IP, 0x000A), {IPPROTO_IP, IP_MULTICAST_TTL}},   // Never used?
+    {sockopt_map_key(SOC_SOL_IP, 0x000B), {IPPROTO_IP, IP_ADD_MEMBERSHIP}},  // Never used?
+    {sockopt_map_key(SOC_SOL_IP, 0x000C), {IPPROTO_IP, IP_DROP_MEMBERSHIP}}, // Never used?
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x0004), {SOL_SOCKET, SO_REUSEADDR}},
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x0080), {SOL_SOCKET, SO_LINGER}},
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x0100), {SOL_SOCKET, SO_OOBINLINE}},
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x1001), {SOL_SOCKET, SO_SNDBUF}},
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x1002), {SOL_SOCKET, SO_RCVBUF}},
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x1003),
+     {SOL_SOCKET, SO_SNDLOWAT}}, // Not supported in winsock2
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x1004),
+     {SOL_SOCKET, SO_RCVLOWAT}}, // Not supported in winsock2
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x1008), {SOL_SOCKET, SO_TYPE}},
+    {sockopt_map_key(SOC_SOL_SOCKET, 0x1009), {SOL_SOCKET, SO_ERROR}},
+    {sockopt_map_key(SOC_SOL_TCP, 0x2001), {IPPROTO_TCP, TCP_NODELAY}},
+    {sockopt_map_key(SOC_SOL_TCP, 0x2002), {IPPROTO_TCP, -1}}, // TCP_MAXSEG, never used?
+    {sockopt_map_key(SOC_SOL_TCP, 0x2003), {IPPROTO_TCP, -1}}, // TCP_STDURG, never used?
 }};
+
+/// Converts a socket option from platform-specific to 3ds-specific
+std::pair<int, int> SOC_U::TranslateSockOpt(int level, int opt) {
+    const auto& found = sockopt_map.find(sockopt_map_key(level, opt));
+    if (found != sockopt_map.end()) {
+        return found->second;
+    }
+    return std::make_pair(SOL_SOCKET, opt);
+}
+
+static void TranslateSockOptDataToPlatform(std::vector<u8>& out, const std::vector<u8>& in,
+                                           int platform_level, int platform_opt) {
+    // linger structure may be different between 3DS and platform
+    if (platform_level == SOL_SOCKET && platform_opt == SO_LINGER &&
+        in.size() == sizeof(CTRLinger)) {
+        linger linger_out;
+        linger_out.l_onoff = static_cast<decltype(linger_out.l_onoff)>(
+            reinterpret_cast<const CTRLinger*>(in.data())->l_onoff);
+        linger_out.l_linger = static_cast<decltype(linger_out.l_linger)>(
+            reinterpret_cast<const CTRLinger*>(in.data())->l_linger);
+        out.resize(sizeof(linger));
+        memcpy(out.data(), &linger_out, sizeof(linger));
+        return;
+    }
+    // Other options should have the size of an int, even for booleans
+    int value;
+    if (in.size() == sizeof(u8)) {
+        value = static_cast<int>(*reinterpret_cast<const u8*>(in.data()));
+    } else if (in.size() == sizeof(u16)) {
+        value = static_cast<int>(*reinterpret_cast<const u16_le*>(in.data()));
+    } else if (in.size() == sizeof(u32)) {
+        value = static_cast<int>(*reinterpret_cast<const u32_le*>(in.data()));
+    } else {
+        LOG_ERROR(
+            Service_SOC,
+            "Unknown sockopt data combination: in_size={}, platform_level={}, platform_opt={}",
+            in.size(), platform_level, platform_opt);
+        out = in;
+        return;
+    }
+    out.resize(sizeof(int));
+    memcpy(out.data(), &value, sizeof(int));
+}
+
+static u32 TranslateSockOptSizeToPlatform(int platform_level, int platform_opt) {
+    if (platform_level == SOL_SOCKET && platform_opt == SO_LINGER)
+        return sizeof(linger);
+    return sizeof(int);
+}
+
+static void TranslateSockOptDataFromPlatform(std::vector<u8>& out, const std::vector<u8>& in,
+                                             int platform_level, int platform_opt) {
+    if (platform_level == SOL_SOCKET && platform_opt == SO_LINGER && in.size() == sizeof(linger)) {
+        CTRLinger linger_out;
+        linger_out.l_onoff = static_cast<decltype(linger_out.l_onoff)>(
+            reinterpret_cast<const linger*>(in.data())->l_onoff);
+        linger_out.l_linger = static_cast<decltype(linger_out.l_linger)>(
+            reinterpret_cast<const linger*>(in.data())->l_linger);
+        memcpy(out.data(), &linger_out, std::min(out.size(), sizeof(CTRLinger)));
+        return;
+    }
+    if (out.size() == sizeof(u8) && in.size() == sizeof(int)) {
+        *reinterpret_cast<u8*>(out.data()) =
+            static_cast<u8>(*reinterpret_cast<const int*>(in.data()));
+    } else if (out.size() == sizeof(u16_le) && in.size() == sizeof(int)) {
+        *reinterpret_cast<u16_le*>(out.data()) =
+            static_cast<u16_le>(*reinterpret_cast<const int*>(in.data()));
+    } else if (out.size() == sizeof(u32_le) && in.size() == sizeof(int)) {
+        *reinterpret_cast<u32_le*>(out.data()) =
+            static_cast<u32_le>(*reinterpret_cast<const int*>(in.data()));
+    } else {
+        LOG_ERROR(Service_SOC,
+                  "Unknown sockopt data combination: in_size={}, out_size={}, platform_level={}, "
+                  "platform_opt={}",
+                  in.size(), out.size(), platform_level, platform_opt);
+        out = in;
+        return;
+    }
+}
+
+bool SOC_U::GetSocketBlocking(const SocketHolder& socket_holder) {
+    return socket_holder.blocking;
+}
+u32 SOC_U::SetSocketBlocking(SocketHolder& socket_holder, bool blocking) {
+    u32 posix_ret = 0;
+#ifdef _WIN32
+    unsigned long nonblocking = (blocking) ? 0 : 1;
+    int ret = ioctlsocket(socket_holder.socket_fd, FIONBIO, &nonblocking);
+    if (ret == SOCKET_ERROR_VALUE) {
+        posix_ret = TranslateError(GET_ERRNO);
+        return posix_ret;
+    }
+    socket_holder.blocking = blocking;
+#else
+    int flags = ::fcntl(socket_holder.socket_fd, F_GETFL, 0);
+    if (flags == SOCKET_ERROR_VALUE) {
+        posix_ret = TranslateError(GET_ERRNO);
+        return posix_ret;
+    }
+
+    flags &= ~O_NONBLOCK;
+    if (!blocking) { // O_NONBLOCK
+        flags |= O_NONBLOCK;
+    }
+
+    socket_holder.blocking = blocking;
+
+    const int ret = ::fcntl(socket_holder.socket_fd, F_SETFL, flags);
+    if (ret == SOCKET_ERROR_VALUE) {
+        posix_ret = TranslateError(GET_ERRNO);
+        return posix_ret;
+    }
+#endif
+    return posix_ret;
+}
+
+static u32 SendRecvFlagsToPlatform(u32 flags) {
+    u32 ret = 0;
+    if (flags & 1) {
+        ret |= MSG_OOB;
+    }
+    if (flags & 2) {
+        ret |= MSG_PEEK;
+    }
+    if (flags & 4) {
+        // Magic value to decide platform specific action
+        ret |= MSGCUSTOM_HANDLE_DONTWAIT;
+    }
+    return ret;
+}
+
+static s32 ShutdownHowToPlatform(s32 how) {
+    if (how == 0) {
+        return SHUT_RD;
+    }
+    if (how == 1) {
+        return SHUT_WR;
+    }
+    if (how == 2) {
+        return SHUT_RDWR;
+    }
+    return -1;
+}
 
 /// Structure to represent the 3ds' pollfd structure, which is different than most implementations
 struct CTRPollFD {
@@ -185,27 +441,37 @@ struct CTRPollFD {
 
     union Events {
         u32 hex; ///< The complete value formed by the flags
-        BitField<0, 1, u32> pollin;
-        BitField<1, 1, u32> pollpri;
-        BitField<2, 1, u32> pollhup;
-        BitField<3, 1, u32> pollerr;
-        BitField<4, 1, u32> pollout;
-        BitField<5, 1, u32> pollnval;
+        BitField<0, 1, u32> pollrdnorm;
+        BitField<1, 1, u32> pollrdband; // The 3DS OS mistakenly uses POLLRDBAND as POLLPRI,
+        BitField<2, 1, u32> pollpri;    // this is reflected in the translate functions below.
+        BitField<3, 1, u32> pollwrnorm;
+        BitField<4, 1, u32> pollwrband;
+        BitField<5, 1, u32> pollerr;
+        BitField<6, 1, u32> pollhup;
+        BitField<7, 1, u32> pollnval;
 
         /// Translates the resulting events of a Poll operation from platform-specific to 3ds
         /// specific
-        static Events TranslateTo3DS(u32 input_event) {
+        static Events TranslateTo3DS(u32 input_event, u8 haslibctrbug) {
             Events ev = {};
-            if (input_event & POLLIN)
-                ev.pollin.Assign(1);
-            if (input_event & POLLPRI)
+
+            if (input_event & POLLRDNORM)
+                ev.pollrdnorm.Assign(1);
+            if (input_event & POLLRDBAND)
                 ev.pollpri.Assign(1);
             if (input_event & POLLHUP)
                 ev.pollhup.Assign(1);
             if (input_event & POLLERR)
                 ev.pollerr.Assign(1);
-            if (input_event & POLLOUT)
-                ev.pollout.Assign(1);
+            if (input_event & POLLWRNORM) {
+                if (haslibctrbug) {
+                    ev.pollwrband.Assign(1);
+                } else {
+                    ev.pollwrnorm.Assign(1);
+                }
+            }
+            if (input_event & POLLWRBAND)
+                ev.pollwrband.Assign(1);
             if (input_event & POLLNVAL)
                 ev.pollnval.Assign(1);
             return ev;
@@ -213,25 +479,34 @@ struct CTRPollFD {
 
         /// Translates the resulting events of a Poll operation from 3ds specific to platform
         /// specific
-        static u32 TranslateToPlatform(Events input_event, bool isOutput) {
+        static u32 TranslateToPlatform(Events input_event, bool isOutput, u8& has_libctru_bug) {
 #if _WIN32
             constexpr bool isWin = true;
 #else
             constexpr bool isWin = false;
 #endif
-
+            has_libctru_bug = 0;
+            if (!input_event.pollwrnorm && input_event.pollwrband) {
+                // Fixes a bug in libctru and some homebrew using libcurl
+                // having the wrong value for POLLOUT
+                input_event.pollwrnorm.Assign(1);
+                input_event.pollwrband.Assign(0);
+                has_libctru_bug = 1;
+            }
             u32 ret = 0;
-            if (input_event.pollin)
-                ret |= POLLIN;
-            if (input_event.pollpri && !isWin)
+            if (input_event.pollrdnorm)
+                ret |= POLLRDNORM;
+            if (input_event.pollrdband && !isWin)
                 ret |= POLLPRI;
-            if (input_event.pollhup && (!isWin || isOutput))
+            if (input_event.pollhup && isOutput)
                 ret |= POLLHUP;
-            if (input_event.pollerr && (!isWin || isOutput))
+            if (input_event.pollerr && isOutput)
                 ret |= POLLERR;
-            if (input_event.pollout)
-                ret |= POLLOUT;
-            if (input_event.pollnval && (isWin && isOutput))
+            if (input_event.pollwrnorm)
+                ret |= POLLWRNORM;
+            if (input_event.pollwrband && !isWin)
+                ret |= POLLWRBAND;
+            if (input_event.pollnval && isOutput)
                 ret |= POLLNVAL;
             return ret;
         }
@@ -240,10 +515,10 @@ struct CTRPollFD {
     Events revents; ///< Events received (output)
 
     /// Converts a platform-specific pollfd to a 3ds specific structure
-    static CTRPollFD FromPlatform(SOC::SOC_U& socu, pollfd const& fd) {
+    static CTRPollFD FromPlatform(SOC::SOC_U& socu, pollfd const& fd, u8 has_libctru_bug) {
         CTRPollFD result;
-        result.events.hex = Events::TranslateTo3DS(fd.events).hex;
-        result.revents.hex = Events::TranslateTo3DS(fd.revents).hex;
+        result.events.hex = Events::TranslateTo3DS(fd.events, has_libctru_bug).hex;
+        result.revents.hex = Events::TranslateTo3DS(fd.revents, has_libctru_bug).hex;
         for (auto iter = socu.open_sockets.begin(); iter != socu.open_sockets.end(); ++iter) {
             if (iter->second.socket_fd == fd.fd) {
                 result.fd = iter->first;
@@ -254,12 +529,16 @@ struct CTRPollFD {
     }
 
     /// Converts a 3ds specific pollfd to a platform-specific structure
-    static pollfd ToPlatform(SOC::SOC_U& socu, CTRPollFD const& fd) {
+    static pollfd ToPlatform(SOC::SOC_U& socu, CTRPollFD const& fd, u8& haslibctrbug) {
         pollfd result;
-        result.events = Events::TranslateToPlatform(fd.events, false);
-        result.revents = Events::TranslateToPlatform(fd.revents, true);
+        u8 unused = 0;
+        result.events = Events::TranslateToPlatform(fd.events, false, haslibctrbug);
+        result.revents = Events::TranslateToPlatform(fd.revents, true, unused);
         auto iter = socu.open_sockets.find(fd.fd);
         result.fd = (iter != socu.open_sockets.end()) ? iter->second.socket_fd : 0;
+        if (iter == socu.open_sockets.end()) {
+            LOG_ERROR(Service_SOC, "Invalid socket handle: {}", fd.fd);
+        }
         return result;
     }
 };
@@ -282,11 +561,14 @@ union CTRSockAddr {
         u16 sin_port;  ///< The port associated with this sockaddr_in
         u32 sin_addr;  ///< The actual address of the sockaddr_in
     } in;
+    static_assert(sizeof(CTRSockAddrIn) == 8, "Invalid CTRSockAddrIn size");
 
     /// Convert a 3DS CTRSockAddr to a platform-specific sockaddr
     static sockaddr ToPlatform(CTRSockAddr const& ctr_addr) {
         sockaddr result;
-        result.sa_family = ctr_addr.raw.sa_family;
+        ASSERT_MSG(ctr_addr.raw.len == sizeof(CTRSockAddrIn),
+                   "Unhandled address size (len) in CTRSockAddr::ToPlatform");
+        result.sa_family = SocketDomainToPlatform(ctr_addr.raw.sa_family);
         memset(result.sa_data, 0, sizeof(result.sa_data));
 
         // We can not guarantee ABI compatibility between platforms so we copy the fields manually
@@ -308,9 +590,9 @@ union CTRSockAddr {
     /// Convert a platform-specific sockaddr to a 3DS CTRSockAddr
     static CTRSockAddr FromPlatform(sockaddr const& addr) {
         CTRSockAddr result;
-        result.raw.sa_family = static_cast<u8>(addr.sa_family);
+        result.raw.sa_family = static_cast<u8>(SocketDomainFromPlatform(addr.sa_family));
         // We can not guarantee ABI compatibility between platforms so we copy the fields manually
-        switch (result.raw.sa_family) {
+        switch (addr.sa_family) {
         case AF_INET: {
             sockaddr_in const* addr_in = reinterpret_cast<sockaddr_in const*>(&addr);
             result.raw.len = sizeof(CTRSockAddrIn);
@@ -335,45 +617,114 @@ struct CTRAddrInfo {
     char ai_canonname[256];
     CTRSockAddr ai_addr;
 
+    static u32 AddressInfoFlagsToPlatform(u32 flags) {
+        u32 ret = 0;
+        if (flags & 1) {
+            ret |= AI_PASSIVE;
+        }
+        if (flags & 2) {
+            ret |= AI_CANONNAME;
+        }
+        if (flags & 4) {
+            ret |= AI_NUMERICHOST;
+        }
+        if (flags & 8) {
+            ret |= AI_NUMERICSERV;
+        }
+        return ret;
+    }
+
+    static u32 AddressInfoFlagsFromPlatform(u32 flags) {
+        u32 ret = 0;
+        if (flags & AI_PASSIVE) {
+            ret |= 1;
+        }
+        if (flags & AI_CANONNAME) {
+            ret |= 2;
+        }
+        if (flags & AI_NUMERICHOST) {
+            ret |= 4;
+        }
+        if (flags & AI_NUMERICSERV) {
+            ret |= 8;
+        }
+        return ret;
+    }
+
     /// Converts a platform-specific addrinfo to a 3ds addrinfo.
     static CTRAddrInfo FromPlatform(const addrinfo& addr) {
-        CTRAddrInfo ctr_addr{};
-
-        ctr_addr.ai_flags = addr.ai_flags;
-        ctr_addr.ai_family = addr.ai_family;
-        ctr_addr.ai_socktype = addr.ai_socktype;
-        ctr_addr.ai_protocol = addr.ai_protocol;
+        CTRAddrInfo ctr_addr{
+            .ai_flags = static_cast<s32_le>(AddressInfoFlagsFromPlatform(addr.ai_flags)),
+            .ai_family = static_cast<s32_le>(SocketDomainFromPlatform(addr.ai_family)),
+            .ai_socktype = static_cast<s32_le>(SocketTypeFromPlatform(addr.ai_socktype)),
+            .ai_protocol = static_cast<s32_le>(SocketProtocolFromPlatform(addr.ai_protocol)),
+            .ai_addr = CTRSockAddr::FromPlatform(*addr.ai_addr),
+        };
+        ctr_addr.ai_addrlen = static_cast<s32_le>(ctr_addr.ai_addr.raw.len);
         if (addr.ai_canonname)
             std::strncpy(ctr_addr.ai_canonname, addr.ai_canonname, sizeof(ctr_addr.ai_canonname));
-
-        ctr_addr.ai_addr = CTRSockAddr::FromPlatform(*addr.ai_addr);
-        ctr_addr.ai_addrlen = ctr_addr.ai_addr.raw.len;
-
         return ctr_addr;
     }
+
+    /// Converts a platform-specific addrinfo to a 3ds addrinfo.
+    static addrinfo ToPlatform(const CTRAddrInfo& ctr_addr) {
+        // Only certain fields are meaningful in hints, copy them manually
+        addrinfo addr = {
+            .ai_flags = static_cast<int>(AddressInfoFlagsToPlatform(ctr_addr.ai_flags)),
+            .ai_family = static_cast<int>(SocketDomainToPlatform(ctr_addr.ai_family)),
+            .ai_socktype = static_cast<int>(SocketTypeToPlatform(ctr_addr.ai_socktype)),
+            .ai_protocol = static_cast<int>(SocketProtocolToPlatform(ctr_addr.ai_protocol)),
+        };
+        return addr;
+    }
 };
+
+static u32 NameInfoFlagsToPlatform(u32 flags) {
+    u32 ret = 0;
+    if (flags & 1) {
+        ret |= NI_NOFQDN;
+    }
+    if (flags & 2) {
+        ret |= NI_NUMERICHOST;
+    }
+    if (flags & 4) {
+        ret |= NI_NAMEREQD;
+    }
+    if (flags & 8) {
+        ret |= NI_NUMERICSERV;
+    }
+    if (flags & 16) {
+        ret |= NI_DGRAM;
+    }
+    return ret;
+}
 
 static_assert(sizeof(CTRAddrInfo) == 0x130, "Size of CTRAddrInfo is not correct");
 
 void SOC_U::PreTimerAdjust() {
-    timer_adjust_handle = Core::System::GetInstance().GetRunningCore().GetTimer().StartAdjust();
+    adjust_value_last = std::chrono::steady_clock::now();
 }
 
-void SOC_U::PostTimerAdjust() {
-    Core::System::GetInstance().GetRunningCore().GetTimer().EndAdjust(timer_adjust_handle);
+void SOC_U::PostTimerAdjust(Kernel::HLERequestContext& ctx, const std::string& caller_method) {
+    std::chrono::time_point<std::chrono::steady_clock> new_timer = std::chrono::steady_clock::now();
+    ASSERT(new_timer >= adjust_value_last);
+    ctx.SleepClientThread(
+        fmt::format("soc_u::{}", caller_method),
+        std::chrono::duration_cast<std::chrono::nanoseconds>(new_timer - adjust_value_last),
+        nullptr);
 }
 
 void SOC_U::CleanupSockets() {
-    for (auto sock : open_sockets)
+    for (const auto& sock : open_sockets)
         closesocket(sock.second.socket_fd);
     open_sockets.clear();
 }
 
 void SOC_U::Socket(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x02, 3, 2);
-    u32 domain = rp.Pop<u32>(); // Address family
-    u32 type = rp.Pop<u32>();
-    u32 protocol = rp.Pop<u32>();
+    u32 domain = SocketDomainToPlatform(rp.Pop<u32>()); // Address family
+    u32 type = SocketTypeToPlatform(rp.Pop<u32>());
+    u32 protocol = SocketProtocolToPlatform(rp.Pop<u32>());
     rp.PopPID();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -400,8 +751,16 @@ void SOC_U::Socket(Kernel::HLERequestContext& ctx) {
     u64 ret = static_cast<u64>(::socket(domain, type, protocol));
     u32 socketHandle = GetNextSocketID();
 
-    if ((s64)ret != SOCKET_ERROR_VALUE)
+    if ((s64)ret != SOCKET_ERROR_VALUE) {
         open_sockets[socketHandle] = {static_cast<decltype(SocketHolder::socket_fd)>(ret), true};
+#if _WIN32
+        // Disable UDP connection reset
+        int new_behavior = 0;
+        unsigned long bytes_returned = 0;
+        WSAIoctl(static_cast<SOCKET>(ret), _WSAIOW(IOC_VENDOR, 12), &new_behavior,
+                 sizeof(new_behavior), NULL, 0, &bytes_returned, NULL, NULL);
+#endif
+    }
 
     if ((s64)ret == SOCKET_ERROR_VALUE)
         ret = TranslateError(GET_ERRNO);
@@ -415,6 +774,7 @@ void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -424,11 +784,11 @@ void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
     auto sock_addr_buf = rp.PopStaticBuffer();
 
     CTRSockAddr ctr_sock_addr;
-    std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), sizeof(CTRSockAddr));
+    std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), len);
 
     sockaddr sock_addr = CTRSockAddr::ToPlatform(ctr_sock_addr);
 
-    s32 ret = ::bind(fd_info->second.socket_fd, &sock_addr, std::max<u32>(sizeof(sock_addr), len));
+    s32 ret = ::bind(fd_info->second.socket_fd, &sock_addr, sizeof(sock_addr));
 
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
@@ -443,6 +803,7 @@ void SOC_U::Fcntl(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -459,48 +820,11 @@ void SOC_U::Fcntl(Kernel::HLERequestContext& ctx) {
     });
 
     if (ctr_cmd == 3) { // F_GETFL
-#ifdef _WIN32
         posix_ret = 0;
-        if (fd_info->second.blocking == false)
-            posix_ret |= 4; // O_NONBLOCK
-#else
-        int ret = ::fcntl(fd_info->second.socket_fd, F_GETFL, 0);
-        if (ret == SOCKET_ERROR_VALUE) {
-            posix_ret = TranslateError(GET_ERRNO);
-            return;
-        }
-        posix_ret = 0;
-        if (ret & O_NONBLOCK)
-            posix_ret |= 4; // O_NONBLOCK
-#endif
+        if (GetSocketBlocking(fd_info->second) == false)
+            posix_ret |= 4;    // O_NONBLOCK
     } else if (ctr_cmd == 4) { // F_SETFL
-#ifdef _WIN32
-        unsigned long tmp = (ctr_arg & 4 /* O_NONBLOCK */) ? 1 : 0;
-        int ret = ioctlsocket(fd_info->second.socket_fd, FIONBIO, &tmp);
-        if (ret == SOCKET_ERROR_VALUE) {
-            posix_ret = TranslateError(GET_ERRNO);
-            return;
-        }
-        auto iter = open_sockets.find(socket_handle);
-        if (iter != open_sockets.end())
-            iter->second.blocking = (tmp == 0);
-#else
-        int flags = ::fcntl(fd_info->second.socket_fd, F_GETFL, 0);
-        if (flags == SOCKET_ERROR_VALUE) {
-            posix_ret = TranslateError(GET_ERRNO);
-            return;
-        }
-
-        flags &= ~O_NONBLOCK;
-        if (ctr_arg & 4) // O_NONBLOCK
-            flags |= O_NONBLOCK;
-
-        int ret = ::fcntl(fd_info->second.socket_fd, F_SETFL, flags);
-        if (ret == SOCKET_ERROR_VALUE) {
-            posix_ret = TranslateError(GET_ERRNO);
-            return;
-        }
-#endif
+        posix_ret = SetSocketBlocking(fd_info->second, !(ctr_arg & 4));
     } else {
         LOG_ERROR(Service_SOC, "Unsupported command ({}) in fcntl call", ctr_cmd);
         posix_ret = TranslateError(EINVAL); // TODO: Find the correct error
@@ -513,6 +837,7 @@ void SOC_U::Listen(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -537,6 +862,7 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
     const auto socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -545,12 +871,12 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
     rp.PopPID();
     sockaddr addr;
     socklen_t addr_len = sizeof(addr);
-    PreTimerAdjust();
     u32 ret = static_cast<u32>(::accept(fd_info->second.socket_fd, &addr, &addr_len));
-    PostTimerAdjust();
 
     if (static_cast<s32>(ret) != SOCKET_ERROR_VALUE) {
-        open_sockets[ret] = {ret, true};
+        u32 socketID = GetNextSocketID();
+        open_sockets[socketID] = {static_cast<decltype(SocketHolder::socket_fd)>(ret), true};
+        ret = socketID;
     }
 
     CTRSockAddr ctr_addr;
@@ -571,20 +897,15 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
 void SOC_U::GetHostId(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x16, 0, 0);
 
-    char name[128];
-    gethostname(name, sizeof(name));
-    addrinfo hints = {};
-    addrinfo* res;
-
-    hints.ai_family = AF_INET;
-    getaddrinfo(name, nullptr, &hints, &res);
-    sockaddr_in* sock_addr = reinterpret_cast<sockaddr_in*>(res->ai_addr);
-    in_addr* addr = &sock_addr->sin_addr;
+    u32 host_id = 0;
+    auto info = GetDefaultInterfaceInfo();
+    if (info.has_value()) {
+        host_id = info->address;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(static_cast<u32>(addr->s_addr));
-    freeaddrinfo(res);
+    rb.Push(host_id);
 }
 
 void SOC_U::Close(Kernel::HLERequestContext& ctx) {
@@ -592,6 +913,7 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -600,9 +922,7 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
 
     s32 ret = 0;
 
-    PreTimerAdjust();
     ret = closesocket(fd_info->second.socket_fd);
-    PostTimerAdjust();
 
     open_sockets.erase(socket_handle);
 
@@ -614,24 +934,98 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
     rb.Push(ret);
 }
 
+void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x09, 4, 6);
+    const u32 socket_handle = rp.Pop<u32>();
+    const auto fd_info = open_sockets.find(socket_handle);
+    if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERR_INVALID_HANDLE);
+        return;
+    }
+    const u32 len = rp.Pop<u32>();
+    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
+    flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
+#ifdef _WIN32
+    bool was_blocking = GetSocketBlocking(fd_info->second);
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, false);
+    }
+#else
+    if (dont_wait) {
+        flags |= MSG_DONTWAIT;
+    }
+#endif // _WIN32
+    const u32 addr_len = rp.Pop<u32>();
+    rp.PopPID();
+    const auto dest_addr_buffer = rp.PopStaticBuffer();
+
+    auto input_mapped_buff = rp.PopMappedBuffer();
+    std::vector<u8> input_buff(len);
+    input_mapped_buff.Read(input_buff.data(), 0,
+                           std::min(input_mapped_buff.GetSize(), static_cast<size_t>(len)));
+
+    s32 ret = -1;
+    if (addr_len > 0) {
+        CTRSockAddr ctr_dest_addr;
+        std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(), sizeof(ctr_dest_addr));
+        sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
+        ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
+                       len, flags, &dest_addr, sizeof(dest_addr));
+    } else {
+        ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
+                       len, flags, nullptr, 0);
+    }
+
+    const auto send_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+
+#ifdef _WIN32
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, true);
+    }
+#endif
+
+    if (ret == SOCKET_ERROR_VALUE) {
+        ret = TranslateError(send_error);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(ret);
+}
+
 void SOC_U::SendTo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0A, 4, 6);
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
     }
     u32 len = rp.Pop<u32>();
-    u32 flags = rp.Pop<u32>();
+    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
+    flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
+#ifdef _WIN32
+    bool was_blocking = GetSocketBlocking(fd_info->second);
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, false);
+    }
+#else
+    if (dont_wait) {
+        flags |= MSG_DONTWAIT;
+    }
+#endif // _WIN32
     u32 addr_len = rp.Pop<u32>();
     rp.PopPID();
     auto input_buff = rp.PopStaticBuffer();
     auto dest_addr_buff = rp.PopStaticBuffer();
 
     s32 ret = -1;
-    PreTimerAdjust();
     if (addr_len > 0) {
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buff.data(), sizeof(ctr_dest_addr));
@@ -642,10 +1036,17 @@ void SOC_U::SendTo(Kernel::HLERequestContext& ctx) {
         ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
                        len, flags, nullptr, 0);
     }
-    PostTimerAdjust();
+
+    auto send_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+
+#ifdef _WIN32
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, true);
+    }
+#endif
 
     if (ret == SOCKET_ERROR_VALUE)
-        ret = TranslateError(GET_ERRNO);
+        ret = TranslateError(send_error);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -657,39 +1058,63 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
     }
     u32 len = rp.Pop<u32>();
-    u32 flags = rp.Pop<u32>();
+    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
+    flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
+#ifdef _WIN32
+    bool was_blocking = GetSocketBlocking(fd_info->second);
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, false);
+    }
+#else
+    if (dont_wait) {
+        flags |= MSG_DONTWAIT;
+    }
+#endif // _WIN32
     u32 addr_len = rp.Pop<u32>();
     rp.PopPID();
     auto& buffer = rp.PopMappedBuffer();
 
     CTRSockAddr ctr_src_addr;
     std::vector<u8> output_buff(len);
-    std::vector<u8> addr_buff(sizeof(ctr_src_addr));
+    std::vector<u8> addr_buff(addr_len);
     sockaddr src_addr;
     socklen_t src_addr_len = sizeof(src_addr);
 
     s32 ret = -1;
-    PreTimerAdjust();
+    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
+        PreTimerAdjust();
+    }
+
     if (addr_len > 0) {
         ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
                          len, flags, &src_addr, &src_addr_len);
         if (ret >= 0 && src_addr_len > 0) {
             ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-            std::memcpy(addr_buff.data(), &ctr_src_addr, sizeof(ctr_src_addr));
+            std::memcpy(addr_buff.data(), &ctr_src_addr, addr_len);
         }
     } else {
         ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
                          len, flags, NULL, 0);
         addr_buff.resize(0);
     }
-    PostTimerAdjust();
+    int recv_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
+        PostTimerAdjust(ctx, "RecvFromOther");
+    }
+#ifdef _WIN32
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, true);
+    }
+#endif
     if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(GET_ERRNO);
+        ret = TranslateError(recv_error);
     } else {
         buffer.Write(output_buff.data(), 0, ret);
     }
@@ -709,41 +1134,63 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
     }
     u32 len = rp.Pop<u32>();
-    u32 flags = rp.Pop<u32>();
+    u32 flags = SendRecvFlagsToPlatform(rp.Pop<u32>());
+    bool dont_wait = (flags & MSGCUSTOM_HANDLE_DONTWAIT) != 0;
+    flags &= ~MSGCUSTOM_HANDLE_DONTWAIT;
+#ifdef _WIN32
+    bool was_blocking = GetSocketBlocking(fd_info->second);
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, false);
+    }
+#else
+    if (dont_wait) {
+        flags |= MSG_DONTWAIT;
+    }
+#endif // _WIN32
     u32 addr_len = rp.Pop<u32>();
     rp.PopPID();
 
     CTRSockAddr ctr_src_addr;
     std::vector<u8> output_buff(len);
-    std::vector<u8> addr_buff(sizeof(ctr_src_addr));
+    std::vector<u8> addr_buff(addr_len);
     sockaddr src_addr;
     socklen_t src_addr_len = sizeof(src_addr);
 
     s32 ret = -1;
-    PreTimerAdjust();
+    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
+        PreTimerAdjust();
+    }
     if (addr_len > 0) {
         // Only get src adr if input adr available
         ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
                          len, flags, &src_addr, &src_addr_len);
         if (ret >= 0 && src_addr_len > 0) {
             ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-            std::memcpy(addr_buff.data(), &ctr_src_addr, sizeof(ctr_src_addr));
+            std::memcpy(addr_buff.data(), &ctr_src_addr, addr_len);
         }
     } else {
         ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
                          len, flags, NULL, 0);
         addr_buff.resize(0);
     }
-    PostTimerAdjust();
-
+    int recv_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
+    if (GetSocketBlocking(fd_info->second) && !dont_wait) {
+        PostTimerAdjust(ctx, "RecvFrom");
+    }
+#ifdef _WIN32
+    if (dont_wait && was_blocking) {
+        SetSocketBlocking(fd_info->second, true);
+    }
+#endif
     s32 total_received = ret;
     if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(GET_ERRNO);
+        ret = TranslateError(recv_error);
         total_received = 0;
     }
 
@@ -772,17 +1219,22 @@ void SOC_U::Poll(Kernel::HLERequestContext& ctx) {
     // sizes)
     // so we have to copy the data in order
     std::vector<pollfd> platform_pollfd(nfds);
+    std::vector<u8> has_libctru_bug(nfds, false);
     for (u32 i = 0; i < nfds; i++) {
-        platform_pollfd[i] = CTRPollFD::ToPlatform(*this, ctr_fds[i]);
+        platform_pollfd[i] = CTRPollFD::ToPlatform(*this, ctr_fds[i], has_libctru_bug[i]);
     }
 
-    PreTimerAdjust();
+    if (timeout) {
+        PreTimerAdjust();
+    }
     s32 ret = ::poll(platform_pollfd.data(), nfds, timeout);
-    PostTimerAdjust();
+    if (timeout) {
+        PostTimerAdjust(ctx, "Poll");
+    }
 
     // Now update the output 3ds_pollfd structure
     for (u32 i = 0; i < nfds; i++) {
-        ctr_fds[i] = CTRPollFD::FromPlatform(*this, platform_pollfd[i]);
+        ctr_fds[i] = CTRPollFD::FromPlatform(*this, platform_pollfd[i], has_libctru_bug[i]);
     }
 
     std::vector<u8> output_fds(nfds * sizeof(CTRPollFD));
@@ -806,6 +1258,7 @@ void SOC_U::GetSockName(Kernel::HLERequestContext& ctx) {
     const auto socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -835,11 +1288,12 @@ void SOC_U::Shutdown(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
     }
-    s32 how = rp.Pop<s32>();
+    s32 how = ShutdownHowToPlatform(rp.Pop<s32>());
     rp.PopPID();
 
     s32 ret = ::shutdown(fd_info->second.socket_fd, how);
@@ -850,11 +1304,55 @@ void SOC_U::Shutdown(Kernel::HLERequestContext& ctx) {
     rb.Push(ret);
 }
 
+void SOC_U::GetHostByName(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0D, 2, 2);
+    [[maybe_unused]] u32 name_len = rp.Pop<u32>();
+    [[maybe_unused]] u32 out_buf_len = rp.Pop<u32>();
+    auto host_name = rp.PopStaticBuffer();
+
+    struct hostent* result = ::gethostbyname(reinterpret_cast<char*>(host_name.data()));
+
+    std::vector<u8> hbn_data_out(sizeof(HostByNameData));
+    HostByNameData& hbn_data = *reinterpret_cast<HostByNameData*>(hbn_data_out.data());
+    int ret = 0;
+
+    if (result) {
+        hbn_data.addr_type = result->h_addrtype;
+        hbn_data.addr_len = result->h_length;
+        std::strncpy(hbn_data.h_name.data(), result->h_name, 255);
+        u16 count;
+        for (count = 0; count < HostByNameData::max_entries; count++) {
+            char* curr = result->h_aliases[count];
+            if (!curr) {
+                break;
+            }
+            std::strncpy(hbn_data.aliases[count].data(), curr, 255);
+        }
+        hbn_data.alias_count = count;
+        for (count = 0; count < HostByNameData::max_entries; count++) {
+            char* curr = result->h_addr_list[count];
+            if (!curr) {
+                break;
+            }
+            std::memcpy(hbn_data.addresses[count].data(), curr, result->h_length);
+        }
+        hbn_data.addr_count = count;
+    } else {
+        ret = -1;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(ret);
+    rb.PushStaticBuffer(std::move(hbn_data_out), 0);
+}
+
 void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x18, 2, 2);
     const auto socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -889,6 +1387,7 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     const auto socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
@@ -901,9 +1400,13 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     std::memcpy(&ctr_input_addr, input_addr_buf.data(), sizeof(ctr_input_addr));
 
     sockaddr input_addr = CTRSockAddr::ToPlatform(ctr_input_addr);
-    PreTimerAdjust();
+    if (GetSocketBlocking(fd_info->second)) {
+        PreTimerAdjust();
+    }
     s32 ret = ::connect(fd_info->second.socket_fd, &input_addr, sizeof(input_addr));
-    PostTimerAdjust();
+    if (GetSocketBlocking(fd_info->second)) {
+        PostTimerAdjust(ctx, "Connect");
+    }
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
 
@@ -937,13 +1440,14 @@ void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
     }
-    u32 level = rp.Pop<u32>();
-    s32 optname = rp.Pop<s32>();
-    socklen_t optlen = static_cast<socklen_t>(rp.Pop<u32>());
+    const u32 level = rp.Pop<u32>();
+    const s32 optname = rp.Pop<s32>();
+    u32 optlen = rp.Pop<u32>();
     rp.PopPID();
 
     s32 err = 0;
@@ -957,17 +1461,25 @@ void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
         err = EINVAL;
 #endif
     } else {
-        char* optval_data = reinterpret_cast<char*>(optval.data());
-        err = ::getsockopt(fd_info->second.socket_fd, level, optname, optval_data, &optlen);
+        const auto level_opt = TranslateSockOpt(level, optname);
+        std::vector<u8> platform_data(
+            TranslateSockOptSizeToPlatform(level_opt.first, level_opt.second));
+        socklen_t platform_data_size = static_cast<socklen_t>(platform_data.size());
+        err = ::getsockopt(fd_info->second.socket_fd, level_opt.first, level_opt.second,
+                           reinterpret_cast<char*>(platform_data.data()), &platform_data_size);
         if (err == SOCKET_ERROR_VALUE) {
             err = TranslateError(GET_ERRNO);
+        } else {
+            platform_data.resize(static_cast<size_t>(platform_data_size));
+            TranslateSockOptDataFromPlatform(optval, platform_data, level_opt.first,
+                                             level_opt.second);
         }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
     rb.Push(RESULT_SUCCESS);
     rb.Push(err);
-    rb.Push(static_cast<u32>(optlen));
+    rb.Push(static_cast<u32>(optval.size()));
     rb.PushStaticBuffer(std::move(optval), 0);
 }
 
@@ -976,15 +1488,17 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
     const auto socket_handle = rp.Pop<u32>();
     auto fd_info = open_sockets.find(socket_handle);
     if (fd_info == open_sockets.end()) {
+        LOG_ERROR(Service_SOC, "Invalid socket handle: {}", socket_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_HANDLE);
         return;
     }
     const auto level = rp.Pop<u32>();
     const auto optname = rp.Pop<s32>();
-    [[maybe_unused]] const auto optlen = static_cast<socklen_t>(rp.Pop<u32>());
+    const auto optlen = rp.Pop<u32>();
     rp.PopPID();
-    const auto optval = rp.PopStaticBuffer();
+    auto optval = rp.PopStaticBuffer();
+    optval.resize(optlen);
 
     s32 err = 0;
 
@@ -995,9 +1509,13 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
         err = EINVAL;
 #endif
     } else {
-        const char* optval_data = reinterpret_cast<const char*>(optval.data());
-        err = static_cast<u32>(::setsockopt(fd_info->second.socket_fd, level, optname, optval_data,
-                                            static_cast<socklen_t>(optval.size())));
+        std::vector<u8> platform_data;
+        const auto levelopt = TranslateSockOpt(level, optname);
+        TranslateSockOptDataToPlatform(platform_data, optval, levelopt.first, levelopt.second);
+        err = static_cast<u32>(::setsockopt(fd_info->second.socket_fd, levelopt.first,
+                                            levelopt.second,
+                                            reinterpret_cast<char*>(platform_data.data()),
+                                            static_cast<socklen_t>(platform_data.size())));
         if (err == SOCKET_ERROR_VALUE) {
             err = TranslateError(GET_ERRNO);
         }
@@ -1006,6 +1524,61 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push(err);
+}
+
+void SOC_U::GetNetworkOpt(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1A, 3, 0);
+    u32 level = rp.Pop<u32>();
+    u32 opt_name = rp.Pop<u32>();
+    u32 opt_len = rp.Pop<u32>();
+    std::vector<u8> opt_data(opt_len);
+
+    u32 err = SOC_ERR_INAVLID_ENUM_VALUE;
+
+    /// Only available level is SOC_SOL_CONFIG, any other value returns an error
+    if (level == SOC_SOL_CONFIG) {
+        switch (static_cast<NetworkOpt>(opt_name)) {
+        case NetworkOpt::NETOPT_MAC_ADDRESS: {
+            if (opt_len >= 6) {
+                std::array<u8, 6> fake_mac = {0};
+                memcpy(opt_data.data(), fake_mac.data(), fake_mac.size());
+            }
+            LOG_WARNING(Service_SOC, "(STUBBED) called, level={} opt_name={}", level, opt_name);
+            err = 0;
+        } break;
+        case NetworkOpt::NETOPT_IP_INFO: {
+            if (opt_len >= sizeof(InterfaceInfo)) {
+                InterfaceInfo& out_info = *reinterpret_cast<InterfaceInfo*>(opt_data.data());
+                auto info = GetDefaultInterfaceInfo();
+                if (info.has_value()) {
+                    out_info = info.value();
+                }
+            }
+            // Extra data not used normally, takes 0xC bytes more
+            if (opt_len >= sizeof(InterfaceInfo) + 0xC) {
+                LOG_ERROR(Service_SOC, "(STUBBED) called, level={} opt_name={} opt_len >= 24",
+                          level, opt_name);
+            }
+            err = 0;
+        } break;
+        default:
+            LOG_ERROR(Service_SOC, "(STUBBED) called, level={} opt_name={}", level, opt_name);
+            break;
+        }
+    } else {
+        LOG_ERROR(Service_SOC, "Unknown level={}", level);
+    }
+
+    if (err != 0) {
+        opt_data.resize(0);
+        opt_len = 0;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(err);
+    rb.Push(static_cast<u32>(opt_len));
+    rb.PushStaticBuffer(std::move(opt_data), 0);
 }
 
 void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
@@ -1027,12 +1600,14 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
     if (hints_size > 0) {
         CTRAddrInfo ctr_hints;
         std::memcpy(&ctr_hints, hints_buff.data(), hints_size);
-        // Only certain fields are meaningful in hints, copy them manually
-        addrinfo hints = {};
-        hints.ai_flags = ctr_hints.ai_flags;
-        hints.ai_family = ctr_hints.ai_family;
-        hints.ai_socktype = ctr_hints.ai_socktype;
-        hints.ai_protocol = ctr_hints.ai_protocol;
+        addrinfo hints = CTRAddrInfo::ToPlatform(ctr_hints);
+        // Mimic what soc does in real hardware
+        if (hints.ai_socktype != 0 && hints.ai_protocol == 0) {
+            hints.ai_protocol = hints.ai_socktype == SOCK_STREAM ? IPPROTO_TCP : IPPROTO_UDP;
+        }
+        if (hints.ai_protocol != 0 && hints.ai_socktype == 0) {
+            hints.ai_socktype = hints.ai_protocol == IPPROTO_TCP ? SOCK_STREAM : SOCK_DGRAM;
+        }
         ret = getaddrinfo(node_data, service_data, &hints, &out);
     } else {
         ret = getaddrinfo(node_data, service_data, nullptr, &out);
@@ -1074,7 +1649,7 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
     u32 socklen = rp.Pop<u32>();
     u32 hostlen = rp.Pop<u32>();
     u32 servlen = rp.Pop<u32>();
-    s32 flags = rp.Pop<s32>();
+    s32 flags = NameInfoFlagsToPlatform(rp.Pop<s32>());
     auto sa_buff = rp.PopStaticBuffer();
 
     CTRSockAddr ctr_sa;
@@ -1100,39 +1675,41 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
 
 SOC_U::SOC_U() : ServiceFramework("soc:U") {
     static const FunctionInfo functions[] = {
-        {0x00010044, &SOC_U::InitializeSockets, "InitializeSockets"},
-        {0x000200C2, &SOC_U::Socket, "Socket"},
-        {0x00030082, &SOC_U::Listen, "Listen"},
-        {0x00040082, &SOC_U::Accept, "Accept"},
-        {0x00050084, &SOC_U::Bind, "Bind"},
-        {0x00060084, &SOC_U::Connect, "Connect"},
-        {0x00070104, &SOC_U::RecvFromOther, "recvfrom_other"},
-        {0x00080102, &SOC_U::RecvFrom, "RecvFrom"},
-        {0x00090106, nullptr, "sendto_other"},
-        {0x000A0106, &SOC_U::SendTo, "SendTo"},
-        {0x000B0042, &SOC_U::Close, "Close"},
-        {0x000C0082, &SOC_U::Shutdown, "Shutdown"},
-        {0x000D0082, nullptr, "GetHostByName"},
-        {0x000E00C2, nullptr, "GetHostByAddr"},
-        {0x000F0106, &SOC_U::GetAddrInfoImpl, "GetAddrInfo"},
-        {0x00100102, &SOC_U::GetNameInfoImpl, "GetNameInfo"},
-        {0x00110102, &SOC_U::GetSockOpt, "GetSockOpt"},
-        {0x00120104, &SOC_U::SetSockOpt, "SetSockOpt"},
-        {0x001300C2, &SOC_U::Fcntl, "Fcntl"},
-        {0x00140084, &SOC_U::Poll, "Poll"},
-        {0x00150042, nullptr, "SockAtMark"},
-        {0x00160000, &SOC_U::GetHostId, "GetHostId"},
-        {0x00170082, &SOC_U::GetSockName, "GetSockName"},
-        {0x00180082, &SOC_U::GetPeerName, "GetPeerName"},
-        {0x00190000, &SOC_U::ShutdownSockets, "ShutdownSockets"},
-        {0x001A00C0, nullptr, "GetNetworkOpt"},
-        {0x001B0040, nullptr, "ICMPSocket"},
-        {0x001C0104, nullptr, "ICMPPing"},
-        {0x001D0040, nullptr, "ICMPCancel"},
-        {0x001E0040, nullptr, "ICMPClose"},
-        {0x001F0040, nullptr, "GetResolverInfo"},
-        {0x00210002, nullptr, "CloseSockets"},
-        {0x00230040, nullptr, "AddGlobalSocket"},
+        // clang-format off
+        {IPC::MakeHeader(0x0001, 1, 4), &SOC_U::InitializeSockets, "InitializeSockets"},
+        {IPC::MakeHeader(0x0002, 3, 2), &SOC_U::Socket, "Socket"},
+        {IPC::MakeHeader(0x0003, 2, 2), &SOC_U::Listen, "Listen"},
+        {IPC::MakeHeader(0x0004, 2, 2), &SOC_U::Accept, "Accept"},
+        {IPC::MakeHeader(0x0005, 2, 4), &SOC_U::Bind, "Bind"},
+        {IPC::MakeHeader(0x0006, 2, 4), &SOC_U::Connect, "Connect"},
+        {IPC::MakeHeader(0x0007, 4, 4), &SOC_U::RecvFromOther, "recvfrom_other"},
+        {IPC::MakeHeader(0x0008, 4, 2), &SOC_U::RecvFrom, "RecvFrom"},
+        {IPC::MakeHeader(0x0009, 4, 6), &SOC_U::SendToOther, "SendToOther"},
+        {IPC::MakeHeader(0x000A, 4, 6), &SOC_U::SendTo, "SendTo"},
+        {IPC::MakeHeader(0x000B, 1, 2), &SOC_U::Close, "Close"},
+        {IPC::MakeHeader(0x000C, 2, 2), &SOC_U::Shutdown, "Shutdown"},
+        {IPC::MakeHeader(0x000D, 2, 2), &SOC_U::GetHostByName, "GetHostByName"},
+        {IPC::MakeHeader(0x000E, 3, 2), nullptr, "GetHostByAddr"},
+        {IPC::MakeHeader(0x000F, 4, 6), &SOC_U::GetAddrInfoImpl, "GetAddrInfo"},
+        {IPC::MakeHeader(0x0010, 4, 2), &SOC_U::GetNameInfoImpl, "GetNameInfo"},
+        {IPC::MakeHeader(0x0011, 4, 2), &SOC_U::GetSockOpt, "GetSockOpt"},
+        {IPC::MakeHeader(0x0012, 4, 4), &SOC_U::SetSockOpt, "SetSockOpt"},
+        {IPC::MakeHeader(0x0013, 3, 2), &SOC_U::Fcntl, "Fcntl"},
+        {IPC::MakeHeader(0x0014, 2, 4), &SOC_U::Poll, "Poll"},
+        {IPC::MakeHeader(0x0015, 1, 2), nullptr, "SockAtMark"},
+        {IPC::MakeHeader(0x0016, 0, 0), &SOC_U::GetHostId, "GetHostId"},
+        {IPC::MakeHeader(0x0017, 2, 2), &SOC_U::GetSockName, "GetSockName"},
+        {IPC::MakeHeader(0x0018, 2, 2), &SOC_U::GetPeerName, "GetPeerName"},
+        {IPC::MakeHeader(0x0019, 0, 0), &SOC_U::ShutdownSockets, "ShutdownSockets"},
+        {IPC::MakeHeader(0x001A, 3, 0), &SOC_U::GetNetworkOpt, "GetNetworkOpt"},
+        {IPC::MakeHeader(0x001B, 1, 0), nullptr, "ICMPSocket"},
+        {IPC::MakeHeader(0x001C, 4, 4), nullptr, "ICMPPing"},
+        {IPC::MakeHeader(0x001D, 1, 0), nullptr, "ICMPCancel"},
+        {IPC::MakeHeader(0x001E, 1, 0), nullptr, "ICMPClose"},
+        {IPC::MakeHeader(0x001F, 1, 0), nullptr, "GetResolverInfo"},
+        {IPC::MakeHeader(0x0021, 0, 2), nullptr, "CloseSockets"},
+        {IPC::MakeHeader(0x0023, 1, 0), nullptr, "AddGlobalSocket"},
+        // clang-format on
     };
 
     RegisterHandlers(functions);
@@ -1148,6 +1725,128 @@ SOC_U::~SOC_U() {
 #ifdef _WIN32
     WSACleanup();
 #endif
+}
+
+std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
+    if (this->interface_info_cached) {
+        return InterfaceInfo(this->interface_info);
+    }
+
+    InterfaceInfo ret;
+    s64 sock_fd = -1;
+    bool interface_found = false;
+    struct sockaddr_in s_in = {.sin_family = AF_INET, .sin_port = htons(53), .sin_addr = {}};
+    s_in.sin_addr.s_addr = inet_addr("8.8.8.8");
+    socklen_t s_info_len = sizeof(struct sockaddr_in);
+    sockaddr_in s_info;
+
+    if ((sock_fd = ::socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        return std::nullopt;
+    }
+
+    if (::connect(sock_fd, (struct sockaddr*)(&s_in), sizeof(struct sockaddr_in)) != 0) {
+        closesocket(sock_fd);
+        return std::nullopt;
+    }
+
+    if (::getsockname(sock_fd, (struct sockaddr*)&s_info, &s_info_len) != 0 ||
+        s_info_len != sizeof(struct sockaddr_in)) {
+        closesocket(sock_fd);
+        return std::nullopt;
+    }
+    closesocket(sock_fd);
+
+#ifdef _WIN32
+    sock_fd = WSASocket(AF_INET, SOCK_DGRAM, 0, 0, 0, 0);
+    if (sock_fd == SOCKET_ERROR) {
+        return std::nullopt;
+    }
+
+    const int max_interfaces = 100;
+    std::vector<INTERFACE_INFO> interface_list_vec(max_interfaces);
+    INTERFACE_INFO* interface_list = reinterpret_cast<INTERFACE_INFO*>(interface_list_vec.data());
+    unsigned long bytes_used;
+    if (WSAIoctl(sock_fd, SIO_GET_INTERFACE_LIST, 0, 0, interface_list,
+                 max_interfaces * sizeof(INTERFACE_INFO), &bytes_used, 0, 0) == SOCKET_ERROR) {
+        closesocket(sock_fd);
+        return std::nullopt;
+    }
+    closesocket(sock_fd);
+
+    int num_interfaces = bytes_used / sizeof(INTERFACE_INFO);
+    for (int i = 0; i < num_interfaces; i++) {
+        if (((sockaddr*)&(interface_list[i].iiAddress))->sa_family == AF_INET &&
+            memcmp(&((sockaddr_in*)&(interface_list[i].iiAddress))->sin_addr.s_addr,
+                   &s_info.sin_addr.s_addr, sizeof(s_info.sin_addr.s_addr)) == 0) {
+            ret.address = ((sockaddr_in*)&(interface_list[i].iiAddress))->sin_addr.s_addr;
+            ret.netmask = ((sockaddr_in*)&(interface_list[i].iiNetmask))->sin_addr.s_addr;
+            ret.broadcast =
+                ((sockaddr_in*)&(interface_list[i].iiBroadcastAddress))->sin_addr.s_addr;
+            interface_found = true;
+            {
+                char address[16] = {0}, netmask[16] = {0}, broadcast[16] = {0};
+                std::strncpy(address,
+                             inet_ntoa(((sockaddr_in*)&(interface_list[i].iiAddress))->sin_addr),
+                             sizeof(address) - 1);
+                std::strncpy(netmask,
+                             inet_ntoa(((sockaddr_in*)&(interface_list[i].iiNetmask))->sin_addr),
+                             sizeof(netmask) - 1);
+                std::strncpy(
+                    broadcast,
+                    inet_ntoa(((sockaddr_in*)&(interface_list[i].iiBroadcastAddress))->sin_addr),
+                    sizeof(broadcast) - 1);
+
+                LOG_DEBUG(Service_SOC, "Found interface: (addr: {}, netmask: {}, broadcast: {})",
+                          address, netmask, broadcast);
+            }
+            break;
+        }
+    }
+#else
+    struct ifaddrs* ifaddr;
+    struct ifaddrs* ifa;
+    if (getifaddrs(&ifaddr) == -1) {
+        return std::nullopt;
+    }
+
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
+            struct sockaddr_in* in_address = (struct sockaddr_in*)ifa->ifa_addr;
+            struct sockaddr_in* in_netmask = (struct sockaddr_in*)ifa->ifa_netmask;
+            struct sockaddr_in* in_broadcast = (struct sockaddr_in*)ifa->ifa_broadaddr;
+            if (in_address->sin_addr.s_addr == s_info.sin_addr.s_addr) {
+                ret.address = in_address->sin_addr.s_addr;
+                ret.netmask = in_netmask->sin_addr.s_addr;
+                ret.broadcast = in_broadcast->sin_addr.s_addr;
+                interface_found = true;
+                {
+                    char address[16] = {0}, netmask[16] = {0}, broadcast[16] = {0};
+                    std::strncpy(address, inet_ntoa(in_address->sin_addr), sizeof(address) - 1);
+                    std::strncpy(netmask, inet_ntoa(in_netmask->sin_addr), sizeof(netmask) - 1);
+                    std::strncpy(broadcast, inet_ntoa(in_broadcast->sin_addr),
+                                 sizeof(broadcast) - 1);
+
+                    LOG_DEBUG(Service_SOC,
+                              "Found interface: (addr: {}, netmask: {}, broadcast: {})", address,
+                              netmask, broadcast);
+                }
+            }
+        }
+    }
+    freeifaddrs(ifaddr);
+#endif // _WIN32
+    if (interface_found) {
+        this->interface_info = ret;
+        this->interface_info_cached = true;
+        return ret;
+    } else {
+        LOG_DEBUG(Service_SOC, "Interface not found");
+        return std::nullopt;
+    }
+}
+
+std::shared_ptr<SOC_U> GetService(Core::System& system) {
+    return system.ServiceManager().GetService<SOC_U>("cfg:u");
 }
 
 void InstallInterfaces(Core::System& system) {

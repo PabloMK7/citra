@@ -142,6 +142,12 @@ public:
     };
 
 protected:
+    enum class WifiStatus {
+        STATUS_DISCONNECTED = 0,
+        STATUS_CONNECTED_O3DS = 1,
+        STATUS_CONNECTED_N3DS = 2,
+    };
+
     struct ACConfig {
         std::array<u8, 0x200> data;
     };
