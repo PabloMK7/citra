@@ -21,6 +21,8 @@ std::optional<std::vector<u8>> Download(const std::string& path) {
     httplib::Request request{
         .method = "GET",
         .path = path,
+        // Needed when httplib is included on android
+        .matches = httplib::Match(),
     };
 
     client->set_follow_location(true);

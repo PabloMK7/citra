@@ -145,8 +145,8 @@ void GMainWindow::ShowTelemetryCallout() {
         tr("<a href='https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/'>Anonymous "
            "data is collected</a> to help improve Citra. "
            "<br/><br/>Would you like to share your usage data with us?");
-    if (QMessageBox::question(this, tr("Telemetry"), telemetry_message) != QMessageBox::Yes) {
-        NetSettings::values.enable_telemetry = false;
+    if (QMessageBox::question(this, tr("Telemetry"), telemetry_message) == QMessageBox::Yes) {
+        NetSettings::values.enable_telemetry = true;
         Settings::Apply();
     }
 }

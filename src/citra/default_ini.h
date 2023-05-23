@@ -349,7 +349,7 @@ renderer_debug =
 
 [WebService]
 # Whether or not to enable telemetry
-# 0: No, 1 (default): Yes
+# 0 (default): No, 1: Yes
 enable_telemetry =
 # URL for Web API
 web_api_url = https://api.citra-emu.org
