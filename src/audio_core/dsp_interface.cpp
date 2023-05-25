@@ -17,6 +17,9 @@ DspInterface::DspInterface() = default;
 DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(AudioCore::SinkType sink_type, std::string_view audio_device) {
+    // Dispose of the current sink first to avoid contention.
+    sink.reset();
+
     sink = CreateSinkFromID(sink_type, audio_device);
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
