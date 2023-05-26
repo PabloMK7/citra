@@ -66,16 +66,16 @@ FFMPEGDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
 FFMPEGDecoder::Impl::~Impl() = default;
 
 std::optional<BinaryMessage> FFMPEGDecoder::Impl::ProcessRequest(const BinaryMessage& request) {
-    if (request.codec != DecoderCodec::DecodeAAC) {
+    if (request.header.codec != DecoderCodec::DecodeAAC) {
         LOG_ERROR(Audio_DSP, "Got wrong codec {}", static_cast<u16>(request.header.codec));
         return {};
     }
 
-    switch (request.cmd) {
+    switch (request.header.cmd) {
     case DecoderCommand::Init: {
         return Initalize(request);
     }
-    case DecoderCommand::Decode: {
+    case DecoderCommand::EncodeDecode: {
         return Decode(request);
     }
     case DecoderCommand::Unknown: {
@@ -163,7 +163,7 @@ std::optional<BinaryMessage> FFMPEGDecoder::Impl::Decode(const BinaryMessage& re
                   request.decode_aac_request.src_addr);
         return {};
     }
-    u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
+    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<u8>, 2> out_streams;
 

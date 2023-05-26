@@ -130,13 +130,13 @@ std::optional<BinaryMessage> FDKDecoder::Impl::Decode(const BinaryMessage& reque
     }
 
     if (request.decode_aac_request.src_addr < Memory::FCRAM_PADDR ||
-        request.decode_aac_request.src_addr + request.size >
+        request.decode_aac_request.src_addr + request.decode_aac_request.size >
             Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
         LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}",
                   request.decode_aac_request.src_addr);
         return {};
     }
-    u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
+    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<s16>, 2> out_streams;
 
