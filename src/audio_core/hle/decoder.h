@@ -72,13 +72,12 @@ struct DecodeAACResponse {
 
 // The DSP replies with the same contents as the response too.
 struct EncodeAACInitRequest {
-    u32_le unknown1 =
-        0; // 0:raw 1:ADTS? less than 2 according to the 3DS Sound app. observed 1 here
+    u32_le unknown1 = 0; // Num channels? 1 or 2. observed 1 here
     enum_le<DecoderSampleRate> sample_rate =
         DecoderSampleRate::Rate16000; // the rate the 3DS Sound app uses
-    u32_le unknown3 =
-        0; // Num channels? less than 3 according to the 3DS Sound app. observed 2 here
-    u32_le unknown4 = 0; // less than 2 according to the 3DS Sound app. observed 0 here
+    u32_le unknown3 = 0;              // less than 3 according to the 3DS Sound app. observed 2 here
+    u32_le unknown4 =
+        0; // 0:raw 1:ADTS? less than 2 according to the 3DS Sound app. observed 0 here
     u32_le unknown5 = 0; // unused?
     u32_le unknown6 = 0; // unused?
 };
