@@ -22,7 +22,7 @@ namespace AudioCore {
 
 class DspHle final : public DspInterface {
 public:
-    explicit DspHle(Memory::MemorySystem& memory);
+    explicit DspHle(Memory::MemorySystem& memory, Core::Timing& timing);
     ~DspHle();
 
     u16 RecvData(u32 register_number) override;

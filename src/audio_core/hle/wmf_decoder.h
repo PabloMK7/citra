@@ -12,7 +12,7 @@ class WMFDecoder final : public DecoderBase {
 public:
     explicit WMFDecoder(Memory::MemorySystem& memory);
     ~WMFDecoder() override;
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request) override;
     bool IsValid() const override;
 
 private:

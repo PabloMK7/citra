@@ -17,11 +17,11 @@ class AudioToolboxDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request);
 
 private:
-    std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
-    std::optional<BinaryResponse> Decode(const BinaryRequest& request);
+    std::optional<BinaryMessage> Initalize(const BinaryMessage& request);
+    std::optional<BinaryMessage> Decode(const BinaryMessage& request);
 
     void Clear();
     bool InitializeDecoder(ADTSData& adts_header);
@@ -43,12 +43,11 @@ private:
     AudioStreamPacketDescription packet_description;
 };
 
-AudioToolboxDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {}
+AudioToolboxDecoder::Impl::Impl(Memory::MemorySystem& memory_) : memory(memory_) {}
 
-std::optional<BinaryResponse> AudioToolboxDecoder::Impl::Initalize(const BinaryRequest& request) {
-    BinaryResponse response;
-    std::memcpy(&response, &request, sizeof(response));
-    response.unknown1 = 0x0;
+std::optional<BinaryMessage> AudioToolboxDecoder::Impl::Initalize(const BinaryMessage& request) {
+    BinaryMessage response = request;
+    response.header.result = ResultStatus::Success;
 
     Clear();
     return response;
@@ -71,29 +70,29 @@ void AudioToolboxDecoder::Impl::Clear() {
     }
 }
 
-std::optional<BinaryResponse> AudioToolboxDecoder::Impl::ProcessRequest(
-    const BinaryRequest& request) {
-    if (request.codec != DecoderCodec::AAC) {
+std::optional<BinaryMessage> AudioToolboxDecoder::Impl::ProcessRequest(
+    const BinaryMessage& request) {
+    if (request.header.codec != DecoderCodec::DecodeAAC) {
         LOG_ERROR(Audio_DSP, "AudioToolbox AAC Decoder cannot handle such codec: {}",
-                  static_cast<u16>(request.codec));
+                  static_cast<u16>(request.header.codec));
         return {};
     }
 
-    switch (request.cmd) {
+    switch (request.header.cmd) {
     case DecoderCommand::Init: {
         return Initalize(request);
     }
-    case DecoderCommand::Decode: {
+    case DecoderCommand::EncodeDecode: {
         return Decode(request);
     }
     case DecoderCommand::Unknown: {
-        BinaryResponse response;
-        std::memcpy(&response, &request, sizeof(response));
-        response.unknown1 = 0x0;
+        BinaryMessage response = request;
+        response.header.result = ResultStatus::Success;
         return response;
     }
     default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
+        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
+                  static_cast<u16>(request.header.cmd));
         return {};
     }
 }
@@ -166,22 +165,24 @@ OSStatus AudioToolboxDecoder::Impl::DataFunc(
     return noErr;
 }
 
-std::optional<BinaryResponse> AudioToolboxDecoder::Impl::Decode(const BinaryRequest& request) {
-    BinaryResponse response;
-    response.codec = request.codec;
-    response.cmd = request.cmd;
-    response.size = request.size;
+std::optional<BinaryMessage> AudioToolboxDecoder::Impl::Decode(const BinaryMessage& request) {
+    BinaryMessage response{};
+    response.header.codec = request.header.codec;
+    response.header.cmd = request.header.cmd;
+    response.decode_aac_response.size = request.decode_aac_request.size;
 
-    if (request.src_addr < Memory::FCRAM_PADDR ||
-        request.src_addr + request.size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}", request.src_addr);
+    if (request.decode_aac_request.src_addr < Memory::FCRAM_PADDR ||
+        request.decode_aac_request.src_addr + request.decode_aac_request.size >
+            Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}",
+                  request.decode_aac_request.src_addr);
         return {};
     }
 
-    auto data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
+    auto data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
     auto adts_header = ParseADTS(reinterpret_cast<const char*>(data));
     curr_data = data + adts_header.header_length;
-    curr_data_len = request.size - adts_header.header_length;
+    curr_data_len = request.decode_aac_request.size - adts_header.header_length;
 
     if (!InitializeDecoder(adts_header)) {
         return std::nullopt;
@@ -218,15 +219,17 @@ std::optional<BinaryResponse> AudioToolboxDecoder::Impl::Decode(const BinaryRequ
     curr_data = nullptr;
     curr_data_len = 0;
 
-    response.sample_rate = GetSampleRateEnum(static_cast<u32>(output_format.mSampleRate));
-    response.num_channels = output_format.mChannelsPerFrame;
-    response.num_samples = num_frames;
+    response.decode_aac_response.sample_rate =
+        GetSampleRateEnum(static_cast<u32>(output_format.mSampleRate));
+    response.decode_aac_response.num_channels = output_format.mChannelsPerFrame;
+    response.decode_aac_response.num_samples = num_frames;
 
     // transfer the decoded buffer from vector to the FCRAM
     for (std::size_t ch = 0; ch < out_streams.size(); ch++) {
         if (!out_streams[ch].empty()) {
             auto byte_size = out_streams[ch].size() * bytes_per_sample;
-            auto dst = ch == 0 ? request.dst_addr_ch0 : request.dst_addr_ch1;
+            auto dst = ch == 0 ? request.decode_aac_request.dst_addr_ch0
+                               : request.decode_aac_request.dst_addr_ch1;
             if (dst < Memory::FCRAM_PADDR ||
                 dst + byte_size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
                 LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch{} {:08x}", ch, dst);
@@ -245,7 +248,7 @@ AudioToolboxDecoder::AudioToolboxDecoder(Memory::MemorySystem& memory)
 
 AudioToolboxDecoder::~AudioToolboxDecoder() = default;
 
-std::optional<BinaryResponse> AudioToolboxDecoder::ProcessRequest(const BinaryRequest& request) {
+std::optional<BinaryMessage> AudioToolboxDecoder::ProcessRequest(const BinaryMessage& request) {
     return impl->ProcessRequest(request);
 }
 

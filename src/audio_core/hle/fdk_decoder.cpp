@@ -11,15 +11,15 @@ class FDKDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
-    std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
+    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request);
     bool IsValid() const {
         return decoder != nullptr;
     }
 
 private:
-    std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
+    std::optional<BinaryMessage> Initalize(const BinaryMessage& request);
 
-    std::optional<BinaryResponse> Decode(const BinaryRequest& request);
+    std::optional<BinaryMessage> Decode(const BinaryMessage& request);
 
     void Clear();
 
@@ -58,10 +58,9 @@ FDKDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     }
 }
 
-std::optional<BinaryResponse> FDKDecoder::Impl::Initalize(const BinaryRequest& request) {
-    BinaryResponse response;
-    std::memcpy(&response, &request, sizeof(response));
-    response.unknown1 = 0x0;
+std::optional<BinaryMessage> FDKDecoder::Impl::Initalize(const BinaryMessage& request) {
+    BinaryMessage response = request;
+    response.header.result = ResultStatus::Success;
 
     if (decoder) {
         LOG_INFO(Audio_DSP, "FDK Decoder initialized");
@@ -90,56 +89,58 @@ void FDKDecoder::Impl::Clear() {
                                AACDEC_FLUSH & AACDEC_INTR & AACDEC_CONCEAL);
 }
 
-std::optional<BinaryResponse> FDKDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
-    if (request.codec != DecoderCodec::AAC) {
+std::optional<BinaryMessage> FDKDecoder::Impl::ProcessRequest(const BinaryMessage& request) {
+    if (request.header.codec != DecoderCodec::DecodeAAC) {
         LOG_ERROR(Audio_DSP, "FDK AAC Decoder cannot handle such codec: {}",
-                  static_cast<u16>(request.codec));
+                  static_cast<u16>(request.header.codec));
         return {};
     }
 
-    switch (request.cmd) {
+    switch (request.header.cmd) {
     case DecoderCommand::Init: {
         return Initalize(request);
     }
-    case DecoderCommand::Decode: {
+    case DecoderCommand::EncodeDecode: {
         return Decode(request);
     }
     case DecoderCommand::Unknown: {
-        BinaryResponse response;
-        std::memcpy(&response, &request, sizeof(response));
-        response.unknown1 = 0x0;
+        BinaryMessage response = request;
+        response.header.result = 0x0;
         return response;
     }
     default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
+        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
+                  static_cast<u16>(request.header.cmd));
         return {};
     }
 }
 
-std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& request) {
-    BinaryResponse response;
-    response.codec = request.codec;
-    response.cmd = request.cmd;
-    response.size = request.size;
+std::optional<BinaryMessage> FDKDecoder::Impl::Decode(const BinaryMessage& request) {
+    BinaryMessages response;
+    response.header.codec = request.header.codec;
+    response.header.cmd = request.header.cmd;
+    response.decode_aac_response.size = request.decode_aac_request.size;
 
     if (!decoder) {
         LOG_DEBUG(Audio_DSP, "Decoder not initalized");
         // This is a hack to continue games that are not compiled with the aac codec
-        response.num_channels = 2;
-        response.num_samples = 1024;
+        response.decode_aac_response.num_channels = 2;
+        response.decode_aac_response.num_samples = 1024;
         return response;
     }
 
-    if (request.src_addr < Memory::FCRAM_PADDR ||
-        request.src_addr + request.size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}", request.src_addr);
+    if (request.decode_aac_request.src_addr < Memory::FCRAM_PADDR ||
+        request.decode_aac_request.src_addr + request.decode_aac_request.size >
+            Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+        LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}",
+                  request.decode_aac_request.src_addr);
         return {};
     }
-    u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
+    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<s16>, 2> out_streams;
 
-    std::size_t data_size = request.size;
+    std::size_t data_size = request.decode_aac_request.size;
 
     // decoding loops
     AAC_DECODER_ERROR result = AAC_DEC_OK;
@@ -168,9 +169,9 @@ std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& requ
             // get the stream information
             stream_info = aacDecoder_GetStreamInfo(decoder);
             // fill the stream information for binary response
-            response.sample_rate = GetSampleRateEnum(stream_info->sampleRate);
-            response.num_channels = stream_info->numChannels;
-            response.num_samples = stream_info->frameSize;
+            response.decode_aac_response.sample_rate = GetSampleRateEnum(stream_info->sampleRate);
+            response.decode_aac_response.num_channels = stream_info->numChannels;
+            response.decode_aac_response.num_samples = stream_info->frameSize;
             // fill the output
             // the sample size = frame_size * channel_counts
             for (int sample = 0; sample < stream_info->frameSize; sample++) {
@@ -193,7 +194,8 @@ std::optional<BinaryResponse> FDKDecoder::Impl::Decode(const BinaryRequest& requ
     for (std::size_t ch = 0; ch < out_streams.size(); ch++) {
         if (!out_streams[ch].empty()) {
             auto byte_size = out_streams[ch].size() * sizeof(s16);
-            auto dst = ch == 0 ? request.dst_addr_ch0 : request.dst_addr_ch1;
+            auto dst = ch == 0 ? request.decode_aac_request.dst_addr_ch0
+                               : request.decode_aac_request.dst_addr_ch1;
             if (dst < Memory::FCRAM_PADDR ||
                 dst + byte_size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
                 LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch{} {:08x}", ch, dst);
@@ -211,7 +213,7 @@ FDKDecoder::FDKDecoder(Memory::MemorySystem& memory) : impl(std::make_unique<Imp
 
 FDKDecoder::~FDKDecoder() = default;
 
-std::optional<BinaryResponse> FDKDecoder::ProcessRequest(const BinaryRequest& request) {
+std::optional<BinaryMessage> FDKDecoder::ProcessRequest(const BinaryMessage& request) {
     return impl->ProcessRequest(request);
 }
 

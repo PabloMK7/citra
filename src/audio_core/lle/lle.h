@@ -6,11 +6,15 @@
 
 #include "audio_core/dsp_interface.h"
 
+namespace Core {
+class Timing;
+}
+
 namespace AudioCore {
 
 class DspLle final : public DspInterface {
 public:
-    explicit DspLle(Memory::MemorySystem& memory, bool multithread);
+    explicit DspLle(Memory::MemorySystem& memory, Core::Timing& timing, bool multithread);
     ~DspLle() override;
 
     u16 RecvData(u32 register_number) override;
@@ -23,6 +27,9 @@ public:
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
 
     void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) override;
+
+    void SetSemaphoreHandler(std::function<void()> handler);
+    void SetRecvDataHandler(u8 index, std::function<void()> handler);
 
     void LoadComponent(const std::vector<u8>& buffer) override;
     void UnloadComponent() override;

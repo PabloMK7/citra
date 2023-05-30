@@ -400,10 +400,10 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     const auto audio_emulation = Settings::values.audio_emulation.GetValue();
     if (audio_emulation == Settings::AudioEmulation::HLE) {
-        dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
+        dsp_core = std::make_unique<AudioCore::DspHle>(*memory, *timing);
     } else {
         const bool multithread = audio_emulation == Settings::AudioEmulation::LLEMultithreaded;
-        dsp_core = std::make_unique<AudioCore::DspLle>(*memory, multithread);
+        dsp_core = std::make_unique<AudioCore::DspLle>(*memory, *timing, multithread);
     }
 
     memory->SetDSP(*dsp_core);

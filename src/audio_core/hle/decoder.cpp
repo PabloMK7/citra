@@ -38,23 +38,25 @@ NullDecoder::NullDecoder() = default;
 
 NullDecoder::~NullDecoder() = default;
 
-std::optional<BinaryResponse> NullDecoder::ProcessRequest(const BinaryRequest& request) {
-    BinaryResponse response;
-    switch (request.cmd) {
+std::optional<BinaryMessage> NullDecoder::ProcessRequest(const BinaryMessage& request) {
+    BinaryMessage response{};
+    switch (request.header.cmd) {
     case DecoderCommand::Init:
     case DecoderCommand::Unknown:
-        std::memcpy(&response, &request, sizeof(response));
-        response.unknown1 = 0x0;
+        response = request;
+        response.header.result = ResultStatus::Success;
         return response;
-    case DecoderCommand::Decode:
-        response.codec = request.codec;
-        response.cmd = DecoderCommand::Decode;
-        response.num_channels = 2; // Just assume stereo here
-        response.size = request.size;
-        response.num_samples = 1024; // Just assume 1024 here
+    case DecoderCommand::EncodeDecode:
+        response.header.codec = request.header.codec;
+        response.header.cmd = request.header.cmd;
+        response.header.result = ResultStatus::Success;
+        response.decode_aac_response.num_channels = 2; // Just assume stereo here
+        response.decode_aac_response.size = request.decode_aac_request.size;
+        response.decode_aac_response.num_samples = 1024; // Just assume 1024 here
         return response;
     default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
+        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
+                  static_cast<u16>(request.header.cmd));
         return std::nullopt;
     }
 };
