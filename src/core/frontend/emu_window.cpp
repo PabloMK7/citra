@@ -110,7 +110,8 @@ std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsi
 }
 
 void EmuWindow::CreateTouchState() {
-    if (touch_state = global_touch_state.lock()) {
+    touch_state = global_touch_state.lock();
+    if (touch_state) {
         return;
     }
     touch_state = std::make_shared<TouchState>();
