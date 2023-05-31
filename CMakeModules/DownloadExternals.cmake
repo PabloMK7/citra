@@ -65,6 +65,8 @@ function(download_qt_external target prefix_var)
     endif()
 
     get_external_prefix(qt base_path)
+    file(MAKE_DIRECTORY "${base_path}")
+
     if (target MATCHES "tools_.*")
         set(prefix "${base_path}")
         set(install_args install-tool --outputdir ${base_path} ${host} desktop ${target})
@@ -76,16 +78,21 @@ function(download_qt_external target prefix_var)
     if (NOT EXISTS "${prefix}")
         message(STATUS "Downloading binaries for Qt...")
         if (WIN32)
-            set(aqt_path "${CMAKE_BINARY_DIR}/externals/aqt.exe")
+            set(aqt_path "${base_path}/aqt.exe")
             file(DOWNLOAD
                 https://github.com/miurahr/aqtinstall/releases/download/v3.1.4/aqt.exe
                 ${aqt_path} SHOW_PROGRESS)
-            execute_process(COMMAND ${aqt_path} ${install_args})
+            execute_process(COMMAND ${aqt_path} ${install_args}
+                    WORKING_DIRECTORY ${base_path})
         else()
             # aqt does not offer binary releases for other platforms, so download and run from pip.
-            set(aqt_install_path "${CMAKE_BINARY_DIR}/externals/aqt")
-            execute_process(COMMAND python3 -m pip install --target=${aqt_install_path} aqtinstall)
-            execute_process(COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${aqt_install_path} python3 -m aqt ${install_args})
+            set(aqt_install_path "${base_path}/aqt")
+            file(MAKE_DIRECTORY "${aqt_install_path}")
+
+            execute_process(COMMAND python3 -m pip install --target=${aqt_install_path} aqtinstall
+                    WORKING_DIRECTORY ${base_path})
+            execute_process(COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${aqt_install_path} python3 -m aqt ${install_args}
+                    WORKING_DIRECTORY ${base_path})
         endif()
     endif()
 
