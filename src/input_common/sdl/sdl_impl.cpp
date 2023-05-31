@@ -148,8 +148,38 @@ struct SDLJoystickDeleter {
 };
 class SDLJoystick {
 public:
-    SDLJoystick(std::string guid_, int port_, SDL_Joystick* joystick)
-        : guid{std::move(guid_)}, port{port_}, sdl_joystick{joystick} {}
+    SDLJoystick(std::string guid_, int port_, SDL_Joystick* joystick,
+                SDL_GameController* game_controller)
+        : guid{std::move(guid_)}, port{port_}, sdl_joystick{joystick, &SDL_JoystickClose},
+          sdl_controller{game_controller, &SDL_GameControllerClose} {
+        EnableMotion();
+    }
+
+    void EnableMotion() {
+        if (!sdl_controller) {
+            return;
+        }
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+        SDL_GameController* controller = sdl_controller.get();
+
+        if (HasMotion()) {
+            SDL_GameControllerSetSensorEnabled(controller, SDL_SENSOR_ACCEL, SDL_FALSE);
+            SDL_GameControllerSetSensorEnabled(controller, SDL_SENSOR_GYRO, SDL_FALSE);
+        }
+        has_accel = SDL_GameControllerHasSensor(controller, SDL_SENSOR_ACCEL) == SDL_TRUE;
+        has_gyro = SDL_GameControllerHasSensor(controller, SDL_SENSOR_GYRO) == SDL_TRUE;
+        if (has_accel) {
+            SDL_GameControllerSetSensorEnabled(controller, SDL_SENSOR_ACCEL, SDL_TRUE);
+        }
+        if (has_gyro) {
+            SDL_GameControllerSetSensorEnabled(controller, SDL_SENSOR_GYRO, SDL_TRUE);
+        }
+#endif
+    }
+
+    bool HasMotion() const {
+        return has_gyro || has_accel;
+    }
 
     void SetButton(int button, bool value) {
         std::lock_guard lock{mutex};
@@ -233,12 +263,13 @@ public:
         return sdl_joystick.get();
     }
 
-    void SetSDLJoystick(SDL_Joystick* joystick) {
-        sdl_joystick = std::unique_ptr<SDL_Joystick, SDLJoystickDeleter>(joystick);
+    SDL_GameController* GetSDLGameController() const {
+        return sdl_controller.get();
     }
 
-    SDL_GameController* GetGameController() const {
-        return SDL_GameControllerFromInstanceID(SDL_JoystickInstanceID(sdl_joystick.get()));
+    void SetSDLJoystick(SDL_Joystick* joystick, SDL_GameController* controller) {
+        sdl_joystick.reset(joystick);
+        sdl_controller.reset(controller);
     }
 
 private:
@@ -251,7 +282,10 @@ private:
     } state;
     std::string guid;
     int port;
-    std::unique_ptr<SDL_Joystick, SDLJoystickDeleter> sdl_joystick;
+    bool has_gyro{false};
+    bool has_accel{false};
+    std::unique_ptr<SDL_Joystick, decltype(&SDL_JoystickClose)> sdl_joystick;
+    std::unique_ptr<SDL_GameController, decltype(&SDL_GameControllerClose)> sdl_controller;
     mutable std::mutex mutex;
 };
 
@@ -301,30 +335,14 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickByGUID(const std::string& g
     const auto it = joystick_map.find(guid);
     if (it != joystick_map.end()) {
         while (it->second.size() <= static_cast<std::size_t>(port)) {
-            auto joystick =
-                std::make_shared<SDLJoystick>(guid, static_cast<int>(it->second.size()), nullptr);
+            auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(it->second.size()),
+                                                          nullptr, nullptr);
             it->second.emplace_back(std::move(joystick));
         }
-        return it->second[port];
+        return it->second[static_cast<std::size_t>(port)];
     }
-    auto joystick = std::make_shared<SDLJoystick>(guid, 0, nullptr);
+    auto joystick = std::make_shared<SDLJoystick>(guid, 0, nullptr, nullptr);
     return joystick_map[guid].emplace_back(std::move(joystick));
-}
-
-std::shared_ptr<SDLGameController> SDLState::GetSDLGameControllerByGUID(const std::string& guid,
-                                                                        int port) {
-    std::lock_guard lock{controller_map_mutex};
-    const auto it = controller_map.find(guid);
-    if (it != controller_map.end()) {
-        while (it->second.size() <= static_cast<std::size_t>(port)) {
-            auto controller = std::make_shared<SDLGameController>(
-                guid, static_cast<int>(it->second.size()), nullptr);
-            it->second.emplace_back(std::move(controller));
-        }
-        return it->second[port];
-    }
-    auto controller = std::make_shared<SDLGameController>(guid, 0, nullptr);
-    return controller_map[guid].emplace_back(std::move(controller));
 }
 
 /**
@@ -337,34 +355,21 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
 
     std::lock_guard lock{joystick_map_mutex};
     auto map_it = joystick_map.find(guid);
-    if (map_it != joystick_map.end()) {
-        auto vec_it = std::find_if(map_it->second.begin(), map_it->second.end(),
-                                   [&sdl_joystick](const std::shared_ptr<SDLJoystick>& joystick) {
-                                       return sdl_joystick == joystick->GetSDLJoystick();
-                                   });
-        if (vec_it != map_it->second.end()) {
-            // This is the common case: There is already an existing SDL_Joystick maped to a
-            // SDLJoystick. return the SDLJoystick
-            return *vec_it;
-        }
-        // Search for a SDLJoystick without a mapped SDL_Joystick...
-        auto nullptr_it = std::find_if(map_it->second.begin(), map_it->second.end(),
-                                       [](const std::shared_ptr<SDLJoystick>& joystick) {
-                                           return !joystick->GetSDLJoystick();
-                                       });
-        if (nullptr_it != map_it->second.end()) {
-            // ... and map it
-            (*nullptr_it)->SetSDLJoystick(sdl_joystick);
-            return *nullptr_it;
-        }
-        // There is no SDLJoystick without a mapped SDL_Joystick
-        // Create a new SDLJoystick
-        auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(map_it->second.size()),
-                                                      sdl_joystick);
-        return map_it->second.emplace_back(std::move(joystick));
+
+    if (map_it == joystick_map.end()) {
+        return nullptr;
     }
-    auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick);
-    return joystick_map[guid].emplace_back(std::move(joystick));
+
+    const auto vec_it = std::find_if(map_it->second.begin(), map_it->second.end(),
+                                     [&sdl_joystick](const auto& joystick) {
+                                         return joystick->GetSDLJoystick() == sdl_joystick;
+                                     });
+
+    if (vec_it == map_it->second.end()) {
+        return nullptr;
+    }
+
+    return *vec_it;
 }
 
 Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
@@ -372,7 +377,7 @@ Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
     Common::ParamPackage params({{"engine", "sdl"}});
     params.Set("guid", guid);
     params.Set("port", port);
-    SDL_GameController* controller = GetSDLGameControllerByGUID(guid, port)->GetSDLGameController();
+    SDL_GameController* controller = GetSDLJoystickByGUID(guid, port)->GetSDLGameController();
     SDL_GameControllerButtonBind button_bind;
 
     if (!controller) {
@@ -456,7 +461,7 @@ Common::ParamPackage SDLState::GetSDLControllerAnalogBindByGUID(
     Common::ParamPackage params({{"engine", "sdl"}});
     params.Set("guid", guid);
     params.Set("port", port);
-    SDL_GameController* controller = GetSDLGameControllerByGUID(guid, port)->GetSDLGameController();
+    SDL_GameController* controller = GetSDLJoystickByGUID(guid, port)->GetSDLGameController();
     SDL_GameControllerButtonBind button_bind_x;
     SDL_GameControllerButtonBind button_bind_y;
 
@@ -487,6 +492,12 @@ Common::ParamPackage SDLState::GetSDLControllerAnalogBindByGUID(
 
 void SDLState::InitJoystick(int joystick_index) {
     SDL_Joystick* sdl_joystick = SDL_JoystickOpen(joystick_index);
+    SDL_GameController* sdl_gamecontroller = nullptr;
+
+    if (SDL_IsGameController(joystick_index)) {
+        sdl_gamecontroller = SDL_GameControllerOpen(joystick_index);
+    }
+
     if (!sdl_joystick) {
         LOG_ERROR(Input, "failed to open joystick {}, with error: {}", joystick_index,
                   SDL_GetError());
@@ -496,93 +507,40 @@ void SDLState::InitJoystick(int joystick_index) {
 
     std::lock_guard lock{joystick_map_mutex};
     if (joystick_map.find(guid) == joystick_map.end()) {
-        auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick);
+        auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick, sdl_gamecontroller);
+        joystick->EnableMotion();
         joystick_map[guid].emplace_back(std::move(joystick));
         return;
     }
+
     auto& joystick_guid_list = joystick_map[guid];
-    const auto it = std::find_if(
-        joystick_guid_list.begin(), joystick_guid_list.end(),
-        [](const std::shared_ptr<SDLJoystick>& joystick) { return !joystick->GetSDLJoystick(); });
+    const auto it = std::find_if(joystick_guid_list.begin(), joystick_guid_list.end(),
+                                 [](const auto& joystick) { return !joystick->GetSDLJoystick(); });
     if (it != joystick_guid_list.end()) {
-        (*it)->SetSDLJoystick(sdl_joystick);
+        (*it)->SetSDLJoystick(sdl_joystick, sdl_gamecontroller);
+        (*it)->EnableMotion();
         return;
     }
-    auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(joystick_guid_list.size()),
-                                                  sdl_joystick);
+    const int port = static_cast<int>(joystick_guid_list.size());
+    auto joystick = std::make_shared<SDLJoystick>(guid, port, sdl_joystick, sdl_gamecontroller);
+    joystick->EnableMotion();
     joystick_guid_list.emplace_back(std::move(joystick));
 }
 
-void SDLState::InitGameController(int controller_index) {
-    SDL_GameController* sdl_controller = SDL_GameControllerOpen(controller_index);
-    if (!sdl_controller) {
-        LOG_WARNING(Input, "failed to open joystick {} as controller", controller_index);
-        return;
-    }
-#if SDL_VERSION_ATLEAST(2, 0, 14)
-    if (SDL_GameControllerHasSensor(sdl_controller, SDL_SENSOR_ACCEL)) {
-        SDL_GameControllerSetSensorEnabled(sdl_controller, SDL_SENSOR_ACCEL, SDL_TRUE);
-    }
-    if (SDL_GameControllerHasSensor(sdl_controller, SDL_SENSOR_GYRO)) {
-        SDL_GameControllerSetSensorEnabled(sdl_controller, SDL_SENSOR_GYRO, SDL_TRUE);
-    }
-#endif
-    const std::string guid = GetGUID(SDL_GameControllerGetJoystick(sdl_controller));
-
-    LOG_INFO(Input, "opened joystick {} as controller", controller_index);
-    std::lock_guard lock{controller_map_mutex};
-    if (controller_map.find(guid) == controller_map.end()) {
-        auto controller = std::make_shared<SDLGameController>(guid, 0, sdl_controller);
-        controller_map[guid].emplace_back(std::move(controller));
-        return;
-    }
-    auto& controller_guid_list = controller_map[guid];
-    const auto it = std::find_if(controller_guid_list.begin(), controller_guid_list.end(),
-                                 [](const std::shared_ptr<SDLGameController>& controller) {
-                                     return !controller->GetSDLGameController();
-                                 });
-    if (it != controller_guid_list.end()) {
-        (*it)->SetSDLGameController(sdl_controller);
-        return;
-    }
-    auto controller = std::make_shared<SDLGameController>(
-        guid, static_cast<int>(controller_guid_list.size()), sdl_controller);
-    controller_guid_list.emplace_back(std::move(controller));
-}
-
 void SDLState::CloseJoystick(SDL_Joystick* sdl_joystick) {
-    std::string guid = GetGUID(sdl_joystick);
-    std::shared_ptr<SDLJoystick> joystick;
-    {
-        std::lock_guard lock{joystick_map_mutex};
-        // This call to guid is safe since the joystick is guaranteed to be in the map
-        auto& joystick_guid_list = joystick_map[guid];
-        const auto joystick_it =
-            std::find_if(joystick_guid_list.begin(), joystick_guid_list.end(),
-                         [&sdl_joystick](const std::shared_ptr<SDLJoystick>& joystick) {
-                             return joystick->GetSDLJoystick() == sdl_joystick;
-                         });
-        joystick = *joystick_it;
-    }
-    // Destruct SDL_Joystick outside the lock guard because SDL can internally call event calback
-    // which locks the mutex again
-    joystick->SetSDLJoystick(nullptr);
-}
+    const auto guid = GetGUID(sdl_joystick);
 
-void SDLState::CloseGameController(SDL_GameController* sdl_controller) {
-    std::string guid = GetGUID(SDL_GameControllerGetJoystick(sdl_controller));
-    std::shared_ptr<SDLGameController> controller;
-    {
-        std::lock_guard lock{controller_map_mutex};
-        auto& controller_guid_list = controller_map[guid];
-        const auto controller_it =
-            std::find_if(controller_guid_list.begin(), controller_guid_list.end(),
-                         [&sdl_controller](const std::shared_ptr<SDLGameController>& controller) {
-                             return controller->GetSDLGameController() == sdl_controller;
-                         });
-        controller = *controller_it;
+    std::scoped_lock lock{joystick_map_mutex};
+    // This call to guid is safe since the joystick is guaranteed to be in the map
+    const auto& joystick_guid_list = joystick_map[guid];
+    const auto joystick_it = std::find_if(joystick_guid_list.begin(), joystick_guid_list.end(),
+                                          [&sdl_joystick](const auto& joystick) {
+                                              return joystick->GetSDLJoystick() == sdl_joystick;
+                                          });
+
+    if (joystick_it != joystick_guid_list.end()) {
+        (*joystick_it)->SetSDLJoystick(nullptr, nullptr);
     }
-    controller->SetSDLGameController(nullptr);
 }
 
 void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
@@ -638,25 +596,12 @@ void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
         LOG_DEBUG(Input, "Joystick connected with device index {}", event.jdevice.which);
         InitJoystick(event.jdevice.which);
         break;
-    case SDL_CONTROLLERDEVICEREMOVED:
-        LOG_DEBUG(Input, "Controller removed with Instance_ID {}", event.cdevice.which);
-        CloseGameController(SDL_GameControllerFromInstanceID(event.cdevice.which));
-        break;
-    case SDL_CONTROLLERDEVICEADDED:
-        LOG_DEBUG(Input, "Controller connected with device index {}", event.cdevice.which);
-        InitGameController(event.cdevice.which);
-        break;
     }
 }
 
 void SDLState::CloseJoysticks() {
     std::lock_guard lock{joystick_map_mutex};
     joystick_map.clear();
-}
-
-void SDLState::CloseGameControllers() {
-    std::lock_guard lock{controller_map_mutex};
-    controller_map.clear();
 }
 
 class SDLButton final : public Input::ButtonDevice {
@@ -904,9 +849,6 @@ SDLState::SDLState() {
     // Because the events for joystick connection happens before we have our event watcher added, we
     // can just open all the joysticks right here
     for (int i = 0; i < SDL_NumJoysticks(); ++i) {
-        if (SDL_IsGameController(i)) {
-            InitGameController(i);
-        }
         InitJoystick(i);
     }
 }
@@ -918,7 +860,6 @@ SDLState::~SDLState() {
     UnregisterFactory<MotionDevice>("sdl");
 
     CloseJoysticks();
-    CloseGameControllers();
     SDL_DelEventWatch(&SDLEventWatcher, this);
 
     initialized = false;
