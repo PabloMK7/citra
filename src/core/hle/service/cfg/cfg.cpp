@@ -898,6 +898,17 @@ void Module::SetEULAVersion(const EULAVersion& version) {
     SetConfigInfoBlock(EULAVersionBlockID, sizeof(data), 0xE, &data);
 }
 
+void Module::SetSystemSetupNeeded(bool setup_needed) {
+    u32 block = setup_needed ? 0 : 1;
+    SetConfigInfoBlock(SystemSetupRequiredBlockID, sizeof(block), 0xC, &block);
+}
+
+bool Module::IsSystemSetupNeeded() {
+    u32 block;
+    GetConfigInfoBlock(SystemSetupRequiredBlockID, sizeof(block), 0xC, &block);
+    return (block & 0xFFFF) == 0;
+}
+
 std::shared_ptr<Module> GetModule(Core::System& system) {
     auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
     if (!cfg)

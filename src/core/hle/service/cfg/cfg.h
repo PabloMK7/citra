@@ -461,6 +461,18 @@ public:
     EULAVersion GetEULAVersion();
 
     /**
+     * Sets whether system initial setup is needed in config savegame.
+     * @param setup_needed Whether system initial setup is needed.
+     */
+    void SetSystemSetupNeeded(bool setup_needed);
+
+    /**
+     * Gets whether system initial setup is needed from config savegame.
+     * @returns Whether system initial setup is needed.
+     */
+    bool IsSystemSetupNeeded();
+
+    /**
      * Writes the config savegame memory buffer to the config savegame file in the filesystem
      * @returns ResultCode indicating the result of the operation, 0 on success
      */

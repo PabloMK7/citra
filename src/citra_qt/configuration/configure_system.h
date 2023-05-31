@@ -57,4 +57,5 @@ private:
     int sound_index = 0;
     u8 country_code;
     u16 play_coin;
+    bool system_setup;
 };
