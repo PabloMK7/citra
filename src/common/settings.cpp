@@ -62,6 +62,8 @@ std::string_view GetTextureFilterName(TextureFilter filter) {
         return "ScaleForce";
     case TextureFilter::xBRZ:
         return "xBRZ";
+    case TextureFilter::MMPX:
+        return "MMPX";
     default:
         return "Invalid";
     }

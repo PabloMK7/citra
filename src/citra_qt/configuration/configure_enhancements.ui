@@ -199,6 +199,11 @@
              <string>xBRZ</string>
             </property>
            </item>
+            <item>
+              <property name="text">
+                <string>MMPX</string>
+              </property>
+            </item>
           </widget>
          </item>
         </layout>

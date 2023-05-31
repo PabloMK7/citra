@@ -40,6 +40,8 @@ private:
 
     void FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit);
 
+    void FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit);
+
     void SetParams(OGLProgram& program, const VideoCore::Extent& src_extent,
                    Common::Rectangle<u32> src_rect);
 
@@ -58,6 +60,7 @@ private:
     OGLProgram nearest_program;
     OGLProgram scale_force_program;
     OGLProgram xbrz_program;
+    OGLProgram mmpx_program;
     OGLProgram gradient_x_program;
     OGLProgram gradient_y_program;
     OGLProgram refine_program;

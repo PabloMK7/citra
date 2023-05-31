@@ -14,6 +14,7 @@
 #include "video_core/host_shaders/format_reinterpreter/rgba4_to_rgb5a1_frag.h"
 #include "video_core/host_shaders/full_screen_triangle_vert.h"
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
+#include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
 #include "video_core/host_shaders/texture_filtering/nearest_neighbor_frag.h"
 #include "video_core/host_shaders/texture_filtering/refine_frag.h"
 #include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
@@ -60,7 +61,8 @@ BlitHelper::BlitHelper(const Driver& driver_)
       nearest_program{CreateProgram(HostShaders::NEAREST_NEIGHBOR_FRAG)},
       scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG)},
       xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG)},
-      gradient_x_program{CreateProgram(HostShaders::X_GRADIENT_FRAG)},
+      mmpx_program{CreateProgram(HostShaders::MMPX_FRAG)}, gradient_x_program{CreateProgram(
+                                                               HostShaders::X_GRADIENT_FRAG)},
       gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG)},
       refine_program{CreateProgram(HostShaders::REFINE_FRAG)},
       d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG)},
@@ -175,6 +177,9 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
     case TextureFilter::xBRZ:
         FilterXbrz(surface, blit);
         break;
+    case TextureFilter::MMPX:
+        FilterMMPX(surface, blit);
+        break;
     default:
         LOG_ERROR(Render_OpenGL, "Unknown texture filter {}", filter);
     }
@@ -268,6 +273,14 @@ void BlitHelper::FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit
     glProgramUniform1f(xbrz_program.handle, 2, static_cast<GLfloat>(surface.res_scale));
     SetParams(xbrz_program, surface.RealExtent(false), blit.src_rect);
     Draw(xbrz_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
+}
+
+void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+    state.texture_units[0].texture_2d = surface.Handle(0);
+    SetParams(mmpx_program, surface.RealExtent(false), blit.src_rect);
+    Draw(mmpx_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::SetParams(OGLProgram& program, const VideoCore::Extent& src_extent,

@@ -74,6 +74,7 @@ enum class TextureFilter : u32 {
     NearestNeighbor = 3,
     ScaleForce = 4,
     xBRZ = 5,
+    MMPX = 6
 };
 
 namespace NativeButton {
