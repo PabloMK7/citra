@@ -42,4 +42,10 @@ for OTHER_ARTIFACT in "${ARTIFACTS_LIST[@]:1}"; do
     done
 done
 
+# Re-sign executables and bundles after combining.
+APP_PATHS=(citra citra-room citra-qt.app)
+for APP_PATH in "${APP_PATHS[@]}"; do
+    codesign --deep -fs - $REV_NAME/$APP_PATH
+done
+
 . .ci/common/post-upload.sh

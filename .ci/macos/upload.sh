@@ -8,9 +8,9 @@ COMPRESSION_FLAGS="-czvf"
 
 mkdir "$REV_NAME"
 
-cp build/bin/Release/citra "$REV_NAME"
-cp -r build/bin/Release/libs "$REV_NAME"
-cp -r build/bin/Release/citra-qt.app "$REV_NAME"
-cp build/bin/Release/citra-room "$REV_NAME"
+cp -a build/bin/Release/citra "$REV_NAME"
+cp -a build/bin/Release/libs "$REV_NAME"
+cp -a build/bin/Release/citra-qt.app "$REV_NAME"
+cp -a build/bin/Release/citra-room "$REV_NAME"
 
 . .ci/common/post-upload.sh
