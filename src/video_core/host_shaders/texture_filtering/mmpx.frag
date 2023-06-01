@@ -9,17 +9,10 @@ layout(location = 0) in vec2 tex_coord;
 layout(location = 0) out vec4 frag_color;
 layout(binding = 0) uniform sampler2D tex;
 
-vec2 source_size = vec2(textureSize(tex, 0));
-vec2 pos = fract(tex_coord * source_size) - vec2(0.5, 0.5);
-vec2 coord = tex_coord - pos / source_size;
-
-vec4 src(float x, float y)
-{
-    return texture(tex, coord + vec2(x, y) * 1 / source_size);
-}
+#define src(x, y) texture(tex, coord + vec2(x, y) * 1.0 / source_size)
 
 float luma(vec4 col){
-    return dot(col.rgb, vec3(0.2126, 0.7152, 0.0722)) * (1 - col.a);
+    return dot(col.rgb, vec3(0.2126, 0.7152, 0.0722)) * (1.0 - col.a);
 }
 
 bool same(vec4 B, vec4 A0){
@@ -56,6 +49,10 @@ bool none_eq4(vec4 B, vec4 A0, vec4 A1, vec4 A2, vec4 A3) {
 
 void main()
 {
+    vec2 source_size = vec2(textureSize(tex, 0));
+    vec2 pos = fract(tex_coord * source_size) - vec2(0.5, 0.5);
+    vec2 coord = tex_coord - pos / source_size;
+
     vec4 E = src(0.0,0.0);
 
     vec4 A = src(-1.0,-1.0);
