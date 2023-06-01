@@ -177,31 +177,43 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          },
                          {
                              .name = "NS CFA",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00010702, 0x00010702, 0x00010702, 0x00010702,
                                                0x00010702, 0x00010702, 0x00010702},
                          },
                          {
                              .name = "Dummy CFA",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00010802, 0x00010802, 0x00010802, 0x00010802,
                                                0x00010802, 0x00010802, 0x00010802},
                          },
                          {
                              .name = "NNID Web Browser Data",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00018002, 0x00018002, 0x00018002, 0x00018002,
                                                0x00018002, 0x00018002, 0x00018002},
                          },
                          {
                              .name = "Miiverse Offline Mode Web Browser Data",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00018102, 0x00018102, 0x00018102, 0x00018102,
                                                0x00018102, 0x00018102, 0x00018102},
                          },
                          {
                              .name = "NNID/Miiverse OSS CROs",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00018202, 0x00018202, 0x00018202, 0x00018202,
                                                0x00018202, 0x00018202, 0x00018202},
                          },
                          {
                              .name = "NFC Peripheral Firmware",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00019002, 0x00019002, 0x00019002, 0x00019002,
                                                0x00019002, 0x00019002, 0x00019002},
                          },
@@ -351,11 +363,15 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                      {
                          {
                              .name = "CFL_Res.dat",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00010202, 0x00010202, 0x00010202, 0x00010202,
                                                0x00010202, 0x00010202, 0x00010202},
                          },
                          {
                              .name = "Region Manifest",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00010402, 0x00010402, 0x00010402, 0x00010402,
                                                0x00010402, 0x00010402, 0x00010402},
                          },
@@ -368,71 +384,105 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          },
                          {
                              .name = "CHN/CN Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0, 0, 0x00011002, 0, 0},
                          },
                          {
                              .name = "TWN/TN Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0, 0, 0, 0, 0x00011102},
                          },
                          {
                              .name = "NL/NL Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011202, 0x00011202, 0, 0, 0},
                          },
                          {
                              .name = "EN/GB Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011302, 0x00011302, 0, 0, 0},
                          },
                          {
                              .name = "EN/US Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0x00011402, 0, 0, 0, 0, 0},
                          },
                          {
                              .name = "FR/FR/regular Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011502, 0x00011502, 0, 0, 0},
                          },
                          {
                              .name = "FR/CA/regular Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0x00011602, 0, 0, 0, 0, 0},
                          },
                          {
                              .name = "DE/regular Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011702, 0x00011702, 0, 0, 0},
                          },
                          {
                              .name = "IT/IT Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011802, 0x00011802, 0, 0, 0},
                          },
                          {
                              .name = "JA_small/32 Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00011902, 0, 0, 0, 0, 0, 0},
                          },
                          {
                              .name = "KO/KO Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0, 0, 0, 0x00011A02, 0},
                          },
                          {
                              .name = "PT/PT/regular Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011B02, 0x00011B02, 0, 0, 0},
                          },
                          {
                              .name = "RU/regular Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0, 0x00011C02, 0x00011C02, 0, 0, 0},
                          },
                          {
                              .name = "ES/ES Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0x00011D02, 0x00011D02, 0x00011D02, 0, 0, 0},
                          },
                          {
                              .name = "PT/BR/regular Dictionary",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0, 0x00011E02, 0, 0, 0, 0, 0},
                          },
                          {
                              .name = "Error Strings",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00012202, 0x00012302, 0x00012102, 0x00012102,
                                                0x00012402, 0x00012502, 0x00012602},
                          },
                          {
                              .name = "EULA",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00013202, 0x00013302, 0x00013102, 0x00013102,
                                                0x00013502, 0, 0},
                          },
@@ -466,6 +516,8 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          },
                          {
                              .name = "Rate",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00015202, 0x00015302, 0x00015102, 0x00015102, 0,
                                                0x00015502, 0x0015602},
                          },
@@ -476,28 +528,34 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                      {
                          {
                              .name = "NGWord List",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00010302, 0x00010302, 0x00010302, 0x00010302,
                                                0x00010302, 0x00010302, 0x00010302},
                          },
                          {
                              .name = "Nintendo Zone Hotspot List",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00010502, 0x00010502, 0x00010502, 0x00010502,
                                                0x00010502, 0x00010502, 0x00010502},
                          },
                          {
                              .name = "NVer (O3DS)",
-                             .sets = SystemTitleSet::Old3ds,
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::Minimal,
                              .title_id_lows = {0x00016202, 0x00016302, 0x00016102, 0x00016102,
                                                0x00016402, 0x00016502, 0x00016602},
                          },
                          {
                              .name = "NVer (N3DS)",
-                             .sets = SystemTitleSet::New3ds,
+                             .sets = SystemTitleSet::New3ds | SystemTitleSet::Minimal,
                              .title_id_lows = {0x20016202, 0x20016302, 0x20016102, 0x20016102, 0,
                                                0x20016502, 0},
                          },
                          {
                              .name = "CVer",
+                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
+                                     SystemTitleSet::Minimal,
                              .title_id_lows = {0x00017202, 0x00017302, 0x00017102, 0x00017102,
                                                0x00017402, 0x00017502, 0x00017602},
                          },
@@ -1025,25 +1083,25 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                      {
                          {
                              .name = "NATIVE_FIRM (O3DS)",
-                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::Minimal,
+                             .sets = SystemTitleSet::Old3ds,
                              .title_id_lows = {0x00000002, 0x00000002, 0x00000002, 0x00000002,
                                                0x00000002, 0x00000002, 0x00000002},
                          },
                          {
                              .name = "NATIVE_FIRM (N3DS)",
-                             .sets = SystemTitleSet::New3ds | SystemTitleSet::Minimal,
+                             .sets = SystemTitleSet::New3ds,
                              .title_id_lows = {0x20000002, 0x20000002, 0x20000002, 0x20000002,
                                                0x20000002, 0x20000002, 0x20000002},
                          },
                          {
                              .name = "SAFE_MODE_FIRM (O3DS)",
-                             .sets = SystemTitleSet::Old3ds | SystemTitleSet::Minimal,
+                             .sets = SystemTitleSet::Old3ds,
                              .title_id_lows = {0x00000003, 0x00000003, 0x00000003, 0x00000003,
                                                0x00000003, 0x00000003, 0x00000003},
                          },
                          {
                              .name = "SAFE_MODE_FIRM (N3DS)",
-                             .sets = SystemTitleSet::New3ds | SystemTitleSet::Minimal,
+                             .sets = SystemTitleSet::New3ds,
                              .title_id_lows = {0x20000003, 0x20000003, 0x20000003, 0x20000003,
                                                0x20000003, 0x20000003, 0x20000003},
                          },
