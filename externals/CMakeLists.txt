@@ -114,7 +114,7 @@ add_subdirectory(open_source_archives)
 set(INTEGER_SAMPLES ON CACHE BOOL "")
 set(SOUNDSTRETCH OFF CACHE BOOL "")
 set(SOUNDTOUCH_DLL OFF CACHE BOOL "")
-add_subdirectory(soundtouch)
+add_subdirectory(soundtouch EXCLUDE_FROM_ALL)
 
 # Teakra
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
