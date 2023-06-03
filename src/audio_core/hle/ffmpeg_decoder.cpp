@@ -143,7 +143,7 @@ void FFMPEGDecoder::Impl::Clear() {
 }
 
 std::optional<BinaryMessage> FFMPEGDecoder::Impl::Decode(const BinaryMessage& request) {
-    BinaryMessage response;
+    BinaryMessage response{};
     response.header.codec = request.header.codec;
     response.header.cmd = request.header.cmd;
     response.decode_aac_response.size = request.decode_aac_request.size;

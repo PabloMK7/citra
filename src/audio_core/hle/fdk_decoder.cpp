@@ -105,7 +105,7 @@ std::optional<BinaryMessage> FDKDecoder::Impl::ProcessRequest(const BinaryMessag
     }
     case DecoderCommand::Unknown: {
         BinaryMessage response = request;
-        response.header.result = 0x0;
+        response.header.result = ResultStatus::Success;
         return response;
     }
     default:
@@ -116,7 +116,7 @@ std::optional<BinaryMessage> FDKDecoder::Impl::ProcessRequest(const BinaryMessag
 }
 
 std::optional<BinaryMessage> FDKDecoder::Impl::Decode(const BinaryMessage& request) {
-    BinaryMessages response;
+    BinaryMessage response{};
     response.header.codec = request.header.codec;
     response.header.cmd = request.header.cmd;
     response.decode_aac_response.size = request.decode_aac_request.size;
