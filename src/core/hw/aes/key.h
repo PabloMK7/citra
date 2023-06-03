@@ -76,6 +76,7 @@ void SetKeyX(std::size_t slot_id, const AESKey& key);
 void SetKeyY(std::size_t slot_id, const AESKey& key);
 void SetNormalKey(std::size_t slot_id, const AESKey& key);
 
+bool IsKeyXAvailable(std::size_t slot_id);
 bool IsNormalKeyAvailable(std::size_t slot_id);
 AESKey GetNormalKey(std::size_t slot_id);
 

@@ -247,9 +247,10 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
     ui->combo_download_set->setCurrentIndex(0);    // set to Minimal
     ui->combo_download_region->setCurrentIndex(0); // set to the base region
 
-    bool keys_available = true;
     HW::AES::InitKeys(true);
-    for (u8 i = 0; i < HW::AES::MaxCommonKeySlot; i++) {
+    bool keys_available = HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure1) &&
+                          HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure2);
+    for (u8 i = 0; i < HW::AES::MaxCommonKeySlot && keys_available; i++) {
         HW::AES::SelectCommonKeyIndex(i);
         if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::TicketCommonKey)) {
             keys_available = false;

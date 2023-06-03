@@ -573,6 +573,10 @@ void SetNormalKey(std::size_t slot_id, const AESKey& key) {
     key_slots.at(slot_id).SetNormalKey(key);
 }
 
+bool IsKeyXAvailable(std::size_t slot_id) {
+    return key_slots.at(slot_id).x.has_value();
+}
+
 bool IsNormalKeyAvailable(std::size_t slot_id) {
     return key_slots.at(slot_id).normal.has_value();
 }
