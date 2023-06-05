@@ -93,6 +93,13 @@ endif()
 # Glad
 add_subdirectory(glad)
 
+# glslang
+set(SKIP_GLSLANG_INSTALL ON)
+set(ENABLE_GLSLANG_BINARIES OFF)
+set(ENABLE_SPVREMAPPER OFF)
+set(ENABLE_CTEST OFF)
+add_subdirectory(glslang)
+
 # inih
 add_subdirectory(inih)
 
@@ -106,15 +113,18 @@ target_include_directories(nihstro-headers INTERFACE ./nihstro/include)
 if (MSVC)
     target_compile_options(nihstro-headers INTERFACE /W0)
 endif()
+
 # Open Source Archives
 add_subdirectory(open_source_archives)
 
 # SoundTouch
-
 set(INTEGER_SAMPLES ON CACHE BOOL "")
 set(SOUNDSTRETCH OFF CACHE BOOL "")
 set(SOUNDTOUCH_DLL OFF CACHE BOOL "")
 add_subdirectory(soundtouch EXCLUDE_FROM_ALL)
+
+# sirit
+add_subdirectory(sirit EXCLUDE_FROM_ALL)
 
 # Teakra
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
@@ -205,3 +215,11 @@ if (ENABLE_OPENAL)
     set(LIBTYPE "STATIC" CACHE STRING "")
     add_subdirectory(openal-soft EXCLUDE_FROM_ALL)
 endif()
+
+# VMA
+add_library(vma INTERFACE)
+target_include_directories(vma INTERFACE ./vma/include)
+
+# vulkan-headers
+add_library(vulkan-headers INTERFACE)
+target_include_directories(vulkan-headers INTERFACE ./vulkan-headers/include)

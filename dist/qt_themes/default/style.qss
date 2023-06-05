@@ -1,3 +1,17 @@
+QPushButton#GraphicsAPIStatusBarButton {
+    color: #656565;
+    border: 1px solid transparent;
+    background-color: transparent;
+    padding: 0px 3px 0px 3px;
+    text-align: center;
+    min-width: 60px;
+    min-height: 20px;
+}
+
+QPushButton#GraphicsAPIStatusBarButton:hover {
+    border: 1px solid #76797C;
+}
+
 QPushButton#3DOptionStatusBarButton {
     color: #A5A5A5;
     font-weight: bold;

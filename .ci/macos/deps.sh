@@ -1,3 +1,3 @@
 #!/bin/sh -ex
 
-brew install ccache ninja || true
+brew install ccache glslang ninja || true

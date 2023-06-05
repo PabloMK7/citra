@@ -59,6 +59,8 @@ option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_FDK "Use FDK AAC decoder" OFF "NOT ENABLE_FFMPEG_AUDIO_DECODER;NOT ENABLE_MF" OFF)
 
+CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_MOLTENVK "Download the bundled MoltenVK" ON "APPLE" OFF)
+
 CMAKE_DEPENDENT_OPTION(CITRA_BUNDLE_LIBRARIES "Bundle dependent libraries with the output executables" ON "APPLE" OFF)
 
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
@@ -282,10 +284,16 @@ find_package(tsl-robin-map QUIET)
 # ======================================
 
 if (APPLE)
+    if (CITRA_USE_BUNDLED_MOLTENVK)
+        download_moltenvk()
+    endif()
+    find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+    message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
+
     # Umbrella framework for everything GUI-related
-    find_library(COCOA_LIBRARY Cocoa)
-    find_library(AVFOUNDATION_LIBRARY AVFoundation)
-    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
+    find_library(COCOA_LIBRARY Cocoa REQUIRED)
+    find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
+    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${MOLTENVK_LIBRARY})
 elseif (WIN32)
     set(PLATFORM_LIBRARIES winmm ws2_32)
     if (MINGW)

@@ -358,6 +358,22 @@ void GMainWindow::InitializeWidgets() {
         statusBar()->addPermanentWidget(label);
     }
 
+    // Setup Graphics API button
+    graphics_api_button = new QPushButton();
+    graphics_api_button->setObjectName(QStringLiteral("GraphicsAPIStatusBarButton"));
+    graphics_api_button->setFocusPolicy(Qt::NoFocus);
+    UpdateAPIIndicator();
+
+    connect(graphics_api_button, &QPushButton::clicked, this, [this] {
+        if (emulation_running) {
+            return;
+        }
+
+        UpdateAPIIndicator(true);
+    });
+
+    statusBar()->insertPermanentWidget(0, graphics_api_button);
+
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
 
@@ -1990,6 +2006,7 @@ void GMainWindow::OnConfigure() {
         }
         UpdateSecondaryWindowVisibility();
         UpdateBootHomeMenuState();
+        UpdateAPIIndicator();
     } else {
         Settings::values.input_profiles = old_input_profiles;
         Settings::values.touch_from_button_maps = old_touch_from_button_maps;
@@ -2311,6 +2328,24 @@ void GMainWindow::ShowMouseCursor() {
     if (emu_thread && UISettings::values.hide_mouse) {
         mouse_hide_timer.start();
     }
+}
+
+void GMainWindow::UpdateAPIIndicator(bool update) {
+    static std::array graphics_apis = {QStringLiteral("SOFTWARE"), QStringLiteral("OPENGL")};
+
+    static std::array graphics_api_colors = {QStringLiteral("#3ae400"), QStringLiteral("#00ccdd")};
+
+    u32 api_index = static_cast<u32>(Settings::values.graphics_api.GetValue());
+    if (update) {
+        api_index = (api_index + 1) % graphics_apis.size();
+        Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(api_index);
+    }
+
+    const QString style_sheet = QStringLiteral("QPushButton { font-weight: bold; color: %0; }")
+                                    .arg(graphics_api_colors[api_index]);
+
+    graphics_api_button->setText(graphics_apis[api_index]);
+    graphics_api_button->setStyleSheet(style_sheet);
 }
 
 void GMainWindow::OnMouseActivity() {

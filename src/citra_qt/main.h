@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 #include <QMainWindow>
+#include <QPushButton>
 #include <QTimer>
 #include <QTranslator>
 #include "citra_qt/compatibility_list.h"
@@ -261,6 +262,7 @@ private:
     void HideMouseCursor();
     void ShowMouseCursor();
     void OpenPerGameConfiguration(u64 title_id, const QString& file_name);
+    void UpdateAPIIndicator(bool update = false);
 
     std::unique_ptr<Ui::MainWindow> ui;
     Core::System& system;
@@ -278,6 +280,7 @@ private:
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
+    QPushButton* graphics_api_button = nullptr;
     QTimer status_bar_update_timer;
     bool message_label_used_for_movie = false;
 

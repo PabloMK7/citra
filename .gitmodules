@@ -64,6 +64,18 @@
 [submodule "dds-ktx"]
     path = externals/dds-ktx
     url = https://github.com/septag/dds-ktx
-[submodule "externals/openal-soft"]
-	path = externals/openal-soft
-	url = https://github.com/kcat/openal-soft
+[submodule "openal-soft"]
+    path = externals/openal-soft
+    url = https://github.com/kcat/openal-soft
+[submodule "glslang"]
+    path = externals/glslang
+    url = https://github.com/KhronosGroup/glslang
+[submodule "vma"]
+    path = externals/vma
+    url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+[submodule "vulkan-headers"]
+    path = externals/vulkan-headers
+    url = https://github.com/KhronosGroup/Vulkan-Headers
+[submodule "sirit"]
+    path = externals/sirit
+    url = https://github.com/yuzu-emu/sirit
