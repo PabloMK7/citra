@@ -752,6 +752,7 @@ void Config::ReadUIValues() {
         ReadBasicSetting(UISettings::values.show_filter_bar);
         ReadBasicSetting(UISettings::values.show_status_bar);
         ReadBasicSetting(UISettings::values.confirm_before_closing);
+        ReadBasicSetting(UISettings::values.save_state_warning);
         ReadBasicSetting(UISettings::values.first_start);
         ReadBasicSetting(UISettings::values.callout_flags);
         ReadBasicSetting(UISettings::values.show_console);
@@ -1209,6 +1210,7 @@ void Config::SaveUIValues() {
         WriteBasicSetting(UISettings::values.show_filter_bar);
         WriteBasicSetting(UISettings::values.show_status_bar);
         WriteBasicSetting(UISettings::values.confirm_before_closing);
+        WriteBasicSetting(UISettings::values.save_state_warning);
         WriteBasicSetting(UISettings::values.first_start);
         WriteBasicSetting(UISettings::values.callout_flags);
         WriteBasicSetting(UISettings::values.show_console);

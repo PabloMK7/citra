@@ -66,9 +66,7 @@
 #include "common/file_util.h"
 #include "common/literals.h"
 #include "common/logging/backend.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
-#include "common/logging/text_formatter.h"
 #include "common/memory_detect.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -83,16 +81,13 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
-#include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/am/am.h"
-#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/savestate.h"
 #include "core/system_titles.h"
-#include "game_list_p.h"
 #include "input_common/main.h"
 #include "network/network_settings.h"
 #include "ui_main.h"
@@ -188,9 +183,9 @@ static QString PrettyProductName() {
     return QSysInfo::prettyProductName();
 }
 
-GMainWindow::GMainWindow()
-    : ui{std::make_unique<Ui::MainWindow>()}, config{std::make_unique<Config>()}, emu_thread{
-                                                                                      nullptr} {
+GMainWindow::GMainWindow(Core::System& system_)
+    : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{Core::Movie::GetInstance()},
+      config{std::make_unique<Config>()}, emu_thread{nullptr} {
     InitializeLogging();
     Debugger::ToggleConsole();
     Settings::LogSettings();
@@ -219,7 +214,7 @@ GMainWindow::GMainWindow()
 
     Network::Init();
 
-    Core::Movie::GetInstance().SetPlaybackCompletionCallback([this] {
+    movie.SetPlaybackCompletionCallback([this] {
         QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted", Qt::BlockingQueuedConnection);
     });
 
@@ -284,9 +279,10 @@ GMainWindow::GMainWindow()
 }
 
 GMainWindow::~GMainWindow() {
-    // will get automatically deleted otherwise
-    if (render_window->parent() == nullptr)
+    // Will get automatically deleted otherwise
+    if (!render_window->parent()) {
         delete render_window;
+    }
 
     Pica::g_debug_context.reset();
     Network::Shutdown();
@@ -317,6 +313,7 @@ void GMainWindow::InitializeWidgets() {
         if (emulation_running) {
             render_window->show();
             render_window->setFocus();
+            render_window->activateWindow();
         }
     });
 
@@ -804,16 +801,14 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Close_Movie, &GMainWindow::OnCloseMovie);
     connect_menu(ui->action_Save_Movie, &GMainWindow::OnSaveMovie);
     connect_menu(ui->action_Movie_Read_Only_Mode,
-                 [](bool checked) { Core::Movie::GetInstance().SetReadOnly(checked); });
+                 [this](bool checked) { movie.SetReadOnly(checked); });
     connect_menu(ui->action_Enable_Frame_Advancing, [this] {
         if (emulation_running) {
-            Core::System::GetInstance().frame_limiter.SetFrameAdvancing(
-                ui->action_Enable_Frame_Advancing->isChecked());
+            system.frame_limiter.SetFrameAdvancing(ui->action_Enable_Frame_Advancing->isChecked());
             ui->action_Advance_Frame->setEnabled(ui->action_Enable_Frame_Advancing->isChecked());
         }
     });
     connect_menu(ui->action_Advance_Frame, [this] {
-        auto& system = Core::System::GetInstance();
         if (emulation_running && system.frame_limiter.IsFrameAdvancing()) {
             ui->action_Enable_Frame_Advancing->setChecked(true);
             ui->action_Advance_Frame->setEnabled(true);
@@ -845,7 +840,7 @@ void GMainWindow::ConnectMenuEvents() {
 }
 
 void GMainWindow::UpdateMenuState() {
-    const bool is_paused = emu_thread == nullptr || !emu_thread->IsRunning();
+    const bool is_paused = !emu_thread || !emu_thread->IsRunning();
 
     const std::array running_actions{
         ui->action_Stop,
@@ -878,15 +873,17 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
         for (QDockWidget* widget : widgets) {
             QWidget* old = widget->titleBarWidget();
             widget->setTitleBarWidget(nullptr);
-            if (old != nullptr)
+            if (old) {
                 delete old;
+            }
         }
     } else {
         for (QDockWidget* widget : widgets) {
             QWidget* old = widget->titleBarWidget();
             widget->setTitleBarWidget(new QWidget());
-            if (old != nullptr)
+            if (old) {
                 delete old;
+            }
         }
     }
 }
@@ -1027,15 +1024,14 @@ void GMainWindow::AllowOSSleep() {
 
 bool GMainWindow::LoadROM(const QString& filename) {
     // Shutdown previous session if the emu thread is still active...
-    if (emu_thread != nullptr)
+    if (emu_thread) {
         ShutdownGame();
+    }
 
     render_window->InitRenderTarget();
     secondary_window->InitRenderTarget();
 
     const auto scope = render_window->Acquire();
-
-    Core::System& system{Core::System::GetInstance()};
 
     const Core::System::ResultStatus result{
         system.Load(*render_window, filename.toStdString(), secondary_window)};
@@ -1126,17 +1122,17 @@ void GMainWindow::BootGame(const QString& filename) {
     StoreRecentFile(filename); // Put the filename on top of the list
 
     if (movie_record_on_start) {
-        Core::Movie::GetInstance().PrepareForRecording();
+        movie.PrepareForRecording();
     }
     if (movie_playback_on_start) {
-        Core::Movie::GetInstance().PrepareForPlayback(movie_playback_path.toStdString());
+        movie.PrepareForPlayback(movie_playback_path.toStdString());
     }
 
     u64 title_id{0};
     const std::string path = filename.toStdString();
     const auto loader = Loader::GetLoader(path);
 
-    if (loader != nullptr && loader->ReadProgramId(title_id) == Loader::ResultStatus::Success) {
+    if (loader && loader->ReadProgramId(title_id) == Loader::ResultStatus::Success) {
         // Load per game settings
         const std::string name{FileUtil::GetFilename(filename.toStdString())};
         const std::string config_file_name =
@@ -1158,21 +1154,20 @@ void GMainWindow::BootGame(const QString& filename) {
 
     // Set everything up
     if (movie_record_on_start) {
-        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString(),
-                                                  movie_record_author.toStdString());
+        movie.StartRecording(movie_record_path.toStdString(), movie_record_author.toStdString());
         movie_record_on_start = false;
         movie_record_path.clear();
         movie_record_author.clear();
     }
     if (movie_playback_on_start) {
-        Core::Movie::GetInstance().StartPlayback(movie_playback_path.toStdString());
+        movie.StartPlayback(movie_playback_path.toStdString());
         movie_playback_on_start = false;
         movie_playback_path.clear();
     }
 
     if (ui->action_Enable_Frame_Advancing->isChecked()) {
         ui->action_Advance_Frame->setEnabled(true);
-        Core::System::GetInstance().frame_limiter.SetFrameAdvancing(true);
+        system.frame_limiter.SetFrameAdvancing(true);
     } else {
         ui->action_Advance_Frame->setEnabled(false);
     }
@@ -1180,8 +1175,7 @@ void GMainWindow::BootGame(const QString& filename) {
     if (video_dumping_on_start) {
         Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
             VideoCore::g_renderer->GetResolutionScaleFactor())};
-        if (!Core::System::GetInstance().VideoDumper().StartDumping(
-                video_dumping_path.toStdString(), layout)) {
+        if (!system.VideoDumper().StartDumping(video_dumping_path.toStdString(), layout)) {
 
             QMessageBox::critical(
                 this, tr("Citra"),
@@ -1235,7 +1229,7 @@ void GMainWindow::BootGame(const QString& filename) {
     render_window->show();
     render_window->hide();
 
-    loading_screen->Prepare(Core::System::GetInstance().GetAppLoader());
+    loading_screen->Prepare(system.GetAppLoader());
     loading_screen->show();
 
     emulation_running = true;
@@ -1256,7 +1250,7 @@ void GMainWindow::ShutdownGame() {
     }
 
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
-    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
+    if (system.VideoDumper().IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
         return;
@@ -1276,7 +1270,7 @@ void GMainWindow::ShutdownGame() {
     Pica::g_debug_context->ClearBreakpoints();
 
     // Frame advancing must be cancelled in order to release the emu thread from waiting
-    Core::System::GetInstance().frame_limiter.SetFrameAdvancing(false);
+    system.frame_limiter.SetFrameAdvancing(false);
 
     emit EmulationStopping();
 
@@ -1366,7 +1360,7 @@ void GMainWindow::UpdateRecentFiles() {
 }
 
 void GMainWindow::UpdateSaveStates() {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    if (!system.IsPoweredOn()) {
         ui->menu_Load_State->setEnabled(false);
         ui->menu_Save_State->setEnabled(false);
         return;
@@ -1381,8 +1375,7 @@ void GMainWindow::UpdateSaveStates() {
     newest_slot_time = 0;
 
     u64 title_id;
-    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(title_id) !=
-        Loader::ResultStatus::Success) {
+    if (system.GetAppLoader().ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         return;
     }
     auto savestates = Core::ListSaveStates(title_id);
@@ -1743,7 +1736,6 @@ void GMainWindow::OnStartGame() {
 }
 
 void GMainWindow::OnRestartGame() {
-    Core::System& system = Core::System::GetInstance();
     if (!system.IsPoweredOn()) {
         return;
     }
@@ -1940,19 +1932,27 @@ void GMainWindow::TriggerRotateScreens() {
 
 void GMainWindow::OnSaveState() {
     QAction* action = qobject_cast<QAction*>(sender());
-    assert(action);
+    ASSERT(action);
 
-    Core::System::GetInstance().SendSignal(Core::System::Signal::Save, action->data().toUInt());
-    Core::System::GetInstance().frame_limiter.AdvanceFrame();
+    system.SendSignal(Core::System::Signal::Save, action->data().toUInt());
+    system.frame_limiter.AdvanceFrame();
     newest_slot = action->data().toUInt();
 }
 
 void GMainWindow::OnLoadState() {
     QAction* action = qobject_cast<QAction*>(sender());
-    assert(action);
+    ASSERT(action);
 
-    Core::System::GetInstance().SendSignal(Core::System::Signal::Load, action->data().toUInt());
-    Core::System::GetInstance().frame_limiter.AdvanceFrame();
+    if (UISettings::values.save_state_warning) {
+        QMessageBox::warning(this, tr("Savestates"),
+                             tr("Warning: Savestates are NOT a replacement for in-game saves, "
+                                "and are not meant to be reliable.\n\nUse at your own risk!"));
+        UISettings::values.save_state_warning = false;
+        config->Save();
+    }
+
+    system.SendSignal(Core::System::Signal::Load, action->data().toUInt());
+    system.frame_limiter.AdvanceFrame();
 }
 
 void GMainWindow::OnConfigure() {
@@ -1998,7 +1998,7 @@ void GMainWindow::OnConfigure() {
 }
 
 void GMainWindow::OnLoadAmiibo() {
-    if (emu_thread == nullptr || !emu_thread->IsRunning()) {
+    if (!emu_thread || !emu_thread->IsRunning()) [[unlikely]] {
         return;
     }
 
@@ -2014,10 +2014,9 @@ void GMainWindow::OnLoadAmiibo() {
 }
 
 void GMainWindow::LoadAmiibo(const QString& filename) {
-    Core::System& system{Core::System::GetInstance()};
     Service::SM::ServiceManager& sm = system.ServiceManager();
     auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
-    if (nfc == nullptr) {
+    if (!nfc) [[unlikely]] {
         return;
     }
 
@@ -2045,10 +2044,9 @@ void GMainWindow::LoadAmiibo(const QString& filename) {
 }
 
 void GMainWindow::OnRemoveAmiibo() {
-    Core::System& system{Core::System::GetInstance()};
     Service::SM::ServiceManager& sm = system.ServiceManager();
     auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
-    if (nfc == nullptr) {
+    if (!nfc) [[unlikely]] {
         return;
     }
 
@@ -2120,9 +2118,8 @@ void GMainWindow::OnCloseMovie() {
             OnPauseGame();
         }
 
-        const bool was_recording =
-            Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording;
-        Core::Movie::GetInstance().Shutdown();
+        const bool was_recording = movie.GetPlayMode() == Core::Movie::PlayMode::Recording;
+        movie.Shutdown();
         if (was_recording) {
             QMessageBox::information(this, tr("Movie Saved"),
                                      tr("The movie is successfully saved."));
@@ -2143,8 +2140,8 @@ void GMainWindow::OnSaveMovie() {
         OnPauseGame();
     }
 
-    if (Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording) {
-        Core::Movie::GetInstance().SaveMovie();
+    if (movie.GetPlayMode() == Core::Movie::PlayMode::Recording) {
+        movie.SaveMovie();
         QMessageBox::information(this, tr("Movie Saved"), tr("The movie is successfully saved."));
     } else {
         LOG_ERROR(Frontend, "Tried to save movie while movie is not being recorded");
@@ -2156,7 +2153,7 @@ void GMainWindow::OnSaveMovie() {
 }
 
 void GMainWindow::OnCaptureScreenshot() {
-    if (emu_thread == nullptr || !emu_thread->IsRunning()) {
+    if (!emu_thread || !emu_thread->IsRunning()) [[unlikely]] {
         return;
     }
 
@@ -2172,8 +2169,9 @@ void GMainWindow::OnCaptureScreenshot() {
             UISettings::values.screenshot_path = path;
         };
     }
-    const std::string filename =
-        game_title.remove(QRegularExpression(QStringLiteral("[\\/:?\"<>|]"))).toStdString();
+
+    static QRegularExpression expr(QStringLiteral("[\\/:?\"<>|]"));
+    const std::string filename = game_title.remove(expr).toStdString();
     const std::string timestamp =
         QDateTime::currentDateTime().toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z")).toStdString();
     path.append(fmt::format("/{}_{}.png", filename, timestamp));
@@ -2195,7 +2193,7 @@ void GMainWindow::OnStartVideoDumping() {
     if (emulation_running) {
         Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
             VideoCore::g_renderer->GetResolutionScaleFactor())};
-        if (!Core::System::GetInstance().VideoDumper().StartDumping(path.toStdString(), layout)) {
+        if (!system.VideoDumper().StartDumping(path.toStdString(), layout)) {
             QMessageBox::critical(
                 this, tr("Citra"),
                 tr("Could not start video dumping.<br>Refer to the log for details."));
@@ -2214,15 +2212,14 @@ void GMainWindow::OnStopVideoDumping() {
         video_dumping_on_start = false;
         video_dumping_path.clear();
     } else {
-        const bool was_dumping = Core::System::GetInstance().VideoDumper().IsDumping();
+        const bool was_dumping = system.VideoDumper().IsDumping();
         if (!was_dumping)
             return;
 
         game_paused_for_dumping = emu_thread->IsRunning();
         OnPauseGame();
 
-        auto future =
-            QtConcurrent::run([] { Core::System::GetInstance().VideoDumper().StopDumping(); });
+        auto future = QtConcurrent::run([this] { system.VideoDumper().StopDumping(); });
         auto* future_watcher = new QFutureWatcher<void>(this);
         connect(future_watcher, &QFutureWatcher<void>::finished, this, [this] {
             if (game_shutdown_delayed) {
@@ -2239,15 +2236,15 @@ void GMainWindow::OnStopVideoDumping() {
 #endif
 
 void GMainWindow::UpdateStatusBar() {
-    if (emu_thread == nullptr) {
+    if (!emu_thread) [[unlikely]] {
         status_bar_update_timer.stop();
         return;
     }
 
     // Update movie status
-    const u64 current = Core::Movie::GetInstance().GetCurrentInputIndex();
-    const u64 total = Core::Movie::GetInstance().GetTotalInputCount();
-    const auto play_mode = Core::Movie::GetInstance().GetPlayMode();
+    const u64 current = movie.GetCurrentInputIndex();
+    const u64 total = movie.GetTotalInputCount();
+    const auto play_mode = movie.GetPlayMode();
     if (play_mode == Core::Movie::PlayMode::Recording) {
         message_label->setText(tr("Recording %1").arg(current));
         message_label_used_for_movie = true;
@@ -2266,7 +2263,7 @@ void GMainWindow::UpdateStatusBar() {
         ui->action_Save_Movie->setEnabled(false);
     }
 
-    auto results = Core::System::GetInstance().GetAndResetPerfStats();
+    auto results = system.GetAndResetPerfStats();
 
     if (Settings::values.frame_limit.GetValue() == 0) {
         emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
@@ -2295,7 +2292,7 @@ void GMainWindow::UpdateBootHomeMenuState() {
 }
 
 void GMainWindow::HideMouseCursor() {
-    if (emu_thread == nullptr || !UISettings::values.hide_mouse.GetValue()) {
+    if (!emu_thread || !UISettings::values.hide_mouse.GetValue()) {
         mouse_hide_timer.stop();
         ShowMouseCursor();
         return;
@@ -2311,7 +2308,7 @@ void GMainWindow::ShowMouseCursor() {
     unsetCursor();
     render_window->unsetCursor();
     secondary_window->unsetCursor();
-    if (emu_thread != nullptr && UISettings::values.hide_mouse) {
+    if (emu_thread && UISettings::values.hide_mouse) {
         mouse_hide_timer.start();
     }
 }
@@ -2406,8 +2403,9 @@ void GMainWindow::OnMenuAboutCitra() {
 }
 
 bool GMainWindow::ConfirmClose() {
-    if (emu_thread == nullptr || !UISettings::values.confirm_before_closing)
+    if (!emu_thread || !UISettings::values.confirm_before_closing) {
         return true;
+    }
 
     QMessageBox::StandardButton answer =
         QMessageBox::question(this, tr("Citra"), tr("Would you like to exit now?"),
@@ -2426,8 +2424,9 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     hotkey_registry.SaveHotkeys();
 
     // Shutdown session if the emu thread is active...
-    if (emu_thread != nullptr)
+    if (emu_thread) {
         ShutdownGame();
+    }
 
     render_window->close();
     secondary_window->close();
@@ -2493,8 +2492,9 @@ void GMainWindow::dragMoveEvent(QDragMoveEvent* event) {
 }
 
 bool GMainWindow::ConfirmChangeGame() {
-    if (emu_thread == nullptr)
+    if (!emu_thread) [[unlikely]] {
         return true;
+    }
 
     auto answer = QMessageBox::question(
         this, tr("Citra"), tr("The game is still running. Would you like to stop emulation?"),
@@ -2584,13 +2584,11 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 
 void GMainWindow::OnConfigurePerGame() {
     u64 title_id{};
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(title_id);
+    system.GetAppLoader().ReadProgramId(title_id);
     OpenPerGameConfiguration(title_id, game_path);
 }
 
 void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_name) {
-    Core::System& system = Core::System::GetInstance();
-
     Settings::SetConfiguringGlobal(false);
     ConfigurePerGame dialog(this, title_id, file_name, system);
     const auto result = dialog.exec();
@@ -2704,7 +2702,7 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 
     // Get the current screen geometry.
     const QScreen* primary_screen = QGuiApplication::primaryScreen();
-    if (primary_screen == nullptr) {
+    if (!primary_screen) {
         return Qt::HighDpiScaleFactorRoundingPolicy::PassThrough;
     }
 
@@ -2760,12 +2758,12 @@ int main(int argc, char* argv[]) {
     // generating shaders
     setlocale(LC_ALL, "C");
 
-    GMainWindow main_window;
+    Core::System& system = Core::System::GetInstance();
+    GMainWindow main_window(system);
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
 
-    Core::System& system = Core::System::GetInstance();
     system.RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
     system.RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 

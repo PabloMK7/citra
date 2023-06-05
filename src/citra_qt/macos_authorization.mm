@@ -90,4 +90,4 @@ bool CheckAuthorizationForMicrophone() {
     return authorized_microphone;
 }
 
-} // AppleAuthorization
+} // namespace AppleAuthorization

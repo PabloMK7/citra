@@ -78,7 +78,6 @@ void EmuThread::run() {
         });
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
-    emit HideLoadingScreen();
 
     core_context.MakeCurrent();
 
