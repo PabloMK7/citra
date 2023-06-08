@@ -8,7 +8,6 @@ if (POLICY CMP0071)
 endif()
 
 add_executable(citra-qt
-    Info.plist
     aboutdialog.cpp
     aboutdialog.h
     aboutdialog.ui
@@ -169,9 +168,6 @@ add_executable(citra-qt
     uisettings.h
     qt_image_interface.cpp
     qt_image_interface.h
-    updater/updater.cpp
-    updater/updater.h
-    updater/updater_p.h
     util/clickable_label.cpp
     util/clickable_label.h
     util/sequence_dialog/sequence_dialog.cpp
@@ -201,6 +197,15 @@ file(GLOB COMPAT_LIST
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.json)
 file(GLOB_RECURSE ICONS ${PROJECT_SOURCE_DIR}/dist/icons/*)
 file(GLOB_RECURSE THEMES ${PROJECT_SOURCE_DIR}/dist/qt_themes/*)
+
+if (ENABLE_QT_UPDATER)
+    target_sources(citra-qt PRIVATE
+        updater/updater.cpp
+        updater/updater.h
+        updater/updater_p.h
+    )
+    target_compile_definitions(citra-qt PUBLIC ENABLE_QT_UPDATER)
+endif()
 
 if (ENABLE_QT_TRANSLATION)
     set(CITRA_QT_LANGUAGES "${PROJECT_SOURCE_DIR}/dist/languages" CACHE PATH "Path to the translation bundle for the Qt frontend")
@@ -248,17 +253,43 @@ target_sources(citra-qt
 )
 
 if (APPLE)
-    set(MACOSX_ICON "../../dist/citra.icns")
-    set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set(DIST_DIR "../../dist/apple")
+    set(APPLE_RESOURCES
+        "${DIST_DIR}/citra.icns"
+        "${DIST_DIR}/LaunchScreen.storyboard"
+        "${DIST_DIR}/launch_logo.png"
+    )
+
     target_sources(citra-qt PRIVATE
-        ${MACOSX_ICON}
+        ${APPLE_RESOURCES}
         macos_authorization.h
         macos_authorization.mm
     )
+
+    # Define app bundle metadata.
+    include(GenerateBuildInfo)
     set_target_properties(citra-qt PROPERTIES
         MACOSX_BUNDLE TRUE
-        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
+        MACOSX_BUNDLE_INFO_PLIST "${DIST_DIR}/Info.plist.in"
+        MACOSX_BUNDLE_BUNDLE_NAME "Citra"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.citra-emu.citra"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${BUILD_FULLNAME}"
+        MACOSX_BUNDLE_ICON_FILE "citra.icns"
+        RESOURCE "${APPLE_RESOURCES}"
     )
+
+    if (IOS)
+        set_target_properties(citra-qt PROPERTIES
+            # Have Xcode copy and sign MoltenVK into app bundle.
+            XCODE_EMBED_FRAMEWORKS "${MOLTENVK_LIBRARY}"
+            XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY YES
+            XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+            # Support iPhone and iPad.
+            XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+        )
+    endif()
 elseif(WIN32)
     # compile as a win32 gui application instead of a console application
     target_link_libraries(citra-qt PRIVATE Qt6::EntryPointImplementation)

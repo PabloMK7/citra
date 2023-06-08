@@ -148,6 +148,7 @@ target_include_directories(enet INTERFACE ./enet/include)
 # Cubeb
 if (ENABLE_CUBEB)
     set(BUILD_TESTS OFF CACHE BOOL "")
+    set(BUILD_TOOLS OFF CACHE BOOL "")
     add_subdirectory(cubeb EXCLUDE_FROM_ALL)
 endif()
 

@@ -46,7 +46,9 @@ class QProgressBar;
 class QPushButton;
 class QSlider;
 class RegistersWidget;
+#if ENABLE_QT_UPDATER
 class Updater;
+#endif
 class WaitTreeWidget;
 
 namespace Camera {
@@ -146,12 +148,15 @@ private:
     void ShutdownGame();
 
     void ShowTelemetryCallout();
+    void SetDiscordEnabled(bool state);
+    void LoadAmiibo(const QString& filename);
+
+#if ENABLE_QT_UPDATER
     void ShowUpdaterWidgets();
     void ShowUpdatePrompt();
     void ShowNoUpdatePrompt();
     void CheckForUpdates();
-    void SetDiscordEnabled(bool state);
-    void LoadAmiibo(const QString& filename);
+#endif
 
     /**
      * Stores the filename in the recently loaded files list.
@@ -244,9 +249,13 @@ private slots:
     void OnCoreError(Core::System::ResultStatus, std::string);
     /// Called whenever a user selects Help->About Citra
     void OnMenuAboutCitra();
+
+#if ENABLE_QT_UPDATER
     void OnUpdateFound(bool found, bool error);
     void OnCheckForUpdates();
     void OnOpenUpdater();
+#endif
+
     void OnLanguageChanged(const QString& locale);
     void OnMouseActivity();
 
@@ -326,7 +335,9 @@ private:
     IPCRecorderWidget* ipcRecorderWidget;
     LLEServiceModulesWidget* lleServiceModulesWidget;
     WaitTreeWidget* waitTreeWidget;
+#if ENABLE_QT_UPDATER
     Updater* updater;
+#endif
 
     bool explicit_update_check = false;
     bool defer_update_prompt = false;

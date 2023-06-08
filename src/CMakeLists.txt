@@ -143,9 +143,12 @@ add_subdirectory(video_core)
 add_subdirectory(audio_core)
 add_subdirectory(network)
 add_subdirectory(input_common)
-add_subdirectory(tests)
 
-if (ENABLE_SDL2)
+if (ENABLE_TESTS)
+    add_subdirectory(tests)
+endif()
+
+if (ENABLE_SDL2 AND ENABLE_SDL2_FRONTEND)
     add_subdirectory(citra)
 endif()
 
@@ -153,11 +156,13 @@ if (ENABLE_QT)
     add_subdirectory(citra_qt)
 endif()
 
+if (ENABLE_DEDICATED_ROOM)
+    add_subdirectory(dedicated_room)
+endif()
+
 if (ANDROID)
     add_subdirectory(android/app/src/main/jni)
     target_include_directories(citra-android PRIVATE android/app/src/main)
-else()
-    add_subdirectory(dedicated_room)
 endif()
 
 if (ENABLE_WEB_SERVICE)

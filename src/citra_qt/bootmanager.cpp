@@ -364,7 +364,7 @@ static Frontend::WindowSystemType GetWindowSystemType() {
         return Frontend::WindowSystemType::X11;
     else if (platform_name == QStringLiteral("wayland"))
         return Frontend::WindowSystemType::Wayland;
-    else if (platform_name == QStringLiteral("cocoa"))
+    else if (platform_name == QStringLiteral("cocoa") || platform_name == QStringLiteral("ios"))
         return Frontend::WindowSystemType::MacOS;
 
     LOG_CRITICAL(Frontend, "Unknown Qt platform!");

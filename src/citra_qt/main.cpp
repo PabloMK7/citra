@@ -223,7 +223,12 @@ GMainWindow::GMainWindow(Core::System& system_)
     InitializeRecentFileMenuActions();
     InitializeSaveStateMenuActions();
     InitializeHotkeys();
+#if ENABLE_QT_UPDATER
     ShowUpdaterWidgets();
+#else
+    ui->action_Check_For_Updates->setVisible(false);
+    ui->action_Open_Maintenance_Tool->setVisible(false);
+#endif
 
     SetDefaultUIGeometry();
     RestoreUIState();
@@ -268,9 +273,11 @@ GMainWindow::GMainWindow(Core::System& system_)
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
 
+#if ENABLE_QT_UPDATER
     if (UISettings::values.check_for_update_on_start) {
         CheckForUpdates();
     }
+#endif
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
@@ -322,9 +329,11 @@ void GMainWindow::InitializeWidgets() {
                                              ui->action_Show_Room);
     multiplayer_state->setVisible(false);
 
+#if ENABLE_QT_UPDATER
     // Setup updater
     updater = new Updater(this);
     UISettings::values.updater_found = updater->HasUpdater();
+#endif
 
     UpdateBootHomeMenuState();
 
@@ -655,13 +664,6 @@ void GMainWindow::InitializeHotkeys() {
     });
 }
 
-void GMainWindow::ShowUpdaterWidgets() {
-    ui->action_Check_For_Updates->setVisible(UISettings::values.updater_found);
-    ui->action_Open_Maintenance_Tool->setVisible(UISettings::values.updater_found);
-
-    connect(updater, &Updater::CheckUpdatesDone, this, &GMainWindow::OnUpdateFound);
-}
-
 void GMainWindow::SetDefaultUIGeometry() {
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
     const QRect screenRect = screen()->geometry();
@@ -851,8 +853,11 @@ void GMainWindow::ConnectMenuEvents() {
         QDesktopServices::openUrl(QUrl(QStringLiteral("https://citra-emu.org/wiki/faq/")));
     });
     connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra);
+
+#if ENABLE_QT_UPDATER
     connect_menu(ui->action_Check_For_Updates, &GMainWindow::OnCheckForUpdates);
     connect_menu(ui->action_Open_Maintenance_Tool, &GMainWindow::OnOpenUpdater);
+#endif
 }
 
 void GMainWindow::UpdateMenuState() {
@@ -904,6 +909,7 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
     }
 }
 
+#if ENABLE_QT_UPDATER
 void GMainWindow::OnCheckForUpdates() {
     explicit_update_check = true;
     CheckForUpdates();
@@ -969,6 +975,14 @@ void GMainWindow::ShowNoUpdatePrompt() {
 void GMainWindow::OnOpenUpdater() {
     updater->LaunchUI();
 }
+
+void GMainWindow::ShowUpdaterWidgets() {
+    ui->action_Check_For_Updates->setVisible(UISettings::values.updater_found);
+    ui->action_Open_Maintenance_Tool->setVisible(UISettings::values.updater_found);
+
+    connect(updater, &Updater::CheckUpdatesDone, this, &GMainWindow::OnUpdateFound);
+}
+#endif
 
 #if defined(__unix__) && !defined(__APPLE__)
 static std::optional<QDBusObjectPath> HoldWakeLockLinux(u32 window_id = 0) {
@@ -1327,9 +1341,11 @@ void GMainWindow::ShutdownGame() {
 
     emulation_running = false;
 
+#if ENABLE_QT_UDPATER
     if (defer_update_prompt) {
         ShowUpdatePrompt();
     }
+#endif
 
     game_title.clear();
     UpdateWindowTitle();

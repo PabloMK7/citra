@@ -15,24 +15,35 @@ project(citra LANGUAGES C CXX ASM)
 
 if (APPLE)
     enable_language(OBJC)
+    if (IOS)
+        # Enable searching CMAKE_PREFIX_PATH for bundled dependencies.
+        set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+    endif()
 endif()
 
 option(ENABLE_LTO "Enable link time optimization" OFF)
 
-option(ENABLE_SDL2 "Enable the SDL2 frontend" ON)
+option(ENABLE_SDL2 "Enable using SDL2" ON)
+CMAKE_DEPENDENT_OPTION(ENABLE_SDL2_FRONTEND "Enable the SDL2 frontend" ON "ENABLE_SDL2;NOT ANDROID AND NOT IOS" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_QT_UPDATER "Enable built-in updater for the Qt frontend" ON "NOT IOS" OFF)
 CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" ON "ENABLE_QT;MSVC OR APPLE" OFF)
+
+CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_DEDICATED_ROOM "Enable generating dedicated room executable" ON "NOT ANDROID AND NOT IOS" OFF)
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 if (MSVC)
     set(OPENSSL_DLL_DIR "" CACHE PATH "Location of the Openssl dlls")
 endif()
 
-option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
+CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
 option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
@@ -205,8 +216,7 @@ find_package(Threads REQUIRED)
 
 if (ENABLE_QT)
     if (CITRA_USE_BUNDLED_QT)
-        download_qt_external(6.5.0 QT_PREFIX)
-        list(APPEND CMAKE_PREFIX_PATH ${QT_PREFIX})
+        download_qt_external(6.5.0)
     endif()
 
     find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
@@ -290,10 +300,14 @@ if (APPLE)
     find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
     message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
 
-    # Umbrella framework for everything GUI-related
-    find_library(COCOA_LIBRARY Cocoa REQUIRED)
+    if (NOT IOS)
+        # Umbrella framework for everything GUI-related
+        find_library(COCOA_LIBRARY Cocoa REQUIRED)
+    endif()
+
     find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
-    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${MOLTENVK_LIBRARY})
+    find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
+    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
 elseif (WIN32)
     set(PLATFORM_LIBRARIES winmm ws2_32)
     if (MINGW)
