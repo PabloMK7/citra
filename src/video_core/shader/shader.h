@@ -241,7 +241,7 @@ private:
 struct Uniforms {
     // The float uniforms are accessed by the shader JIT using SSE instructions, and are
     // therefore required to be 16-byte aligned.
-    alignas(16) Common::Vec4<float24> f[96];
+    alignas(16) std::array<Common::Vec4<float24>, 96> f;
 
     std::array<bool, 16> b;
     std::array<Common::Vec4<u8>, 4> i;
