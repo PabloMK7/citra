@@ -56,35 +56,6 @@ std::condition_variable running_cv;
 
 } // Anonymous namespace
 
-static bool DisplayAlertMessage(const char* caption, const char* text, bool yes_no) {
-    JNIEnv* env = IDCache::GetEnvForThread();
-
-    // Execute the Java method.
-    jboolean result = env->CallStaticBooleanMethod(
-        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertMsg(), ToJString(env, caption),
-        ToJString(env, text), yes_no ? JNI_TRUE : JNI_FALSE);
-
-    return result != JNI_FALSE;
-}
-
-static std::string DisplayAlertPrompt(const char* caption, const char* text, int buttonConfig) {
-    JNIEnv* env = IDCache::GetEnvForThread();
-
-    jstring value = reinterpret_cast<jstring>(env->CallStaticObjectMethod(
-        IDCache::GetNativeLibraryClass(), IDCache::GetDisplayAlertPrompt(), ToJString(env, caption),
-        ToJString(env, text), buttonConfig));
-
-    return GetJString(env, value);
-}
-
-static int AlertPromptButton() {
-    JNIEnv* env = IDCache::GetEnvForThread();
-
-    // Execute the Java method.
-    return static_cast<int>(env->CallStaticIntMethod(IDCache::GetNativeLibraryClass(),
-                                                     IDCache::GetAlertPromptButton()));
-}
-
 static jobject ToJavaCoreError(Core::System::ResultStatus result) {
     static const std::map<Core::System::ResultStatus, const char*> CoreErrorNameMap{
         {Core::System::ResultStatus::ErrorSystemFiles, "ErrorSystemFiles"},
