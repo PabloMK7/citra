@@ -110,7 +110,7 @@ void ARMul_State::Reset() {
     Reg[13] = 0x10000000;
     Reg[15] = 0;
 
-    Cpsr = static_cast<u32>(INTBITS) | SVC32MODE;
+    Cpsr = static_cast<u32>(INTBITS) | static_cast<u32>(SVC32MODE);
     Mode = SVC32MODE;
     Bank = SVCBANK;
 

@@ -37,7 +37,7 @@ public:
 protected:
     ~FFmpegStream();
 
-    void WritePacket(AVPacket& packet);
+    void WritePacket(AVPacket* packet);
     void SendFrame(AVFrame* frame);
 
     struct AVCodecContextDeleter {
@@ -49,6 +49,12 @@ protected:
     struct AVFrameDeleter {
         void operator()(AVFrame* frame) const {
             DynamicLibrary::FFmpeg::av_frame_free(&frame);
+        }
+    };
+
+    struct AVPacketDeleter {
+        void operator()(AVPacket* packet) const {
+            av_packet_free(&packet);
         }
     };
 

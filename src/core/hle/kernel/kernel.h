@@ -90,7 +90,7 @@ union CoreVersion {
         major.Assign(major_ver);
     }
 
-    u32 raw;
+    u32 raw = 0;
     BitField<8, 8, u32> revision;
     BitField<16, 8, u32> minor;
     BitField<24, 8, u32> major;

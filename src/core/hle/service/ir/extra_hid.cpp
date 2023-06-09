@@ -204,12 +204,11 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
         return;
     }
 
-    std::vector<u8> response(5);
+    std::vector<u8> response(5 + size);
     response[0] = static_cast<u8>(ResponseID::ReadCalibrationData);
     std::memcpy(&response[1], &request.offset, sizeof(request.offset));
     std::memcpy(&response[3], &request.size, sizeof(request.size));
-    response.insert(response.end(), calibration_data.begin() + offset,
-                    calibration_data.begin() + offset + size);
+    std::memcpy(&response[5], calibration_data.data() + offset, size);
     Send(response);
 }
 
