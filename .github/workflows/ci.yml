@@ -198,7 +198,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install ccache glslang-dev glslang-tools apksigner -y
       - name: Build
-        run: ./.ci/android/build.sh
+        run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android/build.sh
       - name: Copy and sign artifacts
         env:
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}

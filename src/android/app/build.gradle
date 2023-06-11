@@ -10,7 +10,7 @@ def buildType
 def abiFilter = "arm64-v8a" //, "x86"
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     ndkVersion "25.1.8937393"
 
     compileOptions {
@@ -100,6 +100,7 @@ android {
             path "../../../CMakeLists.txt"
         }
     }
+    namespace 'org.citra.citra_emu'
 
     defaultConfig {
         externalNativeBuild {
