@@ -5,8 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,14 +13,7 @@ import androidx.work.ForegroundInfo;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
-import org.citra.citra_emu.CitraApplication;
 import org.citra.citra_emu.R;
-import org.citra.citra_emu.ui.main.MainActivity;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CiaInstallWorker extends Worker {
     private final Context mContext = getApplicationContext();
@@ -55,7 +46,9 @@ public class CiaInstallWorker extends Worker {
 
     private static long mLastNotifiedTime = 0;
 
-    private static int mStatusNotificationId = 0xC1A0001;
+    private static final int SUMMARY_NOTIFICATION_ID = 0xC1A0000;
+    private static final int PROGRESS_NOTIFICATION_ID = SUMMARY_NOTIFICATION_ID + 1;
+    private static int mStatusNotificationId = SUMMARY_NOTIFICATION_ID + 2;
 
     public CiaInstallWorker(
             @NonNull Context context,
@@ -113,7 +106,7 @@ public class CiaInstallWorker extends Worker {
         }
         // Even if newer versions of Android don't show the group summary text that you design,
         // you always need to manually set a summary to enable grouped notifications.
-        mNotificationManager.notify(0xC1A0000, mSummaryNotification);
+        mNotificationManager.notify(SUMMARY_NOTIFICATION_ID, mSummaryNotification);
         mNotificationManager.notify(mStatusNotificationId++, mInstallStatusBuilder.build());
     }
     @NonNull
@@ -139,7 +132,7 @@ public class CiaInstallWorker extends Worker {
             InstallStatus res = InstallCIA(file);
             notifyInstallStatus(filename, res);
         }
-        mNotificationManager.cancel(0xC1A);
+        mNotificationManager.cancel(PROGRESS_NOTIFICATION_ID);
 
         return Result.success();
     }
@@ -154,13 +147,13 @@ public class CiaInstallWorker extends Worker {
         }
         mLastNotifiedTime = currentTime;
         mInstallProgressBuilder.setProgress(max, progress, false);
-        mNotificationManager.notify(0xC1A, mInstallProgressBuilder.build());
+        mNotificationManager.notify(PROGRESS_NOTIFICATION_ID, mInstallProgressBuilder.build());
     }
 
     @NonNull
     @Override
     public ForegroundInfo getForegroundInfo() {
-        return new ForegroundInfo(0xC1A, mInstallProgressBuilder.build());
+        return new ForegroundInfo(PROGRESS_NOTIFICATION_ID, mInstallProgressBuilder.build());
     }
 
     private native InstallStatus InstallCIA(String path);
