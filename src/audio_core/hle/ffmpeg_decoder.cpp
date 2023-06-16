@@ -3,7 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "audio_core/hle/ffmpeg_decoder.h"
-#include "audio_core/hle/ffmpeg_dl.h"
+#include "common/dynamic_library/ffmpeg.h"
+
+using namespace DynamicLibrary;
 
 namespace AudioCore::HLE {
 
@@ -25,25 +27,25 @@ private:
 
     struct AVPacketDeleter {
         void operator()(AVPacket* packet) const {
-            av_packet_free_dl(&packet);
+            FFmpeg::av_packet_free(&packet);
         }
     };
 
     struct AVCodecContextDeleter {
         void operator()(AVCodecContext* context) const {
-            avcodec_free_context_dl(&context);
+            FFmpeg::avcodec_free_context(&context);
         }
     };
 
     struct AVCodecParserContextDeleter {
         void operator()(AVCodecParserContext* parser) const {
-            av_parser_close_dl(parser);
+            FFmpeg::av_parser_close(parser);
         }
     };
 
     struct AVFrameDeleter {
         void operator()(AVFrame* frame) const {
-            av_frame_free_dl(&frame);
+            FFmpeg::av_frame_free(&frame);
         }
     };
 
@@ -60,7 +62,7 @@ private:
 };
 
 FFMPEGDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
-    have_ffmpeg_dl = InitFFmpegDL();
+    have_ffmpeg_dl = FFmpeg::LoadFFmpeg();
 }
 
 FFMPEGDecoder::Impl::~Impl() = default;
@@ -102,27 +104,27 @@ std::optional<BinaryMessage> FFMPEGDecoder::Impl::Initalize(const BinaryMessage&
         return response;
     }
 
-    av_packet.reset(av_packet_alloc_dl());
+    av_packet.reset(FFmpeg::av_packet_alloc());
 
-    codec = avcodec_find_decoder_dl(AV_CODEC_ID_AAC);
+    codec = FFmpeg::avcodec_find_decoder(AV_CODEC_ID_AAC);
     if (!codec) {
         LOG_ERROR(Audio_DSP, "Codec not found\n");
         return response;
     }
 
-    parser.reset(av_parser_init_dl(codec->id));
+    parser.reset(FFmpeg::av_parser_init(codec->id));
     if (!parser) {
         LOG_ERROR(Audio_DSP, "Parser not found\n");
         return response;
     }
 
-    av_context.reset(avcodec_alloc_context3_dl(codec));
+    av_context.reset(FFmpeg::avcodec_alloc_context3(codec));
     if (!av_context) {
         LOG_ERROR(Audio_DSP, "Could not allocate audio codec context\n");
         return response;
     }
 
-    if (avcodec_open2_dl(av_context.get(), codec, nullptr) < 0) {
+    if (FFmpeg::avcodec_open2(av_context.get(), codec, nullptr) < 0) {
         LOG_ERROR(Audio_DSP, "Could not open codec\n");
         return response;
     }
@@ -170,16 +172,16 @@ std::optional<BinaryMessage> FFMPEGDecoder::Impl::Decode(const BinaryMessage& re
     std::size_t data_size = request.decode_aac_request.size;
     while (data_size > 0) {
         if (!decoded_frame) {
-            decoded_frame.reset(av_frame_alloc_dl());
+            decoded_frame.reset(FFmpeg::av_frame_alloc());
             if (!decoded_frame) {
                 LOG_ERROR(Audio_DSP, "Could not allocate audio frame");
                 return {};
             }
         }
 
-        int ret =
-            av_parser_parse2_dl(parser.get(), av_context.get(), &av_packet->data, &av_packet->size,
-                                data, data_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+        int ret = FFmpeg::av_parser_parse2(parser.get(), av_context.get(), &av_packet->data,
+                                           &av_packet->size, data, static_cast<int>(data_size),
+                                           AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
         if (ret < 0) {
             LOG_ERROR(Audio_DSP, "Error while parsing");
             return {};
@@ -187,7 +189,7 @@ std::optional<BinaryMessage> FFMPEGDecoder::Impl::Decode(const BinaryMessage& re
         data += ret;
         data_size -= ret;
 
-        ret = avcodec_send_packet_dl(av_context.get(), av_packet.get());
+        ret = FFmpeg::avcodec_send_packet(av_context.get(), av_packet.get());
         if (ret < 0) {
             LOG_ERROR(Audio_DSP, "Error submitting the packet to the decoder");
             return {};
@@ -195,33 +197,39 @@ std::optional<BinaryMessage> FFMPEGDecoder::Impl::Decode(const BinaryMessage& re
 
         if (av_packet->size) {
             while (ret >= 0) {
-                ret = avcodec_receive_frame_dl(av_context.get(), decoded_frame.get());
+                ret = FFmpeg::avcodec_receive_frame(av_context.get(), decoded_frame.get());
                 if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
                     break;
                 else if (ret < 0) {
                     LOG_ERROR(Audio_DSP, "Error during decoding");
                     return {};
                 }
-                int bytes_per_sample = av_get_bytes_per_sample_dl(av_context->sample_fmt);
+                int bytes_per_sample = FFmpeg::av_get_bytes_per_sample(av_context->sample_fmt);
                 if (bytes_per_sample < 0) {
                     LOG_ERROR(Audio_DSP, "Failed to calculate data size");
                     return {};
                 }
 
-                ASSERT(decoded_frame->channels <= out_streams.size());
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
+                auto num_channels = static_cast<u32>(decoded_frame->ch_layout.nb_channels);
+#else
+                auto num_channels = static_cast<u32>(decoded_frame->channels);
+#endif
+
+                ASSERT(num_channels <= out_streams.size());
 
                 std::size_t size = bytes_per_sample * (decoded_frame->nb_samples);
 
                 response.decode_aac_response.sample_rate =
                     GetSampleRateEnum(decoded_frame->sample_rate);
-                response.decode_aac_response.num_channels = decoded_frame->channels;
+                response.decode_aac_response.num_channels = num_channels;
                 response.decode_aac_response.num_samples += decoded_frame->nb_samples;
 
                 // FFmpeg converts to 32 signed floating point PCM, we need s16 PCM so we need to
                 // convert it
                 f32 val_float;
                 for (std::size_t current_pos(0); current_pos < size;) {
-                    for (std::size_t channel(0); channel < decoded_frame->channels; channel++) {
+                    for (std::size_t channel(0); channel < num_channels; channel++) {
                         std::memcpy(&val_float, decoded_frame->data[channel] + current_pos,
                                     sizeof(val_float));
                         val_float = std::clamp(val_float, -1.0f, 1.0f);

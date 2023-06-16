@@ -27,6 +27,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
+#include "core/dumping/ffmpeg_backend.h"
 #include "core/file_sys/cia_container.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/framebuffer_layout.h"
@@ -445,10 +446,13 @@ int main(int argc, char** argv) {
     if (!movie_record.empty()) {
         Core::Movie::GetInstance().StartRecording(movie_record, movie_record_author);
     }
-    if (!dump_video.empty()) {
+    if (!dump_video.empty() && DynamicLibrary::FFmpeg::LoadFFmpeg()) {
         Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
             VideoCore::g_renderer->GetResolutionScaleFactor())};
-        system.VideoDumper().StartDumping(dump_video, layout);
+        auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
+        if (dumper->StartDumping(dump_video, layout)) {
+            Core::System::GetInstance().RegisterVideoDumper(dumper);
+        }
     }
 
     std::thread main_render_thread([&emu_window] { emu_window->Present(); });
@@ -491,8 +495,10 @@ int main(int argc, char** argv) {
     secondary_render_thread.join();
 
     Core::Movie::GetInstance().Shutdown();
-    if (system.VideoDumper().IsDumping()) {
-        system.VideoDumper().StopDumping();
+
+    auto video_dumper = system.GetVideoDumper();
+    if (video_dumper && video_dumper->IsDumping()) {
+        video_dumper->StopDumping();
     }
 
     Network::Shutdown();

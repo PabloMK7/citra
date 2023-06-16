@@ -242,10 +242,13 @@ private slots:
     void OnCloseMovie();
     void OnSaveMovie();
     void OnCaptureScreenshot();
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
-    void OnStartVideoDumping();
-    void OnStopVideoDumping();
+    void OnDumpVideo();
+#ifdef _WIN32
+    void OnOpenFFmpeg();
 #endif
+    void OnStartVideoDumping();
+    void StartVideoDumping(const QString& path);
+    void OnStopVideoDumping();
     void OnCoreError(Core::System::ResultStatus, std::string);
     /// Called whenever a user selects Help->About Citra
     void OnMenuAboutCitra();

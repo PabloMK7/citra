@@ -79,3 +79,6 @@
 [submodule "sirit"]
     path = externals/sirit
     url = https://github.com/yuzu-emu/sirit
+[submodule "library-headers"]
+    path = externals/library-headers
+    url = https://github.com/citra-emu/ext-library-headers.git

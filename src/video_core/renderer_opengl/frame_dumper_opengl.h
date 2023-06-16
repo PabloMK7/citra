@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <thread>
+#include "core/core.h"
 #include "core/dumping/backend.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
@@ -28,7 +29,7 @@ class RendererOpenGL;
  */
 class FrameDumperOpenGL {
 public:
-    explicit FrameDumperOpenGL(VideoDumper::Backend& video_dumper, Frontend::EmuWindow& emu_window);
+    explicit FrameDumperOpenGL(Core::System& system, Frontend::EmuWindow& emu_window);
     ~FrameDumperOpenGL();
 
     bool IsDumping() const;
@@ -43,7 +44,7 @@ private:
     void CleanupOpenGLObjects();
     void PresentLoop();
 
-    VideoDumper::Backend& video_dumper;
+    Core::System& system;
     std::unique_ptr<Frontend::GraphicsContext> context;
     std::thread present_thread;
     std::atomic_bool stop_requested{false};

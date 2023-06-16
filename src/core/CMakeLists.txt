@@ -38,6 +38,8 @@ add_library(citra_core STATIC
     core_timing.h
     dumping/backend.cpp
     dumping/backend.h
+    dumping/ffmpeg_backend.cpp
+    dumping/ffmpeg_backend.h
     file_sys/archive_backend.cpp
     file_sys/archive_backend.h
     file_sys/archive_extsavedata.cpp
@@ -468,13 +470,6 @@ add_library(citra_core STATIC
     tracer/recorder.h
 )
 
-if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_sources(citra_core PRIVATE
-        dumping/ffmpeg_backend.cpp
-        dumping/ffmpeg_backend.h
-    )
-endif()
-
 create_target_directory_groups(citra_core)
 
 target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
@@ -502,10 +497,6 @@ if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
         arm/dynarmic/arm_tick_counts.h
     )
     target_link_libraries(citra_core PRIVATE dynarmic)
-endif()
-
-if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_link_libraries(citra_core PUBLIC FFmpeg::avcodec FFmpeg::avfilter FFmpeg::avformat FFmpeg::swresample FFmpeg::avutil)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

@@ -12,15 +12,13 @@
 #include "audio_core/hle/wmf_decoder.h"
 #elif HAVE_AUDIOTOOLBOX
 #include "audio_core/hle/audiotoolbox_decoder.h"
-#elif HAVE_FFMPEG
-#include "audio_core/hle/ffmpeg_decoder.h"
 #elif ANDROID
 #include "audio_core/hle/mediandk_decoder.h"
-#elif HAVE_FDK
-#include "audio_core/hle/fdk_decoder.h"
 #endif
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/decoder.h"
+#include "audio_core/hle/fdk_decoder.h"
+#include "audio_core/hle/ffmpeg_decoder.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/hle/mixers.h"
 #include "audio_core/hle/shared_memory.h"
@@ -120,6 +118,31 @@ private:
     friend class boost::serialization::access;
 };
 
+static std::vector<std::function<std::unique_ptr<HLE::DecoderBase>(Memory::MemorySystem&)>>
+    decoder_backends = {
+#if defined(HAVE_MF)
+        [](Memory::MemorySystem& memory) -> std::unique_ptr<HLE::DecoderBase> {
+            return std::make_unique<HLE::WMFDecoder>(memory);
+        },
+#endif
+#if defined(HAVE_AUDIOTOOLBOX)
+        [](Memory::MemorySystem& memory) -> std::unique_ptr<HLE::DecoderBase> {
+            return std::make_unique<HLE::AudioToolboxDecoder>(memory);
+        },
+#endif
+#if ANDROID
+        [](Memory::MemorySystem& memory) -> std::unique_ptr<HLE::DecoderBase> {
+            return std::make_unique<HLE::MediaNDKDecoder>(memory);
+        },
+#endif
+        [](Memory::MemorySystem& memory) -> std::unique_ptr<HLE::DecoderBase> {
+            return std::make_unique<HLE::FDKDecoder>(memory);
+        },
+        [](Memory::MemorySystem& memory) -> std::unique_ptr<HLE::DecoderBase> {
+            return std::make_unique<HLE::FFMPEGDecoder>(memory);
+        },
+};
+
 DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& timing)
     : parent(parent_), core_timing(timing) {
     dsp_memory.raw_memory.fill(0);
@@ -128,28 +151,14 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& 
         source.SetMemory(memory);
     }
 
-#if defined(HAVE_MF) && defined(HAVE_FFMPEG)
-    decoder = std::make_unique<HLE::WMFDecoder>(memory);
-    if (!decoder->IsValid()) {
-        LOG_WARNING(Audio_DSP, "Unable to load MediaFoundation. Attempting to load FFMPEG instead");
-        decoder = std::make_unique<HLE::FFMPEGDecoder>(memory);
+    for (auto& factory : decoder_backends) {
+        decoder = factory(memory);
+        if (decoder && decoder->IsValid()) {
+            break;
+        }
     }
-#elif defined(HAVE_MF)
-    decoder = std::make_unique<HLE::WMFDecoder>(memory);
-#elif defined(HAVE_AUDIOTOOLBOX)
-    decoder = std::make_unique<HLE::AudioToolboxDecoder>(memory);
-#elif defined(HAVE_FFMPEG)
-    decoder = std::make_unique<HLE::FFMPEGDecoder>(memory);
-#elif ANDROID
-    decoder = std::make_unique<HLE::MediaNDKDecoder>(memory);
-#elif defined(HAVE_FDK)
-    decoder = std::make_unique<HLE::FDKDecoder>(memory);
-#else
-    LOG_WARNING(Audio_DSP, "No decoder found, this could lead to missing audio");
-    decoder = std::make_unique<HLE::NullDecoder>();
-#endif // HAVE_MF
 
-    if (!decoder->IsValid()) {
+    if (!decoder || !decoder->IsValid()) {
         LOG_WARNING(Audio_DSP,
                     "Unable to load any decoders, this could cause missing audio in some games");
         decoder = std::make_unique<HLE::NullDecoder>();

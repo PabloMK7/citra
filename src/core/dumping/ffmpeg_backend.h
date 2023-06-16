@@ -13,23 +13,14 @@
 #include <thread>
 #include <vector>
 #include "common/common_types.h"
+#include "common/dynamic_library/ffmpeg.h"
 #include "common/thread.h"
 #include "common/threadsafe_queue.h"
 #include "core/dumping/backend.h"
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavfilter/avfilter.h>
-#include <libavformat/avformat.h>
-#include <libavutil/opt.h>
-#include <libswresample/swresample.h>
-}
-
 namespace VideoDumper {
 
 using VariableAudioFrame = std::vector<s16>;
-
-void InitFFmpegLibraries();
 
 class FFmpegMuxer;
 
@@ -51,13 +42,13 @@ protected:
 
     struct AVCodecContextDeleter {
         void operator()(AVCodecContext* codec_context) const {
-            avcodec_free_context(&codec_context);
+            DynamicLibrary::FFmpeg::avcodec_free_context(&codec_context);
         }
     };
 
     struct AVFrameDeleter {
         void operator()(AVFrame* frame) const {
-            av_frame_free(&frame);
+            DynamicLibrary::FFmpeg::av_frame_free(&frame);
         }
     };
 
@@ -103,7 +94,7 @@ private:
     // Filter related
     struct AVFilterGraphDeleter {
         void operator()(AVFilterGraph* filter_graph) const {
-            avfilter_graph_free(&filter_graph);
+            DynamicLibrary::FFmpeg::avfilter_graph_free(&filter_graph);
         }
     };
     std::unique_ptr<AVFilterGraph, AVFilterGraphDeleter> filter_graph{};
@@ -132,7 +123,7 @@ public:
 private:
     struct SwrContextDeleter {
         void operator()(SwrContext* swr_context) const {
-            swr_free(&swr_context);
+            DynamicLibrary::FFmpeg::swr_free(&swr_context);
         }
     };
 
@@ -165,8 +156,8 @@ public:
 private:
     struct AVFormatContextDeleter {
         void operator()(AVFormatContext* format_context) const {
-            avio_closep(&format_context->pb);
-            avformat_free_context(format_context);
+            DynamicLibrary::FFmpeg::avio_closep(&format_context->pb);
+            DynamicLibrary::FFmpeg::avformat_free_context(format_context);
         }
     };
 
@@ -253,5 +244,7 @@ std::vector<EncoderInfo> ListEncoders(AVMediaType type);
 std::vector<OptionInfo> GetEncoderGenericOptions();
 std::vector<FormatInfo> ListFormats();
 std::vector<OptionInfo> GetFormatGenericOptions();
+std::vector<std::string> GetPixelFormats();
+std::vector<std::string> GetSampleFormats();
 
 } // namespace VideoDumper

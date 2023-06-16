@@ -117,6 +117,9 @@ endif()
 # Open Source Archives
 add_subdirectory(open_source_archives)
 
+# Dynamic library headers
+add_subdirectory(library-headers EXCLUDE_FROM_ALL)
+
 # SoundTouch
 set(INTEGER_SAMPLES ON CACHE BOOL "")
 set(SOUNDSTRETCH OFF CACHE BOOL "")

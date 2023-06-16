@@ -120,6 +120,15 @@ add_executable(citra-qt
     debugger/wait_tree.cpp
     debugger/wait_tree.h
     discord.h
+    dumping/dumping_dialog.cpp
+    dumping/dumping_dialog.h
+    dumping/dumping_dialog.ui
+    dumping/option_set_dialog.cpp
+    dumping/option_set_dialog.h
+    dumping/option_set_dialog.ui
+    dumping/options_dialog.cpp
+    dumping/options_dialog.h
+    dumping/options_dialog.ui
     game_list.cpp
     game_list.h
     game_list_p.h
@@ -177,20 +186,6 @@ add_executable(citra-qt
     util/util.cpp
     util/util.h
 )
-
-if (ENABLE_FFMPEG_VIDEO_DUMPER)
-    target_sources(citra-qt PRIVATE
-        dumping/dumping_dialog.cpp
-        dumping/dumping_dialog.h
-        dumping/dumping_dialog.ui
-        dumping/option_set_dialog.cpp
-        dumping/option_set_dialog.h
-        dumping/option_set_dialog.ui
-        dumping/options_dialog.cpp
-        dumping/options_dialog.h
-        dumping/options_dialog.ui
-    )
-endif()
 
 file(GLOB COMPAT_LIST
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc
@@ -376,11 +371,6 @@ if (MSVC)
     if (ENABLE_WEB_SERVICE AND OPENSSL_DLL_DIR)
         include(CopyCitraOpensslDeps)
         copy_citra_openssl_deps(citra-qt)
-    endif()
-
-    if (ENABLE_FFMPEG)
-        include(CopyCitraFFmpegDeps)
-        copy_citra_FFmpeg_deps(citra-qt)
     endif()
 endif()
 

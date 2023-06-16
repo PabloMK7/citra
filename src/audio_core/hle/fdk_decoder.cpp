@@ -2,8 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <fdk-aac/aacdecoder_lib.h>
 #include "audio_core/hle/fdk_decoder.h"
+#include "common/dynamic_library/fdk-aac.h"
+
+using namespace DynamicLibrary;
 
 namespace AudioCore::HLE {
 
@@ -29,13 +31,17 @@ private:
 };
 
 FDKDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
+    if (!FdkAac::LoadFdkAac()) {
+        return;
+    }
+
     // allocate an array of LIB_INFO structures
     // if we don't pre-fill the whole segment with zeros, when we call `aacDecoder_GetLibInfo`
     // it will segfault, upon investigation, there is some code in fdk_aac depends on your initial
     // values in this array
     LIB_INFO decoder_info[FDK_MODULE_LAST] = {};
     // get library information and fill the struct
-    if (aacDecoder_GetLibInfo(decoder_info) != 0) {
+    if (FdkAac::aacDecoder_GetLibInfo(decoder_info) != 0) {
         LOG_ERROR(Audio_DSP, "Failed to retrieve fdk_aac library information!");
         return;
     }
@@ -44,14 +50,14 @@ FDKDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
              decoder_info[0].build_date);
 
     // choose the input format when initializing: 1 layer of ADTS
-    decoder = aacDecoder_Open(TRANSPORT_TYPE::TT_MP4_ADTS, 1);
+    decoder = FdkAac::aacDecoder_Open(TRANSPORT_TYPE::TT_MP4_ADTS, 1);
     // set maximum output channel to two (stereo)
     // if the input samples have more channels, fdk_aac will perform a downmix
-    AAC_DECODER_ERROR ret = aacDecoder_SetParam(decoder, AAC_PCM_MAX_OUTPUT_CHANNELS, 2);
+    AAC_DECODER_ERROR ret = FdkAac::aacDecoder_SetParam(decoder, AAC_PCM_MAX_OUTPUT_CHANNELS, 2);
     if (ret != AAC_DEC_OK) {
         // unable to set this parameter reflects the decoder implementation might be broken
         // we'd better shuts down everything
-        aacDecoder_Close(decoder);
+        FdkAac::aacDecoder_Close(decoder);
         decoder = nullptr;
         LOG_ERROR(Audio_DSP, "Unable to set downmix parameter: {}", ret);
         return;
@@ -73,8 +79,9 @@ std::optional<BinaryMessage> FDKDecoder::Impl::Initalize(const BinaryMessage& re
 }
 
 FDKDecoder::Impl::~Impl() {
-    if (decoder)
-        aacDecoder_Close(decoder);
+    if (decoder) {
+        FdkAac::aacDecoder_Close(decoder);
+    }
 }
 
 void FDKDecoder::Impl::Clear() {
@@ -84,9 +91,10 @@ void FDKDecoder::Impl::Clear() {
     // FLUSH - flush internal buffer
     // INTR - treat the current internal buffer as discontinuous
     // CONCEAL - try to interpolate and smooth out the samples
-    if (decoder)
-        aacDecoder_DecodeFrame(decoder, decoder_output, 8192,
-                               AACDEC_FLUSH & AACDEC_INTR & AACDEC_CONCEAL);
+    if (decoder) {
+        FdkAac::aacDecoder_DecodeFrame(decoder, decoder_output, 8192,
+                                       AACDEC_FLUSH & AACDEC_INTR & AACDEC_CONCEAL);
+    }
 }
 
 std::optional<BinaryMessage> FDKDecoder::Impl::ProcessRequest(const BinaryMessage& request) {
@@ -140,7 +148,7 @@ std::optional<BinaryMessage> FDKDecoder::Impl::Decode(const BinaryMessage& reque
 
     std::array<std::vector<s16>, 2> out_streams;
 
-    std::size_t data_size = request.decode_aac_request.size;
+    u32 data_size = request.decode_aac_request.size;
 
     // decoding loops
     AAC_DECODER_ERROR result = AAC_DEC_OK;
@@ -156,18 +164,18 @@ std::optional<BinaryMessage> FDKDecoder::Impl::Decode(const BinaryMessage& reque
     while (buffer_remaining) {
         // queue the input buffer, fdk_aac will automatically slice out the buffer it needs
         // from the input buffer
-        result = aacDecoder_Fill(decoder, &data, &input_size, &buffer_remaining);
+        result = FdkAac::aacDecoder_Fill(decoder, &data, &input_size, &buffer_remaining);
         if (result != AAC_DEC_OK) {
             // there are some issues when queuing the input buffer
             LOG_ERROR(Audio_DSP, "Failed to enqueue the input samples");
             return std::nullopt;
         }
         // get output from decoder
-        result = aacDecoder_DecodeFrame(decoder, decoder_output,
-                                        sizeof(decoder_output) / sizeof(s16), 0);
+        result = FdkAac::aacDecoder_DecodeFrame(decoder, decoder_output,
+                                                sizeof(decoder_output) / sizeof(s16), 0);
         if (result == AAC_DEC_OK) {
             // get the stream information
-            stream_info = aacDecoder_GetStreamInfo(decoder);
+            stream_info = FdkAac::aacDecoder_GetStreamInfo(decoder);
             // fill the stream information for binary response
             response.decode_aac_response.sample_rate = GetSampleRateEnum(stream_info->sampleRate);
             response.decode_aac_response.num_channels = stream_info->numChannels;

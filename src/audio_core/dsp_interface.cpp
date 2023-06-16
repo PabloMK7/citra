@@ -47,8 +47,9 @@ void DspInterface::OutputFrame(StereoFrame16 frame) {
 
     fifo.Push(frame.data(), frame.size());
 
-    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
-        Core::System::GetInstance().VideoDumper().AddAudioFrame(std::move(frame));
+    auto video_dumper = Core::System::GetInstance().GetVideoDumper();
+    if (video_dumper && video_dumper->IsDumping()) {
+        video_dumper->AddAudioFrame(std::move(frame));
     }
 }
 
@@ -58,8 +59,9 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
 
     fifo.Push(&sample, 1);
 
-    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
-        Core::System::GetInstance().VideoDumper().AddAudioSample(std::move(sample));
+    auto video_dumper = Core::System::GetInstance().GetVideoDumper();
+    if (video_dumper && video_dumper->IsDumping()) {
+        video_dumper->AddAudioSample(std::move(sample));
     }
 }
 

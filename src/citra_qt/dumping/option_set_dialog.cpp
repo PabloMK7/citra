@@ -10,10 +10,6 @@
 #include "common/string_util.h"
 #include "ui_option_set_dialog.h"
 
-extern "C" {
-#include <libavutil/pixdesc.h>
-}
-
 static const std::unordered_map<AVOptionType, const char*> TypeNameMap{{
     {AV_OPT_TYPE_BOOL, QT_TR_NOOP("boolean")},
     {AV_OPT_TYPE_FLAGS, QT_TR_NOOP("flags")},
@@ -56,21 +52,14 @@ std::vector<std::pair<QString, QString>> GetPresetValues(const VideoDumper::Opti
     }
     case AV_OPT_TYPE_PIXEL_FMT: {
         std::vector<std::pair<QString, QString>> out{{QObject::tr("none"), QStringLiteral("none")}};
-        // List all pixel formats
-        const AVPixFmtDescriptor* current = nullptr;
-        while ((current = av_pix_fmt_desc_next(current))) {
-            out.emplace_back(QString::fromUtf8(current->name), QString::fromUtf8(current->name));
+        for (const auto& name : VideoDumper::GetPixelFormats()) {
+            out.emplace_back(QString::fromUtf8(name), QString::fromUtf8(name));
         }
         return out;
     }
     case AV_OPT_TYPE_SAMPLE_FMT: {
         std::vector<std::pair<QString, QString>> out{{QObject::tr("none"), QStringLiteral("none")}};
-        // List all sample formats
-        int current = 0;
-        while (true) {
-            const char* name = av_get_sample_fmt_name(static_cast<AVSampleFormat>(current));
-            if (name == nullptr)
-                break;
+        for (const auto& name : VideoDumper::GetSampleFormats()) {
             out.emplace_back(QString::fromUtf8(name), QString::fromUtf8(name));
         }
         return out;

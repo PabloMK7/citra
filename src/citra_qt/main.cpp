@@ -49,6 +49,7 @@
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
 #include "citra_qt/discord.h"
+#include "citra_qt/dumping/dumping_dialog.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/loading_screen.h"
@@ -100,10 +101,6 @@
 
 #ifdef USE_DISCORD_PRESENCE
 #include "citra_qt/discord_impl.h"
-#endif
-
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
-#include "citra_qt/dumping/dumping_dialog.h"
 #endif
 
 #ifdef QT_STATICPLUGIN
@@ -834,18 +831,7 @@ void GMainWindow::ConnectMenuEvents() {
         }
     });
     connect_menu(ui->action_Capture_Screenshot, &GMainWindow::OnCaptureScreenshot);
-
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
-    connect_menu(ui->action_Dump_Video, [this] {
-        if (ui->action_Dump_Video->isChecked()) {
-            OnStartVideoDumping();
-        } else {
-            OnStopVideoDumping();
-        }
-    });
-#else
-    ui->action_Dump_Video->setEnabled(false);
-#endif
+    connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
 
     // Help
     connect_menu(ui->action_Open_Citra_Folder, &GMainWindow::OnOpenCitraFolder);
@@ -1203,15 +1189,7 @@ void GMainWindow::BootGame(const QString& filename) {
     }
 
     if (video_dumping_on_start) {
-        Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
-            VideoCore::g_renderer->GetResolutionScaleFactor())};
-        if (!system.VideoDumper().StartDumping(video_dumping_path.toStdString(), layout)) {
-
-            QMessageBox::critical(
-                this, tr("Citra"),
-                tr("Could not start video dumping.<br>Refer to the log for details."));
-            ui->action_Dump_Video->setChecked(false);
-        }
+        StartVideoDumping(video_dumping_path);
         video_dumping_on_start = false;
         video_dumping_path.clear();
     }
@@ -1279,13 +1257,12 @@ void GMainWindow::ShutdownGame() {
         HideFullscreen();
     }
 
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
-    if (system.VideoDumper().IsDumping()) {
+    auto video_dumper = system.GetVideoDumper();
+    if (video_dumper && video_dumper->IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
         return;
     }
-#endif
 
     AllowOSSleep();
 
@@ -2215,7 +2192,97 @@ void GMainWindow::OnCaptureScreenshot() {
     OnStartGame();
 }
 
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
+void GMainWindow::OnDumpVideo() {
+    if (DynamicLibrary::FFmpeg::LoadFFmpeg()) {
+        if (ui->action_Dump_Video->isChecked()) {
+            OnStartVideoDumping();
+        } else {
+            OnStopVideoDumping();
+        }
+    } else {
+        ui->action_Dump_Video->setChecked(false);
+
+        QMessageBox message_box;
+        message_box.setWindowTitle(tr("Could not load video dumper"));
+        message_box.setText(
+            tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
+#ifdef _WIN32
+               "\n\nTo install FFmpeg to Citra, press Open and select your FFmpeg directory."
+#endif
+               "\n\nTo view a guide on how to install FFmpeg, press Help."));
+        message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
+#ifdef _WIN32
+                                       | QMessageBox::Open
+#endif
+        );
+        auto result = message_box.exec();
+        if (result == QMessageBox::Help) {
+            QDesktopServices::openUrl(QUrl(QStringLiteral(
+                "https://citra-emu.org/wiki/installing-ffmpeg-for-the-video-dumper/")));
+#ifdef _WIN32
+        } else if (result == QMessageBox::Open) {
+            OnOpenFFmpeg();
+#endif
+        }
+    }
+}
+
+#ifdef _WIN32
+void GMainWindow::OnOpenFFmpeg() {
+    auto filename =
+        QFileDialog::getExistingDirectory(this, tr("Select FFmpeg Directory")).toStdString();
+    if (filename.empty()) {
+        return;
+    }
+    // Check for a bin directory if they chose the FFmpeg root directory.
+    auto bin_dir = filename + DIR_SEP + "bin";
+    if (!FileUtil::Exists(bin_dir)) {
+        // Otherwise, assume the user directly selected the directory containing the DLLs.
+        bin_dir = filename;
+    }
+
+    static const std::array library_names = {
+        DynamicLibrary::DynamicLibrary::GetLibraryName("avcodec", LIBAVCODEC_VERSION_MAJOR),
+        DynamicLibrary::DynamicLibrary::GetLibraryName("avfilter", LIBAVFILTER_VERSION_MAJOR),
+        DynamicLibrary::DynamicLibrary::GetLibraryName("avformat", LIBAVFORMAT_VERSION_MAJOR),
+        DynamicLibrary::DynamicLibrary::GetLibraryName("avutil", LIBAVUTIL_VERSION_MAJOR),
+        DynamicLibrary::DynamicLibrary::GetLibraryName("swresample", LIBSWRESAMPLE_VERSION_MAJOR),
+    };
+
+    for (auto& library_name : library_names) {
+        if (!FileUtil::Exists(bin_dir + DIR_SEP + library_name)) {
+            QMessageBox::critical(this, tr("Citra"),
+                                  tr("The provided FFmpeg directory is missing %1. Please make "
+                                     "sure the correct directory was selected.")
+                                      .arg(QString::fromStdString(library_name)));
+            return;
+        }
+    }
+
+    std::atomic<bool> success(true);
+    auto process_file = [&success](u64* num_entries_out, const std::string& directory,
+                                   const std::string& virtual_name) -> bool {
+        auto file_path = directory + DIR_SEP + virtual_name;
+        if (file_path.ends_with(".dll")) {
+            auto destination_path = FileUtil::GetExeDirectory() + DIR_SEP + virtual_name;
+            if (!FileUtil::Copy(file_path, destination_path)) {
+                success.store(false);
+                return false;
+            }
+        }
+        return true;
+    };
+    FileUtil::ForeachDirectoryEntry(nullptr, bin_dir, process_file);
+
+    if (success.load()) {
+        QMessageBox::information(this, tr("Citra"), tr("FFmpeg has been sucessfully installed."));
+    } else {
+        QMessageBox::critical(this, tr("Citra"),
+                              tr("Installation of FFmpeg failed. Check the log file for details."));
+    }
+}
+#endif
+
 void GMainWindow::OnStartVideoDumping() {
     DumpingDialog dialog(this);
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
@@ -2224,17 +2291,25 @@ void GMainWindow::OnStartVideoDumping() {
     }
     const auto path = dialog.GetFilePath();
     if (emulation_running) {
-        Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
-            VideoCore::g_renderer->GetResolutionScaleFactor())};
-        if (!system.VideoDumper().StartDumping(path.toStdString(), layout)) {
-            QMessageBox::critical(
-                this, tr("Citra"),
-                tr("Could not start video dumping.<br>Refer to the log for details."));
-            ui->action_Dump_Video->setChecked(false);
-        }
+        StartVideoDumping(path);
     } else {
         video_dumping_on_start = true;
         video_dumping_path = path;
+    }
+}
+
+void GMainWindow::StartVideoDumping(const QString& path) {
+    Layout::FramebufferLayout layout{
+        Layout::FrameLayoutFromResolutionScale(VideoCore::g_renderer->GetResolutionScaleFactor())};
+
+    auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
+    if (dumper->StartDumping(path.toStdString(), layout)) {
+        system.RegisterVideoDumper(dumper);
+    } else {
+        QMessageBox::critical(
+            this, tr("Citra"),
+            tr("Could not start video dumping.<br>Refer to the log for details."));
+        ui->action_Dump_Video->setChecked(false);
     }
 }
 
@@ -2245,14 +2320,15 @@ void GMainWindow::OnStopVideoDumping() {
         video_dumping_on_start = false;
         video_dumping_path.clear();
     } else {
-        const bool was_dumping = system.VideoDumper().IsDumping();
-        if (!was_dumping)
+        auto dumper = system.GetVideoDumper();
+        if (!dumper || !dumper->IsDumping()) {
             return;
+        }
 
         game_paused_for_dumping = emu_thread->IsRunning();
         OnPauseGame();
 
-        auto future = QtConcurrent::run([this] { system.VideoDumper().StopDumping(); });
+        auto future = QtConcurrent::run([dumper] { dumper->StopDumping(); });
         auto* future_watcher = new QFutureWatcher<void>(this);
         connect(future_watcher, &QFutureWatcher<void>::finished, this, [this] {
             if (game_shutdown_delayed) {
@@ -2266,7 +2342,6 @@ void GMainWindow::OnStopVideoDumping() {
         future_watcher->setFuture(future);
     }
 }
-#endif
 
 void GMainWindow::UpdateStatusBar() {
     if (!emu_thread) [[unlikely]] {

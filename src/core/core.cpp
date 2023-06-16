@@ -11,6 +11,7 @@
 #include "audio_core/lle/lle.h"
 #include "common/arch.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "common/texture.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/exclusive_monitor.h"
@@ -22,10 +23,7 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/dumping/backend.h"
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 #include "core/dumping/ffmpeg_backend.h"
-#endif
-#include "common/settings.h"
 #include "core/frontend/image_interface.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/global.h"
@@ -423,12 +421,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     Service::Init(*this);
     GDBStub::DeferStart();
 
-#ifdef ENABLE_FFMPEG_VIDEO_DUMPER
-    video_dumper = std::make_unique<VideoDumper::FFmpegBackend>();
-#else
-    video_dumper = std::make_unique<VideoDumper::NullBackend>();
-#endif
-
     if (!registered_image_interface) {
         registered_image_interface = std::make_shared<Frontend::ImageInterface>();
     }
@@ -500,12 +492,8 @@ const Cheats::CheatEngine& System::CheatEngine() const {
     return *cheat_engine;
 }
 
-VideoDumper::Backend& System::VideoDumper() {
-    return *video_dumper;
-}
-
-const VideoDumper::Backend& System::VideoDumper() const {
-    return *video_dumper;
+void System::RegisterVideoDumper(std::shared_ptr<VideoDumper::Backend> dumper) {
+    video_dumper = std::move(dumper);
 }
 
 VideoCore::CustomTexManager& System::CustomTexManager() {

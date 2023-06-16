@@ -9,6 +9,10 @@ add_library(audio_core STATIC
     hle/common.h
     hle/decoder.cpp
     hle/decoder.h
+    hle/fdk_decoder.cpp
+    hle/fdk_decoder.h
+    hle/ffmpeg_decoder.cpp
+    hle/ffmpeg_decoder.h
     hle/filter.cpp
     hle/filter.h
     hle/hle.cpp
@@ -67,26 +71,6 @@ elseif(ENABLE_AUDIOTOOLBOX)
     find_library(AUDIOTOOLBOX AudioToolbox)
     target_link_libraries(audio_core PRIVATE ${AUDIOTOOLBOX})
     target_compile_definitions(audio_core PUBLIC HAVE_AUDIOTOOLBOX)
-elseif(ENABLE_FFMPEG_AUDIO_DECODER)
-    target_sources(audio_core PRIVATE
-        hle/ffmpeg_decoder.cpp
-        hle/ffmpeg_decoder.h
-        hle/ffmpeg_dl.cpp
-        hle/ffmpeg_dl.h
-    )
-    if(UNIX)
-        target_link_libraries(audio_core PRIVATE FFmpeg::avcodec)
-    else()
-        target_include_directories(audio_core PRIVATE ${FFMPEG_DIR}/include)
-    endif()
-    target_compile_definitions(audio_core PUBLIC HAVE_FFMPEG)
-elseif(ENABLE_FDK)
-    target_sources(audio_core PRIVATE
-        hle/fdk_decoder.cpp
-        hle/fdk_decoder.h
-    )
-    target_link_libraries(audio_core PRIVATE ${FDK_AAC})
-    target_compile_definitions(audio_core PUBLIC HAVE_FDK)
 endif()
 
 if(ANDROID)

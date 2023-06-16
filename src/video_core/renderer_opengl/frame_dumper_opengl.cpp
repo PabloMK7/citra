@@ -3,32 +3,37 @@
 // Refer to the license.txt file included.
 
 #include <glad/glad.h>
+
+#include <utility>
 #include "core/frontend/emu_window.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 
 namespace OpenGL {
 
-FrameDumperOpenGL::FrameDumperOpenGL(VideoDumper::Backend& video_dumper_,
-                                     Frontend::EmuWindow& emu_window)
-    : video_dumper(video_dumper_), context(emu_window.CreateSharedContext()) {}
+FrameDumperOpenGL::FrameDumperOpenGL(Core::System& system_, Frontend::EmuWindow& emu_window)
+    : system(system_), context(emu_window.CreateSharedContext()) {}
 
 FrameDumperOpenGL::~FrameDumperOpenGL() {
-    if (present_thread.joinable())
+    if (present_thread.joinable()) {
         present_thread.join();
+    }
 }
 
 bool FrameDumperOpenGL::IsDumping() const {
-    return video_dumper.IsDumping();
+    auto video_dumper = system.GetVideoDumper();
+    return video_dumper && video_dumper->IsDumping();
 }
 
 Layout::FramebufferLayout FrameDumperOpenGL::GetLayout() const {
-    return video_dumper.GetLayout();
+    auto video_dumper = system.GetVideoDumper();
+    return video_dumper ? video_dumper->GetLayout() : Layout::FramebufferLayout{};
 }
 
 void FrameDumperOpenGL::StartDumping() {
-    if (present_thread.joinable())
+    if (present_thread.joinable()) {
         present_thread.join();
+    }
 
     present_thread = std::thread(&FrameDumperOpenGL::PresentLoop, this);
 }
@@ -62,13 +67,17 @@ void FrameDumperOpenGL::PresentLoop() {
         frame->present_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         glFlush();
 
-        // Bind the previous PBO and read the pixels
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[next_pbo].handle);
-        GLubyte* pixels = static_cast<GLubyte*>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
-        VideoDumper::VideoFrame frame_data{layout.width, layout.height, pixels};
-        video_dumper.AddVideoFrame(std::move(frame_data));
-        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        auto video_dumper = system.GetVideoDumper();
+        if (video_dumper) {
+            // Bind the previous PBO and read the pixels
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[next_pbo].handle);
+            GLubyte* pixels =
+                static_cast<GLubyte*>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
+            VideoDumper::VideoFrame frame_data{layout.width, layout.height, pixels};
+            video_dumper->AddVideoFrame(std::move(frame_data));
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        }
 
         current_pbo = (current_pbo + 1) % 2;
         next_pbo = (current_pbo + 1) % 2;

@@ -258,11 +258,13 @@ public:
     /// Gets a const reference to the custom texture cache system
     [[nodiscard]] const VideoCore::CustomTexManager& CustomTexManager() const;
 
-    /// Gets a reference to the video dumper backend
-    [[nodiscard]] VideoDumper::Backend& VideoDumper();
+    /// Video Dumper interface
 
-    /// Gets a const reference to the video dumper backend
-    [[nodiscard]] const VideoDumper::Backend& VideoDumper() const;
+    void RegisterVideoDumper(std::shared_ptr<VideoDumper::Backend> video_dumper);
+
+    [[nodiscard]] std::shared_ptr<VideoDumper::Backend> GetVideoDumper() const {
+        return video_dumper;
+    }
 
     std::unique_ptr<PerfStats> perf_stats;
     FrameLimiter frame_limiter;
@@ -370,7 +372,7 @@ private:
     std::unique_ptr<Cheats::CheatEngine> cheat_engine;
 
     /// Video dumper backend
-    std::unique_ptr<VideoDumper::Backend> video_dumper;
+    std::shared_ptr<VideoDumper::Backend> video_dumper;
 
     /// Custom texture cache system
     std::unique_ptr<VideoCore::CustomTexManager> custom_tex_manager;
