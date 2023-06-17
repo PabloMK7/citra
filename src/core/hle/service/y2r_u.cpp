@@ -169,7 +169,7 @@ void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
@@ -179,7 +179,7 @@ void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(spacial_dithering_enabled);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
@@ -189,7 +189,7 @@ void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
@@ -199,7 +199,7 @@ void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(temporal_dithering_enabled);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
@@ -209,7 +209,7 @@ void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
@@ -219,7 +219,7 @@ void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(transfer_end_interrupt_enabled);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
@@ -317,7 +317,7 @@ void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
@@ -327,7 +327,7 @@ void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
@@ -337,7 +337,7 @@ void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
@@ -347,7 +347,7 @@ void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
@@ -377,7 +377,7 @@ void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetInputLineWidth(Kernel::HLERequestContext& ctx) {
@@ -596,7 +596,7 @@ void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
