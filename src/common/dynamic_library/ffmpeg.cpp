@@ -31,7 +31,7 @@ av_hwframe_ctx_init_func av_hwframe_ctx_init;
 av_hwframe_get_buffer_func av_hwframe_get_buffer;
 av_hwframe_transfer_data_func av_hwframe_transfer_data;
 av_int_list_length_for_size_func av_int_list_length_for_size;
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 53, 100) // lavu 56.53.100
 av_opt_child_class_iterate_func av_opt_child_class_iterate;
 #else
 av_opt_child_class_next_func av_opt_child_class_next;
@@ -166,7 +166,7 @@ static bool LoadAVUtil() {
     LOAD_SYMBOL(avutil, av_hwframe_get_buffer);
     LOAD_SYMBOL(avutil, av_hwframe_transfer_data);
     LOAD_SYMBOL(avutil, av_int_list_length_for_size);
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 53, 100) // lavu 56.53.100
     LOAD_SYMBOL(avutil, av_opt_child_class_iterate);
 #else
     LOAD_SYMBOL(avutil, av_opt_child_class_next);
