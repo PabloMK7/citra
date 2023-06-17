@@ -589,8 +589,6 @@ public final class NativeLibrary {
 
     public static native void RemoveAmiibo();
 
-    public static native void InstallCIAS(String[] path);
-
     public static final int SAVESTATE_SLOT_COUNT = 10;
 
     public static final class SavestateInfo {

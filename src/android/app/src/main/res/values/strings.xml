@@ -262,4 +262,22 @@
     <string name="cheats_error_no_name">Name can\'t be empty</string>
     <string name="cheats_error_no_code_lines">Code can\'t be empty</string>
     <string name="cheats_error_on_line">Error on line %1$d</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="one">Installing %d file. See notification for more details.</item>
+        <item quantity="other">Installing %d files. See notification for more details.</item>
+    </plurals>
+    <string name="cia_install_notification_channel_name" translatable="false">Citra CIA Install</string>
+    <string name="cia_install_notification_channel_id" translatable="false">citra-cia</string>
+    <string name="cia_install_notification_channel_description">Citra notifications during CIA Install</string>
+    <string name="cia_install_notification_title">Installing CIA</string>
+    <string name="cia_install_notification_installing">Installing %s (%d/%d)</string>
+    <string name="cia_install_notification_success_title">Successfully installed CIA</string>
+    <string name="cia_install_notification_error_title">Failed to install CIA</string>
+    <string name="cia_install_success">\"%s\" has been installed successfully</string>
+    <string name="cia_install_error_aborted">The installation of \"%s\" was aborted.\n Please see the log for more details</string>
+    <string name="cia_install_error_invalid">\"%s\" is not a valid CIA</string>
+    <string name="cia_install_error_encrypted">\"%s\" must be decrypted before being used with Citra.\n A real 3DS is required</string>
+    <string name="cia_install_error_unknown">An unknown error occurred while installing \"%s\".\n Please see the log for more details</string>
 </resources>

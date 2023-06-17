@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-package org.citra.citra_emu.disk_shader_cache;
+package org.citra.citra_emu.utils;
 
 import android.app.Activity;
 import android.app.Dialog;

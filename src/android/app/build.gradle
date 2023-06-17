@@ -10,7 +10,7 @@ def buildType
 def abiFilter = "arm64-v8a" //, "x86"
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     ndkVersion "25.1.8937393"
 
     compileOptions {
@@ -100,6 +100,7 @@ android {
             path "../../../CMakeLists.txt"
         }
     }
+    namespace 'org.citra.citra_emu'
 
     defaultConfig {
         externalNativeBuild {
@@ -129,6 +130,7 @@ dependencies {
     implementation "androidx.slidingpanelayout:slidingpanelayout:1.2.0"
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.core:core-splashscreen:1.0.0'
+    implementation "androidx.work:work-runtime:2.8.1"
 
     // For loading huge screenshots from the disk.
     implementation 'com.squareup.picasso:picasso:2.71828'
