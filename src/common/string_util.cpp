@@ -4,12 +4,14 @@
 
 #include <algorithm>
 #include <cctype>
-#include <codecvt>
 #include <cstdlib>
 #include <locale>
 #include <sstream>
 #include <string>
 #include <string_view>
+
+#include <boost/locale/encoding_utf.hpp>
+
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -155,13 +157,11 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
 }
 
 std::string UTF16ToUTF8(std::u16string_view input) {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    return convert.to_bytes(input.data(), input.data() + input.size());
+    return boost::locale::conv::utf_to_utf<char>(input.data(), input.data() + input.size());
 }
 
 std::u16string UTF8ToUTF16(std::string_view input) {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    return convert.from_bytes(input.data(), input.data() + input.size());
+    return boost::locale::conv::utf_to_utf<char16_t>(input.data(), input.data() + input.size());
 }
 
 #ifdef _WIN32
