@@ -3,6 +3,8 @@
 # Suppress warnings from external libraries
 if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/W0)
+else()
+    add_compile_options(-Wno-error)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
@@ -112,6 +114,8 @@ add_library(nihstro-headers INTERFACE)
 target_include_directories(nihstro-headers INTERFACE ./nihstro/include)
 if (MSVC)
     target_compile_options(nihstro-headers INTERFACE /W0)
+else()
+    target_compile_options(nihstro-headers INTERFACE -Wno-error)
 endif()
 
 # Open Source Archives
@@ -195,6 +199,11 @@ if (ENABLE_WEB_SERVICE)
     add_library(cpp-jwt INTERFACE)
     target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
     target_compile_definitions(cpp-jwt INTERFACE CPP_JWT_USE_VENDORED_NLOHMANN_JSON)
+    if (MSVC)
+        target_compile_options(cpp-jwt INTERFACE /W0)
+    else()
+        target_compile_options(cpp-jwt INTERFACE -Wno-error)
+    endif()
 endif()
 
 # lodepng

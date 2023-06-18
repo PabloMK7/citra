@@ -170,7 +170,7 @@ static std::wstring CPToUTF16(u32 code_page, const std::string& input) {
         MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
 
     if (size == 0) {
-        return L"";
+        return {};
     }
 
     std::wstring output(size, L'\0');

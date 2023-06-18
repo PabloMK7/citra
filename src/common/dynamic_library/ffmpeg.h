@@ -47,7 +47,7 @@ typedef int (*av_hwframe_ctx_init_func)(AVBufferRef*);
 typedef int (*av_hwframe_get_buffer_func)(AVBufferRef*, AVFrame*, int);
 typedef int (*av_hwframe_transfer_data_func)(AVFrame*, const AVFrame*, int);
 typedef unsigned (*av_int_list_length_for_size_func)(unsigned, const void*, uint64_t);
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 53, 100) // lavu 56.53.100
 typedef const AVClass* (*av_opt_child_class_iterate_func)(const AVClass*, void**);
 #else
 typedef const AVClass* (*av_opt_child_class_next_func)(const AVClass*, const AVClass*);
@@ -85,7 +85,7 @@ extern av_hwframe_ctx_init_func av_hwframe_ctx_init;
 extern av_hwframe_get_buffer_func av_hwframe_get_buffer;
 extern av_hwframe_transfer_data_func av_hwframe_transfer_data;
 extern av_int_list_length_for_size_func av_int_list_length_for_size;
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 53, 100) // lavu 56.53.100
 extern av_opt_child_class_iterate_func av_opt_child_class_iterate;
 #else
 extern av_opt_child_class_next_func av_opt_child_class_next;

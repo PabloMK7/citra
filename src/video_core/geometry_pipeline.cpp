@@ -150,7 +150,7 @@ public:
         setup.uniforms.f[0] = Common::MakeVec(vertex_num, vertex_num, vertex_num, vertex_num);
 
         // The second uniform register and so on are used for receiving input vertices
-        buffer_cur = setup.uniforms.f + 1;
+        buffer_cur = setup.uniforms.f.data() + 1;
 
         main_vertex_num = regs.pipeline.variable_vertex_main_num_minus_1 + 1;
         total_vertex_num = val;
@@ -200,7 +200,7 @@ private:
     template <class Archive>
     void save(Archive& ar, const unsigned int version) const {
         serialize_common(this, ar, version);
-        auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f);
+        auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f.data());
         ar << buffer_idx;
     }
 
@@ -209,7 +209,7 @@ private:
         serialize_common(this, ar, version);
         u32 buffer_idx;
         ar >> buffer_idx;
-        buffer_cur = setup.uniforms.f + buffer_idx;
+        buffer_cur = setup.uniforms.f.data() + buffer_idx;
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -229,7 +229,7 @@ public:
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
         ASSERT(vs_output_num == regs.pipeline.gs_config.stride_minus_1 + 1);
         std::size_t vertex_num = regs.pipeline.gs_config.fixed_vertex_num_minus_1 + 1;
-        buffer_cur = buffer_begin = setup.uniforms.f + regs.pipeline.gs_config.start_index;
+        buffer_cur = buffer_begin = setup.uniforms.f.data() + regs.pipeline.gs_config.start_index;
         buffer_end = buffer_begin + vs_output_num * vertex_num;
     }
 
@@ -273,9 +273,9 @@ private:
     template <class Archive>
     void save(Archive& ar, const unsigned int version) const {
         serialize_common(this, ar, version);
-        auto buffer_offset = static_cast<u32>(buffer_begin - setup.uniforms.f);
-        auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f);
-        auto buffer_size = static_cast<u32>(buffer_end - setup.uniforms.f);
+        auto buffer_offset = static_cast<u32>(buffer_begin - setup.uniforms.f.data());
+        auto buffer_idx = static_cast<u32>(buffer_cur - setup.uniforms.f.data());
+        auto buffer_size = static_cast<u32>(buffer_end - setup.uniforms.f.data());
         ar << buffer_offset;
         ar << buffer_idx;
         ar << buffer_size;
@@ -288,9 +288,9 @@ private:
         ar >> buffer_offset;
         ar >> buffer_idx;
         ar >> buffer_size;
-        buffer_begin = setup.uniforms.f + buffer_offset;
-        buffer_cur = setup.uniforms.f + buffer_idx;
-        buffer_end = setup.uniforms.f + buffer_size;
+        buffer_begin = setup.uniforms.f.data() + buffer_offset;
+        buffer_cur = setup.uniforms.f.data() + buffer_idx;
+        buffer_end = setup.uniforms.f.data() + buffer_size;
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()

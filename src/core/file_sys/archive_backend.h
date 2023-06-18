@@ -31,7 +31,7 @@ enum class LowPathType : u32 {
 };
 
 union Mode {
-    u32 hex;
+    u32 hex = 0;
     BitField<0, 1, u32> read_flag;
     BitField<1, 1, u32> write_flag;
     BitField<2, 1, u32> create_flag;

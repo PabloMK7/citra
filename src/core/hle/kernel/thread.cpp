@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <climits>
 #include <list>
 #include <vector>
 #include <boost/serialization/string.hpp>
@@ -288,7 +289,7 @@ void ThreadManager::DebugThreadQueue() {
 
     for (auto& t : thread_list) {
         u32 priority = ready_queue.contains(t.get());
-        if (priority != -1) {
+        if (priority != UINT_MAX) {
             LOG_DEBUG(Kernel, "0x{:02X} {}", priority, t->GetObjectId());
         }
     }

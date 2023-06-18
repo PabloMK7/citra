@@ -303,6 +303,7 @@ std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node
     std::memcpy(eapol_buffer.data(), &eapol_start, sizeof(eapol_start));
 
     std::vector<u8> buffer = GenerateLLCHeader(EtherType::EAPoL);
+    buffer.reserve(buffer.size() + sizeof(EAPoLStartPacket));
     buffer.insert(buffer.end(), eapol_buffer.begin(), eapol_buffer.end());
     return buffer;
 }
@@ -366,6 +367,7 @@ std::vector<u8> GenerateEAPoLLogoffFrame(const MacAddress& mac_address, u16 netw
     std::memcpy(eapol_buffer.data(), &eapol_logoff, sizeof(eapol_logoff));
 
     std::vector<u8> buffer = GenerateLLCHeader(EtherType::EAPoL);
+    buffer.reserve(buffer.size() + sizeof(EAPoLStartPacket));
     buffer.insert(buffer.end(), eapol_buffer.begin(), eapol_buffer.end());
     return buffer;
 }

@@ -59,21 +59,25 @@ void FFmpegStream::Flush() {
     SendFrame(nullptr);
 }
 
-void FFmpegStream::WritePacket(AVPacket& packet) {
-    FFmpeg::av_packet_rescale_ts(&packet, codec_context->time_base, stream->time_base);
-    packet.stream_index = stream->index;
+void FFmpegStream::WritePacket(AVPacket* packet) {
+    FFmpeg::av_packet_rescale_ts(packet, codec_context->time_base, stream->time_base);
+    packet->stream_index = stream->index;
     {
         std::lock_guard lock{*format_context_mutex};
-        FFmpeg::av_interleaved_write_frame(format_context, &packet);
+        FFmpeg::av_interleaved_write_frame(format_context, packet);
     }
 }
 
 void FFmpegStream::SendFrame(AVFrame* frame) {
     // Initialize packet
-    AVPacket packet;
-    FFmpeg::av_init_packet(&packet);
-    packet.data = nullptr;
-    packet.size = 0;
+    AVPacket* packet = FFmpeg::av_packet_alloc();
+    if (!packet) {
+        LOG_ERROR(Render, "Frame dropped: av_packet_alloc failed");
+    }
+    SCOPE_EXIT({ FFmpeg::av_packet_free(&packet); });
+
+    packet->data = nullptr;
+    packet->size = 0;
 
     // Encode frame
     if (FFmpeg::avcodec_send_frame(codec_context.get(), frame) < 0) {
@@ -82,7 +86,7 @@ void FFmpegStream::SendFrame(AVFrame* frame) {
     }
     int error = 1;
     while (error >= 0) {
-        error = FFmpeg::avcodec_receive_packet(codec_context.get(), &packet);
+        error = FFmpeg::avcodec_receive_packet(codec_context.get(), packet);
         if (error == AVERROR(EAGAIN) || error == AVERROR_EOF)
             return;
         if (error < 0) {
@@ -485,7 +489,7 @@ bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
     }
     codec_context->time_base.num = 1;
     codec_context->time_base.den = codec_context->sample_rate;
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100) // lavc 59.24.100
     codec_context->ch_layout = AV_CHANNEL_LAYOUT_STEREO;
 #else
     codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
@@ -527,7 +531,7 @@ bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
     audio_frame->format = codec_context->sample_fmt;
     audio_frame->sample_rate = codec_context->sample_rate;
 
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100) // lavc 59.24.100
     auto num_channels = codec_context->ch_layout.nb_channels;
     audio_frame->ch_layout = codec_context->ch_layout;
     SwrContext* context = nullptr;
@@ -1003,7 +1007,7 @@ void GetOptionList(std::vector<OptionInfo>& out, const AVClass* av_class, bool s
     }
 
     const AVClass* child_class = nullptr;
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 53, 100) // lavu 56.53.100
     void* iter = nullptr;
     while ((child_class = FFmpeg::av_opt_child_class_iterate(av_class, &iter))) {
 #else

@@ -519,9 +519,9 @@ struct CTRPollFD {
         CTRPollFD result;
         result.events.hex = Events::TranslateTo3DS(fd.events, has_libctru_bug).hex;
         result.revents.hex = Events::TranslateTo3DS(fd.revents, has_libctru_bug).hex;
-        for (auto iter = socu.open_sockets.begin(); iter != socu.open_sockets.end(); ++iter) {
-            if (iter->second.socket_fd == fd.fd) {
-                result.fd = iter->first;
+        for (const auto& socket : socu.open_sockets) {
+            if (socket.second.socket_fd == fd.fd) {
+                result.fd = socket.first;
                 break;
             }
         }
@@ -662,7 +662,8 @@ struct CTRAddrInfo {
         };
         ctr_addr.ai_addrlen = static_cast<s32_le>(ctr_addr.ai_addr.raw.len);
         if (addr.ai_canonname)
-            std::strncpy(ctr_addr.ai_canonname, addr.ai_canonname, sizeof(ctr_addr.ai_canonname));
+            std::strncpy(ctr_addr.ai_canonname, addr.ai_canonname,
+                         sizeof(ctr_addr.ai_canonname) - 1);
         return ctr_addr;
     }
 

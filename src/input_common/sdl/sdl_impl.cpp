@@ -1018,7 +1018,7 @@ public:
     }
 
     Common::ParamPackage GetNextInput() override {
-        SDL_Event event;
+        SDL_Event event{};
         while (state.event_queue.Pop(event)) {
             if (event.type != SDL_JOYAXISMOTION || std::abs(event.jaxis.value / 32767.0) < 0.5) {
                 continue;

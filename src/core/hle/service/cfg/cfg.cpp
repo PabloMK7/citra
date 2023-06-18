@@ -904,7 +904,7 @@ void Module::SetSystemSetupNeeded(bool setup_needed) {
 }
 
 bool Module::IsSystemSetupNeeded() {
-    u32 block;
+    u32 block{};
     GetConfigInfoBlock(SystemSetupRequiredBlockID, sizeof(block), 0xC, &block);
     return (block & 0xFFFF) == 0;
 }
