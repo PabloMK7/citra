@@ -138,6 +138,13 @@ add_library(citra_common STATIC
     zstd_compression.h
 )
 
+if (APPLE)
+    target_sources(citra_common PUBLIC
+        apple_authorization.h
+        apple_authorization.cpp
+    )
+endif()
+
 if (MSVC)
   target_compile_options(citra_common PRIVATE
     /W4

@@ -14,7 +14,7 @@
 #include "ui_configure_audio.h"
 
 #if defined(__APPLE__)
-#include "citra_qt/macos_authorization.h"
+#include "common/apple_authorization.h"
 #endif
 
 ConfigureAudio::ConfigureAudio(QWidget* parent)

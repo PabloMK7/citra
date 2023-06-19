@@ -96,7 +96,7 @@
 #include "video_core/video_core.h"
 
 #ifdef __APPLE__
-#include "macos_authorization.h"
+#include "common/apple_authorization.h"
 #endif
 
 #ifdef USE_DISCORD_PRESENCE

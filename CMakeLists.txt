@@ -13,14 +13,11 @@ include(CMakeDependentOption)
 
 project(citra LANGUAGES C CXX ASM)
 
-if (APPLE)
-    enable_language(OBJC)
-    if (IOS)
-        # Enable searching CMAKE_PREFIX_PATH for bundled dependencies.
-        set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
-        set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
-        set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
-    endif()
+if (IOS)
+    # Enable searching CMAKE_PREFIX_PATH for bundled dependencies.
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 endif()
 
 option(ENABLE_LTO "Enable link time optimization" OFF)
@@ -71,10 +68,6 @@ if (CITRA_USE_PRECOMPILED_HEADERS)
         # buildcache does not properly cache PCH files, leading to compilation errors.
         # See https://github.com/mbitsnbites/buildcache/discussions/230
         message(WARNING "Buildcache does not properly support Precompiled Headers. Disabling PCH")
-        set(CITRA_USE_PRECOMPILED_HEADERS OFF)
-    endif()
-    if(APPLE)
-        message(WARNING "Precompiled Headers currently do not work on Apple. Disabling PCH")
         set(CITRA_USE_PRECOMPILED_HEADERS OFF)
     endif()
 endif()

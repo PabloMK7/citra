@@ -254,12 +254,7 @@ if (APPLE)
         "${DIST_DIR}/LaunchScreen.storyboard"
         "${DIST_DIR}/launch_logo.png"
     )
-
-    target_sources(citra-qt PRIVATE
-        ${APPLE_RESOURCES}
-        macos_authorization.h
-        macos_authorization.mm
-    )
+    target_sources(citra-qt PRIVATE ${APPLE_RESOURCES})
 
     # Define app bundle metadata.
     include(GenerateBuildInfo)

@@ -16,7 +16,7 @@
 #include "ui_configure_camera.h"
 
 #if defined(__APPLE__)
-#include "citra_qt/macos_authorization.h"
+#include "common/apple_authorization.h"
 #endif
 
 const std::array<std::string, 3> ConfigureCamera::Implementations = {
@@ -264,6 +264,9 @@ void ConfigureCamera::SetConfiguration() {
         }
     }
     if (camera_name[index] == "qt") {
+#ifdef __APPLE__
+        AppleAuthorization::CheckAuthorizationForCamera();
+#endif
         ui->system_camera->setCurrentIndex(0);
         if (!camera_config[index].empty()) {
             ui->system_camera->setCurrentText(QString::fromStdString(camera_config[index]));
