@@ -16,6 +16,7 @@
 
 namespace OpenGL::ShaderDecompiler {
 
+using nihstro::DestRegister;
 using nihstro::Instruction;
 using nihstro::OpCode;
 using nihstro::RegisterType;

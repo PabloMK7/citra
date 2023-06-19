@@ -12,7 +12,6 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
-#include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -21,10 +20,6 @@
 #include "video_core/pica_types.h"
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
-
-using nihstro::DestRegister;
-using nihstro::RegisterType;
-using nihstro::SourceRegister;
 
 namespace Pica::Shader {
 
@@ -164,36 +159,19 @@ struct UnitState {
 
     GSEmitter* emitter_ptr;
 
-    static std::size_t InputOffset(const SourceRegister& reg) {
-        switch (reg.GetRegisterType()) {
-        case RegisterType::Input:
-            return offsetof(UnitState, registers.input) +
-                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
-
-        case RegisterType::Temporary:
-            return offsetof(UnitState, registers.temporary) +
-                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
-
-        default:
-            UNREACHABLE();
-            return 0;
-        }
+    static std::size_t InputOffset(int register_index) {
+        return offsetof(UnitState, registers.input) +
+               register_index * sizeof(Common::Vec4<float24>);
     }
 
-    static std::size_t OutputOffset(const DestRegister& reg) {
-        switch (reg.GetRegisterType()) {
-        case RegisterType::Output:
-            return offsetof(UnitState, registers.output) +
-                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
+    static std::size_t OutputOffset(int register_index) {
+        return offsetof(UnitState, registers.output) +
+               register_index * sizeof(Common::Vec4<float24>);
+    }
 
-        case RegisterType::Temporary:
-            return offsetof(UnitState, registers.temporary) +
-                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
-
-        default:
-            UNREACHABLE();
-            return 0;
-        }
+    static std::size_t TemporaryOffset(int register_index) {
+        return offsetof(UnitState, registers.temporary) +
+               register_index * sizeof(Common::Vec4<float24>);
     }
 
     /**

@@ -29,6 +29,9 @@ using Xbyak::Reg32;
 using Xbyak::Reg64;
 using Xbyak::Xmm;
 
+using nihstro::DestRegister;
+using nihstro::RegisterType;
+
 namespace Pica::Shader {
 
 typedef void (JitShader::*JitFunction)(Instruction instr);
@@ -185,13 +188,22 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
                                    Xmm dest) {
     Reg64 src_ptr;
     std::size_t src_offset;
-
-    if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
+    switch (src_reg.GetRegisterType()) {
+    case RegisterType::FloatUniform:
         src_ptr = UNIFORMS;
         src_offset = Uniforms::GetFloatUniformOffset(src_reg.GetIndex());
-    } else {
+        break;
+    case RegisterType::Input:
         src_ptr = STATE;
-        src_offset = UnitState::InputOffset(src_reg);
+        src_offset = UnitState::InputOffset(src_reg.GetIndex());
+        break;
+    case RegisterType::Temporary:
+        src_ptr = STATE;
+        src_offset = UnitState::TemporaryOffset(src_reg.GetIndex());
+        break;
+    default:
+        UNREACHABLE_MSG("Encountered unknown source register type: {}", src_reg.GetRegisterType());
+        break;
     }
 
     int src_offset_disp = (int)src_offset;
@@ -270,7 +282,19 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
 
     SwizzlePattern swiz = {(*swizzle_data)[operand_desc_id]};
 
-    std::size_t dest_offset_disp = UnitState::OutputOffset(dest);
+    std::size_t dest_offset_disp;
+    switch (dest.GetRegisterType()) {
+    case RegisterType::Output:
+        dest_offset_disp = UnitState::OutputOffset(dest.GetIndex());
+        break;
+    case RegisterType::Temporary:
+        dest_offset_disp = UnitState::TemporaryOffset(dest.GetIndex());
+        break;
+    default:
+        UNREACHABLE_MSG("Encountered unknown destination register type: {}",
+                        dest.GetRegisterType());
+        break;
+    }
 
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {

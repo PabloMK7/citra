@@ -20,6 +20,7 @@
 
 using nihstro::Instruction;
 using nihstro::OpCode;
+using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
 namespace Pica::Shader {
