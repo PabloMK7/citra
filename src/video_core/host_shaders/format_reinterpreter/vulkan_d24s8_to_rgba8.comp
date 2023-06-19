@@ -1,0 +1,26 @@
+// Copyright 2023 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#version 450 core
+#extension GL_EXT_samplerless_texture_functions : require
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(set = 0, binding = 0) uniform highp texture2D depth;
+layout(set = 0, binding = 1) uniform lowp utexture2D stencil;
+layout(set = 0, binding = 2, rgba8) uniform highp writeonly image2D color;
+
+layout(push_constant, std140) uniform ComputeInfo {
+    mediump ivec2 src_offset;
+    mediump ivec2 extent;
+};
+
+void main() {
+    ivec2 tex_coord = src_offset + ivec2(gl_GlobalInvocationID.xy);
+    highp uint depth_val =
+        uint(texelFetch(depth, tex_coord, 0).x * (exp2(32.0) - 1.0));
+    lowp uint stencil_val = texelFetch(stencil, tex_coord, 0).x;
+    highp uvec4 components =
+        uvec4(stencil_val, (uvec3(depth_val) >> uvec3(24u, 16u, 8u)) & 0x000000FFu);
+    imageStore(color, tex_coord, vec4(components) / (exp2(8.0) - 1.0));
+}

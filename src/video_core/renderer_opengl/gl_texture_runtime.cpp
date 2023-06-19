@@ -144,8 +144,8 @@ VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
     }
     return VideoCore::StagingData{
         .size = size,
+        .offset = 0,
         .mapped = std::span{staging_buffer.data(), size},
-        .buffer_offset = 0,
     };
 }
 

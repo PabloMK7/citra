@@ -75,8 +75,8 @@ struct BufferTextureCopy {
 
 struct StagingData {
     u32 size;
+    u32 offset;
     std::span<u8> mapped;
-    u64 buffer_offset;
 };
 
 struct TextureCubeConfig {

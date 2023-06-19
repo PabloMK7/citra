@@ -9,8 +9,20 @@ out gl_PerVertex {
 
 layout(location = 0) out vec2 texcoord;
 
-layout (location = 0) uniform vec2 tex_scale;
-layout (location = 1) uniform vec2 tex_offset;
+#ifdef VULKAN
+#define BEGIN_PUSH_CONSTANTS layout(push_constant) uniform PushConstants {
+#define END_PUSH_CONSTANTS };
+#define UNIFORM(n)
+#else // if OpenGL
+#define BEGIN_PUSH_CONSTANTS
+#define END_PUSH_CONSTANTS
+#define UNIFORM(n) layout (location = n) uniform
+#endif
+
+BEGIN_PUSH_CONSTANTS
+UNIFORM(0) vec2 tex_scale;
+UNIFORM(1) vec2 tex_offset;
+END_PUSH_CONSTANTS
 
 void main() {
     float x = float((gl_VertexID & 1) << 2);

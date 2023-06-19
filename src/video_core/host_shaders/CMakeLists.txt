@@ -4,13 +4,12 @@
 
 set(SHADER_FILES
     format_reinterpreter/d24s8_to_rgba8.frag
-    format_reinterpreter/fullscreen_quad.vert
     format_reinterpreter/rgba4_to_rgb5a1.frag
+    format_reinterpreter/vulkan_d24s8_to_rgba8.comp
     texture_filtering/bicubic.frag
     texture_filtering/nearest_neighbor.frag
     texture_filtering/refine.frag
     texture_filtering/scale_force.frag
-    texture_filtering/tex_coord.vert
     texture_filtering/xbrz_freescale.frag
     texture_filtering/mmpx.frag
     texture_filtering/x_gradient.frag
@@ -20,7 +19,21 @@ set(SHADER_FILES
     opengl_present.vert
     opengl_present_anaglyph.frag
     opengl_present_interlaced.frag
+    vulkan_depth_to_buffer.comp
+    vulkan_present.frag
+    vulkan_present.vert
+    vulkan_present_anaglyph.frag
+    vulkan_present_interlaced.frag
+    vulkan_blit_depth_stencil.frag
 )
+
+find_program(GLSLANGVALIDATOR "glslangValidator")
+if ("${GLSLANGVALIDATOR}" STREQUAL "GLSLANGVALIDATOR-NOTFOUND")
+    message(FATAL_ERROR "Required program `glslangValidator` not found.")
+endif()
+
+set(MACROS "-Dgl_VertexID=gl_VertexIndex")
+set(QUIET_FLAG "--quiet")
 
 set(SHADER_INCLUDE ${CMAKE_CURRENT_BINARY_DIR}/include)
 set(SHADER_DIR ${SHADER_INCLUDE}/video_core/host_shaders)
@@ -28,6 +41,23 @@ set(HOST_SHADERS_INCLUDE ${SHADER_INCLUDE} PARENT_SCOPE)
 
 set(INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/source_shader.h.in)
 set(HEADER_GENERATOR ${CMAKE_CURRENT_SOURCE_DIR}/StringShaderHeader.cmake)
+
+# Check if `--quiet` is available on host's glslangValidator version
+# glslangValidator prints to STDERR iff an unrecognized flag is passed to it
+execute_process(
+    COMMAND
+        ${GLSLANGVALIDATOR} ${QUIET_FLAG}
+    ERROR_VARIABLE
+        GLSLANG_ERROR
+    # STDOUT variable defined to silence unnecessary output during CMake configuration
+    OUTPUT_VARIABLE
+        GLSLANG_OUTPUT
+)
+
+if (NOT GLSLANG_ERROR STREQUAL "")
+    message(WARNING "Refusing to use unavailable flag `${QUIET_FLAG}` on `${GLSLANGVALIDATOR}`")
+    set(QUIET_FLAG "")
+endif()
 
 foreach(FILENAME IN ITEMS ${SHADER_FILES})
     string(REPLACE "." "_" SHADER_NAME ${FILENAME})
@@ -47,6 +77,21 @@ foreach(FILENAME IN ITEMS ${SHADER_FILES})
                 # HEADER_GENERATOR should be included here but msbuild seems to assume it's always modified
         )
         set(SHADER_HEADERS ${SHADER_HEADERS} ${SOURCE_HEADER_FILE})
+    endif()
+    # Skip compiling to SPIR-V OpenGL exclusive files
+    if (NOT ${FILENAME} MATCHES "opengl.*")
+        get_filename_component(FILE_NAME ${SHADER_NAME} NAME)
+        string(TOUPPER ${FILE_NAME}_SPV SPIRV_VARIABLE_NAME)
+        set(SPIRV_HEADER_FILE ${SHADER_DIR}/${SHADER_NAME}_spv.h)
+        add_custom_command(
+            OUTPUT
+                ${SPIRV_HEADER_FILE}
+            COMMAND
+                ${GLSLANGVALIDATOR} --target-env vulkan1.1 --glsl-version 450 ${QUIET_FLAG} ${MACROS} --variable-name ${SPIRV_VARIABLE_NAME} -o ${SPIRV_HEADER_FILE} ${SOURCE_FILE}
+            MAIN_DEPENDENCY
+                ${SOURCE_FILE}
+        )
+        set(SHADER_HEADERS ${SHADER_HEADERS} ${SPIRV_HEADER_FILE})
     endif()
 endforeach()
 

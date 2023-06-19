@@ -9,7 +9,14 @@ layout(location = 0) in vec2 tex_coord;
 layout(location = 0) out vec4 frag_color;
 
 layout(binding = 0) uniform sampler2D tex;
-layout(location = 2) uniform lowp float scale;
+
+#ifdef VULKAN
+layout(push_constant, std140) uniform XbrzInfo {
+    float scale;
+};
+#else
+layout(location = 2) uniform float scale;
+#endif
 
 const int BLEND_NONE = 0;
 const int BLEND_NORMAL = 1;
