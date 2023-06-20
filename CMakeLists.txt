@@ -120,7 +120,10 @@ function(check_submodules_present)
         endif()
     endforeach()
 endfunction()
-check_submodules_present()
+if (EXISTS "${PROJECT_SOURCE_DIR}/.git/objects")
+    # only check submodules when source is obtained via Git
+    check_submodules_present()
+endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/dist/compatibility_list/compatibility_list.qrc
                ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc
