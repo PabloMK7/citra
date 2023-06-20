@@ -64,6 +64,7 @@
 #include "common/arch.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
+#include "common/dynamic_library/dynamic_library.h"
 #include "common/file_util.h"
 #include "common/literals.h"
 #include "common/logging/backend.h"
@@ -2242,11 +2243,11 @@ void GMainWindow::OnOpenFFmpeg() {
     }
 
     static const std::array library_names = {
-        DynamicLibrary::DynamicLibrary::GetLibraryName("avcodec", LIBAVCODEC_VERSION_MAJOR),
-        DynamicLibrary::DynamicLibrary::GetLibraryName("avfilter", LIBAVFILTER_VERSION_MAJOR),
-        DynamicLibrary::DynamicLibrary::GetLibraryName("avformat", LIBAVFORMAT_VERSION_MAJOR),
-        DynamicLibrary::DynamicLibrary::GetLibraryName("avutil", LIBAVUTIL_VERSION_MAJOR),
-        DynamicLibrary::DynamicLibrary::GetLibraryName("swresample", LIBSWRESAMPLE_VERSION_MAJOR),
+        Common::DynamicLibrary::GetLibraryName("avcodec", LIBAVCODEC_VERSION_MAJOR),
+        Common::DynamicLibrary::GetLibraryName("avfilter", LIBAVFILTER_VERSION_MAJOR),
+        Common::DynamicLibrary::GetLibraryName("avformat", LIBAVFORMAT_VERSION_MAJOR),
+        Common::DynamicLibrary::GetLibraryName("avutil", LIBAVUTIL_VERSION_MAJOR),
+        Common::DynamicLibrary::GetLibraryName("swresample", LIBSWRESAMPLE_VERSION_MAJOR),
     };
 
     for (auto& library_name : library_names) {

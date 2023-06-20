@@ -8,9 +8,6 @@ extern "C" {
 #include <fdk-aac/aacdecoder_lib.h>
 }
 
-#include "common/common_types.h"
-#include "common/dynamic_library/dynamic_library.h"
-
 namespace DynamicLibrary::FdkAac {
 
 typedef INT (*aacDecoder_GetLibInfo_func)(LIB_INFO* info);

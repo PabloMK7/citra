@@ -10,29 +10,11 @@
 #endif
 #include "dynamic_library.h"
 
-namespace DynamicLibrary {
+namespace Common {
 
 DynamicLibrary::DynamicLibrary(std::string_view name, int major, int minor) {
     auto full_name = GetLibraryName(name, major, minor);
-#if defined(_WIN32)
-    handle = reinterpret_cast<void*>(LoadLibraryA(full_name.c_str()));
-    if (!handle) {
-        DWORD error_message_id = GetLastError();
-        LPSTR message_buffer = nullptr;
-        size_t size =
-            FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                               FORMAT_MESSAGE_IGNORE_INSERTS,
-                           nullptr, error_message_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                           reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr);
-        std::string message(message_buffer, size);
-        load_error = message;
-    }
-#else
-    handle = dlopen(full_name.c_str(), RTLD_LAZY);
-    if (!handle) {
-        load_error = dlerror();
-    }
-#endif // defined(_WIN32)
+    void(Load(full_name));
 }
 
 DynamicLibrary::~DynamicLibrary() {
@@ -46,7 +28,32 @@ DynamicLibrary::~DynamicLibrary() {
     }
 }
 
-void* DynamicLibrary::GetRawSymbol(std::string_view name) {
+bool DynamicLibrary::Load(std::string_view filename) {
+#if defined(_WIN32)
+    handle = reinterpret_cast<void*>(LoadLibraryA(filename.data()));
+    if (!handle) {
+        DWORD error_message_id = GetLastError();
+        LPSTR message_buffer = nullptr;
+        size_t size =
+            FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
+                           nullptr, error_message_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr);
+        std::string message(message_buffer, size);
+        load_error = message;
+        return false;
+    }
+#else
+    handle = dlopen(filename.data(), RTLD_LAZY);
+    if (!handle) {
+        load_error = dlerror();
+        return false;
+    }
+#endif // defined(_WIN32)
+    return true;
+}
+
+void* DynamicLibrary::GetRawSymbol(std::string_view name) const {
 #if defined(_WIN32)
     return reinterpret_cast<void*>(GetProcAddress(reinterpret_cast<HMODULE>(handle), name.data()));
 #else
@@ -84,4 +91,4 @@ std::string DynamicLibrary::GetLibraryName(std::string_view name, int major, int
 #endif
 }
 
-} // namespace DynamicLibrary
+} // namespace Common

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/dynamic_library/dynamic_library.h"
 #include "common/dynamic_library/ffmpeg.h"
 #include "common/logging/log.h"
 
@@ -110,11 +111,11 @@ swr_free_func swr_free;
 swr_init_func swr_init;
 swresample_version_func swresample_version;
 
-static std::unique_ptr<DynamicLibrary> avutil;
-static std::unique_ptr<DynamicLibrary> avcodec;
-static std::unique_ptr<DynamicLibrary> avfilter;
-static std::unique_ptr<DynamicLibrary> avformat;
-static std::unique_ptr<DynamicLibrary> swresample;
+static std::unique_ptr<Common::DynamicLibrary> avutil;
+static std::unique_ptr<Common::DynamicLibrary> avcodec;
+static std::unique_ptr<Common::DynamicLibrary> avfilter;
+static std::unique_ptr<Common::DynamicLibrary> avformat;
+static std::unique_ptr<Common::DynamicLibrary> swresample;
 
 #define LOAD_SYMBOL(library, name)                                                                 \
     any_failed = any_failed || (name = library->GetSymbol<name##_func>(#name)) == nullptr
@@ -124,7 +125,7 @@ static bool LoadAVUtil() {
         return true;
     }
 
-    avutil = std::make_unique<DynamicLibrary>("avutil", LIBAVUTIL_VERSION_MAJOR);
+    avutil = std::make_unique<Common::DynamicLibrary>("avutil", LIBAVUTIL_VERSION_MAJOR);
     if (!avutil->IsLoaded()) {
         LOG_WARNING(Common, "Could not dynamically load libavutil: {}", avutil->GetLoadError());
         avutil.reset();
@@ -194,7 +195,7 @@ static bool LoadAVCodec() {
         return true;
     }
 
-    avcodec = std::make_unique<DynamicLibrary>("avcodec", LIBAVCODEC_VERSION_MAJOR);
+    avcodec = std::make_unique<Common::DynamicLibrary>("avcodec", LIBAVCODEC_VERSION_MAJOR);
     if (!avcodec->IsLoaded()) {
         LOG_WARNING(Common, "Could not dynamically load libavcodec: {}", avcodec->GetLoadError());
         avcodec.reset();
@@ -251,7 +252,7 @@ static bool LoadAVFilter() {
         return true;
     }
 
-    avfilter = std::make_unique<DynamicLibrary>("avfilter", LIBAVFILTER_VERSION_MAJOR);
+    avfilter = std::make_unique<Common::DynamicLibrary>("avfilter", LIBAVFILTER_VERSION_MAJOR);
     if (!avfilter->IsLoaded()) {
         LOG_WARNING(Common, "Could not dynamically load libavfilter: {}", avfilter->GetLoadError());
         avfilter.reset();
@@ -296,7 +297,7 @@ static bool LoadAVFormat() {
         return true;
     }
 
-    avformat = std::make_unique<DynamicLibrary>("avformat", LIBAVFORMAT_VERSION_MAJOR);
+    avformat = std::make_unique<Common::DynamicLibrary>("avformat", LIBAVFORMAT_VERSION_MAJOR);
     if (!avformat->IsLoaded()) {
         LOG_WARNING(Common, "Could not dynamically load libavformat: {}", avformat->GetLoadError());
         avformat.reset();
@@ -344,7 +345,8 @@ static bool LoadSWResample() {
         return true;
     }
 
-    swresample = std::make_unique<DynamicLibrary>("swresample", LIBSWRESAMPLE_VERSION_MAJOR);
+    swresample =
+        std::make_unique<Common::DynamicLibrary>("swresample", LIBSWRESAMPLE_VERSION_MAJOR);
     if (!swresample->IsLoaded()) {
         LOG_WARNING(Common, "Could not dynamically load libswresample: {}",
                     swresample->GetLoadError());

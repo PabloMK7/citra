@@ -15,9 +15,6 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-#include "common/common_types.h"
-#include "common/dynamic_library/dynamic_library.h"
-
 namespace DynamicLibrary::FFmpeg {
 
 // avutil

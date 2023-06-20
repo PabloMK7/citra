@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/dynamic_library/dynamic_library.h"
 #include "common/dynamic_library/fdk-aac.h"
 #include "common/logging/log.h"
 
@@ -15,7 +16,7 @@ aacDecoder_GetStreamInfo_func aacDecoder_GetStreamInfo;
 aacDecoder_DecodeFrame_func aacDecoder_DecodeFrame;
 aacDecoder_Fill_func aacDecoder_Fill;
 
-static std::unique_ptr<DynamicLibrary> fdk_aac;
+static std::unique_ptr<Common::DynamicLibrary> fdk_aac;
 
 #define LOAD_SYMBOL(library, name)                                                                 \
     any_failed = any_failed || (name = library->GetSymbol<name##_func>(#name)) == nullptr
@@ -25,7 +26,7 @@ bool LoadFdkAac() {
         return true;
     }
 
-    fdk_aac = std::make_unique<DynamicLibrary>("fdk-aac", 2);
+    fdk_aac = std::make_unique<Common::DynamicLibrary>("fdk-aac", 2);
     if (!fdk_aac->IsLoaded()) {
         LOG_WARNING(Common, "Could not dynamically load libfdk-aac: {}", fdk_aac->GetLoadError());
         fdk_aac.reset();
