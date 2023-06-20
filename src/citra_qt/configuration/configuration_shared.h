@@ -83,7 +83,7 @@ void SetPerGameSetting(QComboBox* combobox,
 /// account per-game status
 template <typename Type, bool ranged>
 Type GetComboboxSetting(int index, const Settings::SwitchableSetting<Type, ranged>* setting) {
-    if (Settings::IsConfiguringGlobal() && setting->UsingGlobal()) {
+    if (Settings::IsConfiguringGlobal() || setting->UsingGlobal()) {
         return static_cast<Type>(index);
     } else if (!Settings::IsConfiguringGlobal()) {
         if (index == 0) {
