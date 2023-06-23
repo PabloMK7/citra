@@ -51,8 +51,6 @@
 
 namespace Core {
 
-/*static*/ System System::s_instance;
-
 template <>
 Core::System& Global() {
     return System::GetInstance();
@@ -69,6 +67,13 @@ Core::Timing& Global() {
 }
 
 System::~System() = default;
+
+void System::InitializeGlobalInstance() {
+    if (s_instance) {
+        std::abort();
+    }
+    s_instance = std::unique_ptr<System>(new System);
+}
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;

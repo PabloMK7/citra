@@ -146,21 +146,6 @@ void GMainWindow::ShowTelemetryCallout() {
 
 const int GMainWindow::max_recent_files_item;
 
-static void InitializeLogging() {
-    using namespace Common;
-
-    Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
-    Log::SetGlobalFilter(log_filter);
-
-    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
-    FileUtil::CreateFullPath(log_dir);
-    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + LOG_FILE));
-#ifdef _WIN32
-    Log::AddBackend(std::make_unique<Log::DebuggerBackend>());
-#endif
-}
-
 static QString PrettyProductName() {
 #ifdef _WIN32
     // After Windows 10 Version 2004, Microsoft decided to switch to a different notation: 20H2
@@ -186,7 +171,6 @@ static QString PrettyProductName() {
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{Core::Movie::GetInstance()},
       config{std::make_unique<Config>()}, emu_thread{nullptr} {
-    InitializeLogging();
     Debugger::ToggleConsole();
     Settings::LogSettings();
 
@@ -2869,6 +2853,7 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 }
 
 int main(int argc, char* argv[]) {
+    Common::Log::Initialize();
     Common::DetachedTasks detached_tasks;
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
@@ -2893,7 +2878,8 @@ int main(int argc, char* argv[]) {
     // generating shaders
     setlocale(LC_ALL, "C");
 
-    Core::System& system = Core::System::GetInstance();
+    Core::System::InitializeGlobalInstance();
+    auto& system{Core::System::GetInstance()};
     GMainWindow main_window(system);
 
     // Register frontend applets

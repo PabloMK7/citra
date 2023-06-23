@@ -174,25 +174,10 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
         std::cout << std::endl << "* " << message << std::endl << std::endl;
 }
 
-static void InitializeLogging() {
-    using namespace Common;
-
-    Log::Filter log_filter(Log::Level::Debug);
-    log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
-    Log::SetGlobalFilter(log_filter);
-
-    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-
-    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
-    FileUtil::CreateFullPath(log_dir);
-    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + LOG_FILE));
-#ifdef _WIN32
-    Log::AddBackend(std::make_unique<Log::DebuggerBackend>());
-#endif
-}
-
 /// Application entry point
 int main(int argc, char** argv) {
+    Common::Log::Initialize();
+    Common::Log::SetColorConsoleBackendEnabled(true);
     Common::DetachedTasks detached_tasks;
     Config config;
     int option_index = 0;
@@ -202,8 +187,6 @@ int main(int argc, char** argv) {
     std::string movie_record_author;
     std::string movie_play;
     std::string dump_video;
-
-    InitializeLogging();
 
     char* endarg;
 #ifdef _WIN32
@@ -346,6 +329,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    Core::System::InitializeGlobalInstance();
     auto& system = Core::System::GetInstance();
     auto& movie = Core::Movie::GetInstance();
 

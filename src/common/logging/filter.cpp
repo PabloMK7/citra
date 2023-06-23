@@ -204,4 +204,11 @@ bool Filter::CheckMessage(Class log_class, Level level) const {
     return static_cast<u8>(level) >=
            static_cast<u8>(class_levels[static_cast<std::size_t>(log_class)]);
 }
+
+bool Filter::IsDebug() const {
+    return std::any_of(class_levels.begin(), class_levels.end(), [](const Level& l) {
+        return static_cast<u8>(l) <= static_cast<u8>(Level::Debug);
+    });
+}
+
 } // namespace Common::Log

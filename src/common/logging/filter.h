@@ -56,6 +56,9 @@ public:
     /// Matches class/level combination against the filter, returning true if it passed.
     bool CheckMessage(Class log_class, Level level) const;
 
+    /// Returns true if any logging classes are set to debug
+    bool IsDebug() const;
+
 private:
     std::array<Level, static_cast<std::size_t>(Class::Count)> class_levels;
 };
