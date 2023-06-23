@@ -700,4 +700,14 @@ Sampler::Sampler(TextureRuntime&, VideoCore::SamplerParams params) {
 
 Sampler::~Sampler() = default;
 
+DebugScope::DebugScope(TextureRuntime& runtime, Common::Vec4f, std::string_view label)
+    : local_scope_depth{global_scope_depth++} {
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, local_scope_depth, label.size(), label.data());
+}
+
+DebugScope::~DebugScope() {
+    glPopDebugGroup();
+    global_scope_depth--;
+}
+
 } // namespace OpenGL

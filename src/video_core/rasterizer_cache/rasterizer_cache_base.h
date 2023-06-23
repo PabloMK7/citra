@@ -56,6 +56,7 @@ class RasterizerCache {
     using Sampler = typename T::Sampler;
     using Surface = typename T::Surface;
     using Framebuffer = typename T::Framebuffer;
+    using DebugScope = typename T::DebugScope;
 
     using SurfaceMap = boost::icl::interval_map<PAddr, SurfaceId, boost::icl::partial_absorber,
                                                 std::less, boost::icl::inplace_plus,

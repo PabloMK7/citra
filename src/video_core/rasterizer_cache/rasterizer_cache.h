@@ -95,6 +95,9 @@ void RasterizerCache<T>::TickFrame() {
 
 template <class T>
 bool RasterizerCache<T>::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
+    const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
+                           "RasterizerCache::AccelerateTextureCopy ({})", config.DebugName()};
+
     // Texture copy size is aligned to 16 byte units
     const u32 copy_size = Common::AlignDown(config.texture_copy.size, 16);
     if (copy_size == 0) {
@@ -190,6 +193,9 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const GPU::Regs::DisplayTransferC
 
 template <class T>
 bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+    const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
+                           "RasterizerCache::AccelerateDisplayTransfer ({})", config.DebugName()};
+
     SurfaceParams src_params;
     src_params.addr = config.GetPhysicalInputAddress();
     src_params.width = config.output_width;
@@ -250,6 +256,9 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTrans
 
 template <class T>
 bool RasterizerCache<T>::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+    const DebugScope scope{runtime, Common::Vec4f{1.f, 0.f, 1.f, 1.f},
+                           "RasterizerCache::AccelerateFill ({})", config.DebugName()};
+
     SurfaceParams params;
     params.addr = config.GetStartAddress();
     params.end = config.GetEndAddress();
@@ -924,10 +933,18 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
 
     SurfaceRegions validate_regions = surface.invalid_regions & validate_interval;
 
+    if (validate_regions.empty()) {
+        return;
+    }
+
     auto notify_validated = [&](SurfaceInterval interval) {
         surface.MarkValid(interval);
         validate_regions.erase(interval);
     };
+
+    const DebugScope scope{runtime, Common::Vec4f{0.f, 1.f, 0.f, 1.f},
+                           "RasterizerCache::ValidateSurface (from {:#x} to {:#x})", addr,
+                           addr + size};
 
     u32 level = surface.LevelOf(addr);
     SurfaceInterval level_interval = surface.LevelInterval(level);
@@ -1213,10 +1230,14 @@ void RasterizerCache<T>::FlushRegion(PAddr addr, u32 size, SurfaceId flush_surfa
         // Small sizes imply that this most likely comes from the cpu, flush the entire region
         // the point is to avoid thousands of small writes every frame if the cpu decides to
         // access that region, anything higher than 8 you're guaranteed it comes from a service
-        const auto interval = size <= 8 ? region : region & flush_interval;
+        auto interval = size <= 8 ? region : region & flush_interval;
         if (flush_surface_id && surface_id != flush_surface_id) {
             continue;
         }
+
+        const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 0.f, 1.f},
+                               "RasterizerCache::FlushRegion (from {:#x} to {:#x})",
+                               interval.lower(), interval.upper()};
 
         // Sanity check, this surface is the last one that marked this region dirty
         Surface& surface = slot_surfaces[surface_id];
@@ -1224,8 +1245,19 @@ void RasterizerCache<T>::FlushRegion(PAddr addr, u32 size, SurfaceId flush_surfa
 
         if (surface.type == SurfaceType::Fill) {
             DownloadFillSurface(surface, interval);
-        } else {
-            DownloadSurface(surface, interval);
+            flushed_intervals += interval;
+            continue;
+        }
+
+        // Download each requested level of the surface.
+        const u32 start_level = surface.LevelOf(interval.lower());
+        const u32 end_level = surface.LevelOf(interval.upper());
+        for (u32 level = start_level; level <= end_level; level++) {
+            const auto download_interval = interval & surface.LevelInterval(level);
+            if (boost::icl::is_empty(download_interval)) {
+                continue;
+            }
+            DownloadSurface(surface, download_interval);
         }
 
         flushed_intervals += interval;

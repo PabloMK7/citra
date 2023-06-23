@@ -116,6 +116,12 @@ struct Regs {
         inline u32 GetEndAddress() const {
             return DecodeAddressRegister(address_end);
         }
+
+        inline std::string DebugName() const {
+            return fmt::format("from {:#X} to {:#X} with {}-bit value {:#X}", GetStartAddress(),
+                               GetEndAddress(), fill_32bit ? "32" : (fill_24bit ? "24" : "16"),
+                               value_32bit);
+        }
     } memory_fill_config[2];
     ASSERT_MEMBER_SIZE(memory_fill_config[0], 0x10);
 
@@ -174,6 +180,13 @@ struct Regs {
 
         inline u32 GetPhysicalOutputAddress() const {
             return DecodeAddressRegister(output_address);
+        }
+
+        inline std::string DebugName() const noexcept {
+            return fmt::format("from {:#x} to {:#x} with {} scaling and stride {}, width {}",
+                               GetPhysicalInputAddress(), GetPhysicalOutputAddress(),
+                               scaling == NoScale ? "no" : (scaling == ScaleX ? "X" : "XY"),
+                               input_width, output_width);
         }
 
         union {

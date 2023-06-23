@@ -765,6 +765,14 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
         return false;
     }
 
+    const DebugScope scope{runtime,
+                           Common::Vec4f{0.f, 1.f, 1.f, 1.f},
+                           "RasterizerOpenGL::AccelerateDisplay ({}x{} {} at {:#X})",
+                           src_params.width,
+                           src_params.height,
+                           VideoCore::PixelFormatAsString(src_params.pixel_format),
+                           src_params.addr};
+
     const Surface& src_surface = res_cache.GetSurface(src_surface_id);
     const u32 scaled_width = src_surface.GetScaledWidth();
     const u32 scaled_height = src_surface.GetScaledHeight();

@@ -230,11 +230,26 @@ private:
     OGLSampler sampler;
 };
 
+class DebugScope {
+public:
+    template <typename... T>
+    explicit DebugScope(TextureRuntime& runtime, Common::Vec4f color,
+                        fmt::format_string<T...> format, T... args)
+        : DebugScope{runtime, color, fmt::format(format, std::forward<T>(args)...)} {}
+    explicit DebugScope(TextureRuntime& runtime, Common::Vec4f, std::string_view label);
+    ~DebugScope();
+
+private:
+    inline static GLuint global_scope_depth = 0;
+    const GLuint local_scope_depth{};
+};
+
 struct Traits {
     using Runtime = OpenGL::TextureRuntime;
     using Sampler = OpenGL::Sampler;
     using Surface = OpenGL::Surface;
     using Framebuffer = OpenGL::Framebuffer;
+    using DebugScope = OpenGL::DebugScope;
 };
 
 using RasterizerCache = VideoCore::RasterizerCache<Traits>;
