@@ -8,9 +8,12 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include "common/file_util.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
+
+namespace FileUtil {
+class IOFile;
+}
 
 namespace Common::Log {
 
@@ -36,6 +39,7 @@ struct Entry {
 class Backend {
 public:
     virtual ~Backend() = default;
+
     virtual void SetFilter(const Filter& new_filter) {
         filter = new_filter;
     }
@@ -51,6 +55,8 @@ private:
  */
 class ConsoleBackend : public Backend {
 public:
+    ~ConsoleBackend() override;
+
     static const char* Name() {
         return "console";
     }
@@ -65,6 +71,8 @@ public:
  */
 class ColorConsoleBackend : public Backend {
 public:
+    ~ColorConsoleBackend() override;
+
     static const char* Name() {
         return "color_console";
     }
@@ -80,6 +88,8 @@ public:
  */
 class LogcatBackend : public Backend {
 public:
+    ~LogcatBackend() override;
+
     static const char* Name() {
         return "logcat";
     }
@@ -95,6 +105,8 @@ public:
  */
 class FileBackend : public Backend {
 public:
+    ~FileBackend() override;
+
     explicit FileBackend(const std::string& filename);
 
     static const char* Name() {
@@ -108,7 +120,7 @@ public:
     void Write(const Entry& entry) override;
 
 private:
-    FileUtil::IOFile file;
+    std::unique_ptr<FileUtil::IOFile> file;
     std::size_t bytes_written = 0;
 };
 
@@ -117,6 +129,8 @@ private:
  */
 class DebuggerBackend : public Backend {
 public:
+    ~DebuggerBackend() override;
+
     static const char* Name() {
         return "debugger";
     }

@@ -16,6 +16,7 @@
 #define _SH_DENYWR 0
 #endif
 #include "common/assert.h"
+#include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
@@ -133,13 +134,19 @@ private:
     std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
 };
 
+ConsoleBackend::~ConsoleBackend() = default;
+
 void ConsoleBackend::Write(const Entry& entry) {
     PrintMessage(entry);
 }
 
+ColorConsoleBackend::~ColorConsoleBackend() = default;
+
 void ColorConsoleBackend::Write(const Entry& entry) {
     PrintColoredMessage(entry);
 }
+
+LogcatBackend::~LogcatBackend() = default;
 
 void LogcatBackend::Write(const Entry& entry) {
     PrintMessageToLogcat(entry);
@@ -157,19 +164,21 @@ FileBackend::FileBackend(const std::string& filename) {
 
     // _SH_DENYWR allows read only access to the file for other programs.
     // It is #defined to 0 on other platforms
-    file = FileUtil::IOFile(filename, "w", _SH_DENYWR);
+    file = std::make_unique<FileUtil::IOFile>(filename, "w", _SH_DENYWR);
 }
+
+FileBackend::~FileBackend() = default;
 
 void FileBackend::Write(const Entry& entry) {
     // prevent logs from going over the maximum size (in case its spamming and the user doesn't
     // know)
     constexpr std::size_t MAX_BYTES_WRITTEN = 50 * 1024L * 1024L;
-    if (!file.IsOpen() || bytes_written > MAX_BYTES_WRITTEN) {
+    if (!file->IsOpen() || bytes_written > MAX_BYTES_WRITTEN) {
         return;
     }
-    bytes_written += file.WriteString(FormatLogMessage(entry).append(1, '\n'));
+    bytes_written += file->WriteString(FormatLogMessage(entry).append(1, '\n'));
     if (entry.log_level >= Level::Error) {
-        file.Flush();
+        file->Flush();
     }
 }
 
