@@ -196,8 +196,12 @@ public final class SettingsFragmentPresenter {
 
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_REGION_VALUE, Settings.SECTION_SYSTEM, R.string.emulated_region, 0, R.array.regionNames, R.array.regionValues, -1, region));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_LANGUAGE, Settings.SECTION_SYSTEM, R.string.emulated_language, 0, R.array.languageNames, R.array.languageValues, 1, language));
+
+        sl.add(new HeaderSetting(null, null, R.string.clock, 0));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_INIT_CLOCK, Settings.SECTION_SYSTEM, R.string.init_clock, R.string.init_clock_description, R.array.systemClockNames, R.array.systemClockValues, 0, systemClock));
         sl.add(new DateTimeSetting(SettingsFile.KEY_INIT_TIME, Settings.SECTION_SYSTEM, R.string.init_time, R.string.init_time_description, "2000-01-01 00:00:01", dateTime));
+
+        sl.add(new HeaderSetting(null, null, R.string.plugin_loader, 0));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_PLUGIN_LOADER, Settings.SECTION_SYSTEM, R.string.plugin_loader, R.string.plugin_loader_description, false, pluginLoader));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_ALLOW_PLUGIN_LOADER, Settings.SECTION_SYSTEM, R.string.allow_plugin_loader, R.string.allow_plugin_loader_description, true, allowPluginLoader));
     }
