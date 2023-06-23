@@ -147,6 +147,8 @@ void GMainWindow::ShowTelemetryCallout() {
 const int GMainWindow::max_recent_files_item;
 
 static void InitializeLogging() {
+    using namespace Common;
+
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Log::SetGlobalFilter(log_filter);

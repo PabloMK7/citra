@@ -38,23 +38,23 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
         break;
     }
 
-    Log::Level level{};
+    Common::Log::Level level{};
     switch (severity) {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        level = Log::Level::Error;
+        level = Common::Log::Level::Error;
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        level = Log::Level::Info;
+        level = Common::Log::Level::Info;
         break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-        level = Log::Level::Debug;
+        level = Common::Log::Level::Debug;
         break;
     default:
-        level = Log::Level::Info;
+        level = Common::Log::Level::Info;
     }
 
-    LOG_GENERIC(Log::Class::Render_Vulkan, level, "{}: {}",
+    LOG_GENERIC(Common::Log::Class::Render_Vulkan, level, "{}: {}",
                 callback_data->pMessageIdName ? callback_data->pMessageIdName : "<null>",
                 callback_data->pMessage ? callback_data->pMessage : "<null>");
 
@@ -69,25 +69,25 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT 
                                                           const char* pMessage, void* pUserData) {
 
     const VkDebugReportFlagBitsEXT severity = static_cast<VkDebugReportFlagBitsEXT>(flags);
-    Log::Level level{};
+    Common::Log::Level level{};
     switch (severity) {
     case VK_DEBUG_REPORT_ERROR_BIT_EXT:
-        level = Log::Level::Error;
+        level = Common::Log::Level::Error;
         break;
     case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
-        level = Log::Level::Warning;
+        level = Common::Log::Level::Warning;
         break;
     case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
     case VK_DEBUG_REPORT_WARNING_BIT_EXT:
     case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
-        level = Log::Level::Debug;
+        level = Common::Log::Level::Debug;
         break;
     default:
-        level = Log::Level::Info;
+        level = Common::Log::Level::Info;
     }
 
     const vk::DebugReportObjectTypeEXT type = static_cast<vk::DebugReportObjectTypeEXT>(objectType);
-    LOG_GENERIC(Log::Class::Render_Vulkan, level,
+    LOG_GENERIC(Common::Log::Class::Render_Vulkan, level,
                 "type = {}, object = {} | MessageCode = {:#x}, LayerPrefix = {} | {}",
                 vk::to_string(type), object, messageCode, pLayerPrefix, pMessage);
 

@@ -175,6 +175,8 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
 }
 
 static void InitializeLogging() {
+    using namespace Common;
+
     Log::Filter log_filter(Log::Level::Debug);
     log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Log::SetGlobalFilter(log_filter);

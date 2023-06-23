@@ -12,7 +12,7 @@
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
 
-namespace Log {
+namespace Common::Log {
 
 /**
  * A log entry. Log entries are store in a structured format to permit more varied output
@@ -143,4 +143,4 @@ const char* GetLogClassName(Class log_class);
  */
 const char* GetLevelName(Level log_level);
 
-} // namespace Log
+} // namespace Common::Log

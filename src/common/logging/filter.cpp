@@ -7,7 +7,7 @@
 #include "common/logging/filter.h"
 #include "common/string_util.h"
 
-namespace Log {
+namespace Common::Log {
 namespace {
 template <typename It>
 Level GetLevelByName(const It begin, const It end) {
@@ -96,4 +96,4 @@ bool Filter::CheckMessage(Class log_class, Level level) const {
     return static_cast<u8>(level) >=
            static_cast<u8>(class_levels[static_cast<std::size_t>(log_class)]);
 }
-} // namespace Log
+} // namespace Common::Log

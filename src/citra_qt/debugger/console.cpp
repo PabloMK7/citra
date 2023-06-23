@@ -29,13 +29,13 @@ void ToggleConsole() {
             freopen_s(&temp, "CONIN$", "r", stdin);
             freopen_s(&temp, "CONOUT$", "w", stdout);
             freopen_s(&temp, "CONOUT$", "w", stderr);
-            Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
+            Common::Log::AddBackend(std::make_unique<Common::Log::ColorConsoleBackend>());
         }
     } else {
         if (FreeConsole()) {
             // In order to close the console, we have to also detach the streams on it.
             // Just redirect them to NUL if there is no console window
-            Log::RemoveBackend(Log::ColorConsoleBackend::Name());
+            Common::Log::RemoveBackend(Common::Log::ColorConsoleBackend::Name());
             freopen_s(&temp, "NUL", "r", stdin);
             freopen_s(&temp, "NUL", "w", stdout);
             freopen_s(&temp, "NUL", "w", stderr);

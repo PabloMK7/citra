@@ -239,10 +239,10 @@ ResultCode VMManager::ReprotectRange(VAddr target, u32 size, VMAPermission new_p
     return RESULT_SUCCESS;
 }
 
-void VMManager::LogLayout(Log::Level log_level) const {
+void VMManager::LogLayout(Common::Log::Level log_level) const {
     for (const auto& p : vma_map) {
         const VirtualMemoryArea& vma = p.second;
-        LOG_GENERIC(::Log::Class::Kernel, log_level, "{:08X} - {:08X}  size: {:8X} {}{}{} {}",
+        LOG_GENERIC(Common::Log::Class::Kernel, log_level, "{:08X} - {:08X}  size: {:8X} {}{}{} {}",
                     vma.base, vma.base + vma.size, vma.size,
                     (u8)vma.permissions & (u8)VMAPermission::Read ? 'R' : '-',
                     (u8)vma.permissions & (u8)VMAPermission::Write ? 'W' : '-',

@@ -150,6 +150,8 @@ static void SaveBanList(const Network::Room::BanList& ban_list, const std::strin
 }
 
 static void InitializeLogging(const std::string& log_file) {
+    using namespace Common;
+
     Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
 
     const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);

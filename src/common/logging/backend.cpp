@@ -22,7 +22,7 @@
 #include "common/string_util.h"
 #include "common/threadsafe_queue.h"
 
-namespace Log {
+namespace Common::Log {
 
 Filter filter;
 void SetGlobalFilter(const Filter& f) {
@@ -302,4 +302,4 @@ void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
     instance.PushEntry(log_class, log_level, filename, line_num, function,
                        fmt::vformat(format, args));
 }
-} // namespace Log
+} // namespace Common::Log

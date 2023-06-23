@@ -9,7 +9,7 @@
 #include "common/common_types.h"
 #include "common/logging/formatter.h"
 
-namespace Log {
+namespace Common::Log {
 
 // trims up to and including the last of ../, ..\, src/, src\ in a string
 constexpr const char* TrimSourcePath(std::string_view source) {
@@ -173,33 +173,39 @@ void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsig
                       fmt::make_format_args(args...));
 }
 
-} // namespace Log
+} // namespace Common::Log
 
 // Define the fmt lib macros
 #define LOG_GENERIC(log_class, log_level, ...)                                                     \
-    ::Log::FmtLogMessage(log_class, log_level, ::Log::TrimSourcePath(__FILE__), __LINE__,          \
-                         __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(log_class, log_level, Common::Log::TrimSourcePath(__FILE__),        \
+                               __LINE__, __func__, __VA_ARGS__)
 
 #ifdef _DEBUG
 #define LOG_TRACE(log_class, ...)                                                                  \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Trace,                             \
-                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(Common::Log::Class::log_class, Common::Log::Level::Trace,           \
+                               Common::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
+                               __VA_ARGS__)
 #else
 #define LOG_TRACE(log_class, fmt, ...) (void(0))
 #endif
 
 #define LOG_DEBUG(log_class, ...)                                                                  \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Debug,                             \
-                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(Common::Log::Class::log_class, Common::Log::Level::Debug,           \
+                               Common::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
+                               __VA_ARGS__)
 #define LOG_INFO(log_class, ...)                                                                   \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Info,                              \
-                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(Common::Log::Class::log_class, Common::Log::Level::Info,            \
+                               Common::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
+                               __VA_ARGS__)
 #define LOG_WARNING(log_class, ...)                                                                \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Warning,                           \
-                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(Common::Log::Class::log_class, Common::Log::Level::Warning,         \
+                               Common::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
+                               __VA_ARGS__)
 #define LOG_ERROR(log_class, ...)                                                                  \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Error,                             \
-                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(Common::Log::Class::log_class, Common::Log::Level::Error,           \
+                               Common::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
+                               __VA_ARGS__)
 #define LOG_CRITICAL(log_class, ...)                                                               \
-    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Critical,                          \
-                         ::Log::TrimSourcePath(__FILE__), __LINE__, __func__, __VA_ARGS__)
+    Common::Log::FmtLogMessage(Common::Log::Class::log_class, Common::Log::Level::Critical,        \
+                               Common::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
+                               __VA_ARGS__)
