@@ -9,7 +9,7 @@
 #include "citra_qt/debugger/console.h"
 #include "citra_qt/uisettings.h"
 #include "common/file_util.h"
-#include "common/logging/log.h"
+#include "common/logging/backend.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "ui_configure_debug.h"

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <chrono>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -16,21 +15,6 @@ class IOFile;
 }
 
 namespace Common::Log {
-
-/**
- * A log entry. Log entries are store in a structured format to permit more varied output
- * formatting on different frontends, as well as facilitating filtering and aggregation.
- */
-struct Entry {
-    std::chrono::microseconds timestamp;
-    Class log_class{};
-    Level log_level{};
-    const char* filename = nullptr;
-    unsigned int line_num = 0;
-    std::string function;
-    std::string message;
-    bool final_entry = false;
-};
 
 /**
  * Interface for logging backends. As loggers can be created and removed at runtime, this can be
@@ -147,14 +131,9 @@ void RemoveBackend(std::string_view backend_name);
 Backend* GetBackend(std::string_view backend_name);
 
 /**
- * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
- * instead of underscores as in the enumeration.
+ * The global filter will prevent any messages from even being processed if they are filtered. Each
+ * backend can have a filter, but if the level is lower than the global filter, the backend will
+ * never get the message
  */
-const char* GetLogClassName(Class log_class);
-
-/**
- * Returns the name of the passed log level as a C-string.
- */
-const char* GetLevelName(Level log_level);
-
+void SetGlobalFilter(const Filter& filter);
 } // namespace Common::Log
