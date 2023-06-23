@@ -10,9 +10,17 @@
 struct SDL_Renderer;
 struct SDL_Surface;
 
+namespace VideoCore {
+enum class ScreenId : u32;
+}
+
+namespace Core {
+class System;
+}
+
 class EmuWindow_SDL2_SW : public EmuWindow_SDL2 {
 public:
-    explicit EmuWindow_SDL2_SW(bool fullscreen, bool is_secondary);
+    explicit EmuWindow_SDL2_SW(Core::System& system, bool fullscreen, bool is_secondary);
     ~EmuWindow_SDL2_SW();
 
     void Present() override;
@@ -22,7 +30,10 @@ public:
 
 private:
     /// Loads a framebuffer to an SDL surface
-    SDL_Surface* LoadFramebuffer(int fb_id);
+    SDL_Surface* LoadFramebuffer(VideoCore::ScreenId screen_id);
+
+    /// The system class.
+    Core::System& system;
 
     /// The SDL software renderer
     SDL_Renderer* renderer;

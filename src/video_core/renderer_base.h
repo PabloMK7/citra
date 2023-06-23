@@ -18,6 +18,12 @@ class System;
 
 namespace VideoCore {
 
+enum class ScreenId : u32 {
+    TopLeft,
+    TopRight,
+    Bottom,
+};
+
 struct RendererSettings {
     // Screenshot
     std::atomic_bool screenshot_requested{false};
@@ -75,7 +81,7 @@ public:
         return current_fps;
     }
 
-    int GetCurrentFrame() const {
+    s32 GetCurrentFrame() const {
         return current_frame;
     }
 
@@ -108,7 +114,7 @@ protected:
     Frontend::EmuWindow& render_window;    ///< Reference to the render window handle.
     Frontend::EmuWindow* secondary_window; ///< Reference to the secondary render window handle.
     f32 current_fps = 0.0f;                ///< Current framerate, should be set by the renderer
-    int current_frame = 0;                 ///< Current frame, should be set by the renderer
+    s32 current_frame = 0;                 ///< Current frame, should be set by the renderer
 };
 
 } // namespace VideoCore

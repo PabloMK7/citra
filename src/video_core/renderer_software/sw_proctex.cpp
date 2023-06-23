@@ -4,17 +4,18 @@
 
 #include <array>
 #include <cmath>
-#include "common/math_util.h"
 #include "video_core/renderer_software/sw_proctex.h"
 
-namespace Pica::Rasterizer {
+namespace SwRenderer {
 
-using ProcTexClamp = TexturingRegs::ProcTexClamp;
-using ProcTexShift = TexturingRegs::ProcTexShift;
-using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
-using ProcTexFilter = TexturingRegs::ProcTexFilter;
+namespace {
+using ProcTexClamp = Pica::TexturingRegs::ProcTexClamp;
+using ProcTexShift = Pica::TexturingRegs::ProcTexShift;
+using ProcTexCombiner = Pica::TexturingRegs::ProcTexCombiner;
+using ProcTexFilter = Pica::TexturingRegs::ProcTexFilter;
+using Pica::f16;
 
-static float LookupLUT(const std::array<State::ProcTex::ValueEntry, 128>& lut, float coord) {
+float LookupLUT(const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut, float coord) {
     // For NoiseLUT/ColorMap/AlphaMap, coord=0.0 is lut[0], coord=127.0/128.0 is lut[127] and
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
     // value entries and difference entries.
@@ -26,13 +27,13 @@ static float LookupLUT(const std::array<State::ProcTex::ValueEntry, 128>& lut, f
 
 // These function are used to generate random noise for procedural texture. Their results are
 // verified against real hardware, but it's not known if the algorithm is the same as hardware.
-static unsigned int NoiseRand1D(unsigned int v) {
+unsigned int NoiseRand1D(unsigned int v) {
     static constexpr std::array<unsigned int, 16> table{
         {0, 4, 10, 8, 4, 9, 7, 12, 5, 15, 13, 14, 11, 15, 2, 11}};
     return ((v % 9 + 2) * 3 & 0xF) ^ table[(v / 9) & 0xF];
 }
 
-static float NoiseRand2D(unsigned int x, unsigned int y) {
+float NoiseRand2D(unsigned int x, unsigned int y) {
     static constexpr std::array<unsigned int, 16> table{
         {10, 2, 15, 8, 0, 7, 4, 5, 5, 13, 2, 6, 13, 9, 3, 14}};
     unsigned int u2 = NoiseRand1D(x);
@@ -45,11 +46,12 @@ static float NoiseRand2D(unsigned int x, unsigned int y) {
     return -1.0f + v2 * 2.0f / 15.0f;
 }
 
-static float NoiseCoef(float u, float v, const TexturingRegs& regs, const State::ProcTex& state) {
-    const float freq_u = float16::FromRaw(regs.proctex_noise_frequency.u).ToFloat32();
-    const float freq_v = float16::FromRaw(regs.proctex_noise_frequency.v).ToFloat32();
-    const float phase_u = float16::FromRaw(regs.proctex_noise_u.phase).ToFloat32();
-    const float phase_v = float16::FromRaw(regs.proctex_noise_v.phase).ToFloat32();
+float NoiseCoef(float u, float v, const Pica::TexturingRegs& regs,
+                const Pica::State::ProcTex& state) {
+    const float freq_u = f16::FromRaw(regs.proctex_noise_frequency.u).ToFloat32();
+    const float freq_v = f16::FromRaw(regs.proctex_noise_frequency.v).ToFloat32();
+    const float phase_u = f16::FromRaw(regs.proctex_noise_u.phase).ToFloat32();
+    const float phase_v = f16::FromRaw(regs.proctex_noise_v.phase).ToFloat32();
     const float x = 9 * freq_u * std::abs(u + phase_u);
     const float y = 9 * freq_v * std::abs(v + phase_v);
     const int x_int = static_cast<int>(x);
@@ -66,7 +68,7 @@ static float NoiseCoef(float u, float v, const TexturingRegs& regs, const State:
     return Common::BilinearInterp(g0, g1, g2, g3, x_noise, y_noise);
 }
 
-static float GetShiftOffset(float v, ProcTexShift mode, ProcTexClamp clamp_mode) {
+float GetShiftOffset(float v, ProcTexShift mode, ProcTexClamp clamp_mode) {
     const float offset = (clamp_mode == ProcTexClamp::MirroredRepeat) ? 1 : 0.5f;
     switch (mode) {
     case ProcTexShift::None:
@@ -81,7 +83,7 @@ static float GetShiftOffset(float v, ProcTexShift mode, ProcTexClamp clamp_mode)
     }
 };
 
-static void ClampCoord(float& coord, ProcTexClamp mode) {
+void ClampCoord(float& coord, ProcTexClamp mode) {
     switch (mode) {
     case ProcTexClamp::ToZero:
         if (coord > 1.0f)
@@ -112,8 +114,8 @@ static void ClampCoord(float& coord, ProcTexClamp mode) {
     }
 }
 
-static float CombineAndMap(float u, float v, ProcTexCombiner combiner,
-                           const std::array<State::ProcTex::ValueEntry, 128>& map_table) {
+float CombineAndMap(float u, float v, ProcTexCombiner combiner,
+                    const std::array<Pica::State::ProcTex::ValueEntry, 128>& map_table) {
     float f;
     switch (combiner) {
     case ProcTexCombiner::U:
@@ -122,28 +124,28 @@ static float CombineAndMap(float u, float v, ProcTexCombiner combiner,
     case ProcTexCombiner::U2:
         f = u * u;
         break;
-    case TexturingRegs::ProcTexCombiner::V:
+    case ProcTexCombiner::V:
         f = v;
         break;
-    case TexturingRegs::ProcTexCombiner::V2:
+    case ProcTexCombiner::V2:
         f = v * v;
         break;
-    case TexturingRegs::ProcTexCombiner::Add:
+    case ProcTexCombiner::Add:
         f = (u + v) * 0.5f;
         break;
-    case TexturingRegs::ProcTexCombiner::Add2:
+    case ProcTexCombiner::Add2:
         f = (u * u + v * v) * 0.5f;
         break;
-    case TexturingRegs::ProcTexCombiner::SqrtAdd2:
+    case ProcTexCombiner::SqrtAdd2:
         f = std::min(std::sqrt(u * u + v * v), 1.0f);
         break;
-    case TexturingRegs::ProcTexCombiner::Min:
+    case ProcTexCombiner::Min:
         f = std::min(u, v);
         break;
-    case TexturingRegs::ProcTexCombiner::Max:
+    case ProcTexCombiner::Max:
         f = std::max(u, v);
         break;
-    case TexturingRegs::ProcTexCombiner::RMax:
+    case ProcTexCombiner::RMax:
         f = std::min(((u + v) * 0.5f + std::sqrt(u * u + v * v)) * 0.5f, 1.0f);
         break;
     default:
@@ -153,8 +155,10 @@ static float CombineAndMap(float u, float v, ProcTexCombiner combiner,
     }
     return LookupLUT(map_table, f);
 }
+} // Anonymous namespace
 
-Common::Vec4<u8> ProcTex(float u, float v, const TexturingRegs& regs, const State::ProcTex& state) {
+Common::Vec4<u8> ProcTex(float u, float v, const Pica::TexturingRegs& regs,
+                         const Pica::State::ProcTex& state) {
     u = std::abs(u);
     v = std::abs(v);
 
@@ -218,4 +222,4 @@ Common::Vec4<u8> ProcTex(float u, float v, const TexturingRegs& regs, const Stat
     }
 }
 
-} // namespace Pica::Rasterizer
+} // namespace SwRenderer

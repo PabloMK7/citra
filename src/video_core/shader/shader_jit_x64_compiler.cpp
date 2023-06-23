@@ -813,7 +813,7 @@ void JitShader::Compile_JMP(Instruction instr) {
     }
 }
 
-static void Emit(GSEmitter* emitter, Common::Vec4<float24> (*output)[16]) {
+static void Emit(GSEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
     emitter->Emit(*output);
 }
 

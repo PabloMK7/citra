@@ -85,8 +85,8 @@ private:
     const Regs& regs;
     Shader::GSUnitState& unit;
     Shader::AttributeBuffer attribute_buffer;
-    Common::Vec4<float24>* buffer_cur;
-    Common::Vec4<float24>* buffer_end;
+    Common::Vec4<f24>* buffer_cur;
+    Common::Vec4<f24>* buffer_end;
     unsigned int vs_output_num;
 
     GeometryPipeline_Point() : regs(g_state.regs), unit(g_state.gs_unit) {}
@@ -146,7 +146,7 @@ public:
         DEBUG_ASSERT(need_index);
 
         // The number of vertex input is put to the uniform register
-        float24 vertex_num = float24::FromFloat32(static_cast<float>(val));
+        f24 vertex_num = f24::FromFloat32(static_cast<float>(val));
         setup.uniforms.f[0] = Common::MakeVec(vertex_num, vertex_num, vertex_num, vertex_num);
 
         // The second uniform register and so on are used for receiving input vertices
@@ -183,7 +183,7 @@ private:
     Shader::ShaderSetup& setup;
     unsigned int main_vertex_num;
     unsigned int total_vertex_num;
-    Common::Vec4<float24>* buffer_cur;
+    Common::Vec4<f24>* buffer_cur;
     unsigned int vs_output_num;
 
     GeometryPipeline_VariablePrimitive() : regs(g_state.regs), setup(g_state.gs) {}
@@ -257,9 +257,9 @@ public:
 private:
     [[maybe_unused]] const Regs& regs;
     Shader::ShaderSetup& setup;
-    Common::Vec4<float24>* buffer_begin;
-    Common::Vec4<float24>* buffer_cur;
-    Common::Vec4<float24>* buffer_end;
+    Common::Vec4<f24>* buffer_begin;
+    Common::Vec4<f24>* buffer_cur;
+    Common::Vec4<f24>* buffer_end;
     unsigned int vs_output_num;
 
     GeometryPipeline_FixedPrimitive() : regs(g_state.regs), setup(g_state.gs) {}

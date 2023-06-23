@@ -4,16 +4,18 @@
 
 #pragma once
 
-#include <tuple>
+#include <span>
+#include <utility>
+
 #include "common/quaternion.h"
 #include "common/vector_math.h"
 #include "video_core/pica_state.h"
 
-namespace Pica {
+namespace SwRenderer {
 
-std::tuple<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
+std::pair<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
     const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
-    const Common::Quaternion<float>& normquat, const Common::Vec3<float>& view,
-    const Common::Vec4<u8> (&texture_color)[4]);
+    const Common::Quaternion<f32>& normquat, const Common::Vec3f& view,
+    std::span<const Common::Vec4<u8>, 4> texture_color);
 
-} // namespace Pica
+} // namespace SwRenderer

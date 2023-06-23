@@ -80,7 +80,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
     const auto& program_code = setup.program_code;
 
     // Placeholder for invalid inputs
-    static float24 dummy_vec4_float24[4];
+    static f24 dummy_vec4_float24[4];
 
     unsigned iteration = 0;
     bool exit_loop = false;
@@ -111,7 +111,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 
         debug_data.max_offset = std::max<u32>(debug_data.max_offset, 1 + program_counter);
 
-        auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
+        auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const f24* {
             switch (source_reg.GetRegisterType()) {
             case RegisterType::Input:
                 return &state.registers.input[source_reg.GetIndex()].x;
@@ -137,15 +137,15 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     ? 0
                     : state.address_registers[instr.common.address_register_index - 1];
 
-            const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted) +
-                                                        (is_inverted ? 0 : address_offset));
-            const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted) +
-                                                        (is_inverted ? address_offset : 0));
+            const f24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted) +
+                                                    (is_inverted ? 0 : address_offset));
+            const f24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted) +
+                                                    (is_inverted ? address_offset : 0));
 
             const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
             const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
 
-            float24 src1[4] = {
+            f24 src1[4] = {
                 src1_[(int)swizzle.src1_selector_0.Value()],
                 src1_[(int)swizzle.src1_selector_1.Value()],
                 src1_[(int)swizzle.src1_selector_2.Value()],
@@ -157,7 +157,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 src1[2] = -src1[2];
                 src1[3] = -src1[3];
             }
-            float24 src2[4] = {
+            f24 src2[4] = {
                 src2_[(int)swizzle.src2_selector_0.Value()],
                 src2_[(int)swizzle.src2_selector_1.Value()],
                 src2_[(int)swizzle.src2_selector_2.Value()],
@@ -170,12 +170,11 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 src2[3] = -src2[3];
             }
 
-            float24* dest =
-                (instr.common.dest.Value() < 0x10)
-                    ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
-                : (instr.common.dest.Value() < 0x20)
-                    ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
-                    : dummy_vec4_float24;
+            f24* dest = (instr.common.dest.Value() < 0x10)
+                            ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
+                        : (instr.common.dest.Value() < 0x20)
+                            ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
+                            : dummy_vec4_float24;
 
             debug_data.max_opdesc_id =
                 std::max<u32>(debug_data.max_opdesc_id, 1 + instr.common.operand_desc_id);
@@ -216,7 +215,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
 
-                    dest[i] = float24::FromFloat32(std::floor(src1[i].ToFloat32()));
+                    dest[i] = f24::FromFloat32(std::floor(src1[i].ToFloat32()));
                 }
                 Record<DebugDataRecord::DEST_OUT>(debug_data, iteration, dest);
                 break;
@@ -263,11 +262,10 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 
                 OpCode::Id opcode = instr.opcode.Value().EffectiveOpCode();
                 if (opcode == OpCode::Id::DPH || opcode == OpCode::Id::DPHI)
-                    src1[3] = float24::FromFloat32(1.0f);
+                    src1[3] = f24::One();
 
                 int num_components = (opcode == OpCode::Id::DP3) ? 3 : 4;
-                float24 dot = std::inner_product(src1, src1 + num_components, src2,
-                                                 float24::FromFloat32(0.f));
+                f24 dot = std::inner_product(src1, src1 + num_components, src2, f24::Zero());
 
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -283,7 +281,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             case OpCode::Id::RCP: {
                 Record<DebugDataRecord::SRC1>(debug_data, iteration, src1);
                 Record<DebugDataRecord::DEST_IN>(debug_data, iteration, dest);
-                float24 rcp_res = float24::FromFloat32(1.0f / src1[0].ToFloat32());
+                f24 rcp_res = f24::FromFloat32(1.0f / src1[0].ToFloat32());
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -298,7 +296,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             case OpCode::Id::RSQ: {
                 Record<DebugDataRecord::SRC1>(debug_data, iteration, src1);
                 Record<DebugDataRecord::DEST_IN>(debug_data, iteration, dest);
-                float24 rsq_res = float24::FromFloat32(1.0f / std::sqrt(src1[0].ToFloat32()));
+                f24 rsq_res = f24::FromFloat32(1.0f / std::sqrt(src1[0].ToFloat32()));
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -345,8 +343,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
 
-                    dest[i] = (src1[i] >= src2[i]) ? float24::FromFloat32(1.0f)
-                                                   : float24::FromFloat32(0.0f);
+                    dest[i] = (src1[i] >= src2[i]) ? f24::One() : f24::Zero();
                 }
                 Record<DebugDataRecord::DEST_OUT>(debug_data, iteration, dest);
                 break;
@@ -360,8 +357,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
 
-                    dest[i] = (src1[i] < src2[i]) ? float24::FromFloat32(1.0f)
-                                                  : float24::FromFloat32(0.0f);
+                    dest[i] = (src1[i] < src2[i]) ? f24::One() : f24::Zero();
                 }
                 Record<DebugDataRecord::DEST_OUT>(debug_data, iteration, dest);
                 break;
@@ -413,7 +409,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 Record<DebugDataRecord::DEST_IN>(debug_data, iteration, dest);
 
                 // EX2 only takes first component exp2 and writes it to all dest components
-                float24 ex2_res = float24::FromFloat32(std::exp2(src1[0].ToFloat32()));
+                f24 ex2_res = f24::FromFloat32(std::exp2(src1[0].ToFloat32()));
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -430,7 +426,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 Record<DebugDataRecord::DEST_IN>(debug_data, iteration, dest);
 
                 // LG2 only takes the first component log2 and writes it to all dest components
-                float24 lg2_res = float24::FromFloat32(std::log2(src1[0].ToFloat32()));
+                f24 lg2_res = f24::FromFloat32(std::log2(src1[0].ToFloat32()));
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -466,17 +462,17 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                         ? 0
                         : state.address_registers[instr.mad.address_register_index - 1];
 
-                const float24* src1_ = LookupSourceRegister(instr.mad.GetSrc1(is_inverted));
-                const float24* src2_ = LookupSourceRegister(instr.mad.GetSrc2(is_inverted) +
-                                                            (!is_inverted * address_offset));
-                const float24* src3_ = LookupSourceRegister(instr.mad.GetSrc3(is_inverted) +
-                                                            (is_inverted * address_offset));
+                const f24* src1_ = LookupSourceRegister(instr.mad.GetSrc1(is_inverted));
+                const f24* src2_ = LookupSourceRegister(instr.mad.GetSrc2(is_inverted) +
+                                                        (!is_inverted * address_offset));
+                const f24* src3_ = LookupSourceRegister(instr.mad.GetSrc3(is_inverted) +
+                                                        (is_inverted * address_offset));
 
                 const bool negate_src1 = ((bool)mad_swizzle.negate_src1 != false);
                 const bool negate_src2 = ((bool)mad_swizzle.negate_src2 != false);
                 const bool negate_src3 = ((bool)mad_swizzle.negate_src3 != false);
 
-                float24 src1[4] = {
+                f24 src1[4] = {
                     src1_[(int)mad_swizzle.src1_selector_0.Value()],
                     src1_[(int)mad_swizzle.src1_selector_1.Value()],
                     src1_[(int)mad_swizzle.src1_selector_2.Value()],
@@ -488,7 +484,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     src1[2] = -src1[2];
                     src1[3] = -src1[3];
                 }
-                float24 src2[4] = {
+                f24 src2[4] = {
                     src2_[(int)mad_swizzle.src2_selector_0.Value()],
                     src2_[(int)mad_swizzle.src2_selector_1.Value()],
                     src2_[(int)mad_swizzle.src2_selector_2.Value()],
@@ -500,7 +496,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     src2[2] = -src2[2];
                     src2[3] = -src2[3];
                 }
-                float24 src3[4] = {
+                f24 src3[4] = {
                     src3_[(int)mad_swizzle.src3_selector_0.Value()],
                     src3_[(int)mad_swizzle.src3_selector_1.Value()],
                     src3_[(int)mad_swizzle.src3_selector_2.Value()],
@@ -513,12 +509,11 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                     src3[3] = -src3[3];
                 }
 
-                float24* dest =
-                    (instr.mad.dest.Value() < 0x10)
-                        ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
-                    : (instr.mad.dest.Value() < 0x20)
-                        ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
-                        : dummy_vec4_float24;
+                f24* dest = (instr.mad.dest.Value() < 0x10)
+                                ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
+                            : (instr.mad.dest.Value() < 0x20)
+                                ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
+                                : dummy_vec4_float24;
 
                 Record<DebugDataRecord::SRC1>(debug_data, iteration, src1);
                 Record<DebugDataRecord::SRC2>(debug_data, iteration, src2);
@@ -687,7 +682,7 @@ DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
     DebugData<true> debug_data;
 
     // Setup input register table
-    state.registers.input.fill(Common::Vec4<float24>::AssignToAll(float24::Zero()));
+    state.registers.input.fill(Common::Vec4<f24>::AssignToAll(f24::Zero()));
     state.LoadInput(config, input);
     RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
     return debug_data;

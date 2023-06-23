@@ -12,7 +12,6 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
-#include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/hash.h"
@@ -29,7 +28,7 @@ using ProgramCode = std::array<u32, MAX_PROGRAM_CODE_LENGTH>;
 using SwizzleData = std::array<u32, MAX_SWIZZLE_DATA_LENGTH>;
 
 struct AttributeBuffer {
-    alignas(16) Common::Vec4<float24> attr[16];
+    alignas(16) Common::Vec4<f24> attr[16];
 
 private:
     friend class boost::serialization::access;
@@ -46,16 +45,16 @@ using VertexHandler = std::function<void(const AttributeBuffer&)>;
 using WindingSetter = std::function<void()>;
 
 struct OutputVertex {
-    Common::Vec4<float24> pos;
-    Common::Vec4<float24> quat;
-    Common::Vec4<float24> color;
-    Common::Vec2<float24> tc0;
-    Common::Vec2<float24> tc1;
-    float24 tc0_w;
+    Common::Vec4<f24> pos;
+    Common::Vec4<f24> quat;
+    Common::Vec4<f24> color;
+    Common::Vec2<f24> tc0;
+    Common::Vec2<f24> tc1;
+    f24 tc0_w;
     INSERT_PADDING_WORDS(1);
-    Common::Vec3<float24> view;
+    Common::Vec3<f24> view;
     INSERT_PADDING_WORDS(1);
-    Common::Vec2<float24> tc2;
+    Common::Vec2<f24> tc2;
 
     static void ValidateSemantics(const RasterizerRegs& regs);
     static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs,
@@ -76,8 +75,8 @@ private:
     friend class boost::serialization::access;
 };
 #define ASSERT_POS(var, pos)                                                                       \
-    static_assert(offsetof(OutputVertex, var) == pos * sizeof(float24), "Semantic at wrong "       \
-                                                                        "offset.")
+    static_assert(offsetof(OutputVertex, var) == pos * sizeof(f24), "Semantic at wrong "           \
+                                                                    "offset.")
 ASSERT_POS(pos, RasterizerRegs::VSOutputAttributes::POSITION_X);
 ASSERT_POS(quat, RasterizerRegs::VSOutputAttributes::QUATERNION_X);
 ASSERT_POS(color, RasterizerRegs::VSOutputAttributes::COLOR_R);
@@ -109,7 +108,7 @@ struct GSEmitter {
 
     GSEmitter();
     ~GSEmitter();
-    void Emit(std::span<Common::Vec4<float24>, 16> output_regs);
+    void Emit(std::span<Common::Vec4<f24>, 16> output_regs);
 
 private:
     friend class boost::serialization::access;
@@ -136,9 +135,9 @@ struct UnitState {
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
-        alignas(16) std::array<Common::Vec4<float24>, 16> input;
-        alignas(16) std::array<Common::Vec4<float24>, 16> temporary;
-        alignas(16) std::array<Common::Vec4<float24>, 16> output;
+        alignas(16) std::array<Common::Vec4<f24>, 16> input;
+        alignas(16) std::array<Common::Vec4<f24>, 16> temporary;
+        alignas(16) std::array<Common::Vec4<f24>, 16> output;
 
     private:
         friend class boost::serialization::access;
@@ -160,18 +159,16 @@ struct UnitState {
     GSEmitter* emitter_ptr;
 
     static std::size_t InputOffset(int register_index) {
-        return offsetof(UnitState, registers.input) +
-               register_index * sizeof(Common::Vec4<float24>);
+        return offsetof(UnitState, registers.input) + register_index * sizeof(Common::Vec4<f24>);
     }
 
     static std::size_t OutputOffset(int register_index) {
-        return offsetof(UnitState, registers.output) +
-               register_index * sizeof(Common::Vec4<float24>);
+        return offsetof(UnitState, registers.output) + register_index * sizeof(Common::Vec4<f24>);
     }
 
     static std::size_t TemporaryOffset(int register_index) {
         return offsetof(UnitState, registers.temporary) +
-               register_index * sizeof(Common::Vec4<float24>);
+               register_index * sizeof(Common::Vec4<f24>);
     }
 
     /**
@@ -219,13 +216,13 @@ private:
 struct Uniforms {
     // The float uniforms are accessed by the shader JIT using SSE instructions, and are
     // therefore required to be 16-byte aligned.
-    alignas(16) std::array<Common::Vec4<float24>, 96> f;
+    alignas(16) std::array<Common::Vec4<f24>, 96> f;
 
     std::array<bool, 16> b;
     std::array<Common::Vec4<u8>, 4> i;
 
     static std::size_t GetFloatUniformOffset(unsigned index) {
-        return offsetof(Uniforms, f) + index * sizeof(Common::Vec4<float24>);
+        return offsetof(Uniforms, f) + index * sizeof(Common::Vec4<f24>);
     }
 
     static std::size_t GetBoolUniformOffset(unsigned index) {

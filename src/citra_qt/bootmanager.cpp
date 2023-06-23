@@ -25,6 +25,7 @@
 #include "input_common/motion_emu.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/renderer_base.h"
+#include "video_core/renderer_software/renderer_software.h"
 #include "video_core/video_core.h"
 
 #ifdef HAS_OPENGL
@@ -288,7 +289,8 @@ private:
 #endif
 
 struct SoftwareRenderWidget : public RenderWidget {
-    explicit SoftwareRenderWidget(GRenderWindow* parent) : RenderWidget(parent) {}
+    explicit SoftwareRenderWidget(GRenderWindow* parent, Core::System& system_)
+        : RenderWidget(parent), system(system_) {}
 
     void Present() override {
         if (!isVisible()) {
@@ -298,61 +300,40 @@ struct SoftwareRenderWidget : public RenderWidget {
             return;
         }
 
+        using VideoCore::ScreenId;
+
         const auto layout{Layout::DefaultFrameLayout(width(), height(), false, false)};
         QPainter painter(this);
 
-        const auto draw_screen = [&](int fb_id) {
-            const auto rect = fb_id == 0 ? layout.top_screen : layout.bottom_screen;
-            const QImage screen = LoadFramebuffer(fb_id).scaled(rect.GetWidth(), rect.GetHeight());
+        const auto draw_screen = [&](ScreenId screen_id) {
+            const auto rect =
+                screen_id == ScreenId::TopLeft ? layout.top_screen : layout.bottom_screen;
+            const QImage screen =
+                LoadFramebuffer(screen_id).scaled(rect.GetWidth(), rect.GetHeight());
             painter.drawImage(rect.left, rect.top, screen);
         };
 
         painter.fillRect(rect(), qRgb(Settings::values.bg_red.GetValue() * 255,
                                       Settings::values.bg_green.GetValue() * 255,
                                       Settings::values.bg_blue.GetValue() * 255));
-        draw_screen(0);
-        draw_screen(1);
+        draw_screen(ScreenId::TopLeft);
+        draw_screen(ScreenId::Bottom);
 
         painter.end();
     }
 
-    QImage LoadFramebuffer(int fb_id) {
-        const auto& framebuffer = GPU::g_regs.framebuffer_config[fb_id];
-        const PAddr framebuffer_addr =
-            framebuffer.active_fb == 0 ? framebuffer.address_left1 : framebuffer.address_left2;
-
-        Memory::RasterizerFlushRegion(framebuffer_addr, framebuffer.stride * framebuffer.height);
-        const u8* framebuffer_data = VideoCore::g_memory->GetPhysicalPointer(framebuffer_addr);
-
-        const int width = framebuffer.height;
-        const int height = framebuffer.width;
-        const int bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
-
-        QImage image{width, height, QImage::Format_RGBA8888};
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                const u8* pixel = framebuffer_data + (x * height + height - y) * bpp;
-                const Common::Vec4 color = [&] {
-                    switch (framebuffer.color_format) {
-                    case GPU::Regs::PixelFormat::RGBA8:
-                        return Common::Color::DecodeRGBA8(pixel);
-                    case GPU::Regs::PixelFormat::RGB8:
-                        return Common::Color::DecodeRGB8(pixel);
-                    case GPU::Regs::PixelFormat::RGB565:
-                        return Common::Color::DecodeRGB565(pixel);
-                    case GPU::Regs::PixelFormat::RGB5A1:
-                        return Common::Color::DecodeRGB5A1(pixel);
-                    case GPU::Regs::PixelFormat::RGBA4:
-                        return Common::Color::DecodeRGBA4(pixel);
-                    }
-                    UNREACHABLE();
-                }();
-
-                image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
-            }
-        }
+    QImage LoadFramebuffer(VideoCore::ScreenId screen_id) {
+        const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.Renderer());
+        const auto& info = renderer.Screen(screen_id);
+        const int width = static_cast<int>(info.width);
+        const int height = static_cast<int>(info.height);
+        QImage image{height, width, QImage::Format_RGBA8888};
+        std::memcpy(image.bits(), info.pixels.data(), info.pixels.size());
         return image;
     }
+
+private:
+    Core::System& system;
 };
 
 static Frontend::WindowSystemType GetWindowSystemType() {
@@ -401,8 +382,9 @@ static Frontend::EmuWindow::WindowSystemInfo GetWindowSystemInfo(QWindow* window
 
 std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::main_context;
 
-GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread, bool is_secondary_)
-    : QWidget(parent_), EmuWindow(is_secondary_), emu_thread(emu_thread) {
+GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread_, Core::System& system_,
+                             bool is_secondary_)
+    : QWidget(parent_), EmuWindow(is_secondary_), emu_thread(emu_thread_), system{system_} {
 
     setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
                        .arg(QString::fromUtf8(Common::g_build_name),
@@ -652,12 +634,12 @@ void GRenderWindow::ReleaseRenderTarget() {
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
     if (res_scale == 0) {
-        res_scale = VideoCore::g_renderer->GetResolutionScaleFactor();
+        res_scale = system.Renderer().GetResolutionScaleFactor();
     }
 
     const auto layout{Layout::FrameLayoutFromResolutionScale(res_scale, is_secondary)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
-    VideoCore::g_renderer->RequestScreenshot(
+    system.Renderer().RequestScreenshot(
         screenshot_image.bits(),
         [this, screenshot_path] {
             const std::string std_screenshot_path = screenshot_path.toStdString();
@@ -708,7 +690,7 @@ bool GRenderWindow::InitializeOpenGL() {
 }
 
 void GRenderWindow::InitializeSoftware() {
-    child_widget = new SoftwareRenderWidget(this);
+    child_widget = new SoftwareRenderWidget(this, system);
     main_context = std::make_unique<DummyContext>();
 }
 

@@ -5,10 +5,10 @@
 #include <cmath>
 #include <cstring>
 #include "common/arch.h"
+#include "common/assert.h"
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-#include "video_core/pica_state.h"
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
 #include "video_core/shader/shader.h"
@@ -41,11 +41,11 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
         // Allow us to overflow OutputVertex to avoid branches, since
         // RasterizerRegs::VSOutputAttributes::INVALID would write to slot 31, which
         // would be out of bounds otherwise.
-        std::array<float24, 32> vertex_slots_overflow;
+        std::array<f24, 32> vertex_slots_overflow;
     };
 
     // Assert that OutputVertex has enough space for 24 semantic registers
-    static_assert(sizeof(std::array<float24, 24>) == sizeof(ret),
+    static_assert(sizeof(std::array<f24, 24>) == sizeof(ret),
                   "Struct and array have different sizes.");
 
     unsigned int num_attributes = regs.vs_output_total & 7;
@@ -61,7 +61,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
     // interpolation
     for (unsigned i = 0; i < 4; ++i) {
         float c = std::fabs(ret.color[i].ToFloat32());
-        ret.color[i] = float24::FromFloat32(c < 1.0f ? c : 1.0f);
+        ret.color[i] = f24::FromFloat32(c < 1.0f ? c : 1.0f);
     }
 
     LOG_TRACE(HW_GPU,
@@ -86,7 +86,7 @@ void UnitState::LoadInput(const ShaderRegs& config, const AttributeBuffer& input
     }
 }
 
-static void CopyRegistersToOutput(std::span<Common::Vec4<float24>, 16> regs, u32 mask,
+static void CopyRegistersToOutput(std::span<Common::Vec4<f24>, 16> regs, u32 mask,
                                   AttributeBuffer& buffer) {
     int output_i = 0;
     for (int reg : Common::BitSet<u32>(mask)) {
@@ -108,7 +108,7 @@ GSEmitter::~GSEmitter() {
     delete handlers;
 }
 
-void GSEmitter::Emit(std::span<Common::Vec4<float24>, 16> output_regs) {
+void GSEmitter::Emit(std::span<Common::Vec4<f24>, 16> output_regs) {
     ASSERT(vertex_id < 3);
     // TODO: This should be merged with UnitState::WriteOutput somehow
     CopyRegistersToOutput(output_regs, output_mask, buffer[vertex_id]);

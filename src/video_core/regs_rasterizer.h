@@ -37,9 +37,9 @@ struct RasterizerRegs {
     BitField<0, 1, u32> clip_enable;
     BitField<0, 24, u32> clip_coef[4]; // float24
 
-    Common::Vec4<float24> GetClipCoef() const {
-        return {float24::FromRaw(clip_coef[0]), float24::FromRaw(clip_coef[1]),
-                float24::FromRaw(clip_coef[2]), float24::FromRaw(clip_coef[3])};
+    Common::Vec4<f24> GetClipCoef() const {
+        return {f24::FromRaw(clip_coef[0]), f24::FromRaw(clip_coef[1]), f24::FromRaw(clip_coef[2]),
+                f24::FromRaw(clip_coef[3])};
     }
 
     Common::Rectangle<s32> GetViewportRect() const {
@@ -47,9 +47,9 @@ struct RasterizerRegs {
             // These registers hold half-width and half-height, so must be multiplied by 2
             viewport_corner.x,  // left
             viewport_corner.y + // top
-                static_cast<s32>(float24::FromRaw(viewport_size_y).ToFloat32() * 2),
+                static_cast<s32>(f24::FromRaw(viewport_size_y).ToFloat32() * 2),
             viewport_corner.x + // right
-                static_cast<s32>(float24::FromRaw(viewport_size_x).ToFloat32() * 2),
+                static_cast<s32>(f24::FromRaw(viewport_size_x).ToFloat32() * 2),
             viewport_corner.y // bottom
         };
     }

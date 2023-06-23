@@ -5,6 +5,7 @@
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64)
 
+#include "common/assert.h"
 #include "common/microprofile.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_jit_x64.h"

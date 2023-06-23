@@ -4,23 +4,25 @@
 
 #pragma once
 
+#include <span>
+
 #include "common/common_types.h"
 #include "common/vector_math.h"
 #include "video_core/regs_texturing.h"
 
-namespace Pica::Rasterizer {
+namespace SwRenderer {
 
-int GetWrappedTexCoord(TexturingRegs::TextureConfig::WrapMode mode, int val, unsigned size);
+int GetWrappedTexCoord(Pica::TexturingRegs::TextureConfig::WrapMode mode, s32 val, u32 size);
 
-Common::Vec3<u8> GetColorModifier(TexturingRegs::TevStageConfig::ColorModifier factor,
+Common::Vec3<u8> GetColorModifier(Pica::TexturingRegs::TevStageConfig::ColorModifier factor,
                                   const Common::Vec4<u8>& values);
 
-u8 GetAlphaModifier(TexturingRegs::TevStageConfig::AlphaModifier factor,
+u8 GetAlphaModifier(Pica::TexturingRegs::TevStageConfig::AlphaModifier factor,
                     const Common::Vec4<u8>& values);
 
-Common::Vec3<u8> ColorCombine(TexturingRegs::TevStageConfig::Operation op,
-                              const Common::Vec3<u8> input[3]);
+Common::Vec3<u8> ColorCombine(Pica::TexturingRegs::TevStageConfig::Operation op,
+                              std::span<const Common::Vec3<u8>, 3> input);
 
-u8 AlphaCombine(TexturingRegs::TevStageConfig::Operation op, const std::array<u8, 3>& input);
+u8 AlphaCombine(Pica::TexturingRegs::TevStageConfig::Operation op, const std::array<u8, 3>& input);
 
-} // namespace Pica::Rasterizer
+} // namespace SwRenderer

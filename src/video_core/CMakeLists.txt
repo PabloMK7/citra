@@ -83,8 +83,6 @@ add_library(video_core STATIC
     renderer_opengl/post_processing_opengl.h
     renderer_opengl/renderer_opengl.cpp
     renderer_opengl/renderer_opengl.h
-    renderer_software/rasterizer.cpp
-    renderer_software/rasterizer.h
     renderer_software/renderer_software.cpp
     renderer_software/renderer_software.h
     renderer_software/sw_clipper.cpp

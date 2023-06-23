@@ -54,12 +54,12 @@ struct DebugData<true> {
             LOOP_INT_IN = 0x800,
         };
 
-        Common::Vec4<float24> src1;
-        Common::Vec4<float24> src2;
-        Common::Vec4<float24> src3;
+        Common::Vec4<f24> src1;
+        Common::Vec4<f24> src2;
+        Common::Vec4<f24> src3;
 
-        Common::Vec4<float24> dest_in;
-        Common::Vec4<float24> dest_out;
+        Common::Vec4<f24> dest_in;
+        Common::Vec4<f24> dest_out;
 
         s32 address_registers[2];
         bool conditional_code[2];
@@ -89,7 +89,7 @@ template <DebugDataRecord::Type type, typename ValueType>
 inline void SetField(DebugDataRecord& record, ValueType value);
 
 template <>
-inline void SetField<DebugDataRecord::SRC1>(DebugDataRecord& record, float24* value) {
+inline void SetField<DebugDataRecord::SRC1>(DebugDataRecord& record, f24* value) {
     record.src1.x = value[0];
     record.src1.y = value[1];
     record.src1.z = value[2];
@@ -97,7 +97,7 @@ inline void SetField<DebugDataRecord::SRC1>(DebugDataRecord& record, float24* va
 }
 
 template <>
-inline void SetField<DebugDataRecord::SRC2>(DebugDataRecord& record, float24* value) {
+inline void SetField<DebugDataRecord::SRC2>(DebugDataRecord& record, f24* value) {
     record.src2.x = value[0];
     record.src2.y = value[1];
     record.src2.z = value[2];
@@ -105,7 +105,7 @@ inline void SetField<DebugDataRecord::SRC2>(DebugDataRecord& record, float24* va
 }
 
 template <>
-inline void SetField<DebugDataRecord::SRC3>(DebugDataRecord& record, float24* value) {
+inline void SetField<DebugDataRecord::SRC3>(DebugDataRecord& record, f24* value) {
     record.src3.x = value[0];
     record.src3.y = value[1];
     record.src3.z = value[2];
@@ -113,7 +113,7 @@ inline void SetField<DebugDataRecord::SRC3>(DebugDataRecord& record, float24* va
 }
 
 template <>
-inline void SetField<DebugDataRecord::DEST_IN>(DebugDataRecord& record, float24* value) {
+inline void SetField<DebugDataRecord::DEST_IN>(DebugDataRecord& record, f24* value) {
     record.dest_in.x = value[0];
     record.dest_in.y = value[1];
     record.dest_in.z = value[2];
@@ -121,7 +121,7 @@ inline void SetField<DebugDataRecord::DEST_IN>(DebugDataRecord& record, float24*
 }
 
 template <>
-inline void SetField<DebugDataRecord::DEST_OUT>(DebugDataRecord& record, float24* value) {
+inline void SetField<DebugDataRecord::DEST_OUT>(DebugDataRecord& record, f24* value) {
     record.dest_out.x = value[0];
     record.dest_out.y = value[1];
     record.dest_out.z = value[2];

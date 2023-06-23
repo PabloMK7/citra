@@ -550,8 +550,8 @@ void GraphicsVertexShaderWidget::OnResumed() {
 }
 
 void GraphicsVertexShaderWidget::OnInputAttributeChanged(int index) {
-    float value = input_data[index]->text().toFloat();
-    input_vertex.attr[index / 4][index % 4] = Pica::float24::FromFloat32(value);
+    const f32 value = input_data[index]->text().toFloat();
+    input_vertex.attr[index / 4][index % 4] = Pica::f24::FromFloat32(value);
     // Re-execute shader with updated value
     Reload();
 }

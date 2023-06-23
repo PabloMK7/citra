@@ -11,7 +11,13 @@ namespace Core {
 class System;
 }
 
-namespace VideoCore {
+namespace SwRenderer {
+
+struct ScreenInfo {
+    u32 width;
+    u32 height;
+    std::vector<u8> pixels;
+};
 
 class RendererSoftware : public VideoCore::RendererBase {
 public:
@@ -22,12 +28,22 @@ public:
         return rasterizer.get();
     }
 
+    [[nodiscard]] const ScreenInfo& Screen(VideoCore::ScreenId id) const noexcept {
+        return screen_infos[static_cast<u32>(id)];
+    }
+
     void SwapBuffers() override;
     void TryPresent(int timeout_ms, bool is_secondary) override {}
     void Sync() override {}
 
 private:
+    void PrepareRenderTarget();
+    void CopyPixels(int i);
+
+private:
+    Memory::MemorySystem& memory;
     std::unique_ptr<RasterizerSoftware> rasterizer;
+    std::array<ScreenInfo, 3> screen_infos{};
 };
 
-} // namespace VideoCore
+} // namespace SwRenderer

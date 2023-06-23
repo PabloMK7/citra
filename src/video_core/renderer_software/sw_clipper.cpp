@@ -1,196 +1,88 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
-#include <boost/container/static_vector.hpp>
-#include "common/bit_field.h"
-#include "common/common_types.h"
-#include "common/logging/log.h"
-#include "common/vector_math.h"
-#include "video_core/pica_state.h"
-#include "video_core/pica_types.h"
-#include "video_core/renderer_software/rasterizer.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/renderer_software/sw_clipper.h"
-#include "video_core/shader/shader.h"
 
-using Pica::Rasterizer::Vertex;
+namespace SwRenderer {
 
-namespace Pica::Clipper {
+using Pica::TexturingRegs;
 
-struct ClippingEdge {
-public:
-    ClippingEdge(Common::Vec4<float24> coeffs,
-                 Common::Vec4<float24> bias = Common::Vec4<float24>(float24::FromFloat32(0),
-                                                                    float24::FromFloat32(0),
-                                                                    float24::FromFloat32(0),
-                                                                    float24::FromFloat32(0)))
-        : coeffs(coeffs), bias(bias) {}
-
-    bool IsInside(const Vertex& vertex) const {
-        return Common::Dot(vertex.pos + bias, coeffs) >= float24::FromFloat32(0);
+void FlipQuaternionIfOpposite(Common::Vec4<f24>& a, const Common::Vec4<f24>& b) {
+    if (Common::Dot(a, b) < f24::Zero()) {
+        a *= f24::FromFloat32(-1.0f);
     }
-
-    bool IsOutSide(const Vertex& vertex) const {
-        return !IsInside(vertex);
-    }
-
-    Vertex GetIntersection(const Vertex& v0, const Vertex& v1) const {
-        float24 dp = Common::Dot(v0.pos + bias, coeffs);
-        float24 dp_prev = Common::Dot(v1.pos + bias, coeffs);
-        float24 factor = dp_prev / (dp_prev - dp);
-
-        return Vertex::Lerp(factor, v0, v1);
-    }
-
-private:
-    [[maybe_unused]] float24 pos;
-    Common::Vec4<float24> coeffs;
-    Common::Vec4<float24> bias;
 };
 
-static void InitScreenCoordinates(Vertex& vtx) {
-    struct {
-        float24 halfsize_x;
-        float24 offset_x;
-        float24 halfsize_y;
-        float24 offset_y;
-        float24 zscale;
-        float24 offset_z;
-    } viewport;
+int SignedArea(const Common::Vec2<Fix12P4>& vtx1, const Common::Vec2<Fix12P4>& vtx2,
+               const Common::Vec2<Fix12P4>& vtx3) {
+    const auto vec1 = Common::MakeVec(vtx2 - vtx1, 0);
+    const auto vec2 = Common::MakeVec(vtx3 - vtx1, 0);
+    // TODO: There is a very small chance this will overflow for sizeof(int) == 4
+    return Common::Cross(vec1, vec2).z;
+};
 
-    const auto& regs = g_state.regs;
-    viewport.halfsize_x = float24::FromRaw(regs.rasterizer.viewport_size_x);
-    viewport.halfsize_y = float24::FromRaw(regs.rasterizer.viewport_size_y);
-    viewport.offset_x = float24::FromFloat32(static_cast<float>(regs.rasterizer.viewport_corner.x));
-    viewport.offset_y = float24::FromFloat32(static_cast<float>(regs.rasterizer.viewport_corner.y));
-
-    float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
-    vtx.pos.w = inv_w;
-    vtx.quat *= inv_w;
-    vtx.color *= inv_w;
-    vtx.tc0 *= inv_w;
-    vtx.tc1 *= inv_w;
-    vtx.tc0_w *= inv_w;
-    vtx.view *= inv_w;
-    vtx.tc2 *= inv_w;
-
-    vtx.screenpos[0] =
-        (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
-    vtx.screenpos[1] =
-        (vtx.pos.y * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
-    vtx.screenpos[2] = vtx.pos.z * inv_w;
-}
-
-void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const OutputVertex& v2) {
-    using boost::container::static_vector;
-
-    // Clipping a planar n-gon against a plane will remove at least 1 vertex and introduces 2 at
-    // the new edge (or less in degenerate cases). As such, we can say that each clipping plane
-    // introduces at most 1 new vertex to the polygon. Since we start with a triangle and have a
-    // fixed 6 clipping planes, the maximum number of vertices of the clipped polygon is 3 + 6 = 9.
-    static const std::size_t MAX_VERTICES = 9;
-    static_vector<Vertex, MAX_VERTICES> buffer_a = {v0, v1, v2};
-    static_vector<Vertex, MAX_VERTICES> buffer_b;
-
-    auto FlipQuaternionIfOpposite = [](auto& a, const auto& b) {
-        if (Common::Dot(a, b) < float24::Zero())
-            a = a * float24::FromFloat32(-1.0f);
-    };
-
-    // Flip the quaternions if they are opposite to prevent interpolating them over the wrong
-    // direction.
-    FlipQuaternionIfOpposite(buffer_a[1].quat, buffer_a[0].quat);
-    FlipQuaternionIfOpposite(buffer_a[2].quat, buffer_a[0].quat);
-
-    auto* output_list = &buffer_a;
-    auto* input_list = &buffer_b;
-
-    // NOTE: We clip against a w=epsilon plane to guarantee that the output has a positive w value.
-    // TODO: Not sure if this is a valid approach. Also should probably instead use the smallest
-    //       epsilon possible within float24 accuracy.
-    static const float24 EPSILON = float24::FromFloat32(0.00001f);
-    static const float24 f0 = float24::FromFloat32(0.0);
-    static const float24 f1 = float24::FromFloat32(1.0);
-    static const std::array<ClippingEdge, 7> clipping_edges = {{
-        {Common::MakeVec(-f1, f0, f0, f1)}, // x = +w
-        {Common::MakeVec(f1, f0, f0, f1)},  // x = -w
-        {Common::MakeVec(f0, -f1, f0, f1)}, // y = +w
-        {Common::MakeVec(f0, f1, f0, f1)},  // y = -w
-        {Common::MakeVec(f0, f0, -f1, f0)}, // z =  0
-        {Common::MakeVec(f0, f0, f1, f1)},  // z = -w
-        {Common::MakeVec(f0, f0, f0, f1),
-         Common::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
-    }};
-
-    // Simple implementation of the Sutherland-Hodgman clipping algorithm.
-    // TODO: Make this less inefficient (currently lots of useless buffering overhead happens here)
-    auto Clip = [&](const ClippingEdge& edge) {
-        std::swap(input_list, output_list);
-        output_list->clear();
-
-        const Vertex* reference_vertex = &input_list->back();
-
-        for (const auto& vertex : *input_list) {
-            // NOTE: This algorithm changes vertex order in some cases!
-            if (edge.IsInside(vertex)) {
-                if (edge.IsOutSide(*reference_vertex)) {
-                    output_list->push_back(edge.GetIntersection(vertex, *reference_vertex));
-                }
-
-                output_list->push_back(vertex);
-            } else if (edge.IsInside(*reference_vertex)) {
-                output_list->push_back(edge.GetIntersection(vertex, *reference_vertex));
-            }
-            reference_vertex = &vertex;
+std::tuple<f24, f24, f24, PAddr> ConvertCubeCoord(f24 u, f24 v, f24 w,
+                                                  const Pica::TexturingRegs& regs) {
+    const float abs_u = std::abs(u.ToFloat32());
+    const float abs_v = std::abs(v.ToFloat32());
+    const float abs_w = std::abs(w.ToFloat32());
+    f24 x, y, z;
+    PAddr addr;
+    if (abs_u > abs_v && abs_u > abs_w) {
+        if (u > f24::Zero()) {
+            addr = regs.GetCubePhysicalAddress(TexturingRegs::CubeFace::PositiveX);
+            y = -v;
+        } else {
+            addr = regs.GetCubePhysicalAddress(TexturingRegs::CubeFace::NegativeX);
+            y = v;
         }
-    };
-
-    for (auto edge : clipping_edges) {
-        Clip(edge);
-
-        // Need to have at least a full triangle to continue...
-        if (output_list->size() < 3)
-            return;
+        x = -w;
+        z = u;
+    } else if (abs_v > abs_w) {
+        if (v > f24::Zero()) {
+            addr = regs.GetCubePhysicalAddress(TexturingRegs::CubeFace::PositiveY);
+            x = u;
+        } else {
+            addr = regs.GetCubePhysicalAddress(TexturingRegs::CubeFace::NegativeY);
+            x = -u;
+        }
+        y = w;
+        z = v;
+    } else {
+        if (w > f24::Zero()) {
+            addr = regs.GetCubePhysicalAddress(TexturingRegs::CubeFace::PositiveZ);
+            y = -v;
+        } else {
+            addr = regs.GetCubePhysicalAddress(TexturingRegs::CubeFace::NegativeZ);
+            y = v;
+        }
+        x = u;
+        z = w;
     }
+    const f24 z_abs = f24::FromFloat32(std::abs(z.ToFloat32()));
+    const f24 half = f24::FromFloat32(0.5f);
+    return std::make_tuple(x / z * half + half, y / z * half + half, z_abs, addr);
+}
 
-    if (g_state.regs.rasterizer.clip_enable) {
-        ClippingEdge custom_edge{g_state.regs.rasterizer.GetClipCoef()};
-        Clip(custom_edge);
-
-        if (output_list->size() < 3)
-            return;
-    }
-
-    InitScreenCoordinates((*output_list)[0]);
-    InitScreenCoordinates((*output_list)[1]);
-
-    for (std::size_t i = 0; i < output_list->size() - 2; i++) {
-        Vertex& vtx0 = (*output_list)[0];
-        Vertex& vtx1 = (*output_list)[i + 1];
-        Vertex& vtx2 = (*output_list)[i + 2];
-
-        InitScreenCoordinates(vtx2);
-
-        LOG_TRACE(
-            Render_Software,
-            "Triangle {}/{} at position ({:.3}, {:.3}, {:.3}, {:.3f}), "
-            "({:.3}, {:.3}, {:.3}, {:.3}), ({:.3}, {:.3}, {:.3}, {:.3}) and "
-            "screen position ({:.2}, {:.2}, {:.2}), ({:.2}, {:.2}, {:.2}), ({:.2}, {:.2}, {:.2})",
-            i + 1, output_list->size() - 2, vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(),
-            vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(), vtx1.pos.x.ToFloat32(),
-            vtx1.pos.y.ToFloat32(), vtx1.pos.z.ToFloat32(), vtx1.pos.w.ToFloat32(),
-            vtx2.pos.x.ToFloat32(), vtx2.pos.y.ToFloat32(), vtx2.pos.z.ToFloat32(),
-            vtx2.pos.w.ToFloat32(), vtx0.screenpos.x.ToFloat32(), vtx0.screenpos.y.ToFloat32(),
-            vtx0.screenpos.z.ToFloat32(), vtx1.screenpos.x.ToFloat32(),
-            vtx1.screenpos.y.ToFloat32(), vtx1.screenpos.z.ToFloat32(),
-            vtx2.screenpos.x.ToFloat32(), vtx2.screenpos.y.ToFloat32(),
-            vtx2.screenpos.z.ToFloat32());
-
-        Rasterizer::ProcessTriangle(vtx0, vtx1, vtx2);
+bool IsRightSideOrFlatBottomEdge(const Common::Vec2<Fix12P4>& vtx,
+                                 const Common::Vec2<Fix12P4>& line1,
+                                 const Common::Vec2<Fix12P4>& line2) {
+    if (line1.y == line2.y) {
+        // Just check if vertex is above us => bottom line parallel to x-axis
+        return vtx.y < line1.y;
+    } else {
+        // Check if vertex is on our left => right side
+        // TODO: Not sure how likely this is to overflow
+        const auto svtx = vtx.Cast<s32>();
+        const auto sline1 = line1.Cast<s32>();
+        const auto sline2 = line2.Cast<s32>();
+        return svtx.x <
+               sline1.x + (sline2.x - sline1.x) * (svtx.y - sline1.y) / (sline2.y - sline1.y);
     }
 }
 
-} // namespace Pica::Clipper
+} // namespace SwRenderer

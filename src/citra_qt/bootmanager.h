@@ -112,7 +112,7 @@ class GRenderWindow : public QWidget, public Frontend::EmuWindow {
     Q_OBJECT
 
 public:
-    GRenderWindow(QWidget* parent, EmuThread* emu_thread, bool is_secondary);
+    GRenderWindow(QWidget* parent, EmuThread* emu_thread, Core::System& system, bool is_secondary);
     ~GRenderWindow() override;
 
     // EmuWindow implementation.
@@ -188,6 +188,7 @@ private:
     QWidget* child_widget = nullptr;
 
     EmuThread* emu_thread;
+    Core::System& system;
 
     /// Main context that will be shared with all other contexts that are requested.
     /// If this is used in a shared context setting, then this should not be used directly, but

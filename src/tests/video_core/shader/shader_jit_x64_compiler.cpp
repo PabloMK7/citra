@@ -14,7 +14,6 @@
 #include "video_core/shader/shader_interpreter.h"
 #include "video_core/shader/shader_jit_x64_compiler.h"
 
-using float24 = Pica::float24;
 using JitShader = Pica::Shader::JitShader;
 using ShaderInterpreter = Pica::Shader::InterpreterEngine;
 
@@ -51,14 +50,14 @@ public:
     }
 
     void RunJit(Pica::Shader::UnitState& shader_unit, float input) {
-        shader_unit.registers.input[0].x = float24::FromFloat32(input);
-        shader_unit.registers.temporary[0].x = float24::FromFloat32(0);
+        shader_unit.registers.input[0].x = Pica::f24::FromFloat32(input);
+        shader_unit.registers.temporary[0].x = Pica::f24::Zero();
         shader_jit.Run(*shader_setup, shader_unit, 0);
     }
 
     void RunInterpreter(Pica::Shader::UnitState& shader_unit, float input) {
-        shader_unit.registers.input[0].x = float24::FromFloat32(input);
-        shader_unit.registers.temporary[0].x = float24::FromFloat32(0);
+        shader_unit.registers.input[0].x = Pica::f24::FromFloat32(input);
+        shader_unit.registers.temporary[0].x = Pica::f24::Zero();
         shader_interpreter.Run(*shader_setup, shader_unit);
     }
 

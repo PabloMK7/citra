@@ -98,7 +98,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 const s8* srcdata = reinterpret_cast<const s8*>(
                     VideoCore::g_memory->GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                    input.attr[i][comp] = f24::FromFloat32(srcdata[comp]);
                 }
                 break;
             }
@@ -106,7 +106,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 const u8* srcdata = reinterpret_cast<const u8*>(
                     VideoCore::g_memory->GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                    input.attr[i][comp] = f24::FromFloat32(srcdata[comp]);
                 }
                 break;
             }
@@ -114,7 +114,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 const s16* srcdata = reinterpret_cast<const s16*>(
                     VideoCore::g_memory->GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                    input.attr[i][comp] = f24::FromFloat32(srcdata[comp]);
                 }
                 break;
             }
@@ -122,7 +122,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 const float* srcdata = reinterpret_cast<const float*>(
                     VideoCore::g_memory->GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                    input.attr[i][comp] = f24::FromFloat32(srcdata[comp]);
                 }
                 break;
             }
@@ -132,8 +132,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
             // is *not* carried over from the default attribute settings even if they're
             // enabled for this attribute.
             for (unsigned int comp = vertex_attribute_elements[i]; comp < 4; ++comp) {
-                input.attr[i][comp] =
-                    comp == 3 ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
+                input.attr[i][comp] = comp == 3 ? f24::One() : f24::Zero();
             }
 
             LOG_TRACE(HW_GPU,

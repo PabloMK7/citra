@@ -344,11 +344,14 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    auto& system = Core::System::GetInstance();
+    auto& movie = Core::Movie::GetInstance();
+
     if (!movie_record.empty()) {
-        Core::Movie::GetInstance().PrepareForRecording();
+        movie.PrepareForRecording();
     }
     if (!movie_play.empty()) {
-        Core::Movie::GetInstance().PrepareForPlayback(movie_play);
+        movie.PrepareForPlayback(movie_play);
     }
 
     // Apply the command line arguments
@@ -361,13 +364,13 @@ int main(int argc, char** argv) {
 
     EmuWindow_SDL2::InitializeSDL2();
 
-    const auto create_emu_window = [](bool fullscreen,
-                                      bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
+    const auto create_emu_window = [&](bool fullscreen,
+                                       bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
         switch (Settings::values.graphics_api.GetValue()) {
         case Settings::GraphicsAPI::OpenGL:
             return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
         case Settings::GraphicsAPI::Software:
-            return std::make_unique<EmuWindow_SDL2_SW>(fullscreen, is_secondary);
+            return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
         }
         LOG_ERROR(Frontend, "Invalid Graphics API, using OpenGL");
         return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
@@ -385,7 +388,6 @@ int main(int argc, char** argv) {
              Common::g_scm_desc);
     Settings::LogSettings();
 
-    Core::System& system = Core::System::GetInstance();
     const Core::System::ResultStatus load_result{
         system.Load(*emu_window, filepath, secondary_window.get())};
 
@@ -437,21 +439,21 @@ int main(int argc, char** argv) {
     }
 
     if (!movie_play.empty()) {
-        auto metadata = Core::Movie::GetInstance().GetMovieMetadata(movie_play);
+        auto metadata = movie.GetMovieMetadata(movie_play);
         LOG_INFO(Movie, "Author: {}", metadata.author);
         LOG_INFO(Movie, "Rerecord count: {}", metadata.rerecord_count);
         LOG_INFO(Movie, "Input count: {}", metadata.input_count);
-        Core::Movie::GetInstance().StartPlayback(movie_play);
+        movie.StartPlayback(movie_play);
     }
     if (!movie_record.empty()) {
-        Core::Movie::GetInstance().StartRecording(movie_record, movie_record_author);
+        movie.StartRecording(movie_record, movie_record_author);
     }
     if (!dump_video.empty() && DynamicLibrary::FFmpeg::LoadFFmpeg()) {
-        Layout::FramebufferLayout layout{Layout::FrameLayoutFromResolutionScale(
-            VideoCore::g_renderer->GetResolutionScaleFactor())};
+        const auto layout{
+            Layout::FrameLayoutFromResolutionScale(system.Renderer().GetResolutionScaleFactor())};
         auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
         if (dumper->StartDumping(dump_video, layout)) {
-            Core::System::GetInstance().RegisterVideoDumper(dumper);
+            system.RegisterVideoDumper(dumper);
         }
     }
 
@@ -494,7 +496,7 @@ int main(int argc, char** argv) {
     main_render_thread.join();
     secondary_render_thread.join();
 
-    Core::Movie::GetInstance().Shutdown();
+    movie.Shutdown();
 
     auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
