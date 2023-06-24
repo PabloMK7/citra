@@ -8,6 +8,7 @@
 #include <memory>
 #include <sstream>
 #include <unordered_map>
+#include <fmt/format.h>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 #include "common/assert.h"

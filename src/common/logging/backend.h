@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <filesystem>
 #include "common/logging/filter.h"
 
 namespace Common::Log {

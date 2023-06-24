@@ -3,8 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
-#include <exception>
-#include <vector>
 
 #include <fmt/format.h>
 
