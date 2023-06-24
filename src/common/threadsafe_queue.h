@@ -13,8 +13,10 @@
 #include <mutex>
 #include <utility>
 
+#include "common/polyfill_thread.h"
+
 namespace Common {
-template <typename T>
+template <typename T, bool with_stop_token = false>
 class SPSCQueue {
 public:
     SPSCQueue() {
@@ -93,6 +95,19 @@ public:
         return t;
     }
 
+    T PopWait(std::stop_token stop_token) {
+        if (Empty()) {
+            std::unique_lock lock{cv_mutex};
+            CondvarWait(cv, lock, stop_token, [this] { return !Empty(); });
+        }
+        if (stop_token.stop_requested()) {
+            return T{};
+        }
+        T t;
+        Pop(t);
+        return t;
+    }
+
     // not thread-safe
     void Clear() {
         size.store(0);
@@ -121,13 +136,13 @@ private:
     ElementPtr* read_ptr;
     std::atomic_size_t size{0};
     std::mutex cv_mutex;
-    std::condition_variable cv;
+    std::conditional_t<with_stop_token, std::condition_variable_any, std::condition_variable> cv;
 };
 
 // a simple thread-safe,
 // single reader, multiple writer queue
 
-template <typename T>
+template <typename T, bool with_stop_token = false>
 class MPSCQueue {
 public:
     [[nodiscard]] std::size_t Size() const {
@@ -160,13 +175,17 @@ public:
         return spsc_queue.PopWait();
     }
 
+    T PopWait(std::stop_token stop_token) {
+        return spsc_queue.PopWait(stop_token);
+    }
+
     // not thread-safe
     void Clear() {
         spsc_queue.Clear();
     }
 
 private:
-    SPSCQueue<T> spsc_queue;
+    SPSCQueue<T, with_stop_token> spsc_queue;
     std::mutex write_lock;
 };
 } // namespace Common

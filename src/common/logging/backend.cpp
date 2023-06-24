@@ -27,13 +27,13 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/literals.h"
-#include "common/settings.h"
-#include "common/thread.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/logging/log_entry.h"
 #include "common/logging/text_formatter.h"
+#include "common/settings.h"
 #include "common/string_util.h"
+#include "common/thread.h"
 #include "common/threadsafe_queue.h"
 
 namespace Common::Log {
