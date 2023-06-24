@@ -264,6 +264,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 #endif
 
+    Common::Log::Start();
+
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
         BootGame(args[1]);

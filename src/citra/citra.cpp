@@ -178,6 +178,7 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
 int main(int argc, char** argv) {
     Common::Log::Initialize();
     Common::Log::SetColorConsoleBackendEnabled(true);
+    Common::Log::Start();
     Common::DetachedTasks detached_tasks;
     Config config;
     int option_index = 0;

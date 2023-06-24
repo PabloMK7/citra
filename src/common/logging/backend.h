@@ -14,6 +14,8 @@ class Filter;
 /// Initializes the logging system. This should be the first thing called in main.
 void Initialize();
 
+void Start();
+
 void DisableLoggingInTests();
 
 /**

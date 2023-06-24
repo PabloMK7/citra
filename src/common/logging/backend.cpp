@@ -4,7 +4,6 @@
 
 #include <chrono>
 #include <exception>
-#include <thread>
 #include <vector>
 
 #include <fmt/format.h>
@@ -31,6 +30,7 @@
 #include "common/logging/log.h"
 #include "common/logging/log_entry.h"
 #include "common/logging/text_formatter.h"
+#include "common/polyfill_thread.h"
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "common/thread.h"
@@ -219,6 +219,10 @@ public:
         initialization_in_progress_suppress_logging = false;
     }
 
+    static void Start() {
+        instance->StartBackendThread();
+    }
+
     Impl(const Impl&) = delete;
     Impl& operator=(const Impl&) = delete;
 
@@ -244,26 +248,7 @@ public:
 
 private:
     Impl(const std::string& file_backend_filename, const Filter& filter_)
-        : filter{filter_}, file_backend{file_backend_filename}, backend_thread{std::thread([this] {
-              Common::SetCurrentThreadName("citra:Log");
-              Entry entry;
-              const auto write_logs = [this, &entry]() {
-                  ForEachBackend([&entry](Backend& backend) { backend.Write(entry); });
-              };
-              while (true) {
-                  entry = message_queue.PopWait();
-                  if (entry.final_entry) {
-                      break;
-                  }
-                  write_logs();
-              }
-              // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a
-              // case where a system is repeatedly spamming logs even on close.
-              int max_logs_to_write = filter.IsDebug() ? INT_MAX : 100;
-              while (max_logs_to_write-- && message_queue.Pop(entry)) {
-                  write_logs();
-              }
-          })} {
+        : filter{filter_}, file_backend{file_backend_filename} {
 #ifdef CITRA_LINUX_GCC_BACKTRACE
         int waker_pipefd[2];
         int done_printing_pipefd[2];
@@ -297,7 +282,7 @@ private:
                 }
                 line.pop_back(); // Remove newline
                 const auto frame_entry =
-                    CreateEntry(Class::Log, Level::Critical, "?", 0, "?", line);
+                    CreateEntry(Class::Log, Level::Critical, "?", 0, "?", std::move(line));
                 ForEachBackend([&frame_entry](Backend& backend) { backend.Write(frame_entry); });
             }
             using namespace std::literals;
@@ -326,15 +311,35 @@ private:
         StopBackendThread();
     }
 
+    void StartBackendThread() {
+        backend_thread = std::thread([this] {
+            Common::SetCurrentThreadName("citra:Log");
+            Entry entry;
+            const auto write_logs = [this, &entry]() {
+                ForEachBackend([&entry](Backend& backend) { backend.Write(entry); });
+            };
+            while (!stop.stop_requested()) {
+                entry = message_queue.PopWait(stop.get_token());
+                if (entry.filename != nullptr) {
+                    write_logs();
+                }
+            }
+            // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a
+            // case where a system is repeatedly spamming logs even on close.
+            int max_logs_to_write = filter.IsDebug() ? INT_MAX : 100;
+            while (max_logs_to_write-- && message_queue.Pop(entry)) {
+                write_logs();
+            }
+        });
+    }
+
     void StopBackendThread() {
-        Entry stop_entry{};
-        stop_entry.final_entry = true;
-        message_queue.Push(stop_entry);
+        stop.request_stop();
         backend_thread.join();
     }
 
     Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                      const char* function, std::string message) const {
+                      const char* function, std::string&& message) const {
         using std::chrono::duration_cast;
         using std::chrono::microseconds;
         using std::chrono::steady_clock;
@@ -347,7 +352,6 @@ private:
             .line_num = line_nr,
             .function = function,
             .message = std::move(message),
-            .final_entry = false,
         };
     }
 
@@ -398,8 +402,9 @@ private:
     ColorConsoleBackend color_console_backend{};
     FileBackend file_backend;
 
+    std::stop_source stop;
     std::thread backend_thread;
-    MPSCQueue<Entry> message_queue{};
+    MPSCQueue<Entry, true> message_queue{};
     std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
 
 #ifdef CITRA_LINUX_GCC_BACKTRACE
@@ -413,6 +418,10 @@ private:
 
 void Initialize() {
     Impl::Initialize();
+}
+
+void Start() {
+    Impl::Start();
 }
 
 void DisableLoggingInTests() {

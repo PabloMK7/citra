@@ -22,7 +22,6 @@ struct Entry {
     unsigned int line_num = 0;
     std::string function;
     std::string message;
-    bool final_entry = false;
 };
 
 } // namespace Common::Log
