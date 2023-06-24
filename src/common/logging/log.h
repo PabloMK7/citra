@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <array>
+#include <string_view>
+
 #include "common/logging/formatter.h"
 #include "common/logging/types.h"
 

@@ -84,6 +84,7 @@ add_library(citra_common STATIC
     logging/filter.h
     logging/formatter.h
     logging/log.h
+    logging/log_entry.h
     logging/text_formatter.cpp
     logging/text_formatter.h
     logging/types.h
