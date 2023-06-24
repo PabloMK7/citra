@@ -352,6 +352,9 @@ private:
         lambda(static_cast<Backend&>(debugger_backend));
         lambda(static_cast<Backend&>(color_console_backend));
         lambda(static_cast<Backend&>(file_backend));
+#ifdef ANDROID
+        lambda(static_cast<Backend&>(lc_backend));
+#endif
     }
 
     static void Deleter(Impl* ptr) {
@@ -394,6 +397,9 @@ private:
     DebuggerBackend debugger_backend{};
     ColorConsoleBackend color_console_backend{};
     FileBackend file_backend;
+#ifdef ANDROID
+    LogcatBackend lc_backend{};
+#endif
 
     MPSCQueue<Entry> message_queue{};
     std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};

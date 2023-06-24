@@ -2880,7 +2880,6 @@ int main(int argc, char* argv[]) {
     // generating shaders
     setlocale(LC_ALL, "C");
 
-    Core::System::InitializeGlobalInstance();
     auto& system{Core::System::GetInstance()};
     GMainWindow main_window(system);
 

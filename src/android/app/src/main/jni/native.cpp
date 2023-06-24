@@ -438,10 +438,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_CreateConfigFile(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_CreateLogFile(JNIEnv* env,
                                                            [[maybe_unused]] jclass clazz) {
-    Log::RemoveBackend(Log::FileBackend::Name());
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
-    Log::AddBackend(std::make_unique<Log::FileBackend>(
-        FileUtil::GetUserPath(FileUtil::UserPath::LogDir) + LOG_FILE));
+    Common::Log::Initialize();
+    Common::Log::Start();
     LOG_INFO(Frontend, "Logging backend initialised");
 }
 

@@ -73,9 +73,9 @@ public:
      * Gets the instance of the System singleton class.
      * @returns Reference to the instance of the System singleton class.
      */
-    [[nodiscard]] static System& GetInstance();
-
-    static void InitializeGlobalInstance();
+    [[nodiscard]] static System& GetInstance() {
+        return s_instance;
+    }
 
     /// Enumeration representing the return values of the System Initialize and Load process.
     enum class ResultStatus : u32 {
@@ -392,7 +392,7 @@ private:
     std::unique_ptr<Core::ExclusiveMonitor> exclusive_monitor;
 
 private:
-    inline static std::unique_ptr<System> s_instance;
+    static System s_instance;
 
     std::atomic_bool is_powered_on{};
 

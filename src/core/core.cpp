@@ -52,6 +52,8 @@
 
 namespace Core {
 
+/*static*/ System System::s_instance;
+
 template <>
 Core::System& Global() {
     return System::GetInstance();
@@ -68,20 +70,6 @@ Core::Timing& Global() {
 }
 
 System::~System() = default;
-
-System& System::GetInstance() {
-    if (!s_instance) {
-        throw std::runtime_error("Using System instance before its initialization");
-    }
-    return *s_instance;
-}
-
-void System::InitializeGlobalInstance() {
-    if (s_instance) {
-        throw std::runtime_error("Reinitializing Global System instance.");
-    }
-    s_instance = std::unique_ptr<System>(new System);
-}
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;

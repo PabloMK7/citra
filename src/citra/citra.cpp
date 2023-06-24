@@ -330,7 +330,6 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    Core::System::InitializeGlobalInstance();
     auto& system = Core::System::GetInstance();
     auto& movie = Core::Movie::GetInstance();
 

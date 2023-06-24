@@ -7,6 +7,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <cstddef>
+#include <memory>
 #include <mutex>
 #include <new>
 
@@ -94,7 +95,7 @@ private:
         const size_t pos = write_index % Capacity;
 
         // Emplace into the queue.
-        std::construct_at(std::addressof(m_data[pos]), std::forward<Args>(args)...);
+        new (std::addressof(m_data[pos])) T(std::forward<Args>(args)...);
 
         // Increment the write index.
         ++m_write_index;
