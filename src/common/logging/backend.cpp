@@ -21,6 +21,7 @@
 #define CITRA_LINUX_GCC_BACKTRACE
 #endif
 
+#include "common/bounded_threadsafe_queue.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/literals.h"
@@ -32,7 +33,6 @@
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "common/thread.h"
-#include "common/threadsafe_queue.h"
 
 namespace Common::Log {
 
@@ -237,11 +237,11 @@ public:
 
     void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                    const char* function, std::string message) {
-        if (!filter.CheckMessage(log_class, log_level))
+        if (!filter.CheckMessage(log_class, log_level)) {
             return;
-        const Entry& entry =
-            CreateEntry(log_class, log_level, filename, line_num, function, std::move(message));
-        message_queue.Push(entry);
+        }
+        message_queue.EmplaceWait(
+            CreateEntry(log_class, log_level, filename, line_num, function, std::move(message)));
     }
 
 private:
@@ -317,7 +317,7 @@ private:
                 ForEachBackend([&entry](Backend& backend) { backend.Write(entry); });
             };
             while (!stop_token.stop_requested()) {
-                entry = message_queue.PopWait(stop_token);
+                message_queue.PopWait(entry, stop_token);
                 if (entry.filename != nullptr) {
                     write_logs();
                 }
@@ -325,7 +325,7 @@ private:
             // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a
             // case where a system is repeatedly spamming logs even on close.
             int max_logs_to_write = filter.IsDebug() ? INT_MAX : 100;
-            while (max_logs_to_write-- && message_queue.Pop(entry)) {
+            while (max_logs_to_write-- && message_queue.TryPop(entry)) {
                 write_logs();
             }
         });
@@ -395,7 +395,7 @@ private:
     ColorConsoleBackend color_console_backend{};
     FileBackend file_backend;
 
-    MPSCQueue<Entry, true> message_queue{};
+    MPSCQueue<Entry> message_queue{};
     std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
     std::jthread backend_thread;
 
