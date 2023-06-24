@@ -5,7 +5,7 @@
 #pragma once
 
 #include <type_traits>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 // adapted from https://github.com/fmtlib/fmt/issues/2704
 // a generic formatter for enum classes
