@@ -73,12 +73,7 @@ public:
      * Gets the instance of the System singleton class.
      * @returns Reference to the instance of the System singleton class.
      */
-    [[nodiscard]] static System& GetInstance() {
-        if (!s_instance) {
-            std::abort();
-        }
-        return *s_instance;
-    }
+    [[nodiscard]] static System& GetInstance();
 
     static void InitializeGlobalInstance();
 

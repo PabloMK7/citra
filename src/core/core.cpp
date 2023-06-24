@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <exception>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -68,9 +69,16 @@ Core::Timing& Global() {
 
 System::~System() = default;
 
+System& System::GetInstance() {
+    if (!s_instance) {
+        throw std::runtime_error("Using System instance before its initialization");
+    }
+    return *s_instance;
+}
+
 void System::InitializeGlobalInstance() {
     if (s_instance) {
-        std::abort();
+        throw std::runtime_error("Reinitializing Global System instance.");
     }
     s_instance = std::unique_ptr<System>(new System);
 }

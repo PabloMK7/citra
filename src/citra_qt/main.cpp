@@ -171,6 +171,7 @@ static QString PrettyProductName() {
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{Core::Movie::GetInstance()},
       config{std::make_unique<Config>()}, emu_thread{nullptr} {
+    Common::Log::Initialize();
     Debugger::ToggleConsole();
     Settings::LogSettings();
 
@@ -2853,7 +2854,6 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 }
 
 int main(int argc, char* argv[]) {
-    Common::Log::Initialize();
     Common::DetachedTasks detached_tasks;
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });

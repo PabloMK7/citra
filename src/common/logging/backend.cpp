@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <exception>
 #include <thread>
 #include <vector>
 #include "common/common_paths.h"
@@ -177,7 +178,7 @@ public:
 };
 #endif
 
-bool initialization_in_progress_suppress_logging = false;
+bool initialization_in_progress_suppress_logging = true;
 
 #ifdef CITRA_LINUX_GCC_BACKTRACE
 [[noreturn]] void SleepForever() {
@@ -194,14 +195,15 @@ class Impl {
 public:
     static Impl& Instance() {
         if (!instance) {
-            abort();
+            throw std::runtime_error("Using Logging instance before its initialization");
         }
         return *instance;
     }
 
     static void Initialize() {
         if (instance) {
-            abort();
+            LOG_WARNING(Log, "Reinitializing logging backend");
+            return;
         }
         initialization_in_progress_suppress_logging = true;
         const auto& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
