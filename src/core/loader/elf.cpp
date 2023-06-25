@@ -16,9 +16,6 @@
 
 using Kernel::CodeSet;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// ELF Header Constants
-
 // File type
 enum ElfType {
     ET_NONE = 0,
@@ -108,9 +105,6 @@ typedef unsigned int Elf32_Off;
 typedef signed int Elf32_Sword;
 typedef unsigned int Elf32_Word;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// ELF file header
-
 struct Elf32_Ehdr {
     unsigned char e_ident[EI_NIDENT];
     Elf32_Half e_type;
@@ -169,9 +163,6 @@ struct Elf32_Rel {
     Elf32_Addr r_offset;
     Elf32_Word r_info;
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// ElfReader class
 
 typedef int SectionID;
 
@@ -358,9 +349,6 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
     }
     return -1;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Loader namespace
 
 namespace Loader {
 

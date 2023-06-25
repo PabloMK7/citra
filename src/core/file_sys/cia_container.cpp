@@ -10,9 +10,6 @@
 #include "core/file_sys/file_backend.h"
 #include "core/loader/loader.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 namespace FileSys {
 
 Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {

@@ -15,8 +15,6 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 namespace HLE::Applets {
 
 ResultCode MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) {

@@ -30,9 +30,6 @@ SERVICE_CONSTRUCT_IMPL(Service::FS::FS_USER)
 SERIALIZE_EXPORT_IMPL(Service::FS::FS_USER)
 SERIALIZE_EXPORT_IMPL(Service::FS::ClientSlot)
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace FS_User
-
 using Kernel::ClientSession;
 using Kernel::ServerSession;
 

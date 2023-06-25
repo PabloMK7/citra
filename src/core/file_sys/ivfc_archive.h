@@ -18,9 +18,6 @@
 #include "core/file_sys/romfs_reader.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 namespace FileSys {
 
 class IVFCDelayGenerator : public DelayGenerator {

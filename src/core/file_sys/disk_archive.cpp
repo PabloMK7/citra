@@ -11,9 +11,6 @@
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 SERIALIZE_EXPORT_IMPL(FileSys::DiskFile)
 SERIALIZE_EXPORT_IMPL(FileSys::DiskDirectory)
 
@@ -53,8 +50,6 @@ bool DiskFile::SetSize(const u64 size) const {
 bool DiskFile::Close() const {
     return file->Close();
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DiskDirectory::DiskDirectory(const std::string& path) {
     directory.size = FileUtil::ScanDirectoryTree(path, directory);

@@ -10,9 +10,6 @@
 #include "core/file_sys/title_metadata.h"
 #include "core/loader/loader.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 namespace FileSys {
 
 Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {

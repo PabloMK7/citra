@@ -12,9 +12,6 @@
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 namespace FileSys {
 
 /// File system interface to the SystemSaveData archive

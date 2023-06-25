@@ -10,9 +10,6 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/fs/archive.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_OtherSaveDataPermitted)
 SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_OtherSaveDataGeneral)
 

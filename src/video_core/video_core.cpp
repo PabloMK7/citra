@@ -16,9 +16,6 @@
 #include "video_core/renderer_software/renderer_software.h"
 #include "video_core/video_core.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Video Core namespace
-
 namespace VideoCore {
 
 std::unique_ptr<RendererBase> g_renderer{}; ///< Renderer plugin

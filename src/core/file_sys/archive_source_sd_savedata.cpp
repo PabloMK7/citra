@@ -11,9 +11,6 @@
 #include "core/file_sys/savedata_archive.h"
 #include "core/hle/service/fs/archive.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 SERIALIZE_EXPORT_IMPL(FileSys::ArchiveSource_SDSaveData)
 
 namespace FileSys {

@@ -13,8 +13,6 @@
 #include "core/hle/service/ptm/ptm.h"
 #include "core/movie.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 SERIALIZE_EXPORT_IMPL(SharedPage::Handler)
 
 namespace boost::serialization {

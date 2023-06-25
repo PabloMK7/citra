@@ -40,9 +40,6 @@ struct NCSD_Header {
 
 static_assert(sizeof(NCSD_Header) == 0x200, "NCCH header structure size is wrong");
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-/// NCCH header (Note: "NCCH" appears to be a publicly unknown acronym)
-
 struct NCCH_Header {
     u8 signature[0x100];
     u32_le magic;
@@ -98,9 +95,6 @@ struct NCCH_Header {
 
 static_assert(sizeof(NCCH_Header) == 0x200, "NCCH header structure size is wrong");
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// ExeFS (executable file system) headers
-
 struct ExeFs_SectionHeader {
     char name[8];
     u32 offset;
@@ -112,9 +106,6 @@ struct ExeFs_Header {
     u8 reserved[0x80];
     u8 hashes[8][0x20];
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// ExHeader (executable file system header) headers
 
 struct ExHeader_SystemInfoFlags {
     u8 reserved[5];
@@ -222,9 +213,6 @@ struct ExHeader_Header {
 };
 
 static_assert(sizeof(ExHeader_Header) == 0x800, "ExHeader structure size is wrong");
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
 
 namespace FileSys {
 

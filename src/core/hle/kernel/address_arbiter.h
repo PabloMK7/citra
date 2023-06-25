@@ -22,9 +22,6 @@
 // applications use them as an underlying mechanism to implement thread-safe barriers, events, and
 // semaphores.
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Kernel namespace
-
 namespace Kernel {
 
 class Thread;

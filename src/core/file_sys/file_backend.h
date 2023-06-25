@@ -12,9 +12,6 @@
 #include "core/hle/result.h"
 #include "delay_generator.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 namespace FileSys {
 
 class FileBackend : NonCopyable {

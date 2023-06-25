@@ -8,9 +8,6 @@
 #include <cstddef>
 #include "common/common_types.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
-
 namespace FileSys {
 
 // Structure of a directory entry, from http://3dbrew.org/wiki/FSDir:Read#Entry_format

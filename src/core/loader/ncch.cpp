@@ -28,9 +28,6 @@
 #include "core/system_titles.h"
 #include "network/network.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Loader namespace
-
 namespace Loader {
 
 static const u64 UPDATE_MASK = 0x0000000e00000000;
