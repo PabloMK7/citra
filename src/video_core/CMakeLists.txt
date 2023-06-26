@@ -104,6 +104,12 @@ add_library(video_core STATIC
     renderer_vulkan/vk_instance.h
     renderer_vulkan/vk_platform.cpp
     renderer_vulkan/vk_platform.h
+    renderer_vulkan/vk_shader_gen.cpp
+    renderer_vulkan/vk_shader_gen.h
+    renderer_vulkan/vk_shader_gen_spv.cpp
+    renderer_vulkan/vk_shader_gen_spv.h
+    renderer_vulkan/vk_shader_util.cpp
+    renderer_vulkan/vk_shader_util.h
     shader/debug_data.h
     shader/shader.cpp
     shader/shader.h
@@ -133,7 +139,7 @@ create_target_directory_groups(video_core)
 
 target_link_libraries(video_core PUBLIC citra_common citra_core)
 target_link_libraries(video_core PRIVATE Boost::serialization dds-ktx json-headers nihstro-headers tsl::robin_map)
-target_link_libraries(video_core PRIVATE vulkan-headers vma glad)
+target_link_libraries(video_core PRIVATE vulkan-headers vma glad sirit SPIRV glslang)
 set_target_properties(video_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if ("x86_64" IN_LIST ARCHITECTURE)
