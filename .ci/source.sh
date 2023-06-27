@@ -1,8 +1,12 @@
 #!/bin/bash -ex
 
-. .ci/common/pre-upload.sh
+GITDATE="`git show -s --date=short --format='%ad' | sed 's/-//g'`"
+GITREV="`git show -s --format='%h'`"
 REV_NAME="citra-unified-source-${GITDATE}-${GITREV}"
+
 COMPAT_LIST='dist/compatibility_list/compatibility_list.json'
+
+mkdir artifacts
 
 pip3 install git-archive-all
 wget -q https://api.citra-emu.org/gamedb -O "${COMPAT_LIST}"

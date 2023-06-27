@@ -38,13 +38,16 @@ android {
         ndk.abiFilters abiFilter
     }
 
-    signingConfigs {
-        //release {
-        //    storeFile file('')
-        //    storePassword System.getenv('ANDROID_KEYPASS')
-        //    keyAlias = 'key0'
-        //    keyPassword System.getenv('ANDROID_KEYPASS')
-        //}
+    def keystoreFile = System.getenv('ANDROID_KEYSTORE_FILE')
+    if (keystoreFile != null) {
+        signingConfigs {
+            release {
+                storeFile file(keystoreFile)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASS')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEYSTORE_PASS')
+            }
+        }
     }
 
     applicationVariants.all { variant ->
@@ -56,7 +59,7 @@ android {
 
         // Signed by release key, allowing for upload to Play Store.
         release {
-            signingConfig signingConfigs.debug
+            signingConfig keystoreFile != null ? signingConfigs.release : signingConfigs.debug
         }
 
         // builds a release build that doesn't need signing
@@ -107,8 +110,7 @@ android {
             cmake {
                 arguments "-DENABLE_QT=0", // Don't use QT
                         "-DENABLE_SDL2=0", // Don't use SDL
-                        "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
-                        "-DBUNDLE_SPEEX=ON"
+                        "-DANDROID_ARM_NEON=true" // cryptopp requires Neon to work
 
                 abiFilters abiFilter
             }
@@ -167,4 +169,24 @@ def getVersion() {
     }
 
     return versionName
+}
+
+// Add task to each variant for copying output APKs to bundle directory.
+android.applicationVariants.all { variant ->
+    def capitalizedName = variant.name.capitalize()
+    def copyTask = tasks.register("copyBundle${capitalizedName}") {
+        doLast {
+            project.copy {
+                from variant.outputs[0].outputFile.parentFile
+                include '*.apk'
+                into layout.buildDirectory.dir("bundle")
+            }
+            project.copy {
+                from layout.buildDirectory.dir("outputs/bundle/${variant.name}")
+                include '*.aab'
+                into layout.buildDirectory.dir("bundle")
+            }
+        }
+    }
+    tasks.named("bundle${capitalizedName}").get().configure { finalizedBy copyTask }
 }

@@ -290,22 +290,6 @@ elseif(WIN32)
     endif()
 endif()
 
-if (CITRA_BUNDLE_LIBRARIES)
-    if (APPLE)
-        set(BUNDLE_DIR "$<TARGET_BUNDLE_DIR:citra-qt>")
-    endif()
-
-    add_custom_command(TARGET citra-qt
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-        -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-        -DTYPE=qt
-        -DEXECUTABLE_PATH=$<TARGET_FILE:citra-qt>
-        -DBUNDLE_PATH=${BUNDLE_DIR}
-        -P ${CMAKE_SOURCE_DIR}/CMakeModules/BundleLibraries.cmake
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-endif()
-
 create_target_directory_groups(citra-qt)
 
 target_link_libraries(citra-qt PRIVATE audio_core citra_common citra_core input_common network video_core)
@@ -358,15 +342,6 @@ endif()
 
 if(UNIX AND NOT APPLE)
     install(TARGETS citra-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-endif()
-
-if (MSVC)
-    include(CopyCitraQt6Deps)
-    copy_citra_Qt6_deps(citra-qt)
-    if (ENABLE_WEB_SERVICE AND OPENSSL_DLL_DIR)
-        include(CopyCitraOpensslDeps)
-        copy_citra_openssl_deps(citra-qt)
-    endif()
 endif()
 
 if (NOT APPLE)

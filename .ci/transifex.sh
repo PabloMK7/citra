@@ -1,6 +1,4 @@
-#!/bin/bash -e
-
-set -x
+#!/bin/bash -ex
 
 echo -e "\e[1m\e[33mBuild tools information:\e[0m"
 cmake --version

@@ -20,7 +20,11 @@ if (IOS)
     set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 endif()
 
-option(ENABLE_LTO "Enable link time optimization" OFF)
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    set(IS_DEBUG_BUILD ON)
+else()
+    set(IS_DEBUG_BUILD OFF)
+endif()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_SDL2_FRONTEND "Enable the SDL2 frontend" ON "ENABLE_SDL2;NOT ANDROID AND NOT IOS" OFF)
@@ -30,15 +34,11 @@ option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OF
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_QT_UPDATER "Enable built-in updater for the Qt frontend" ON "NOT IOS" OFF)
-CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" ON "ENABLE_QT;MSVC OR APPLE" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_DEDICATED_ROOM "Enable generating dedicated room executable" ON "NOT ANDROID AND NOT IOS" OFF)
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
-if (MSVC)
-    set(OPENSSL_DLL_DIR "" CACHE PATH "Location of the Openssl dlls")
-endif()
 
 CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
 option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
@@ -47,30 +47,22 @@ CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
-option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
-
 CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder (preferred over FFmpeg)" ON "WIN32" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_AUDIOTOOLBOX "Use AudioToolbox decoder (preferred over FFmpeg)" ON "APPLE" OFF)
 
-CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ON "MINGW" OFF)
-
-option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
-
-
-CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_MOLTENVK "Download the bundled MoltenVK" ON "APPLE" OFF)
-
-CMAKE_DEPENDENT_OPTION(CITRA_BUNDLE_LIBRARIES "Bundle dependent libraries with the output executables" ON "APPLE" OFF)
-
+# Compile options
+CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
+option(ENABLE_LTO "Enable link time optimization" OFF)
+option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
-if (CITRA_USE_PRECOMPILED_HEADERS)
-    if (MSVC AND CCACHE)
-        # buildcache does not properly cache PCH files, leading to compilation errors.
-        # See https://github.com/mbitsnbites/buildcache/discussions/230
-        message(WARNING "Buildcache does not properly support Precompiled Headers. Disabling PCH")
-        set(CITRA_USE_PRECOMPILED_HEADERS OFF)
-    endif()
-endif()
+# System library options
+CMAKE_DEPENDENT_OPTION(USE_SYSTEM_QT "Use the system Qt lib (instead of the bundled one)" OFF "ENABLE_QT;MSVC OR APPLE" ON)
+CMAKE_DEPENDENT_OPTION(USE_SYSTEM_MOLTENVK "Use the system MoltenVK lib (instead of the bundled one)" OFF "APPLE" OFF)
+option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
+option(USE_SYSTEM_OPENSSL "Use the system OpenSSL libs (instead of the bundled LibreSSL)" OFF)
+
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")
     set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
@@ -203,8 +195,8 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 if (ENABLE_QT)
-    if (CITRA_USE_BUNDLED_QT)
-        download_qt_external(6.5.0)
+    if (NOT USE_SYSTEM_QT)
+        download_qt(6.5.0)
     endif()
 
     find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
@@ -215,13 +207,6 @@ if (ENABLE_QT)
 
     if (ENABLE_QT_TRANSLATION)
         find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
-    endif()
-
-    if (NOT CITRA_USE_BUNDLED_QT)
-        # Make sure the Qt bin directory is in the prefix path for later use, such as in post-build scripts.
-        get_target_property(qmake_executable Qt6::qmake IMPORTED_LOCATION)
-        get_filename_component(qt_bin_dir "${qmake_executable}" DIRECTORY)
-        list(APPEND CMAKE_PREFIX_PATH ${qt_bin_dir})
     endif()
 endif()
 
@@ -245,7 +230,7 @@ find_package(tsl-robin-map QUIET)
 # ======================================
 
 if (APPLE)
-    if (CITRA_USE_BUNDLED_MOLTENVK)
+    if (NOT USE_SYSTEM_MOLTENVK)
         download_moltenvk()
     endif()
     find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
@@ -309,7 +294,7 @@ if (CLANG_FORMAT)
             add_custom_target(clang-format
                 COMMAND powershell.exe -Command "Get-ChildItem '${SRCS}/*' -Include *.cpp,*.h,*.mm -Recurse | Foreach {&'${CLANG_FORMAT}' -i $_.fullname}"
                 COMMENT ${CCOMMENT})
-    endif()
+        endif()
     else()
         add_custom_target(clang-format
             COMMAND find ${SRCS} -iname *.h -o -iname *.cpp -o -iname *.mm | xargs ${CLANG_FORMAT} -i
@@ -401,6 +386,14 @@ else()
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT citra)
 endif()
 
+# Create target for outputting distributable bundles.
+if (NOT ANDROID AND NOT IOS)
+    include(BundleTarget)
+    bundle_target(citra)
+    bundle_target(citra-qt)
+    bundle_target(citra-room)
+endif()
+
 # Installation instructions
 # =========================
 
@@ -409,7 +402,7 @@ endif()
 # http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
 # http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
 if(ENABLE_QT AND UNIX AND NOT APPLE)
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.desktop"
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra-qt.desktop"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.svg"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")

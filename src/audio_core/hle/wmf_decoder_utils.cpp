@@ -30,7 +30,7 @@ void ReportError(std::string msg, HRESULT hr) {
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
 
     HRESULT hr = S_OK;
-    MFT_REGISTER_TYPE_INFO reg = {0};
+    MFT_REGISTER_TYPE_INFO reg{};
     GUID category = MFT_CATEGORY_AUDIO_DECODER;
     IMFActivate** activate;
     unique_mfptr<IMFTransform> transform;

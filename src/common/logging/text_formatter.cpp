@@ -44,7 +44,7 @@ void PrintColoredMessage(const Entry& entry) {
         return;
     }
 
-    CONSOLE_SCREEN_BUFFER_INFO original_info = {0};
+    CONSOLE_SCREEN_BUFFER_INFO original_info{};
     GetConsoleScreenBufferInfo(console_handle, &original_info);
 
     WORD color = 0;

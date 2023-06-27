@@ -1,60 +1,28 @@
 
-# This function downloads a binary library package from our external repo.
-# Params:
-#   remote_path: path to the file to download, relative to the remote repository root
-#   prefix_var: name of a variable which will be set with the path to the extracted contents
-function(download_bundled_external remote_path lib_name prefix_var)
-    get_external_prefix(${lib_name} prefix)
-    if (NOT EXISTS "${prefix}")
-        message(STATUS "Downloading binaries for ${lib_name}...")
-
-        if (WIN32)
-            set(repo_base "ext-windows-bin/raw/master")
-        elseif (APPLE)
-            set(repo_base "ext-macos-bin/raw/main")
-        else()
-            message(FATAL_ERROR "Bundled libraries are unsupported for this OS.")
-        endif()
-
-        file(DOWNLOAD
-            https://github.com/citra-emu/${repo_base}/${remote_path}${lib_name}.7z
-            "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z" SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z"
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
-    endif()
-
-    # For packages that include the /usr/local prefix, include it in the prefix path.
-    if (EXISTS "${prefix}/usr/local")
-        set(prefix "${prefix}/usr/local")
-    endif()
-
-    message(STATUS "Using bundled binaries at ${prefix}")
-    set(${prefix_var} "${prefix}" PARENT_SCOPE)
-endfunction()
-
 # This function downloads Qt using aqt.
 # Params:
 #   target: Qt dependency to install. Specify a version number to download Qt, or "tools_(name)" for a specific build tool.
 #   prefix_var: Name of a variable which will be set with the path to the extracted contents.
-function(download_qt_external target)
+function(download_qt target)
     # Determine installation parameters for OS, architecture, and compiler
     if (WIN32)
         set(host "windows")
         set(type "desktop")
         if (MINGW)
-            set(arch_path "mingw81")
-        elseif ((MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1940) AND "x86_64" IN_LIST ARCHITECTURE)
+            set(arch "win64_mingw")
+            set(arch_path "mingw_64")
+        elseif (MSVC)
             if ("arm64" IN_LIST ARCHITECTURE)
                 set(arch_path "msvc2019_arm64")
             elseif ("x86_64" IN_LIST ARCHITECTURE)
                 set(arch_path "msvc2019_64")
             else()
-                message(FATAL_ERROR "Unsupported bundled Qt architecture. Disable CITRA_USE_BUNDLED_QT and provide your own.")
+                message(FATAL_ERROR "Unsupported bundled Qt architecture. Enable USE_SYSTEM_QT and provide your own.")
             endif()
+            set(arch "win64_${arch_path}")
         else()
-            message(FATAL_ERROR "Unsupported bundled Qt toolchain. Disable CITRA_USE_BUNDLED_QT and provide your own.")
+            message(FATAL_ERROR "Unsupported bundled Qt toolchain. Enable USE_SYSTEM_QT and provide your own.")
         endif()
-        set(arch "win64_${arch_path}")
     elseif (APPLE)
         set(host "mac")
         if (IOS)

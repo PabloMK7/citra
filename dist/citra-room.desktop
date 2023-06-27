@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Citra Room
+Comment=Multiplayer room host for Citra
+Icon=citra
+TryExec=citra-room
+Exec=citra-room %f
+Categories=Game;Emulator;
+Keywords=3DS;Nintendo

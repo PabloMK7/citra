@@ -233,6 +233,12 @@ using socket_t = int;
 #undef X509_EXTENSIONS
 #undef PKCS7_SIGNER_INFO
 
+// libressl will warn without this, which becomes an error.
+#undef OCSP_REQUEST
+#undef OCSP_RESPONSE
+#undef PKCS7_ISSUER_AND_SERIAL
+#undef __WINCRYPT_H__
+
 #ifdef _MSC_VER
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "cryptui.lib")

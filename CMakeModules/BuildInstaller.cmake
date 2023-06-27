@@ -12,7 +12,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${BASE_DIR}/CMakeModules")
 include(DownloadExternals)
-download_qt_external(tools_ifw QT_PREFIX)
+download_qt(tools_ifw QT_PREFIX)
 
 file(GLOB_RECURSE INSTALLER_BASE "${QT_PREFIX}/**/installerbase*")
 file(GLOB_RECURSE BINARY_CREATOR "${QT_PREFIX}/**/binarycreator*")

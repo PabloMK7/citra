@@ -20,41 +20,7 @@ jobs:
       - name: Build
         env:
           COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
-        run: ./.ci/linux-clang-format/docker.sh
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        image: ["linux-appimage", "linux-fresh", "linux-frozen", "linux-mingw"]
-    container:
-      image: citraemu/build-environments:${{ matrix.image }}
-      options: -u 1001
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Set up cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.ccache
-          key: ${{ runner.os }}-${{ matrix.image }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.image }}-
-      - name: Build
-        run: ./.ci/${{ matrix.image }}/docker.sh
-        env:
-          ENABLE_COMPATIBILITY_REPORTING: "ON"
-      - name: Pack
-        run: ./.ci/${{ matrix.image }}/upload.sh
-        if: ${{ matrix.image == 'linux-appimage' || matrix.image == 'linux-mingw' }}
-        env:
-          NAME: ${{ matrix.image }}
-      - name: Upload
-        uses: actions/upload-artifact@v3
-        if: ${{ matrix.image == 'linux-appimage' || matrix.image == 'linux-mingw' }}
-        with:
-          name: ${{ matrix.image }}
-          path: artifacts/
+        run: ./.ci/clang-format.sh
   source:
     if: ${{ !github.head_ref }}
     runs-on: ubuntu-latest
@@ -63,17 +29,57 @@ jobs:
         with:
           submodules: recursive
       - name: Pack
-        run: ./.ci/source/build.sh
+        run: ./.ci/source.sh
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
           name: source
           path: artifacts/
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: ["appimage", "fresh"]
+    container:
+      image: citraemu/build-environments:linux-${{ matrix.target }}
+      options: -u 1001
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      OS: linux
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-
+      - name: Build
+        run: ./.ci/linux.sh
+      - name: Pack
+        run: ./.ci/pack.sh
+        if: ${{ matrix.target == 'appimage' }}
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        if: ${{ matrix.target == 'appimage' }}
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: artifacts/
   macos:
     runs-on: macos-latest
     strategy:
       matrix:
-        arch: ["x86_64", "arm64"]
+        target: ["x86_64", "arm64"]
+    env:
+      CCACHE_CPP2: yes
+      CCACHE_SLOPPINESS: time_macros
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      OS: macos
+      TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -81,59 +87,66 @@ jobs:
       - name: Set up cache
         uses: actions/cache@v3
         with:
-          path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-macos-${{ matrix.arch }}-${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-macos-${{ matrix.arch }}-
-      - name: Install dependencies
-        run: ./.ci/macos/deps.sh
+            ${{ runner.os }}-${{ matrix.target }}-
+      - name: Install tools
+        run: brew install ccache glslang ninja
       - name: Build
-        run: ./.ci/macos/build.sh
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "11"
-          ENABLE_COMPATIBILITY_REPORTING: "ON"
-          TARGET_ARCH: ${{ matrix.arch }}
-      - name: Pack
-        run: ./.ci/macos/upload.sh
-      - name: Upload
-        uses: actions/upload-artifact@v3
+        run: ./.ci/macos.sh
+      - name: Prepare outputs for caching
+        run: mv build/bundle $OS-$TARGET
+      - name: Cache outputs for universal build
+        uses: actions/cache/save@v3
         with:
-          name: macos-${{ matrix.arch }}
-          path: artifacts/
+          path: ${{ env.OS }}-${{ env.TARGET }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
   macos-universal:
     runs-on: macos-latest
     needs: macos
+    env:
+      OS: macos
+      TARGET: universal
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Download x86 build
-        uses: actions/download-artifact@master
+      - name: Download x86_64 build from cache
+        uses: actions/cache/restore@v3
         with:
-          name: macos-x86_64
-          path: macos-x86_64/
-      - name: Download ARM64 build
-        uses: actions/download-artifact@master
+          path: ${{ env.OS }}-x86_64
+          key: ${{ runner.os }}-x86_64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
+      - name: Download ARM64 build from cache
+        uses: actions/cache/restore@v3
         with:
-          name: macos-arm64
-          path: macos-arm64/
+          path: ${{ env.OS }}-arm64
+          key: ${{ runner.os }}-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
       - name: Create universal app
-        run: ./.ci/macos/universal.sh
+        run: ./.ci/macos-universal.sh
         env:
-          ARTIFACTS: macos-x86_64 macos-arm64
+          ARTIFACTS: ${{ env.OS }}-x86_64 ${{ env.OS }}-arm64
+      - name: Pack
+        run: ./.ci/pack.sh
 #      - name: Upload
 #        uses: actions/upload-artifact@v3
 #        with:
-#          name: macos
+#          name: ${{ env.OS }}-${{ env.TARGET }}
 #          path: artifacts/
-      - name: Delete intermediate artifacts
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: |
-            macos-x86_64
-            macos-arm64
   windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        target: ["msvc", "msys2"]
+    defaults:
+      run:
+        shell: ${{ (matrix.target == 'msys2' && 'msys2') || 'bash' }} {0}
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      OS: windows
+      TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -141,15 +154,26 @@ jobs:
       - name: Set up cache
         uses: actions/cache@v3
         with:
-          path: ~/.buildcache
-          key: ${{ runner.os }}-win-${{ github.sha }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-win-
-      - name: Install dependencies
-        run: ./.ci/windows-msvc/deps.sh
-        shell: bash
+            ${{ runner.os }}-${{ matrix.target }}-
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ matrix.target == 'msvc' }}
+      - name: Install MSVC extra tools
+        run: choco install ccache ninja wget
+        if: ${{ matrix.target == 'msvc' }}
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        if: ${{ matrix.target == 'msys2' }}
+        with:
+          msystem: clang64
+          update: true
+          install: git make p7zip
+          pacboy: >-
+            toolchain:p ccache:p cmake:p ninja:p
+            qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p
       - name: Setup Vulkan SDK
         uses: humbletim/setup-vulkan-sdk@v1.2.0
         with:
@@ -159,19 +183,19 @@ jobs:
       - name: Test glslangValidator
         run: glslangValidator --version
       - name: Build
-        run: ./.ci/windows-msvc/build.sh
-        shell: bash
-        env:
-          ENABLE_COMPATIBILITY_REPORTING: "ON"
+        run: ./.ci/windows.sh
       - name: Pack
-        run: ./.ci/windows-msvc/upload.ps1
+        run: ./.ci/pack.sh
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: msvc
+          name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
   android:
     runs-on: ubuntu-latest
+    env:
+      OS: android
+      TARGET: universal
     steps:
       - uses: actions/checkout@v3
         with:
@@ -198,18 +222,21 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install ccache glslang-dev glslang-tools apksigner -y
       - name: Build
-        run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android/build.sh
-      - name: Copy and sign artifacts
+        run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh
         env:
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
-        run: ./.ci/android/upload.sh
+      - name: Pack
+        run: ../../../.ci/pack.sh
+        working-directory: src/android/app
+        env:
+          UPLOAD_RAW: 1
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: android
-          path: artifacts/
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: src/android/app/artifacts/
   transifex:
     runs-on: ubuntu-latest
     container: citraemu/build-environments:linux-transifex
@@ -220,12 +247,12 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Update Translation
-        run: ./.ci/transifex/docker.sh
+        run: ./.ci/transifex.sh
         env:
           TX_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}
   release:
     runs-on: ubuntu-latest
-    needs: [build, android, macos-universal, source, windows]
+    needs: [windows, linux, macos-universal, android, source]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/download-artifact@v3
