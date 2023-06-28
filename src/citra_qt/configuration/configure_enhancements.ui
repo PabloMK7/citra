@@ -368,6 +368,11 @@
              <string>Separate Windows</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Hybrid Screen</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>

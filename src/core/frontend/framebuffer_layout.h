@@ -37,6 +37,9 @@ struct FramebufferLayout {
     Common::Rectangle<u32> bottom_screen;
     bool is_rotated = true;
 
+    bool additional_screen_enabled;
+    Common::Rectangle<u32> additional_screen;
+
     CardboardSettings cardboard;
 
     /**
@@ -99,6 +102,15 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_swapped, bool
  */
 FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped, bool upright,
                                    float scale_factor);
+/**
+ * Factory method for constructing a frame with 2.5 times bigger top screen on the right,
+ * and 1x top and bottom screen on the left
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be the large display
+ * @return Newly created FramebufferLayout object with default screen regions initialized
+ */
+FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool upright);
 
 /**
  * Factory method for constructing a Frame with the Top screen and bottom

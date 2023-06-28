@@ -187,6 +187,7 @@ filter_mode =
 # 2: Large Screen Small Screen
 # 3: Side by Side
 # 4: Separate Windows
+# 5: Hybrid Screen
 layout_option =
 
 # Toggle custom layout (using the settings below) on or off.

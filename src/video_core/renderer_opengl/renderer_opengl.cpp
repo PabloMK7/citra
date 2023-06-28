@@ -942,6 +942,15 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
         ApplySecondLayerOpacity();
         DrawTopScreen(layout, top_screen);
     }
+
+    if (layout.additional_screen_enabled) {
+        const auto& additional_screen = layout.additional_screen;
+        if (!Settings::values.swap_screen.GetValue()) {
+            DrawTopScreen(layout, additional_screen);
+        } else {
+            DrawBottomScreen(layout, additional_screen);
+        }
+    }
     ResetSecondLayerOpacity();
 }
 
