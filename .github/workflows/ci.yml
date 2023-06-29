@@ -11,7 +11,7 @@ jobs:
   clang-format:
     runs-on: ubuntu-latest
     container: 
-      image: citraemu/build-environments:linux-clang-format
+      image: citraemu/build-environments:linux-fresh
       options: -u 1001
     steps:
       - uses: actions/checkout@v3
@@ -239,7 +239,7 @@ jobs:
           path: src/android/app/artifacts/
   transifex:
     runs-on: ubuntu-latest
-    container: citraemu/build-environments:linux-transifex
+    container: citraemu/build-environments:linux-fresh
     if: ${{ github.repository == 'citra-emu/citra' && !github.head_ref }}
     steps:
       - uses: actions/checkout@v3

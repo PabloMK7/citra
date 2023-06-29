@@ -389,9 +389,15 @@ endif()
 # Create target for outputting distributable bundles.
 if (NOT ANDROID AND NOT IOS)
     include(BundleTarget)
-    bundle_target(citra)
-    bundle_target(citra-qt)
-    bundle_target(citra-room)
+    if (ENABLE_SDL2_FRONTEND)
+        bundle_target(citra)
+    endif()
+    if (ENABLE_QT)
+        bundle_target(citra-qt)
+    endif()
+    if (ENABLE_DEDICATED_ROOM)
+        bundle_target(citra-room)
+    endif()
 endif()
 
 # Installation instructions
