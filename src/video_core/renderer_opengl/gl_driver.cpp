@@ -44,6 +44,8 @@ inline std::string_view GetType(GLenum type) {
         RET(PERFORMANCE);
         RET(OTHER);
         RET(MARKER);
+        RET(POP_GROUP);
+        RET(PUSH_GROUP);
     default:
         UNREACHABLE();
     }

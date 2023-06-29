@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/scope_exit.h"
+#include "common/settings.h"
 #include "video_core/custom_textures/material.h"
 #include "video_core/regs.h"
 #include "video_core/renderer_base.h"
@@ -702,10 +703,16 @@ Sampler::~Sampler() = default;
 
 DebugScope::DebugScope(TextureRuntime& runtime, Common::Vec4f, std::string_view label)
     : local_scope_depth{global_scope_depth++} {
+    if (!Settings::values.renderer_debug) {
+        return;
+    }
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, local_scope_depth, label.size(), label.data());
 }
 
 DebugScope::~DebugScope() {
+    if (!Settings::values.renderer_debug) {
+        return;
+    }
     glPopDebugGroup();
     global_scope_depth--;
 }
