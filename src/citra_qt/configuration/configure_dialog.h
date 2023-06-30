@@ -13,11 +13,15 @@ namespace Ui {
 class ConfigureDialog;
 }
 
+namespace Core {
+class System;
+}
+
 class ConfigureDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry,
+    explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry, Core::System& system,
                              bool enable_web_config = true);
     ~ConfigureDialog() override;
 
@@ -37,4 +41,5 @@ private:
 
     std::unique_ptr<Ui::ConfigureDialog> ui;
     HotkeyRegistry& registry;
+    Core::System& system;
 };

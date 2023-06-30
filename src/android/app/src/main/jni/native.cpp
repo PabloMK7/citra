@@ -141,7 +141,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         app_loader->ReadProgramId(program_id);
         GameSettings::LoadOverrides(program_id);
     }
-    Settings::Apply();
+    system.ApplySettings();
     Settings::LogSettings();
 
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImage::Factory>());
@@ -472,7 +472,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_ReloadSettings(JNIEnv* env,
         GameSettings::LoadOverrides(program_id);
     }
 
-    Settings::Apply();
+    system.ApplySettings();
 }
 
 jstring Java_org_citra_citra_1emu_NativeLibrary_GetUserSetting(JNIEnv* env,

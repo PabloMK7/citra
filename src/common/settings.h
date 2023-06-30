@@ -525,7 +525,6 @@ void SetConfiguringGlobal(bool is_global);
 
 float Volume();
 
-void Apply();
 void LogSettings();
 
 // Restore the global state of all applicable settings in the Values struct

@@ -343,7 +343,7 @@ int main(int argc, char** argv) {
     // Apply the command line arguments
     Settings::values.gdbstub_port = gdb_port;
     Settings::values.use_gdbstub = use_gdbstub;
-    Settings::Apply();
+    system.ApplySettings();
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();

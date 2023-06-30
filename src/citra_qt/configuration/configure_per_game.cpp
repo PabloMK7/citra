@@ -102,7 +102,7 @@ void ConfigurePerGame::ApplyConfiguration() {
     audio_tab->ApplyConfiguration();
     debug_tab->ApplyConfiguration();
 
-    Settings::Apply();
+    system.ApplySettings();
     Settings::LogSettings();
 
     game_config->Save();

@@ -330,6 +330,9 @@ public:
         return false;
     }
 
+    /// Applies any changes to settings to this core instance.
+    void ApplySettings();
+
 private:
     /**
      * Initialize the emulated system.
