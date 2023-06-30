@@ -570,15 +570,7 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void onAmiiboSelected(String selectedFile) {
-        boolean success = false;
-        try {
-            Uri uri = Uri.parse(selectedFile);
-            DocumentFile file = DocumentFile.fromSingleUri(this, uri);
-            byte[] bytes = FileUtil.getBytesFromFile(this, file);
-            success = NativeLibrary.LoadAmiibo(bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        boolean success = NativeLibrary.LoadAmiibo(selectedFile);
 
         if (!success) {
             new MaterialAlertDialogBuilder(this)

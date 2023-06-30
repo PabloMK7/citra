@@ -2017,6 +2017,25 @@ void GMainWindow::OnLoadAmiibo() {
         return;
     }
 
+    Core::System& system{Core::System::GetInstance()};
+    Service::SM::ServiceManager& sm = system.ServiceManager();
+    auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
+    if (nfc == nullptr) {
+        return;
+    }
+
+    if (nfc->IsTagActive()) {
+        QMessageBox::warning(this, tr("Error opening amiibo data file"),
+                             tr("A tag is already in use."));
+        return;
+    }
+
+    if (!nfc->IsSearchingForAmiibos()) {
+        QMessageBox::warning(this, tr("Error opening amiibo data file"),
+                             tr("Game is not looking for amiibos."));
+        return;
+    }
+
     const QString extensions{QStringLiteral("*.bin")};
     const QString file_filter = tr("Amiibo File (%1);; All Files (*.*)").arg(extensions);
     const QString filename = QFileDialog::getOpenFileName(this, tr("Load Amiibo"), {}, file_filter);
@@ -2035,26 +2054,12 @@ void GMainWindow::LoadAmiibo(const QString& filename) {
         return;
     }
 
-    QFile nfc_file{filename};
-    if (!nfc_file.open(QIODevice::ReadOnly)) {
-        QMessageBox::warning(this, tr("Error opening Amiibo data file"),
-                             tr("Unable to open Amiibo file \"%1\" for reading.").arg(filename));
+    if (!nfc->LoadAmiibo(filename.toStdString())) {
+        QMessageBox::warning(this, tr("Error opening amiibo data file"),
+                             tr("Unable to open amiibo file \"%1\" for reading.").arg(filename));
         return;
     }
 
-    Service::NFC::AmiiboData amiibo_data{};
-    const u64 read_size =
-        nfc_file.read(reinterpret_cast<char*>(&amiibo_data), sizeof(Service::NFC::AmiiboData));
-    if (read_size != sizeof(Service::NFC::AmiiboData)) {
-        QMessageBox::warning(this, tr("Error reading Amiibo data file"),
-                             tr("Unable to fully read Amiibo data. Expected to read %1 bytes, but "
-                                "was only able to read %2 bytes.")
-                                 .arg(sizeof(Service::NFC::AmiiboData))
-                                 .arg(read_size));
-        return;
-    }
-
-    nfc->LoadAmiibo(amiibo_data);
     ui->action_Remove_Amiibo->setEnabled(true);
 }
 

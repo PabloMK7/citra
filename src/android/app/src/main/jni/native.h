@@ -142,7 +142,7 @@ JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_ReloadCameraDevic
                                                                                    jclass clazz);
 
 JNIEXPORT jboolean Java_org_citra_citra_1emu_NativeLibrary_LoadAmiibo(JNIEnv* env, jclass clazz,
-                                                                      jbyteArray bytes);
+                                                                      jstring j_file);
 
 JNIEXPORT void Java_org_citra_citra_1emu_NativeLibrary_RemoveAmiibo(JNIEnv* env, jclass clazz);
 

@@ -585,7 +585,7 @@ public final class NativeLibrary {
     /// Notifies that the activity is now in foreground and camera devices can now be reloaded
     public static native void ReloadCameraDevices();
 
-    public static native boolean LoadAmiibo(byte[] bytes);
+    public static native boolean LoadAmiibo(String path);
 
     public static native void RemoveAmiibo();
 
