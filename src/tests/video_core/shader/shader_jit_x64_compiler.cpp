@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <span>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <nihstro/inline_assembly.h>
@@ -21,6 +22,11 @@ using DestRegister = nihstro::DestRegister;
 using OpCode = nihstro::OpCode;
 using SourceRegister = nihstro::SourceRegister;
 using Type = nihstro::InlineAsm::Type;
+
+static constexpr Common::Vec4f vec4_inf = Common::Vec4f::AssignToAll(INFINITY);
+static constexpr Common::Vec4f vec4_nan = Common::Vec4f::AssignToAll(NAN);
+static constexpr Common::Vec4f vec4_one = Common::Vec4f::AssignToAll(1.0f);
+static constexpr Common::Vec4f vec4_zero = Common::Vec4f::AssignToAll(0.0f);
 
 static std::unique_ptr<Pica::Shader::ShaderSetup> CompileShaderSetup(
     std::initializer_list<nihstro::InlineAsm> code) {
@@ -43,22 +49,66 @@ public:
         shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
     }
 
-    float Run(float input) {
+    Common::Vec4f Run(std::span<const Common::Vec4f> inputs) {
         Pica::Shader::UnitState shader_unit;
-        RunJit(shader_unit, input);
-        return shader_unit.registers.output[0].x.ToFloat32();
+        RunJit(shader_unit, inputs);
+        return {shader_unit.registers.output[0].x.ToFloat32(),
+                shader_unit.registers.output[0].y.ToFloat32(),
+                shader_unit.registers.output[0].z.ToFloat32(),
+                shader_unit.registers.output[0].w.ToFloat32()};
     }
 
-    void RunJit(Pica::Shader::UnitState& shader_unit, float input) {
-        shader_unit.registers.input[0].x = Pica::f24::FromFloat32(input);
-        shader_unit.registers.temporary[0].x = Pica::f24::Zero();
+    Common::Vec4f Run(std::initializer_list<float> inputs) {
+        std::vector<Common::Vec4f> input_vecs;
+        for (const float& input : inputs) {
+            input_vecs.emplace_back(input, 0.0f, 0.0f, 0.0f);
+        }
+        return Run(input_vecs);
+    }
+
+    Common::Vec4f Run(float input) {
+        return Run({input});
+    }
+
+    Common::Vec4f Run(std::initializer_list<Common::Vec4f> inputs) {
+        return Run(std::vector<Common::Vec4f>{inputs});
+    }
+
+    void RunJit(Pica::Shader::UnitState& shader_unit, std::span<const Common::Vec4f> inputs) {
+        for (std::size_t i = 0; i < inputs.size(); ++i) {
+            const Common::Vec4f& input = inputs[i];
+            shader_unit.registers.input[i].x = Pica::f24::FromFloat32(input.x);
+            shader_unit.registers.input[i].y = Pica::f24::FromFloat32(input.y);
+            shader_unit.registers.input[i].z = Pica::f24::FromFloat32(input.z);
+            shader_unit.registers.input[i].w = Pica::f24::FromFloat32(input.w);
+        }
+        shader_unit.registers.temporary.fill(
+            Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
         shader_jit.Run(*shader_setup, shader_unit, 0);
     }
 
-    void RunInterpreter(Pica::Shader::UnitState& shader_unit, float input) {
-        shader_unit.registers.input[0].x = Pica::f24::FromFloat32(input);
-        shader_unit.registers.temporary[0].x = Pica::f24::Zero();
+    void RunJit(Pica::Shader::UnitState& shader_unit, float input) {
+        const Common::Vec4f input_vec(input, 0, 0, 0);
+        RunJit(shader_unit, {&input_vec, 1});
+    }
+
+    void RunInterpreter(Pica::Shader::UnitState& shader_unit,
+                        std::span<const Common::Vec4f> inputs) {
+        for (std::size_t i = 0; i < inputs.size(); ++i) {
+            const Common::Vec4f& input = inputs[i];
+            shader_unit.registers.input[i].x = Pica::f24::FromFloat32(input.x);
+            shader_unit.registers.input[i].y = Pica::f24::FromFloat32(input.y);
+            shader_unit.registers.input[i].z = Pica::f24::FromFloat32(input.z);
+            shader_unit.registers.input[i].w = Pica::f24::FromFloat32(input.w);
+        }
+        shader_unit.registers.temporary.fill(
+            Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
         shader_interpreter.Run(*shader_setup, shader_unit);
+    }
+
+    void RunInterpreter(Pica::Shader::UnitState& shader_unit, float input) {
+        const Common::Vec4f input_vec(input, 0, 0, 0);
+        RunInterpreter(shader_unit, {&input_vec, 1});
     }
 
 public:
@@ -67,23 +117,87 @@ public:
     std::unique_ptr<Pica::Shader::ShaderSetup> shader_setup;
 };
 
+TEST_CASE("ADD", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::ADD, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({+1.0f, -1.0f}).x == +0.0f);
+    REQUIRE(shader.Run({+0.0f, -0.0f}).x == -0.0f);
+    REQUIRE(std::isnan(shader.Run({+INFINITY, -INFINITY}).x));
+    REQUIRE(std::isinf(shader.Run({INFINITY, +1.0f}).x));
+    REQUIRE(std::isinf(shader.Run({INFINITY, -1.0f}).x));
+}
+
+TEST_CASE("DP3", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::DP3, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({vec4_inf, vec4_zero}).x == 0.0f);
+    REQUIRE(std::isnan(shader.Run({vec4_nan, vec4_zero}).x));
+
+    REQUIRE(shader.Run({vec4_one, vec4_one}).x == 3.0f);
+}
+
+TEST_CASE("DP4", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::DP4, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({vec4_inf, vec4_zero}).x == 0.0f);
+    REQUIRE(std::isnan(shader.Run({vec4_nan, vec4_zero}).x));
+
+    REQUIRE(shader.Run({vec4_one, vec4_one}).x == 4.0f);
+}
+
+TEST_CASE("DPH", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::DPH, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({vec4_inf, vec4_zero}).x == 0.0f);
+    REQUIRE(std::isnan(shader.Run({vec4_nan, vec4_zero}).x));
+
+    REQUIRE(shader.Run({vec4_one, vec4_one}).x == 4.0f);
+    REQUIRE(shader.Run({vec4_zero, vec4_one}).x == 1.0f);
+}
+
 TEST_CASE("LG2", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
     auto shader = ShaderTest({
-        // clang-format off
         {OpCode::Id::LG2, sh_output, sh_input},
         {OpCode::Id::END},
-        // clang-format on
     });
 
-    REQUIRE(std::isnan(shader.Run(NAN)));
-    REQUIRE(std::isnan(shader.Run(-1.f)));
-    REQUIRE(std::isinf(shader.Run(0.f)));
-    REQUIRE(shader.Run(4.f) == Catch::Approx(2.f));
-    REQUIRE(shader.Run(64.f) == Catch::Approx(6.f));
-    REQUIRE(shader.Run(1.e24f) == Catch::Approx(79.7262742773f));
+    REQUIRE(std::isnan(shader.Run(NAN).x));
+    REQUIRE(std::isnan(shader.Run(-1.f).x));
+    REQUIRE(std::isinf(shader.Run(0.f).x));
+    REQUIRE(shader.Run(4.f).x == Catch::Approx(2.f));
+    REQUIRE(shader.Run(64.f).x == Catch::Approx(6.f));
+    REQUIRE(shader.Run(1.e24f).x == Catch::Approx(79.7262742773f));
 }
 
 TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
@@ -91,20 +205,203 @@ TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
     const auto sh_output = DestRegister::MakeOutput(0);
 
     auto shader = ShaderTest({
-        // clang-format off
         {OpCode::Id::EX2, sh_output, sh_input},
         {OpCode::Id::END},
-        // clang-format on
     });
 
-    REQUIRE(std::isnan(shader.Run(NAN)));
-    REQUIRE(shader.Run(-800.f) == Catch::Approx(0.f));
-    REQUIRE(shader.Run(0.f) == Catch::Approx(1.f));
-    REQUIRE(shader.Run(2.f) == Catch::Approx(4.f));
-    REQUIRE(shader.Run(6.f) == Catch::Approx(64.f));
-    REQUIRE(shader.Run(79.7262742773f) == Catch::Approx(1.e24f));
-    REQUIRE(std::isinf(shader.Run(800.f)));
+    REQUIRE(std::isnan(shader.Run(NAN).x));
+    REQUIRE(shader.Run(-800.f).x == Catch::Approx(0.f));
+    REQUIRE(shader.Run(0.f).x == Catch::Approx(1.f));
+    REQUIRE(shader.Run(2.f).x == Catch::Approx(4.f));
+    REQUIRE(shader.Run(6.f).x == Catch::Approx(64.f));
+    REQUIRE(shader.Run(79.7262742773f).x == Catch::Approx(1.e24f));
+    REQUIRE(std::isinf(shader.Run(800.f).x));
 }
+
+TEST_CASE("MUL", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::MUL, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({+1.0f, -1.0f}).x == -1.0f);
+    REQUIRE(shader.Run({-1.0f, +1.0f}).x == -1.0f);
+
+    REQUIRE(shader.Run({INFINITY, 0.0f}).x == 0.0f);
+    REQUIRE(std::isnan(shader.Run({NAN, 0.0f}).x));
+    REQUIRE(shader.Run({+INFINITY, +INFINITY}).x == INFINITY);
+    REQUIRE(shader.Run({+INFINITY, -INFINITY}).x == -INFINITY);
+}
+
+TEST_CASE("SGE", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::SGE, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({INFINITY, 0.0f}).x == 1.0f);
+    REQUIRE(shader.Run({0.0f, INFINITY}).x == 0.0f);
+    REQUIRE(shader.Run({NAN, 0.0f}).x == 0.0f);
+    REQUIRE(shader.Run({0.0f, NAN}).x == 0.0f);
+    REQUIRE(shader.Run({+INFINITY, +INFINITY}).x == 1.0f);
+    REQUIRE(shader.Run({+INFINITY, -INFINITY}).x == 1.0f);
+    REQUIRE(shader.Run({-INFINITY, +INFINITY}).x == 0.0f);
+    REQUIRE(shader.Run({+1.0f, -1.0f}).x == 1.0f);
+    REQUIRE(shader.Run({-1.0f, +1.0f}).x == 0.0f);
+}
+
+TEST_CASE("SLT", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::SLT, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({INFINITY, 0.0f}).x == 0.0f);
+    REQUIRE(shader.Run({0.0f, INFINITY}).x == 1.0f);
+    REQUIRE(shader.Run({NAN, 0.0f}).x == 0.0f);
+    REQUIRE(shader.Run({0.0f, NAN}).x == 0.0f);
+    REQUIRE(shader.Run({+INFINITY, +INFINITY}).x == 0.0f);
+    REQUIRE(shader.Run({+INFINITY, -INFINITY}).x == 0.0f);
+    REQUIRE(shader.Run({-INFINITY, +INFINITY}).x == 1.0f);
+    REQUIRE(shader.Run({+1.0f, -1.0f}).x == 0.0f);
+    REQUIRE(shader.Run({-1.0f, +1.0f}).x == 1.0f);
+}
+
+TEST_CASE("FLR", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::FLR, sh_output, sh_input1},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({0.5}).x == 0.0f);
+    REQUIRE(shader.Run({-0.5}).x == -1.0f);
+    REQUIRE(shader.Run({1.5}).x == 1.0f);
+    REQUIRE(shader.Run({-1.5}).x == -2.0f);
+    REQUIRE(std::isnan(shader.Run({NAN}).x));
+    REQUIRE(std::isinf(shader.Run({INFINITY}).x));
+}
+
+TEST_CASE("MAX", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::MAX, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({1.0f, 0.0f}).x == 1.0f);
+    REQUIRE(shader.Run({0.0f, 1.0f}).x == 1.0f);
+    REQUIRE(shader.Run({0.0f, +INFINITY}).x == +INFINITY);
+    // REQUIRE(shader.Run({0.0f, -INFINITY}).x == -INFINITY); // TODO: 3dbrew says this is -INFINITY
+    REQUIRE(std::isnan(shader.Run({0.0f, NAN}).x));
+    REQUIRE(shader.Run({NAN, 0.0f}).x == 0.0f);
+    REQUIRE(shader.Run({-INFINITY, +INFINITY}).x == +INFINITY);
+}
+
+TEST_CASE("MIN", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::MIN, sh_output, sh_input1, sh_input2},
+        {OpCode::Id::END},
+    });
+
+    REQUIRE(shader.Run({1.0f, 0.0f}).x == 0.0f);
+    REQUIRE(shader.Run({0.0f, 1.0f}).x == 0.0f);
+    REQUIRE(shader.Run({0.0f, +INFINITY}).x == 0.0f);
+    REQUIRE(shader.Run({0.0f, -INFINITY}).x == -INFINITY);
+    REQUIRE(std::isnan(shader.Run({0.0f, NAN}).x));
+    REQUIRE(shader.Run({NAN, 0.0f}).x == 0.0f);
+    REQUIRE(shader.Run({-INFINITY, +INFINITY}).x == -INFINITY);
+}
+
+TEST_CASE("RCP", "[video_core][shader][shader_jit]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::RCP, sh_output, sh_input},
+        {OpCode::Id::END},
+    });
+
+    // REQUIRE(shader.Run({-0.0f}).x == INFINITY); // Violates IEEE
+    REQUIRE(shader.Run({0.0f}).x == INFINITY);
+    REQUIRE(shader.Run({INFINITY}).x == 0.0f);
+    REQUIRE(std::isnan(shader.Run({NAN}).x));
+
+    REQUIRE(shader.Run({16.0f}).x == Catch::Approx(0.0625f).margin(0.001f));
+    REQUIRE(shader.Run({8.0f}).x == Catch::Approx(0.125f).margin(0.001f));
+    REQUIRE(shader.Run({4.0f}).x == Catch::Approx(0.25f).margin(0.001f));
+    REQUIRE(shader.Run({2.0f}).x == Catch::Approx(0.5f).margin(0.001f));
+    REQUIRE(shader.Run({1.0f}).x == Catch::Approx(1.0f).margin(0.001f));
+    REQUIRE(shader.Run({0.5f}).x == Catch::Approx(2.0f).margin(0.001f));
+    REQUIRE(shader.Run({0.25f}).x == Catch::Approx(4.0f).margin(0.001f));
+    REQUIRE(shader.Run({0.125f}).x == Catch::Approx(8.0f).margin(0.002f));
+    REQUIRE(shader.Run({0.0625f}).x == Catch::Approx(16.0f).margin(0.004f));
+}
+
+TEST_CASE("RSQ", "[video_core][shader][shader_jit]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        {OpCode::Id::RSQ, sh_output, sh_input},
+        {OpCode::Id::END},
+    });
+
+    // REQUIRE(shader.Run({-0.0f}).x == INFINITY); // Violates IEEE
+    REQUIRE(std::isnan(shader.Run({-2.0f}).x));
+    REQUIRE(shader.Run({INFINITY}).x == 0.0f);
+    REQUIRE(std::isnan(shader.Run({-INFINITY}).x));
+    REQUIRE(std::isnan(shader.Run({NAN}).x));
+
+    REQUIRE(shader.Run({16.0f}).x == Catch::Approx(0.25f).margin(0.001f));
+    REQUIRE(shader.Run({8.0f}).x == Catch::Approx(1.0f / std::sqrt(8.0f)).margin(0.001f));
+    REQUIRE(shader.Run({4.0f}).x == Catch::Approx(0.5f).margin(0.001f));
+    REQUIRE(shader.Run({2.0f}).x == Catch::Approx(1.0f / std::sqrt(2.0f)).margin(0.001f));
+    REQUIRE(shader.Run({1.0f}).x == Catch::Approx(1.0f).margin(0.001f));
+    REQUIRE(shader.Run({0.5f}).x == Catch::Approx(1.0f / std::sqrt(0.5f)).margin(0.001f));
+    REQUIRE(shader.Run({0.25f}).x == Catch::Approx(2.0f).margin(0.001f));
+    REQUIRE(shader.Run({0.125f}).x == Catch::Approx(1.0 / std::sqrt(0.125)).margin(0.002f));
+    REQUIRE(shader.Run({0.0625f}).x == Catch::Approx(4.0f).margin(0.004f));
+}
+
+// TODO: Requires fix from https://github.com/neobrain/nihstro/issues/68
+// TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
+//     const auto sh_input1 = SourceRegister::MakeInput(0);
+//     const auto sh_input2 = SourceRegister::MakeInput(1);
+//     const auto sh_input3 = SourceRegister::MakeInput(2);
+//     const auto sh_output = DestRegister::MakeOutput(0);
+
+//     auto shader = ShaderTest({
+//         {OpCode::Id::MAD, sh_output, sh_input1, sh_input2, sh_input3},
+//         {OpCode::Id::END},
+//     });
+
+//     REQUIRE(shader.Run({vec4_inf, vec4_zero, vec4_zero}).x == 0.0f);
+//     REQUIRE(std::isnan(shader.Run({vec4_nan, vec4_zero, vec4_zero}).x));
+
+//     REQUIRE(shader.Run({vec4_one, vec4_one, vec4_one}).x == 2.0f);
+// }
 
 TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
