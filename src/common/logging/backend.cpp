@@ -202,7 +202,7 @@ public:
         return *instance;
     }
 
-    static void Initialize() {
+    static void Initialize(std::string_view log_file) {
         if (instance) {
             LOG_WARNING(Log, "Reinitializing logging backend");
             return;
@@ -212,8 +212,8 @@ public:
         void(FileUtil::CreateDir(log_dir));
         Filter filter;
         filter.ParseFilterString(Settings::values.log_filter.GetValue());
-        instance = std::unique_ptr<Impl, decltype(&Deleter)>(new Impl(log_dir + LOG_FILE, filter),
-                                                             Deleter);
+        instance = std::unique_ptr<Impl, decltype(&Deleter)>(
+            new Impl(fmt::format("{}{}", log_dir, log_file), filter), Deleter);
         initialization_in_progress_suppress_logging = false;
     }
 
@@ -414,8 +414,8 @@ private:
 };
 } // namespace
 
-void Initialize() {
-    Impl::Initialize();
+void Initialize(std::string_view log_file) {
+    Impl::Initialize(log_file.empty() ? LOG_FILE : log_file);
 }
 
 void Start() {

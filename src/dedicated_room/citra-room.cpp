@@ -150,7 +150,7 @@ static void SaveBanList(const Network::Room::BanList& ban_list, const std::strin
 }
 
 static void InitializeLogging(const std::string& log_file) {
-    Common::Log::Initialize();
+    Common::Log::Initialize(log_file);
     Common::Log::SetColorConsoleBackendEnabled(true);
 }
 

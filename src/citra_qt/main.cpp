@@ -172,8 +172,9 @@ GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{Core::Movie::GetInstance()},
       config{std::make_unique<Config>()}, emu_thread{nullptr} {
     Common::Log::Initialize();
+    Common::Log::Start();
+
     Debugger::ToggleConsole();
-    Settings::LogSettings();
 
     // register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
@@ -263,8 +264,6 @@ GMainWindow::GMainWindow(Core::System& system_)
         CheckForUpdates();
     }
 #endif
-
-    Common::Log::Start();
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
@@ -1143,8 +1142,9 @@ void GMainWindow::BootGame(const QString& filename) {
         system.ApplySettings();
 
         LOG_INFO(Frontend, "Using per game config file for title id {}", config_file_name);
-        Settings::LogSettings();
     }
+
+    Settings::LogSettings();
 
     // Save configurations
     UpdateUISettings();

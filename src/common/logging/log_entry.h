@@ -19,7 +19,7 @@ struct Entry {
     Class log_class{};
     Level log_level{};
     const char* filename = nullptr;
-    unsigned int line_num = 0;
+    u32 line_num = 0;
     std::string function;
     std::string message;
 };

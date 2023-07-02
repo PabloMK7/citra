@@ -20,7 +20,7 @@ enum class Level : u8 {
     Critical, ///< Major problems during execution that threaten the stability of the entire
     ///< application.
 
-    Count ///< Total number of logging levels
+    Count, ///< Total number of logging levels
 };
 
 /**
@@ -100,7 +100,7 @@ enum class Class : u8 {
     Movie,           ///< Movie (Input Recording) Playback
     WebService,      ///< Interface to Citra Web Services
     RPC_Server,      ///< RPC server
-    Count            ///< Total number of logging classes
+    Count,           ///< Total number of logging classes
 };
 
 } // namespace Common::Log

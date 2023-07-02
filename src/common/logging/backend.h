@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <string_view>
 #include "common/logging/filter.h"
 
 namespace Common::Log {
@@ -11,7 +12,7 @@ namespace Common::Log {
 class Filter;
 
 /// Initializes the logging system. This should be the first thing called in main.
-void Initialize();
+void Initialize(std::string_view log_file = "");
 
 void Start();
 
