@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <nihstro/shader_bytecode.h>
 #include <smmintrin.h>
+#include <xbyak/xbyak_util.h>
 #include <xmmintrin.h>
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -31,6 +32,8 @@ using Xbyak::Xmm;
 
 using nihstro::DestRegister;
 using nihstro::RegisterType;
+
+static const Xbyak::util::Cpu host_caps;
 
 namespace Pica::Shader {
 
@@ -306,7 +309,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
         // register...
         movaps(SCRATCH, xword[STATE + dest_offset_disp]);
 
-        if (Common::GetCPUCaps().sse4_1) {
+        if (host_caps.has(Cpu::tSSE41)) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
                       ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             blendps(SCRATCH, src, mask);
@@ -437,7 +440,7 @@ void JitShader::Compile_DPH(Instruction instr) {
         Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     }
 
-    if (Common::GetCPUCaps().sse4_1) {
+    if (host_caps.has(Cpu::tSSE41)) {
         // Set 4th component to 1.0
         blendps(SRC1, ONE, 0b1000);
     } else {
@@ -507,7 +510,7 @@ void JitShader::Compile_SLT(Instruction instr) {
 void JitShader::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    if (Common::GetCPUCaps().sse4_1) {
+    if (host_caps.has(Cpu::tSSE41)) {
         roundps(SRC1, SRC1, _MM_FROUND_FLOOR);
     } else {
         cvttps2dq(SRC1, SRC1);
