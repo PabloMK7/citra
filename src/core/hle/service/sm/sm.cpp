@@ -44,7 +44,7 @@ ResultVal<std::shared_ptr<Kernel::ServerPort>> ServiceManager::RegisterService(
 
     registered_services_inverse.emplace(client_port->GetObjectId(), name);
     registered_services.emplace(std::move(name), std::move(client_port));
-    return MakeResult(std::move(server_port));
+    return server_port;
 }
 
 ResultVal<std::shared_ptr<Kernel::ClientPort>> ServiceManager::GetServicePort(
@@ -56,7 +56,7 @@ ResultVal<std::shared_ptr<Kernel::ClientPort>> ServiceManager::GetServicePort(
         return ERR_SERVICE_NOT_REGISTERED;
     }
 
-    return MakeResult(it->second);
+    return it->second;
 }
 
 ResultVal<std::shared_ptr<Kernel::ClientSession>> ServiceManager::ConnectToService(

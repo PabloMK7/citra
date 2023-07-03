@@ -131,7 +131,7 @@ void PLG_LDR::OnProcessExit(Kernel::Process& process, Kernel::KernelSystem& kern
 
 ResultVal<Kernel::Handle> PLG_LDR::GetMemoryChangedHandle(Kernel::KernelSystem& kernel) {
     if (plgldr_context.memory_changed_handle)
-        return MakeResult(plgldr_context.memory_changed_handle);
+        return plgldr_context.memory_changed_handle;
 
     std::shared_ptr<Kernel::Event> evt = kernel.CreateEvent(
         Kernel::ResetType::OneShot,
@@ -139,7 +139,7 @@ ResultVal<Kernel::Handle> PLG_LDR::GetMemoryChangedHandle(Kernel::KernelSystem& 
     CASCADE_RESULT(plgldr_context.memory_changed_handle,
                    kernel.GetCurrentProcess()->handle_table.Create(std::move(evt)));
 
-    return MakeResult(plgldr_context.memory_changed_handle);
+    return plgldr_context.memory_changed_handle;
 }
 
 void PLG_LDR::OnMemoryChanged(Kernel::Process& process, Kernel::KernelSystem& kernel) {

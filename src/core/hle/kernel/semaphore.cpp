@@ -31,7 +31,7 @@ ResultVal<std::shared_ptr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_
     semaphore->available_count = initial_count;
     semaphore->name = std::move(name);
 
-    return MakeResult<std::shared_ptr<Semaphore>>(std::move(semaphore));
+    return semaphore;
 }
 
 bool Semaphore::ShouldWait(const Thread* thread) const {
@@ -53,7 +53,7 @@ ResultVal<s32> Semaphore::Release(s32 release_count) {
 
     WakeupAllWaitingThreads();
 
-    return MakeResult<s32>(previous_count);
+    return previous_count;
 }
 
 } // namespace Kernel

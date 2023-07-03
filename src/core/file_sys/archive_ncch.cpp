@@ -170,16 +170,14 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         if (!archive_data.empty()) {
             u64 romfs_offset = 0;
             u64 romfs_size = archive_data.size();
-            std::unique_ptr<DelayGenerator> delay_generator =
-                std::make_unique<RomFSDelayGenerator>();
-            file = std::make_unique<IVFCFileInMemory>(std::move(archive_data), romfs_offset,
+            auto delay_generator = std::make_unique<RomFSDelayGenerator>();
+            return std::make_unique<IVFCFileInMemory>(std::move(archive_data), romfs_offset,
                                                       romfs_size, std::move(delay_generator));
-            return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
         }
         return ERROR_NOT_FOUND;
     }
 
-    return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
+    return file;
 }
 
 ResultCode NCCHArchive::DeleteFile(const Path& path) const {
@@ -192,21 +190,21 @@ ResultCode NCCHArchive::DeleteFile(const Path& path) const {
 ResultCode NCCHArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode NCCHArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode NCCHArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode NCCHArchive::CreateFile(const Path& path, u64 size) const {
@@ -219,20 +217,20 @@ ResultCode NCCHArchive::CreateFile(const Path& path, u64 size) const {
 ResultCode NCCHArchive::CreateDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode NCCHArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> NCCHArchive::OpenDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to open a directory within an NCCH archive ({}).",
                  GetName().c_str());
     // TODO(shinyquagsire23): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 u64 NCCHArchive::GetFreeBytes() const {
@@ -253,14 +251,14 @@ ResultVal<std::size_t> NCCHFile::Read(const u64 offset, const std::size_t length
     std::size_t copy_size = std::min(length, available_size);
     memcpy(buffer, file_buffer.data() + offset, copy_size);
 
-    return MakeResult<std::size_t>(copy_size);
+    return copy_size;
 }
 
 ResultVal<std::size_t> NCCHFile::Write(const u64 offset, const std::size_t length, const bool flush,
                                        const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to NCCH file");
     // TODO(shinyquagsire23): Find error code
-    return MakeResult<std::size_t>(0);
+    return 0ULL;
 }
 
 u64 NCCHFile::GetSize() const {
@@ -290,9 +288,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
     NCCHArchivePath open_path;
     std::memcpy(&open_path, binary.data(), sizeof(NCCHArchivePath));
 
-    auto archive = std::make_unique<NCCHArchive>(
+    return std::make_unique<NCCHArchive>(
         open_path.tid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF));
-    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
 ResultCode ArchiveFactory_NCCH::Format(const Path& path,
@@ -308,7 +305,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_NCCH::GetFormatInfo(const Path& path
                                                                 u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 } // namespace FileSys

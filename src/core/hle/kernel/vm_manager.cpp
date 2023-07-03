@@ -96,7 +96,7 @@ ResultVal<VAddr> VMManager::MapBackingMemoryToBase(VAddr base, u32 region_size, 
     if (result.Failed())
         return result.Code();
 
-    return MakeResult<VAddr>(target);
+    return target;
 }
 
 ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, MemoryRef memory,
@@ -115,7 +115,7 @@ ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, Memory
     final_vma.backing_memory = memory;
     UpdatePageTableForVMA(final_vma);
 
-    return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
+    return MergeAdjacent(vma_handle);
 }
 
 ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size,
@@ -135,7 +135,7 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u3
     final_vma.mmio_handler = mmio_handler;
     UpdatePageTableForVMA(final_vma);
 
-    return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
+    return MergeAdjacent(vma_handle);
 }
 
 ResultCode VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
@@ -294,7 +294,7 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
         vma_handle = SplitVMA(vma_handle, start_in_vma);
     }
 
-    return MakeResult<VMAIter>(vma_handle);
+    return vma_handle;
 }
 
 ResultVal<VMManager::VMAIter> VMManager::CarveVMARange(VAddr target, u32 size) {
@@ -322,7 +322,7 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMARange(VAddr target, u32 size) {
         end_vma = SplitVMA(end_vma, target_end - end_vma->second.base);
     }
 
-    return MakeResult<VMAIter>(begin_vma);
+    return begin_vma;
 }
 
 VMManager::VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma) {
@@ -409,6 +409,6 @@ ResultVal<std::vector<std::pair<MemoryRef, u32>>> VMManager::GetBackingBlocksFor
 
         interval_target += interval_size;
     }
-    return MakeResult(backing_blocks);
+    return backing_blocks;
 }
 } // namespace Kernel

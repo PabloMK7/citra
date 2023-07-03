@@ -22,7 +22,7 @@ ResultVal<std::size_t> DiskFile::Read(const u64 offset, const std::size_t length
         return ERROR_INVALID_OPEN_FLAGS;
 
     file->Seek(offset, SEEK_SET);
-    return MakeResult<std::size_t>(file->ReadBytes(buffer, length));
+    return file->ReadBytes(buffer, length);
 }
 
 ResultVal<std::size_t> DiskFile::Write(const u64 offset, const std::size_t length, const bool flush,
@@ -34,7 +34,7 @@ ResultVal<std::size_t> DiskFile::Write(const u64 offset, const std::size_t lengt
     std::size_t written = file->WriteBytes(buffer, length);
     if (flush)
         file->Flush();
-    return MakeResult<std::size_t>(written);
+    return written;
 }
 
 u64 DiskFile::GetSize() const {

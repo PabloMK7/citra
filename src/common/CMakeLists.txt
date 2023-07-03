@@ -73,6 +73,7 @@ add_library(citra_common STATIC
     dynamic_library/ffmpeg.h
     error.cpp
     error.h
+    expected.h
     file_util.cpp
     file_util.h
     hash.h

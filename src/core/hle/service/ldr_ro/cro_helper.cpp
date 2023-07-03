@@ -301,7 +301,7 @@ ResultVal<VAddr> CROHelper::RebaseSegmentTable(u32 cro_size, VAddr data_segment_
         }
         SetEntry(system.Memory(), i, segment);
     }
-    return MakeResult<u32>(prev_data_segment + module_address);
+    return prev_data_segment + module_address;
 }
 
 ResultCode CROHelper::RebaseExportNamedSymbolTable() {
@@ -776,10 +776,10 @@ ResultCode CROHelper::ApplyImportNamedSymbol(VAddr crs_address) {
                             return result;
                         }
 
-                        return MakeResult<bool>(false);
+                        return false;
                     }
 
-                    return MakeResult<bool>(true);
+                    return true;
                 });
             if (result.IsError()) {
                 return result;
@@ -897,9 +897,9 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
                             return result;
                         }
                     }
-                    return MakeResult<bool>(false);
+                    return false;
                 }
-                return MakeResult<bool>(true);
+                return true;
             });
         if (result.IsError()) {
             return result;
@@ -1090,10 +1090,10 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
                             return result;
                         }
 
-                        return MakeResult<bool>(false);
+                        return false;
                     }
 
-                    return MakeResult<bool>(true);
+                    return true;
                 });
             if (result.IsError()) {
                 LOG_ERROR(Service_LDR, "Error applying exit relocation {:08X}", result.raw);
@@ -1317,7 +1317,7 @@ ResultCode CROHelper::Link(VAddr crs_address, bool link_on_load_bug_fix) {
                                     if (result.IsError())
                                         return result;
 
-                                    return MakeResult<bool>(true);
+                                    return true;
                                 });
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error applying export {:08X}", result.raw);
@@ -1362,7 +1362,7 @@ ResultCode CROHelper::Unlink(VAddr crs_address) {
                                     if (result.IsError())
                                         return result;
 
-                                    return MakeResult<bool>(true);
+                                    return true;
                                 });
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error resetting export {:08X}", result.raw);

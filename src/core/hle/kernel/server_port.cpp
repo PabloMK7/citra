@@ -31,7 +31,7 @@ ResultVal<std::shared_ptr<ServerSession>> ServerPort::Accept() {
 
     auto session = std::move(pending_sessions.back());
     pending_sessions.pop_back();
-    return MakeResult(std::move(session));
+    return session;
 }
 
 bool ServerPort::ShouldWait(const Thread* thread) const {

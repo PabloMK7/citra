@@ -271,7 +271,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
     memory_used += size;
     resource_limit->current_commit += size;
 
-    return MakeResult<VAddr>(target);
+    return target;
 }
 
 ResultCode Process::HeapFree(VAddr target, u32 size) {
@@ -344,7 +344,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     resource_limit->current_commit += size;
 
     LOG_DEBUG(Kernel, "Allocated at target={:08X}", target);
-    return MakeResult<VAddr>(target);
+    return target;
 }
 
 ResultCode Process::LinearFree(VAddr target, u32 size) {

@@ -432,7 +432,7 @@ ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 f
     else
         pointer = &cfg_config_file_buffer[itr->offset_or_data];
 
-    return MakeResult<void*>(pointer);
+    return pointer;
 }
 
 ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {

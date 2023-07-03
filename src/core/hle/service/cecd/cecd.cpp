@@ -1239,7 +1239,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 const u32 message_size = static_cast<u32>(message->GetSize());
                 std::vector<u8> buffer(message_size);
 
-                message->Read(0, message_size, buffer.data()).Unwrap();
+                void(message->Read(0, message_size, buffer.data()).Unwrap());
                 message->Close();
 
                 std::memcpy(&message_headers[outbox_info_header.message_num++], buffer.data(),
@@ -1329,7 +1329,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 const u32 message_size = static_cast<u32>(message->GetSize());
                 std::vector<u8> buffer(message_size);
 
-                message->Read(0, message_size, buffer.data()).Unwrap();
+                void(message->Read(0, message_size, buffer.data()).Unwrap());
                 message->Close();
 
                 // Message id is at offset 0x20, and is 8 bytes

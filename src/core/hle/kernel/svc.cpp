@@ -674,7 +674,7 @@ ResultCode SVC::OpenProcess(Handle* out_handle, u32 process_id) {
         return ResultCode(24, ErrorModule::OS, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
     auto result_handle = kernel.GetCurrentProcess()->handle_table.Create(process);
-    if (result_handle.empty()) {
+    if (!result_handle) {
         return result_handle.Code();
     }
     *out_handle = result_handle.Unwrap();
@@ -699,7 +699,7 @@ ResultCode SVC::OpenThread(Handle* out_handle, Handle process_handle, u32 thread
         for (auto& thread : thread_list) {
             if (thread->owner_process.lock() == process && thread.get()->thread_id == thread_id) {
                 auto result_handle = kernel.GetCurrentProcess()->handle_table.Create(thread);
-                if (result_handle.empty()) {
+                if (!result_handle) {
                     return result_handle.Code();
                 }
                 *out_handle = result_handle.Unwrap();

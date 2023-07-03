@@ -31,8 +31,7 @@ std::string IVFCArchive::GetName() const {
 ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
     std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<IVFCDelayGenerator>();
-    return MakeResult<std::unique_ptr<FileBackend>>(
-        std::make_unique<IVFCFile>(romfs_file, std::move(delay_generator)));
+    return std::make_unique<IVFCFile>(romfs_file, std::move(delay_generator));
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
@@ -45,21 +44,21 @@ ResultCode IVFCArchive::DeleteFile(const Path& path) const {
 ResultCode IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode IVFCArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
@@ -72,17 +71,17 @@ ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
 ResultCode IVFCArchive::CreateDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultCode IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> IVFCArchive::OpenDirectory(const Path& path) const {
-    return MakeResult<std::unique_ptr<DirectoryBackend>>(std::make_unique<IVFCDirectory>());
+    return std::make_unique<IVFCDirectory>();
 }
 
 u64 IVFCArchive::GetFreeBytes() const {
@@ -99,14 +98,14 @@ IVFCFile::IVFCFile(std::shared_ptr<RomFSReader> file,
 ResultVal<std::size_t> IVFCFile::Read(const u64 offset, const std::size_t length,
                                       u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
-    return MakeResult<std::size_t>(romfs_file->ReadFile(offset, length, buffer));
+    return romfs_file->ReadFile(offset, length, buffer);
 }
 
 ResultVal<std::size_t> IVFCFile::Write(const u64 offset, const std::size_t length, const bool flush,
                                        const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     // TODO(Subv): Find error code
-    return MakeResult<std::size_t>(0);
+    return 0ULL;
 }
 
 u64 IVFCFile::GetSize() const {
@@ -130,14 +129,14 @@ ResultVal<std::size_t> IVFCFileInMemory::Read(const u64 offset, const std::size_
     std::size_t read_length = (std::size_t)std::min((u64)length, data_size - offset);
 
     std::memcpy(buffer, romfs_file.data() + data_offset + offset, read_length);
-    return MakeResult<std::size_t>(read_length);
+    return read_length;
 }
 
 ResultVal<std::size_t> IVFCFileInMemory::Write(const u64 offset, const std::size_t length,
                                                const bool flush, const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     // TODO(Subv): Find error code
-    return MakeResult<std::size_t>(0);
+    return 0ULL;
 }
 
 u64 IVFCFileInMemory::GetSize() const {

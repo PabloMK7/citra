@@ -50,8 +50,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveSource_SDSaveData::Open(u64 pr
         return ERR_NOT_FORMATTED;
     }
 
-    auto archive = std::make_unique<SaveDataArchive>(std::move(concrete_mount_point));
-    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
+    return std::make_unique<SaveDataArchive>(std::move(concrete_mount_point));
 }
 
 ResultCode ArchiveSource_SDSaveData::Format(u64 program_id,
@@ -83,7 +82,7 @@ ResultVal<ArchiveFormatInfo> ArchiveSource_SDSaveData::GetFormatInfo(u64 program
 
     ArchiveFormatInfo info = {};
     file.ReadBytes(&info, sizeof(info));
-    return MakeResult<ArchiveFormatInfo>(info);
+    return info;
 }
 
 std::string ArchiveSource_SDSaveData::GetSaveDataPathFor(const std::string& mount_point,

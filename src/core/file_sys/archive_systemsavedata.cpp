@@ -59,8 +59,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
         // TODO(Subv): Check error code, this one is probably wrong
         return ERROR_NOT_FOUND;
     }
-    auto archive = std::make_unique<SaveDataArchive>(fullpath);
-    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
+    return std::make_unique<SaveDataArchive>(fullpath);
 }
 
 ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path,
@@ -76,7 +75,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_SystemSaveData::GetFormatInfo(const 
                                                                           u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
-    return ResultCode(-1);
+    return RESULT_UNKNOWN;
 }
 
 } // namespace FileSys

@@ -423,7 +423,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     thread_managers[processor_id]->ready_queue.push_back(thread->current_priority, thread.get());
     thread->status = ThreadStatus::Ready;
 
-    return MakeResult<std::shared_ptr<Thread>>(std::move(thread));
+    return thread;
 }
 
 void Thread::SetPriority(u32 priority) {

@@ -291,7 +291,7 @@ ResultVal<MessageParameter> AppletManager::GlanceParameter(AppletId app_id) {
         next_parameter = {};
     }
 
-    return MakeResult<MessageParameter>(std::move(parameter));
+    return parameter;
 }
 
 ResultVal<MessageParameter> AppletManager::ReceiveParameter(AppletId app_id) {
@@ -333,7 +333,7 @@ ResultVal<AppletManager::GetLockHandleResult> AppletManager::GetLockHandle(
                   corrected_attributes.raw);
     }
 
-    return MakeResult<AppletManager::GetLockHandleResult>({corrected_attributes, 0, lock});
+    return GetLockHandleResult{corrected_attributes, 0, lock};
 }
 
 ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId app_id,
@@ -372,8 +372,7 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
         });
     }
 
-    return MakeResult<InitializeResult>(
-        {slot_data->notification_event, slot_data->parameter_event});
+    return InitializeResult{slot_data->notification_event, slot_data->parameter_event};
 }
 
 ResultCode AppletManager::Enable(AppletAttributes attributes) {
@@ -420,7 +419,7 @@ ResultVal<Notification> AppletManager::InquireNotification(AppletId app_id) {
         if (slot_data->registered) {
             auto notification = slot_data->notification;
             slot_data->notification = Notification::None;
-            return MakeResult<Notification>(notification);
+            return notification;
         }
     }
 
@@ -943,12 +942,12 @@ ResultVal<AppletManager::AppletManInfo> AppletManager::GetAppletManInfo(
         }
     }
 
-    return MakeResult<AppletManInfo>({
+    return AppletManInfo{
         .active_applet_pos = active_applet_pos,
         .requested_applet_id = requested_applet_id,
         .home_menu_applet_id = AppletId::HomeMenu,
         .active_applet_id = active_applet_id,
-    });
+    };
 }
 
 ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_id) {
@@ -968,8 +967,13 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
     auto media_type = ((slot_data->title_id >> 32) & 0xFFFFFFFF) == 0x00040000
                           ? Service::FS::MediaType::SDMC
                           : Service::FS::MediaType::NAND;
-    return MakeResult<AppletInfo>({slot_data->title_id, media_type, slot_data->registered,
-                                   slot_data->loaded, slot_data->attributes.raw});
+    return AppletInfo{
+        .title_id = slot_data->title_id,
+        .media_type = media_type,
+        .registered = slot_data->registered,
+        .loaded = slot_data->loaded,
+        .attributes = slot_data->attributes.raw,
+    };
 }
 
 ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,

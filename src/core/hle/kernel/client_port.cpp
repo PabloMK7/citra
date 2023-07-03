@@ -40,7 +40,7 @@ ResultVal<std::shared_ptr<ClientSession>> ClientPort::Connect() {
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
 
-    return MakeResult(client);
+    return client;
 }
 
 void ClientPort::ConnectionClosed() {

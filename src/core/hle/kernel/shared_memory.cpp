@@ -69,7 +69,7 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
     }
 
     shared_memory->base_address = address;
-    return MakeResult(shared_memory);
+    return shared_memory;
 }
 
 std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(

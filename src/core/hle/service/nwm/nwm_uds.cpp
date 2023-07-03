@@ -673,7 +673,7 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
         channel_data.clear();
     }
 
-    return MakeResult(connection_status_event);
+    return connection_status_event;
 }
 
 void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {

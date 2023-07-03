@@ -845,11 +845,11 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromGameCard(u64 title_id, Special
 
     switch (type) {
     case SpecialContentType::Update:
-        return MakeResult(static_cast<u16>(NCSDContentIndex::Update));
+        return static_cast<u16>(NCSDContentIndex::Update);
     case SpecialContentType::Manual:
-        return MakeResult(static_cast<u16>(NCSDContentIndex::Manual));
+        return static_cast<u16>(NCSDContentIndex::Manual);
     case SpecialContentType::DLPChild:
-        return MakeResult(static_cast<u16>(NCSDContentIndex::DLP));
+        return static_cast<u16>(NCSDContentIndex::DLP);
     default:
         UNREACHABLE();
     }
@@ -874,9 +874,9 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
 
     switch (type) {
     case SpecialContentType::Manual:
-        return MakeResult(static_cast<u16>(FileSys::TMDContentIndex::Manual));
+        return static_cast<u16>(FileSys::TMDContentIndex::Manual);
     case SpecialContentType::DLPChild:
-        return MakeResult(static_cast<u16>(FileSys::TMDContentIndex::DLP));
+        return static_cast<u16>(FileSys::TMDContentIndex::DLP);
     default:
         ASSERT(false);
     }

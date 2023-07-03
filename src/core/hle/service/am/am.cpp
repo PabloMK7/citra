@@ -92,7 +92,7 @@ CIAFile::~CIAFile() {
 
 ResultVal<std::size_t> CIAFile::Read(u64 offset, std::size_t length, u8* buffer) const {
     UNIMPLEMENTED();
-    return MakeResult<std::size_t>(length);
+    return length;
 }
 
 ResultCode CIAFile::WriteTicket() {
@@ -203,7 +203,7 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
         }
     }
 
-    return MakeResult(length);
+    return length;
 }
 
 ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush,
@@ -235,7 +235,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
 
     // If we don't have a header yet, we can't pull offsets of other sections
     if (install_state == CIAInstallState::InstallStarted)
-        return MakeResult<std::size_t>(length);
+        return length;
 
     // If we have been given data before (or including) .app content, pull it into
     // our buffer, but only pull *up to* the content offset, no further.
@@ -267,14 +267,14 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
 
     // Content data sizes can only be retrieved from TMD data
     if (install_state != CIAInstallState::TMDLoaded)
-        return MakeResult<std::size_t>(length);
+        return length;
 
     // From this point forward, data will no longer be buffered in data
     auto result = WriteContentData(offset, length, buffer);
     if (result.Failed())
         return result;
 
-    return MakeResult<std::size_t>(length);
+    return length;
 }
 
 u64 CIAFile::GetSize() const {
@@ -1316,7 +1316,7 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
             // File::OpenSubFile
             std::size_t offset = file->GetSessionFileOffset(server);
             std::size_t size = file->GetSessionFileSize(server);
-            return MakeResult(std::make_unique<AMFileWrapper>(file, offset, size));
+            return std::make_unique<AMFileWrapper>(file, offset, size);
         }
 
         LOG_ERROR(Service_AM, "Failed to cast handle to FSFile!");

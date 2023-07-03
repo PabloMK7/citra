@@ -42,7 +42,7 @@ public:
         if (offset > size) {
             return ERR_WRITE_BEYOND_END;
         } else if (offset == size) {
-            return MakeResult<std::size_t>(0);
+            return 0ULL;
         }
 
         if (offset + length > size) {
@@ -150,11 +150,9 @@ public:
         Mode rwmode;
         rwmode.write_flag.Assign(1);
         rwmode.read_flag.Assign(1);
-        std::unique_ptr<DelayGenerator> delay_generator =
-            std::make_unique<ExtSaveDataDelayGenerator>();
-        auto disk_file =
-            std::make_unique<FixSizeDiskFile>(std::move(file), rwmode, std::move(delay_generator));
-        return MakeResult<std::unique_ptr<FileBackend>>(std::move(disk_file));
+        auto delay_generator = std::make_unique<ExtSaveDataDelayGenerator>();
+        return std::make_unique<FixSizeDiskFile>(std::move(file), rwmode,
+                                                 std::move(delay_generator));
     }
 
     ResultCode CreateFile(const Path& path, u64 size) const override {
@@ -255,8 +253,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
         }
     }
     std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExtSaveDataDelayGenerator>();
-    auto archive = std::make_unique<ExtSaveDataArchive>(fullpath, std::move(delay_generator));
-    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
+    return std::make_unique<ExtSaveDataArchive>(fullpath, std::move(delay_generator));
 }
 
 ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
@@ -276,7 +273,7 @@ ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
 
     if (!file.IsOpen()) {
         // TODO(Subv): Find the correct error code
-        return ResultCode(-1);
+        return RESULT_UNKNOWN;
     }
 
     file.WriteBytes(&format_info, sizeof(format_info));
@@ -296,7 +293,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
 
     ArchiveFormatInfo info = {};
     file.ReadBytes(&info, sizeof(info));
-    return MakeResult<ArchiveFormatInfo>(info);
+    return info;
 }
 
 void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data,

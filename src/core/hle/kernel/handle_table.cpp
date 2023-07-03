@@ -49,7 +49,7 @@ ResultVal<Handle> HandleTable::Create(std::shared_ptr<Object> obj) {
     objects[slot] = std::move(obj);
 
     Handle handle = generation | (slot << 15);
-    return MakeResult<Handle>(handle);
+    return handle;
 }
 
 ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
