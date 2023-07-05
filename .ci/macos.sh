@@ -1,7 +1,6 @@
 #!/bin/bash -ex
 
 mkdir build && cd build
-# TODO: LibreSSL ASM disabled due to platform detection issues in cross-compile build.
 cmake .. -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_OSX_ARCHITECTURES="$TARGET" \
@@ -10,8 +9,7 @@ cmake .. -GNinja \
     -DENABLE_QT_TRANSLATION=ON \
     -DCITRA_ENABLE_COMPATIBILITY_REPORTING=ON \
     -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON \
-    -DUSE_DISCORD_PRESENCE=ON \
-    -DENABLE_ASM=OFF
+    -DUSE_DISCORD_PRESENCE=ON
 ninja
 ninja bundle
 

@@ -13,6 +13,8 @@ src/common/scm_rev.cpp
 .vs/
 .vscode/
 .cache/
+cmake-build-debug/
+cmake-build-release/
 CMakeLists.txt.user*
 
 # *nix related
@@ -41,4 +43,6 @@ Thumbs.db
 repo/
 
 # GitHub Actions generated files
+.ccache/
 node_modules/
+VULKAN_SDK/

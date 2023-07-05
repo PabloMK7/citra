@@ -182,6 +182,8 @@ jobs:
           vulkan-use-cache: true
       - name: Test glslangValidator
         run: glslangValidator --version
+      - name: Disable line ending translation
+        run: git config --global core.autocrlf input
       - name: Build
         run: ./.ci/windows.sh
       - name: Pack
