@@ -168,6 +168,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         VAddr target_address = 0x10000000;
         auto result = process->vm_manager.MapBackingMemory(
             target_address, buffer, static_cast<u32>(buffer.GetSize()), MemoryState::Private);
+        REQUIRE(result.Code() == RESULT_SUCCESS);
 
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),

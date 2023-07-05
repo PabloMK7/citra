@@ -1497,7 +1497,6 @@ void FragmentModule::DefineInterface() {
 
     // Define shadow textures
     shadow_texture_px_id = DefineUniformConst(image_r32_id, 2, 0, true);
-    shadow_buffer_id = DefineUniformConst(image_r32_id, 2, 6);
 
     // Define built-ins
     gl_frag_coord_id = DefineVar(vec_ids.Get(4), spv::StorageClass::Input);

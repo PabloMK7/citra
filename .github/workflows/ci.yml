@@ -173,7 +173,7 @@ jobs:
           install: git make p7zip
           pacboy: >-
             toolchain:p ccache:p cmake:p ninja:p
-            qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p
+            qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
       - name: Setup Vulkan SDK
         uses: humbletim/setup-vulkan-sdk@v1.2.0
         with:

@@ -99,10 +99,10 @@ std::shared_ptr<Common::DynamicLibrary> OpenLibrary() {
     auto library = std::make_shared<Common::DynamicLibrary>();
 #ifdef __APPLE__
     const std::string filename = Common::DynamicLibrary::GetLibraryName("vulkan");
-    library->Load(filename);
-    if (!library->IsLoaded()) {
+    if (!library->Load(filename)) {
         // Fall back to directly loading bundled MoltenVK library.
-        library->Load("libMoltenVK.dylib");
+        const std::string mvk_filename = Common::DynamicLibrary::GetLibraryName("MoltenVK");
+        void(library->Load(mvk_filename));
     }
 #else
     std::string filename = Common::DynamicLibrary::GetLibraryName("vulkan", 1);

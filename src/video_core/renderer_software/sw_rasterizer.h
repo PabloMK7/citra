@@ -68,7 +68,7 @@ private:
     bool DoAlphaTest(u8 alpha) const;
 
     /// Performs the depth stencil test. Returns false if the test failed.
-    bool DoDepthStencilTest(u16 x, u16 y, float depth, bool stencil_action_enable) const;
+    bool DoDepthStencilTest(u16 x, u16 y, float depth) const;
 
 private:
     Memory::MemorySystem& memory;

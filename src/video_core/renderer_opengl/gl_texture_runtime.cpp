@@ -681,8 +681,8 @@ Sampler::Sampler(TextureRuntime&, VideoCore::SamplerParams params) {
     const GLenum wrap_s = PicaToGL::WrapMode(params.wrap_s);
     const GLenum wrap_t = PicaToGL::WrapMode(params.wrap_t);
     const Common::Vec4f gl_color = PicaToGL::ColorRGBA8(params.border_color);
-    const float lod_min = params.lod_min;
-    const float lod_max = params.lod_max;
+    const auto lod_min = static_cast<float>(params.lod_min);
+    const auto lod_max = static_cast<float>(params.lod_max);
 
     sampler.Create();
 
@@ -706,7 +706,8 @@ DebugScope::DebugScope(TextureRuntime& runtime, Common::Vec4f, std::string_view 
     if (!Settings::values.renderer_debug) {
         return;
     }
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, local_scope_depth, label.size(), label.data());
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, local_scope_depth,
+                     static_cast<GLsizei>(label.size()), label.data());
 }
 
 DebugScope::~DebugScope() {

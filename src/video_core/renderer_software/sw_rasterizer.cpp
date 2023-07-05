@@ -292,11 +292,6 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
     auto textures = regs.texturing.GetTextures();
     const auto tev_stages = regs.texturing.GetTevStages();
 
-    const bool stencil_action_enable =
-        regs.framebuffer.output_merger.stencil_test.enable &&
-        regs.framebuffer.framebuffer.depth_format == FramebufferRegs::DepthFormat::D24S8;
-    const auto stencil_test = regs.framebuffer.output_merger.stencil_test;
-
     // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
     for (u16 y = min_y + 8; y < max_y; y += 0x10) {
@@ -446,7 +441,7 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
                 continue;
             }
             WriteFog(combiner_output, depth);
-            if (!DoDepthStencilTest(x, y, depth, stencil_action_enable)) {
+            if (!DoDepthStencilTest(x, y, depth)) {
                 continue;
             }
             const auto result = PixelColor(x, y, combiner_output);
@@ -828,11 +823,14 @@ bool RasterizerSoftware::DoAlphaTest(u8 alpha) const {
         return alpha > output_merger.alpha_test.ref;
     case FramebufferRegs::CompareFunc::GreaterThanOrEqual:
         return alpha >= output_merger.alpha_test.ref;
+    default:
+        LOG_CRITICAL(Render_Software, "Unknown alpha test condition {}",
+                     output_merger.alpha_test.func.Value());
+        return false;
     }
 }
 
-bool RasterizerSoftware::DoDepthStencilTest(u16 x, u16 y, float depth,
-                                            bool stencil_action_enable) const {
+bool RasterizerSoftware::DoDepthStencilTest(u16 x, u16 y, float depth) const {
     const auto& framebuffer = regs.framebuffer.framebuffer;
     const auto stencil_test = regs.framebuffer.output_merger.stencil_test;
     u8 old_stencil = 0;
@@ -846,6 +844,10 @@ bool RasterizerSoftware::DoDepthStencilTest(u16 x, u16 y, float depth,
             fb.SetStencil(x >> 4, y >> 4, stencil);
         }
     };
+
+    const bool stencil_action_enable =
+        regs.framebuffer.output_merger.stencil_test.enable &&
+        regs.framebuffer.framebuffer.depth_format == FramebufferRegs::DepthFormat::D24S8;
 
     if (stencil_action_enable) {
         old_stencil = fb.GetStencil(x >> 4, y >> 4);

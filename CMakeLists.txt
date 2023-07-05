@@ -5,6 +5,10 @@ cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0092 NEW)
 # Enforce new LTO setting
 cmake_policy(SET CMP0069 NEW)
+# Honor visibility properties for all targets
+# Set the default so subdirectory cmake_minimum_required calls won't unset the policy.
+cmake_policy(SET CMP0063 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
@@ -13,11 +17,25 @@ include(CMakeDependentOption)
 
 project(citra LANGUAGES C CXX ASM)
 
-if (IOS)
-    # Enable searching CMAKE_PREFIX_PATH for bundled dependencies.
-    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
-    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
-    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+if (APPLE)
+    # Silence warnings on empty objects, for example when platform-specific code is #ifdef'd out.
+    set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+    set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+
+    if (IOS)
+        # Minimum iOS 14
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0")
+
+        # Enable searching CMAKE_PREFIX_PATH for bundled dependencies.
+        set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+    else()
+        # Minimum macOS 11
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+    endif()
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -62,6 +80,7 @@ CMAKE_DEPENDENT_OPTION(USE_SYSTEM_MOLTENVK "Use the system MoltenVK lib (instead
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_OPENSSL "Use the system OpenSSL libs (instead of the bundled LibreSSL)" OFF)
+option(USE_SYSTEM_LIBUSB "Use the system libusb (instead of the bundled libusb)" OFF)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")
@@ -183,6 +202,10 @@ add_definitions(-DBOOST_NO_CXX98_FUNCTION_BASE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Apply consistent visibility settings.
+set(CMAKE_CXX_VISIBILITY_PRESET default)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN NO)
+
 # set up output paths for executable binaries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/$<CONFIG>)
 
@@ -207,19 +230,6 @@ if (ENABLE_QT)
 
     if (ENABLE_QT_TRANSLATION)
         find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
-    endif()
-endif()
-
-# Ensure libusb is properly configured (based on dolphin libusb include)
-if (ENABLE_LIBUSB)
-    if(NOT APPLE)
-        include(FindPkgConfig)
-        find_package(LibUSB)
-    endif()
-    if (NOT LIBUSB_FOUND)
-        add_subdirectory(externals/libusb)
-        set(LIBUSB_INCLUDE_DIR "")
-        set(LIBUSB_LIBRARIES usb)
     endif()
 endif()
 
@@ -352,11 +362,6 @@ endif()
 enable_testing()
 add_subdirectory(externals)
 
-# See externals/CMakeLists.txt
-foreach(def ${CRYPTOPP_COMPILE_DEFINITIONS})
-    add_definitions(-D${def})
-endforeach()
-
 # Boost
 if (USE_SYSTEM_BOOST)
     find_package(Boost 1.70.0 COMPONENTS serialization iostreams REQUIRED)
@@ -373,6 +378,11 @@ if (ENABLE_SDL2 AND USE_SYSTEM_SDL2)
     target_link_libraries(SDL2 INTERFACE "${SDL2_LIBRARY}")
     target_include_directories(SDL2 INTERFACE "${SDL2_INCLUDE_DIR}")
     add_library(SDL2::SDL2 ALIAS SDL2)
+endif()
+
+if (ENABLE_LIBUSB AND USE_SYSTEM_LIBUSB)
+    include(FindPkgConfig)
+    find_package(LibUSB)
 endif()
 
 add_subdirectory(src)

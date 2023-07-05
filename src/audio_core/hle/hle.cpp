@@ -64,7 +64,7 @@ public:
 
     u16 RecvData(u32 register_number);
     bool RecvDataIsReady(u32 register_number) const;
-    std::vector<u8> PipeRead(DspPipe pipe_number, u32 length);
+    std::vector<u8> PipeRead(DspPipe pipe_number, std::size_t length);
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
 
@@ -202,7 +202,7 @@ bool DspHle::Impl::RecvDataIsReady(u32 register_number) const {
     return true;
 }
 
-std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
+std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, std::size_t length) {
     const std::size_t pipe_index = static_cast<std::size_t>(pipe_number);
 
     if (pipe_index >= num_dsp_pipe) {
@@ -486,7 +486,7 @@ void DspHle::SetSemaphore(u16 semaphore_value) {
     // Do nothing in HLE
 }
 
-std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, u32 length) {
+std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, std::size_t length) {
     return impl->PipeRead(pipe_number, length);
 }
 

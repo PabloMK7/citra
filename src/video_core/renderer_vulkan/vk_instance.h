@@ -281,7 +281,6 @@ private:
     bool pipeline_creation_cache_control{};
     bool shader_stencil_export{};
     bool debug_messenger_supported{};
-    bool debug_report_supported{};
 };
 
 } // namespace Vulkan

@@ -115,6 +115,10 @@ __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
 }
 #endif
 
+#ifdef HAVE_SDL2
+#include <SDL.h>
+#endif
+
 constexpr int default_mouse_timeout = 2500;
 
 /**
@@ -967,7 +971,7 @@ void GMainWindow::ShowUpdaterWidgets() {
 }
 #endif
 
-#if defined(__unix__) && !defined(__APPLE__)
+#if defined(HAVE_SDL2) && defined(__unix__) && !defined(__APPLE__)
 static std::optional<QDBusObjectPath> HoldWakeLockLinux(u32 window_id = 0) {
     if (!QDBusConnection::sessionBus().isConnected()) {
         return {};
@@ -1013,12 +1017,12 @@ void GMainWindow::PreventOSSleep() {
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 #elif defined(HAVE_SDL2)
     SDL_DisableScreenSaver();
-#ifdef __unix__
+#if defined(__unix__) && !defined(__APPLE__)
     auto reply = HoldWakeLockLinux(winId());
     if (reply) {
         wake_lock = std::move(reply.value());
     }
-#endif // __unix__
+#endif // defined(__unix__) && !defined(__APPLE__)
 #endif // _WIN32
 }
 
@@ -1027,11 +1031,11 @@ void GMainWindow::AllowOSSleep() {
     SetThreadExecutionState(ES_CONTINUOUS);
 #elif defined(HAVE_SDL2)
     SDL_EnableScreenSaver();
-#ifdef __unix__
+#if defined(__unix__) && !defined(__APPLE__)
     if (!wake_lock.path().isEmpty()) {
         ReleaseWakeLockLinux(wake_lock);
     }
-#endif // __unix__
+#endif // defined(__unix__) && !defined(__APPLE__)
 #endif // _WIN32
 }
 

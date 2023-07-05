@@ -4,6 +4,9 @@
 
 //? #version 430 core
 
+precision highp int;
+precision highp float;
+
 layout(location = 0) in mediump vec2 tex_coord;
 layout(location = 0) out lowp vec4 frag_color;
 

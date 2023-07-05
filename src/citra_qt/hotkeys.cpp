@@ -26,7 +26,7 @@ void HotkeyRegistry::SaveHotkeys() {
 void HotkeyRegistry::LoadHotkeys() {
     // Make sure NOT to use a reference here because it would become invalid once we call
     // beginGroup()
-    for (const auto shortcut : UISettings::values.shortcuts) {
+    for (auto shortcut : UISettings::values.shortcuts) {
         Hotkey& hk = hotkey_groups[shortcut.group][shortcut.name];
         if (!shortcut.shortcut.keyseq.isEmpty()) {
             hk.keyseq =

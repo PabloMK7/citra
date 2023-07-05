@@ -392,7 +392,7 @@ void DspLle::SetSemaphore(u16 semaphore_value) {
     impl->teakra.SetSemaphore(semaphore_value);
 }
 
-std::vector<u8> DspLle::PipeRead(DspPipe pipe_number, u32 length) {
+std::vector<u8> DspLle::PipeRead(DspPipe pipe_number, std::size_t length) {
     return impl->ReadPipe(static_cast<u8>(pipe_number), static_cast<u16>(length));
 }
 

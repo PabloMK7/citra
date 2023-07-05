@@ -65,7 +65,7 @@ public:
      * @param length the number of bytes to read. The max is 65,535 (max of u16).
      * @returns a vector of bytes from the specified pipe. On error, will be empty.
      */
-    virtual std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) = 0;
+    virtual std::vector<u8> PipeRead(DspPipe pipe_number, std::size_t length) = 0;
 
     /**
      * How much data is left in pipe

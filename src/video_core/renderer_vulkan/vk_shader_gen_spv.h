@@ -256,13 +256,7 @@ private:
     Id texture_buffer_lut_lf_id{};
     Id texture_buffer_lut_rg_id{};
     Id texture_buffer_lut_rgba_id{};
-    Id shadow_buffer_id{};
     Id shadow_texture_px_id{};
-    Id shadow_texture_nx_id{};
-    Id shadow_texture_py_id{};
-    Id shadow_texture_ny_id{};
-    Id shadow_texture_pz_id{};
-    Id shadow_texture_nz_id{};
 
     Id texture_buffer_lut_lf{};
     Id texture_buffer_lut_rg{};

@@ -290,6 +290,11 @@ elseif(WIN32)
     endif()
 endif()
 
+if(ENABLE_SDL2)
+    target_link_libraries(citra-qt PRIVATE SDL2::SDL2)
+    target_compile_definitions(citra-qt PRIVATE HAVE_SDL2)
+endif()
+
 create_target_directory_groups(citra-qt)
 
 target_link_libraries(citra-qt PRIVATE audio_core citra_common citra_core input_common network video_core)
