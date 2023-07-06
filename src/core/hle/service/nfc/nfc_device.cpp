@@ -176,7 +176,7 @@ ResultCode NfcDevice::StartCommunication() {
 
     if (device_state != DeviceState::Initialized ||
         communication_state != CommunicationState::Idle) {
-        return ResultCommandInvalidForState;
+        return ResultInvalidOperation;
     }
 
     communication_state = CommunicationState::SearchingForAdapter;
@@ -193,7 +193,7 @@ ResultCode NfcDevice::StopCommunication() {
     }
 
     if (communication_state == CommunicationState::Idle) {
-        return ResultCommandInvalidForState;
+        return ResultInvalidOperation;
     }
 
     if (device_state == DeviceState::TagMounted ||
@@ -214,7 +214,7 @@ ResultCode NfcDevice::StartDetection(TagProtocol allowed_protocol) {
 
     if (device_state != DeviceState::Initialized && device_state != DeviceState::TagRemoved &&
         communication_state != CommunicationState::Initialized) {
-        return ResultCommandInvalidForState;
+        return ResultInvalidOperation;
     }
 
     // TODO: Set console in search mode here
@@ -253,7 +253,7 @@ ResultCode NfcDevice::StopDetection() {
     }
 
     LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
-    return ResultCommandInvalidForState;
+    return ResultInvalidOperation;
 }
 
 ResultCode NfcDevice::Flush() {
@@ -261,7 +261,7 @@ ResultCode NfcDevice::Flush() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -284,12 +284,12 @@ ResultCode NfcDevice::Flush() {
     if (!is_plain_amiibo) {
         if (!AmiiboCrypto::EncodeAmiibo(tag.file, encrypted_tag.file)) {
             LOG_ERROR(Service_NFC, "Failed to encode data");
-            return ResultWriteAmiiboFailed;
+            return ResultOperationFailed;
         }
 
         if (amiibo_filename.empty()) {
             LOG_ERROR(Service_NFC, "Tried to use UpdateStoredAmiiboData on a nonexistant file.");
-            return ResultWriteAmiiboFailed;
+            return ResultOperationFailed;
         }
     }
 
@@ -315,7 +315,7 @@ ResultCode NfcDevice::Flush() {
     amiibo_file.Close();
 
     if (write_failed) {
-        return ResultWriteAmiiboFailed;
+        return ResultOperationFailed;
     }
 
     is_data_moddified = false;
@@ -328,14 +328,14 @@ ResultCode NfcDevice::Mount() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (!AmiiboCrypto::IsAmiiboValid(encrypted_tag.file)) {
         LOG_ERROR(Service_NFC, "Not an amiibo");
-        return ResultNotAnAmiibo;
+        return ResultNotSupported;
     }
 
     // The loaded amiibo is not encrypted
@@ -346,7 +346,7 @@ ResultCode NfcDevice::Mount() {
 
     if (!AmiiboCrypto::DecodeAmiibo(encrypted_tag.file, tag.file)) {
         LOG_ERROR(Service_NFC, "Can't decode amiibo {}", device_state);
-        return ResultCorruptedData;
+        return ResultNeedFormat;
     }
 
     device_state = DeviceState::TagMounted;
@@ -362,7 +362,7 @@ ResultCode NfcDevice::MountAmiibo() {
     }
 
     if (tag_info.tag_type != PackedTagType::Type2) {
-        return ResultNotAnAmiibo;
+        return ResultNotSupported;
     }
 
     return Mount();
@@ -373,14 +373,14 @@ ResultCode NfcDevice::PartiallyMount() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (!AmiiboCrypto::IsAmiiboValid(encrypted_tag.file)) {
         LOG_ERROR(Service_NFC, "Not an amiibo");
-        return ResultNotAnAmiibo;
+        return ResultNotSupported;
     }
 
     // The loaded amiibo is not encrypted
@@ -391,7 +391,7 @@ ResultCode NfcDevice::PartiallyMount() {
 
     if (!AmiiboCrypto::DecodeAmiibo(encrypted_tag.file, tag.file)) {
         LOG_ERROR(Service_NFC, "Can't decode amiibo {}", device_state);
-        return ResultCorruptedData;
+        return ResultNeedFormat;
     }
 
     device_state = DeviceState::TagPartiallyMounted;
@@ -407,7 +407,7 @@ ResultCode NfcDevice::PartiallyMountAmiibo() {
     }
 
     if (tag_info.tag_type != PackedTagType::Type2) {
-        return ResultNotAnAmiibo;
+        return ResultNotSupported;
     }
 
     return PartiallyMount();
@@ -418,7 +418,7 @@ ResultCode NfcDevice::ResetTagScanState() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -448,7 +448,7 @@ ResultCode NfcDevice::GetTagInfo(TagInfo& tag_info) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -469,7 +469,7 @@ ResultCode NfcDevice::GetCommonInfo(CommonInfo& common_info) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -499,7 +499,7 @@ ResultCode NfcDevice::GetModelInfo(ModelInfo& model_info) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -521,13 +521,13 @@ ResultCode NfcDevice::GetRegisterInfo(RegisterInfo& register_info) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (tag.file.settings.settings.amiibo_initialized == 0) {
-        return ResultRegistrationIsNotInitialized;
+        return ResultNeedRegister;
     }
 
     const auto& settings = tag.file.settings;
@@ -550,7 +550,7 @@ ResultCode NfcDevice::GetAdminInfo(AdminInfo& admin_info) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -614,13 +614,13 @@ ResultCode NfcDevice::DeleteRegisterInfo() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (tag.file.settings.settings.amiibo_initialized == 0) {
-        return ResultRegistrationIsNotInitialized;
+        return ResultNeedRegister;
     }
 
     CryptoPP::AutoSeededRandomPool rng;
@@ -648,7 +648,7 @@ ResultCode NfcDevice::SetRegisterInfoPrivate(const RegisterInfoPrivate& register
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -683,7 +683,7 @@ ResultCode NfcDevice::RestoreAmiibo() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -713,19 +713,19 @@ ResultCode NfcDevice::OpenApplicationArea(u32 access_id) {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (tag.file.settings.settings.appdata_initialized.Value() == 0) {
         LOG_WARNING(Service_NFC, "Application area is not initialized");
-        return ResultApplicationAreaIsNotInitialized;
+        return ResultNeedCreate;
     }
 
     if (tag.file.application_area_id != access_id) {
         LOG_WARNING(Service_NFC, "Wrong application area id");
-        return ResultWrongApplicationAreaId;
+        return ResultAccessIdMisMatch;
     }
 
     is_app_area_open = true;
@@ -740,14 +740,14 @@ ResultCode NfcDevice::GetApplicationAreaId(u32& application_area_id) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (tag.file.settings.settings.appdata_initialized.Value() == 0) {
         LOG_WARNING(Service_NFC, "Application area is not initialized");
-        return ResultApplicationAreaIsNotInitialized;
+        return ResultNeedCreate;
     }
 
     application_area_id = tag.file.application_area_id;
@@ -760,19 +760,19 @@ ResultCode NfcDevice::GetApplicationArea(std::vector<u8>& data) const {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (!is_app_area_open) {
         LOG_ERROR(Service_NFC, "Application area is not open");
-        return ResultCommandInvalidForState;
+        return ResultInvalidOperation;
     }
 
     if (tag.file.settings.settings.appdata_initialized.Value() == 0) {
         LOG_ERROR(Service_NFC, "Application area is not initialized");
-        return ResultApplicationAreaIsNotInitialized;
+        return ResultNeedCreate;
     }
 
     if (data.size() > sizeof(ApplicationArea)) {
@@ -789,7 +789,7 @@ ResultCode NfcDevice::SetApplicationArea(std::span<const u8> data) {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -806,12 +806,12 @@ ResultCode NfcDevice::SetApplicationArea(std::span<const u8> data) {
 
     if (!is_app_area_open) {
         LOG_ERROR(Service_NFC, "Application area is not open");
-        return ResultCommandInvalidForState;
+        return ResultInvalidOperation;
     }
 
     if (tag.file.settings.settings.appdata_initialized.Value() == 0) {
         LOG_ERROR(Service_NFC, "Application area is not initialized");
-        return ResultApplicationAreaIsNotInitialized;
+        return ResultNeedCreate;
     }
 
     std::memcpy(tag.file.application_area.data(), data.data(), data.size());
@@ -837,14 +837,14 @@ ResultCode NfcDevice::CreateApplicationArea(u32 access_id, std::span<const u8> d
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (tag.file.settings.settings.appdata_initialized.Value() != 0) {
         LOG_ERROR(Service_NFC, "Application area already exist");
-        return ResultApplicationAreaExist;
+        return ResultAlreadyCreated;
     }
 
     return RecreateApplicationArea(access_id, data);
@@ -855,7 +855,7 @@ ResultCode NfcDevice::RecreateApplicationArea(u32 access_id, std::span<const u8>
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -867,7 +867,7 @@ ResultCode NfcDevice::RecreateApplicationArea(u32 access_id, std::span<const u8>
 
     if (is_app_area_open) {
         LOG_ERROR(Service_NFC, "Application area is open");
-        return ResultCommandInvalidForState;
+        return ResultInvalidOperation;
     }
 
     std::memcpy(tag.file.application_area.data(), data.data(), data.size());
@@ -912,13 +912,13 @@ ResultCode NfcDevice::DeleteApplicationArea() {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
 
     if (tag.file.settings.settings.appdata_initialized == 0) {
-        return ResultApplicationAreaIsNotInitialized;
+        return ResultNeedCreate;
     }
 
     CryptoPP::AutoSeededRandomPool rng;
@@ -950,7 +950,7 @@ ResultCode NfcDevice::ApplicationAreaExist(bool& has_application_area) {
         LOG_ERROR(Service_NFC, "Wrong device state {}", device_state);
         const auto connection_result = CheckConnectionState();
         if (connection_result.IsSuccess()) {
-            return ResultCommandInvalidForState;
+            return ResultInvalidOperation;
         }
         return connection_result;
     }
@@ -981,16 +981,16 @@ ResultCode NfcDevice::GetCommunicationStatus(CommunicationState& status) const {
         return RESULT_SUCCESS;
     }
 
-    return ResultCommandInvalidForState;
+    return ResultInvalidOperation;
 }
 
 ResultCode NfcDevice::CheckConnectionState() const {
     if (connection_state == ConnectionState::Lost) {
-        return ResultCommunicationLost;
+        return ResultSleep;
     }
 
     if (connection_state == ConnectionState::NoAdapter) {
-        return ResultNoAdapterDetected;
+        return ResultWifiOff;
     }
 
     return RESULT_SUCCESS;

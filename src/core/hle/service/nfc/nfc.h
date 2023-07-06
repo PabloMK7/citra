@@ -61,81 +61,81 @@ public:
         void Initialize(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::Shutdown service function
+         * NFC::Finalize service function
          *  Inputs:
          *      0 : Header code [0x00020040]
          *      1 : (u8) CommunicationMode.
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void Shutdown(Kernel::HLERequestContext& ctx);
+        void Finalize(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::StartCommunication service function
+         * NFC::Connect service function
          *  Inputs:
          *      0 : Header code [0x00030000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void StartCommunication(Kernel::HLERequestContext& ctx);
+        void Connect(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::StopCommunication service function
+         * NFC::Disconnect service function
          *  Inputs:
          *      0 : Header code [0x00040000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void StopCommunication(Kernel::HLERequestContext& ctx);
+        void Disconnect(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::StartTagScanning service function
+         * NFC::StartDetection service function
          *  Inputs:
          *      0 : Header code [0x00050040]
          *      1 : (u16) unknown. This is normally 0x0
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void StartTagScanning(Kernel::HLERequestContext& ctx);
+        void StartDetection(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::StopTagScanning service function
+         * NFC::StopDetection service function
          *  Inputs:
          *      0 : Header code [0x00060000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void StopTagScanning(Kernel::HLERequestContext& ctx);
+        void StopDetection(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::LoadAmiiboData service function
+         * NFC::Mount service function
          *  Inputs:
          *      0 : Header code [0x00070000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void LoadAmiiboData(Kernel::HLERequestContext& ctx);
+        void Mount(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::ResetTagScanState service function
+         * NFC::Unmount service function
          *  Inputs:
          *      0 : Header code [0x00080000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void ResetTagScanState(Kernel::HLERequestContext& ctx);
+        void Unmount(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::UpdateStoredAmiiboData service function
+         * NFC::Flush service function
          *  Inputs:
          *      0 : Header code [0x00090002]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void UpdateStoredAmiiboData(Kernel::HLERequestContext& ctx);
+        void Flush(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetTagInRangeEvent service function
+         * NFC::GetActivateEvent service function
          *  Inputs:
          *      0 : Header code [0x000B0000]
          *  Outputs:
@@ -143,10 +143,10 @@ public:
          *      2 : Copy handle descriptor
          *      3 : Event Handle
          */
-        void GetTagInRangeEvent(Kernel::HLERequestContext& ctx);
+        void GetActivateEvent(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetTagOutOfRangeEvent service function
+         * NFC::GetDeactivateEvent service function
          *  Inputs:
          *      0 : Header code [0x000C0000]
          *  Outputs:
@@ -154,27 +154,27 @@ public:
          *      2 : Copy handle descriptor
          *      3 : Event Handle
          */
-        void GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx);
+        void GetDeactivateEvent(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetTagState service function
+         * NFC::GetStatus service function
          *  Inputs:
          *      0 : Header code [0x000D0000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : (u8) Tag state
          */
-        void GetTagState(Kernel::HLERequestContext& ctx);
+        void GetStatus(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::CommunicationGetStatus service function
+         * NFC::GetTargetConnectionStatus service function
          *  Inputs:
          *      0 : Header code [0x000F0000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : (u8) Communication state
          */
-        void CommunicationGetStatus(Kernel::HLERequestContext& ctx);
+        void GetTargetConnectionStatus(Kernel::HLERequestContext& ctx);
 
         /**
          * NFC::GetTagInfo2 service function
@@ -197,27 +197,27 @@ public:
         void GetTagInfo(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetTagInfo service function
+         * NFC::GetConnectResult service function
          *  Inputs:
          *      0 : Header code [0x00120000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : Output NFC-adapter result-code
          */
-        void CommunicationGetResult(Kernel::HLERequestContext& ctx);
+        void GetConnectResult(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::OpenAppData service function
+         * NFC::OpenApplicationArea service function
          *  Inputs:
          *      0 : Header code [0x00130040]
          *      1 : (u32) App ID
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void OpenAppData(Kernel::HLERequestContext& ctx);
+        void OpenApplicationArea(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::InitializeWriteAppData service function
+         * NFC::CreateApplicationArea service function
          *  Inputs:
          *      0 : Header code [0x00140384]
          *      1 : (u32) App ID
@@ -230,20 +230,20 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void InitializeWriteAppData(Kernel::HLERequestContext& ctx);
+        void CreateApplicationArea(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::ReadAppData service function
+         * NFC::ReadApplicationArea service function
          *  Inputs:
          *      0 : Header code [0x00150040]
          *      1 : Size (unused? Hard-coded to be 0xD8)
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void ReadAppData(Kernel::HLERequestContext& ctx);
+        void ReadApplicationArea(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::WriteAppData service function
+         * NFC::WriteApplicationArea service function
          *  Inputs:
          *      0 : Header code [0x00160242]
          *      1 : Size
@@ -253,37 +253,37 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void WriteAppData(Kernel::HLERequestContext& ctx);
+        void WriteApplicationArea(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetRegisterInfo service function
+         * NFC::GetNfpRegisterInfo service function
          *  Inputs:
          *      0 : Header code [0x00170000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *   2-43 : AmiiboSettings struct (see above)
          */
-        void GetRegisterInfo(Kernel::HLERequestContext& ctx);
+        void GetNfpRegisterInfo(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetCommonInfo service function
+         * NFC::GetNfpCommonInfo service function
          *  Inputs:
          *      0 : Header code [0x00180000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *   2-17 : 0x40-byte config struct
          */
-        void GetCommonInfo(Kernel::HLERequestContext& ctx);
+        void GetNfpCommonInfo(Kernel::HLERequestContext& ctx);
 
         /**
-         * NFC::GetAppDataInitStruct service function
+         * NFC::InitializeCreateInfo service function
          *  Inputs:
          *      0 : Header code [0x00180000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *   2-16 : 0x3C-byte config struct
          */
-        void GetAppDataInitStruct(Kernel::HLERequestContext& ctx);
+        void InitializeCreateInfo(Kernel::HLERequestContext& ctx);
 
         /**
          * NFC::LoadAmiiboPartially service function
@@ -292,7 +292,7 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void LoadAmiiboPartially(Kernel::HLERequestContext& ctx);
+        void MountRom(Kernel::HLERequestContext& ctx);
 
         /**
          * NFC::GetIdentificationBlock service function
