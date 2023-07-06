@@ -593,8 +593,18 @@ void SelectDlpNfcKeyYIndex(u8 index) {
     key_slots[KeySlotID::DLPNFCDataKey].SetKeyY(dlp_nfc_key_y_slots.at(index));
 }
 
-const NfcSecret& GetNfcSecret(u8 index) {
-    return nfc_secrets[index];
+bool NfcSecretsAvailable() {
+    auto missing_secret =
+        std::find_if(nfc_secrets.begin(), nfc_secrets.end(), [](auto& nfc_secret) {
+            return nfc_secret.phrase.empty() || nfc_secret.seed.empty() ||
+                   nfc_secret.hmac_key.empty();
+        });
+    SelectDlpNfcKeyYIndex(DlpNfcKeyY::Nfc);
+    return IsNormalKeyAvailable(KeySlotID::DLPNFCDataKey) && missing_secret == nfc_secrets.end();
+}
+
+const NfcSecret& GetNfcSecret(NfcSecretId secret_id) {
+    return nfc_secrets[secret_id];
 }
 
 const AESIV& GetNfcIv() {

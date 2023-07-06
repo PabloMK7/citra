@@ -13,6 +13,7 @@
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/nfc/amiibo_crypto.h"
 #include "core/hle/service/nfc/nfc_device.h"
+#include "core/hw/aes/key.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::NFC::NfcDevice)
 
@@ -98,7 +99,7 @@ bool NfcDevice::LoadAmiibo(std::string filename) {
     }
 
     // Fallback for encrypted amiibos without keys
-    if (!AmiiboCrypto::IsKeyAvailable()) {
+    if (!HW::AES::NfcSecretsAvailable()) {
         LOG_INFO(Service_NFC, "Loading amiibo without keys");
         memcpy(&encrypted_tag.raw, &tag.raw, sizeof(EncryptedNTAG215File));
         tag.file = {};

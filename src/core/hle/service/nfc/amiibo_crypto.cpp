@@ -12,9 +12,9 @@
 #include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
 
-#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "core/hle/service/nfc/amiibo_crypto.h"
+#include "core/hw/aes/key.h"
 
 namespace Service::NFC::AmiiboCrypto {
 
@@ -159,35 +159,44 @@ HashSeed GetSeed(const NTAG215File& data) {
     return seed;
 }
 
-std::vector<u8> GenerateInternalKey(const InternalKey& key, const HashSeed& seed) {
-    const std::size_t seed_part1_len = sizeof(key.magic_bytes) - key.magic_length;
-    const std::size_t string_size = key.type_string.size();
+std::vector<u8> GenerateInternalKey(const HW::AES::NfcSecret& secret, const HashSeed& seed) {
+    static constexpr std::size_t FULL_SEED_LENGTH = 0x10;
+    const std::size_t seed_part1_len = FULL_SEED_LENGTH - secret.seed.size();
+    const std::size_t string_size = secret.phrase.size();
     std::vector<u8> output(string_size + seed_part1_len);
 
     // Copy whole type string
-    memccpy(output.data(), key.type_string.data(), '\0', string_size);
+    memccpy(output.data(), secret.phrase.data(), '\0', string_size);
 
-    // Append (16 - magic_length) from the input seed
+    // Append (FULL_SEED_LENGTH - secret.seed.size()) from the input seed
     memcpy(output.data() + string_size, &seed, seed_part1_len);
 
-    // Append all bytes from magicBytes
-    output.insert(output.end(), key.magic_bytes.begin(),
-                  key.magic_bytes.begin() + key.magic_length);
+    // Append all bytes from secret.seed
+    output.insert(output.end(), secret.seed.begin(), secret.seed.end());
 
     output.insert(output.end(), seed.uid_1.begin(), seed.uid_1.end());
     output.emplace_back(seed.nintendo_id_1);
     output.insert(output.end(), seed.uid_2.begin(), seed.uid_2.end());
     output.emplace_back(seed.nintendo_id_2);
 
-    for (std::size_t i = 0; i < sizeof(seed.keygen_salt); i++) {
-        output.emplace_back(static_cast<u8>(seed.keygen_salt[i] ^ key.xor_pad[i]));
-    }
+    HW::AES::SelectDlpNfcKeyYIndex(HW::AES::DlpNfcKeyY::Nfc);
+    auto nfc_key = HW::AES::GetNormalKey(HW::AES::KeySlotID::DLPNFCDataKey);
+    auto nfc_iv = HW::AES::GetNfcIv();
+
+    // Decrypt the keygen salt using the NFC key and IV.
+    CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
+    d.SetKeyWithIV(nfc_key.data(), nfc_key.size(), nfc_iv.data(), nfc_iv.size());
+    std::array<u8, sizeof(seed.keygen_salt)> decrypted_salt{};
+    d.ProcessData(reinterpret_cast<unsigned char*>(decrypted_salt.data()),
+                  reinterpret_cast<const unsigned char*>(seed.keygen_salt.data()),
+                  seed.keygen_salt.size());
+    output.insert(output.end(), decrypted_salt.begin(), decrypted_salt.end());
 
     return output;
 }
 
-void CryptoInit(CryptoCtx& ctx, CryptoPP::HMAC<CryptoPP::SHA256>& hmac_ctx, const HmacKey& hmac_key,
-                const std::vector<u8>& seed) {
+void CryptoInit(CryptoCtx& ctx, CryptoPP::HMAC<CryptoPP::SHA256>& hmac_ctx,
+                std::span<const u8> hmac_key, std::span<const u8> seed) {
     // Initialize context
     ctx.used = false;
     ctx.counter = 0;
@@ -216,16 +225,16 @@ void CryptoStep(CryptoCtx& ctx, CryptoPP::HMAC<CryptoPP::SHA256>& hmac_ctx, Drgb
         output.data(), reinterpret_cast<const unsigned char*>(ctx.buffer.data()), ctx.buffer_size);
 }
 
-DerivedKeys GenerateKey(const InternalKey& key, const NTAG215File& data) {
+DerivedKeys GenerateKey(const HW::AES::NfcSecret& secret, const NTAG215File& data) {
     const auto seed = GetSeed(data);
 
     // Generate internal seed
-    const std::vector<u8> internal_key = GenerateInternalKey(key, seed);
+    const std::vector<u8> internal_key = GenerateInternalKey(secret, seed);
 
     // Initialize context
     CryptoCtx ctx{};
     CryptoPP::HMAC<CryptoPP::SHA256> hmac_ctx;
-    CryptoInit(ctx, hmac_ctx, key.hmac_key, internal_key);
+    CryptoInit(ctx, hmac_ctx, secret.hmac_key, internal_key);
 
     // Generate derived keys
     DerivedKeys derived_keys{};
@@ -264,39 +273,15 @@ void Cipher(const DerivedKeys& keys, const NTAG215File& in_data, NTAG215File& ou
     out_data.password = in_data.password;
 }
 
-bool LoadKeys(InternalKey& locked_secret, InternalKey& unfixed_info) {
-    const auto citra_keys_dir = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir);
-    auto keys_file = FileUtil::IOFile(citra_keys_dir + "key_retail.bin", "rb");
-
-    if (!keys_file.IsOpen()) {
-        LOG_ERROR(Service_NFC, "No keys detected");
-        return false;
-    }
-
-    if (keys_file.ReadBytes(&unfixed_info, sizeof(InternalKey)) != sizeof(InternalKey)) {
-        LOG_ERROR(Service_NFC, "Failed to read unfixed_info");
-        return false;
-    }
-    if (keys_file.ReadBytes(&locked_secret, sizeof(InternalKey)) != sizeof(InternalKey)) {
-        LOG_ERROR(Service_NFC, "Failed to read locked-secret");
-        return false;
-    }
-
-    return true;
-}
-
-bool IsKeyAvailable() {
-    const auto citra_keys_dir = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir);
-    return FileUtil::Exists(citra_keys_dir + "key_retail.bin");
-}
+static constexpr std::size_t HMAC_KEY_SIZE = 0x10;
 
 bool DecodeAmiibo(const EncryptedNTAG215File& encrypted_tag_data, NTAG215File& tag_data) {
-    InternalKey locked_secret{};
-    InternalKey unfixed_info{};
-
-    if (!LoadKeys(locked_secret, unfixed_info)) {
+    if (!HW::AES::NfcSecretsAvailable()) {
         return false;
     }
+
+    auto unfixed_info = HW::AES::GetNfcSecret(HW::AES::NfcSecretId::UnfixedInfo);
+    auto locked_secret = HW::AES::GetNfcSecret(HW::AES::NfcSecretId::LockedSecret);
 
     // Generate keys
     NTAG215File encoded_data = NfcDataToEncodedData(encrypted_tag_data);
@@ -308,13 +293,13 @@ bool DecodeAmiibo(const EncryptedNTAG215File& encrypted_tag_data, NTAG215File& t
 
     // Regenerate tag HMAC. Note: order matters, data HMAC depends on tag HMAC!
     constexpr std::size_t input_length = DYNAMIC_LOCK_START - UUID_START;
-    CryptoPP::HMAC<CryptoPP::SHA256> tag_hmac(tag_keys.hmac_key.data(), sizeof(HmacKey));
+    CryptoPP::HMAC<CryptoPP::SHA256> tag_hmac(tag_keys.hmac_key.data(), HMAC_KEY_SIZE);
     tag_hmac.CalculateDigest(reinterpret_cast<unsigned char*>(&tag_data.hmac_tag),
                              reinterpret_cast<const unsigned char*>(&tag_data.uid), input_length);
 
     // Regenerate data HMAC
     constexpr std::size_t input_length2 = DYNAMIC_LOCK_START - WRITE_COUNTER_START;
-    CryptoPP::HMAC<CryptoPP::SHA256> data_hmac(data_keys.hmac_key.data(), sizeof(HmacKey));
+    CryptoPP::HMAC<CryptoPP::SHA256> data_hmac(data_keys.hmac_key.data(), HMAC_KEY_SIZE);
     data_hmac.CalculateDigest(reinterpret_cast<unsigned char*>(&tag_data.hmac_data),
                               reinterpret_cast<const unsigned char*>(&tag_data.write_counter),
                               input_length2);
@@ -333,12 +318,12 @@ bool DecodeAmiibo(const EncryptedNTAG215File& encrypted_tag_data, NTAG215File& t
 }
 
 bool EncodeAmiibo(const NTAG215File& tag_data, EncryptedNTAG215File& encrypted_tag_data) {
-    InternalKey locked_secret{};
-    InternalKey unfixed_info{};
-
-    if (!LoadKeys(locked_secret, unfixed_info)) {
+    if (!HW::AES::NfcSecretsAvailable()) {
         return false;
     }
+
+    auto unfixed_info = HW::AES::GetNfcSecret(HW::AES::NfcSecretId::UnfixedInfo);
+    auto locked_secret = HW::AES::GetNfcSecret(HW::AES::NfcSecretId::LockedSecret);
 
     // Generate keys
     const auto data_keys = GenerateKey(unfixed_info, tag_data);
@@ -349,12 +334,12 @@ bool EncodeAmiibo(const NTAG215File& tag_data, EncryptedNTAG215File& encrypted_t
     // Generate tag HMAC
     constexpr std::size_t input_length = DYNAMIC_LOCK_START - UUID_START;
     constexpr std::size_t input_length2 = HMAC_TAG_START - WRITE_COUNTER_START;
-    CryptoPP::HMAC<CryptoPP::SHA256> tag_hmac(tag_keys.hmac_key.data(), sizeof(HmacKey));
+    CryptoPP::HMAC<CryptoPP::SHA256> tag_hmac(tag_keys.hmac_key.data(), HMAC_KEY_SIZE);
     tag_hmac.CalculateDigest(reinterpret_cast<unsigned char*>(&encoded_tag_data.hmac_tag),
                              reinterpret_cast<const unsigned char*>(&tag_data.uid), input_length);
 
     // Generate data HMAC
-    CryptoPP::HMAC<CryptoPP::SHA256> data_hmac(data_keys.hmac_key.data(), sizeof(HmacKey));
+    CryptoPP::HMAC<CryptoPP::SHA256> data_hmac(data_keys.hmac_key.data(), HMAC_KEY_SIZE);
     data_hmac.Update(reinterpret_cast<const unsigned char*>(&tag_data.write_counter),
                      input_length2);
     data_hmac.Update(reinterpret_cast<unsigned char*>(&encoded_tag_data.hmac_tag),

@@ -60,6 +60,11 @@ struct NfcSecret {
     std::vector<u8> hmac_key;
 };
 
+enum NfcSecretId : std::size_t {
+    UnfixedInfo = 0,
+    LockedSecret = 1,
+};
+
 constexpr std::size_t MaxCommonKeySlot = 6;
 constexpr std::size_t NumDlpNfcKeyYs = 2;
 constexpr std::size_t NumNfcSecrets = 2;
@@ -83,7 +88,8 @@ AESKey GetNormalKey(std::size_t slot_id);
 void SelectCommonKeyIndex(u8 index);
 void SelectDlpNfcKeyYIndex(u8 index);
 
-const NfcSecret& GetNfcSecret(u8 index);
+bool NfcSecretsAvailable();
+const NfcSecret& GetNfcSecret(NfcSecretId secret_id);
 const AESIV& GetNfcIv();
 
 } // namespace HW::AES
