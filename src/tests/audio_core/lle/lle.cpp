@@ -70,7 +70,7 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
 
         buffer = lle.PipeRead(AudioCore::DspPipe::Audio, 2);
         u16 size;
-        memcpy(&size, buffer.data(), sizeof(size));
+        std::memcpy(&size, buffer.data(), sizeof(size));
         // see AudioCore::DspHle::Impl::AudioPipeWriteStructAddresses()
         REQUIRE(size * 2 == 30);
     }

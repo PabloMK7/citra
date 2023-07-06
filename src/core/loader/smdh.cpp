@@ -11,12 +11,13 @@
 
 namespace Loader {
 
-bool IsValidSMDH(const std::vector<u8>& smdh_data) {
-    if (smdh_data.size() < sizeof(Loader::SMDH))
+bool IsValidSMDH(std::span<const u8> smdh_data) {
+    if (smdh_data.size() < sizeof(Loader::SMDH)) {
         return false;
+    }
 
     u32 magic;
-    memcpy(&magic, smdh_data.data(), sizeof(u32));
+    std::memcpy(&magic, smdh_data.data(), sizeof(u32));
 
     return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
 }

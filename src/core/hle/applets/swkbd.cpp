@@ -93,7 +93,7 @@ ResultCode SoftwareKeyboard::Start(Service::APT::MessageParameter const& paramet
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (SoftwareKeyboardConfig) is wrong");
 
-    memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+    std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
     text_memory = std::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
     DrawScreenKeyboard();
@@ -115,7 +115,7 @@ void SoftwareKeyboard::Update() {
     const KeyboardData& data = frontend_applet->ReceiveData();
     std::u16string text = Common::UTF8ToUTF16(data.text);
     // Include a null terminator
-    memcpy(text_memory->GetPointer(), text.c_str(), (text.length() + 1) * sizeof(char16_t));
+    std::memcpy(text_memory->GetPointer(), text.c_str(), (text.length() + 1) * sizeof(char16_t));
     switch (config.num_buttons_m1) {
     case SoftwareKeyboardButtonConfig::SingleButton:
         config.return_code = SoftwareKeyboardResult::D0Click;

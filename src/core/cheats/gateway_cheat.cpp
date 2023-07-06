@@ -6,6 +6,7 @@
 #include <cmath>
 #include <fstream>
 #include <functional>
+#include <span>
 #include <string>
 #include <vector>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -144,7 +145,7 @@ static inline void JokerOp(const GatewayCheat::CheatLine& line, State& state,
 }
 
 static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Core::System& system,
-                           const std::vector<GatewayCheat::CheatLine>& cheat_lines) {
+                           std::span<const GatewayCheat::CheatLine> cheat_lines) {
     if (state.if_flag > 0) {
         // Skip over the additional patch lines
         state.current_line_nr += static_cast<int>(std::ceil(line.value / 8.0));

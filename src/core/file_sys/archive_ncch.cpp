@@ -249,7 +249,7 @@ ResultVal<std::size_t> NCCHFile::Read(const u64 offset, const std::size_t length
 
     std::size_t available_size = static_cast<std::size_t>(file_buffer.size() - offset);
     std::size_t copy_size = std::min(length, available_size);
-    memcpy(buffer, file_buffer.data() + offset, copy_size);
+    std::memcpy(buffer, file_buffer.data() + offset, copy_size);
 
     return copy_size;
 }

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <span>
 #include <vector>
 #include "common/archives.h"
 #include "common/bit_field.h"
@@ -142,7 +143,7 @@ static void WriteSingleHWReg(u32 base_address, u32 data) {
  * @param data A vector containing the source data
  * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::vector<u8>& data) {
+static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, std::span<const u8> data) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes = 0x80;
 
@@ -185,8 +186,8 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::ve
  * @param masks   A vector containing the masks
  * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes,
-                                      const std::vector<u8>& data, const std::vector<u8>& masks) {
+static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, std::span<const u8> data,
+                                      std::span<const u8> masks) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes = 0x80;
 

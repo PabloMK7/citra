@@ -11,6 +11,7 @@
 #include <cstring>
 #include <limits>
 #include <new>
+#include <span>
 #include <type_traits>
 #include <vector>
 #include "common/common_types.h"
@@ -57,7 +58,7 @@ public:
         return push_count;
     }
 
-    std::size_t Push(const std::vector<T>& input) {
+    std::size_t Push(std::span<const T> input) {
         return Push(input.data(), input.size() / granularity);
     }
 

@@ -78,7 +78,7 @@ private:
     void ParseRegionLockoutInfo(u64 program_id);
 
     /// Detects whether the NCCH contains GBA Virtual Console.
-    bool IsGbaVirtualConsole(const std::vector<u8>& code);
+    bool IsGbaVirtualConsole(std::span<const u8> code);
 
     FileSys::NCCHContainer base_ncch;
     FileSys::NCCHContainer update_ncch;

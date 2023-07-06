@@ -108,7 +108,7 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
     return Loader::ResultStatus::Success;
 }
 
-Loader::ResultStatus CIAContainer::Load(const std::vector<u8>& file_data) {
+Loader::ResultStatus CIAContainer::Load(std::span<const u8> file_data) {
     Loader::ResultStatus result = LoadHeader(file_data);
     if (result != Loader::ResultStatus::Success)
         return result;
@@ -133,30 +133,29 @@ Loader::ResultStatus CIAContainer::Load(const std::vector<u8>& file_data) {
     return Loader::ResultStatus::Success;
 }
 
-Loader::ResultStatus CIAContainer::LoadHeader(const std::vector<u8>& header_data,
-                                              std::size_t offset) {
-    if (header_data.size() - offset < sizeof(Header))
+Loader::ResultStatus CIAContainer::LoadHeader(std::span<const u8> header_data, std::size_t offset) {
+    if (header_data.size() - offset < sizeof(Header)) {
         return Loader::ResultStatus::Error;
+    }
 
     std::memcpy(&cia_header, header_data.data(), sizeof(Header));
 
     return Loader::ResultStatus::Success;
 }
 
-Loader::ResultStatus CIAContainer::LoadTicket(const std::vector<u8>& ticket_data,
-                                              std::size_t offset) {
+Loader::ResultStatus CIAContainer::LoadTicket(std::span<const u8> ticket_data, std::size_t offset) {
     return cia_ticket.Load(ticket_data, offset);
 }
 
-Loader::ResultStatus CIAContainer::LoadTitleMetadata(const std::vector<u8>& tmd_data,
+Loader::ResultStatus CIAContainer::LoadTitleMetadata(std::span<const u8> tmd_data,
                                                      std::size_t offset) {
     return cia_tmd.Load(tmd_data, offset);
 }
 
-Loader::ResultStatus CIAContainer::LoadMetadata(const std::vector<u8>& meta_data,
-                                                std::size_t offset) {
-    if (meta_data.size() - offset < sizeof(Metadata))
+Loader::ResultStatus CIAContainer::LoadMetadata(std::span<const u8> meta_data, std::size_t offset) {
+    if (meta_data.size() - offset < sizeof(Metadata)) {
         return Loader::ResultStatus::Error;
+    }
 
     std::memcpy(&cia_metadata, meta_data.data(), sizeof(Metadata));
 

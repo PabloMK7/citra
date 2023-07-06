@@ -115,7 +115,7 @@ void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     }
 
     // Skip 'F' header
-    auto* command_pos = command_buffer + 1;
+    const u8* command_pos = command_buffer + 1;
 
     if (*command_pos == 0 || *command_pos == ',') {
         LOG_WARNING(Debug_GDBStub, "bad HIO packet format position 0: {}", *command_pos);

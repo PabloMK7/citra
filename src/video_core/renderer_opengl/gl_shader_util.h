@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <vector>
+#include <span>
 #include <glad/glad.h>
 
 namespace OpenGL {
@@ -37,6 +37,6 @@ GLuint LoadShader(std::string_view source, GLenum type);
  * @param shaders ID of shaders to attach to the program
  * @returns Handle of the newly created OpenGL program object
  */
-GLuint LoadProgram(bool separable_program, const std::vector<GLuint>& shaders);
+GLuint LoadProgram(bool separable_program, std::span<const GLuint> shaders);
 
 } // namespace OpenGL

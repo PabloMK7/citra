@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <thread>
 #include "common/threadsafe_queue.h"
 #include "core/rpc/server.h"
@@ -27,7 +28,7 @@ private:
     void Start();
     void Stop();
     void HandleReadMemory(Packet& packet, u32 address, u32 data_size);
-    void HandleWriteMemory(Packet& packet, u32 address, const u8* data, u32 data_size);
+    void HandleWriteMemory(Packet& packet, u32 address, std::span<const u8> data);
     bool ValidatePacket(const PacketHeader& packet_header);
     void HandleSingleRequest(std::unique_ptr<Packet> request);
     void HandleRequestsLoop();

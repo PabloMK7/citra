@@ -6,6 +6,7 @@
 
 #include <array>
 #include <functional>
+#include <span>
 #include "common/common_types.h"
 
 namespace RPC {
@@ -67,7 +68,7 @@ public:
 
 private:
     void HandleReadMemory(u32 address, u32 data_size);
-    void HandleWriteMemory(u32 address, const u8* data, u32 data_size);
+    void HandleWriteMemory(u32 address, std::span<const u8> data);
 
     struct PacketHeader header;
     std::array<u8, MAX_PACKET_DATA_SIZE> packet_data;

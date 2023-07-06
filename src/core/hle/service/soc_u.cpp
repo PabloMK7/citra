@@ -312,7 +312,7 @@ static void TranslateSockOptDataToPlatform(std::vector<u8>& out, const std::vect
         linger_out.l_linger = static_cast<decltype(linger_out.l_linger)>(
             reinterpret_cast<const CTRLinger*>(in.data())->l_linger);
         out.resize(sizeof(linger));
-        memcpy(out.data(), &linger_out, sizeof(linger));
+        std::memcpy(out.data(), &linger_out, sizeof(linger));
         return;
     }
     // Other options should have the size of an int, even for booleans
@@ -332,7 +332,7 @@ static void TranslateSockOptDataToPlatform(std::vector<u8>& out, const std::vect
         return;
     }
     out.resize(sizeof(int));
-    memcpy(out.data(), &value, sizeof(int));
+    std::memcpy(out.data(), &value, sizeof(int));
 }
 
 static u32 TranslateSockOptSizeToPlatform(int platform_level, int platform_opt) {
@@ -349,7 +349,7 @@ static void TranslateSockOptDataFromPlatform(std::vector<u8>& out, const std::ve
             reinterpret_cast<const linger*>(in.data())->l_onoff);
         linger_out.l_linger = static_cast<decltype(linger_out.l_linger)>(
             reinterpret_cast<const linger*>(in.data())->l_linger);
-        memcpy(out.data(), &linger_out, std::min(out.size(), sizeof(CTRLinger)));
+        std::memcpy(out.data(), &linger_out, std::min(out.size(), sizeof(CTRLinger)));
         return;
     }
     if (out.size() == sizeof(u8) && in.size() == sizeof(int)) {
@@ -569,7 +569,7 @@ union CTRSockAddr {
         ASSERT_MSG(ctr_addr.raw.len == sizeof(CTRSockAddrIn),
                    "Unhandled address size (len) in CTRSockAddr::ToPlatform");
         result.sa_family = SocketDomainToPlatform(ctr_addr.raw.sa_family);
-        memset(result.sa_data, 0, sizeof(result.sa_data));
+        std::memset(result.sa_data, 0, sizeof(result.sa_data));
 
         // We can not guarantee ABI compatibility between platforms so we copy the fields manually
         switch (result.sa_family) {
@@ -577,7 +577,7 @@ union CTRSockAddr {
             sockaddr_in* result_in = reinterpret_cast<sockaddr_in*>(&result);
             result_in->sin_port = ctr_addr.in.sin_port;
             result_in->sin_addr.s_addr = ctr_addr.in.sin_addr;
-            memset(result_in->sin_zero, 0, sizeof(result_in->sin_zero));
+            std::memset(result_in->sin_zero, 0, sizeof(result_in->sin_zero));
             break;
         }
         default:
@@ -1542,7 +1542,7 @@ void SOC_U::GetNetworkOpt(Kernel::HLERequestContext& ctx) {
         case NetworkOpt::NETOPT_MAC_ADDRESS: {
             if (opt_len >= 6) {
                 std::array<u8, 6> fake_mac = {0};
-                memcpy(opt_data.data(), fake_mac.data(), fake_mac.size());
+                std::memcpy(opt_data.data(), fake_mac.data(), fake_mac.size());
             }
             LOG_WARNING(Service_SOC, "(STUBBED) called, level={} opt_name={}", level, opt_name);
             err = 0;
@@ -1777,8 +1777,8 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
     int num_interfaces = bytes_used / sizeof(INTERFACE_INFO);
     for (int i = 0; i < num_interfaces; i++) {
         if (((sockaddr*)&(interface_list[i].iiAddress))->sa_family == AF_INET &&
-            memcmp(&((sockaddr_in*)&(interface_list[i].iiAddress))->sin_addr.s_addr,
-                   &s_info.sin_addr.s_addr, sizeof(s_info.sin_addr.s_addr)) == 0) {
+            std::memcmp(&((sockaddr_in*)&(interface_list[i].iiAddress))->sin_addr.s_addr,
+                        &s_info.sin_addr.s_addr, sizeof(s_info.sin_addr.s_addr)) == 0) {
             ret.address = ((sockaddr_in*)&(interface_list[i].iiAddress))->sin_addr.s_addr;
             ret.netmask = ((sockaddr_in*)&(interface_list[i].iiNetmask))->sin_addr.s_addr;
             ret.broadcast =

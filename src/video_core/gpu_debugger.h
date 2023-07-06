@@ -51,7 +51,7 @@ public:
         gx_command_history.emplace_back();
         Service::GSP::Command& cmd = gx_command_history.back();
 
-        memcpy(&cmd, command_data, sizeof(Service::GSP::Command));
+        std::memcpy(&cmd, command_data, sizeof(Service::GSP::Command));
 
         ForEachObserver([this](DebuggerObserver* observer) {
             observer->GXCommandProcessed(static_cast<int>(this->gx_command_history.size()));

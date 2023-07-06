@@ -5,9 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <boost/serialization/unique_ptr.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include "common/common_types.h"
@@ -219,7 +219,7 @@ public:
      * @return ResultCode 0 on success or the corresponding code on error
      */
     ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
-                                 const std::vector<u8>& smdh_icon,
+                                 std::span<const u8> smdh_icon,
                                  const FileSys::ArchiveFormatInfo& format_info, u64 program_id);
 
     /**

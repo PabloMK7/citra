@@ -70,7 +70,7 @@ GLuint LoadShader(std::string_view source, GLenum type) {
     return shader_id;
 }
 
-GLuint LoadProgram(bool separable_program, const std::vector<GLuint>& shaders) {
+GLuint LoadProgram(bool separable_program, std::span<const GLuint> shaders) {
     // Link the program
     LOG_DEBUG(Render_OpenGL, "Linking program...");
 

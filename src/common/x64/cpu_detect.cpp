@@ -56,7 +56,7 @@ static CPUCaps Detect() {
     // Citra at all anyway
 
     int cpu_id[4];
-    memset(caps.brand_string, 0, sizeof(caps.brand_string));
+    std::memset(caps.brand_string, 0, sizeof(caps.brand_string));
 
     // Detect CPU's CPUID capabilities and grab CPU string
     __cpuid(cpu_id, 0x00000000);

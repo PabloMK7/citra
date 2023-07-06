@@ -130,7 +130,7 @@ struct CTMHeader {
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
 
-static u64 GetInputCount(const std::vector<u8>& input) {
+static u64 GetInputCount(std::span<const u8> input) {
     u64 input_count = 0;
     for (std::size_t pos = 0; pos < input.size(); pos += sizeof(ControllerState)) {
         if (input.size() < pos + sizeof(ControllerState)) {
@@ -476,8 +476,7 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
     return ValidationResult::OK;
 }
 
-Movie::ValidationResult Movie::ValidateInput(const std::vector<u8>& input,
-                                             u64 expected_count) const {
+Movie::ValidationResult Movie::ValidateInput(std::span<const u8> input, u64 expected_count) const {
     return GetInputCount(input) == expected_count ? ValidationResult::OK
                                                   : ValidationResult::InputCountDismatch;
 }

@@ -122,7 +122,7 @@ void OGLShader::Release() {
     handle = 0;
 }
 
-void OGLProgram::Create(bool separable_program, const std::vector<GLuint>& shaders) {
+void OGLProgram::Create(bool separable_program, std::span<const GLuint> shaders) {
     if (handle != 0)
         return;
 
@@ -136,7 +136,8 @@ void OGLProgram::Create(std::string_view vert_shader, std::string_view frag_shad
     frag.Create(frag_shader, GL_FRAGMENT_SHADER);
 
     MICROPROFILE_SCOPE(OpenGL_ResourceCreation);
-    Create(false, {vert.handle, frag.handle});
+    const std::array shaders{vert.handle, frag.handle};
+    Create(false, shaders);
 }
 
 void OGLProgram::Release() {

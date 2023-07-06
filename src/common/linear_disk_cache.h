@@ -154,7 +154,7 @@ private:
 
     struct Header {
         Header() : id(*(u32*)"DCAC"), key_t_size(sizeof(K)), value_t_size(sizeof(V)) {
-            memcpy(ver, scm_rev_git_str, 40);
+            std::memcpy(ver, scm_rev_git_str, 40);
         }
 
         const u32 id;

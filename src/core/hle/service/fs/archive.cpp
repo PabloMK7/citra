@@ -230,7 +230,7 @@ ResultVal<FileSys::ArchiveFormatInfo> ArchiveManager::GetArchiveFormatInfo(
 }
 
 ResultCode ArchiveManager::CreateExtSaveData(MediaType media_type, u32 high, u32 low,
-                                             const std::vector<u8>& smdh_icon,
+                                             std::span<const u8> smdh_icon,
                                              const FileSys::ArchiveFormatInfo& format_info,
                                              u64 program_id) {
     // Construct the binary path to the archive first
@@ -247,10 +247,11 @@ ResultCode ArchiveManager::CreateExtSaveData(MediaType media_type, u32 high, u32
     auto ext_savedata = static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get());
 
     ResultCode result = ext_savedata->Format(path, format_info, program_id);
-    if (result.IsError())
+    if (result.IsError()) {
         return result;
+    }
 
-    ext_savedata->WriteIcon(path, smdh_icon.data(), smdh_icon.size());
+    ext_savedata->WriteIcon(path, smdh_icon);
     return RESULT_SUCCESS;
 }
 

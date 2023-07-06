@@ -507,8 +507,8 @@ void ShaderDiskCache::SavePrecompiledHeaderToVirtualPrecompiledCache() {
 
 void ShaderDiskCache::SaveVirtualPrecompiledFile() {
     decompressed_precompiled_cache_offset = 0;
-    const std::vector<u8>& compressed = Common::Compression::CompressDataZSTDDefault(
-        decompressed_precompiled_cache.data(), decompressed_precompiled_cache.size());
+    const auto compressed =
+        Common::Compression::CompressDataZSTDDefault(decompressed_precompiled_cache);
 
     const auto precompiled_path{GetPrecompiledPath()};
 

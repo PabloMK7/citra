@@ -67,7 +67,7 @@ JNIEXPORT jlong JNICALL Java_org_citra_citra_1emu_model_GameInfo_initialize(JNIE
     Loader::SMDH* smdh = nullptr;
     if (Loader::IsValidSMDH(smdh_data)) {
         smdh = new Loader::SMDH;
-        memcpy(smdh, smdh_data.data(), sizeof(Loader::SMDH));
+        std::memcpy(smdh, smdh_data.data(), sizeof(Loader::SMDH));
     }
     return reinterpret_cast<jlong>(smdh);
 }

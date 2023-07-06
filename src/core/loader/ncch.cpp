@@ -171,7 +171,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
     std::vector<u8> smdh_buffer;
     if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
         SMDH smdh;
-        memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
+        std::memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
         u32 region_lockout = smdh.region_lockout;
         constexpr u32 REGION_COUNT = 7;
         std::vector<u32> regions;
@@ -185,15 +185,20 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
     } else {
         const auto region = Core::GetSystemTitleRegion(program_id);
         if (region.has_value()) {
-            cfg->SetPreferredRegionCodes({region.value()});
+            const std::array regions{region.value()};
+            cfg->SetPreferredRegionCodes(regions);
         }
     }
 }
 
-bool AppLoader_NCCH::IsGbaVirtualConsole(const std::vector<u8>& code) {
-    const u32* gbaVcHeader = reinterpret_cast<const u32*>(code.data() + code.size() - 0x10);
-    return code.size() >= 0x10 && gbaVcHeader[0] == MakeMagic('.', 'C', 'A', 'A') &&
-           gbaVcHeader[1] == 1;
+bool AppLoader_NCCH::IsGbaVirtualConsole(std::span<const u8> code) {
+    if (code.size() < 0x10) [[unlikely]] {
+        return false;
+    }
+
+    u32 gbaVcHeader[2];
+    std::memcpy(gbaVcHeader, code.data() + code.size() - 0x10, sizeof(gbaVcHeader));
+    return gbaVcHeader[0] == MakeMagic('.', 'C', 'A', 'A') && gbaVcHeader[1] == 1;
 }
 
 ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
@@ -317,7 +322,7 @@ ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
         return ResultStatus::ErrorInvalidFormat;
     }
 
-    memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
+    std::memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
 
     const auto& short_title = smdh.GetShortTitle(SMDH::TitleLanguage::English);
     auto title_end = std::find(short_title.begin(), short_title.end(), u'\0');

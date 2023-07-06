@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <span>
 #include <utility>
 #include <vector>
 #include <glad/glad.h>
@@ -129,7 +130,7 @@ public:
     }
 
     /// Creates a new program from given shader objects
-    void Create(bool separable_program, const std::vector<GLuint>& shaders);
+    void Create(bool separable_program, std::span<const GLuint> shaders);
 
     /// Creates a new program from given shader soruce code
     void Create(std::string_view vert_shader, std::string_view frag_shader);

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <span>
 #include <vector>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -17,7 +18,7 @@ namespace Loader {
  * @param smdh_data data buffer to test
  * @return bool test result
  */
-bool IsValidSMDH(const std::vector<u8>& smdh_data);
+bool IsValidSMDH(std::span<const u8> smdh_data);
 
 /// SMDH data structure that contains titles, icons etc. See https://www.3dbrew.org/wiki/SMDH
 struct SMDH {

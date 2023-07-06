@@ -5,7 +5,7 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+#include <span>
 #include <boost/serialization/access.hpp>
 #include "audio_core/audio_types.h"
 #include "audio_core/time_stretch.h"
@@ -80,7 +80,7 @@ public:
      * @param pipe_number The Pipe ID
      * @param buffer The data to write to the pipe.
      */
-    virtual void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) = 0;
+    virtual void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) = 0;
 
     /// Returns a reference to the array backing DSP memory
     virtual std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() = 0;
@@ -89,7 +89,7 @@ public:
     virtual void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) = 0;
 
     /// Loads the DSP program
-    virtual void LoadComponent(const std::vector<u8>& buffer) = 0;
+    virtual void LoadComponent(std::span<const u8> buffer) = 0;
 
     /// Unloads the DSP program
     virtual void UnloadComponent() = 0;

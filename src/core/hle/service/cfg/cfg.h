@@ -6,9 +6,9 @@
 
 #include <array>
 #include <memory>
+#include <span>
 #include <string>
 #include <utility>
-#include <vector>
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
@@ -345,7 +345,7 @@ public:
      * setting is auto.
      * @param region_codes the preferred region codes to set
      */
-    void SetPreferredRegionCodes(const std::vector<u32>& region_codes);
+    void SetPreferredRegionCodes(std::span<const u32> region_codes);
 
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.

@@ -38,7 +38,7 @@ TEST_CASE("DSP HLE Audio Decoder", "[audio_core]") {
         request.header.cmd = AudioCore::HLE::DecoderCommand::EncodeDecode;
         u8* fcram = memory.GetFCRAMPointer(0);
 
-        memcpy(fcram, fixure_buffer, fixure_buffer_size);
+        std::memcpy(fcram, fixure_buffer, fixure_buffer_size);
         request.decode_aac_request.src_addr = Memory::FCRAM_PADDR;
         request.decode_aac_request.dst_addr_ch0 = Memory::FCRAM_PADDR + 1024;
         request.decode_aac_request.dst_addr_ch1 = Memory::FCRAM_PADDR + 1048576; // 1 MB

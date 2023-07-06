@@ -31,7 +31,7 @@ std::vector<u8> HexToBytes(const std::string& hex) {
 constexpr std::size_t SlotSize = 4;
 std::array<RsaSlot, SlotSize> rsa_slots;
 
-std::vector<u8> RsaSlot::GetSignature(const std::vector<u8>& message) const {
+std::vector<u8> RsaSlot::GetSignature(std::span<const u8> message) const {
     CryptoPP::Integer sig =
         CryptoPP::ModularExponentiation(CryptoPP::Integer(message.data(), message.size()),
                                         CryptoPP::Integer(exponent.data(), exponent.size()),
@@ -85,7 +85,7 @@ RsaSlot GetSlot(std::size_t slot_id) {
     return rsa_slots[slot_id];
 }
 
-std::vector<u8> CreateASN1Message(const std::vector<u8>& data) {
+std::vector<u8> CreateASN1Message(std::span<const u8> data) {
     static constexpr std::array<u8, 224> asn1_header = {
         {0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

@@ -142,8 +142,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
             }
             exe_load_func.push_back(instruction);
         }
-        memcpy(exe_load_args, header.infos.builtin_load_exe_args,
-               sizeof(_3gx_Infos::builtin_load_exe_args));
+        std::memcpy(exe_load_args, header.infos.builtin_load_exe_args,
+                    sizeof(_3gx_Infos::builtin_load_exe_args));
     }
 
     // Load code sections
@@ -245,8 +245,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     plugin_header.plgldr_reply = plg_context.plg_reply;
     plugin_header.is_default_plugin = plg_context.is_default_path;
     if (plg_context.use_user_load_parameters) {
-        memcpy(plugin_header.config, plg_context.user_load_parameters.config,
-               sizeof(PluginHeader::config));
+        std::memcpy(plugin_header.config, plg_context.user_load_parameters.config,
+                    sizeof(PluginHeader::config));
     }
     kernel.memory.WriteBlock(process, _3GX_exe_load_addr, &plugin_header, sizeof(PluginHeader));
 
@@ -286,8 +286,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
 }
 
 void FileSys::Plugin3GXLoader::MapBootloader(Kernel::Process& process, Kernel::KernelSystem& kernel,
-                                             u32 memory_offset,
-                                             const std::vector<u32>& exe_load_func,
+                                             u32 memory_offset, std::span<const u32> exe_load_func,
                                              const u32_le* exe_load_args, u32 checksum_size,
                                              u32 exe_checksum, bool no_flash) {
 
@@ -296,7 +295,8 @@ void FileSys::Plugin3GXLoader::MapBootloader(Kernel::Process& process, Kernel::K
                             sizeof(u32) * 2);
 
     std::array<u32_le, g_plugin_loader_bootloader.size() / sizeof(u32)> bootloader;
-    memcpy(bootloader.data(), g_plugin_loader_bootloader.data(), g_plugin_loader_bootloader.size());
+    std::memcpy(bootloader.data(), g_plugin_loader_bootloader.data(),
+                g_plugin_loader_bootloader.size());
 
     for (auto it = bootloader.begin(); it < bootloader.end(); it++) {
         switch (static_cast<u32>(*it)) {

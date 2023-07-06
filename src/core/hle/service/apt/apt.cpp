@@ -134,7 +134,7 @@ void Module::APTInterface::Initialize(Kernel::HLERequestContext& ctx) {
 
 static u32 DecompressLZ11(const u8* in, u8* out) {
     u32_le decompressed_size;
-    memcpy(&decompressed_size, in, sizeof(u32));
+    std::memcpy(&decompressed_size, in, sizeof(u32));
     in += 4;
 
     u8 type = decompressed_size & 0xFF;

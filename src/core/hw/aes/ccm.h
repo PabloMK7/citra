@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <span>
 #include <vector>
 #include "common/common_types.h"
 
@@ -23,7 +24,7 @@ using CCMNonce = std::array<u8, CCM_NONCE_SIZE>;
  * @param slot_id The slot ID of the key to use for encryption
  * @returns a vector of u8 containing the encrypted data with MAC at the end
  */
-std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
+std::vector<u8> EncryptSignCCM(std::span<const u8> pdata, const CCMNonce& nonce,
                                std::size_t slot_id);
 
 /**
@@ -33,7 +34,7 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
  * @param slot_id The slot ID of the key to use for decryption
  * @returns a vector of u8 containing the decrypted data; an empty vector if the verification fails
  */
-std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
+std::vector<u8> DecryptVerifyCCM(std::span<const u8> cipher, const CCMNonce& nonce,
                                  std::size_t slot_id);
 
 } // namespace HW::AES

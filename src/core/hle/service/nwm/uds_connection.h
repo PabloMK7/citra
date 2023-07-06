@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <span>
 #include <tuple>
 #include <vector>
 #include "common/common_types.h"
@@ -41,7 +42,7 @@ static_assert(sizeof(AssociationResponseFrame) == 6, "AssociationResponseFrame h
 std::vector<u8> GenerateAuthenticationFrame(AuthenticationSeq seq);
 
 /// Returns the sequence number from the body of an Authentication frame.
-AuthenticationSeq GetAuthenticationSeqNumber(const std::vector<u8>& body);
+AuthenticationSeq GetAuthenticationSeqNumber(std::span<const u8> body);
 
 /// Generates an 802.11 association response frame with the specified status, association id and
 /// network id, starting at the frame body.
@@ -49,6 +50,6 @@ std::vector<u8> GenerateAssocResponseFrame(AssocStatus status, u16 association_i
 
 /// Returns a tuple of (association status, association id) from the body of an AssociationResponse
 /// frame.
-std::tuple<AssocStatus, u16> GetAssociationResult(const std::vector<u8>& body);
+std::tuple<AssocStatus, u16> GetAssociationResult(std::span<const u8> body);
 
 } // namespace Service::NWM

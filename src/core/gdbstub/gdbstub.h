@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <span>
 #include "common/common_types.h"
 #include "core/hle/kernel/thread.h"
 

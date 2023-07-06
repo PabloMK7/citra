@@ -116,13 +116,13 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
             u32 value = config.value_32bit;
             std::size_t len = (end - start) / sizeof(u32);
             for (std::size_t i = 0; i < len; ++i)
-                memcpy(&start[i * sizeof(u32)], &value, sizeof(u32));
+                std::memcpy(&start[i * sizeof(u32)], &value, sizeof(u32));
         }
     } else {
         // fill with 16-bit values
         u16 value_16bit = config.value_16bit.Value();
         for (u8* ptr = start; ptr < end; ptr += sizeof(u16))
-            memcpy(ptr, &value_16bit, sizeof(u16));
+            std::memcpy(ptr, &value_16bit, sizeof(u16));
     }
 }
 
@@ -521,7 +521,7 @@ static void VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
 /// Initialize hardware
 void Init(Memory::MemorySystem& memory) {
     g_memory = &memory;
-    memset(&g_regs, 0, sizeof(g_regs));
+    std::memset(&g_regs, 0, sizeof(g_regs));
 
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     auto& framebuffer_sub = g_regs.framebuffer_config[1];

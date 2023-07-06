@@ -12,7 +12,7 @@ void RelocateSharedFont(std::shared_ptr<Kernel::SharedMemory> shared_font, VAddr
     const u8* cfnt_ptr = shared_font->GetPointer(SharedFontStartOffset);
 
     CFNT cfnt;
-    memcpy(&cfnt, cfnt_ptr, sizeof(cfnt));
+    std::memcpy(&cfnt, cfnt_ptr, sizeof(cfnt));
 
     u32 assumed_cmap_offset = 0;
     u32 assumed_cwdh_offset = 0;
@@ -27,17 +27,17 @@ void RelocateSharedFont(std::shared_ptr<Kernel::SharedMemory> shared_font, VAddr
         const u8* data = shared_font->GetPointer(current_offset);
 
         SectionHeader section_header;
-        memcpy(&section_header, data, sizeof(section_header));
+        std::memcpy(&section_header, data, sizeof(section_header));
 
-        if (first_cmap_offset == 0 && memcmp(section_header.magic, "CMAP", 4) == 0) {
+        if (first_cmap_offset == 0 && std::memcmp(section_header.magic, "CMAP", 4) == 0) {
             first_cmap_offset = current_offset;
-        } else if (first_cwdh_offset == 0 && memcmp(section_header.magic, "CWDH", 4) == 0) {
+        } else if (first_cwdh_offset == 0 && std::memcmp(section_header.magic, "CWDH", 4) == 0) {
             first_cwdh_offset = current_offset;
-        } else if (first_tglp_offset == 0 && memcmp(section_header.magic, "TGLP", 4) == 0) {
+        } else if (first_tglp_offset == 0 && std::memcmp(section_header.magic, "TGLP", 4) == 0) {
             first_tglp_offset = current_offset;
-        } else if (memcmp(section_header.magic, "FINF", 4) == 0) {
+        } else if (std::memcmp(section_header.magic, "FINF", 4) == 0) {
             BCFNT::FINF finf;
-            memcpy(&finf, data, sizeof(finf));
+            std::memcpy(&finf, data, sizeof(finf));
 
             assumed_cmap_offset = finf.cmap_offset - sizeof(SectionHeader);
             assumed_cwdh_offset = finf.cwdh_offset - sizeof(SectionHeader);
@@ -59,44 +59,44 @@ void RelocateSharedFont(std::shared_ptr<Kernel::SharedMemory> shared_font, VAddr
         u8* data = shared_font->GetPointer(current_offset);
 
         SectionHeader section_header;
-        memcpy(&section_header, data, sizeof(section_header));
+        std::memcpy(&section_header, data, sizeof(section_header));
 
-        if (memcmp(section_header.magic, "FINF", 4) == 0) {
+        if (std::memcmp(section_header.magic, "FINF", 4) == 0) {
             BCFNT::FINF finf;
-            memcpy(&finf, data, sizeof(finf));
+            std::memcpy(&finf, data, sizeof(finf));
 
             // Relocate the offsets in the FINF section
             finf.cmap_offset += offset;
             finf.cwdh_offset += offset;
             finf.tglp_offset += offset;
 
-            memcpy(data, &finf, sizeof(finf));
-        } else if (memcmp(section_header.magic, "CMAP", 4) == 0) {
+            std::memcpy(data, &finf, sizeof(finf));
+        } else if (std::memcmp(section_header.magic, "CMAP", 4) == 0) {
             BCFNT::CMAP cmap;
-            memcpy(&cmap, data, sizeof(cmap));
+            std::memcpy(&cmap, data, sizeof(cmap));
 
             // Relocate the offsets in the CMAP section
             if (cmap.next_cmap_offset != 0)
                 cmap.next_cmap_offset += offset;
 
-            memcpy(data, &cmap, sizeof(cmap));
-        } else if (memcmp(section_header.magic, "CWDH", 4) == 0) {
+            std::memcpy(data, &cmap, sizeof(cmap));
+        } else if (std::memcmp(section_header.magic, "CWDH", 4) == 0) {
             BCFNT::CWDH cwdh;
-            memcpy(&cwdh, data, sizeof(cwdh));
+            std::memcpy(&cwdh, data, sizeof(cwdh));
 
             // Relocate the offsets in the CWDH section
             if (cwdh.next_cwdh_offset != 0)
                 cwdh.next_cwdh_offset += offset;
 
-            memcpy(data, &cwdh, sizeof(cwdh));
-        } else if (memcmp(section_header.magic, "TGLP", 4) == 0) {
+            std::memcpy(data, &cwdh, sizeof(cwdh));
+        } else if (std::memcmp(section_header.magic, "TGLP", 4) == 0) {
             BCFNT::TGLP tglp;
-            memcpy(&tglp, data, sizeof(tglp));
+            std::memcpy(&tglp, data, sizeof(tglp));
 
             // Relocate the offsets in the TGLP section
             tglp.sheet_data_offset += offset;
 
-            memcpy(data, &tglp, sizeof(tglp));
+            std::memcpy(data, &tglp, sizeof(tglp));
         }
 
         current_offset += section_header.section_size;

@@ -181,7 +181,7 @@ public:
     }
 
     /// Returns the list of available extensions.
-    const std::vector<std::string>& GetAvailableExtensions() const {
+    std::span<const std::string> GetAvailableExtensions() const {
         return available_extensions;
     }
 

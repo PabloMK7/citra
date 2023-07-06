@@ -64,7 +64,7 @@ WaitTreeItem* WaitTreeItem::Parent() const {
     return parent;
 }
 
-const std::vector<std::unique_ptr<WaitTreeItem>>& WaitTreeItem::Children() const {
+std::span<const std::unique_ptr<WaitTreeItem>> WaitTreeItem::Children() const {
     return children;
 }
 

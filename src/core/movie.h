@@ -5,6 +5,7 @@
 #pragma once
 
 #include <functional>
+#include <span>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 
@@ -156,7 +157,7 @@ private:
     void Record(const Service::IR::ExtraHIDResponse& extra_hid_response);
 
     ValidationResult ValidateHeader(const CTMHeader& header) const;
-    ValidationResult ValidateInput(const std::vector<u8>& input, u64 expected_count) const;
+    ValidationResult ValidateInput(std::span<const u8> input, u64 expected_count) const;
 
     PlayMode play_mode;
 

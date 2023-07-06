@@ -29,12 +29,13 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     return result;
 }
 
-Loader::ResultStatus TitleMetadata::Load(const std::vector<u8>& file_data, std::size_t offset) {
+Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::size_t offset) {
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
-    if (total_size < sizeof(u32_be))
+    if (total_size < sizeof(u32_be)) {
         return Loader::ResultStatus::Error;
+    }
 
-    memcpy(&signature_type, &file_data[offset], sizeof(u32_be));
+    std::memcpy(&signature_type, &file_data[offset], sizeof(u32_be));
 
     // Signature lengths are variable, and the body follows the signature
     u32 signature_size = GetSignatureSize(signature_type);
@@ -46,13 +47,14 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8>& file_data, std::
     std::size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);
     std::size_t body_end = body_start + sizeof(Body);
 
-    if (total_size < body_end)
+    if (total_size < body_end) {
         return Loader::ResultStatus::Error;
+    }
 
     // Read signature + TMD body, then load the amount of ContentChunks specified
     tmd_signature.resize(signature_size);
-    memcpy(tmd_signature.data(), &file_data[offset + sizeof(u32_be)], signature_size);
-    memcpy(&tmd_body, &file_data[offset + body_start], sizeof(TitleMetadata::Body));
+    std::memcpy(tmd_signature.data(), &file_data[offset + sizeof(u32_be)], signature_size);
+    std::memcpy(&tmd_body, &file_data[offset + body_start], sizeof(TitleMetadata::Body));
 
     std::size_t expected_size =
         body_start + sizeof(Body) + static_cast<u16>(tmd_body.content_count) * sizeof(ContentChunk);
@@ -65,8 +67,8 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8>& file_data, std::
     for (u16 i = 0; i < tmd_body.content_count; i++) {
         ContentChunk chunk;
 
-        memcpy(&chunk, &file_data[offset + body_end + (i * sizeof(ContentChunk))],
-               sizeof(ContentChunk));
+        std::memcpy(&chunk, &file_data[offset + body_end + (i * sizeof(ContentChunk))],
+                    sizeof(ContentChunk));
         tmd_chunks.push_back(chunk);
     }
 

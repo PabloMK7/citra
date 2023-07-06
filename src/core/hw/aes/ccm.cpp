@@ -42,7 +42,7 @@ public:
 
 } // namespace
 
-std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
+std::vector<u8> EncryptSignCCM(std::span<const u8> pdata, const CCMNonce& nonce,
                                std::size_t slot_id) {
     if (!IsNormalKeyAvailable(slot_id)) {
         LOG_ERROR(HW_AES, "Key slot {} not available. Will use zero key.", slot_id);
@@ -63,7 +63,7 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
     return cipher;
 }
 
-std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
+std::vector<u8> DecryptVerifyCCM(std::span<const u8> cipher, const CCMNonce& nonce,
                                  std::size_t slot_id) {
     if (!IsNormalKeyAvailable(slot_id)) {
         LOG_ERROR(HW_AES, "Key slot {} not available. Will use zero key.", slot_id);

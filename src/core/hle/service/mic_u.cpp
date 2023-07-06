@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <span>
 #include <boost/serialization/weak_ptr.hpp>
 #include "audio_core/input.h"
 #include "audio_core/input_details.h"
@@ -77,7 +78,7 @@ struct State {
     u8 sample_size = 0;
     SampleRate sample_rate = SampleRate::Rate16360;
 
-    void WriteSamples(const std::vector<u8>& samples) {
+    void WriteSamples(std::span<const u8> samples) {
         u32 bytes_total_written = 0;
         const std::size_t remaining_space = size - offset;
         std::size_t bytes_to_write = std::min(samples.size(), remaining_space);

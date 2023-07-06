@@ -26,7 +26,7 @@ enum class SegmentType : u8 {
 
 class Dsp1 {
 public:
-    explicit Dsp1(const std::vector<u8>& raw);
+    explicit Dsp1(std::span<const u8> raw);
 
     struct Header {
         std::array<u8, 0x100> signature;
@@ -65,7 +65,7 @@ public:
     bool recv_data_on_start;
 };
 
-Dsp1::Dsp1(const std::vector<u8>& raw) {
+Dsp1::Dsp1(std::span<const u8> raw) {
     Header header;
     std::memcpy(&header, raw.data(), sizeof(header));
     recv_data_on_start = header.recv_data_on_start != 0;
@@ -220,7 +220,7 @@ struct DspLle::Impl final {
         }
     }
 
-    void WritePipe(u8 pipe_index, const std::vector<u8>& data) {
+    void WritePipe(u8 pipe_index, std::span<const u8> data) {
         PipeStatus pipe_status = GetPipeStatus(pipe_index, PipeDirection::CPUtoDSP);
         bool need_update = false;
         const u8* buffer_ptr = data.data();
@@ -304,7 +304,7 @@ struct DspLle::Impl final {
         return size & PipeStatus::PtrMask;
     }
 
-    void LoadComponent(const std::vector<u8>& buffer) {
+    void LoadComponent(std::span<const u8> buffer) {
         if (loaded) {
             LOG_ERROR(Audio_DSP, "Component already loaded!");
             return;
@@ -400,7 +400,7 @@ std::size_t DspLle::GetPipeReadableSize(DspPipe pipe_number) const {
     return impl->GetPipeReadableSize(static_cast<u8>(pipe_number));
 }
 
-void DspLle::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
+void DspLle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     impl->WritePipe(static_cast<u8>(pipe_number), buffer);
 }
 
@@ -476,7 +476,7 @@ void DspLle::SetRecvDataHandler(u8 index, std::function<void()> handler) {
     impl->teakra.SetRecvDataHandler(index, handler);
 }
 
-void DspLle::LoadComponent(const std::vector<u8>& buffer) {
+void DspLle::LoadComponent(std::span<const u8> buffer) {
     impl->LoadComponent(buffer);
 }
 

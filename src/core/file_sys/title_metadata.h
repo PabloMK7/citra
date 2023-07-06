@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <span>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -82,7 +83,7 @@ public:
 #pragma pack(pop)
 
     Loader::ResultStatus Load(const std::string& file_path);
-    Loader::ResultStatus Load(const std::vector<u8>& file_data, std::size_t offset = 0);
+    Loader::ResultStatus Load(std::span<const u8> file_data, std::size_t offset = 0);
     Loader::ResultStatus Save(const std::string& file_path);
 
     u64 GetTitleID() const;

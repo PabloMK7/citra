@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <span>
 #include <unordered_map>
 #include "common/assert.h"
 #include "common/file_util.h"
@@ -892,7 +893,7 @@ std::string FormatDuration(s64 duration) {
 }
 
 std::string FormatDefaultValue(const AVOption* option,
-                               const std::vector<OptionInfo::NamedConstant>& named_constants) {
+                               std::span<const OptionInfo::NamedConstant> named_constants) {
     // The following is taken and modified from libavutil code (opt.c)
     switch (option->type) {
     case AV_OPT_TYPE_BOOL: {

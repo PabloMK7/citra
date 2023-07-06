@@ -18,7 +18,7 @@ QString RecordDialog::FormatObject(const IPCDebugger::ObjectInfo& object) const 
         .arg(object.id, 8, 16, QLatin1Char('0'));
 }
 
-QString RecordDialog::FormatCmdbuf(const std::vector<u32>& cmdbuf) const {
+QString RecordDialog::FormatCmdbuf(std::span<const u32> cmdbuf) const {
     QString result;
     for (std::size_t i = 0; i < cmdbuf.size(); ++i) {
         result.append(

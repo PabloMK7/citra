@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <set>
+#include <span>
 #include <thread>
 #include <unordered_map>
 #include <variant>
@@ -174,7 +175,7 @@ public:
             OGLShader shader;
             shader.Create(source, type);
             OGLProgram& program = std::get<OGLProgram>(shader_or_program);
-            program.Create(true, {shader.handle});
+            program.Create(true, std::array{shader.handle});
             SetShaderUniformBlockBindings(program.handle);
 
             if (type == GL_FRAGMENT_SHADER) {
@@ -449,7 +450,8 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
         const u64 unique_identifier = impl->current.GetConfigHash();
         OGLProgram& cached_program = impl->program_cache[unique_identifier];
         if (cached_program.handle == 0) {
-            cached_program.Create(false, {impl->current.vs, impl->current.gs, impl->current.fs});
+            cached_program.Create(false,
+                                  std::array{impl->current.vs, impl->current.gs, impl->current.fs});
             auto& disk_cache = impl->disk_cache;
             disk_cache.SaveDumpToFile(unique_identifier, cached_program.handle,
                                       VideoCore::g_hw_shader_accurate_mul);
@@ -492,7 +494,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     std::vector<std::size_t> load_raws_index;
     // Loads both decompiled and precompiled shaders from the cache. If either one is missing for
     const auto LoadPrecompiledShader = [&](std::size_t begin, std::size_t end,
-                                           const std::vector<ShaderDiskCacheRaw>& raw_cache,
+                                           std::span<const ShaderDiskCacheRaw> raw_cache,
                                            const ShaderDecompiledMap& decompiled_map,
                                            const ShaderDumpsMap& dump_map) {
         for (std::size_t i = begin; i < end; ++i) {

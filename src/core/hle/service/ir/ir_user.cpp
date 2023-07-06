@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include <vector>
 #include <boost/crc.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
@@ -98,9 +99,10 @@ public:
      * @params packet The data of the packet to put.
      * @returns whether the operation is successful.
      */
-    bool Put(const std::vector<u8>& packet) {
-        if (info.packet_count == max_packet_count)
+    bool Put(std::span<const u8> packet) {
+        if (info.packet_count == max_packet_count) {
             return false;
+        }
 
         u32 write_offset;
 
@@ -182,12 +184,12 @@ private:
     }
 
     void SetPacketInfo(u32 index, const PacketInfo& packet_info) {
-        memcpy(GetPacketInfoPointer(index), &packet_info, sizeof(PacketInfo));
+        std::memcpy(GetPacketInfoPointer(index), &packet_info, sizeof(PacketInfo));
     }
 
     PacketInfo GetPacketInfo(u32 index) {
         PacketInfo packet_info;
-        memcpy(&packet_info, GetPacketInfoPointer(index), sizeof(PacketInfo));
+        std::memcpy(&packet_info, GetPacketInfoPointer(index), sizeof(PacketInfo));
         return packet_info;
     }
 
@@ -198,7 +200,7 @@ private:
 
     void UpdateBufferInfo() {
         if (info_offset) {
-            memcpy(shared_memory->GetPointer(info_offset), &info, sizeof(info));
+            std::memcpy(shared_memory->GetPointer(info_offset), &info, sizeof(info));
         }
     }
 
@@ -225,7 +227,7 @@ private:
 };
 
 /// Wraps the payload into packet and puts it to the receive buffer
-void IR_USER::PutToReceive(const std::vector<u8>& payload) {
+void IR_USER::PutToReceive(std::span<const u8> payload) {
     LOG_TRACE(Service_IR, "called, data={}", fmt::format("{:02x}", fmt::join(payload, " ")));
     std::size_t size = payload.size();
 
@@ -464,8 +466,8 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework("ir:USER", 1) {
     send_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:SendEvent");
     receive_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ReceiveEvent");
 
-    extra_hid = std::make_unique<ExtraHID>(
-        [this](const std::vector<u8>& data) { PutToReceive(data); }, system.CoreTiming());
+    extra_hid = std::make_unique<ExtraHID>([this](std::span<const u8> data) { PutToReceive(data); },
+                                           system.CoreTiming());
 }
 
 IR_USER::~IR_USER() {
@@ -481,7 +483,7 @@ void IR_USER::ReloadInputDevices() {
 IRDevice::IRDevice(SendFunc send_func_) : send_func(send_func_) {}
 IRDevice::~IRDevice() = default;
 
-void IRDevice::Send(const std::vector<u8>& data) {
+void IRDevice::Send(std::span<const u8> data) {
     send_func(data);
 }
 

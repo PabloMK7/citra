@@ -108,8 +108,8 @@ void System::SaveState(u32 slot) const {
     oa&* this;
 
     const std::string& str{sstream.str()};
-    auto buffer = Common::Compression::CompressDataZSTDDefault(
-        reinterpret_cast<const u8*>(str.data()), str.size());
+    const auto data = std::span<const u8>{reinterpret_cast<const u8*>(str.data()), str.size()};
+    auto buffer = Common::Compression::CompressDataZSTDDefault(data);
 
     const auto path = GetSaveStatePath(title_id, slot);
     if (!FileUtil::CreateFullPath(path)) {

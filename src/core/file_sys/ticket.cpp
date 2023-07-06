@@ -13,7 +13,7 @@
 
 namespace FileSys {
 
-Loader::ResultStatus Ticket::Load(const std::vector<u8> file_data, std::size_t offset) {
+Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t offset) {
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     if (total_size < sizeof(u32))
         return Loader::ResultStatus::Error;
@@ -35,8 +35,8 @@ Loader::ResultStatus Ticket::Load(const std::vector<u8> file_data, std::size_t o
 
     // Read signature + ticket body
     ticket_signature.resize(signature_size);
-    memcpy(ticket_signature.data(), &file_data[offset + sizeof(u32)], signature_size);
-    memcpy(&ticket_body, &file_data[offset + body_start], sizeof(Body));
+    std::memcpy(ticket_signature.data(), &file_data[offset + sizeof(u32)], signature_size);
+    std::memcpy(&ticket_body, &file_data[offset + body_start], sizeof(Body));
 
     return Loader::ResultStatus::Success;
 }

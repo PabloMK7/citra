@@ -226,7 +226,7 @@ void DumpShader(const std::string& filename, const ShaderRegs& config,
     std::vector<nihstro::ConstantInfo> constant_table;
     for (unsigned i = 0; i < setup.uniforms.b.size(); ++i) {
         nihstro::ConstantInfo constant;
-        memset(&constant, 0, sizeof(constant));
+        std::memset(&constant, 0, sizeof(constant));
         constant.type = nihstro::ConstantInfo::Bool;
         constant.regid = i;
         constant.b = setup.uniforms.b[i];
@@ -234,7 +234,7 @@ void DumpShader(const std::string& filename, const ShaderRegs& config,
     }
     for (unsigned i = 0; i < setup.uniforms.i.size(); ++i) {
         nihstro::ConstantInfo constant;
-        memset(&constant, 0, sizeof(constant));
+        std::memset(&constant, 0, sizeof(constant));
         constant.type = nihstro::ConstantInfo::Int;
         constant.regid = i;
         constant.i.x = setup.uniforms.i[i].x;
@@ -245,7 +245,7 @@ void DumpShader(const std::string& filename, const ShaderRegs& config,
     }
     for (unsigned i = 0; i < sizeof(setup.uniforms.f) / sizeof(setup.uniforms.f[0]); ++i) {
         nihstro::ConstantInfo constant;
-        memset(&constant, 0, sizeof(constant));
+        std::memset(&constant, 0, sizeof(constant));
         constant.type = nihstro::ConstantInfo::Float;
         constant.regid = i;
         constant.f.x = nihstro::to_float24(setup.uniforms.f[i].x.ToFloat32());

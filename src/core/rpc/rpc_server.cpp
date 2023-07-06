@@ -37,18 +37,19 @@ void RPCServer::HandleReadMemory(Packet& packet, u32 address, u32 data_size) {
     packet.SendReply();
 }
 
-void RPCServer::HandleWriteMemory(Packet& packet, u32 address, const u8* data, u32 data_size) {
+void RPCServer::HandleWriteMemory(Packet& packet, u32 address, std::span<const u8> data) {
     // Only allow writing to certain memory regions
     if ((address >= Memory::PROCESS_IMAGE_VADDR && address <= Memory::PROCESS_IMAGE_VADDR_END) ||
         (address >= Memory::HEAP_VADDR && address <= Memory::HEAP_VADDR_END) ||
         (address >= Memory::N3DS_EXTRA_RAM_VADDR && address <= Memory::N3DS_EXTRA_RAM_VADDR_END)) {
         // Note: Memory write occurs asynchronously from the state of the emulator
         Core::System::GetInstance().Memory().WriteBlock(
-            *Core::System::GetInstance().Kernel().GetCurrentProcess(), address, data, data_size);
+            *Core::System::GetInstance().Kernel().GetCurrentProcess(), address, data.data(),
+            data.size());
         // If the memory happens to be executable code, make sure the changes become visible
 
         // Is current core correct here?
-        Core::System::GetInstance().InvalidateCacheRange(address, data_size);
+        Core::System::GetInstance().InvalidateCacheRange(address, data.size());
     }
     packet.SetPacketDataSize(0);
     packet.SendReply();
@@ -72,14 +73,14 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
 
 void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
     bool success = false;
+    const auto& packet_data = request_packet->GetPacketData();
 
     if (ValidatePacket(request_packet->GetHeader())) {
         // Currently, all request types use the address/data_size wire format
         u32 address = 0;
         u32 data_size = 0;
-        std::memcpy(&address, request_packet->GetPacketData().data(), sizeof(address));
-        std::memcpy(&data_size, request_packet->GetPacketData().data() + sizeof(address),
-                    sizeof(data_size));
+        std::memcpy(&address, packet_data.data(), sizeof(address));
+        std::memcpy(&data_size, packet_data.data() + sizeof(address), sizeof(data_size));
 
         switch (request_packet->GetPacketType()) {
         case PacketType::ReadMemory:
@@ -90,8 +91,8 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
             break;
         case PacketType::WriteMemory:
             if (data_size > 0 && data_size <= MAX_PACKET_DATA_SIZE - (sizeof(u32) * 2)) {
-                const u8* data = request_packet->GetPacketData().data() + (sizeof(u32) * 2);
-                HandleWriteMemory(*request_packet, address, data, data_size);
+                const auto data = std::span{packet_data}.subspan(sizeof(u32) * 2, data_size);
+                HandleWriteMemory(*request_packet, address, data);
                 success = true;
             }
             break;

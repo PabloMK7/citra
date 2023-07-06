@@ -304,7 +304,7 @@ void ThreadManager::DebugThreadQueue() {
  * alloc_needed: Whether there's a need to allocate a new TLS page (All pages are full).
  */
 static std::tuple<std::size_t, std::size_t, bool> GetFreeThreadLocalSlot(
-    const std::vector<std::bitset<8>>& tls_slots) {
+    std::span<const std::bitset<8>> tls_slots) {
     // Iterate over all the allocated pages, and try to find one where not all slots are used.
     for (std::size_t page = 0; page < tls_slots.size(); ++page) {
         const auto& page_tls_slots = tls_slots[page];
@@ -527,7 +527,7 @@ ThreadManager::~ThreadManager() {
     }
 }
 
-const std::vector<std::shared_ptr<Thread>>& ThreadManager::GetThreadList() {
+std::span<const std::shared_ptr<Thread>> ThreadManager::GetThreadList() {
     return thread_list;
 }
 

@@ -543,13 +543,15 @@ void SVC::ExitProcess() {
     current_process->status = ProcessStatus::Exited;
 
     // Stop all the process threads that are currently waiting for objects.
-    auto& thread_list = kernel.GetCurrentThreadManager().GetThreadList();
+    const auto thread_list = kernel.GetCurrentThreadManager().GetThreadList();
     for (auto& thread : thread_list) {
-        if (thread->owner_process.lock() != current_process)
+        if (thread->owner_process.lock() != current_process) {
             continue;
+        }
 
-        if (thread.get() == kernel.GetCurrentThreadManager().GetCurrentThread())
+        if (thread.get() == kernel.GetCurrentThreadManager().GetCurrentThread()) {
             continue;
+        }
 
         // TODO(Subv): When are the other running/ready threads terminated?
         ASSERT_MSG(thread->status == ThreadStatus::WaitSynchAny ||
@@ -695,7 +697,7 @@ ResultCode SVC::OpenThread(Handle* out_handle, Handle process_handle, u32 thread
     }
 
     for (u32 core_id = 0; core_id < system.GetNumCores(); core_id++) {
-        auto& thread_list = kernel.GetThreadManager(core_id).GetThreadList();
+        const auto thread_list = kernel.GetThreadManager(core_id).GetThreadList();
         for (auto& thread : thread_list) {
             if (thread->owner_process.lock() == process && thread.get()->thread_id == thread_id) {
                 auto result_handle = kernel.GetCurrentProcess()->handle_table.Create(thread);
@@ -2092,7 +2094,7 @@ ResultCode SVC::ControlProcess(Handle process_handle, u32 process_OP, u32 varg2,
     }
     case ControlProcessOP::PROCESSOP_SCHEDULE_THREADS_WITHOUT_TLS_MAGIC: {
         for (u32 core_id = 0; core_id < system.GetNumCores(); core_id++) {
-            auto& thread_list = kernel.GetThreadManager(core_id).GetThreadList();
+            const auto thread_list = kernel.GetThreadManager(core_id).GetThreadList();
             for (auto& thread : thread_list) {
                 if (thread->owner_process.lock() != process) {
                     continue;

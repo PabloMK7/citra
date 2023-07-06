@@ -6,8 +6,8 @@
 
 #include <array>
 #include <memory>
+#include <span>
 #include <string>
-#include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/file_sys/ticket.h"
@@ -39,13 +39,13 @@ public:
     // Load whole CIAs outright
     Loader::ResultStatus Load(const FileBackend& backend);
     Loader::ResultStatus Load(const std::string& filepath);
-    Loader::ResultStatus Load(const std::vector<u8>& header_data);
+    Loader::ResultStatus Load(std::span<const u8> header_data);
 
     // Load parts of CIAs (for CIAs streamed in)
-    Loader::ResultStatus LoadHeader(const std::vector<u8>& header_data, std::size_t offset = 0);
-    Loader::ResultStatus LoadTicket(const std::vector<u8>& ticket_data, std::size_t offset = 0);
-    Loader::ResultStatus LoadTitleMetadata(const std::vector<u8>& tmd_data, std::size_t offset = 0);
-    Loader::ResultStatus LoadMetadata(const std::vector<u8>& meta_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadHeader(std::span<const u8> header_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadTicket(std::span<const u8> ticket_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadTitleMetadata(std::span<const u8> tmd_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadMetadata(std::span<const u8> meta_data, std::size_t offset = 0);
 
     const Ticket& GetTicket() const;
     const TitleMetadata& GetTitleMetadata() const;

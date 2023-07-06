@@ -31,7 +31,7 @@ ResultCode MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParamete
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
 
-    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
+    std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     using Kernel::MemoryPermission;
     // Create a SharedMemory that directly points to this heap block.
@@ -54,7 +54,7 @@ ResultCode MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (MiiConfig) is wrong");
 
-    memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+    std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     using namespace Frontend;
     frontend_applet = Core::System::GetInstance().GetMiiSelector();

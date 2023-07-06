@@ -149,7 +149,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
         return ERROR_READ;
 
     // BSS clear
-    memset((char*)loadinfo.seg_ptrs[2] + hdr.data_seg_size - hdr.bss_size, 0, hdr.bss_size);
+    std::memset((char*)loadinfo.seg_ptrs[2] + hdr.data_seg_size - hdr.bss_size, 0, hdr.bss_size);
 
     // Relocate the segments
     for (unsigned int current_segment = 0; current_segment < NUM_SEGMENTS; ++current_segment) {

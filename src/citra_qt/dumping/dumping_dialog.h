@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include <vector>
 #include <QDialog>
 #include "core/dumping/ffmpeg_backend.h"
 

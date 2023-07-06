@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <memory>
+#include <span>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
@@ -36,10 +37,10 @@ u64 GetModId(u64 program_id) {
  * @param size Size of compressed buffer
  * @return Size of decompressed buffer
  */
-static u32 LZSS_GetDecompressedSize(const u8* buffer, u32 size) {
+static std::size_t LZSS_GetDecompressedSize(std::span<const u8> buffer) {
     u32 offset_size;
-    std::memcpy(&offset_size, buffer + size - sizeof(u32), sizeof(u32));
-    return offset_size + size;
+    std::memcpy(&offset_size, buffer.data() + buffer.size() - sizeof(u32), sizeof(u32));
+    return offset_size + buffer.size();
 }
 
 /**
@@ -50,19 +51,18 @@ static u32 LZSS_GetDecompressedSize(const u8* buffer, u32 size) {
  * @param decompressed_size Size of decompressed buffer
  * @return True on success, otherwise false
  */
-static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decompressed,
-                            u32 decompressed_size) {
-    const u8* footer = compressed + compressed_size - 8;
+static bool LZSS_Decompress(std::span<const u8> compressed, std::span<u8> decompressed) {
+    const u8* footer = compressed.data() + compressed.size() - 8;
 
     u32 buffer_top_and_bottom;
     std::memcpy(&buffer_top_and_bottom, footer, sizeof(u32));
 
-    u32 out = decompressed_size;
-    u32 index = compressed_size - ((buffer_top_and_bottom >> 24) & 0xFF);
-    u32 stop_index = compressed_size - (buffer_top_and_bottom & 0xFFFFFF);
+    size_t out = decompressed.size();
+    size_t index = compressed.size() - ((buffer_top_and_bottom >> 24) & 0xFF);
+    size_t stop_index = compressed.size() - (buffer_top_and_bottom & 0xFFFFFF);
 
-    memset(decompressed, 0, decompressed_size);
-    memcpy(decompressed, compressed, compressed_size);
+    std::memset(decompressed.data(), 0, decompressed.size());
+    std::memcpy(decompressed.data(), compressed.data(), compressed.size());
 
     while (index > stop_index) {
         u8 control = compressed[--index];
@@ -92,7 +92,7 @@ static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decom
 
                 for (unsigned j = 0; j < segment_size; j++) {
                     // Check if compression is out of bounds
-                    if (out + segment_offset >= decompressed_size)
+                    if (out + segment_offset >= decompressed.size())
                         return false;
 
                     u8 data = decompressed[out + segment_offset];
@@ -538,14 +538,9 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 
             if (strcmp(section.name, ".code") == 0 && is_compressed) {
                 // Section is compressed, read compressed .code section...
-                std::unique_ptr<u8[]> temp_buffer;
-                try {
-                    temp_buffer.reset(new u8[section.size]);
-                } catch (std::bad_alloc&) {
-                    return Loader::ResultStatus::ErrorMemoryAllocationFailed;
-                }
-
-                if (exefs_file.ReadBytes(&temp_buffer[0], section.size) != section.size)
+                std::vector<u8> temp_buffer(section.size);
+                if (exefs_file.ReadBytes(temp_buffer.data(), temp_buffer.size()) !=
+                    temp_buffer.size())
                     return Loader::ResultStatus::Error;
 
                 if (is_encrypted) {
@@ -553,11 +548,10 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                 }
 
                 // Decompress .code section...
-                u32 decompressed_size = LZSS_GetDecompressedSize(&temp_buffer[0], section.size);
-                buffer.resize(decompressed_size);
-                if (!LZSS_Decompress(&temp_buffer[0], section.size, buffer.data(),
-                                     decompressed_size))
+                buffer.resize(LZSS_GetDecompressedSize(temp_buffer));
+                if (!LZSS_Decompress(temp_buffer, buffer)) {
                     return Loader::ResultStatus::ErrorInvalidFormat;
+                }
             } else {
                 // Section is uncompressed...
                 buffer.resize(section.size);

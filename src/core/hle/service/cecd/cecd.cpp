@@ -834,7 +834,7 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
               open_mode.check);
 }
 
-std::string Module::EncodeBase64(const std::vector<u8>& in) const {
+std::string Module::EncodeBase64(std::span<const u8> in) const {
     using namespace CryptoPP;
     using Name::EncodingLookupArray;
     using Name::InsertLineBreaks;
@@ -855,7 +855,7 @@ std::string Module::EncodeBase64(const std::vector<u8>& in) const {
 }
 
 std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,
-                                               const std::vector<u8>& msg_id) const {
+                                               std::span<const u8> msg_id) const {
     switch (type) {
     case CecDataPathType::MboxList:
         return "/CEC/MBoxList____";

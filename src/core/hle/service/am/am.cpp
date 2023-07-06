@@ -223,7 +223,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
         std::size_t buf_max_size =
             std::min(static_cast<std::size_t>(offset + length), FileSys::CIA_HEADER_SIZE);
         data.resize(buf_max_size);
-        memcpy(data.data() + offset, buffer, buf_copy_size);
+        std::memcpy(data.data() + offset, buffer, buf_copy_size);
 
         // We have enough data to load a CIA header and parse it.
         if (written >= FileSys::CIA_HEADER_SIZE) {
@@ -248,7 +248,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
             buf_offset;
         std::size_t buf_max_size = std::min(offset + length, container.GetContentOffset());
         data.resize(buf_max_size);
-        memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
+        std::memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
     }
 
     // TODO(shinyquagsire23): Write out .tik files to nand?
@@ -850,7 +850,7 @@ void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(title_ids_output);
 }
 
-ResultCode GetTitleInfoFromList(const std::vector<u64>& title_id_list,
+ResultCode GetTitleInfoFromList(std::span<const u64> title_id_list,
                                 Service::FS::MediaType media_type,
                                 Kernel::MappedBuffer& title_info_out) {
     std::size_t write_offset = 0;

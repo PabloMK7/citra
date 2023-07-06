@@ -64,7 +64,7 @@ template void Write<u8>(u32 addr, const u8 data);
 
 /// Initialize hardware
 void Init() {
-    memset(&g_regs, 0, sizeof(g_regs));
+    std::memset(&g_regs, 0, sizeof(g_regs));
     LOG_DEBUG(HW_LCD, "initialized OK");
 }
 

@@ -855,7 +855,7 @@ const std::string& GetDefaultUserPath(UserPath path) {
     return g_default_paths[path];
 }
 
-const void UpdateUserPath(UserPath path, const std::string& filename) {
+void UpdateUserPath(UserPath path, const std::string& filename) {
     if (filename.empty()) {
         return;
     }

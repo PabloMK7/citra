@@ -78,7 +78,7 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
         std::vector<u8> lle_read_buffer;
         lle_read_buffer = lle.PipeRead(AudioCore::DspPipe::Audio, 2);
         u16 lle_size;
-        memcpy(&lle_size, lle_read_buffer.data(), sizeof(lle_size));
+        std::memcpy(&lle_size, lle_read_buffer.data(), sizeof(lle_size));
         lle_read_buffer = lle.PipeRead(AudioCore::DspPipe::Audio, lle_size * 2);
 
         // HLE
@@ -89,7 +89,7 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
         std::vector<u8> hle_read_buffer(32);
         hle_read_buffer = hle.PipeRead(AudioCore::DspPipe::Audio, 2);
         u16 hle_size;
-        memcpy(&hle_size, hle_read_buffer.data(), sizeof(hle_size));
+        std::memcpy(&hle_size, hle_read_buffer.data(), sizeof(hle_size));
         hle_read_buffer = hle.PipeRead(AudioCore::DspPipe::Audio, hle_size * 2);
 
         REQUIRE(hle_size == lle_size);

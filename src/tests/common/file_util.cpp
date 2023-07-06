@@ -21,6 +21,6 @@ TEST_CASE("SplitFilename83 Sanity", "[common]") {
     std::string expected_short_name = filename.substr(0, 6).append("~1");
     std::string expected_extension = filename.substr(filename.find('.') + 1, 3);
 
-    REQUIRE(memcmp(short_name.data(), expected_short_name.data(), short_name.size()) == 0);
-    REQUIRE(memcmp(extension.data(), expected_extension.data(), extension.size()) == 0);
+    REQUIRE(std::memcmp(short_name.data(), expected_short_name.data(), short_name.size()) == 0);
+    REQUIRE(std::memcmp(extension.data(), expected_extension.data(), extension.size()) == 0);
 }

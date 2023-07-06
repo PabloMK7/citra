@@ -452,12 +452,12 @@ private:
         u32 sharedmem_size, const NodeInfo& node, u16 version,
         std::shared_ptr<Kernel::SharedMemory> sharedmem);
 
-    ResultCode BeginHostingNetwork(const u8* network_info_buffer, std::size_t network_info_size,
+    ResultCode BeginHostingNetwork(std::span<const u8> network_info_buffer,
                                    std::vector<u8> passphrase);
 
     void ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
-                          const u8* network_info_buffer, std::size_t network_info_size,
-                          u8 connection_type, std::vector<u8> passphrase);
+                          std::span<const u8> network_info_buffer, u8 connection_type,
+                          std::vector<u8> passphrase);
 
     void BeaconBroadcastCallback(std::uintptr_t user_data, s64 cycles_late);
 

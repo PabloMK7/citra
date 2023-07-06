@@ -129,7 +129,7 @@ void ConfigurePerGame::HandleApplyButtonClicked() {
 
 static QPixmap GetQPixmapFromSMDH(std::vector<u8>& smdh_data) {
     Loader::SMDH smdh;
-    memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+    std::memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
     bool large = true;
     std::vector<u16> icon_data = smdh.GetIcon(large);

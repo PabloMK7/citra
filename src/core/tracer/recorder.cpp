@@ -180,7 +180,7 @@ void Recorder::MemoryAccessed(const u8* data, u32 size, u32 physical_address) {
     element.uses_existing_data = (memory_regions.find(element.hash) != memory_regions.end());
     if (!element.uses_existing_data) {
         element.extra_data.resize(size);
-        memcpy(element.extra_data.data(), data, size);
+        std::memcpy(element.extra_data.data(), data, size);
         memory_regions.insert({element.hash, 0}); // file offset will be initialized in Finish()
     }
 

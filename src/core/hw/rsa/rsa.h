@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <span>
 #include <vector>
 #include "common/common_types.h"
 
@@ -14,7 +15,7 @@ public:
     RsaSlot() = default;
     RsaSlot(std::vector<u8> exponent, std::vector<u8> modulus)
         : init(true), exponent(std::move(exponent)), modulus(std::move(modulus)) {}
-    std::vector<u8> GetSignature(const std::vector<u8>& message) const;
+    std::vector<u8> GetSignature(std::span<const u8> message) const;
 
     explicit operator bool() const {
         // TODO(B3N30): Maybe check if exponent and modulus are vailid
@@ -31,6 +32,6 @@ void InitSlots();
 
 RsaSlot GetSlot(std::size_t slot_id);
 
-std::vector<u8> CreateASN1Message(const std::vector<u8>& data);
+std::vector<u8> CreateASN1Message(std::span<const u8> data);
 
 } // namespace HW::RSA

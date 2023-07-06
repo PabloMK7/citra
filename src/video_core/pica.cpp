@@ -33,7 +33,7 @@ void Shutdown() {
 template <typename T>
 void Zero(T& o) {
     static_assert(std::is_trivial_v<T>, "It's undefined behavior to memset a non-trivial type");
-    memset(&o, 0, sizeof(o));
+    std::memset(&o, 0, sizeof(o));
 }
 
 State::State() : geometry_pipeline(*this) {

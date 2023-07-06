@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <span>
 #include <QAbstractItemModel>
 #include <QDockWidget>
 #include <QTreeView>
@@ -36,7 +37,7 @@ public:
 
     void Expand();
     WaitTreeItem* Parent() const;
-    const std::vector<std::unique_ptr<WaitTreeItem>>& Children() const;
+    std::span<const std::unique_ptr<WaitTreeItem>> Children() const;
     std::size_t Row() const;
     static std::vector<std::unique_ptr<WaitTreeThread>> MakeThreadItemList();
 

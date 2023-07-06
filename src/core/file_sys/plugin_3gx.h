@@ -21,9 +21,10 @@
 
 #pragma once
 
-#include <core/file_sys/archive_backend.h>
+#include <span>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/plgldr/plgldr.h"
 
@@ -71,7 +72,7 @@ private:
 
     static constexpr size_t bootloader_memory_size = 0x1000;
     static void MapBootloader(Kernel::Process& process, Kernel::KernelSystem& kernel,
-                              u32 memory_offset, const std::vector<u32>& exe_load_func,
+                              u32 memory_offset, std::span<const u32> exe_load_func,
                               const u32_le* exe_load_args, u32 checksum_size, u32 exe_checksum,
                               bool no_flash);
 

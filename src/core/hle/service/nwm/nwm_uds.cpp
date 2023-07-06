@@ -843,14 +843,14 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(0);
 }
 
-ResultCode NWM_UDS::BeginHostingNetwork(const u8* network_info_buffer,
-                                        std::size_t network_info_size, std::vector<u8> passphrase) {
+ResultCode NWM_UDS::BeginHostingNetwork(std::span<const u8> network_info_buffer,
+                                        std::vector<u8> passphrase) {
     // TODO(Subv): Store the passphrase and verify it when attempting a connection.
 
     {
         std::lock_guard lock(connection_status_mutex);
         network_info = {};
-        std::memcpy(&network_info, network_info_buffer, network_info_size);
+        std::memcpy(&network_info, network_info_buffer.data(), network_info_buffer.size());
 
         // The real UDS module throws a fatal error if this assert fails.
         ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
@@ -921,8 +921,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     ASSERT(passphrase.size() == passphrase_size);
 
     LOG_DEBUG(Service_NWM, "called");
-    auto result = BeginHostingNetwork(network_info_buffer.data(), network_info_buffer.size(),
-                                      std::move(passphrase));
+    auto result = BeginHostingNetwork(network_info_buffer, std::move(passphrase));
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -940,8 +939,7 @@ void NWM_UDS::BeginHostingNetworkDeprecated(Kernel::HLERequestContext& ctx) {
     ASSERT(passphrase.size() == passphrase_size);
 
     LOG_DEBUG(Service_NWM, "called");
-    auto result = BeginHostingNetwork(network_info_buffer.data(), network_info_buffer.size(),
-                                      std::move(passphrase));
+    auto result = BeginHostingNetwork(network_info_buffer, std::move(passphrase));
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1277,10 +1275,10 @@ private:
 };
 
 void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
-                               const u8* network_info_buffer, std::size_t network_info_size,
-                               u8 connection_type, std::vector<u8> passphrase) {
+                               std::span<const u8> network_info_buffer, u8 connection_type,
+                               std::vector<u8> passphrase) {
     network_info = {};
-    std::memcpy(&network_info, network_info_buffer, network_info_size);
+    std::memcpy(&network_info, network_info_buffer.data(), network_info_buffer.size());
 
     // Start the connection sequence
     StartConnectionSequence(network_info.host_mac_address);
@@ -1304,8 +1302,7 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> passphrase = rp.PopStaticBuffer();
 
-    ConnectToNetwork(ctx, 0x1E, network_info_buffer.data(), network_info_buffer.size(),
-                     connection_type, std::move(passphrase));
+    ConnectToNetwork(ctx, 0x1E, network_info_buffer, connection_type, std::move(passphrase));
 
     LOG_DEBUG(Service_NWM, "called");
 }
@@ -1322,8 +1319,7 @@ void NWM_UDS::ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> passphrase = rp.PopStaticBuffer();
 
-    ConnectToNetwork(ctx, 0x09, network_info_buffer.data(), network_info_buffer.size(),
-                     connection_type, std::move(passphrase));
+    ConnectToNetwork(ctx, 0x09, network_info_buffer, connection_type, std::move(passphrase));
 
     LOG_DEBUG(Service_NWM, "called");
 }

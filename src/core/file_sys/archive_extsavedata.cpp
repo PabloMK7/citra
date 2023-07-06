@@ -296,11 +296,10 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     return info;
 }
 
-void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data,
-                                           std::size_t icon_size) {
+void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, std::span<const u8> icon) {
     std::string game_path = FileSys::GetExtSaveDataPath(GetMountPoint(), path);
     FileUtil::IOFile icon_file(game_path + "icon", "wb");
-    icon_file.WriteBytes(icon_data, icon_size);
+    icon_file.WriteBytes(icon.data(), icon.size());
 }
 
 } // namespace FileSys

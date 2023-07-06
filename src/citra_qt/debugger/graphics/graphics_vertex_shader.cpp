@@ -487,7 +487,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
 
     if (replace_vertex_data) {
         if (vertex_data) {
-            memcpy(&input_vertex, vertex_data, sizeof(input_vertex));
+            std::memcpy(&input_vertex, vertex_data, sizeof(input_vertex));
             for (unsigned attr = 0; attr < 16; ++attr) {
                 for (unsigned comp = 0; comp < 4; ++comp) {
                     input_data[4 * attr + comp]->setText(

@@ -6,7 +6,7 @@
 
 #include <functional>
 #include <memory>
-#include <vector>
+#include <span>
 #include "core/hle/service/service.h"
 
 namespace Kernel {
@@ -26,7 +26,7 @@ public:
      * A function object that implements the method to send data to the 3DS, which takes a vector of
      * data to send.
      */
-    using SendFunc = std::function<void(const std::vector<u8>& data)>;
+    using SendFunc = std::function<void(std::span<const u8> data)>;
 
     explicit IRDevice(SendFunc send_func);
     virtual ~IRDevice();
@@ -38,11 +38,11 @@ public:
     virtual void OnDisconnect() = 0;
 
     /// Called when data is received from the 3DS. This is invoked by the ir:USER send function.
-    virtual void OnReceive(const std::vector<u8>& data) = 0;
+    virtual void OnReceive(std::span<const u8> data) = 0;
 
 protected:
     /// Sends data to the 3DS. The actual sending method is specified in the constructor
-    void Send(const std::vector<u8>& data);
+    void Send(std::span<const u8> data);
 
 private:
     // NOTE: This value is *not* serialized because it's always passed in the constructor
@@ -161,7 +161,7 @@ private:
      */
     void ReleaseReceivedData(Kernel::HLERequestContext& ctx);
 
-    void PutToReceive(const std::vector<u8>& payload);
+    void PutToReceive(std::span<const u8> payload);
 
     std::shared_ptr<Kernel::Event> conn_status_event, send_event, receive_event;
     std::shared_ptr<Kernel::SharedMemory> shared_memory;

@@ -28,7 +28,7 @@ static std::vector<u8> GenerateLLCHeader(EtherType protocol) {
     header.protocol = protocol;
 
     std::vector<u8> buffer(sizeof(header));
-    memcpy(buffer.data(), &header, sizeof(header));
+    std::memcpy(buffer.data(), &header, sizeof(header));
 
     return buffer;
 }
@@ -53,7 +53,7 @@ static std::vector<u8> GenerateSecureDataHeader(u16 data_size, u8 channel, u16 d
     header.src_node_id = src_node_id;
 
     std::vector<u8> buffer(sizeof(header));
-    memcpy(buffer.data(), &header, sizeof(header));
+    std::memcpy(buffer.data(), &header, sizeof(header));
 
     return buffer;
 }
@@ -83,7 +83,7 @@ static std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> GetDataCryptoCTR(
  * @returns The key used for data frames crypto.
  */
 [[maybe_unused]] static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(
-    const std::vector<u8>& passphrase, const NetworkInfo& network_info) {
+    std::span<const u8> passphrase, const NetworkInfo& network_info) {
     // Calculate the MD5 hash of the input passphrase.
     std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> passphrase_hash;
     CryptoPP::Weak::MD5().CalculateDigest(passphrase_hash.data(), passphrase.data(),
@@ -158,9 +158,9 @@ static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddres
  * @returns The decrypted payload.
  */
 [[maybe_unused]] static std::vector<u8> DecryptDataFrame(
-    const std::vector<u8>& encrypted_payload,
-    const std::array<u8, CryptoPP::AES::BLOCKSIZE>& ccmp_key, const MacAddress& sender,
-    const MacAddress& receiver, const MacAddress& bssid, u16 sequence_number, u16 frame_control) {
+    std::span<const u8> encrypted_payload, const std::array<u8, CryptoPP::AES::BLOCKSIZE>& ccmp_key,
+    const MacAddress& sender, const MacAddress& receiver, const MacAddress& bssid,
+    u16 sequence_number, u16 frame_control) {
 
     // Reference: IEEE 802.11-2007
 
@@ -218,7 +218,7 @@ static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddres
  * @returns The encrypted payload.
  */
 [[maybe_unused]] static std::vector<u8> EncryptDataFrame(
-    const std::vector<u8>& payload, const std::array<u8, CryptoPP::AES::BLOCKSIZE>& ccmp_key,
+    std::span<const u8> payload, const std::array<u8, CryptoPP::AES::BLOCKSIZE>& ccmp_key,
     const MacAddress& sender, const MacAddress& receiver, const MacAddress& bssid,
     u16 sequence_number, u16 frame_control) {
     // Reference: IEEE 802.11-2007
@@ -266,7 +266,7 @@ static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddres
     return {};
 }
 
-std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node,
+std::vector<u8> GenerateDataPayload(std::span<const u8> data, u8 channel, u16 dest_node,
                                     u16 src_node, u16 sequence_number) {
     std::vector<u8> buffer = GenerateLLCHeader(EtherType::SecureData);
     std::vector<u8> securedata_header = GenerateSecureDataHeader(
@@ -277,7 +277,7 @@ std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16
     return buffer;
 }
 
-SecureDataHeader ParseSecureDataHeader(const std::vector<u8>& data) {
+SecureDataHeader ParseSecureDataHeader(std::span<const u8> data) {
     SecureDataHeader header;
 
     // Skip the LLC header
@@ -308,20 +308,20 @@ std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node
     return buffer;
 }
 
-EtherType GetFrameEtherType(const std::vector<u8>& frame) {
+EtherType GetFrameEtherType(std::span<const u8> frame) {
     LLCHeader header;
     std::memcpy(&header, frame.data(), sizeof(header));
     return header.protocol;
 }
 
-u16 GetEAPoLFrameType(const std::vector<u8>& frame) {
+u16 GetEAPoLFrameType(std::span<const u8> frame) {
     // Ignore the LLC header
     u16_be eapol_type;
     std::memcpy(&eapol_type, frame.data() + sizeof(LLCHeader), sizeof(eapol_type));
     return eapol_type;
 }
 
-NodeInfo DeserializeNodeInfoFromFrame(const std::vector<u8>& frame) {
+NodeInfo DeserializeNodeInfoFromFrame(std::span<const u8> frame) {
     EAPoLStartPacket eapol_start;
 
     // Skip the LLC header
@@ -372,7 +372,7 @@ std::vector<u8> GenerateEAPoLLogoffFrame(const MacAddress& mac_address, u16 netw
     return buffer;
 }
 
-EAPoLLogoffPacket ParseEAPoLLogoffFrame(const std::vector<u8>& frame) {
+EAPoLLogoffPacket ParseEAPoLLogoffFrame(std::span<const u8> frame) {
     EAPoLLogoffPacket eapol_logoff;
 
     // Skip the LLC header
