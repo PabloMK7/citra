@@ -282,8 +282,46 @@ GMainWindow::GMainWindow(Core::System& system_)
 #endif
 
     QStringList args = QApplication::arguments();
-    if (args.length() >= 2) {
-        BootGame(args[1]);
+    if (args.size() < 2) {
+        return;
+    }
+
+    QString game_path;
+    for (int i = 1; i < args.size(); ++i) {
+        // Preserves drag/drop functionality
+        if (args.size() == 2 && !args[1].startsWith(QChar::fromLatin1('-'))) {
+            game_path = args[1];
+            break;
+        }
+
+        // Launch game in fullscreen mode
+        if (args[i] == QStringLiteral("-f")) {
+            ui->action_Fullscreen->setChecked(true);
+            continue;
+        }
+
+        // Launch game in windowed mode
+        if (args[i] == QStringLiteral("-w")) {
+            ui->action_Fullscreen->setChecked(false);
+            continue;
+        }
+
+        // Launch game at path
+        if (args[i] == QStringLiteral("-g")) {
+            if (i >= args.size() - 1) {
+                continue;
+            }
+
+            if (args[i + 1].startsWith(QChar::fromLatin1('-'))) {
+                continue;
+            }
+
+            game_path = args[++i];
+        }
+    }
+
+    if (!game_path.isEmpty()) {
+        BootGame(game_path);
     }
 }
 
