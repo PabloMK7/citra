@@ -10,7 +10,7 @@
 namespace Service::ACT {
 
 Module::Interface::Interface(std::shared_ptr<Module> act, const char* name)
-    : ServiceFramework(name, 1 /* Placeholder */), act(std::move(act)) {}
+    : ServiceFramework(name, 3), act(std::move(act)) {}
 
 Module::Interface::~Interface() = default;
 
