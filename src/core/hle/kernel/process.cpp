@@ -203,7 +203,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 
     status = ProcessStatus::Running;
 
-    vm_manager.LogLayout(Log::Level::Debug);
+    vm_manager.LogLayout(Common::Log::Level::Debug);
     Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, SharedFrom(this));
 }
 

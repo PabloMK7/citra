@@ -150,15 +150,8 @@ static void SaveBanList(const Network::Room::BanList& ban_list, const std::strin
 }
 
 static void InitializeLogging(const std::string& log_file) {
-    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-
-    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
-    FileUtil::CreateFullPath(log_dir);
-    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + log_file));
-
-#ifdef _WIN32
-    Log::AddBackend(std::make_unique<Log::DebuggerBackend>());
-#endif
+    Common::Log::Initialize(log_file);
+    Common::Log::SetColorConsoleBackendEnabled(true);
 }
 
 /// Application entry point

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <exception>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -12,9 +13,9 @@
 #include "common/arch.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
-#include "common/texture.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/exclusive_monitor.h"
+#include "core/hle/service/cam/cam.h"
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
@@ -23,19 +24,22 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/dumping/backend.h"
-#include "core/dumping/ffmpeg_backend.h"
 #include "core/frontend/image_interface.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/global.h"
-#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/apt.h"
+#include "core/hle/service/cam/cam.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/gsp/gsp.h"
-#include "core/hle/service/pm/pm_app.h"
+#include "core/hle/service/hid/hid.h"
+#include "core/hle/service/ir/ir_rst.h"
+#include "core/hle/service/ir/ir_user.h"
+#include "core/hle/service/mic_u.h"
+#include "core/hle/service/plgldr/plgldr.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hw/gpu.h"
@@ -594,6 +598,64 @@ void System::Reset() {
     if (auto apt = Service::APT::GetModule(*this)) {
         apt->GetAppletManager()->SetDeliverArg(std::move(deliver_arg));
     }
+}
+
+void System::ApplySettings() {
+    GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
+    GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
+
+    VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit.GetValue();
+    VideoCore::g_hw_shader_enabled = Settings::values.use_hw_shader.GetValue();
+    VideoCore::g_hw_shader_accurate_mul = Settings::values.shaders_accurate_mul.GetValue();
+
+#ifndef ANDROID
+    if (VideoCore::g_renderer) {
+        VideoCore::g_renderer->UpdateCurrentFramebufferLayout();
+    }
+#endif
+
+    if (VideoCore::g_renderer) {
+        auto& settings = VideoCore::g_renderer->Settings();
+        settings.bg_color_update_requested = true;
+        settings.sampler_update_requested = true;
+        settings.shader_update_requested = true;
+        settings.texture_filter_update_requested = true;
+    }
+
+    if (IsPoweredOn()) {
+        CoreTiming().UpdateClockSpeed(Settings::values.cpu_clock_percentage.GetValue());
+        Core::DSP().SetSink(Settings::values.output_type.GetValue(),
+                            Settings::values.output_device.GetValue());
+        Core::DSP().EnableStretching(Settings::values.enable_audio_stretching.GetValue());
+
+        auto hid = Service::HID::GetModule(*this);
+        if (hid) {
+            hid->ReloadInputDevices();
+        }
+
+        auto apt = Service::APT::GetModule(*this);
+        if (apt) {
+            apt->GetAppletManager()->ReloadInputDevices();
+        }
+
+        auto ir_user = service_manager->GetService<Service::IR::IR_USER>("ir:USER");
+        if (ir_user)
+            ir_user->ReloadInputDevices();
+        auto ir_rst = service_manager->GetService<Service::IR::IR_RST>("ir:rst");
+        if (ir_rst)
+            ir_rst->ReloadInputDevices();
+
+        auto cam = Service::CAM::GetModule(*this);
+        if (cam) {
+            cam->ReloadCameraDevices();
+        }
+
+        Service::MIC::ReloadMic(*this);
+    }
+
+    Service::PLGLDR::PLG_LDR::SetEnabled(Settings::values.plugin_loader_enabled.GetValue());
+    Service::PLGLDR::PLG_LDR::SetAllowGameChangeState(
+        Settings::values.allow_plugin_loader.GetValue());
 }
 
 template <class Archive>

@@ -21,6 +21,7 @@ void ToggleConsole() {
         console_shown = UISettings::values.show_console.GetValue();
     }
 
+    using namespace Common::Log;
 #ifdef _WIN32
     FILE* temp;
     if (UISettings::values.show_console) {
@@ -29,24 +30,20 @@ void ToggleConsole() {
             freopen_s(&temp, "CONIN$", "r", stdin);
             freopen_s(&temp, "CONOUT$", "w", stdout);
             freopen_s(&temp, "CONOUT$", "w", stderr);
-            Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
+            SetColorConsoleBackendEnabled(true);
         }
     } else {
         if (FreeConsole()) {
             // In order to close the console, we have to also detach the streams on it.
             // Just redirect them to NUL if there is no console window
-            Log::RemoveBackend(Log::ColorConsoleBackend::Name());
+            SetColorConsoleBackendEnabled(false);
             freopen_s(&temp, "NUL", "r", stdin);
             freopen_s(&temp, "NUL", "w", stdout);
             freopen_s(&temp, "NUL", "w", stderr);
         }
     }
 #else
-    if (UISettings::values.show_console) {
-        Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-    } else {
-        Log::RemoveBackend(Log::ColorConsoleBackend::Name());
-    }
+    SetColorConsoleBackendEnabled(UISettings::values.show_console.GetValue());
 #endif
 }
 } // namespace Debugger

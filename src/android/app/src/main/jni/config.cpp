@@ -7,8 +7,8 @@
 #include <sstream>
 #include <unordered_map>
 #include <inih/cpp/INIReader.h>
-
 #include "common/file_util.h"
+#include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
 #include "common/settings.h"
@@ -259,6 +259,12 @@ void Config::ReadValues() {
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
+
+    // Apply the log_filter setting as the logger has already been initialized
+    // and doesn't pick up the filter on its own.
+    Common::Log::Filter filter;
+    filter.ParseFilterString(Settings::values.log_filter.GetValue());
+    Common::Log::SetGlobalFilter(filter);
 
     // Debugging
     Settings::values.record_frame_times =

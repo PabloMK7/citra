@@ -57,6 +57,7 @@ add_library(citra_common STATIC
     detached_tasks.h
     bit_field.h
     bit_set.h
+    bounded_threadsafe_queue.h
     cityhash.cpp
     cityhash.h
     color.h
@@ -85,8 +86,10 @@ add_library(citra_common STATIC
     logging/filter.h
     logging/formatter.h
     logging/log.h
+    logging/log_entry.h
     logging/text_formatter.cpp
     logging/text_formatter.h
+    logging/types.h
     math_util.h
     memory_detect.cpp
     memory_detect.h
@@ -172,4 +175,7 @@ endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_common PRIVATE precompiled_headers.h)
+endif()
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+  target_link_libraries(citra_common PRIVATE backtrace dl)
 endif()

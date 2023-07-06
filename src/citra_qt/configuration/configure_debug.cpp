@@ -9,7 +9,7 @@
 #include "citra_qt/debugger/console.h"
 #include "citra_qt/uisettings.h"
 #include "common/file_util.h"
-#include "common/logging/log.h"
+#include "common/logging/backend.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "ui_configure_debug.h"
@@ -89,9 +89,9 @@ void ConfigureDebug::ApplyConfiguration() {
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
     Debugger::ToggleConsole();
-    Log::Filter filter;
+    Common::Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter.GetValue());
-    Log::SetGlobalFilter(filter);
+    Common::Log::SetGlobalFilter(filter);
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
 

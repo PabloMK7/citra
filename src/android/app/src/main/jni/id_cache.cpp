@@ -180,12 +180,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION) != JNI_OK)
         return JNI_ERR;
 
-    // Initialize Logger
-    Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
-    Log::SetGlobalFilter(log_filter);
-    Log::AddBackend(std::make_unique<Log::LogcatBackend>());
-
     // Initialize misc classes
     s_savestate_info_class = reinterpret_cast<jclass>(
         env->NewGlobalRef(env->FindClass("org/citra/citra_emu/NativeLibrary$SavestateInfo")));

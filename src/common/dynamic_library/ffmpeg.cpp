@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include "common/dynamic_library/dynamic_library.h"
 #include "common/dynamic_library/ffmpeg.h"
 #include "common/logging/log.h"

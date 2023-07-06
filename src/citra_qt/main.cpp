@@ -144,24 +144,11 @@ void GMainWindow::ShowTelemetryCallout() {
            "<br/><br/>Would you like to share your usage data with us?");
     if (QMessageBox::question(this, tr("Telemetry"), telemetry_message) == QMessageBox::Yes) {
         NetSettings::values.enable_telemetry = true;
-        Settings::Apply();
+        system.ApplySettings();
     }
 }
 
 const int GMainWindow::max_recent_files_item;
-
-static void InitializeLogging() {
-    Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter.GetValue());
-    Log::SetGlobalFilter(log_filter);
-
-    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
-    FileUtil::CreateFullPath(log_dir);
-    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + LOG_FILE));
-#ifdef _WIN32
-    Log::AddBackend(std::make_unique<Log::DebuggerBackend>());
-#endif
-}
 
 static QString PrettyProductName() {
 #ifdef _WIN32
@@ -188,9 +175,10 @@ static QString PrettyProductName() {
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{Core::Movie::GetInstance()},
       config{std::make_unique<Config>()}, emu_thread{nullptr} {
-    InitializeLogging();
+    Common::Log::Initialize();
+    Common::Log::Start();
+
     Debugger::ToggleConsole();
-    Settings::LogSettings();
 
     // register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
@@ -1193,11 +1181,12 @@ void GMainWindow::BootGame(const QString& filename) {
         const std::string config_file_name =
             title_id == 0 ? name : fmt::format("{:016X}", title_id);
         Config per_game_config(config_file_name, Config::ConfigType::PerGameConfig);
-        Settings::Apply();
+        system.ApplySettings();
 
         LOG_INFO(Frontend, "Using per game config file for title id {}", config_file_name);
-        Settings::LogSettings();
     }
+
+    Settings::LogSettings();
 
     // Save configurations
     UpdateUISettings();
@@ -1936,7 +1925,7 @@ void GMainWindow::ChangeScreenLayout() {
     }
 
     Settings::values.layout_option = new_layout;
-    Settings::Apply();
+    system.ApplySettings();
     UpdateSecondaryWindowVisibility();
 }
 
@@ -1964,18 +1953,18 @@ void GMainWindow::ToggleScreenLayout() {
 
     Settings::values.layout_option = new_layout;
     SyncMenuUISettings();
-    Settings::Apply();
+    system.ApplySettings();
     UpdateSecondaryWindowVisibility();
 }
 
 void GMainWindow::OnSwapScreens() {
     Settings::values.swap_screen = ui->action_Screen_Layout_Swap_Screens->isChecked();
-    Settings::Apply();
+    system.ApplySettings();
 }
 
 void GMainWindow::OnRotateScreens() {
     Settings::values.upright_screen = ui->action_Screen_Layout_Upright_Screens->isChecked();
-    Settings::Apply();
+    system.ApplySettings();
 }
 
 void GMainWindow::TriggerSwapScreens() {
@@ -2014,7 +2003,7 @@ void GMainWindow::OnLoadState() {
 void GMainWindow::OnConfigure() {
     game_list->SetDirectoryWatcherEnabled(false);
     Settings::SetConfiguringGlobal(true);
-    ConfigureDialog configureDialog(this, hotkey_registry,
+    ConfigureDialog configureDialog(this, hotkey_registry, system,
                                     !multiplayer_state->IsHostingPublicRoom());
     connect(&configureDialog, &ConfigureDialog::LanguageChanged, this,
             &GMainWindow::OnLanguageChanged);
@@ -2336,7 +2325,7 @@ void GMainWindow::OnOpenFFmpeg() {
 #endif
 
 void GMainWindow::OnStartVideoDumping() {
-    DumpingDialog dialog(this);
+    DumpingDialog dialog(this, system);
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
         ui->action_Dump_Video->setChecked(false);
         return;
@@ -2938,7 +2927,7 @@ int main(int argc, char* argv[]) {
     // generating shaders
     setlocale(LC_ALL, "C");
 
-    Core::System& system = Core::System::GetInstance();
+    auto& system{Core::System::GetInstance()};
     GMainWindow main_window(system);
 
     // Register frontend applets

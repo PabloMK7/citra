@@ -10,6 +10,7 @@
 #include <boost/optional.hpp>
 #include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
+#include <fmt/format.h>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/file_util.h"

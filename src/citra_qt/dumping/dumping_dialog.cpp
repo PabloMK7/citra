@@ -8,10 +8,11 @@
 #include "citra_qt/dumping/options_dialog.h"
 #include "citra_qt/uisettings.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "ui_dumping_dialog.h"
 
-DumpingDialog::DumpingDialog(QWidget* parent)
-    : QDialog(parent), ui(std::make_unique<Ui::DumpingDialog>()) {
+DumpingDialog::DumpingDialog(QWidget* parent, Core::System& system_)
+    : QDialog(parent), ui{std::make_unique<Ui::DumpingDialog>()}, system{system_} {
 
     ui->setupUi(this);
 
@@ -216,5 +217,5 @@ void DumpingDialog::ApplyConfiguration() {
     Settings::values.audio_encoder_options = ui->audioEncoderOptionsLineEdit->text().toStdString();
     Settings::values.audio_bitrate = ui->audioBitrateSpinBox->value();
     UISettings::values.video_dumping_path = last_path;
-    Settings::Apply();
+    system.ApplySettings();
 }

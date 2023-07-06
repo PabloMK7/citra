@@ -7,6 +7,7 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unique_ptr.hpp>
+#include <fmt/format.h>
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"

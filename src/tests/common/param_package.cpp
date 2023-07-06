@@ -4,11 +4,13 @@
 
 #include <cmath>
 #include <catch2/catch_test_macros.hpp>
+#include "common/logging/backend.h"
 #include "common/param_package.h"
 
 namespace Common {
 
 TEST_CASE("ParamPackage", "[common]") {
+    Common::Log::DisableLoggingInTests();
     ParamPackage original{
         {"abc", "xyz"},
         {"def", "42"},

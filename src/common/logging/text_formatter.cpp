@@ -12,13 +12,12 @@
 #endif
 
 #include "common/assert.h"
-#include "common/common_funcs.h"
-#include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/logging/log.h"
+#include "common/logging/log_entry.h"
 #include "common/logging/text_formatter.h"
-#include "common/string_util.h"
 
-namespace Log {
+namespace Common::Log {
 
 std::string FormatLogMessage(const Entry& entry) {
     unsigned int time_seconds = static_cast<unsigned int>(entry.timestamp.count() / 1000000);
@@ -141,4 +140,4 @@ void PrintMessageToLogcat([[maybe_unused]] const Entry& entry) {
     __android_log_print(android_log_priority, "CitraNative", "%s", str.c_str());
 #endif
 }
-} // namespace Log
+} // namespace Common::Log

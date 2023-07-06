@@ -3,11 +3,12 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include "common/logging/backend.h"
+
+#include "common/assert.h"
 #include "common/logging/filter.h"
 #include "common/string_util.h"
 
-namespace Log {
+namespace Common::Log {
 namespace {
 template <typename It>
 Level GetLevelByName(const It begin, const It end) {
@@ -22,7 +23,7 @@ Level GetLevelByName(const It begin, const It end) {
 
 template <typename It>
 Class GetClassByName(const It begin, const It end) {
-    for (ClassType i = 0; i < static_cast<ClassType>(Class::Count); ++i) {
+    for (u8 i = 0; i < static_cast<u8>(Class::Count); ++i) {
         const char* level_name = GetLogClassName(static_cast<Class>(i));
         if (Common::ComparePartialString(begin, end, level_name)) {
             return static_cast<Class>(i);
@@ -62,6 +63,115 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
 }
 } // Anonymous namespace
 
+/// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
+#define ALL_LOG_CLASSES()                                                                          \
+    CLS(Log)                                                                                       \
+    CLS(Common)                                                                                    \
+    SUB(Common, Filesystem)                                                                        \
+    SUB(Common, Memory)                                                                            \
+    CLS(Core)                                                                                      \
+    SUB(Core, ARM11)                                                                               \
+    SUB(Core, Timing)                                                                              \
+    SUB(Core, Cheats)                                                                              \
+    CLS(Config)                                                                                    \
+    CLS(Debug)                                                                                     \
+    SUB(Debug, Emulated)                                                                           \
+    SUB(Debug, GPU)                                                                                \
+    SUB(Debug, Breakpoint)                                                                         \
+    SUB(Debug, GDBStub)                                                                            \
+    CLS(Kernel)                                                                                    \
+    SUB(Kernel, SVC)                                                                               \
+    CLS(Applet)                                                                                    \
+    SUB(Applet, SWKBD)                                                                             \
+    CLS(Service)                                                                                   \
+    SUB(Service, SRV)                                                                              \
+    SUB(Service, FRD)                                                                              \
+    SUB(Service, FS)                                                                               \
+    SUB(Service, ERR)                                                                              \
+    SUB(Service, APT)                                                                              \
+    SUB(Service, BOSS)                                                                             \
+    SUB(Service, GSP)                                                                              \
+    SUB(Service, AC)                                                                               \
+    SUB(Service, AM)                                                                               \
+    SUB(Service, PTM)                                                                              \
+    SUB(Service, LDR)                                                                              \
+    SUB(Service, MIC)                                                                              \
+    SUB(Service, NDM)                                                                              \
+    SUB(Service, NFC)                                                                              \
+    SUB(Service, NIM)                                                                              \
+    SUB(Service, NS)                                                                               \
+    SUB(Service, NWM)                                                                              \
+    SUB(Service, CAM)                                                                              \
+    SUB(Service, CECD)                                                                             \
+    SUB(Service, CFG)                                                                              \
+    SUB(Service, CSND)                                                                             \
+    SUB(Service, DSP)                                                                              \
+    SUB(Service, DLP)                                                                              \
+    SUB(Service, HID)                                                                              \
+    SUB(Service, HTTP)                                                                             \
+    SUB(Service, SOC)                                                                              \
+    SUB(Service, IR)                                                                               \
+    SUB(Service, Y2R)                                                                              \
+    SUB(Service, PS)                                                                               \
+    SUB(Service, PLGLDR)                                                                           \
+    CLS(HW)                                                                                        \
+    SUB(HW, Memory)                                                                                \
+    SUB(HW, LCD)                                                                                   \
+    SUB(HW, GPU)                                                                                   \
+    SUB(HW, AES)                                                                                   \
+    CLS(Frontend)                                                                                  \
+    CLS(Render)                                                                                    \
+    SUB(Render, Software)                                                                          \
+    SUB(Render, OpenGL)                                                                            \
+    SUB(Render, Vulkan)                                                                            \
+    CLS(Audio)                                                                                     \
+    SUB(Audio, DSP)                                                                                \
+    SUB(Audio, Sink)                                                                               \
+    CLS(Input)                                                                                     \
+    CLS(Network)                                                                                   \
+    CLS(Movie)                                                                                     \
+    CLS(Loader)                                                                                    \
+    CLS(WebService)                                                                                \
+    CLS(RPC_Server)
+
+// GetClassName is a macro defined by Windows.h, grrr...
+const char* GetLogClassName(Class log_class) {
+    switch (log_class) {
+#define CLS(x)                                                                                     \
+    case Class::x:                                                                                 \
+        return #x;
+#define SUB(x, y)                                                                                  \
+    case Class::x##_##y:                                                                           \
+        return #x "." #y;
+        ALL_LOG_CLASSES()
+#undef CLS
+#undef SUB
+    case Class::Count:
+    default:
+        break;
+    }
+    UNREACHABLE();
+}
+
+const char* GetLevelName(Level log_level) {
+#define LVL(x)                                                                                     \
+    case Level::x:                                                                                 \
+        return #x
+    switch (log_level) {
+        LVL(Trace);
+        LVL(Debug);
+        LVL(Info);
+        LVL(Warning);
+        LVL(Error);
+        LVL(Critical);
+    case Level::Count:
+    default:
+        break;
+    }
+#undef LVL
+    UNREACHABLE();
+}
+
 Filter::Filter(Level default_level) {
     ResetAll(default_level);
 }
@@ -96,4 +206,11 @@ bool Filter::CheckMessage(Class log_class, Level level) const {
     return static_cast<u8>(level) >=
            static_cast<u8>(class_levels[static_cast<std::size_t>(log_class)]);
 }
-} // namespace Log
+
+bool Filter::IsDebug() const {
+    return std::any_of(class_levels.begin(), class_levels.end(), [](const Level& l) {
+        return static_cast<u8>(l) <= static_cast<u8>(Level::Debug);
+    });
+}
+
+} // namespace Common::Log

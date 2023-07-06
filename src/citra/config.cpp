@@ -11,8 +11,8 @@
 #include "citra/config.h"
 #include "citra/default_ini.h"
 #include "common/file_util.h"
+#include "common/logging/backend.h"
 #include "common/logging/log.h"
-#include "common/param_package.h"
 #include "common/settings.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
@@ -298,6 +298,12 @@ void Config::ReadValues() {
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
+
+    // Apply the log_filter setting as the logger has already been initialized
+    // and doesn't pick up the filter on its own.
+    Common::Log::Filter filter;
+    filter.ParseFilterString(Settings::values.log_filter.GetValue());
+    Common::Log::SetGlobalFilter(filter);
 
     // Debugging
     Settings::values.record_frame_times =

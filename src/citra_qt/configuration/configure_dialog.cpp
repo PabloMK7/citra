@@ -8,10 +8,13 @@
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/hotkeys.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "ui_configure.h"
 
-ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry, bool enable_web_config)
-    : QDialog(parent), ui(std::make_unique<Ui::ConfigureDialog>()), registry(registry) {
+ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Core::System& system_,
+                                 bool enable_web_config)
+    : QDialog(parent), ui{std::make_unique<Ui::ConfigureDialog>()}, registry{registry_},
+      system{system_} {
     Settings::SetConfiguringGlobal(true);
 
     ui->setupUi(this);
@@ -68,7 +71,7 @@ void ConfigureDialog::ApplyConfiguration() {
     ui->webTab->ApplyConfiguration();
     ui->uiTab->ApplyConfiguration();
     ui->storageTab->ApplyConfiguration();
-    Settings::Apply();
+    system.ApplySettings();
     Settings::LogSettings();
 }
 

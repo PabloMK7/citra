@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cryptopp/hex.h>
+#include <fmt/format.h>
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
