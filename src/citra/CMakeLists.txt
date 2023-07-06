@@ -32,3 +32,9 @@ endif()
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra PRIVATE precompiled_headers.h)
 endif()
+
+# Bundle in-place on MSVC so dependencies can be resolved by builds.
+if (MSVC)
+    include(BundleTarget)
+    bundle_target_in_place(citra)
+endif()

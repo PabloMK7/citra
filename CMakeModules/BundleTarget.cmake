@@ -125,16 +125,24 @@ if (BUNDLE_TARGET_EXECUTE)
     # --- Root bundling logic ---
 
     set(bundle_dir ${BINARY_PATH}/bundle)
-    file(MAKE_DIRECTORY ${bundle_dir})
 
     # On Linux, always bundle an AppImage.
     if (DEFINED LINUXDEPLOY)
+        if (IN_PLACE)
+            message(FATAL_ERROR "Cannot bundle for Linux in-place.")
+        endif()
+
         bundle_appimage("${bundle_dir}" "${EXECUTABLE_PATH}" "${SOURCE_PATH}" "${BINARY_PATH}" "${LINUXDEPLOY}" ${BUNDLE_QT})
     else()
-        message(STATUS "Copying base executable ${EXECUTABLE_PATH} to output directory ${bundle_dir}")
-        file(COPY ${EXECUTABLE_PATH} DESTINATION ${bundle_dir})
-        get_filename_component(bundled_executable_name "${EXECUTABLE_PATH}" NAME)
-        set(bundled_executable_path "${bundle_dir}/${bundled_executable_name}")
+        if (IN_PLACE)
+            message(STATUS "Bundling dependencies in-place")
+            set(bundled_executable_path "${EXECUTABLE_PATH}")
+        else()
+            message(STATUS "Copying base executable ${EXECUTABLE_PATH} to output directory ${bundle_dir}")
+            file(COPY ${EXECUTABLE_PATH} DESTINATION ${bundle_dir})
+            get_filename_component(bundled_executable_name "${EXECUTABLE_PATH}" NAME)
+            set(bundled_executable_path "${bundle_dir}/${bundled_executable_name}")
+        endif()
 
         if (BUNDLE_QT)
             bundle_qt("${bundled_executable_path}")
@@ -171,12 +179,16 @@ else()
     endfunction()
 
     # Adds a target to the bundle target, packing in required libraries.
-    function(bundle_target target_name)
+    # If in_place is true, the bundling will be done in-place as part of the specified target.
+    function(bundle_target_internal target_name in_place)
         # Create base bundle target if it does not exist.
-        if (NOT TARGET bundle)
+        if (NOT in_place AND NOT TARGET bundle)
             message(STATUS "Creating base bundle target")
 
             add_custom_target(bundle)
+            add_custom_command(
+                TARGET bundle
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/")
             add_custom_command(
                 TARGET bundle
                 COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/license.txt" "${CMAKE_BINARY_DIR}/bundle/")
@@ -222,9 +234,16 @@ else()
             set(EXTRA_BUNDLE_ARGS "-DLINUXDEPLOY=${LINUXDEPLOY_BASE}/squashfs-root/AppRun")
         endif()
 
-        message(STATUS "Adding ${target_name} to bundle target")
+        if (in_place)
+            message(STATUS "Adding in-place bundling to ${target_name}")
+            set(DEST_TARGET ${target_name})
+        else()
+            message(STATUS "Adding ${target_name} to bundle target")
+            set(DEST_TARGET bundle)
+            add_dependencies(bundle ${target_name})
+        endif()
 
-        add_custom_target(bundle-${target_name}
+        add_custom_command(TARGET ${DEST_TARGET} POST_BUILD
             COMMAND ${CMAKE_COMMAND}
             "-DCMAKE_PREFIX_PATH=\"${CMAKE_PREFIX_PATH}\""
             "-DBUNDLE_TARGET_EXECUTE=1"
@@ -234,10 +253,19 @@ else()
             "-DEXECUTABLE_PATH=${BUNDLE_EXECUTABLE_PATH}"
             "-DBUNDLE_LIBRARY_PATHS=\"${BUNDLE_LIBRARY_PATHS}\""
             "-DBUNDLE_QT=${BUNDLE_QT}"
+            "-DIN_PLACE=${in_place}"
             ${EXTRA_BUNDLE_ARGS}
             -P "${CMAKE_SOURCE_DIR}/CMakeModules/BundleTarget.cmake"
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-            DEPENDS ${target_name})
-        add_dependencies(bundle bundle-${target_name})
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+    endfunction()
+
+    # Adds a target to the bundle target, packing in required libraries.
+    function(bundle_target target_name)
+        bundle_target_internal("${target_name}" OFF)
+    endfunction()
+
+    # Bundles the target in-place, packing in required libraries.
+    function(bundle_target_in_place target_name)
+        bundle_target_internal("${target_name}" ON)
     endfunction()
 endif()
