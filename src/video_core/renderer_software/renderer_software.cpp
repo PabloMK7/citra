@@ -23,10 +23,8 @@ void RendererSoftware::SwapBuffers() {
 }
 
 void RendererSoftware::PrepareRenderTarget() {
-    for (int i : {0, 1, 2}) {
+    for (u32 i = 0; i < 3; i++) {
         const int fb_id = i == 2 ? 1 : 0;
-        const auto& framebuffer = GPU::g_regs.framebuffer_config[fb_id];
-        auto& info = screen_infos[i];
 
         u32 lcd_color_addr =
             (fb_id == 0) ? LCD_REG_INDEX(color_fill_top) : LCD_REG_INDEX(color_fill_bottom);
@@ -35,33 +33,29 @@ void RendererSoftware::PrepareRenderTarget() {
         LCD::Read(color_fill.raw, lcd_color_addr);
 
         if (!color_fill.is_enabled) {
-            const u32 old_width = std::exchange(info.width, framebuffer.width);
-            const u32 old_height = std::exchange(info.height, framebuffer.height);
-            if (framebuffer.width != old_width || framebuffer.height != old_height) [[unlikely]] {
-                info.pixels.resize(framebuffer.width * framebuffer.height * 4);
-            }
-            CopyPixels(i);
+            LoadFBToScreenInfo(i);
         }
     }
 }
 
-void RendererSoftware::CopyPixels(int i) {
+void RendererSoftware::LoadFBToScreenInfo(int i) {
     const u32 fb_id = i == 2 ? 1 : 0;
     const auto& framebuffer = GPU::g_regs.framebuffer_config[fb_id];
+    auto& info = screen_infos[i];
 
     const PAddr framebuffer_addr =
         framebuffer.active_fb == 0 ? framebuffer.address_left1 : framebuffer.address_left2;
     const s32 bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
     const u8* framebuffer_data = memory.GetPhysicalPointer(framebuffer_addr);
 
-    const s32 stride = framebuffer.stride;
-    const s32 height = framebuffer.height;
-    ASSERT(stride * height != 0);
+    const s32 pixel_stride = framebuffer.stride / bpp;
+    info.height = framebuffer.height;
+    info.width = pixel_stride;
+    info.pixels.resize(info.width * info.height * 4);
 
-    u32 output_offset = 0;
-    for (u32 y = 0; y < framebuffer.height; y++) {
-        for (u32 x = 0; x < framebuffer.width; x++) {
-            const u8* pixel = framebuffer_data + (y * stride + x) * bpp;
+    for (u32 y = 0; y < info.height; y++) {
+        for (u32 x = 0; x < info.width; x++) {
+            const u8* pixel = framebuffer_data + (y * pixel_stride + pixel_stride - x) * bpp;
             const Common::Vec4 color = [&] {
                 switch (framebuffer.color_format) {
                 case GPU::Regs::PixelFormat::RGBA8:
@@ -77,9 +71,9 @@ void RendererSoftware::CopyPixels(int i) {
                 }
                 UNREACHABLE();
             }();
-            u8* dest = screen_infos[i].pixels.data() + output_offset;
+            const u32 output_offset = (x * info.height + y) * 4;
+            u8* dest = info.pixels.data() + output_offset;
             std::memcpy(dest, color.AsArray(), sizeof(color));
-            output_offset += sizeof(color);
         }
     }
 }

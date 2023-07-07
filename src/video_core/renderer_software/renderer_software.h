@@ -38,7 +38,7 @@ public:
 
 private:
     void PrepareRenderTarget();
-    void CopyPixels(int i);
+    void LoadFBToScreenInfo(int i);
 
 private:
     Memory::MemorySystem& memory;
