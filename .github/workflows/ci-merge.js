@@ -11,7 +11,7 @@ async function checkBaseChanges(github, context) {
         repository(name:$name, owner:$owner) {
             ref(qualifiedName:$ref) {
                 target {
-                    ... on Commit { id pushedDate oid }
+                    ... on Commit { id committedDate oid }
                 }
             }
         }
@@ -22,9 +22,9 @@ async function checkBaseChanges(github, context) {
         ref: 'refs/heads/master',
     };
     const result = await github.graphql(query, variables);
-    const pushedAt = result.repository.ref.target.pushedDate;
-    console.log(`Last commit pushed at ${pushedAt}.`);
-    const delta = new Date() - new Date(pushedAt);
+    const committedAt = result.repository.ref.target.committedDate;
+    console.log(`Last commit committed at ${committedAt}.`);
+    const delta = new Date() - new Date(committedAt);
     if (delta <= DETECTION_TIME_FRAME) {
         console.info('New changes detected, triggering a new build.');
         return true;
