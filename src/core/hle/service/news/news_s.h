@@ -25,6 +25,20 @@ private:
      */
     void GetTotalNotifications(Kernel::HLERequestContext& ctx);
 
+    /**
+     * GetNewsDBHeader service function.
+     *  Inputs:
+     *      0 : 0x000A0042
+     *      1 : Size
+     *      2 : Output Buffer Mapping Translation Header ((Size << 4) | 0xC)
+     *      3 : Output Buffer Pointer
+     *  Outputs:
+     *      0 : 0x000A0080
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Actual Size
+     */
+    void GetNewsDBHeader(Kernel::HLERequestContext& ctx);
+
     SERVICE_SERIALIZATION_SIMPLE
 };
 

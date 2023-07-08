@@ -110,8 +110,13 @@ public:
         return sizeof(shared_page);
     }
 
+    /// Gets the system time in milliseconds since the year 2000.
+    u64 GetSystemTimeSince2000() const;
+
+    /// Gets the system time in milliseconds since the year 1900.
+    u64 GetSystemTimeSince1900() const;
+
 private:
-    u64 GetSystemTime() const;
     void UpdateTimeCallback(std::uintptr_t user_data, int cycles_late);
     Core::Timing& timing;
     Core::TimingEventType* update_time_event;

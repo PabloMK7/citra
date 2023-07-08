@@ -11,6 +11,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/ptm/ptm_gets.h"
 #include "core/hle/service/ptm/ptm_play.h"
@@ -130,6 +131,17 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     Service::PTM::CheckNew3DS(rb);
+}
+
+void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x401, 0, 0);
+
+    auto& share_page = Core::System::GetInstance().Kernel().GetSharedPageHandler();
+    const u64 console_time = share_page.GetSystemTimeSince2000();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(console_time);
 }
 
 static void WriteGameCoinData(GameCoin gamecoin_data) {

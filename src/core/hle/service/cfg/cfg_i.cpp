@@ -31,7 +31,7 @@ CFG_I::CFG_I(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
         {IPC::MakeHeader(0x0404, 1, 2), nullptr, "GetLocalFriendCodeSeedData"},
         {IPC::MakeHeader(0x0405, 0, 0), nullptr, "GetLocalFriendCodeSeed"},
         {IPC::MakeHeader(0x0406, 0, 0), &CFG_I::D<&CFG_I::SecureInfoGetRegion, 0x0406>, "SecureInfoGetRegion"},
-        {IPC::MakeHeader(0x0407, 0, 0), nullptr, "SecureInfoGetByte101"},
+        {IPC::MakeHeader(0x0407, 0, 0), &CFG_I::D<&CFG_I::SecureInfoGetByte101, 0x0407>, "SecureInfoGetByte101"},
         {IPC::MakeHeader(0x0408, 1, 2), nullptr, "SecureInfoGetSerialNo"},
         {IPC::MakeHeader(0x0409, 0, 0), nullptr, "UpdateConfigBlk00040003"},
         {IPC::MakeHeader(0x0801, 2, 2), &CFG_I::D<&CFG_I::GetConfigInfoBlk8, 0x0801>, "GetConfigInfoBlk8"},
@@ -55,7 +55,7 @@ CFG_I::CFG_I(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
         {IPC::MakeHeader(0x0814, 1, 2), nullptr, "SecureInfoGetData"},
         {IPC::MakeHeader(0x0815, 1, 2), nullptr, "SecureInfoGetSignature"},
         {IPC::MakeHeader(0x0816, 0, 0), &CFG_I::D<&CFG_I::SecureInfoGetRegion, 0x0816>, "SecureInfoGetRegion"},
-        {IPC::MakeHeader(0x0817, 0, 0), nullptr, "SecureInfoGetByte101"},
+        {IPC::MakeHeader(0x0817, 0, 0), &CFG_I::D<&CFG_I::SecureInfoGetByte101, 0x0817>, "SecureInfoGetByte101"},
         {IPC::MakeHeader(0x0818, 1, 2), nullptr, "SecureInfoGetSerialNo"},
         // clang-format on
     };

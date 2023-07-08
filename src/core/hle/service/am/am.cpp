@@ -1121,6 +1121,17 @@ void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
                 ticket_list_count, ticket_index);
 }
 
+void Module::Interface::NeedsCleanup(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0013, 1, 0); // 0x00130040
+    const auto media_type = rp.Pop<u8>();
+
+    LOG_DEBUG(Service_AM, "(STUBBED) media_type=0x{:02x}", media_type);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<bool>(false);
+}
+
 void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0019, 1, 0); // 0x190040
     u8 media_type = rp.Pop<u8>();

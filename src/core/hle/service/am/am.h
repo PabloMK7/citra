@@ -358,6 +358,16 @@ public:
         void GetTicketList(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::NeedsCleanup service function
+         *  Inputs:
+         *      1 : Media Type
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : bool, Needs Cleanup
+         */
+        void NeedsCleanup(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::QueryAvailableTitleDatabase service function
          *  Inputs:
          *      1 : Media Type

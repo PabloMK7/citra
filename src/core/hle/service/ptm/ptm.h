@@ -137,6 +137,14 @@ public:
          */
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
 
+        /**
+         * PTM::GetSystemTime service function
+         *  Outputs:
+         *      1: Result code, 0 on success, otherwise error code
+         *      2-3: Time since 01/01/2020.
+         */
+        void GetSystemTime(Kernel::HLERequestContext& ctx);
+
     protected:
         std::shared_ptr<Module> ptm;
     };

@@ -28,7 +28,7 @@ AM_U::AM_U(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:u"
         {IPC::MakeHeader(0x0010, 4, 2), nullptr, "GetImportContentContextList"},
         {IPC::MakeHeader(0x0011, 4, 4), nullptr, "GetImportContentContexts"},
         {IPC::MakeHeader(0x0012, 4, 2), nullptr, "DeleteImportContentContexts"},
-        {IPC::MakeHeader(0x0013, 1, 0), nullptr, "NeedsCleanup"},
+        {IPC::MakeHeader(0x0013, 1, 0), &AM_U::NeedsCleanup, "NeedsCleanup"},
         {IPC::MakeHeader(0x0014, 1, 0), nullptr, "DoCleanup"},
         {IPC::MakeHeader(0x0015, 1, 0), nullptr, "DeleteAllImportContexts"},
         {IPC::MakeHeader(0x0016, 0, 0), nullptr, "DeleteAllTemporaryPrograms"},

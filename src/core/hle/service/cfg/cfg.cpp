@@ -271,6 +271,17 @@ void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 
     rb.Push<u8>(static_cast<u8>(cfg->GetRegionValue()));
 }
 
+void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx, u16 id) {
+    IPC::RequestParser rp(ctx, id, 0, 0);
+
+    LOG_DEBUG(Service_CFG, "(STUBBED) called");
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    // According to 3dbrew this is normally 0.
+    rb.Push<u8>(0);
+}
+
 void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 1, 0);
     const u32 app_id_salt = rp.Pop<u32>() & 0x000FFFFF;

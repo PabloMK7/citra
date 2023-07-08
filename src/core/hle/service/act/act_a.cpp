@@ -11,9 +11,9 @@ ACT_A::ACT_A(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "a
     const FunctionInfo functions[] = {
         // act:u shared commands
         // clang-format off
-        {IPC::MakeHeader(0x0001, 2, 4), nullptr, "Initialize"},
+        {IPC::MakeHeader(0x0001, 2, 4), &ACT_A::Initialize, "Initialize"},
         {IPC::MakeHeader(0x0002, 1, 0), nullptr, "GetErrorCode"},
-        {IPC::MakeHeader(0x0006, 3, 2), nullptr, "GetAccountDataBlock"},
+        {IPC::MakeHeader(0x0006, 3, 2), &ACT_A::GetAccountDataBlock, "GetAccountDataBlock"},
         {IPC::MakeHeader(0x000B, 1, 2), nullptr, "AcquireEulaList"},
         {IPC::MakeHeader(0x000D, 1, 0), nullptr, "GenerateUuid"},
         // act:a

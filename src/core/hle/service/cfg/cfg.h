@@ -166,6 +166,17 @@ public:
         void SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 id);
 
         /**
+         * CFG::SecureInfoGetByte101 service function
+         *  Inputs:
+         *      1 : None
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Value loaded from SecureInfo offset 0x101
+         */
+        void SecureInfoGetByte101(Kernel::HLERequestContext& ctx, u16 id);
+
+        /**
          * CFG::GenHashConsoleUnique service function
          *  Inputs:
          *      1 : 20 bit application ID salt

@@ -30,7 +30,7 @@ PTM_Gets::PTM_Gets(std::shared_ptr<Module> ptm)
         {IPC::MakeHeader(0x000E, 0, 0), nullptr, "GetPedometerRecordingMode"},
         {IPC::MakeHeader(0x000F, 2, 4), nullptr, "GetStepHistoryAll"},
         // ptm:gets
-        {IPC::MakeHeader(0x0401, 0, 0), nullptr, "GetSystemTime"},
+        {IPC::MakeHeader(0x0401, 0, 0), &PTM_Gets::GetSystemTime, "GetSystemTime"},
         // clang-format on
     };
     RegisterHandlers(functions);

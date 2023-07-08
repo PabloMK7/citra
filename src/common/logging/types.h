@@ -55,6 +55,7 @@ enum class Class : u8 {
     Service_FRD,     ///< The FRD (Friends) service
     Service_FS,      ///< The FS (Filesystem) service implementation
     Service_ERR,     ///< The ERR (Error) port implementation
+    Service_ACT,     ///< The ACT (Account) service
     Service_APT,     ///< The APT (Applets) service
     Service_BOSS,    ///< The BOSS (SpotPass) service
     Service_GSP,     ///< The GSP (GPU control) service
