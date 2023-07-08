@@ -80,23 +80,29 @@ struct State {
 
     void WriteSamples(std::span<const u8> samples) {
         u32 bytes_total_written = 0;
-        const std::size_t remaining_space = size - offset;
-        std::size_t bytes_to_write = std::min(samples.size(), remaining_space);
+        auto sample_buffer = sharedmem_buffer + initial_offset;
+        // Do not let sampling buffer overrun shared memory space.
+        const auto sample_buffer_size =
+            std::min(size, sharedmem_size - initial_offset - sizeof(u32));
 
-        // Write as many samples as we can to the buffer.
-        // TODO if the sample size is 16bit, this could theoretically cut a sample in the case where
-        // the application configures an odd size
-        std::memcpy(sharedmem_buffer + offset, samples.data(), bytes_to_write);
-        offset += static_cast<u32>(bytes_to_write);
-        bytes_total_written += static_cast<u32>(bytes_to_write);
-
-        // If theres any samples left to write after we looped, go ahead and write them now
-        if (looped_buffer && samples.size() > bytes_total_written) {
-            offset = initial_offset;
-            bytes_to_write = std::min(samples.size() - bytes_total_written, size);
-            std::memcpy(sharedmem_buffer + offset, samples.data() + bytes_total_written,
+        // Write samples in a loop until the input runs out
+        while (samples.size() > bytes_total_written) {
+            // TODO: If the sample size is 16-bit, this could theoretically cut a sample in the case
+            // where the application configures an odd size.
+            std::size_t bytes_to_write =
+                std::min(samples.size() - bytes_total_written, sample_buffer_size - offset);
+            std::memcpy(sample_buffer + offset, samples.data() + bytes_total_written,
                         bytes_to_write);
             offset += static_cast<u32>(bytes_to_write);
+            bytes_total_written += static_cast<u32>(bytes_to_write);
+
+            if (offset >= sample_buffer_size && looped_buffer) {
+                offset = 0;
+            }
+
+            if (!looped_buffer) {
+                break;
+            }
         }
 
         // The last 4 bytes of the shared memory contains the latest offset
@@ -205,7 +211,8 @@ struct MIC_U::Impl {
         }
 
         u8 sample_size = encoding == Encoding::PCM8Signed || encoding == Encoding::PCM8 ? 8 : 16;
-        state.offset = state.initial_offset = audio_buffer_offset;
+        state.offset = 0;
+        state.initial_offset = audio_buffer_offset;
         state.sample_rate = sample_rate;
         state.sample_size = sample_size;
         state.looped_buffer = audio_buffer_loop;
