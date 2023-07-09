@@ -576,7 +576,7 @@ public:
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
     /// Gets a pointer to the memory region beginning at the specified physical address.
-    u8* GetPhysicalPointer(PAddr address);
+    u8* GetPhysicalPointer(PAddr address) const;
 
     /// Returns a reference to the memory region beginning at the specified physical address
     MemoryRef GetPhysicalRef(PAddr address) const;

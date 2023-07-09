@@ -643,7 +643,7 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
     return string;
 }
 
-u8* MemorySystem::GetPhysicalPointer(PAddr address) {
+u8* MemorySystem::GetPhysicalPointer(PAddr address) const {
     return GetPhysicalRef(address);
 }
 

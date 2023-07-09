@@ -66,7 +66,7 @@ public:
 
 private:
     const std::size_t source_id;
-    Memory::MemorySystem* memory_system;
+    const Memory::MemorySystem* memory_system{};
     StereoFrame16 current_frame;
 
     using Format = SourceConfiguration::Configuration::Format;
