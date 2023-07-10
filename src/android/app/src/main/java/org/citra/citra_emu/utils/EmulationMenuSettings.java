@@ -13,8 +13,8 @@ public class EmulationMenuSettings {
     public static final int LayoutOption_SingleScreen = 1;
     public static final int LayoutOption_LargeScreen = 2;
     public static final int LayoutOption_SideScreen = 3;
-    public static final int LayoutOption_MobilePortrait = 4;
-    public static final int LayoutOption_MobileLandscape = 5;
+    public static final int LayoutOption_MobilePortrait = 5;
+    public static final int LayoutOption_MobileLandscape = 6;
 
     public static boolean getJoystickRelCenter() {
         return mPreferences.getBoolean("EmulationMenuSettings_JoystickRelCenter", true);
