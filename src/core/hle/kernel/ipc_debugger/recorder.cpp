@@ -74,7 +74,7 @@ void Recorder::SetRequestInfo(const std::shared_ptr<Kernel::Thread>& client_thre
     const u32 thread_id = client_thread->GetThreadId();
     if (!record_map.count(thread_id)) {
         // This is possible when the recorder is enabled after application started
-        LOG_ERROR(Kernel, "No request is assoicated with the thread");
+        LOG_ERROR(Kernel, "No request is associated with the thread");
         return;
     }
 
@@ -113,7 +113,7 @@ void Recorder::SetReplyInfo(const std::shared_ptr<Kernel::Thread>& client_thread
     const u32 thread_id = client_thread->GetThreadId();
     if (!record_map.count(thread_id)) {
         // This is possible when the recorder is enabled after application started
-        LOG_ERROR(Kernel, "No request is assoicated with the thread");
+        LOG_ERROR(Kernel, "No request is associated with the thread");
         return;
     }
 
@@ -133,7 +133,7 @@ void Recorder::SetHLEUnimplemented(const std::shared_ptr<Kernel::Thread>& client
     const u32 thread_id = client_thread->GetThreadId();
     if (!record_map.count(thread_id)) {
         // This is possible when the recorder is enabled after application started
-        LOG_ERROR(Kernel, "No request is assoicated with the thread");
+        LOG_ERROR(Kernel, "No request is associated with the thread");
         return;
     }
 
