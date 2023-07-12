@@ -104,9 +104,11 @@ private:
     void DonePopulating(const QStringList& watch_list);
 
     void PopupContextMenu(const QPoint& menu_location);
+    void PopupHeaderContextMenu(const QPoint& menu_location);
     void AddGamePopup(QMenu& context_menu, const QString& path, u64 program_id, u64 extdata_id);
     void AddCustomDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddPermDirPopup(QMenu& context_menu, QModelIndex selected);
+    void UpdateColumnVisibility();
 
     QString FindGameByProgramID(QStandardItem* current_item, u64 program_id, int role);
 

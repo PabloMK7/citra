@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QActionGroup>
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -307,6 +308,9 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     tree_view->setEditTriggers(QHeaderView::NoEditTriggers);
     tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
     tree_view->setStyleSheet(QStringLiteral("QTreeView{ border: none; }"));
+    tree_view->header()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    UpdateColumnVisibility();
 
     item_model->insertColumns(0, COLUMN_COUNT);
     RetranslateUI();
@@ -317,6 +321,8 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     connect(tree_view, &QTreeView::customContextMenuRequested, this, &GameList::PopupContextMenu);
     connect(tree_view, &QTreeView::expanded, this, &GameList::OnItemExpanded);
     connect(tree_view, &QTreeView::collapsed, this, &GameList::OnItemExpanded);
+    connect(tree_view->header(), &QHeaderView::customContextMenuRequested, this,
+            &GameList::PopupHeaderContextMenu);
 
     // We must register all custom types with the Qt Automoc system so that we are able to use
     // it with signals/slots. In this case, QList falls under the umbrells of custom types.
@@ -469,6 +475,41 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     }
 
     context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
+}
+
+void GameList::PopupHeaderContextMenu(const QPoint& menu_location) {
+    const QModelIndex item = tree_view->indexAt(menu_location);
+    if (!item.isValid()) {
+        return;
+    }
+
+    QMenu context_menu;
+    static const QMap<QString, Settings::Setting<bool>*> columns{
+        {tr("Compatibility"), &UISettings::values.show_compat_column},
+        {tr("Region"), &UISettings::values.show_region_column},
+        {tr("File type"), &UISettings::values.show_type_column},
+        {tr("Size"), &UISettings::values.show_size_column}};
+
+    QActionGroup* column_group = new QActionGroup(this);
+    column_group->setExclusive(false);
+    for (const auto& key : columns.keys()) {
+        QAction* action = column_group->addAction(context_menu.addAction(key));
+        action->setCheckable(true);
+        action->setChecked(columns[key]->GetValue());
+        connect(action, &QAction::toggled, [this, key](bool value) {
+            *columns[key] = !columns[key]->GetValue();
+            UpdateColumnVisibility();
+        });
+    }
+
+    context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
+}
+
+void GameList::UpdateColumnVisibility() {
+    tree_view->setColumnHidden(COLUMN_COMPATIBILITY, !UISettings::values.show_compat_column);
+    tree_view->setColumnHidden(COLUMN_REGION, !UISettings::values.show_region_column);
+    tree_view->setColumnHidden(COLUMN_FILE_TYPE, !UISettings::values.show_type_column);
+    tree_view->setColumnHidden(COLUMN_SIZE, !UISettings::values.show_size_column);
 }
 
 void ForEachOpenGLCacheFile(u64 program_id, auto func) {
@@ -750,6 +791,10 @@ QStandardItemModel* GameList::GetModel() const {
 
 void GameList::PopulateAsync(QVector<UISettings::GameDir>& game_dirs) {
     tree_view->setEnabled(false);
+
+    // Update the columns in case UISettings has changed
+    UpdateColumnVisibility();
+
     // Delete any rows that might already exist if we're repopulating
     item_model->removeRows(0, item_model->rowCount());
     search_field->clear();

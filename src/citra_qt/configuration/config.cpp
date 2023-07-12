@@ -772,6 +772,11 @@ void Config::ReadUIGameListValues() {
     ReadBasicSetting(UISettings::values.game_list_hide_no_icon);
     ReadBasicSetting(UISettings::values.game_list_single_line_mode);
 
+    ReadBasicSetting(UISettings::values.show_compat_column);
+    ReadBasicSetting(UISettings::values.show_region_column);
+    ReadBasicSetting(UISettings::values.show_type_column);
+    ReadBasicSetting(UISettings::values.show_size_column);
+
     qt_config->endGroup();
 }
 
@@ -1229,6 +1234,11 @@ void Config::SaveUIGameListValues() {
     WriteBasicSetting(UISettings::values.game_list_row_2);
     WriteBasicSetting(UISettings::values.game_list_hide_no_icon);
     WriteBasicSetting(UISettings::values.game_list_single_line_mode);
+
+    WriteBasicSetting(UISettings::values.show_compat_column);
+    WriteBasicSetting(UISettings::values.show_region_column);
+    WriteBasicSetting(UISettings::values.show_type_column);
+    WriteBasicSetting(UISettings::values.show_size_column);
 
     qt_config->endGroup();
 }
