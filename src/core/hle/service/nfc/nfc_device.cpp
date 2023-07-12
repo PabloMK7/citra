@@ -38,10 +38,7 @@ void NfcDevice::serialize(Archive& ar, const unsigned int) {
 }
 SERIALIZE_IMPL(NfcDevice)
 
-/// The interval at which the amiibo will be removed automatically 1.5s
-static constexpr u64 amiibo_removal_interval_us = 268 * 1000 * 1000;
-
-NfcDevice::NfcDevice(Core::System& system) {
+NfcDevice::NfcDevice(Core::System& system_) : system{system_} {
     tag_in_range_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
     tag_out_of_range_event =
@@ -88,8 +85,7 @@ bool NfcDevice::LoadAmiibo(std::string filename) {
     tag_out_of_range_event->Clear();
     tag_in_range_event->Signal();
 
-    Core::System::GetInstance().CoreTiming().ScheduleEvent(amiibo_removal_interval_us,
-                                                           remove_amiibo_event);
+    RescheduleTagRemoveEvent();
 
     // Fallback for plain amiibos
     if (is_plain_amiibo) {
@@ -269,6 +265,9 @@ ResultCode NfcDevice::Flush() {
         }
         return connection_result;
     }
+
+    // Ensure the tag will not be removed in the middle of a write
+    RescheduleTagRemoveEvent();
 
     auto& settings = tag.file.settings;
 
@@ -888,8 +887,7 @@ ResultCode NfcDevice::RecreateApplicationArea(u32 access_id, std::span<const u8>
     }
 
     u64 application_id{};
-    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(application_id) ==
-        Loader::ResultStatus::Success) {
+    if (system.GetAppLoader().ReadProgramId(application_id) == Loader::ResultStatus::Success) {
         tag.file.application_id_byte =
             static_cast<u8>(application_id >> application_id_version_offset & 0xf);
         tag.file.application_id =
@@ -1008,7 +1006,7 @@ void NfcDevice::SetAmiiboName(AmiiboSettings& settings, const AmiiboName& amiibo
 }
 
 time_t NfcDevice::GetCurrentTime() const {
-    auto& share_page = Core::System::GetInstance().Kernel().GetSharedPageHandler();
+    auto& share_page = system.Kernel().GetSharedPageHandler();
     const auto console_time = share_page.GetSharedPage().date_time_1.date_time / 1000;
 
     // 3DS console time uses Jan 1 1900 as internal epoch,
@@ -1109,6 +1107,20 @@ void NfcDevice::BuildAmiiboWithoutKeys() {
     // Admin info
     settings.settings.amiibo_initialized.Assign(1);
     settings.settings.appdata_initialized.Assign(0);
+}
+
+void NfcDevice::RescheduleTagRemoveEvent() {
+    /// The interval at which the amiibo will be removed automatically 1.5s
+    static constexpr u64 amiibo_removal_interval = nsToCycles(1500 * 1000 * 1000);
+
+    system.CoreTiming().UnscheduleEvent(remove_amiibo_event, 0);
+
+    if (device_state != DeviceState::TagFound && device_state != DeviceState::TagMounted &&
+        device_state != DeviceState::TagPartiallyMounted) {
+        return;
+    }
+
+    system.CoreTiming().ScheduleEvent(amiibo_removal_interval, remove_amiibo_event);
 }
 
 } // namespace Service::NFC

@@ -175,6 +175,8 @@ void Module::Interface::Mount(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_NFC, "called");
 
+    nfc->device->RescheduleTagRemoveEvent();
+
     ResultCode result = RESULT_SUCCESS;
     switch (nfc->nfc_mode) {
     case CommunicationMode::Ntag:
@@ -310,6 +312,8 @@ void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_NFC, "called");
 
+    nfc->device->RescheduleTagRemoveEvent();
+
     if (nfc->nfc_mode == CommunicationMode::TrainTag) {
         LOG_ERROR(Service_NFC, "CommunicationMode  {} not implemented", nfc->nfc_mode);
         IPC::RequestBuilder rb = rp.MakeBuilder(26, 0);
@@ -329,6 +333,8 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x11, 0, 0);
 
     LOG_INFO(Service_NFC, "called");
+
+    nfc->device->RescheduleTagRemoveEvent();
 
     if (nfc->nfc_mode == CommunicationMode::TrainTag) {
         LOG_ERROR(Service_NFC, "CommunicationMode  {} not implemented", nfc->nfc_mode);
@@ -359,6 +365,8 @@ void Module::Interface::OpenApplicationArea(Kernel::HLERequestContext& ctx) {
     u32 access_id = rp.Pop<u32>();
 
     LOG_INFO(Service_NFC, "called, access_id={}", access_id);
+
+    nfc->device->RescheduleTagRemoveEvent();
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -396,6 +404,8 @@ void Module::Interface::ReadApplicationArea(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x15, 0, 0);
 
     LOG_INFO(Service_NFC, "called");
+
+    nfc->device->RescheduleTagRemoveEvent();
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -436,6 +446,8 @@ void Module::Interface::GetNfpRegisterInfo(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_NFC, "called");
 
+    nfc->device->RescheduleTagRemoveEvent();
+
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultInvalidOperation);
@@ -454,6 +466,8 @@ void Module::Interface::GetNfpCommonInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x18, 0, 0);
 
     LOG_INFO(Service_NFC, "called");
+
+    nfc->device->RescheduleTagRemoveEvent();
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -515,6 +529,8 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_NFC, "called");
 
+    nfc->device->RescheduleTagRemoveEvent();
+
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultInvalidOperation);
@@ -547,6 +563,8 @@ void Module::Interface::GetAdminInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x402, 0, 0);
 
     LOG_INFO(Service_NFC, "called");
+
+    nfc->device->RescheduleTagRemoveEvent();
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

@@ -21,7 +21,7 @@ class KReadableEvent;
 namespace Service::NFC {
 class NfcDevice {
 public:
-    NfcDevice(Core::System& system);
+    NfcDevice(Core::System& system_);
     ~NfcDevice();
 
     bool LoadAmiibo(std::string filename);
@@ -71,6 +71,10 @@ public:
     std::shared_ptr<Kernel::Event> GetActivateEvent() const;
     std::shared_ptr<Kernel::Event> GetDeactivateEvent() const;
 
+    /// Automatically removes the nfc tag after x ammount of time.
+    /// If called multiple times the counter will be restarted.
+    void RescheduleTagRemoveEvent();
+
 private:
     time_t GetCurrentTime() const;
     void SetAmiiboName(AmiiboSettings& settings, const AmiiboName& amiibo_name);
@@ -100,6 +104,7 @@ private:
 
     SerializableAmiiboFile tag{};
     SerializableEncryptedAmiiboFile encrypted_tag{};
+    Core::System& system;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
