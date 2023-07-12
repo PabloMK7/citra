@@ -37,39 +37,33 @@ CubebInput::CubebInput(std::string device_id)
 }
 
 CubebInput::~CubebInput() {
-    if (!impl->ctx)
-        return;
-
     if (impl->stream) {
         if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
             LOG_ERROR(Audio, "Error stopping cubeb input stream.");
         }
-
         cubeb_stream_destroy(impl->stream);
     }
 
-    cubeb_destroy(impl->ctx);
+    if (impl->ctx) {
+        cubeb_destroy(impl->ctx);
+    }
 }
 
 void CubebInput::StartSampling(const InputParameters& params) {
     // Cubeb apparently only supports signed 16 bit PCM (and float32 which the 3ds doesn't support)
-    // TODO resample the input stream
+    // TODO: Resample the input stream.
     if (params.sign == Signedness::Unsigned) {
         LOG_ERROR(Audio,
-                  "Application requested unsupported unsigned pcm format. Falling back to signed");
+                  "Application requested unsupported unsigned pcm format. Falling back to signed.");
     }
 
-    impl->sample_size_in_bytes = params.sample_size / 8;
-
     parameters = params;
-    is_sampling = true;
+    impl->sample_size_in_bytes = params.sample_size / 8;
 
     cubeb_devid input_device = nullptr;
     if (device_id != auto_device_name && !device_id.empty()) {
         cubeb_device_collection collection;
-        if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) != CUBEB_OK) {
-            LOG_WARNING(Audio, "Audio input device enumeration not supported");
-        } else {
+        if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) == CUBEB_OK) {
             const auto collection_end = collection.device + collection.count;
             const auto device = std::find_if(
                 collection.device, collection_end, [this](const cubeb_device_info& info) {
@@ -79,39 +73,42 @@ void CubebInput::StartSampling(const InputParameters& params) {
                 input_device = device->devid;
             }
             cubeb_device_collection_destroy(impl->ctx, &collection);
+        } else {
+            LOG_WARNING(Audio_Sink,
+                        "Audio input device enumeration not supported, using default device.");
         }
     }
 
-    cubeb_stream_params input_params;
-    input_params.channels = 1;
-    input_params.layout = CUBEB_LAYOUT_UNDEFINED;
-    input_params.prefs = CUBEB_STREAM_PREF_NONE;
-    input_params.format = CUBEB_SAMPLE_S16LE;
-    input_params.rate = params.sample_rate;
+    cubeb_stream_params input_params = {
+        .format = CUBEB_SAMPLE_S16LE,
+        .rate = params.sample_rate,
+        .channels = 1,
+        .layout = CUBEB_LAYOUT_UNDEFINED,
+    };
 
     u32 latency_frames = 512; // Firefox default
     if (cubeb_get_min_latency(impl->ctx, &input_params, &latency_frames) != CUBEB_OK) {
-        LOG_ERROR(Audio, "Could not get minimum latency");
+        LOG_WARNING(Audio, "Error getting minimum input latency, falling back to default latency.");
     }
 
     if (cubeb_stream_init(impl->ctx, &impl->stream, "Citra Microphone", input_device, &input_params,
                           nullptr, nullptr, latency_frames, Impl::DataCallback, Impl::StateCallback,
                           impl.get()) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "Error creating cubeb input stream");
-        is_sampling = false;
+        LOG_CRITICAL(Audio, "Error creating cubeb input stream.");
         return;
     }
 
     if (cubeb_stream_start(impl->stream) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "Error starting cubeb input stream");
-        is_sampling = false;
+        LOG_CRITICAL(Audio, "Error starting cubeb input stream.");
+        cubeb_stream_destroy(impl->stream);
+        impl->stream = nullptr;
         return;
     }
+
+    is_sampling = true;
 }
 
 void CubebInput::StopSampling() {
-    // TODO(xperia64): Destroy the stream for now to avoid a leak because StartSampling
-    // reinitializes the stream every time
     if (impl->stream) {
         cubeb_stream_stop(impl->stream);
         cubeb_stream_destroy(impl->stream);
@@ -121,8 +118,14 @@ void CubebInput::StopSampling() {
 }
 
 void CubebInput::AdjustSampleRate(u32 sample_rate) {
-    // TODO This should restart the stream with the new sample rate
-    LOG_ERROR(Audio, "AdjustSampleRate unimplemented!");
+    if (!is_sampling) {
+        return;
+    }
+
+    auto new_parameters = parameters;
+    new_parameters.sample_rate = sample_rate;
+    StopSampling();
+    StartSampling(new_parameters);
 }
 
 Samples CubebInput::Read() {
@@ -136,7 +139,7 @@ Samples CubebInput::Read() {
 
 long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                     void* output_buffer, long num_frames) {
-    Impl* impl = static_cast<Impl*>(user_data);
+    auto impl = static_cast<Impl*>(user_data);
     if (!impl) {
         return 0;
     }
@@ -177,9 +180,7 @@ std::vector<std::string> ListCubebInputDevices() {
     }
 
     cubeb_device_collection collection;
-    if (cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) != CUBEB_OK) {
-        LOG_WARNING(Audio_Sink, "Audio input device enumeration not supported");
-    } else {
+    if (cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) == CUBEB_OK) {
         for (std::size_t i = 0; i < collection.count; i++) {
             const cubeb_device_info& device = collection.device[i];
             if (device.state == CUBEB_DEVICE_STATE_ENABLED && device.friendly_name) {
@@ -187,6 +188,8 @@ std::vector<std::string> ListCubebInputDevices() {
             }
         }
         cubeb_device_collection_destroy(ctx, &collection);
+    } else {
+        LOG_WARNING(Audio_Sink, "Audio input device enumeration not supported.");
     }
 
     cubeb_destroy(ctx);
