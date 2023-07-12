@@ -3,9 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <QImage>
+#include <QImageReader>
 #include <QString>
 #include "citra_qt/qt_image_interface.h"
 #include "common/logging/log.h"
+
+QtImageInterface::QtImageInterface() {
+    QImageReader::setAllocationLimit(0);
+}
 
 bool QtImageInterface::DecodePNG(std::vector<u8>& dst, u32& width, u32& height,
                                  std::span<const u8> src) {
