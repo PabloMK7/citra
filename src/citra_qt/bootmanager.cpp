@@ -44,7 +44,8 @@
 
 static Frontend::WindowSystemType GetWindowSystemType();
 
-EmuThread::EmuThread(Frontend::GraphicsContext& core_context) : core_context(core_context) {}
+EmuThread::EmuThread(Core::System& system_, Frontend::GraphicsContext& core_context)
+    : system{system_}, core_context(core_context) {}
 
 EmuThread::~EmuThread() = default;
 
@@ -62,7 +63,6 @@ static GMainWindow* GetMainWindow() {
 void EmuThread::run() {
     MicroProfileOnThreadCreate("EmuThread");
     const auto scope = core_context.Acquire();
-    Core::System& system = Core::System::GetInstance();
 
     if (Settings::values.preload_textures) {
         emit LoadProgress(VideoCore::LoadCallbackStage::Preload, 0, 0);
@@ -107,7 +107,7 @@ void EmuThread::run() {
             }
             if (result != Core::System::ResultStatus::Success) {
                 this->SetRunning(false);
-                emit ErrorThrown(result, Core::System::GetInstance().GetStatusDetails());
+                emit ErrorThrown(result, system.GetStatusDetails());
             }
 
             was_active = running || exec_step;
@@ -248,8 +248,8 @@ public:
 #ifdef HAS_OPENGL
 class OpenGLRenderWidget : public RenderWidget {
 public:
-    explicit OpenGLRenderWidget(GRenderWindow* parent, bool is_secondary)
-        : RenderWidget(parent), is_secondary(is_secondary) {
+    explicit OpenGLRenderWidget(GRenderWindow* parent, Core::System& system_, bool is_secondary)
+        : RenderWidget(parent), system(system_), is_secondary(is_secondary) {
         setAttribute(Qt::WA_NativeWindow);
         setAttribute(Qt::WA_PaintOnScreen);
         if (GetWindowSystemType() == Frontend::WindowSystemType::Wayland) {
@@ -266,7 +266,7 @@ public:
         if (!isVisible()) {
             return;
         }
-        if (!Core::System::GetInstance().IsPoweredOn()) {
+        if (!system.IsPoweredOn()) {
             return;
         }
         context->MakeCurrent();
@@ -284,6 +284,7 @@ public:
 
 private:
     std::unique_ptr<Frontend::GraphicsContext> context{};
+    Core::System& system;
     bool is_secondary;
 };
 #endif
@@ -296,7 +297,7 @@ struct SoftwareRenderWidget : public RenderWidget {
         if (!isVisible()) {
             return;
         }
-        if (!Core::System::GetInstance().IsPoweredOn()) {
+        if (!system.IsPoweredOn()) {
             return;
         }
 
@@ -666,7 +667,7 @@ bool GRenderWindow::InitializeOpenGL() {
 
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground,
     // WA_DontShowOnScreen, WA_DeleteOnClose
-    auto child = new OpenGLRenderWidget(this, is_secondary);
+    auto child = new OpenGLRenderWidget(this, system, is_secondary);
     child_widget = child;
     child_widget->windowHandle()->create();
 

@@ -10,9 +10,13 @@
 
 struct SDL_Window;
 
+namespace Core {
+class System;
+}
+
 class EmuWindow_SDL2 : public Frontend::EmuWindow {
 public:
-    explicit EmuWindow_SDL2(bool is_secondary);
+    explicit EmuWindow_SDL2(Core::System& system_, bool is_secondary);
     ~EmuWindow_SDL2();
 
     /// Initializes SDL2
@@ -78,4 +82,6 @@ protected:
 
     /// Keeps track of how often to update the title bar during gameplay
     u32 last_time = 0;
+
+    Core::System& system;
 };

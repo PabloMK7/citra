@@ -8,8 +8,8 @@
 #include "core/frontend/applets/swkbd.h"
 
 namespace Frontend {
-void RegisterDefaultApplets() {
-    Core::System::GetInstance().RegisterSoftwareKeyboard(std::make_shared<DefaultKeyboard>());
-    Core::System::GetInstance().RegisterMiiSelector(std::make_shared<DefaultMiiSelector>());
+void RegisterDefaultApplets(Core::System& system) {
+    system.RegisterSoftwareKeyboard(std::make_shared<DefaultKeyboard>());
+    system.RegisterMiiSelector(std::make_shared<DefaultMiiSelector>());
 }
 } // namespace Frontend

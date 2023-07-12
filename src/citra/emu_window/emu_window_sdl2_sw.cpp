@@ -18,7 +18,7 @@
 class DummyContext : public Frontend::GraphicsContext {};
 
 EmuWindow_SDL2_SW::EmuWindow_SDL2_SW(Core::System& system_, bool fullscreen, bool is_secondary)
-    : EmuWindow_SDL2{is_secondary}, system{system_} {
+    : EmuWindow_SDL2{system_, is_secondary}, system{system_} {
     std::string window_title = fmt::format("Citra {} | {}-{}", Common::g_build_fullname,
                                            Common::g_scm_branch, Common::g_scm_desc);
     render_window =

@@ -109,7 +109,8 @@ void EmuWindow_SDL2::Fullscreen() {
     SDL_MaximizeWindow(render_window);
 }
 
-EmuWindow_SDL2::EmuWindow_SDL2(bool is_secondary) : EmuWindow(is_secondary) {}
+EmuWindow_SDL2::EmuWindow_SDL2(Core::System& system_, bool is_secondary)
+    : EmuWindow(is_secondary), system(system_) {}
 
 EmuWindow_SDL2::~EmuWindow_SDL2() {
     SDL_Quit();
@@ -202,7 +203,7 @@ void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minima
 void EmuWindow_SDL2::UpdateFramerateCounter() {
     const u32 current_time = SDL_GetTicks();
     if (current_time > last_time + 2000) {
-        const auto results = Core::System::GetInstance().GetAndResetPerfStats();
+        const auto results = system.GetAndResetPerfStats();
         const auto title =
             fmt::format("Citra {} | {}-{} | FPS: {:.0f} ({:.0f}%)", Common::g_build_fullname,
                         Common::g_scm_branch, Common::g_scm_desc, results.game_fps,

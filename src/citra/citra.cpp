@@ -346,7 +346,7 @@ int main(int argc, char** argv) {
     system.ApplySettings();
 
     // Register frontend applets
-    Frontend::RegisterDefaultApplets();
+    Frontend::RegisterDefaultApplets(system);
 
     EmuWindow_SDL2::InitializeSDL2();
 
@@ -354,12 +354,12 @@ int main(int argc, char** argv) {
                                        bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
         switch (Settings::values.graphics_api.GetValue()) {
         case Settings::GraphicsAPI::OpenGL:
-            return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
+            return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
         case Settings::GraphicsAPI::Software:
             return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
         }
         LOG_ERROR(Frontend, "Invalid Graphics API, using OpenGL");
-        return std::make_unique<EmuWindow_SDL2_GL>(fullscreen, is_secondary);
+        return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
     };
 
     const auto emu_window{create_emu_window(fullscreen, false)};

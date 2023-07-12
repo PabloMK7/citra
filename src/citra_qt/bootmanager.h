@@ -18,6 +18,10 @@ class QTouchEvent;
 
 class GRenderWindow;
 
+namespace Core {
+class System;
+}
+
 namespace VideoCore {
 enum class LoadCallbackStage;
 }
@@ -26,7 +30,7 @@ class EmuThread final : public QThread {
     Q_OBJECT
 
 public:
-    explicit EmuThread(Frontend::GraphicsContext& context);
+    explicit EmuThread(Core::System& system_, Frontend::GraphicsContext& context);
     ~EmuThread() override;
 
     /**
@@ -80,6 +84,7 @@ private:
     std::mutex running_mutex;
     std::condition_variable running_cv;
 
+    Core::System& system;
     Frontend::GraphicsContext& core_context;
 
 signals:

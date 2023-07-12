@@ -151,7 +151,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     Camera::RegisterFactory("ndk", std::move(ndk_factory));
 
     // Register frontend applets
-    Frontend::RegisterDefaultApplets();
+    Frontend::RegisterDefaultApplets(system);
     system.RegisterMiiSelector(std::make_shared<MiiSelector::AndroidMiiSelector>());
     system.RegisterSoftwareKeyboard(std::make_shared<SoftwareKeyboard::AndroidKeyboard>());
 

@@ -9,9 +9,13 @@
 
 struct SDL_Window;
 
+namespace Core {
+class System;
+}
+
 class EmuWindow_SDL2_GL : public EmuWindow_SDL2 {
 public:
-    explicit EmuWindow_SDL2_GL(bool fullscreen, bool is_secondary);
+    explicit EmuWindow_SDL2_GL(Core::System& system_, bool fullscreen, bool is_secondary);
     ~EmuWindow_SDL2_GL();
 
     void Present() override;
