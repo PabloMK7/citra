@@ -27,7 +27,8 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
                                    Core::System& system_)
     : QDialog(parent), ui(std::make_unique<Ui::ConfigurePerGame>()),
       filename{file_name.toStdString()}, title_id{title_id_}, system{system_} {
-    const auto config_file_name = title_id == 0 ? filename : fmt::format("{:016X}", title_id);
+    const auto config_file_name = title_id == 0 ? std::string(FileUtil::GetFilename(filename))
+                                                : fmt::format("{:016X}", title_id);
     game_config = std::make_unique<Config>(config_file_name, Config::ConfigType::PerGameConfig);
 
     audio_tab = std::make_unique<ConfigureAudio>(this);

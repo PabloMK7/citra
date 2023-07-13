@@ -1171,20 +1171,18 @@ void GMainWindow::BootGame(const QString& filename) {
         movie.PrepareForPlayback(movie_playback_path.toStdString());
     }
 
-    u64 title_id{0};
     const std::string path = filename.toStdString();
     const auto loader = Loader::GetLoader(path);
 
-    if (loader && loader->ReadProgramId(title_id) == Loader::ResultStatus::Success) {
-        // Load per game settings
-        const std::string name{FileUtil::GetFilename(filename.toStdString())};
-        const std::string config_file_name =
-            title_id == 0 ? name : fmt::format("{:016X}", title_id);
-        Config per_game_config(config_file_name, Config::ConfigType::PerGameConfig);
-        system.ApplySettings();
+    u64 title_id{0};
+    loader->ReadProgramId(title_id);
 
-        LOG_INFO(Frontend, "Using per game config file for title id {}", config_file_name);
-    }
+    // Load per game settings
+    const std::string name{FileUtil::GetFilename(filename.toStdString())};
+    const std::string config_file_name = title_id == 0 ? name : fmt::format("{:016X}", title_id);
+    LOG_INFO(Frontend, "Loading per game config file for title {}", config_file_name);
+    Config per_game_config(config_file_name, Config::ConfigType::PerGameConfig);
+    system.ApplySettings();
 
     Settings::LogSettings();
 
