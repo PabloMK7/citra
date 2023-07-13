@@ -9,7 +9,7 @@
 #include "core/rpc/packet.h"
 #include "core/rpc/udp_server.h"
 
-namespace RPC {
+namespace Core::RPC {
 
 class UDPServer::Impl {
 public:
@@ -93,4 +93,4 @@ UDPServer::UDPServer(std::function<void(std::unique_ptr<Packet>)> new_request_ca
 
 UDPServer::~UDPServer() = default;
 
-} // namespace RPC
+} // namespace Core::RPC

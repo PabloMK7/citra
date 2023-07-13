@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace RPC {
+namespace Core::RPC {
 
 class RPCServer;
 class UDPServer;
@@ -14,10 +14,9 @@ class Packet;
 
 class Server {
 public:
-    Server(RPCServer& rpc_server);
+    explicit Server(RPCServer& rpc_server);
     ~Server();
-    void Start();
-    void Stop();
+
     void NewRequestCallback(std::unique_ptr<Packet> new_request);
 
 private:
@@ -25,4 +24,4 @@ private:
     std::unique_ptr<UDPServer> udp_server;
 };
 
-} // namespace RPC
+} // namespace Core::RPC

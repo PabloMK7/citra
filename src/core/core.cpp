@@ -416,7 +416,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
 
-    rpc_server = std::make_unique<RPC::RPCServer>();
+    rpc_server = std::make_unique<RPC::RPCServer>(*this);
 
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);

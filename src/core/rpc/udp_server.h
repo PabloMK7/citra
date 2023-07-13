@@ -7,7 +7,7 @@
 #include <functional>
 #include <memory>
 
-namespace RPC {
+namespace Core::RPC {
 
 class Packet;
 
@@ -21,4 +21,4 @@ private:
     std::unique_ptr<Impl> impl;
 };
 
-} // namespace RPC
+} // namespace Core::RPC

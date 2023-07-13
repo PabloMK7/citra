@@ -32,7 +32,7 @@ namespace AudioCore {
 class DspInterface;
 }
 
-namespace RPC {
+namespace Core::RPC {
 class RPCServer;
 }
 
