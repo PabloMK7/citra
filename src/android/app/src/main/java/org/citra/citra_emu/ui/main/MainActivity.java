@@ -1,7 +1,10 @@
 package org.citra.citra_emu.ui.main;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.splashscreen.SplashScreen;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.Collections;
@@ -124,6 +128,9 @@ public final class MainActivity extends AppCompatActivity implements MainView {
             );
         });
 
+    private final ActivityResultLauncher<String> requestNotificationPermissionLauncher =
+        registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> { });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
@@ -165,6 +172,12 @@ public final class MainActivity extends AppCompatActivity implements MainView {
         EmulationActivity.tryDismissRunningNotification(this);
 
         setInsets();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
 
     @Override
