@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <functional>
+#include "core/core.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
 #include "core/rpc/server.h"
@@ -10,7 +10,7 @@
 
 namespace Core::RPC {
 
-Server::Server(RPCServer& rpc_server) : rpc_server(rpc_server) {
+Server::Server(Core::System& system_) : rpc_server{system_} {
     const auto callback = [this](std::unique_ptr<Packet> new_request) {
         NewRequestCallback(std::move(new_request));
     };

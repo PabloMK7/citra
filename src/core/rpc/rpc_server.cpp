@@ -10,7 +10,7 @@
 
 namespace Core::RPC {
 
-RPCServer::RPCServer(Core::System& system_) : system{system_}, server{*this} {
+RPCServer::RPCServer(Core::System& system_) : system{system_} {
     LOG_INFO(RPC_Server, "Starting RPC server.");
     request_handler_thread =
         std::jthread([this](std::stop_token stop_token) { HandleRequestsLoop(stop_token); });

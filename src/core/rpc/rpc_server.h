@@ -9,7 +9,6 @@
 #include <span>
 #include "common/polyfill_thread.h"
 #include "common/threadsafe_queue.h"
-#include "core/rpc/server.h"
 
 namespace Core {
 class System;
@@ -36,7 +35,6 @@ private:
 
 private:
     Core::System& system;
-    Server server;
     Common::SPSCQueue<std::unique_ptr<Packet>, true> request_queue;
     std::jthread request_handler_thread;
 };

@@ -47,7 +47,7 @@
 #include "core/hw/lcd.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
-#include "core/rpc/rpc_server.h"
+#include "core/rpc/server.h"
 #include "network/network.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/renderer_base.h"
@@ -416,7 +416,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
 
-    rpc_server = std::make_unique<RPC::RPCServer>(*this);
+    rpc_server = std::make_unique<RPC::Server>(*this);
 
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
