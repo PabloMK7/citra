@@ -13,5 +13,5 @@ struct ConversionConfiguration;
 } // namespace Service::Y2R
 
 namespace HW::Y2R {
-void PerformConversion(Memory::MemorySystem& memory, Service::Y2R::ConversionConfiguration& cvt);
+void PerformConversion(Memory::MemorySystem& memory, Service::Y2R::ConversionConfiguration cvt);
 } // namespace HW::Y2R

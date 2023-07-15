@@ -260,7 +260,7 @@ static void WriteTileToOutput(u32* output, const ImageTile& tile, int height, in
  * Hardware behaves strangely (doesn't fire the completion interrupt, for example) in these cases,
  * so they are believed to be invalid configurations anyway.
  */
-void PerformConversion(Memory::MemorySystem& memory, ConversionConfiguration& cvt) {
+void PerformConversion(Memory::MemorySystem& memory, ConversionConfiguration cvt) {
     ASSERT(cvt.input_line_width % 8 == 0);
     ASSERT(cvt.block_alignment != BlockAlignment::Block8x8 || cvt.input_lines % 8 == 0);
     // Tiles per row
