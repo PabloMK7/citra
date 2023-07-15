@@ -14,8 +14,8 @@ QTM_C::QTM_C() : ServiceFramework("qtm:c", 2) {
     static const FunctionInfo functions[] = {
         // qtm calibration commands
         // clang-format off
-        {IPC::MakeHeader(0x0001, 0, 0), nullptr, "InitializeHardwareCheck"},
-        {IPC::MakeHeader(0x0005, 1, 0), nullptr, "SetIrLedCheck"},
+        {0x0001, nullptr, "InitializeHardwareCheck"},
+        {0x0005, nullptr, "SetIrLedCheck"},
         // clang-format on
     };
 

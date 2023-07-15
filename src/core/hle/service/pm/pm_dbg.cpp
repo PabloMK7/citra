@@ -13,9 +13,9 @@ namespace Service::PM {
 PM_DBG::PM_DBG() : ServiceFramework("pm:dbg", 3) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 5, 0), nullptr, "LaunchAppDebug"},
-        {IPC::MakeHeader(0x0002, 5, 0), nullptr, "LaunchApp"},
-        {IPC::MakeHeader(0x0003, 0, 0), nullptr, "RunQueuedProcess"},
+        {0x0001, nullptr, "LaunchAppDebug"},
+        {0x0002, nullptr, "LaunchApp"},
+        {0x0003, nullptr, "RunQueuedProcess"},
         // clang-format on
     };
 

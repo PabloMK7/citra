@@ -40,7 +40,7 @@ constexpr std::array<u8, 10> KeyTypes{{
 }};
 
 void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x4, 8, 4);
+    IPC::RequestParser rp(ctx);
     auto src_size = rp.Pop<u32>();
     [[maybe_unused]] const auto dest_size = rp.Pop<u32>();
 
@@ -149,22 +149,22 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
 PS_PS::PS_PS() : ServiceFramework("ps:ps", DefaultMaxSessions) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 9, 4), nullptr, "SignRsaSha256"},
-        {IPC::MakeHeader(0x0002, 9, 4), nullptr, "VerifyRsaSha256"},
-        {IPC::MakeHeader(0x0004, 8, 4), &PS_PS::EncryptDecryptAes, "EncryptDecryptAes"},
-        {IPC::MakeHeader(0x0005, 10, 4), nullptr, "EncryptSignDecryptVerifyAesCcm"},
-        {IPC::MakeHeader(0x0006, 1, 0), nullptr, "GetRomId"},
-        {IPC::MakeHeader(0x0007, 1, 0), nullptr, "GetRomId2"},
-        {IPC::MakeHeader(0x0008, 1, 0), nullptr, "GetRomMakerCode"},
-        {IPC::MakeHeader(0x0009, 0, 0), nullptr, "GetCTRCardAutoStartupBit"},
-        {IPC::MakeHeader(0x000A, 0, 0), nullptr, "GetLocalFriendCodeSeed"},
-        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "GetDeviceId"},
-        {IPC::MakeHeader(0x000C, 0, 0), nullptr, "SeedRNG"},
-        {IPC::MakeHeader(0x000D, 1, 2), nullptr, "GenerateRandomBytes"},
-        {IPC::MakeHeader(0x000E, 2, 2), nullptr, "InterfaceForPXI_0x04010084"},
-        {IPC::MakeHeader(0x000F, 2, 2), nullptr, "InterfaceForPXI_0x04020082"},
-        {IPC::MakeHeader(0x0010, 1, 2), nullptr, "InterfaceForPXI_0x04030044"},
-        {IPC::MakeHeader(0x0011, 1, 2), nullptr, "InterfaceForPXI_0x04040044"},
+        {0x0001, nullptr, "SignRsaSha256"},
+        {0x0002, nullptr, "VerifyRsaSha256"},
+        {0x0004, &PS_PS::EncryptDecryptAes, "EncryptDecryptAes"},
+        {0x0005, nullptr, "EncryptSignDecryptVerifyAesCcm"},
+        {0x0006, nullptr, "GetRomId"},
+        {0x0007, nullptr, "GetRomId2"},
+        {0x0008, nullptr, "GetRomMakerCode"},
+        {0x0009, nullptr, "GetCTRCardAutoStartupBit"},
+        {0x000A, nullptr, "GetLocalFriendCodeSeed"},
+        {0x000B, nullptr, "GetDeviceId"},
+        {0x000C, nullptr, "SeedRNG"},
+        {0x000D, nullptr, "GenerateRandomBytes"},
+        {0x000E, nullptr, "InterfaceForPXI_0x04010084"},
+        {0x000F, nullptr, "InterfaceForPXI_0x04020082"},
+        {0x0010, nullptr, "InterfaceForPXI_0x04030044"},
+        {0x0011, nullptr, "InterfaceForPXI_0x04040044"},
         // clang-format on
     };
 

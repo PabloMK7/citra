@@ -100,7 +100,7 @@ void Recorder::SetRequestInfo(const std::shared_ptr<Kernel::Thread>& client_thre
 
         record.function_name = std::dynamic_pointer_cast<Service::ServiceFrameworkBase>(
                                    client_session->parent->port->GetServerPort()->hle_handler)
-                                   ->GetFunctionName(record.untranslated_request_cmdbuf[0]);
+                                   ->GetFunctionName({record.untranslated_request_cmdbuf[0]});
     }
     client_session_map.erase(thread_id);
 

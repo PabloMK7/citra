@@ -10,19 +10,19 @@ namespace Service::AM {
 AM_APP::AM_APP(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:app", 5) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x1001, 3, 0), &AM_APP::GetDLCContentInfoCount, "GetDLCContentInfoCount"},
-        {IPC::MakeHeader(0x1002, 4, 4), &AM_APP::FindDLCContentInfos, "FindDLCContentInfos"},
-        {IPC::MakeHeader(0x1003, 5, 2), &AM_APP::ListDLCContentInfos, "ListDLCContentInfos"},
-        {IPC::MakeHeader(0x1004, 4, 2), &AM_APP::DeleteContents, "DeleteContents"},
-        {IPC::MakeHeader(0x1005, 2, 4), &AM_APP::GetDLCTitleInfos, "GetDLCTitleInfos"},
-        {IPC::MakeHeader(0x1006, 2, 0), nullptr, "GetNumDataTitleTickets"},
-        {IPC::MakeHeader(0x1007, 4, 2), &AM_APP::ListDataTitleTicketInfos, "ListDataTitleTicketInfos"},
-        {IPC::MakeHeader(0x1008, 7, 2), nullptr, "GetItemRights"},
-        {IPC::MakeHeader(0x1009, 3, 0), nullptr, "IsDataTitleInUse"},
-        {IPC::MakeHeader(0x100A, 0, 0), nullptr, "IsExternalTitleDatabaseInitialized"},
-        {IPC::MakeHeader(0x100B, 3, 0), nullptr, "GetNumExistingContentInfos"},
-        {IPC::MakeHeader(0x100C, 5, 2), nullptr, "ListExistingContentInfos"},
-        {IPC::MakeHeader(0x100D, 2, 4), &AM_APP::GetPatchTitleInfos, "GetPatchTitleInfos"},
+        {0x1001, &AM_APP::GetDLCContentInfoCount, "GetDLCContentInfoCount"},
+        {0x1002, &AM_APP::FindDLCContentInfos, "FindDLCContentInfos"},
+        {0x1003, &AM_APP::ListDLCContentInfos, "ListDLCContentInfos"},
+        {0x1004, &AM_APP::DeleteContents, "DeleteContents"},
+        {0x1005, &AM_APP::GetDLCTitleInfos, "GetDLCTitleInfos"},
+        {0x1006, nullptr, "GetNumDataTitleTickets"},
+        {0x1007, &AM_APP::ListDataTitleTicketInfos, "ListDataTitleTicketInfos"},
+        {0x1008, nullptr, "GetItemRights"},
+        {0x1009, nullptr, "IsDataTitleInUse"},
+        {0x100A, nullptr, "IsExternalTitleDatabaseInitialized"},
+        {0x100B, nullptr, "GetNumExistingContentInfos"},
+        {0x100C, nullptr, "ListExistingContentInfos"},
+        {0x100D, &AM_APP::GetPatchTitleInfos, "GetPatchTitleInfos"},
         // clang-format on
     };
     RegisterHandlers(functions);

@@ -24,7 +24,7 @@ enum class DspPipe;
 namespace Service::DSP {
 
 void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x01, 1, 0);
+    IPC::RequestParser rp(ctx);
     const u32 register_number = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -35,7 +35,7 @@ void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::RecvDataIsReady(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x02, 1, 0);
+    IPC::RequestParser rp(ctx);
     const u32 register_number = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -46,7 +46,7 @@ void DSP_DSP::RecvDataIsReady(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x07, 1, 0);
+    IPC::RequestParser rp(ctx);
     const u16 semaphore_value = rp.Pop<u16>();
 
     system.DSP().SetSemaphore(semaphore_value);
@@ -58,7 +58,7 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0C, 1, 0);
+    IPC::RequestParser rp(ctx);
     const u32 address = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -72,7 +72,7 @@ void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0D, 2, 2);
+    IPC::RequestParser rp(ctx);
     const u32 channel = rp.Pop<u32>();
     const u32 size = rp.Pop<u32>();
     auto buffer = rp.PopStaticBuffer();
@@ -110,7 +110,7 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0E, 3, 0);
+    IPC::RequestParser rp(ctx);
     const u32 channel = rp.Pop<u32>();
     const u32 peer = rp.Pop<u32>();
     const u16 size = rp.Pop<u16>();
@@ -133,7 +133,7 @@ void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::GetPipeReadableSize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0F, 2, 0);
+    IPC::RequestParser rp(ctx);
     const u32 channel = rp.Pop<u32>();
     const u32 peer = rp.Pop<u32>();
 
@@ -149,7 +149,7 @@ void DSP_DSP::GetPipeReadableSize(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x10, 3, 0);
+    IPC::RequestParser rp(ctx);
     const u32 channel = rp.Pop<u32>();
     const u32 peer = rp.Pop<u32>();
     const u16 size = rp.Pop<u16>();
@@ -172,7 +172,7 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x11, 3, 2);
+    IPC::RequestParser rp(ctx);
     const u32 size = rp.Pop<u32>();
     const u32 prog_mask = rp.Pop<u32>();
     const u32 data_mask = rp.Pop<u32>();
@@ -193,7 +193,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x12, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     system.DSP().UnloadComponent();
 
@@ -204,7 +204,7 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x13, 2, 2);
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const VAddr address = rp.Pop<u32>();
     [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
@@ -217,7 +217,7 @@ void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x14, 2, 2);
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const VAddr address = rp.Pop<u32>();
     [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto process = rp.PopObject<Kernel::Process>();
@@ -230,7 +230,7 @@ void DSP_DSP::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x15, 2, 2);
+    IPC::RequestParser rp(ctx);
     const u32 interrupt = rp.Pop<u32>();
     const u32 channel = rp.Pop<u32>();
     auto event = rp.PopObject<Kernel::Event>();
@@ -265,7 +265,7 @@ void DSP_DSP::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x16, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
@@ -275,7 +275,7 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x17, 1, 0);
+    IPC::RequestParser rp(ctx);
     preset_semaphore = rp.Pop<u16>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -285,7 +285,7 @@ void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1F, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -295,7 +295,7 @@ void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
 }
 
 void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x20, 1, 0);
+    IPC::RequestParser rp(ctx);
     const u8 force = rp.Pop<u8>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -347,39 +347,39 @@ DSP_DSP::DSP_DSP(Core::System& system)
     : ServiceFramework("dsp::DSP", DefaultMaxSessions), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 1, 0), &DSP_DSP::RecvData, "RecvData"},
-        {IPC::MakeHeader(0x0002, 1, 0), &DSP_DSP::RecvDataIsReady, "RecvDataIsReady"},
-        {IPC::MakeHeader(0x0003, 2, 0), nullptr, "SendData"},
-        {IPC::MakeHeader(0x0004, 1, 0), nullptr, "SendDataIsEmpty"},
-        {IPC::MakeHeader(0x0005, 3, 2), nullptr, "SendFifoEx"},
-        {IPC::MakeHeader(0x0006, 3, 0), nullptr, "RecvFifoEx"},
-        {IPC::MakeHeader(0x0007, 1, 0), &DSP_DSP::SetSemaphore, "SetSemaphore"},
-        {IPC::MakeHeader(0x0008, 0, 0), nullptr, "GetSemaphore"},
-        {IPC::MakeHeader(0x0009, 1, 0), nullptr, "ClearSemaphore"},
-        {IPC::MakeHeader(0x000A, 1, 0), nullptr, "MaskSemaphore"},
-        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "CheckSemaphoreRequest"},
-        {IPC::MakeHeader(0x000C, 1, 0), &DSP_DSP::ConvertProcessAddressFromDspDram, "ConvertProcessAddressFromDspDram"},
-        {IPC::MakeHeader(0x000D, 2, 2), &DSP_DSP::WriteProcessPipe, "WriteProcessPipe"},
-        {IPC::MakeHeader(0x000E, 3, 0), &DSP_DSP::ReadPipe, "ReadPipe"},
-        {IPC::MakeHeader(0x000F, 2, 0), &DSP_DSP::GetPipeReadableSize, "GetPipeReadableSize"},
-        {IPC::MakeHeader(0x0010, 3, 0), &DSP_DSP::ReadPipeIfPossible, "ReadPipeIfPossible"},
-        {IPC::MakeHeader(0x0011, 3, 2), &DSP_DSP::LoadComponent, "LoadComponent"},
-        {IPC::MakeHeader(0x0012, 0, 0), &DSP_DSP::UnloadComponent, "UnloadComponent"},
-        {IPC::MakeHeader(0x0013, 2, 2), &DSP_DSP::FlushDataCache, "FlushDataCache"},
-        {IPC::MakeHeader(0x0014, 2, 2), &DSP_DSP::InvalidateDataCache, "InvalidateDCache"},
-        {IPC::MakeHeader(0x0015, 2, 2), &DSP_DSP::RegisterInterruptEvents, "RegisterInterruptEvents"},
-        {IPC::MakeHeader(0x0016, 0, 0), &DSP_DSP::GetSemaphoreEventHandle, "GetSemaphoreEventHandle"},
-        {IPC::MakeHeader(0x0017, 1, 0), &DSP_DSP::SetSemaphoreMask, "SetSemaphoreMask"},
-        {IPC::MakeHeader(0x0018, 1, 0), nullptr, "GetPhysicalAddress"},
-        {IPC::MakeHeader(0x0019, 1, 0), nullptr, "GetVirtualAddress"},
-        {IPC::MakeHeader(0x001A, 1, 2), nullptr, "SetIirFilterI2S1_cmd1"},
-        {IPC::MakeHeader(0x001B, 1, 2), nullptr, "SetIirFilterI2S1_cmd2"},
-        {IPC::MakeHeader(0x001C, 2, 2), nullptr, "SetIirFilterEQ"},
-        {IPC::MakeHeader(0x001D, 3, 0), nullptr, "ReadMultiEx_SPI2"},
-        {IPC::MakeHeader(0x001E, 3, 2), nullptr, "WriteMultiEx_SPI2"},
-        {IPC::MakeHeader(0x001F, 0, 0), &DSP_DSP::GetHeadphoneStatus, "GetHeadphoneStatus"},
-        {IPC::MakeHeader(0x0020, 1, 0), &DSP_DSP::ForceHeadphoneOut, "ForceHeadphoneOut"},
-        {IPC::MakeHeader(0x0021, 0, 0), nullptr, "GetIsDspOccupied"},
+        {0x0001, &DSP_DSP::RecvData, "RecvData"},
+        {0x0002, &DSP_DSP::RecvDataIsReady, "RecvDataIsReady"},
+        {0x0003, nullptr, "SendData"},
+        {0x0004, nullptr, "SendDataIsEmpty"},
+        {0x0005, nullptr, "SendFifoEx"},
+        {0x0006, nullptr, "RecvFifoEx"},
+        {0x0007, &DSP_DSP::SetSemaphore, "SetSemaphore"},
+        {0x0008, nullptr, "GetSemaphore"},
+        {0x0009, nullptr, "ClearSemaphore"},
+        {0x000A, nullptr, "MaskSemaphore"},
+        {0x000B, nullptr, "CheckSemaphoreRequest"},
+        {0x000C, &DSP_DSP::ConvertProcessAddressFromDspDram, "ConvertProcessAddressFromDspDram"},
+        {0x000D, &DSP_DSP::WriteProcessPipe, "WriteProcessPipe"},
+        {0x000E, &DSP_DSP::ReadPipe, "ReadPipe"},
+        {0x000F, &DSP_DSP::GetPipeReadableSize, "GetPipeReadableSize"},
+        {0x0010, &DSP_DSP::ReadPipeIfPossible, "ReadPipeIfPossible"},
+        {0x0011, &DSP_DSP::LoadComponent, "LoadComponent"},
+        {0x0012, &DSP_DSP::UnloadComponent, "UnloadComponent"},
+        {0x0013, &DSP_DSP::FlushDataCache, "FlushDataCache"},
+        {0x0014, &DSP_DSP::InvalidateDataCache, "InvalidateDCache"},
+        {0x0015, &DSP_DSP::RegisterInterruptEvents, "RegisterInterruptEvents"},
+        {0x0016, &DSP_DSP::GetSemaphoreEventHandle, "GetSemaphoreEventHandle"},
+        {0x0017, &DSP_DSP::SetSemaphoreMask, "SetSemaphoreMask"},
+        {0x0018, nullptr, "GetPhysicalAddress"},
+        {0x0019, nullptr, "GetVirtualAddress"},
+        {0x001A, nullptr, "SetIirFilterI2S1_cmd1"},
+        {0x001B, nullptr, "SetIirFilterI2S1_cmd2"},
+        {0x001C, nullptr, "SetIirFilterEQ"},
+        {0x001D, nullptr, "ReadMultiEx_SPI2"},
+        {0x001E, nullptr, "WriteMultiEx_SPI2"},
+        {0x001F, &DSP_DSP::GetHeadphoneStatus, "GetHeadphoneStatus"},
+        {0x0020, &DSP_DSP::ForceHeadphoneOut, "ForceHeadphoneOut"},
+        {0x0021, nullptr, "GetIsDspOccupied"},
         // clang-format on
     };
 

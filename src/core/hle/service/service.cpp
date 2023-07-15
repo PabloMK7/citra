@@ -143,7 +143,7 @@ void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* function
     handlers.reserve(handlers.size() + n);
     for (std::size_t i = 0; i < n; ++i) {
         // Usually this array is sorted by id already, so hint to insert at the end
-        handlers.emplace_hint(handlers.cend(), functions[i].expected_header, functions[i]);
+        handlers.emplace_hint(handlers.cend(), functions[i].command_id, functions[i]);
     }
 }
 
@@ -171,8 +171,7 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
 }
 
 void ServiceFrameworkBase::HandleSyncRequest(Kernel::HLERequestContext& context) {
-    u32 header_code = context.CommandBuffer()[0];
-    auto itr = handlers.find(header_code);
+    auto itr = handlers.find(context.CommandHeader().command_id.Value());
     const FunctionInfoBase* info = itr == handlers.end() ? nullptr : &itr->second;
     if (info == nullptr || info->handler_callback == nullptr) {
         context.ReportUnimplemented();
@@ -184,12 +183,13 @@ void ServiceFrameworkBase::HandleSyncRequest(Kernel::HLERequestContext& context)
     handler_invoker(this, info->handler_callback, context);
 }
 
-std::string ServiceFrameworkBase::GetFunctionName(u32 header) const {
-    if (!handlers.count(header)) {
+std::string ServiceFrameworkBase::GetFunctionName(IPC::Header header) const {
+    auto itr = handlers.find(header.command_id.Value());
+    if (itr == handlers.end()) {
         return "";
     }
 
-    return handlers.at(header).name;
+    return itr->second.name;
 }
 
 static bool AttemptLLE(const ServiceModuleInfo& service_module) {

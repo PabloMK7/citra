@@ -24,7 +24,7 @@ void Module::serialize(Archive& ar, const unsigned int) {
 SERIALIZE_IMPL(Module)
 
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x01, 1, 0);
+    IPC::RequestParser rp(ctx);
     const auto communication_mode = rp.PopEnum<CommunicationMode>();
 
     LOG_INFO(Service_NFC, "called, communication_mode={}", communication_mode);
@@ -58,7 +58,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Finalize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x02, 1, 0);
+    IPC::RequestParser rp(ctx);
     const auto communication_mode = rp.PopEnum<CommunicationMode>();
 
     LOG_INFO(Service_NFC, "called, communication_mode={}", communication_mode);
@@ -92,7 +92,7 @@ void Module::Interface::Finalize(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Connect(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x03, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 
@@ -109,7 +109,7 @@ void Module::Interface::Connect(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Disconnect(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x04, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 
@@ -126,7 +126,7 @@ void Module::Interface::Disconnect(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::StartDetection(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x05, 1, 0);
+    IPC::RequestParser rp(ctx);
     u16 in_val = rp.Pop<u16>();
 
     LOG_INFO(Service_NFC, "called, in_val={:04x}", in_val);
@@ -148,7 +148,7 @@ void Module::Interface::StartDetection(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::StopDetection(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x06, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -171,7 +171,7 @@ void Module::Interface::StopDetection(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Mount(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x07, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -195,7 +195,7 @@ void Module::Interface::Mount(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Unmount(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x08, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -215,7 +215,7 @@ void Module::Interface::Unmount(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Flush(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x09, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -237,7 +237,7 @@ void Module::Interface::Flush(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetActivateEvent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0B, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -254,7 +254,7 @@ void Module::Interface::GetActivateEvent(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetDeactivateEvent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0C, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -271,7 +271,7 @@ void Module::Interface::GetDeactivateEvent(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetStatus(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0D, 0, 0);
+    IPC::RequestParser rp(ctx);
     DeviceState state = DeviceState::NotInitialized;
 
     LOG_DEBUG(Service_NFC, "called");
@@ -288,7 +288,7 @@ void Module::Interface::GetStatus(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTargetConnectionStatus(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0F, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_DEBUG(Service_NFC, "called");
 
@@ -308,7 +308,7 @@ void Module::Interface::GetTargetConnectionStatus(Kernel::HLERequestContext& ctx
 }
 
 void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x10, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -330,7 +330,7 @@ void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x11, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -352,7 +352,7 @@ void Module::Interface::GetTagInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetConnectResult(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x12, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -361,7 +361,7 @@ void Module::Interface::GetConnectResult(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::OpenApplicationArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x13, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 access_id = rp.Pop<u32>();
 
     LOG_INFO(Service_NFC, "called, access_id={}", access_id);
@@ -381,7 +381,7 @@ void Module::Interface::OpenApplicationArea(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::CreateApplicationArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x14, 18, 2);
+    IPC::RequestParser rp(ctx);
     u32 access_id = rp.Pop<u32>();
     [[maybe_unused]] u32 size = rp.Pop<u32>();
     std::vector<u8> buffer = rp.PopStaticBuffer();
@@ -401,7 +401,7 @@ void Module::Interface::CreateApplicationArea(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::ReadApplicationArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x15, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -422,7 +422,7 @@ void Module::Interface::ReadApplicationArea(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::WriteApplicationArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x16, 12, 2);
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] u32 size = rp.Pop<u32>();
     std::vector<u8> tag_uuid_info = rp.PopStaticBuffer();
     std::vector<u8> buffer = rp.PopStaticBuffer();
@@ -442,7 +442,7 @@ void Module::Interface::WriteApplicationArea(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetNfpRegisterInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x17, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -463,7 +463,7 @@ void Module::Interface::GetNfpRegisterInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetNfpCommonInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x18, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -484,7 +484,7 @@ void Module::Interface::GetNfpCommonInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::InitializeCreateInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x19, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -503,7 +503,7 @@ void Module::Interface::InitializeCreateInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::MountRom(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1A, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -525,7 +525,7 @@ void Module::Interface::MountRom(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1B, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -546,7 +546,7 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::Format(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x401, 3, 2);
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] u32 unknown1 = rp.Pop<u32>();
     [[maybe_unused]] u32 unknown2 = rp.Pop<u32>();
     [[maybe_unused]] u32 unknown3 = rp.Pop<u32>();
@@ -560,7 +560,7 @@ void Module::Interface::Format(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetAdminInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x402, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -581,7 +581,7 @@ void Module::Interface::GetAdminInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetEmptyRegisterInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x403, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -597,7 +597,7 @@ void Module::Interface::GetEmptyRegisterInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::SetRegisterInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x404, 41, 0);
+    IPC::RequestParser rp(ctx);
     const auto register_info = rp.PopRaw<RegisterInfoPrivate>();
 
     LOG_INFO(Service_NFC, "called");
@@ -615,7 +615,7 @@ void Module::Interface::SetRegisterInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DeleteRegisterInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x405, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -632,7 +632,7 @@ void Module::Interface::DeleteRegisterInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DeleteApplicationArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x406, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_NFC, "called");
 
@@ -649,7 +649,7 @@ void Module::Interface::DeleteApplicationArea(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::ExistsApplicationArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x407, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

@@ -207,6 +207,11 @@ public:
         return cmd_buf.data();
     }
 
+    /// Returns the command header from the IPC command buffer.
+    IPC::Header CommandHeader() const {
+        return {cmd_buf[0]};
+    }
+
     /**
      * Returns the session through which this request was made. This can be used as a map key to
      * access per-client data on services.

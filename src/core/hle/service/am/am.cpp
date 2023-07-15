@@ -684,7 +684,7 @@ Module::Interface::Interface(std::shared_ptr<Module> am, const char* name, u32 m
 Module::Interface::~Interface() = default;
 
 void Module::Interface::GetNumPrograms(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0001, 1, 0); // 0x00010040
+    IPC::RequestParser rp(ctx);
     u32 media_type = rp.Pop<u8>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -693,7 +693,7 @@ void Module::Interface::GetNumPrograms(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1002, 4, 4); // 0x10020104
+    IPC::RequestParser rp(ctx);
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
@@ -758,7 +758,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1003, 5, 2); // 0x10030142
+    IPC::RequestParser rp(ctx);
 
     u32 content_count = rp.Pop<u32>();
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
@@ -811,7 +811,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DeleteContents(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1004, 4, 2); // 0x10040102
+    IPC::RequestParser rp(ctx);
     u8 media_type = rp.Pop<u8>();
     u64 title_id = rp.Pop<u64>();
     u32 content_count = rp.Pop<u32>();
@@ -825,7 +825,7 @@ void Module::Interface::DeleteContents(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0002, 2, 2); // 0x00020082
+    IPC::RequestParser rp(ctx);
 
     u32 count = rp.Pop<u32>();
     u8 media_type = rp.Pop<u8>();
@@ -879,7 +879,7 @@ ResultCode GetTitleInfoFromList(std::span<const u64> title_id_list,
 }
 
 void Module::Interface::GetProgramInfos(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0003, 2, 4); // 0x00030084
+    IPC::RequestParser rp(ctx);
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u32 title_count = rp.Pop<u32>();
@@ -898,7 +898,7 @@ void Module::Interface::GetProgramInfos(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0004, 3, 0);
+    IPC::RequestParser rp(ctx);
     auto media_type = rp.PopEnum<FS::MediaType>();
     u64 title_id = rp.Pop<u64>();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -926,7 +926,7 @@ void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0005, 3, 0);
+    IPC::RequestParser rp(ctx);
     FS::MediaType media_type = rp.PopEnum<FS::MediaType>();
     u64 title_id = rp.Pop<u64>();
     std::string path = GetTitleContentPath(media_type, title_id);
@@ -952,7 +952,7 @@ void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetDLCTitleInfos(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1005, 2, 4); // 0x10050084
+    IPC::RequestParser rp(ctx);
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u32 title_count = rp.Pop<u32>();
@@ -985,7 +985,7 @@ void Module::Interface::GetDLCTitleInfos(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x100D, 2, 4); // 0x100D0084
+    IPC::RequestParser rp(ctx);
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u32 title_count = rp.Pop<u32>();
@@ -1018,7 +1018,7 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::ListDataTitleTicketInfos(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1007, 4, 2); // 0x10070102
+    IPC::RequestParser rp(ctx);
     u32 ticket_count = rp.Pop<u32>();
     u64 title_id = rp.Pop<u64>();
     u32 start_index = rp.Pop<u32>();
@@ -1046,7 +1046,7 @@ void Module::Interface::ListDataTitleTicketInfos(Kernel::HLERequestContext& ctx)
 }
 
 void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1001, 3, 0); // 0x100100C0
+    IPC::RequestParser rp(ctx);
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
 
@@ -1076,7 +1076,7 @@ void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0007, 2, 0); // 0x00070080
+    IPC::RequestParser rp(ctx);
     u64 title_id = rp.Pop<u64>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1085,7 +1085,7 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0008, 0, 0); // 0x00080000
+    IPC::RequestParser rp(ctx);
 
     u32 ticket_count = 0;
     for (const auto& title_list : am->am_title_list) {
@@ -1099,7 +1099,7 @@ void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0009, 2, 2); // 0x00090082
+    IPC::RequestParser rp(ctx);
     u32 ticket_list_count = rp.Pop<u32>();
     u32 ticket_index = rp.Pop<u32>();
     auto& ticket_tids_out = rp.PopMappedBuffer();
@@ -1122,7 +1122,7 @@ void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::NeedsCleanup(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0013, 1, 0); // 0x00130040
+    IPC::RequestParser rp(ctx);
     const auto media_type = rp.Pop<u8>();
 
     LOG_DEBUG(Service_AM, "(STUBBED) media_type=0x{:02x}", media_type);
@@ -1133,7 +1133,7 @@ void Module::Interface::NeedsCleanup(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0019, 1, 0); // 0x190040
+    IPC::RequestParser rp(ctx);
     u8 media_type = rp.Pop<u8>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -1144,7 +1144,7 @@ void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& c
 }
 
 void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0025, 3, 0); // 0x2500C0
+    IPC::RequestParser rp(ctx);
     u64 tid = rp.Pop<u64>();
     u16 content_index = rp.Pop<u16>();
 
@@ -1161,7 +1161,7 @@ void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x002D, 3, 0); // 0x2D00C0
+    IPC::RequestParser rp(ctx);
     u64 tid = rp.Pop<u64>();
     u16 content_index = rp.Pop<u16>();
 
@@ -1177,7 +1177,7 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
 }
 
 void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0402, 1, 0); // 0x04020040
+    IPC::RequestParser rp(ctx);
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
 
     if (am->cia_installing) {
@@ -1203,7 +1203,7 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0403, 0, 0); // 0x04030000
+    IPC::RequestParser rp(ctx);
 
     if (am->cia_installing) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1230,7 +1230,7 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
 }
 
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0405, 0, 2); // 0x04050002
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
 
     am->ScanForAllTitles();
@@ -1241,7 +1241,7 @@ void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0406, 0, 2); // 0x04060002
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
 
     // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
@@ -1254,7 +1254,7 @@ void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext&
 }
 
 void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0407, 3, 2); // 0x040700C2
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     [[maybe_unused]] const u32 title_count = rp.Pop<u32>();
     [[maybe_unused]] const u8 database = rp.Pop<u8>();
@@ -1341,7 +1341,7 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
 }
 
 void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0408, 1, 2); // 0x04080042
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
@@ -1378,7 +1378,7 @@ void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetSystemMenuDataFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0409, 0, 4); // 0x04090004
+    IPC::RequestParser rp(ctx);
     auto cia = rp.PopObject<Kernel::ClientSession>();
     auto& output_buffer = rp.PopMappedBuffer();
 
@@ -1422,7 +1422,7 @@ void Module::Interface::GetSystemMenuDataFromCia(Kernel::HLERequestContext& ctx)
 }
 
 void Module::Interface::GetDependencyListFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x040A, 0, 2); // 0x040A0002
+    IPC::RequestParser rp(ctx);
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
     auto file_res = GetFileFromSession(cia);
@@ -1449,7 +1449,7 @@ void Module::Interface::GetDependencyListFromCia(Kernel::HLERequestContext& ctx)
 }
 
 void Module::Interface::GetTransferSizeFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x040B, 0, 2); // 0x040B0002
+    IPC::RequestParser rp(ctx);
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
     auto file_res = GetFileFromSession(cia);
@@ -1473,7 +1473,7 @@ void Module::Interface::GetTransferSizeFromCia(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetCoreVersionFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x040C, 0, 2); // 0x040C0002
+    IPC::RequestParser rp(ctx);
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
     auto file_res = GetFileFromSession(cia);
@@ -1497,7 +1497,7 @@ void Module::Interface::GetCoreVersionFromCia(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x040D, 1, 2); // 0x040D0042
+    IPC::RequestParser rp(ctx);
     [[maybe_unused]] const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
@@ -1525,7 +1525,7 @@ void Module::Interface::GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DeleteProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0410, 3, 0);
+    IPC::RequestParser rp(ctx);
     auto media_type = rp.PopEnum<FS::MediaType>();
     u64 title_id = rp.Pop<u64>();
     LOG_INFO(Service_AM, "Deleting title 0x{:016x}", title_id);
@@ -1545,7 +1545,7 @@ void Module::Interface::DeleteProgram(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetSystemUpdaterMutex(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x412, 0, 0); // 0x04120000
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
@@ -1553,7 +1553,7 @@ void Module::Interface::GetSystemUpdaterMutex(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetMetaSizeFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0413, 0, 2); // 0x04130002
+    IPC::RequestParser rp(ctx);
     auto cia = rp.PopObject<Kernel::ClientSession>();
 
     auto file_res = GetFileFromSession(cia);
@@ -1578,7 +1578,7 @@ void Module::Interface::GetMetaSizeFromCia(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0414, 1, 4); // 0x04140044
+    IPC::RequestParser rp(ctx);
 
     u32 output_size = rp.Pop<u32>();
     auto cia = rp.PopObject<Kernel::ClientSession>();

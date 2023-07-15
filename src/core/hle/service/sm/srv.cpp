@@ -48,7 +48,7 @@ constexpr int MAX_PENDING_NOTIFICATIONS = 16;
  *      1: ResultCode
  */
 void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1, 0, 2);
+    IPC::RequestParser rp(ctx);
 
     const auto pid_descriptor = rp.Pop<u32>();
     if (pid_descriptor != IPC::CallingPidDesc()) {
@@ -74,7 +74,7 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
  *      3: Handle to semaphore signaled on process notification
  */
 void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     notification_semaphore =
         system.Kernel().CreateSemaphore(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
@@ -139,7 +139,7 @@ private:
  *      3: Service handle
  */
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x5, 4, 0);
+    IPC::RequestParser rp(ctx);
     auto name_buf = rp.PopRaw<std::array<char, 8>>();
     std::size_t name_len = rp.Pop<u32>();
     u32 flags = rp.Pop<u32>();
@@ -202,7 +202,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
  *      1: ResultCode
  */
 void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 notification_id = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -220,7 +220,7 @@ void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
  *      1: ResultCode
  */
 void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xA, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 notification_id = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -239,7 +239,7 @@ void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
  *      1: ResultCode
  */
 void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xC, 2, 0);
+    IPC::RequestParser rp(ctx);
     u32 notification_id = rp.Pop<u32>();
     u8 flags = rp.Pop<u8>();
 
@@ -258,7 +258,7 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
 }
 
 void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x3, 4, 0);
+    IPC::RequestParser rp(ctx);
 
     auto name_buf = rp.PopRaw<std::array<char, 8>>();
     std::size_t name_len = rp.Pop<u32>();
@@ -289,20 +289,20 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
 SRV::SRV(Core::System& system) : ServiceFramework("srv:", 4), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 0, 2), &SRV::RegisterClient, "RegisterClient"},
-        {IPC::MakeHeader(0x0002, 0, 0), &SRV::EnableNotification, "EnableNotification"},
-        {IPC::MakeHeader(0x0003, 4, 0), &SRV::RegisterService, "RegisterService"},
-        {IPC::MakeHeader(0x0004, 3, 0), nullptr, "UnregisterService"},
-        {IPC::MakeHeader(0x0005, 4, 0), &SRV::GetServiceHandle, "GetServiceHandle"},
-        {IPC::MakeHeader(0x0006, 3, 2), nullptr, "RegisterPort"},
-        {IPC::MakeHeader(0x0007, 3, 0), nullptr, "UnregisterPort"},
-        {IPC::MakeHeader(0x0008, 4, 0), nullptr, "GetPort"},
-        {IPC::MakeHeader(0x0009, 1, 0), &SRV::Subscribe, "Subscribe"},
-        {IPC::MakeHeader(0x000A, 1, 0), &SRV::Unsubscribe, "Unsubscribe"},
-        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "ReceiveNotification"},
-        {IPC::MakeHeader(0x000C, 2, 0), &SRV::PublishToSubscriber, "PublishToSubscriber"},
-        {IPC::MakeHeader(0x000D, 1, 0), nullptr, "PublishAndGetSubscriber"},
-        {IPC::MakeHeader(0x000E, 3, 0), nullptr, "IsServiceRegistered"},
+        {0x0001, &SRV::RegisterClient, "RegisterClient"},
+        {0x0002, &SRV::EnableNotification, "EnableNotification"},
+        {0x0003, &SRV::RegisterService, "RegisterService"},
+        {0x0004, nullptr, "UnregisterService"},
+        {0x0005, &SRV::GetServiceHandle, "GetServiceHandle"},
+        {0x0006, nullptr, "RegisterPort"},
+        {0x0007, nullptr, "UnregisterPort"},
+        {0x0008, nullptr, "GetPort"},
+        {0x0009, &SRV::Subscribe, "Subscribe"},
+        {0x000A, &SRV::Unsubscribe, "Unsubscribe"},
+        {0x000B, nullptr, "ReceiveNotification"},
+        {0x000C, &SRV::PublishToSubscriber, "PublishToSubscriber"},
+        {0x000D, nullptr, "PublishAndGetSubscriber"},
+        {0x000E, nullptr, "IsServiceRegistered"},
         // clang-format on
     };
     RegisterHandlers(functions);

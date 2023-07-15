@@ -12,18 +12,18 @@ namespace Service::HID {
 Spvr::Spvr(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid:SPVR", 6) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 8, 0), nullptr, "CalibrateTouchScreen"},
-        {IPC::MakeHeader(0x0002, 0, 0), nullptr, "UpdateTouchConfig"},
-        {IPC::MakeHeader(0x000A, 0, 0), &Spvr::GetIPCHandles, "GetIPCHandles"},
-        {IPC::MakeHeader(0x000B, 0, 0), nullptr, "StartAnalogStickCalibration"},
-        {IPC::MakeHeader(0x000E, 0, 0), nullptr, "GetAnalogStickCalibrateParam"},
-        {IPC::MakeHeader(0x0011, 0, 0), &Spvr::EnableAccelerometer, "EnableAccelerometer"},
-        {IPC::MakeHeader(0x0012, 0, 0), &Spvr::DisableAccelerometer, "DisableAccelerometer"},
-        {IPC::MakeHeader(0x0013, 0, 0), &Spvr::EnableGyroscopeLow, "EnableGyroscopeLow"},
-        {IPC::MakeHeader(0x0014, 0, 0), &Spvr::DisableGyroscopeLow, "DisableGyroscopeLow"},
-        {IPC::MakeHeader(0x0015, 0, 0), &Spvr::GetGyroscopeLowRawToDpsCoefficient, "GetGyroscopeLowRawToDpsCoefficient"},
-        {IPC::MakeHeader(0x0016, 0, 0), &Spvr::GetGyroscopeLowCalibrateParam, "GetGyroscopeLowCalibrateParam"},
-        {IPC::MakeHeader(0x0017, 0, 0), &Spvr::GetSoundVolume, "GetSoundVolume"},
+        {0x0001, nullptr, "CalibrateTouchScreen"},
+        {0x0002, nullptr, "UpdateTouchConfig"},
+        {0x000A, &Spvr::GetIPCHandles, "GetIPCHandles"},
+        {0x000B, nullptr, "StartAnalogStickCalibration"},
+        {0x000E, nullptr, "GetAnalogStickCalibrateParam"},
+        {0x0011, &Spvr::EnableAccelerometer, "EnableAccelerometer"},
+        {0x0012, &Spvr::DisableAccelerometer, "DisableAccelerometer"},
+        {0x0013, &Spvr::EnableGyroscopeLow, "EnableGyroscopeLow"},
+        {0x0014, &Spvr::DisableGyroscopeLow, "DisableGyroscopeLow"},
+        {0x0015, &Spvr::GetGyroscopeLowRawToDpsCoefficient, "GetGyroscopeLowRawToDpsCoefficient"},
+        {0x0016, &Spvr::GetGyroscopeLowCalibrateParam, "GetGyroscopeLowCalibrateParam"},
+        {0x0017, &Spvr::GetSoundVolume, "GetSoundVolume"},
         // clang-format on
     };
     RegisterHandlers(functions);

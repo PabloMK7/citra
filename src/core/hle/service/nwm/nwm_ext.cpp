@@ -12,7 +12,7 @@ namespace Service::NWM {
 NWM_EXT::NWM_EXT() : ServiceFramework("nwm::EXT") {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0008, 1, 0), nullptr, "ControlWirelessEnabled"},
+        {0x0008, nullptr, "ControlWirelessEnabled"},
         // clang-format on
     };
     RegisterHandlers(functions);

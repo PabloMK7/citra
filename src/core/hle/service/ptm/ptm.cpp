@@ -27,7 +27,7 @@ namespace Service::PTM {
 static const GameCoin default_game_coin = {0x4F00, 42, 0, 0, 0, 2014, 12, 29};
 
 void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x5, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -37,7 +37,7 @@ void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x6, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -45,7 +45,7 @@ void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x7, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -55,7 +55,7 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x8, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -65,7 +65,7 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -75,7 +75,7 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xB, 3, 2);
+    IPC::RequestParser rp(ctx);
 
     u32 hours = rp.Pop<u32>();
     u64 start_time = rp.Pop<u64>();
@@ -98,7 +98,7 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xC, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -108,7 +108,7 @@ void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x80F, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -127,14 +127,14 @@ void CheckNew3DS(IPC::RequestBuilder& rb) {
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x40A, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     Service::PTM::CheckNew3DS(rb);
 }
 
 void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x401, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     auto& share_page = Core::System::GetInstance().Kernel().GetSharedPageHandler();
     const u64 console_time = share_page.GetSystemTimeSince2000();

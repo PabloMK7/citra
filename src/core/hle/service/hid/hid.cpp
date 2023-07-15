@@ -307,7 +307,7 @@ void Module::UpdateGyroscopeCallback(std::uintptr_t user_data, s64 cycles_late) 
 }
 
 void Module::Interface::GetIPCHandles(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0xA, 0, 0};
+    IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 7);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(hid->shared_mem, hid->event_pad_or_touch_1, hid->event_pad_or_touch_2,
@@ -315,7 +315,7 @@ void Module::Interface::GetIPCHandles(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x11, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     ++hid->enable_accelerometer_count;
 
@@ -332,7 +332,7 @@ void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x12, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     --hid->enable_accelerometer_count;
 
@@ -348,7 +348,7 @@ void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x13, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     ++hid->enable_gyroscope_count;
 
@@ -364,7 +364,7 @@ void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x14, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     --hid->enable_gyroscope_count;
 
@@ -380,7 +380,7 @@ void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x15, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -388,7 +388,7 @@ void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestCon
 }
 
 void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x16, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(6, 0);
     rb.Push(RESULT_SUCCESS);
@@ -405,7 +405,7 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
 }
 
 void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x17, 0, 0};
+    IPC::RequestParser rp(ctx);
 
     const u8 volume = static_cast<u8>(0x3F * Settings::values.volume.GetValue());
 

@@ -60,7 +60,7 @@ static bool VerifyBufferState(Kernel::Process& process, VAddr buffer_ptr, u32 si
 }
 
 void RO::Initialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x01, 3, 2);
+    IPC::RequestParser rp(ctx);
     VAddr crs_buffer_ptr = rp.Pop<u32>();
     u32 crs_size = rp.Pop<u32>();
     VAddr crs_address = rp.Pop<u32>();
@@ -143,7 +143,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x02, 2, 2);
+    IPC::RequestParser rp(ctx);
     VAddr crr_buffer_ptr = rp.Pop<u32>();
     u32 crr_size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
@@ -156,7 +156,7 @@ void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
 }
 
 void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x03, 1, 2);
+    IPC::RequestParser rp(ctx);
     u32 crr_buffer_ptr = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
@@ -167,7 +167,7 @@ void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
 }
 
 void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
-    IPC::RequestParser rp(ctx, link_on_load_bug_fix ? 0x09 : 0x04, 11, 2);
+    IPC::RequestParser rp(ctx);
     VAddr cro_buffer_ptr = rp.Pop<u32>();
     VAddr cro_address = rp.Pop<u32>();
     u32 cro_size = rp.Pop<u32>();
@@ -334,7 +334,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
 }
 
 void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x05, 3, 2);
+    IPC::RequestParser rp(ctx);
     VAddr cro_address = rp.Pop<u32>();
     u32 zero = rp.Pop<u32>();
     VAddr cro_buffer_ptr = rp.Pop<u32>();
@@ -404,7 +404,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
 }
 
 void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x06, 1, 2);
+    IPC::RequestParser rp(ctx);
     VAddr cro_address = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
@@ -444,7 +444,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 }
 
 void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x07, 1, 2);
+    IPC::RequestParser rp(ctx);
     VAddr cro_address = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
@@ -484,7 +484,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 }
 
 void RO::Shutdown(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x08, 1, 2);
+    IPC::RequestParser rp(ctx);
     VAddr crs_buffer_ptr = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
@@ -517,15 +517,15 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
 RO::RO(Core::System& system) : ServiceFramework("ldr:ro", 2), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 3, 2), &RO::Initialize, "Initialize"},
-        {IPC::MakeHeader(0x0002, 2, 2), &RO::LoadCRR, "LoadCRR"},
-        {IPC::MakeHeader(0x0003, 1, 2), &RO::UnloadCRR, "UnloadCRR"},
-        {IPC::MakeHeader(0x0004, 11, 2), &RO::LoadCRO<false>, "LoadCRO"},
-        {IPC::MakeHeader(0x0005, 3, 2), &RO::UnloadCRO, "UnloadCRO"},
-        {IPC::MakeHeader(0x0006, 1, 2), &RO::LinkCRO, "LinkCRO"},
-        {IPC::MakeHeader(0x0007, 1, 2), &RO::UnlinkCRO, "UnlinkCRO"},
-        {IPC::MakeHeader(0x0008, 1, 2), &RO::Shutdown, "Shutdown"},
-        {IPC::MakeHeader(0x0009, 11, 2), &RO::LoadCRO<true>, "LoadCRO_New"},
+        {0x0001, &RO::Initialize, "Initialize"},
+        {0x0002, &RO::LoadCRR, "LoadCRR"},
+        {0x0003, &RO::UnloadCRR, "UnloadCRR"},
+        {0x0004, &RO::LoadCRO<false>, "LoadCRO"},
+        {0x0005, &RO::UnloadCRO, "UnloadCRO"},
+        {0x0006, &RO::LinkCRO, "LinkCRO"},
+        {0x0007, &RO::UnlinkCRO, "UnlinkCRO"},
+        {0x0008, &RO::Shutdown, "Shutdown"},
+        {0x0009, &RO::LoadCRO<true>, "LoadCRO_New"},
         // clang-format on
     };
     RegisterHandlers(functions);

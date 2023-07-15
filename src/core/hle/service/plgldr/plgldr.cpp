@@ -47,19 +47,19 @@ PAddr PLG_LDR::plugin_fb_addr = 0;
 PLG_LDR::PLG_LDR() : ServiceFramework{"plg:ldr", 1} {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 0, 2), nullptr, "LoadPlugin"},
-        {IPC::MakeHeader(0x0002, 0, 0), &PLG_LDR::IsEnabled, "IsEnabled"},
-        {IPC::MakeHeader(0x0003, 1, 0), &PLG_LDR::SetEnabled, "SetEnabled"},
-        {IPC::MakeHeader(0x0004, 2, 4), &PLG_LDR::SetLoadSettings, "SetLoadSettings"},
-        {IPC::MakeHeader(0x0005, 1, 8), nullptr, "DisplayMenu"},
-        {IPC::MakeHeader(0x0006, 0, 4), nullptr, "DisplayMessage"},
-        {IPC::MakeHeader(0x0007, 1, 4), &PLG_LDR::DisplayErrorMessage, "DisplayErrorMessage"},
-        {IPC::MakeHeader(0x0008, 0, 0), &PLG_LDR::GetPLGLDRVersion, "GetPLGLDRVersion"},
-        {IPC::MakeHeader(0x0009, 0, 0), &PLG_LDR::GetArbiter, "GetArbiter"},
-        {IPC::MakeHeader(0x000A, 0, 2), &PLG_LDR::GetPluginPath, "GetPluginPath"},
-        {IPC::MakeHeader(0x000B, 1, 0), nullptr, "SetRosalinaMenuBlock"},
-        {IPC::MakeHeader(0x000C, 2, 4), nullptr, "SetSwapParam"},
-        {IPC::MakeHeader(0x000D, 1, 2), nullptr, "SetLoadExeParam"},
+        {0x0001, nullptr, "LoadPlugin"},
+        {0x0002, &PLG_LDR::IsEnabled, "IsEnabled"},
+        {0x0003, &PLG_LDR::SetEnabled, "SetEnabled"},
+        {0x0004, &PLG_LDR::SetLoadSettings, "SetLoadSettings"},
+        {0x0005, nullptr, "DisplayMenu"},
+        {0x0006, nullptr, "DisplayMessage"},
+        {0x0007, &PLG_LDR::DisplayErrorMessage, "DisplayErrorMessage"},
+        {0x0008, &PLG_LDR::GetPLGLDRVersion, "GetPLGLDRVersion"},
+        {0x0009, &PLG_LDR::GetArbiter, "GetArbiter"},
+        {0x000A, &PLG_LDR::GetPluginPath, "GetPluginPath"},
+        {0x000B, nullptr, "SetRosalinaMenuBlock"},
+        {0x000C, nullptr, "SetSwapParam"},
+        {0x000D, nullptr, "SetLoadExeParam"},
         // clang-format on
     };
     RegisterHandlers(functions);
@@ -156,7 +156,7 @@ void PLG_LDR::OnMemoryChanged(Kernel::Process& process, Kernel::KernelSystem& ke
 }
 
 void PLG_LDR::IsEnabled(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 2, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -164,7 +164,7 @@ void PLG_LDR::IsEnabled(Kernel::HLERequestContext& ctx) {
 }
 
 void PLG_LDR::SetEnabled(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 3, 1, 0);
+    IPC::RequestParser rp(ctx);
     bool enabled = rp.Pop<u32>() == 1;
 
     bool can_change = enabled == plgldr_context.is_enabled || allow_game_change;
@@ -177,7 +177,7 @@ void PLG_LDR::SetEnabled(Kernel::HLERequestContext& ctx) {
 }
 
 void PLG_LDR::SetLoadSettings(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 4, 2, 4);
+    IPC::RequestParser rp(ctx);
 
     plgldr_context.use_user_load_parameters = true;
     plgldr_context.user_load_parameters.no_flash = rp.Pop<u32>() == 1;
@@ -201,7 +201,7 @@ void PLG_LDR::SetLoadSettings(Kernel::HLERequestContext& ctx) {
 }
 
 void PLG_LDR::DisplayErrorMessage(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 7, 1, 4);
+    IPC::RequestParser rp(ctx);
     u32 error_code = rp.Pop<u32>();
     auto title = rp.PopMappedBuffer();
     auto desc = rp.PopMappedBuffer();
@@ -223,7 +223,7 @@ void PLG_LDR::DisplayErrorMessage(Kernel::HLERequestContext& ctx) {
 }
 
 void PLG_LDR::GetPLGLDRVersion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 8, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -231,7 +231,7 @@ void PLG_LDR::GetPLGLDRVersion(Kernel::HLERequestContext& ctx) {
 }
 
 void PLG_LDR::GetArbiter(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 9, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     // NOTE: It doesn't make sense to send an arbiter in HLE, as it's used to
@@ -242,7 +242,7 @@ void PLG_LDR::GetArbiter(Kernel::HLERequestContext& ctx) {
 }
 
 void PLG_LDR::GetPluginPath(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 10, 0, 2);
+    IPC::RequestParser rp(ctx);
     auto path = rp.PopMappedBuffer();
 
     // Same behaviour as strncpy

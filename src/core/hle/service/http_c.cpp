@@ -115,7 +115,7 @@ void Context::MakeRequest() {
 }
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1, 1, 4);
+    IPC::RequestParser rp(ctx);
     const u32 shmem_size = rp.Pop<u32>();
     u32 pid = rp.PopPID();
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
@@ -145,7 +145,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x8, 1, 2);
+    IPC::RequestParser rp(ctx);
     const Context::Handle context_handle = rp.Pop<u32>();
     u32 pid = rp.PopPID();
 
@@ -180,7 +180,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 1, 0);
+    IPC::RequestParser rp(ctx);
     const Context::Handle context_handle = rp.Pop<u32>();
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, context_id={}", context_handle);
@@ -233,7 +233,7 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xA, 1, 0);
+    IPC::RequestParser rp(ctx);
     const Context::Handle context_handle = rp.Pop<u32>();
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, context_id={}", context_handle);
@@ -286,7 +286,7 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2, 2, 2);
+    IPC::RequestParser rp(ctx);
     const u32 url_size = rp.Pop<u32>();
     RequestMethod method = rp.PopEnum<RequestMethod>();
     Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
@@ -359,7 +359,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x3, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     u32 context_handle = rp.Pop<u32>();
 
@@ -399,7 +399,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x11, 3, 4);
+    IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
     [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
     const u32 value_size = rp.Pop<u32>();
@@ -475,7 +475,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x12, 3, 4);
+    IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
     [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
     const u32 value_size = rp.Pop<u32>();
@@ -550,7 +550,7 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x29, 2, 0);
+    IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
     const u32 client_cert_handle = rp.Pop<u32>();
 
@@ -620,7 +620,7 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2a, 2, 0);
+    IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
     const u32 unk = rp.Pop<u32>();
 
@@ -637,7 +637,7 @@ void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x32, 2, 4);
+    IPC::RequestParser rp(ctx);
     u32 cert_size = rp.Pop<u32>();
     u32 key_size = rp.Pop<u32>();
     Kernel::MappedBuffer& cert_buffer = rp.PopMappedBuffer();
@@ -678,7 +678,7 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x33, 1, 0);
+    IPC::RequestParser rp(ctx);
     u8 cert_id = rp.Pop<u8>();
 
     LOG_DEBUG(Service_HTTP, "called, cert_id={} cert_handle={}", cert_id, client_certs_counter);
@@ -750,7 +750,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x34, 1, 0);
+    IPC::RequestParser rp(ctx);
     ClientCertContext::Handle cert_handle = rp.Pop<u32>();
 
     LOG_DEBUG(Service_HTTP, "called, cert_handle={}", cert_handle);
@@ -782,7 +782,7 @@ void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x39, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     shared_memory = nullptr;
 
@@ -870,62 +870,62 @@ void HTTP_C::DecryptClCertA() {
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 1, 4), &HTTP_C::Initialize, "Initialize"},
-        {IPC::MakeHeader(0x0002, 2, 2), &HTTP_C::CreateContext, "CreateContext"},
-        {IPC::MakeHeader(0x0003, 1, 0), &HTTP_C::CloseContext, "CloseContext"},
-        {IPC::MakeHeader(0x0004, 1, 0), nullptr, "CancelConnection"},
-        {IPC::MakeHeader(0x0005, 1, 0), nullptr, "GetRequestState"},
-        {IPC::MakeHeader(0x0006, 1, 0), nullptr, "GetDownloadSizeState"},
-        {IPC::MakeHeader(0x0007, 1, 0), nullptr, "GetRequestError"},
-        {IPC::MakeHeader(0x0008, 1, 2), &HTTP_C::InitializeConnectionSession, "InitializeConnectionSession"},
-        {IPC::MakeHeader(0x0009, 1, 0), &HTTP_C::BeginRequest, "BeginRequest"},
-        {IPC::MakeHeader(0x000A, 1, 0), &HTTP_C::BeginRequestAsync, "BeginRequestAsync"},
-        {IPC::MakeHeader(0x000B, 2, 2), nullptr, "ReceiveData"},
-        {IPC::MakeHeader(0x000C, 4, 2), nullptr, "ReceiveDataTimeout"},
-        {IPC::MakeHeader(0x000D, 5, 6), nullptr, "SetProxy"},
-        {IPC::MakeHeader(0x000E, 1, 0), nullptr, "SetProxyDefault"},
-        {IPC::MakeHeader(0x000F, 3, 4), nullptr, "SetBasicAuthorization"},
-        {IPC::MakeHeader(0x0010, 2, 0), nullptr, "SetSocketBufferSize"},
-        {IPC::MakeHeader(0x0011, 3, 4), &HTTP_C::AddRequestHeader, "AddRequestHeader"},
-        {IPC::MakeHeader(0x0012, 3, 4), &HTTP_C::AddPostDataAscii, "AddPostDataAscii"},
-        {IPC::MakeHeader(0x0013, 3, 4), nullptr, "AddPostDataBinary"},
-        {IPC::MakeHeader(0x0014, 2, 2), nullptr, "AddPostDataRaw"},
-        {IPC::MakeHeader(0x0015, 2, 0), nullptr, "SetPostDataType"},
-        {IPC::MakeHeader(0x0016, 3, 4), nullptr, "SendPostDataAscii"},
-        {IPC::MakeHeader(0x0017, 5, 4), nullptr, "SendPostDataAsciiTimeout"},
-        {IPC::MakeHeader(0x0018, 3, 4), nullptr, "SendPostDataBinary"},
-        {IPC::MakeHeader(0x0019, 5, 4), nullptr, "SendPostDataBinaryTimeout"},
-        {IPC::MakeHeader(0x001A, 2, 2), nullptr, "SendPostDataRaw"},
-        {IPC::MakeHeader(0x001B, 4, 2), nullptr, "SendPOSTDataRawTimeout"},
-        {IPC::MakeHeader(0x001C, 2, 0), nullptr, "SetPostDataEncoding"},
-        {IPC::MakeHeader(0x001D, 1, 0), nullptr, "NotifyFinishSendPostData"},
-        {IPC::MakeHeader(0x001E, 3, 4), nullptr, "GetResponseHeader"},
-        {IPC::MakeHeader(0x001F, 5, 4), nullptr, "GetResponseHeaderTimeout"},
-        {IPC::MakeHeader(0x0020, 2, 2), nullptr, "GetResponseData"},
-        {IPC::MakeHeader(0x0021, 4, 2), nullptr, "GetResponseDataTimeout"},
-        {IPC::MakeHeader(0x0022, 1, 0), nullptr, "GetResponseStatusCode"},
-        {IPC::MakeHeader(0x0023, 3, 0), nullptr, "GetResponseStatusCodeTimeout"},
-        {IPC::MakeHeader(0x0024, 2, 2), nullptr, "AddTrustedRootCA"},
-        {IPC::MakeHeader(0x0025, 2, 0), nullptr, "AddDefaultCert"},
-        {IPC::MakeHeader(0x0026, 2, 0), nullptr, "SelectRootCertChain"},
-        {IPC::MakeHeader(0x0027, 3, 4), nullptr, "SetClientCert"},
-        {IPC::MakeHeader(0x0029, 2, 0), &HTTP_C::SetClientCertContext, "SetClientCertContext"},
-        {IPC::MakeHeader(0x002A, 1, 0), &HTTP_C::GetSSLError, "GetSSLError"},
-        {IPC::MakeHeader(0x002B, 2, 0), nullptr, "SetSSLOpt"},
-        {IPC::MakeHeader(0x002C, 2, 0), nullptr, "SetSSLClearOpt"},
-        {IPC::MakeHeader(0x002D, 0, 0), nullptr, "CreateRootCertChain"},
-        {IPC::MakeHeader(0x002E, 1, 0), nullptr, "DestroyRootCertChain"},
-        {IPC::MakeHeader(0x002F, 2, 2), nullptr, "RootCertChainAddCert"},
-        {IPC::MakeHeader(0x0030, 2, 0), nullptr, "RootCertChainAddDefaultCert"},
-        {IPC::MakeHeader(0x0031, 2, 0), nullptr, "RootCertChainRemoveCert"},
-        {IPC::MakeHeader(0x0032, 2, 4), &HTTP_C::OpenClientCertContext, "OpenClientCertContext"},
-        {IPC::MakeHeader(0x0033, 1, 0), &HTTP_C::OpenDefaultClientCertContext, "OpenDefaultClientCertContext"},
-        {IPC::MakeHeader(0x0034, 1, 0), &HTTP_C::CloseClientCertContext, "CloseClientCertContext"},
-        {IPC::MakeHeader(0x0035, 6, 6), nullptr, "SetDefaultProxy"},
-        {IPC::MakeHeader(0x0036, 0, 0), nullptr, "ClearDNSCache"},
-        {IPC::MakeHeader(0x0037, 2, 0), nullptr, "SetKeepAlive"},
-        {IPC::MakeHeader(0x0038, 3, 0), nullptr, "SetPostDataTypeSize"},
-        {IPC::MakeHeader(0x0039, 0, 0), &HTTP_C::Finalize, "Finalize"},
+        {0x0001, &HTTP_C::Initialize, "Initialize"},
+        {0x0002, &HTTP_C::CreateContext, "CreateContext"},
+        {0x0003, &HTTP_C::CloseContext, "CloseContext"},
+        {0x0004, nullptr, "CancelConnection"},
+        {0x0005, nullptr, "GetRequestState"},
+        {0x0006, nullptr, "GetDownloadSizeState"},
+        {0x0007, nullptr, "GetRequestError"},
+        {0x0008, &HTTP_C::InitializeConnectionSession, "InitializeConnectionSession"},
+        {0x0009, &HTTP_C::BeginRequest, "BeginRequest"},
+        {0x000A, &HTTP_C::BeginRequestAsync, "BeginRequestAsync"},
+        {0x000B, nullptr, "ReceiveData"},
+        {0x000C, nullptr, "ReceiveDataTimeout"},
+        {0x000D, nullptr, "SetProxy"},
+        {0x000E, nullptr, "SetProxyDefault"},
+        {0x000F, nullptr, "SetBasicAuthorization"},
+        {0x0010, nullptr, "SetSocketBufferSize"},
+        {0x0011, &HTTP_C::AddRequestHeader, "AddRequestHeader"},
+        {0x0012, &HTTP_C::AddPostDataAscii, "AddPostDataAscii"},
+        {0x0013, nullptr, "AddPostDataBinary"},
+        {0x0014, nullptr, "AddPostDataRaw"},
+        {0x0015, nullptr, "SetPostDataType"},
+        {0x0016, nullptr, "SendPostDataAscii"},
+        {0x0017, nullptr, "SendPostDataAsciiTimeout"},
+        {0x0018, nullptr, "SendPostDataBinary"},
+        {0x0019, nullptr, "SendPostDataBinaryTimeout"},
+        {0x001A, nullptr, "SendPostDataRaw"},
+        {0x001B, nullptr, "SendPOSTDataRawTimeout"},
+        {0x001C, nullptr, "SetPostDataEncoding"},
+        {0x001D, nullptr, "NotifyFinishSendPostData"},
+        {0x001E, nullptr, "GetResponseHeader"},
+        {0x001F, nullptr, "GetResponseHeaderTimeout"},
+        {0x0020, nullptr, "GetResponseData"},
+        {0x0021, nullptr, "GetResponseDataTimeout"},
+        {0x0022, nullptr, "GetResponseStatusCode"},
+        {0x0023, nullptr, "GetResponseStatusCodeTimeout"},
+        {0x0024, nullptr, "AddTrustedRootCA"},
+        {0x0025, nullptr, "AddDefaultCert"},
+        {0x0026, nullptr, "SelectRootCertChain"},
+        {0x0027, nullptr, "SetClientCert"},
+        {0x0029, &HTTP_C::SetClientCertContext, "SetClientCertContext"},
+        {0x002A, &HTTP_C::GetSSLError, "GetSSLError"},
+        {0x002B, nullptr, "SetSSLOpt"},
+        {0x002C, nullptr, "SetSSLClearOpt"},
+        {0x002D, nullptr, "CreateRootCertChain"},
+        {0x002E, nullptr, "DestroyRootCertChain"},
+        {0x002F, nullptr, "RootCertChainAddCert"},
+        {0x0030, nullptr, "RootCertChainAddDefaultCert"},
+        {0x0031, nullptr, "RootCertChainRemoveCert"},
+        {0x0032, &HTTP_C::OpenClientCertContext, "OpenClientCertContext"},
+        {0x0033, &HTTP_C::OpenDefaultClientCertContext, "OpenDefaultClientCertContext"},
+        {0x0034, &HTTP_C::CloseClientCertContext, "CloseClientCertContext"},
+        {0x0035, nullptr, "SetDefaultProxy"},
+        {0x0036, nullptr, "ClearDNSCache"},
+        {0x0037, nullptr, "SetKeepAlive"},
+        {0x0038, nullptr, "SetPostDataTypeSize"},
+        {0x0039, &HTTP_C::Finalize, "Finalize"},
         // clang-format on
     };
     RegisterHandlers(functions);

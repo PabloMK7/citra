@@ -36,7 +36,7 @@ using Kernel::ServerSession;
 namespace Service::FS {
 
 void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0801, 0, 2);
+    IPC::RequestParser rp(ctx);
     u32 pid = rp.PopPID();
 
     ClientSlot* slot = GetSessionData(ctx.Session());
@@ -47,7 +47,7 @@ void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0802, 7, 2);
+    IPC::RequestParser rp(ctx);
     rp.Skip(1, false); // Transaction.
 
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -77,7 +77,7 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x803, 8, 4);
+    IPC::RequestParser rp(ctx);
     rp.Skip(1, false); // Transaction
 
     const auto archive_id = rp.PopEnum<ArchiveIdCode>();
@@ -129,7 +129,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x804, 5, 2);
+    IPC::RequestParser rp(ctx);
     rp.Skip(1, false); // TransactionId
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     const auto filename_type = rp.PopEnum<FileSys::LowPathType>();
@@ -147,7 +147,7 @@ void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x805, 9, 4);
+    IPC::RequestParser rp(ctx);
     rp.Skip(1, false); // TransactionId
 
     const auto src_archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -175,7 +175,7 @@ void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::DeleteDirectory(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x806, 5, 2);
+    IPC::RequestParser rp(ctx);
 
     rp.Skip(1, false); // TransactionId
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -194,7 +194,7 @@ void FS_USER::DeleteDirectory(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x807, 5, 2);
+    IPC::RequestParser rp(ctx);
 
     rp.Skip(1, false); // TransactionId
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -213,7 +213,7 @@ void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x808, 8, 2);
+    IPC::RequestParser rp(ctx);
 
     rp.Skip(1, false); // TransactionId
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -234,7 +234,7 @@ void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x809, 6, 2);
+    IPC::RequestParser rp(ctx);
     rp.Skip(1, false); // TransactionId
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
@@ -252,7 +252,7 @@ void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x80A, 9, 4);
+    IPC::RequestParser rp(ctx);
     rp.Skip(1, false); // TransactionId
     const auto src_archive_handle = rp.PopRaw<ArchiveHandle>();
     const auto src_dirname_type = rp.PopEnum<FileSys::LowPathType>();
@@ -279,7 +279,7 @@ void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x80B, 4, 2);
+    IPC::RequestParser rp(ctx);
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     const auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
     const auto dirname_size = rp.Pop<u32>();
@@ -308,7 +308,7 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x80C, 3, 2);
+    IPC::RequestParser rp(ctx);
     const auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
     const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
     const auto archivename_size = rp.Pop<u32>();
@@ -335,7 +335,7 @@ void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x80E, 2, 0);
+    IPC::RequestParser rp(ctx);
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -343,14 +343,14 @@ void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::IsSdmcDetected(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x817, 0, 0);
+    IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push(Settings::values.use_virtual_sd.GetValue());
 }
 
 void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x818, 0, 0);
+    IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     // If the SD isn't enabled, it can't be writeable...else, stubbed true
@@ -361,7 +361,7 @@ void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
 void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED)");
 
-    IPC::RequestParser rp(ctx, 0x84C, 9, 2);
+    IPC::RequestParser rp(ctx);
     const auto archive_id = rp.PopEnum<ArchiveIdCode>();
     const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
     const auto archivename_size = rp.Pop<u32>();
@@ -403,7 +403,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x80F, 6, 0);
+    IPC::RequestParser rp(ctx);
     const auto block_size = rp.Pop<u32>();
     const auto number_directories = rp.Pop<u32>();
     const auto number_files = rp.Pop<u32>();
@@ -426,7 +426,7 @@ void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x812, 2, 0);
+    IPC::RequestParser rp(ctx);
     const auto archive_handle = rp.PopRaw<ArchiveHandle>();
     ResultVal<u64> bytes_res = archives.GetFreeBytesInArchive(archive_handle);
 
@@ -440,7 +440,7 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x814, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_WARNING(Service_FS, "(STUBBED) called");
 
@@ -458,7 +458,7 @@ void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x815, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_WARNING(Service_FS, "(STUBBED) called");
 
@@ -476,7 +476,7 @@ void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Figure out the other parameters.
-    IPC::RequestParser rp(ctx, 0x0851, 9, 2);
+    IPC::RequestParser rp(ctx);
     MediaType media_type = static_cast<MediaType>(rp.Pop<u32>()); // the other bytes are unknown
     u32 save_low = rp.Pop<u32>();
     u32 save_high = rp.Pop<u32>();
@@ -509,7 +509,7 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x852, 4, 0);
+    IPC::RequestParser rp(ctx);
     MediaType media_type = static_cast<MediaType>(rp.Pop<u32>()); // the other bytes are unknown
     u32 save_low = rp.Pop<u32>();
     u32 save_high = rp.Pop<u32>();
@@ -524,7 +524,7 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x821, 0, 0);
+    IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
@@ -532,7 +532,7 @@ void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x857, 2, 0);
+    IPC::RequestParser rp(ctx);
     u32 savedata_high = rp.Pop<u32>();
     u32 savedata_low = rp.Pop<u32>();
 
@@ -541,7 +541,7 @@ void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CreateSystemSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x856, 9, 0);
+    IPC::RequestParser rp(ctx);
     u32 savedata_high = rp.Pop<u32>();
     u32 savedata_low = rp.Pop<u32>();
     u32 total_size = rp.Pop<u32>();
@@ -564,7 +564,7 @@ void FS_USER::CreateSystemSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x810, 8, 0);
+    IPC::RequestParser rp(ctx);
     u32 savedata_id = rp.Pop<u32>();
     u32 total_size = rp.Pop<u32>();
     u32 block_size = rp.Pop<u32>();
@@ -586,7 +586,7 @@ void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x861, 1, 2);
+    IPC::RequestParser rp(ctx);
     const u32 version = rp.Pop<u32>();
     u32 pid = rp.PopPID();
 
@@ -600,7 +600,7 @@ void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x862, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     priority = rp.Pop<u32>();
 
@@ -611,7 +611,7 @@ void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x863, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     if (priority == UINT32_MAX) {
         LOG_INFO(Service_FS, "priority was not set, priority=0x{:X}", priority);
@@ -625,7 +625,7 @@ void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x849, 1, 0);
+    IPC::RequestParser rp(ctx);
     auto media_type = rp.PopEnum<MediaType>();
 
     LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x{:08X}", media_type);
@@ -643,7 +643,7 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x845, 3, 2);
+    IPC::RequestParser rp(ctx);
     const auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
     const auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
     const auto archivename_size = rp.Pop<u32>();
@@ -671,7 +671,7 @@ void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x82F, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     u32 process_id = rp.Pop<u32>();
 
@@ -699,7 +699,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x830, 6, 2);
+    IPC::RequestParser rp(ctx);
     MediaType media_type = static_cast<MediaType>(rp.Pop<u8>());
     u32 save_low = rp.Pop<u32>();
     u32 save_high = rp.Pop<u32>();
@@ -730,7 +730,7 @@ void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x835, 2, 0);
+    IPC::RequestParser rp(ctx);
     MediaType media_type = static_cast<MediaType>(rp.Pop<u8>());
     u32 save_low = rp.Pop<u32>();
 
@@ -741,7 +741,7 @@ void FS_USER::ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x83A, 4, 0);
+    IPC::RequestParser rp(ctx);
     const MediaType media_type = static_cast<MediaType>(rp.Pop<u8>());
     const u64 title_id = rp.Pop<u64>();
     const auto type = rp.PopEnum<SpecialContentType>();
@@ -767,13 +767,14 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
-    IPC::RequestBuilder rb{ctx, 0x87D, 2, 0};
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(FileSys::GetSeedCount());
 }
 
 void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp{ctx, 0x87A, 6, 0};
+    IPC::RequestParser rp(ctx);
     u64 title_id{rp.Pop<u64>()};
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
     FileSys::AddSeed({title_id, seed, {}});
@@ -782,7 +783,7 @@ void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x865, 5, 0);
+    IPC::RequestParser rp(ctx);
     u64 value = rp.Pop<u64>();
     u32 secure_value_slot = rp.Pop<u32>();
     u32 unique_id = rp.Pop<u32>();
@@ -801,7 +802,7 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x866, 3, 0);
+    IPC::RequestParser rp(ctx);
 
     u32 secure_value_slot = rp.Pop<u32>();
     u32 unique_id = rp.Pop<u32>();
@@ -888,117 +889,117 @@ FS_USER::FS_USER(Core::System& system)
     : ServiceFramework("fs:USER", 30), system(system), archives(system.ArchiveManager()) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 3, 6), nullptr, "Dummy1"},
-        {IPC::MakeHeader(0x0401, 3, 4), nullptr, "Control"},
-        {IPC::MakeHeader(0x0801, 0, 2), &FS_USER::Initialize, "Initialize"},
-        {IPC::MakeHeader(0x0802, 7, 2), &FS_USER::OpenFile, "OpenFile"},
-        {IPC::MakeHeader(0x0803, 8, 4), &FS_USER::OpenFileDirectly, "OpenFileDirectly"},
-        {IPC::MakeHeader(0x0804, 5, 2), &FS_USER::DeleteFile, "DeleteFile"},
-        {IPC::MakeHeader(0x0805, 9, 4), &FS_USER::RenameFile, "RenameFile"},
-        {IPC::MakeHeader(0x0806, 5, 2), &FS_USER::DeleteDirectory, "DeleteDirectory"},
-        {IPC::MakeHeader(0x0807, 5, 2), &FS_USER::DeleteDirectoryRecursively, "DeleteDirectoryRecursively"},
-        {IPC::MakeHeader(0x0808, 8, 2), &FS_USER::CreateFile, "CreateFile"},
-        {IPC::MakeHeader(0x0809, 6, 2), &FS_USER::CreateDirectory, "CreateDirectory"},
-        {IPC::MakeHeader(0x080A, 9, 4), &FS_USER::RenameDirectory, "RenameDirectory"},
-        {IPC::MakeHeader(0x080B, 4, 2), &FS_USER::OpenDirectory, "OpenDirectory"},
-        {IPC::MakeHeader(0x080C, 3, 2), &FS_USER::OpenArchive, "OpenArchive"},
-        {IPC::MakeHeader(0x080D, 5, 4), nullptr, "ControlArchive"},
-        {IPC::MakeHeader(0x080E, 2, 0), &FS_USER::CloseArchive, "CloseArchive"},
-        {IPC::MakeHeader(0x080F, 6, 0), &FS_USER::FormatThisUserSaveData, "FormatThisUserSaveData"},
-        {IPC::MakeHeader(0x0810, 8, 0), &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
-        {IPC::MakeHeader(0x0811, 1, 0), nullptr, "DeleteSystemSaveData"},
-        {IPC::MakeHeader(0x0812, 2, 0), &FS_USER::GetFreeBytes, "GetFreeBytes"},
-        {IPC::MakeHeader(0x0813, 0, 0), nullptr, "GetCardType"},
-        {IPC::MakeHeader(0x0814, 0, 0), &FS_USER::GetSdmcArchiveResource, "GetSdmcArchiveResource"},
-        {IPC::MakeHeader(0x0815, 0, 0), &FS_USER::GetNandArchiveResource, "GetNandArchiveResource"},
-        {IPC::MakeHeader(0x0816, 0, 0), nullptr, "GetSdmcFatfsError"},
-        {IPC::MakeHeader(0x0817, 0, 0), &FS_USER::IsSdmcDetected, "IsSdmcDetected"},
-        {IPC::MakeHeader(0x0818, 0, 0), &FS_USER::IsSdmcWriteable, "IsSdmcWritable"},
-        {IPC::MakeHeader(0x0819, 1, 2), nullptr, "GetSdmcCid"},
-        {IPC::MakeHeader(0x081A, 1, 2), nullptr, "GetNandCid"},
-        {IPC::MakeHeader(0x081B, 0, 0), nullptr, "GetSdmcSpeedInfo"},
-        {IPC::MakeHeader(0x081C, 0, 0), nullptr, "GetNandSpeedInfo"},
-        {IPC::MakeHeader(0x081D, 1, 2), nullptr, "GetSdmcLog"},
-        {IPC::MakeHeader(0x081E, 1, 2), nullptr, "GetNandLog"},
-        {IPC::MakeHeader(0x081F, 0, 0), nullptr, "ClearSdmcLog"},
-        {IPC::MakeHeader(0x0820, 0, 0), nullptr, "ClearNandLog"},
-        {IPC::MakeHeader(0x0821, 0, 0), &FS_USER::CardSlotIsInserted, "CardSlotIsInserted"},
-        {IPC::MakeHeader(0x0822, 0, 0), nullptr, "CardSlotPowerOn"},
-        {IPC::MakeHeader(0x0823, 0, 0), nullptr, "CardSlotPowerOff"},
-        {IPC::MakeHeader(0x0824, 0, 0), nullptr, "CardSlotGetCardIFPowerStatus"},
-        {IPC::MakeHeader(0x0825, 1, 0), nullptr, "CardNorDirectCommand"},
-        {IPC::MakeHeader(0x0826, 2, 0), nullptr, "CardNorDirectCommandWithAddress"},
-        {IPC::MakeHeader(0x0827, 2, 2), nullptr, "CardNorDirectRead"},
-        {IPC::MakeHeader(0x0828, 3, 2), nullptr, "CardNorDirectReadWithAddress"},
-        {IPC::MakeHeader(0x0829, 2, 2), nullptr, "CardNorDirectWrite"},
-        {IPC::MakeHeader(0x082A, 3, 2), nullptr, "CardNorDirectWriteWithAddress"},
-        {IPC::MakeHeader(0x082B, 3, 2), nullptr, "CardNorDirectRead_4xIO"},
-        {IPC::MakeHeader(0x082C, 2, 2), nullptr, "CardNorDirectCpuWriteWithoutVerify"},
-        {IPC::MakeHeader(0x082D, 1, 0), nullptr, "CardNorDirectSectorEraseWithoutVerify"},
-        {IPC::MakeHeader(0x082E, 1, 0), nullptr, "GetProductInfo"},
-        {IPC::MakeHeader(0x082F, 1, 0), &FS_USER::GetProgramLaunchInfo, "GetProgramLaunchInfo"},
-        {IPC::MakeHeader(0x0830, 6, 2), &FS_USER::ObsoletedCreateExtSaveData, "Obsoleted_3_0_CreateExtSaveData"},
-        {IPC::MakeHeader(0x0831, 6, 0), nullptr, "CreateSharedExtSaveData"},
-        {IPC::MakeHeader(0x0832, 4, 2), nullptr, "ReadExtSaveDataIcon"},
-        {IPC::MakeHeader(0x0833, 2, 2), nullptr, "EnumerateExtSaveData"},
-        {IPC::MakeHeader(0x0834, 2, 2), nullptr, "EnumerateSharedExtSaveData"},
-        {IPC::MakeHeader(0x0835, 2, 0), &FS_USER::ObsoletedDeleteExtSaveData, "Obsoleted_3_0_DeleteExtSaveData"},
-        {IPC::MakeHeader(0x0836, 2, 0), nullptr, "DeleteSharedExtSaveData"},
-        {IPC::MakeHeader(0x0837, 1, 0), nullptr, "SetCardSpiBaudRate"},
-        {IPC::MakeHeader(0x0838, 1, 0), nullptr, "SetCardSpiBusMode"},
-        {IPC::MakeHeader(0x0839, 0, 0), nullptr, "SendInitializeInfoTo9"},
-        {IPC::MakeHeader(0x083A, 4, 0), &FS_USER::GetSpecialContentIndex, "GetSpecialContentIndex"},
-        {IPC::MakeHeader(0x083B, 3, 2), nullptr, "GetLegacyRomHeader"},
-        {IPC::MakeHeader(0x083C, 3, 2), nullptr, "GetLegacyBannerData"},
-        {IPC::MakeHeader(0x083D, 4, 0), nullptr, "CheckAuthorityToAccessExtSaveData"},
-        {IPC::MakeHeader(0x083E, 3, 2), nullptr, "QueryTotalQuotaSize"},
-        {IPC::MakeHeader(0x083F, 3, 0), nullptr, "GetExtDataBlockSize"},
-        {IPC::MakeHeader(0x0840, 1, 0), nullptr, "AbnegateAccessRight"},
-        {IPC::MakeHeader(0x0841, 0, 0), nullptr, "DeleteSdmcRoot"},
-        {IPC::MakeHeader(0x0842, 1, 0), nullptr, "DeleteAllExtSaveDataOnNand"},
-        {IPC::MakeHeader(0x0843, 0, 0), nullptr, "InitializeCtrFileSystem"},
-        {IPC::MakeHeader(0x0844, 0, 0), nullptr, "CreateSeed"},
-        {IPC::MakeHeader(0x0845, 3, 2), &FS_USER::GetFormatInfo, "GetFormatInfo"},
-        {IPC::MakeHeader(0x0846, 4, 2), nullptr, "GetLegacyRomHeader2"},
-        {IPC::MakeHeader(0x0847, 6, 0), nullptr, "FormatCtrCardUserSaveData"},
-        {IPC::MakeHeader(0x0848, 1, 2), nullptr, "GetSdmcCtrRootPath"},
-        {IPC::MakeHeader(0x0849, 1, 0), &FS_USER::GetArchiveResource, "GetArchiveResource"},
-        {IPC::MakeHeader(0x084A, 0, 2), nullptr, "ExportIntegrityVerificationSeed"},
-        {IPC::MakeHeader(0x084B, 0, 2), nullptr, "ImportIntegrityVerificationSeed"},
-        {IPC::MakeHeader(0x084C, 9, 2), &FS_USER::FormatSaveData, "FormatSaveData"},
-        {IPC::MakeHeader(0x084D, 4, 2), nullptr, "GetLegacySubBannerData"},
-        {IPC::MakeHeader(0x084E, 13, 2), nullptr, "UpdateSha256Context"},
-        {IPC::MakeHeader(0x084F, 4, 2), nullptr, "ReadSpecialFile"},
-        {IPC::MakeHeader(0x0850, 1, 0), nullptr, "GetSpecialFileSize"},
-        {IPC::MakeHeader(0x0851, 9, 2), &FS_USER::CreateExtSaveData, "CreateExtSaveData"},
-        {IPC::MakeHeader(0x0852, 4, 0), &FS_USER::DeleteExtSaveData, "DeleteExtSaveData"},
-        {IPC::MakeHeader(0x0853, 5, 2), nullptr, "ReadExtSaveDataIcon"},
-        {IPC::MakeHeader(0x0854, 3, 0), nullptr, "GetExtDataBlockSize"},
-        {IPC::MakeHeader(0x0855, 4, 2), nullptr, "EnumerateExtSaveData"},
-        {IPC::MakeHeader(0x0856, 9, 0), &FS_USER::CreateSystemSaveData, "CreateSystemSaveData"},
-        {IPC::MakeHeader(0x0857, 2, 0), &FS_USER::DeleteSystemSaveData, "DeleteSystemSaveData"},
-        {IPC::MakeHeader(0x0858, 0, 0), nullptr, "StartDeviceMoveAsSource"},
-        {IPC::MakeHeader(0x0859, 8, 0), nullptr, "StartDeviceMoveAsDestination"},
-        {IPC::MakeHeader(0x085A, 3, 0), nullptr, "SetArchivePriority"},
-        {IPC::MakeHeader(0x085B, 2, 0), nullptr, "GetArchivePriority"},
-        {IPC::MakeHeader(0x085C, 3, 0), nullptr, "SetCtrCardLatencyParameter"},
-        {IPC::MakeHeader(0x085D, 7, 0), nullptr, "SetFsCompatibilityInfo"},
-        {IPC::MakeHeader(0x085E, 1, 0), nullptr, "ResetCardCompatibilityParameter"},
-        {IPC::MakeHeader(0x085F, 1, 0), nullptr, "SwitchCleanupInvalidSaveData"},
-        {IPC::MakeHeader(0x0860, 1, 2), nullptr, "EnumerateSystemSaveData"},
-        {IPC::MakeHeader(0x0861, 1, 2), &FS_USER::InitializeWithSdkVersion, "InitializeWithSdkVersion"},
-        {IPC::MakeHeader(0x0862, 1, 0), &FS_USER::SetPriority, "SetPriority"},
-        {IPC::MakeHeader(0x0863, 0, 0), &FS_USER::GetPriority, "GetPriority"},
-        {IPC::MakeHeader(0x0864, 0, 0), nullptr, "GetNandInfo"},
-        {IPC::MakeHeader(0x0865, 5, 0), &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue"},
-        {IPC::MakeHeader(0x0866, 3, 0), &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue"},
-        {IPC::MakeHeader(0x0867, 3, 4), nullptr, "ControlSecureSave"},
-        {IPC::MakeHeader(0x0868, 0, 0), nullptr, "GetMediaType"},
-        {IPC::MakeHeader(0x0869, 0, 0), nullptr, "GetNandEraseCount"},
-        {IPC::MakeHeader(0x086A, 2, 2), nullptr, "ReadNandReport"},
-        {IPC::MakeHeader(0x087A, 6, 0), &FS_USER::AddSeed, "AddSeed"},
-        {IPC::MakeHeader(0x087D, 0, 0), &FS_USER::GetNumSeeds, "GetNumSeeds"},
-        {IPC::MakeHeader(0x0886, 3, 0), nullptr, "CheckUpdatedDat"},
+        {0x0001, nullptr, "Dummy1"},
+        {0x0401, nullptr, "Control"},
+        {0x0801, &FS_USER::Initialize, "Initialize"},
+        {0x0802, &FS_USER::OpenFile, "OpenFile"},
+        {0x0803, &FS_USER::OpenFileDirectly, "OpenFileDirectly"},
+        {0x0804, &FS_USER::DeleteFile, "DeleteFile"},
+        {0x0805, &FS_USER::RenameFile, "RenameFile"},
+        {0x0806, &FS_USER::DeleteDirectory, "DeleteDirectory"},
+        {0x0807, &FS_USER::DeleteDirectoryRecursively, "DeleteDirectoryRecursively"},
+        {0x0808, &FS_USER::CreateFile, "CreateFile"},
+        {0x0809, &FS_USER::CreateDirectory, "CreateDirectory"},
+        {0x080A, &FS_USER::RenameDirectory, "RenameDirectory"},
+        {0x080B, &FS_USER::OpenDirectory, "OpenDirectory"},
+        {0x080C, &FS_USER::OpenArchive, "OpenArchive"},
+        {0x080D, nullptr, "ControlArchive"},
+        {0x080E, &FS_USER::CloseArchive, "CloseArchive"},
+        {0x080F, &FS_USER::FormatThisUserSaveData, "FormatThisUserSaveData"},
+        {0x0810, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
+        {0x0811, nullptr, "DeleteSystemSaveData"},
+        {0x0812, &FS_USER::GetFreeBytes, "GetFreeBytes"},
+        {0x0813, nullptr, "GetCardType"},
+        {0x0814, &FS_USER::GetSdmcArchiveResource, "GetSdmcArchiveResource"},
+        {0x0815, &FS_USER::GetNandArchiveResource, "GetNandArchiveResource"},
+        {0x0816, nullptr, "GetSdmcFatfsError"},
+        {0x0817, &FS_USER::IsSdmcDetected, "IsSdmcDetected"},
+        {0x0818, &FS_USER::IsSdmcWriteable, "IsSdmcWritable"},
+        {0x0819, nullptr, "GetSdmcCid"},
+        {0x081A, nullptr, "GetNandCid"},
+        {0x081B, nullptr, "GetSdmcSpeedInfo"},
+        {0x081C, nullptr, "GetNandSpeedInfo"},
+        {0x081D, nullptr, "GetSdmcLog"},
+        {0x081E, nullptr, "GetNandLog"},
+        {0x081F, nullptr, "ClearSdmcLog"},
+        {0x0820, nullptr, "ClearNandLog"},
+        {0x0821, &FS_USER::CardSlotIsInserted, "CardSlotIsInserted"},
+        {0x0822, nullptr, "CardSlotPowerOn"},
+        {0x0823, nullptr, "CardSlotPowerOff"},
+        {0x0824, nullptr, "CardSlotGetCardIFPowerStatus"},
+        {0x0825, nullptr, "CardNorDirectCommand"},
+        {0x0826, nullptr, "CardNorDirectCommandWithAddress"},
+        {0x0827, nullptr, "CardNorDirectRead"},
+        {0x0828, nullptr, "CardNorDirectReadWithAddress"},
+        {0x0829, nullptr, "CardNorDirectWrite"},
+        {0x082A, nullptr, "CardNorDirectWriteWithAddress"},
+        {0x082B, nullptr, "CardNorDirectRead_4xIO"},
+        {0x082C, nullptr, "CardNorDirectCpuWriteWithoutVerify"},
+        {0x082D, nullptr, "CardNorDirectSectorEraseWithoutVerify"},
+        {0x082E, nullptr, "GetProductInfo"},
+        {0x082F, &FS_USER::GetProgramLaunchInfo, "GetProgramLaunchInfo"},
+        {0x0830, &FS_USER::ObsoletedCreateExtSaveData, "Obsoleted_3_0_CreateExtSaveData"},
+        {0x0831, nullptr, "CreateSharedExtSaveData"},
+        {0x0832, nullptr, "ReadExtSaveDataIcon"},
+        {0x0833, nullptr, "EnumerateExtSaveData"},
+        {0x0834, nullptr, "EnumerateSharedExtSaveData"},
+        {0x0835, &FS_USER::ObsoletedDeleteExtSaveData, "Obsoleted_3_0_DeleteExtSaveData"},
+        {0x0836, nullptr, "DeleteSharedExtSaveData"},
+        {0x0837, nullptr, "SetCardSpiBaudRate"},
+        {0x0838, nullptr, "SetCardSpiBusMode"},
+        {0x0839, nullptr, "SendInitializeInfoTo9"},
+        {0x083A, &FS_USER::GetSpecialContentIndex, "GetSpecialContentIndex"},
+        {0x083B, nullptr, "GetLegacyRomHeader"},
+        {0x083C, nullptr, "GetLegacyBannerData"},
+        {0x083D, nullptr, "CheckAuthorityToAccessExtSaveData"},
+        {0x083E, nullptr, "QueryTotalQuotaSize"},
+        {0x083F, nullptr, "GetExtDataBlockSize"},
+        {0x0840, nullptr, "AbnegateAccessRight"},
+        {0x0841, nullptr, "DeleteSdmcRoot"},
+        {0x0842, nullptr, "DeleteAllExtSaveDataOnNand"},
+        {0x0843, nullptr, "InitializeCtrFileSystem"},
+        {0x0844, nullptr, "CreateSeed"},
+        {0x0845, &FS_USER::GetFormatInfo, "GetFormatInfo"},
+        {0x0846, nullptr, "GetLegacyRomHeader2"},
+        {0x0847, nullptr, "FormatCtrCardUserSaveData"},
+        {0x0848, nullptr, "GetSdmcCtrRootPath"},
+        {0x0849, &FS_USER::GetArchiveResource, "GetArchiveResource"},
+        {0x084A, nullptr, "ExportIntegrityVerificationSeed"},
+        {0x084B, nullptr, "ImportIntegrityVerificationSeed"},
+        {0x084C, &FS_USER::FormatSaveData, "FormatSaveData"},
+        {0x084D, nullptr, "GetLegacySubBannerData"},
+        {0x084E, nullptr, "UpdateSha256Context"},
+        {0x084F, nullptr, "ReadSpecialFile"},
+        {0x0850, nullptr, "GetSpecialFileSize"},
+        {0x0851, &FS_USER::CreateExtSaveData, "CreateExtSaveData"},
+        {0x0852, &FS_USER::DeleteExtSaveData, "DeleteExtSaveData"},
+        {0x0853, nullptr, "ReadExtSaveDataIcon"},
+        {0x0854, nullptr, "GetExtDataBlockSize"},
+        {0x0855, nullptr, "EnumerateExtSaveData"},
+        {0x0856, &FS_USER::CreateSystemSaveData, "CreateSystemSaveData"},
+        {0x0857, &FS_USER::DeleteSystemSaveData, "DeleteSystemSaveData"},
+        {0x0858, nullptr, "StartDeviceMoveAsSource"},
+        {0x0859, nullptr, "StartDeviceMoveAsDestination"},
+        {0x085A, nullptr, "SetArchivePriority"},
+        {0x085B, nullptr, "GetArchivePriority"},
+        {0x085C, nullptr, "SetCtrCardLatencyParameter"},
+        {0x085D, nullptr, "SetFsCompatibilityInfo"},
+        {0x085E, nullptr, "ResetCardCompatibilityParameter"},
+        {0x085F, nullptr, "SwitchCleanupInvalidSaveData"},
+        {0x0860, nullptr, "EnumerateSystemSaveData"},
+        {0x0861, &FS_USER::InitializeWithSdkVersion, "InitializeWithSdkVersion"},
+        {0x0862, &FS_USER::SetPriority, "SetPriority"},
+        {0x0863, &FS_USER::GetPriority, "GetPriority"},
+        {0x0864, nullptr, "GetNandInfo"},
+        {0x0865, &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue"},
+        {0x0866, &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue"},
+        {0x0867, nullptr, "ControlSecureSave"},
+        {0x0868, nullptr, "GetMediaType"},
+        {0x0869, nullptr, "GetNandEraseCount"},
+        {0x086A, nullptr, "ReadNandReport"},
+        {0x087A, &FS_USER::AddSeed, "AddSeed"},
+        {0x087D, &FS_USER::GetNumSeeds, "GetNumSeeds"},
+        {0x0886, nullptr, "CheckUpdatedDat"},
         // clang-format on
     };
     RegisterHandlers(functions);

@@ -13,19 +13,19 @@ namespace Service::PM {
 PM_APP::PM_APP() : ServiceFramework("pm:app", 3) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 5, 0), nullptr, "LaunchTitle"},
-        {IPC::MakeHeader(0x0002, 2, 2), nullptr, "LaunchFIRM"},
-        {IPC::MakeHeader(0x0003, 2, 0), nullptr, "TerminateApplication"},
-        {IPC::MakeHeader(0x0004, 4, 0), nullptr, "TerminateTitle"},
-        {IPC::MakeHeader(0x0005, 3, 0), nullptr, "TerminateProcess"},
-        {IPC::MakeHeader(0x0006, 2, 2), nullptr, "PrepareForReboot"},
-        {IPC::MakeHeader(0x0007, 1, 2), nullptr, "GetFIRMLaunchParams"},
-        {IPC::MakeHeader(0x0008, 4, 0), nullptr, "GetTitleExheaderFlags"},
-        {IPC::MakeHeader(0x0009, 1, 2), nullptr, "SetFIRMLaunchParams"},
-        {IPC::MakeHeader(0x000A, 5, 0), nullptr, "SetAppResourceLimit"},
-        {IPC::MakeHeader(0x000B, 5, 0), nullptr, "GetAppResourceLimit"},
-        {IPC::MakeHeader(0x000C, 2, 0), nullptr, "UnregisterProcess"},
-        {IPC::MakeHeader(0x000D, 9, 0), nullptr, "LaunchTitleUpdate"},
+        {0x0001, nullptr, "LaunchTitle"},
+        {0x0002, nullptr, "LaunchFIRM"},
+        {0x0003, nullptr, "TerminateApplication"},
+        {0x0004, nullptr, "TerminateTitle"},
+        {0x0005, nullptr, "TerminateProcess"},
+        {0x0006, nullptr, "PrepareForReboot"},
+        {0x0007, nullptr, "GetFIRMLaunchParams"},
+        {0x0008, nullptr, "GetTitleExheaderFlags"},
+        {0x0009, nullptr, "SetFIRMLaunchParams"},
+        {0x000A, nullptr, "SetAppResourceLimit"},
+        {0x000B, nullptr, "GetAppResourceLimit"},
+        {0x000C, nullptr, "UnregisterProcess"},
+        {0x000D, nullptr, "LaunchTitleUpdate"},
         // clang-format on
     };
 

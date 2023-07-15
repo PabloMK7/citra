@@ -11,8 +11,8 @@ NS_C::NS_C(std::shared_ptr<Service::APT::Module> apt)
     : Service::APT::Module::NSInterface(std::move(apt), "ns:c", 1) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 4, 0), nullptr, "LockSpecialContent"},
-        {IPC::MakeHeader(0x0002, 4, 0), nullptr, "UnlockSpecialContent"},
+        {0x0001, nullptr, "LockSpecialContent"},
+        {0x0002, nullptr, "UnlockSpecialContent"},
         // clang-format on
     };
     RegisterHandlers(functions);

@@ -210,14 +210,8 @@ inline void RequestBuilder::PushMappedBuffer(const Kernel::MappedBuffer& mapped_
 
 class RequestParser : public RequestHelperBase {
 public:
-    RequestParser(Kernel::HLERequestContext& context, Header desired_header)
-        : RequestHelperBase(context, desired_header) {}
-
-    RequestParser(Kernel::HLERequestContext& context, u16 command_id, unsigned normal_params_size,
-                  unsigned translate_params_size)
-        : RequestParser(context,
-                        Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {
-    }
+    RequestParser(Kernel::HLERequestContext& context)
+        : RequestHelperBase(context, context.CommandHeader()) {}
 
     RequestBuilder MakeBuilder(u32 normal_params_size, u32 translate_params_size,
                                bool validateHeader = true) {

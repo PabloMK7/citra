@@ -14,8 +14,8 @@ QTM_SP::QTM_SP() : ServiceFramework("qtm:sp", 2) {
     static const FunctionInfo functions[] = {
         // qtm common commands
         // clang-format off
-        {IPC::MakeHeader(0x0001, 2, 0), nullptr, "GetHeadtrackingInfoRaw"},
-        {IPC::MakeHeader(0x0002, 2, 0), nullptr, "GetHeadtrackingInfo"},
+        {0x0001, nullptr, "GetHeadtrackingInfoRaw"},
+        {0x0002, nullptr, "GetHeadtrackingInfo"},
         // clang-format on
     };
 

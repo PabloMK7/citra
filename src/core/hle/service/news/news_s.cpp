@@ -18,7 +18,7 @@ struct NewsDbHeader {
 static_assert(sizeof(NewsDbHeader) == 0x10, "News DB Header structure size is wrong");
 
 void NEWS_S::GetTotalNotifications(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x5, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_WARNING(Service, "(STUBBED) called");
 
@@ -29,7 +29,7 @@ void NEWS_S::GetTotalNotifications(Kernel::HLERequestContext& ctx) {
 }
 
 void NEWS_S::GetNewsDBHeader(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xA, 1, 2);
+    IPC::RequestParser rp(ctx);
     const auto size = rp.Pop<u32>();
     auto output_buffer = rp.PopMappedBuffer();
 
@@ -47,19 +47,19 @@ void NEWS_S::GetNewsDBHeader(Kernel::HLERequestContext& ctx) {
 NEWS_S::NEWS_S() : ServiceFramework("news:s", 2) {
     const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 3, 6), nullptr, "AddNotification"},
-        {IPC::MakeHeader(0x0005, 0, 0), &NEWS_S::GetTotalNotifications, "GetTotalNotifications"},
-        {IPC::MakeHeader(0x0006, 1, 2), nullptr, "SetNewsDBHeader"},
-        {IPC::MakeHeader(0x0007, 2, 2), nullptr, "SetNotificationHeader"},
-        {IPC::MakeHeader(0x0008, 2, 2), nullptr, "SetNotificationMessage"},
-        {IPC::MakeHeader(0x0009, 2, 2), nullptr, "SetNotificationImage"},
-        {IPC::MakeHeader(0x000A, 1, 2), &NEWS_S::GetNewsDBHeader, "GetNewsDBHeader"},
-        {IPC::MakeHeader(0x000B, 2, 2), nullptr, "GetNotificationHeader"},
-        {IPC::MakeHeader(0x000C, 2, 2), nullptr, "GetNotificationMessage"},
-        {IPC::MakeHeader(0x000D, 2, 2), nullptr, "GetNotificationImage"},
-        {IPC::MakeHeader(0x000E, 1, 0), nullptr, "SetInfoLEDPattern"},
-        {IPC::MakeHeader(0x0012, 2, 2), nullptr, "GetNotificationHeaderOther"},
-        {IPC::MakeHeader(0x0013, 0, 0), nullptr, "WriteNewsDBSavedata"},
+        {0x0001, nullptr, "AddNotification"},
+        {0x0005, &NEWS_S::GetTotalNotifications, "GetTotalNotifications"},
+        {0x0006, nullptr, "SetNewsDBHeader"},
+        {0x0007, nullptr, "SetNotificationHeader"},
+        {0x0008, nullptr, "SetNotificationMessage"},
+        {0x0009, nullptr, "SetNotificationImage"},
+        {0x000A, &NEWS_S::GetNewsDBHeader, "GetNewsDBHeader"},
+        {0x000B, nullptr, "GetNotificationHeader"},
+        {0x000C, nullptr, "GetNotificationMessage"},
+        {0x000D, nullptr, "GetNotificationImage"},
+        {0x000E, nullptr, "SetInfoLEDPattern"},
+        {0x0012, nullptr, "GetNotificationHeaderOther"},
+        {0x0013, nullptr, "WriteNewsDBSavedata"},
         // clang-format on
     };
     RegisterHandlers(functions);

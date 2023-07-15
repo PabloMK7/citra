@@ -78,7 +78,7 @@ ResultCode ConversionConfiguration::SetStandardCoefficient(
 }
 
 void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     conversion.input_format = rp.PopEnum<InputFormat>();
 
@@ -89,7 +89,7 @@ void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -99,7 +99,7 @@ void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x3, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     conversion.output_format = rp.PopEnum<OutputFormat>();
 
@@ -110,7 +110,7 @@ void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x4, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -120,7 +120,7 @@ void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x5, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     conversion.rotation = rp.PopEnum<Rotation>();
 
@@ -131,7 +131,7 @@ void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x6, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -141,7 +141,7 @@ void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x7, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     conversion.block_alignment = rp.PopEnum<BlockAlignment>();
 
@@ -152,7 +152,7 @@ void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x8, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -162,7 +162,7 @@ void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     spacial_dithering_enabled = rp.Pop<bool>();
 
@@ -173,7 +173,7 @@ void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xA, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -183,7 +183,7 @@ void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xB, 1, 0);
+    IPC::RequestParser rp(ctx);
     temporal_dithering_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -193,7 +193,7 @@ void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xC, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -203,7 +203,7 @@ void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xD, 1, 0);
+    IPC::RequestParser rp(ctx);
     transfer_end_interrupt_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -213,7 +213,7 @@ void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xE, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -223,7 +223,7 @@ void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xF, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
@@ -233,7 +233,7 @@ void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x10, 4, 2);
+    IPC::RequestParser rp(ctx);
     conversion.src_Y.address = rp.Pop<u32>();
     conversion.src_Y.image_size = rp.Pop<u32>();
     conversion.src_Y.transfer_unit = rp.Pop<u32>();
@@ -252,7 +252,7 @@ void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x11, 4, 2);
+    IPC::RequestParser rp(ctx);
     conversion.src_U.address = rp.Pop<u32>();
     conversion.src_U.image_size = rp.Pop<u32>();
     conversion.src_U.transfer_unit = rp.Pop<u32>();
@@ -271,7 +271,7 @@ void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x12, 4, 2);
+    IPC::RequestParser rp(ctx);
 
     conversion.src_V.address = rp.Pop<u32>();
     conversion.src_V.image_size = rp.Pop<u32>();
@@ -291,7 +291,7 @@ void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x13, 4, 2);
+    IPC::RequestParser rp(ctx);
 
     conversion.src_YUYV.address = rp.Pop<u32>();
     conversion.src_YUYV.image_size = rp.Pop<u32>();
@@ -311,7 +311,7 @@ void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x14, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -321,7 +321,7 @@ void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x15, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -331,7 +331,7 @@ void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x16, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -341,7 +341,7 @@ void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x17, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -351,7 +351,7 @@ void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x18, 4, 2);
+    IPC::RequestParser rp(ctx);
 
     conversion.dst.address = rp.Pop<u32>();
     conversion.dst.image_size = rp.Pop<u32>();
@@ -371,7 +371,7 @@ void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x19, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -381,7 +381,7 @@ void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetInputLineWidth(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1A, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 input_line_width = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -391,7 +391,7 @@ void Y2R_U::SetInputLineWidth(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetInputLineWidth(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1B, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -401,7 +401,7 @@ void Y2R_U::GetInputLineWidth(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetInputLines(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1C, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 input_lines = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -411,7 +411,7 @@ void Y2R_U::SetInputLines(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetInputLines(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1D, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -421,7 +421,7 @@ void Y2R_U::GetInputLines(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1E, 4, 0);
+    IPC::RequestParser rp(ctx);
 
     rp.PopRaw<CoefficientSet>(conversion.coefficients);
 
@@ -435,7 +435,7 @@ void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1F, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
     rb.Push(RESULT_SUCCESS);
@@ -445,7 +445,7 @@ void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetStandardCoefficient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x20, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 index = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -455,7 +455,7 @@ void Y2R_U::SetStandardCoefficient(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetStandardCoefficient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x21, 1, 0);
+    IPC::RequestParser rp(ctx);
     const u32 index = rp.Pop<u32>();
 
     if (index < standard_coefficients.size()) {
@@ -474,7 +474,7 @@ void Y2R_U::GetStandardCoefficient(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetAlpha(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x22, 1, 0);
+    IPC::RequestParser rp(ctx);
     conversion.alpha = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -484,7 +484,7 @@ void Y2R_U::SetAlpha(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x23, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -494,7 +494,7 @@ void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x24, 8, 0); // 0x240200
+    IPC::RequestParser rp(ctx);
     rp.PopRaw(dithering_weight_params);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -503,7 +503,7 @@ void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x25, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(9, 0);
     rb.Push(RESULT_SUCCESS);
@@ -513,7 +513,7 @@ void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x26, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     // dst_image_size would seem to be perfect for this, but it doesn't include the gap :(
     u32 total_output_size =
@@ -532,7 +532,7 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x27, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -541,7 +541,7 @@ void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x28, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -551,7 +551,7 @@ void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x29, 7, 0);
+    IPC::RequestParser rp(ctx);
     auto params = rp.PopRaw<ConversionParameters>();
 
     conversion.input_format = params.input_format;
@@ -590,7 +590,7 @@ cleanup:
 }
 
 void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2A, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -600,7 +600,7 @@ void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2B, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -627,7 +627,7 @@ void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2C, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -636,7 +636,7 @@ void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
 }
 
 void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2D, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
     rb.Push(RESULT_SUCCESS);
@@ -648,51 +648,51 @@ void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
 Y2R_U::Y2R_U(Core::System& system) : ServiceFramework("y2r:u", 1), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 1, 0), &Y2R_U::SetInputFormat, "SetInputFormat"},
-        {IPC::MakeHeader(0x0002, 0, 0), &Y2R_U::GetInputFormat, "GetInputFormat"},
-        {IPC::MakeHeader(0x0003, 1, 0), &Y2R_U::SetOutputFormat, "SetOutputFormat"},
-        {IPC::MakeHeader(0x0004, 0, 0), &Y2R_U::GetOutputFormat, "GetOutputFormat"},
-        {IPC::MakeHeader(0x0005, 1, 0), &Y2R_U::SetRotation, "SetRotation"},
-        {IPC::MakeHeader(0x0006, 0, 0), &Y2R_U::GetRotation, "GetRotation"},
-        {IPC::MakeHeader(0x0007, 1, 0), &Y2R_U::SetBlockAlignment, "SetBlockAlignment"},
-        {IPC::MakeHeader(0x0008, 0, 0), &Y2R_U::GetBlockAlignment, "GetBlockAlignment"},
-        {IPC::MakeHeader(0x0009, 1, 0), &Y2R_U::SetSpacialDithering, "SetSpacialDithering"},
-        {IPC::MakeHeader(0x000A, 0, 0), &Y2R_U::GetSpacialDithering, "GetSpacialDithering"},
-        {IPC::MakeHeader(0x000B, 1, 0), &Y2R_U::SetTemporalDithering, "SetTemporalDithering"},
-        {IPC::MakeHeader(0x000C, 0, 0), &Y2R_U::GetTemporalDithering, "GetTemporalDithering"},
-        {IPC::MakeHeader(0x000D, 1, 0), &Y2R_U::SetTransferEndInterrupt, "SetTransferEndInterrupt"},
-        {IPC::MakeHeader(0x000E, 0, 0), &Y2R_U::GetTransferEndInterrupt, "GetTransferEndInterrupt"},
-        {IPC::MakeHeader(0x000F, 0, 0), &Y2R_U::GetTransferEndEvent, "GetTransferEndEvent"},
-        {IPC::MakeHeader(0x0010, 4, 2), &Y2R_U::SetSendingY, "SetSendingY"},
-        {IPC::MakeHeader(0x0011, 4, 2), &Y2R_U::SetSendingU, "SetSendingU"},
-        {IPC::MakeHeader(0x0012, 4, 2), &Y2R_U::SetSendingV, "SetSendingV"},
-        {IPC::MakeHeader(0x0013, 4, 2), &Y2R_U::SetSendingYUYV, "SetSendingYUYV"},
-        {IPC::MakeHeader(0x0014, 0, 0), &Y2R_U::IsFinishedSendingYuv, "IsFinishedSendingYuv"},
-        {IPC::MakeHeader(0x0015, 0, 0), &Y2R_U::IsFinishedSendingY, "IsFinishedSendingY"},
-        {IPC::MakeHeader(0x0016, 0, 0), &Y2R_U::IsFinishedSendingU, "IsFinishedSendingU"},
-        {IPC::MakeHeader(0x0017, 0, 0), &Y2R_U::IsFinishedSendingV, "IsFinishedSendingV"},
-        {IPC::MakeHeader(0x0018, 4, 2), &Y2R_U::SetReceiving, "SetReceiving"},
-        {IPC::MakeHeader(0x0019, 0, 0), &Y2R_U::IsFinishedReceiving, "IsFinishedReceiving"},
-        {IPC::MakeHeader(0x001A, 1, 0), &Y2R_U::SetInputLineWidth, "SetInputLineWidth"},
-        {IPC::MakeHeader(0x001B, 0, 0), &Y2R_U::GetInputLineWidth, "GetInputLineWidth"},
-        {IPC::MakeHeader(0x001C, 1, 0), &Y2R_U::SetInputLines, "SetInputLines"},
-        {IPC::MakeHeader(0x001D, 0, 0), &Y2R_U::GetInputLines, "GetInputLines"},
-        {IPC::MakeHeader(0x001E, 4, 0), &Y2R_U::SetCoefficient, "SetCoefficient"},
-        {IPC::MakeHeader(0x001F, 0, 0), &Y2R_U::GetCoefficient, "GetCoefficient"},
-        {IPC::MakeHeader(0x0020, 1, 0), &Y2R_U::SetStandardCoefficient, "SetStandardCoefficient"},
-        {IPC::MakeHeader(0x0021, 1, 0), &Y2R_U::GetStandardCoefficient, "GetStandardCoefficient"},
-        {IPC::MakeHeader(0x0022, 1, 0), &Y2R_U::SetAlpha, "SetAlpha"},
-        {IPC::MakeHeader(0x0023, 0, 0), &Y2R_U::GetAlpha, "GetAlpha"},
-        {IPC::MakeHeader(0x0024, 8, 0), &Y2R_U::SetDitheringWeightParams, "SetDitheringWeightParams"},
-        {IPC::MakeHeader(0x0025, 0, 0), &Y2R_U::GetDitheringWeightParams, "GetDitheringWeightParams"},
-        {IPC::MakeHeader(0x0026, 0, 0), &Y2R_U::StartConversion, "StartConversion"},
-        {IPC::MakeHeader(0x0027, 0, 0), &Y2R_U::StopConversion, "StopConversion"},
-        {IPC::MakeHeader(0x0028, 0, 0), &Y2R_U::IsBusyConversion, "IsBusyConversion"},
-        {IPC::MakeHeader(0x0029, 7, 0), &Y2R_U::SetPackageParameter, "SetPackageParameter"},
-        {IPC::MakeHeader(0x002A, 0, 0), &Y2R_U::PingProcess, "PingProcess"},
-        {IPC::MakeHeader(0x002B, 0, 0), &Y2R_U::DriverInitialize, "DriverInitialize"},
-        {IPC::MakeHeader(0x002C, 0, 0), &Y2R_U::DriverFinalize, "DriverFinalize"},
-        {IPC::MakeHeader(0x002D, 0, 0), &Y2R_U::GetPackageParameter, "GetPackageParameter"},
+        {0x0001, &Y2R_U::SetInputFormat, "SetInputFormat"},
+        {0x0002, &Y2R_U::GetInputFormat, "GetInputFormat"},
+        {0x0003, &Y2R_U::SetOutputFormat, "SetOutputFormat"},
+        {0x0004, &Y2R_U::GetOutputFormat, "GetOutputFormat"},
+        {0x0005, &Y2R_U::SetRotation, "SetRotation"},
+        {0x0006, &Y2R_U::GetRotation, "GetRotation"},
+        {0x0007, &Y2R_U::SetBlockAlignment, "SetBlockAlignment"},
+        {0x0008, &Y2R_U::GetBlockAlignment, "GetBlockAlignment"},
+        {0x0009, &Y2R_U::SetSpacialDithering, "SetSpacialDithering"},
+        {0x000A, &Y2R_U::GetSpacialDithering, "GetSpacialDithering"},
+        {0x000B, &Y2R_U::SetTemporalDithering, "SetTemporalDithering"},
+        {0x000C, &Y2R_U::GetTemporalDithering, "GetTemporalDithering"},
+        {0x000D, &Y2R_U::SetTransferEndInterrupt, "SetTransferEndInterrupt"},
+        {0x000E, &Y2R_U::GetTransferEndInterrupt, "GetTransferEndInterrupt"},
+        {0x000F, &Y2R_U::GetTransferEndEvent, "GetTransferEndEvent"},
+        {0x0010, &Y2R_U::SetSendingY, "SetSendingY"},
+        {0x0011, &Y2R_U::SetSendingU, "SetSendingU"},
+        {0x0012, &Y2R_U::SetSendingV, "SetSendingV"},
+        {0x0013, &Y2R_U::SetSendingYUYV, "SetSendingYUYV"},
+        {0x0014, &Y2R_U::IsFinishedSendingYuv, "IsFinishedSendingYuv"},
+        {0x0015, &Y2R_U::IsFinishedSendingY, "IsFinishedSendingY"},
+        {0x0016, &Y2R_U::IsFinishedSendingU, "IsFinishedSendingU"},
+        {0x0017, &Y2R_U::IsFinishedSendingV, "IsFinishedSendingV"},
+        {0x0018, &Y2R_U::SetReceiving, "SetReceiving"},
+        {0x0019, &Y2R_U::IsFinishedReceiving, "IsFinishedReceiving"},
+        {0x001A, &Y2R_U::SetInputLineWidth, "SetInputLineWidth"},
+        {0x001B, &Y2R_U::GetInputLineWidth, "GetInputLineWidth"},
+        {0x001C, &Y2R_U::SetInputLines, "SetInputLines"},
+        {0x001D, &Y2R_U::GetInputLines, "GetInputLines"},
+        {0x001E, &Y2R_U::SetCoefficient, "SetCoefficient"},
+        {0x001F, &Y2R_U::GetCoefficient, "GetCoefficient"},
+        {0x0020, &Y2R_U::SetStandardCoefficient, "SetStandardCoefficient"},
+        {0x0021, &Y2R_U::GetStandardCoefficient, "GetStandardCoefficient"},
+        {0x0022, &Y2R_U::SetAlpha, "SetAlpha"},
+        {0x0023, &Y2R_U::GetAlpha, "GetAlpha"},
+        {0x0024, &Y2R_U::SetDitheringWeightParams, "SetDitheringWeightParams"},
+        {0x0025, &Y2R_U::GetDitheringWeightParams, "GetDitheringWeightParams"},
+        {0x0026, &Y2R_U::StartConversion, "StartConversion"},
+        {0x0027, &Y2R_U::StopConversion, "StopConversion"},
+        {0x0028, &Y2R_U::IsBusyConversion, "IsBusyConversion"},
+        {0x0029, &Y2R_U::SetPackageParameter, "SetPackageParameter"},
+        {0x002A, &Y2R_U::PingProcess, "PingProcess"},
+        {0x002B, &Y2R_U::DriverInitialize, "DriverInitialize"},
+        {0x002C, &Y2R_U::DriverFinalize, "DriverFinalize"},
+        {0x002D, &Y2R_U::GetPackageParameter, "GetPackageParameter"},
         // clang-format on
     };
     RegisterHandlers(functions);

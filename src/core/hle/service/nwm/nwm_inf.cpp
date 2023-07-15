@@ -12,9 +12,9 @@ namespace Service::NWM {
 NWM_INF::NWM_INF() : ServiceFramework("nwm::INF") {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0006, 15, 4), nullptr, "RecvBeaconBroadcastData"},
-        {IPC::MakeHeader(0x0007, 29, 2), nullptr, "ConnectToEncryptedAP"},
-        {IPC::MakeHeader(0x0008, 12, 2), nullptr, "ConnectToAP"},
+        {0x0006, nullptr, "RecvBeaconBroadcastData"},
+        {0x0007, nullptr, "ConnectToEncryptedAP"},
+        {0x0008, nullptr, "ConnectToAP"},
         // clang-format on
     };
     RegisterHandlers(functions);

@@ -231,7 +231,7 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, std::
 }
 
 void GSP_GPU::WriteHWRegs(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1, 2, 2);
+    IPC::RequestParser rp(ctx);
     u32 reg_addr = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     std::vector<u8> src_data = rp.PopStaticBuffer();
@@ -241,7 +241,7 @@ void GSP_GPU::WriteHWRegs(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::WriteHWRegsWithMask(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x2, 2, 4);
+    IPC::RequestParser rp(ctx);
     u32 reg_addr = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
 
@@ -253,7 +253,7 @@ void GSP_GPU::WriteHWRegsWithMask(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x4, 2, 0);
+    IPC::RequestParser rp(ctx);
     u32 reg_addr = rp.Pop<u32>();
     u32 input_size = rp.Pop<u32>();
 
@@ -326,7 +326,7 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
 }
 
 void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x5, 8, 0);
+    IPC::RequestParser rp(ctx);
     u32 screen_id = rp.Pop<u32>();
     auto fb_info = rp.PopRaw<FrameBufferInfo>();
 
@@ -335,7 +335,7 @@ void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x8, 2, 2);
+    IPC::RequestParser rp(ctx);
     u32 address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
@@ -350,7 +350,7 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 2, 2);
+    IPC::RequestParser rp(ctx);
     u32 address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
@@ -365,7 +365,7 @@ void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x10, 1, 0);
+    IPC::RequestParser rp(ctx);
     u32 mode = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -375,7 +375,7 @@ void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x13, 1, 2);
+    IPC::RequestParser rp(ctx);
     u32 flags = rp.Pop<u32>();
 
     auto interrupt_event = rp.PopObject<Kernel::Event>();
@@ -405,7 +405,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x14, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     SessionData* session_data = GetSessionData(ctx.Session());
     session_data->interrupt_event = nullptr;
@@ -622,7 +622,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 }
 
 void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xB, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     bool enable_black = rp.Pop<bool>();
     LCD::Regs::ColorFill data = {0};
@@ -639,7 +639,7 @@ void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0xC, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
@@ -662,7 +662,7 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x18, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     if (active_thread_id == UINT32_MAX) {
         LOG_WARNING(Service_GSP, "Called without an active thread.");
@@ -705,7 +705,7 @@ void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::SaveVramSysArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x19, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_GSP, "called");
 
@@ -721,7 +721,7 @@ void GSP_GPU::SaveVramSysArea(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::RestoreVramSysArea(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1A, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     LOG_INFO(Service_GSP, "called");
 
@@ -738,7 +738,7 @@ void GSP_GPU::RestoreVramSysArea(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x16, 1, 2);
+    IPC::RequestParser rp(ctx);
 
     u32 flag = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
@@ -771,7 +771,7 @@ void GSP_GPU::ReleaseRight(const SessionData* session_data) {
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x17, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     const SessionData* session_data = GetSessionData(ctx.Session());
     ReleaseRight(session_data);
@@ -783,7 +783,7 @@ void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1F, 2, 2);
+    IPC::RequestParser rp(ctx);
 
     u32 address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
@@ -797,7 +797,7 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1C, 1, 0);
+    IPC::RequestParser rp(ctx);
 
     u8 state = rp.Pop<u8>();
 
@@ -822,37 +822,37 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
 GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 2), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 2, 2), &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
-        {IPC::MakeHeader(0x0002, 2, 4), &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},
-        {IPC::MakeHeader(0x0003, 2, 2), nullptr, "WriteHWRegRepeat"},
-        {IPC::MakeHeader(0x0004, 2, 0), &GSP_GPU::ReadHWRegs, "ReadHWRegs"},
-        {IPC::MakeHeader(0x0005, 8, 0), &GSP_GPU::SetBufferSwap, "SetBufferSwap"},
-        {IPC::MakeHeader(0x0006, 2, 2), nullptr, "SetCommandList"},
-        {IPC::MakeHeader(0x0007, 3, 2), nullptr, "RequestDma"},
-        {IPC::MakeHeader(0x0008, 2, 2), &GSP_GPU::FlushDataCache, "FlushDataCache"},
-        {IPC::MakeHeader(0x0009, 2, 2), &GSP_GPU::InvalidateDataCache, "InvalidateDataCache"},
-        {IPC::MakeHeader(0x000A, 1, 4), nullptr, "RegisterInterruptEvents"},
-        {IPC::MakeHeader(0x000B, 1, 0), &GSP_GPU::SetLcdForceBlack, "SetLcdForceBlack"},
-        {IPC::MakeHeader(0x000C, 0, 0), &GSP_GPU::TriggerCmdReqQueue, "TriggerCmdReqQueue"},
-        {IPC::MakeHeader(0x000D, 5, 0), nullptr, "SetDisplayTransfer"},
-        {IPC::MakeHeader(0x000E, 6, 0), nullptr, "SetTextureCopy"},
-        {IPC::MakeHeader(0x000F, 8, 0), nullptr, "SetMemoryFill"},
-        {IPC::MakeHeader(0x0010, 1, 0), &GSP_GPU::SetAxiConfigQoSMode, "SetAxiConfigQoSMode"},
-        {IPC::MakeHeader(0x0011, 1, 0), nullptr, "SetPerfLogMode"},
-        {IPC::MakeHeader(0x0012, 0, 0), nullptr, "GetPerfLog"},
-        {IPC::MakeHeader(0x0013, 1, 2), &GSP_GPU::RegisterInterruptRelayQueue, "RegisterInterruptRelayQueue"},
-        {IPC::MakeHeader(0x0014, 0, 0), &GSP_GPU::UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
-        {IPC::MakeHeader(0x0015, 0, 2), nullptr, "TryAcquireRight"},
-        {IPC::MakeHeader(0x0016, 1, 2), &GSP_GPU::AcquireRight, "AcquireRight"},
-        {IPC::MakeHeader(0x0017, 0, 0), &GSP_GPU::ReleaseRight, "ReleaseRight"},
-        {IPC::MakeHeader(0x0018, 0, 0), &GSP_GPU::ImportDisplayCaptureInfo, "ImportDisplayCaptureInfo"},
-        {IPC::MakeHeader(0x0019, 0, 0), &GSP_GPU::SaveVramSysArea, "SaveVramSysArea"},
-        {IPC::MakeHeader(0x001A, 0, 0), &GSP_GPU::RestoreVramSysArea, "RestoreVramSysArea"},
-        {IPC::MakeHeader(0x001B, 0, 0), nullptr, "ResetGpuCore"},
-        {IPC::MakeHeader(0x001C, 1, 0), &GSP_GPU::SetLedForceOff, "SetLedForceOff"},
-        {IPC::MakeHeader(0x001D, 1, 0), nullptr, "SetTestCommand"},
-        {IPC::MakeHeader(0x001E, 2, 0), nullptr, "SetInternalPriorities"},
-        {IPC::MakeHeader(0x001F, 2, 2), &GSP_GPU::StoreDataCache, "StoreDataCache"},
+        {0x0001, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
+        {0x0002, &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},
+        {0x0003, nullptr, "WriteHWRegRepeat"},
+        {0x0004, &GSP_GPU::ReadHWRegs, "ReadHWRegs"},
+        {0x0005, &GSP_GPU::SetBufferSwap, "SetBufferSwap"},
+        {0x0006, nullptr, "SetCommandList"},
+        {0x0007, nullptr, "RequestDma"},
+        {0x0008, &GSP_GPU::FlushDataCache, "FlushDataCache"},
+        {0x0009, &GSP_GPU::InvalidateDataCache, "InvalidateDataCache"},
+        {0x000A, nullptr, "RegisterInterruptEvents"},
+        {0x000B, &GSP_GPU::SetLcdForceBlack, "SetLcdForceBlack"},
+        {0x000C, &GSP_GPU::TriggerCmdReqQueue, "TriggerCmdReqQueue"},
+        {0x000D, nullptr, "SetDisplayTransfer"},
+        {0x000E, nullptr, "SetTextureCopy"},
+        {0x000F, nullptr, "SetMemoryFill"},
+        {0x0010, &GSP_GPU::SetAxiConfigQoSMode, "SetAxiConfigQoSMode"},
+        {0x0011, nullptr, "SetPerfLogMode"},
+        {0x0012, nullptr, "GetPerfLog"},
+        {0x0013, &GSP_GPU::RegisterInterruptRelayQueue, "RegisterInterruptRelayQueue"},
+        {0x0014, &GSP_GPU::UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
+        {0x0015, nullptr, "TryAcquireRight"},
+        {0x0016, &GSP_GPU::AcquireRight, "AcquireRight"},
+        {0x0017, &GSP_GPU::ReleaseRight, "ReleaseRight"},
+        {0x0018, &GSP_GPU::ImportDisplayCaptureInfo, "ImportDisplayCaptureInfo"},
+        {0x0019, &GSP_GPU::SaveVramSysArea, "SaveVramSysArea"},
+        {0x001A, &GSP_GPU::RestoreVramSysArea, "RestoreVramSysArea"},
+        {0x001B, nullptr, "ResetGpuCore"},
+        {0x001C, &GSP_GPU::SetLedForceOff, "SetLedForceOff"},
+        {0x001D, nullptr, "SetTestCommand"},
+        {0x001E, nullptr, "SetInternalPriorities"},
+        {0x001F, &GSP_GPU::StoreDataCache, "StoreDataCache"},
         // clang-format on
     };
     RegisterHandlers(functions);

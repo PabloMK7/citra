@@ -13,7 +13,7 @@ PTM_Sets::PTM_Sets(std::shared_ptr<Module> ptm) : Module::Interface(std::move(pt
     static const FunctionInfo functions[] = {
         // Note that this service does not have access to ptm:u's common commands
         // clang-format off
-        {IPC::MakeHeader(0x0001, 2, 0), nullptr, "SetSystemTime"},
+        {0x0001, nullptr, "SetSystemTime"},
         // clang-format on
     };
     RegisterHandlers(functions);

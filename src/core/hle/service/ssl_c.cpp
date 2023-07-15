@@ -13,7 +13,7 @@ SERIALIZE_EXPORT_IMPL(Service::SSL::SSL_C)
 namespace Service::SSL {
 
 void SSL_C::Initialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x01, 0, 2);
+    IPC::RequestParser rp(ctx);
     rp.PopPID();
 
     // Seed random number generator when the SSL service is initialized
@@ -26,7 +26,7 @@ void SSL_C::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void SSL_C::GenerateRandomData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x11, 1, 2);
+    IPC::RequestParser rp(ctx);
     u32 size = rp.Pop<u32>();
     auto buffer = rp.PopMappedBuffer();
 
@@ -62,29 +62,29 @@ void SSL_C::GenerateRandomData(Kernel::HLERequestContext& ctx) {
 SSL_C::SSL_C() : ServiceFramework("ssl:C") {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x0001, 0, 2), &SSL_C::Initialize, "Initialize"},
-        {IPC::MakeHeader(0x0002, 3, 2), nullptr, "CreateContext"},
-        {IPC::MakeHeader(0x0003, 0, 0), nullptr, "CreateRootCertChain"},
-        {IPC::MakeHeader(0x0004, 1, 0), nullptr, "DestroyRootCertChain"},
-        {IPC::MakeHeader(0x0005, 2, 2), nullptr, "AddTrustedRootCA"},
-        {IPC::MakeHeader(0x0006, 2, 0), nullptr, "RootCertChainAddDefaultCert"},
-        {IPC::MakeHeader(0x0007, 2, 0), nullptr, "RootCertChainRemoveCert"},
-        {IPC::MakeHeader(0x000D, 2, 4), nullptr, "OpenClientCertContext"},
-        {IPC::MakeHeader(0x000E, 1, 0), nullptr, "OpenDefaultClientCertContext"},
-        {IPC::MakeHeader(0x000F, 1, 0), nullptr, "CloseClientCertContext"},
-        {IPC::MakeHeader(0x0011, 1, 2), &SSL_C::GenerateRandomData, "GenerateRandomData"},
-        {IPC::MakeHeader(0x0012, 1, 2), nullptr, "InitializeConnectionSession"},
-        {IPC::MakeHeader(0x0013, 1, 0), nullptr, "StartConnection"},
-        {IPC::MakeHeader(0x0014, 1, 0), nullptr, "StartConnectionGetOut"},
-        {IPC::MakeHeader(0x0015, 2, 2), nullptr, "Read"},
-        {IPC::MakeHeader(0x0016, 2, 2), nullptr, "ReadPeek"},
-        {IPC::MakeHeader(0x0017, 2, 2), nullptr, "Write"},
-        {IPC::MakeHeader(0x0018, 2, 0), nullptr, "ContextSetRootCertChain"},
-        {IPC::MakeHeader(0x0019, 2, 0), nullptr, "ContextSetClientCert"},
-        {IPC::MakeHeader(0x001B, 2, 0), nullptr, "ContextClearOpt"},
-        {IPC::MakeHeader(0x001C, 3, 4), nullptr, "ContextGetProtocolCipher"},
-        {IPC::MakeHeader(0x001E, 1, 0), nullptr, "DestroyContext"},
-        {IPC::MakeHeader(0x001F, 2, 2), nullptr, "ContextInitSharedmem"},
+        {0x0001, &SSL_C::Initialize, "Initialize"},
+        {0x0002, nullptr, "CreateContext"},
+        {0x0003, nullptr, "CreateRootCertChain"},
+        {0x0004, nullptr, "DestroyRootCertChain"},
+        {0x0005, nullptr, "AddTrustedRootCA"},
+        {0x0006, nullptr, "RootCertChainAddDefaultCert"},
+        {0x0007, nullptr, "RootCertChainRemoveCert"},
+        {0x000D, nullptr, "OpenClientCertContext"},
+        {0x000E, nullptr, "OpenDefaultClientCertContext"},
+        {0x000F, nullptr, "CloseClientCertContext"},
+        {0x0011, &SSL_C::GenerateRandomData, "GenerateRandomData"},
+        {0x0012, nullptr, "InitializeConnectionSession"},
+        {0x0013, nullptr, "StartConnection"},
+        {0x0014, nullptr, "StartConnectionGetOut"},
+        {0x0015, nullptr, "Read"},
+        {0x0016, nullptr, "ReadPeek"},
+        {0x0017, nullptr, "Write"},
+        {0x0018, nullptr, "ContextSetRootCertChain"},
+        {0x0019, nullptr, "ContextSetClientCert"},
+        {0x001B, nullptr, "ContextClearOpt"},
+        {0x001C, nullptr, "ContextGetProtocolCipher"},
+        {0x001E, nullptr, "DestroyContext"},
+        {0x001F, nullptr, "ContextInitSharedmem"},
         // clang-format on
     };
 

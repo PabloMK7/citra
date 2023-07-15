@@ -12,7 +12,7 @@ namespace Service::NWM {
 NWM_CEC::NWM_CEC() : ServiceFramework("nwm::CEC") {
     static const FunctionInfo functions[] = {
         // clang-format off
-        {IPC::MakeHeader(0x000D, 2, 2), nullptr, "SendProbeRequest"},
+        {0x000D, nullptr, "SendProbeRequest"},
         // clang-format on
     };
     RegisterHandlers(functions);

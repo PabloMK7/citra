@@ -26,7 +26,7 @@ Module::Interface::Interface(std::shared_ptr<Module> frd, const char* name, u32 
 Module::Interface::~Interface() = default;
 
 void Module::Interface::GetMyPresence(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x08, 0, 0);
+    IPC::RequestParser rp(ctx);
 
     std::vector<u8> buffer(sizeof(MyPresence));
     std::memcpy(buffer.data(), &frd->my_presence, buffer.size());
@@ -39,7 +39,7 @@ void Module::Interface::GetMyPresence(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetFriendKeyList(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x11, 2, 0);
+    IPC::RequestParser rp(ctx);
     const u32 unknown = rp.Pop<u32>();
     const u32 frd_count = rp.Pop<u32>();
 
@@ -54,7 +54,7 @@ void Module::Interface::GetFriendKeyList(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetFriendProfile(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x15, 1, 2);
+    IPC::RequestParser rp(ctx);
     const u32 count = rp.Pop<u32>();
     const std::vector<u8> frd_keys = rp.PopStaticBuffer();
     ASSERT(frd_keys.size() == count * sizeof(FriendKey));
@@ -69,7 +69,7 @@ void Module::Interface::GetFriendProfile(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x17, 1, 2);
+    IPC::RequestParser rp(ctx);
     const u32 count = rp.Pop<u32>();
     const std::vector<u8> frd_keys = rp.PopStaticBuffer();
     ASSERT(frd_keys.size() == count * sizeof(FriendKey));
@@ -84,7 +84,7 @@ void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) 
 }
 
 void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x5, 0, 0);
+    IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(frd->my_friend_key);
@@ -93,7 +93,7 @@ void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 0, 0);
+    IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
 
     struct ScreenName {
@@ -119,7 +119,7 @@ void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx
     const std::size_t scrambled_friend_code_size = 12;
     const std::size_t friend_code_size = 8;
 
-    IPC::RequestParser rp(ctx, 0x1C, 1, 2);
+    IPC::RequestParser rp(ctx);
     const u32 friend_code_count = rp.Pop<u32>();
     const std::vector<u8> scrambled_friend_codes = rp.PopStaticBuffer();
     ASSERT_MSG(scrambled_friend_codes.size() == (friend_code_count * scrambled_friend_code_size),
@@ -147,7 +147,7 @@ void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx
 }
 
 void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x32, 1, 2);
+    IPC::RequestParser rp(ctx);
     u32 version = rp.Pop<u32>();
     rp.PopPID();
 

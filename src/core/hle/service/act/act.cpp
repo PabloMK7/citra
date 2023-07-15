@@ -16,7 +16,7 @@ Module::Interface::Interface(std::shared_ptr<Module> act, const char* name)
 Module::Interface::~Interface() = default;
 
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1, 2, 4); // 0x10084
+    IPC::RequestParser rp(ctx);
     const auto sdk_version = rp.Pop<u32>();
     const auto shared_memory_size = rp.Pop<u32>();
     const auto caller_pid = rp.PopPID();
@@ -31,7 +31,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x6, 3, 2); // 0x600C2
+    IPC::RequestParser rp(ctx);
     const auto unknown = rp.Pop<u8>();
     const auto size = rp.Pop<u32>();
     const auto block_id = rp.Pop<u32>();

@@ -163,7 +163,7 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : Region value loaded from SecureInfo offset 0x100
          */
-        void SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 id);
+        void SecureInfoGetRegion(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::SecureInfoGetByte101 service function
@@ -174,7 +174,7 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : Value loaded from SecureInfo offset 0x101
          */
-        void SecureInfoGetByte101(Kernel::HLERequestContext& ctx, u16 id);
+        void SecureInfoGetByte101(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::GenHashConsoleUnique service function
@@ -243,7 +243,7 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void GetConfigInfoBlk8(Kernel::HLERequestContext& ctx, u16 id);
+        void GetConfigInfoBlk8(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::SetConfigInfoBlk4 service function
@@ -259,7 +259,7 @@ public:
          *      The parameters order is different from GetConfigInfoBlk2/8's,
          *      where Block ID and Size are switched.
          */
-        void SetConfigInfoBlk4(Kernel::HLERequestContext& ctx, u16 id);
+        void SetConfigInfoBlk4(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::UpdateConfigNANDSavegame service function
@@ -268,7 +268,7 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void UpdateConfigNANDSavegame(Kernel::HLERequestContext& ctx, u16 id);
+        void UpdateConfigNANDSavegame(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::FormatConfig service function
@@ -278,12 +278,6 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          */
         void FormatConfig(Kernel::HLERequestContext& ctx);
-
-        /// A helper function for dispatching service functions that have multiple IDs
-        template <void (Interface::*function)(Kernel::HLERequestContext& ctx, u16 id), u16 id>
-        void D(Kernel::HLERequestContext& ctx) {
-            (this->*function)(ctx, id);
-        }
 
     protected:
         std::shared_ptr<Module> cfg;
