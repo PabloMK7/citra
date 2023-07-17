@@ -319,6 +319,10 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
             pipe_data[static_cast<u32>(pipe_number)].resize(sizeof(value));
             std::memcpy(pipe_data[static_cast<u32>(pipe_number)].data(), &value, sizeof(value));
         }
+        auto dsp = dsp_dsp.lock();
+        if (dsp) {
+            dsp->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
+        }
         break;
     }
     default:
@@ -461,8 +465,6 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
         // TODO(merry): Signal all the other interrupts as appropriate.
         if (auto service = dsp_dsp.lock()) {
             service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
-            // HACK(merry): Added to prevent regressions. Will remove soon.
-            service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
     }
 

@@ -14,9 +14,16 @@
 namespace AudioCore::HLE {
 
 enum class DecoderCommand : u16 {
+    /// Initializes the decoder.
     Init = 0,
+    /// Decodes/encodes a data frame.
     EncodeDecode = 1,
-    Unknown = 2, // Probably UnInit
+    /// Shuts down the decoder.
+    Shutdown = 2,
+    /// Loads the saved decoder state. Used for DSP wake.
+    LoadState = 3,
+    /// Saves the decoder state. Used for DSP sleep.
+    SaveState = 4,
 };
 
 enum class DecoderCodec : u16 {

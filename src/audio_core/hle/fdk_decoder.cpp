@@ -111,7 +111,11 @@ std::optional<BinaryMessage> FDKDecoder::Impl::ProcessRequest(const BinaryMessag
     case DecoderCommand::EncodeDecode: {
         return Decode(request);
     }
-    case DecoderCommand::Unknown: {
+    case DecoderCommand::Shutdown:
+    case DecoderCommand::SaveState:
+    case DecoderCommand::LoadState: {
+        LOG_WARNING(Audio_DSP, "Got unimplemented binary request: {}",
+                    static_cast<u16>(request.header.cmd));
         BinaryMessage response = request;
         response.header.result = ResultStatus::Success;
         return response;

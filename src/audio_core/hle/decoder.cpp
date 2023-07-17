@@ -42,7 +42,9 @@ std::optional<BinaryMessage> NullDecoder::ProcessRequest(const BinaryMessage& re
     BinaryMessage response{};
     switch (request.header.cmd) {
     case DecoderCommand::Init:
-    case DecoderCommand::Unknown:
+    case DecoderCommand::Shutdown:
+    case DecoderCommand::SaveState:
+    case DecoderCommand::LoadState:
         response = request;
         response.header.result = ResultStatus::Success;
         return response;
