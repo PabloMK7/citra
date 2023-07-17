@@ -988,13 +988,18 @@ ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType
     // Save the title data to send it to the Home Menu when DoApplicationJump is called.
     auto application_slot_data = GetAppletSlot(AppletSlot::Application);
     app_jump_parameters.current_title_id = application_slot_data->title_id;
-    // TODO(Subv): Retrieve the correct media type of the currently-running application. For now
-    // just assume NAND.
-    app_jump_parameters.current_media_type = FS::MediaType::NAND;
-    app_jump_parameters.next_title_id = flags == ApplicationJumpFlags::UseCurrentParameters
-                                            ? application_slot_data->title_id
-                                            : title_id;
-    app_jump_parameters.next_media_type = media_type;
+    // TODO: Basic heuristic to guess media type, needs proper implementation.
+    app_jump_parameters.current_media_type =
+        ((application_slot_data->title_id >> 32) & 0xFFFFFFFF) == 0x00040000
+            ? Service::FS::MediaType::SDMC
+            : Service::FS::MediaType::NAND;
+    if (flags == ApplicationJumpFlags::UseCurrentParameters) {
+        app_jump_parameters.next_title_id = app_jump_parameters.current_title_id;
+        app_jump_parameters.next_media_type = app_jump_parameters.current_media_type;
+    } else {
+        app_jump_parameters.next_title_id = title_id;
+        app_jump_parameters.next_media_type = media_type;
+    }
     app_jump_parameters.flags = flags;
 
     // Note: The real console uses the Home Menu to perform the application jump, therefore the menu
@@ -1020,45 +1025,51 @@ ResultCode AppletManager::DoApplicationJump(const DeliverArg& arg) {
         deliver_arg->source_program_id = title_id;
     }
 
-    // TODO(Subv): Terminate the current Application.
+    if (GetAppletSlot(AppletSlot::HomeMenu)->registered) {
+        // If the home menu is running, use it to jump to the next application.
+        // The home menu will call GetProgramIdOnApplicationJump and
+        // PrepareToStartApplication/StartApplication to launch the title.
+        active_slot = AppletSlot::HomeMenu;
+        SendParameter({
+            .sender_id = AppletId::Application,
+            .destination_id = AppletId::HomeMenu,
+            .signal = SignalType::WakeupToLaunchApplication,
+        });
 
-    // Note: The real console sends signal 17 (WakeupToLaunchApplication) to the Home Menu, this
-    // prompts it to call GetProgramIdOnApplicationJump and
-    // PrepareToStartApplication/StartApplication on the title to launch.
-    active_slot = AppletSlot::Application;
+        // TODO: APT terminates the application here, usually it will exit itself properly though.
+        return RESULT_SUCCESS;
+    } else {
+        // Otherwise, work around the missing home menu by launching the title directly.
 
-    // Perform a soft-reset if we're trying to relaunch the same title.
-    // TODO(Subv): Note that this reboots the entire emulated system, a better way would be to
-    // simply re-launch the title without closing all services, but this would only work for
-    // installed titles since we have no way of getting the file path of an arbitrary game dump
-    // based only on the title id.
+        // TODO: The emulator does not support terminating the old process immediately.
+        // We could call TerminateProcess but references to the process are still held elsewhere,
+        // preventing clean up. This code is left commented for when this is implemented, for now we
+        // cannot use NS as the old process resources would interfere with the new ones.
+        /*
+        auto process =
+            NS::LaunchTitle(app_jump_parameters.next_media_type, app_jump_parameters.next_title_id);
+        if (!process) {
+            LOG_CRITICAL(Service_APT, "Failed to launch title during application jump, exiting.");
+            system.RequestShutdown();
+        }
+        return RESULT_SUCCESS;
+        */
 
-    auto new_path = Service::AM::GetTitleContentPath(app_jump_parameters.next_media_type,
-                                                     app_jump_parameters.next_title_id);
-    if (new_path.empty() || !FileUtil::Exists(new_path)) {
-        LOG_CRITICAL(
-            Service_APT,
-            "Failed to find title during application jump: {} Resetting current title instead.",
-            new_path);
-        new_path.clear();
+        auto new_path = Service::AM::GetTitleContentPath(app_jump_parameters.next_media_type,
+                                                         app_jump_parameters.next_title_id);
+        if (new_path.empty() || !FileUtil::Exists(new_path)) {
+            // TODO: This can happen if the requested title is not installed. Need a way to find
+            // non-installed titles in the game list.
+            LOG_CRITICAL(
+                Service_APT,
+                "Failed to find title during application jump: {} Resetting current title instead.",
+                new_path);
+            new_path.clear();
+        }
+
+        system.RequestReset(new_path);
+        return RESULT_SUCCESS;
     }
-
-    system.RequestReset(new_path);
-    return RESULT_SUCCESS;
-
-    // Launch the title directly.
-    // The emulator does not suport terminating old processes, would require a lot of cleanup
-    // This code is left commented for when this is implemented, for now we cannot use NS
-    // as the old process resources would interfere with the new ones
-    /*
-    auto process =
-        NS::LaunchTitle(app_jump_parameters.next_media_type, app_jump_parameters.next_title_id);
-    if (!process) {
-        LOG_CRITICAL(Service_APT, "Failed to launch title during application jump, exiting.");
-        system.RequestShutdown();
-    }
-    return RESULT_SUCCESS;
-    */
 }
 
 ResultCode AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType media_type) {

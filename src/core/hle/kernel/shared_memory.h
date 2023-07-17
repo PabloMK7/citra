@@ -9,6 +9,7 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 #include "core/hle/kernel/object.h"
@@ -98,7 +99,7 @@ private:
     /// Permission restrictions applied to other processes mapping the block.
     MemoryPermission other_permissions{};
     /// Process that created this shared memory block.
-    Process* owner_process;
+    std::weak_ptr<Process> owner_process;
     /// Address of shared memory block in the owner process if specified.
     VAddr base_address = 0;
     /// Name of shared memory object.

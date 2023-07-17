@@ -391,9 +391,9 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         plgldr->OnMemoryChanged(process, Core::System::GetInstance().Kernel());
 }
 
-ResultVal<std::vector<std::pair<MemoryRef, u32>>> VMManager::GetBackingBlocksForRange(VAddr address,
-                                                                                      u32 size) {
-    std::vector<std::pair<MemoryRef, u32>> backing_blocks;
+ResultVal<MemoryRegionInfo::IntervalSet> VMManager::GetBackingBlocksForRange(VAddr address,
+                                                                             u32 size) {
+    MemoryRegionInfo::IntervalSet backing_blocks;
     VAddr interval_target = address;
     while (interval_target != address + size) {
         auto vma = FindVMA(interval_target);
@@ -404,8 +404,10 @@ ResultVal<std::vector<std::pair<MemoryRef, u32>>> VMManager::GetBackingBlocksFor
 
         VAddr interval_end = std::min(address + size, vma->second.base + vma->second.size);
         u32 interval_size = interval_end - interval_target;
-        auto backing_memory = vma->second.backing_memory + (interval_target - vma->second.base);
-        backing_blocks.push_back({backing_memory, interval_size});
+        auto backing_memory = memory.GetFCRAMOffset(vma->second.backing_memory +
+                                                    (interval_target - vma->second.base));
+        backing_blocks +=
+            MemoryRegionInfo::Interval(backing_memory, backing_memory + interval_size);
 
         interval_target += interval_size;
     }

@@ -79,7 +79,18 @@ std::shared_ptr<Process> KernelSystem::CreateProcess(std::shared_ptr<CodeSet> co
     return process;
 }
 
-void KernelSystem::RemoveProcess(std::shared_ptr<Process> process) {
+void KernelSystem::TerminateProcess(std::shared_ptr<Process> process) {
+    LOG_INFO(Kernel_SVC, "Process {} exiting", process->process_id);
+
+    ASSERT_MSG(process->status == ProcessStatus::Running, "Process has already exited");
+    process->status = ProcessStatus::Exited;
+
+    // Stop all process threads.
+    for (u32 core = 0; core < Core::GetNumCores(); core++) {
+        GetThreadManager(core).TerminateProcessThreads(process);
+    }
+
+    process->Exit();
     std::erase(process_list, process);
 }
 
@@ -268,6 +279,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         interval_target += interval_size;
     }
 
+    holding_memory += allocated_fcram;
     memory_used += size;
     resource_limit->current_commit += size;
 
@@ -288,13 +300,14 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
 
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
-    for (const auto& [backing_memory, block_size] : backing_blocks) {
-        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory.GetPtr()), block_size);
+    for (const auto& backing_block : backing_blocks) {
+        memory_region->Free(backing_block.lower(), backing_block.upper() - backing_block.lower());
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
     ASSERT(result.IsSuccess());
 
+    holding_memory -= backing_blocks;
     memory_used -= size;
     resource_limit->current_commit -= size;
 
@@ -340,6 +353,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     ASSERT(vma.Succeeded());
     vm_manager.Reprotect(vma.Unwrap(), perms);
 
+    holding_memory += MemoryRegionInfo::Interval(physical_offset, physical_offset + size);
     memory_used += size;
     resource_limit->current_commit += size;
 
@@ -365,13 +379,84 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
         return result;
     }
 
-    memory_used -= size;
-    resource_limit->current_commit -= size;
-
     u32 physical_offset = target - GetLinearHeapAreaAddress(); // relative to FCRAM
     memory_region->Free(physical_offset, size);
 
+    holding_memory -= MemoryRegionInfo::Interval(physical_offset, physical_offset + size);
+    memory_used -= size;
+    resource_limit->current_commit -= size;
+
     return RESULT_SUCCESS;
+}
+
+ResultVal<VAddr> Process::AllocateThreadLocalStorage() {
+    std::size_t tls_page;
+    std::size_t tls_slot;
+    bool needs_allocation = true;
+
+    // Iterate over all the allocated pages, and try to find one where not all slots are used.
+    for (tls_page = 0; tls_page < tls_slots.size(); ++tls_page) {
+        const auto& page_tls_slots = tls_slots[tls_page];
+        if (!page_tls_slots.all()) {
+            // We found a page with at least one free slot, find which slot it is.
+            for (tls_slot = 0; tls_slot < page_tls_slots.size(); ++tls_slot) {
+                if (!page_tls_slots.test(tls_slot)) {
+                    needs_allocation = false;
+                    break;
+                }
+            }
+
+            if (!needs_allocation) {
+                break;
+            }
+        }
+    }
+
+    if (needs_allocation) {
+        tls_page = tls_slots.size();
+        tls_slot = 0;
+
+        LOG_DEBUG(Kernel, "Allocating new TLS page in slot {}", tls_page);
+
+        // There are no already-allocated pages with free slots, lets allocate a new one.
+        // TLS pages are allocated from the BASE region in the linear heap.
+        auto base_memory_region = kernel.GetMemoryRegion(MemoryRegion::BASE);
+
+        // Allocate some memory from the end of the linear heap for this region.
+        auto offset = base_memory_region->LinearAllocate(Memory::CITRA_PAGE_SIZE);
+        if (!offset) {
+            LOG_ERROR(Kernel_SVC,
+                      "Not enough space in BASE linear region to allocate a new TLS page");
+            return ERR_OUT_OF_MEMORY;
+        }
+
+        holding_tls_memory +=
+            MemoryRegionInfo::Interval(*offset, *offset + Memory::CITRA_PAGE_SIZE);
+        memory_used += Memory::CITRA_PAGE_SIZE;
+
+        // The page is completely available at the start.
+        tls_slots.emplace_back(0);
+
+        // Map the page to the current process' address space.
+        auto tls_page_addr =
+            Memory::TLS_AREA_VADDR + static_cast<VAddr>(tls_page) * Memory::CITRA_PAGE_SIZE;
+        vm_manager.MapBackingMemory(tls_page_addr, kernel.memory.GetFCRAMRef(*offset),
+                                    Memory::CITRA_PAGE_SIZE, MemoryState::Locked);
+
+        LOG_DEBUG(Kernel, "Allocated TLS page at addr={:08X}", tls_page_addr);
+    } else {
+        LOG_DEBUG(Kernel, "Allocating TLS in existing page slot {}", tls_page);
+    }
+
+    // Mark the slot as used
+    tls_slots[tls_page].set(tls_slot);
+
+    auto tls_address = Memory::TLS_AREA_VADDR +
+                       static_cast<VAddr>(tls_page) * Memory::CITRA_PAGE_SIZE +
+                       static_cast<VAddr>(tls_slot) * Memory::TLS_ENTRY_SIZE;
+    kernel.memory.ZeroBlock(*this, tls_address, Memory::TLS_ENTRY_SIZE);
+
+    return tls_address;
 }
 
 ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perms,
@@ -419,7 +504,9 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
 
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(source, size));
     VAddr interval_target = target;
-    for (const auto& [backing_memory, block_size] : backing_blocks) {
+    for (const auto& backing_block : backing_blocks) {
+        auto backing_memory = kernel.memory.GetFCRAMRef(backing_block.lower());
+        auto block_size = backing_block.upper() - backing_block.lower();
         auto target_vma =
             vm_manager.MapBackingMemory(interval_target, backing_memory, block_size, target_state);
         ASSERT(target_vma.Succeeded());
@@ -471,6 +558,42 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
     return RESULT_SUCCESS;
 }
 
+void Process::FreeAllMemory() {
+    if (memory_region == nullptr || resource_limit == nullptr) {
+        return;
+    }
+
+    // Free any heap/linear memory allocations.
+    for (auto& entry : holding_memory) {
+        LOG_DEBUG(Kernel, "Freeing process memory region 0x{:08X} - 0x{:08X}", entry.lower(),
+                  entry.upper());
+        auto size = entry.upper() - entry.lower();
+        memory_region->Free(entry.lower(), size);
+        memory_used -= size;
+        resource_limit->current_commit -= size;
+    }
+    holding_memory.clear();
+
+    // Free any TLS memory allocations.
+    auto base_memory_region = kernel.GetMemoryRegion(MemoryRegion::BASE);
+    for (auto& entry : holding_tls_memory) {
+        LOG_DEBUG(Kernel, "Freeing process TLS memory region 0x{:08X} - 0x{:08X}", entry.lower(),
+                  entry.upper());
+        auto size = entry.upper() - entry.lower();
+        base_memory_region->Free(entry.lower(), size);
+        memory_used -= size;
+    }
+    holding_tls_memory.clear();
+    tls_slots.clear();
+
+    // Diagnostics for debugging.
+    // TODO: The way certain non-application shared memory is allocated can result in very slight
+    // leaks in these values still.
+    LOG_DEBUG(Kernel, "Remaining memory used after process cleanup: 0x{:08X}", memory_used);
+    LOG_DEBUG(Kernel, "Remaining memory resource commit after process cleanup: 0x{:08X}",
+              resource_limit->current_commit);
+}
+
 Kernel::Process::Process(KernelSystem& kernel)
     : Object(kernel), handle_table(kernel), vm_manager(kernel.memory, *this), kernel(kernel) {
     kernel.memory.RegisterPageTable(vm_manager.page_table);
@@ -484,6 +607,7 @@ Kernel::Process::~Process() {
     // memory etc.) even if they are still referenced by other processes.
     handle_table.Clear();
 
+    FreeAllMemory();
     kernel.memory.UnregisterPageTable(vm_manager.page_table);
 }
 

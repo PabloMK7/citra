@@ -369,6 +369,7 @@ private:
     ResultCode ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32 operation,
                              u32 permissions);
     void ExitProcess();
+    ResultCode TerminateProcess(Handle handle);
     ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions);
     ResultCode UnmapMemoryBlock(Handle handle, u32 addr);
     ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address);
@@ -535,41 +536,18 @@ ResultCode SVC::ControlMemory(u32* out_addr, u32 addr0, u32 addr1, u32 size, u32
 }
 
 void SVC::ExitProcess() {
-    std::shared_ptr<Process> current_process = kernel.GetCurrentProcess();
-    LOG_INFO(Kernel_SVC, "Process {} exiting", current_process->process_id);
+    kernel.TerminateProcess(kernel.GetCurrentProcess());
+}
 
-    ASSERT_MSG(current_process->status == ProcessStatus::Running, "Process has already exited");
-
-    current_process->status = ProcessStatus::Exited;
-
-    // Stop all the process threads that are currently waiting for objects.
-    const auto thread_list = kernel.GetCurrentThreadManager().GetThreadList();
-    for (auto& thread : thread_list) {
-        if (thread->owner_process.lock() != current_process) {
-            continue;
-        }
-
-        if (thread.get() == kernel.GetCurrentThreadManager().GetCurrentThread()) {
-            continue;
-        }
-
-        // TODO(Subv): When are the other running/ready threads terminated?
-        ASSERT_MSG(thread->status == ThreadStatus::WaitSynchAny ||
-                       thread->status == ThreadStatus::WaitSynchAll,
-                   "Exiting processes with non-waiting threads is currently unimplemented");
-
-        thread->Stop();
+ResultCode SVC::TerminateProcess(Handle handle) {
+    std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(handle);
+    if (process == nullptr) {
+        return ERR_INVALID_HANDLE;
     }
 
-    current_process->Exit();
-
-    // Kill the current thread
-    kernel.GetCurrentThreadManager().GetCurrentThread()->Stop();
-
-    // Remove kernel reference to process so it can be cleaned up.
-    kernel.RemoveProcess(current_process);
-
-    system.PrepareReschedule();
+    kernel.TerminateProcess(process);
+    return RESULT_SUCCESS;
 }
 
 /// Maps a memory block to specified address
@@ -1690,7 +1668,7 @@ ResultCode SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my
 
     CASCADE_RESULT(shared_memory,
                    kernel.CreateSharedMemory(
-                       current_process.get(), size, static_cast<MemoryPermission>(my_permission),
+                       current_process, size, static_cast<MemoryPermission>(my_permission),
                        static_cast<MemoryPermission>(other_permission), addr, region));
     CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(shared_memory)));
 
@@ -2244,7 +2222,7 @@ const std::array<SVC::FunctionDef, 180> SVC::SVC_Table{{
     {0x73, nullptr, "CreateCodeSet"},
     {0x74, nullptr, "RandomStub"},
     {0x75, nullptr, "CreateProcess"},
-    {0x76, nullptr, "TerminateProcess"},
+    {0x76, &SVC::Wrap<&SVC::TerminateProcess>, "TerminateProcess"},
     {0x77, nullptr, "SetProcessResourceLimits"},
     {0x78, nullptr, "CreateResourceLimit"},
     {0x79, nullptr, "SetResourceLimitValues"},

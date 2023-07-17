@@ -217,6 +217,8 @@ public:
     u32 memory_used = 0;
 
     std::shared_ptr<MemoryRegionInfo> memory_region = nullptr;
+    MemoryRegionInfo::IntervalSet holding_memory;
+    MemoryRegionInfo::IntervalSet holding_tls_memory;
 
     /// The Thread Local Storage area is allocated as processes create threads,
     /// each TLS area is 0x200 bytes, so one page (0x1000) is split up in 8 parts, and each part
@@ -237,12 +239,16 @@ public:
     ResultVal<VAddr> LinearAllocate(VAddr target, u32 size, VMAPermission perms);
     ResultCode LinearFree(VAddr target, u32 size);
 
+    ResultVal<VAddr> AllocateThreadLocalStorage();
+
     ResultCode Map(VAddr target, VAddr source, u32 size, VMAPermission perms,
                    bool privileged = false);
     ResultCode Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
                      bool privileged = false);
 
 private:
+    void FreeAllMemory();
+
     KernelSystem& kernel;
 
     friend class boost::serialization::access;

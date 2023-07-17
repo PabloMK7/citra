@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cstring>
 #include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
@@ -20,15 +19,21 @@ SharedMemory::~SharedMemory() {
         kernel.GetMemoryRegion(MemoryRegion::SYSTEM)
             ->Free(interval.lower(), interval.upper() - interval.lower());
     }
-    if (base_address != 0 && owner_process != nullptr) {
-        owner_process->vm_manager.ChangeMemoryState(base_address, size, MemoryState::Locked,
-                                                    VMAPermission::None, MemoryState::Private,
-                                                    VMAPermission::ReadWrite);
+
+    auto process = owner_process.lock();
+    if (process) {
+        if (base_address != 0) {
+            process->vm_manager.ChangeMemoryState(base_address, size, MemoryState::Locked,
+                                                  VMAPermission::None, MemoryState::Private,
+                                                  VMAPermission::ReadWrite);
+        } else {
+            process->memory_used -= size;
+        }
     }
 }
 
 ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
-    Process* owner_process, u32 size, MemoryPermission permissions,
+    std::shared_ptr<Process> owner_process, u32 size, MemoryPermission permissions,
     MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
     auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
@@ -52,11 +57,11 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
         shared_memory->linear_heap_phys_offset = *offset;
 
         // Increase the amount of used linear heap memory for the owner process.
-        if (shared_memory->owner_process != nullptr) {
-            shared_memory->owner_process->memory_used += size;
+        if (owner_process != nullptr) {
+            owner_process->memory_used += size;
         }
     } else {
-        auto& vm_manager = shared_memory->owner_process->vm_manager;
+        auto& vm_manager = owner_process->vm_manager;
         // The memory is already available and mapped in the owner process.
 
         CASCADE_CODE(vm_manager.ChangeMemoryState(address, size, MemoryState::Private,
@@ -65,7 +70,10 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
 
         auto backing_blocks = vm_manager.GetBackingBlocksForRange(address, size);
         ASSERT(backing_blocks.Succeeded()); // should success after verifying memory state above
-        shared_memory->backing_blocks = std::move(backing_blocks).Unwrap();
+        for (const auto& interval : backing_blocks.Unwrap()) {
+            shared_memory->backing_blocks.emplace_back(memory.GetFCRAMRef(interval.lower()),
+                                                       interval.upper() - interval.lower());
+        }
     }
 
     shared_memory->base_address = address;
@@ -82,14 +90,14 @@ std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     auto backing_blocks = memory_region->HeapAllocate(size);
     ASSERT_MSG(!backing_blocks.empty(), "Not enough space in region to allocate shared memory!");
     shared_memory->holding_memory = backing_blocks;
-    shared_memory->owner_process = nullptr;
+    shared_memory->owner_process = std::weak_ptr<Process>();
     shared_memory->name = std::move(name);
     shared_memory->size = size;
     shared_memory->permissions = permissions;
     shared_memory->other_permissions = other_permissions;
     for (const auto& interval : backing_blocks) {
-        shared_memory->backing_blocks.push_back(
-            {memory.GetFCRAMRef(interval.lower()), interval.upper() - interval.lower()});
+        shared_memory->backing_blocks.emplace_back(memory.GetFCRAMRef(interval.lower()),
+                                                   interval.upper() - interval.lower());
         std::fill(memory.GetFCRAMPointer(interval.lower()),
                   memory.GetFCRAMPointer(interval.upper()), 0);
     }
@@ -102,7 +110,7 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
                              MemoryPermission other_permissions) {
 
     MemoryPermission own_other_permissions =
-        &target_process == owner_process ? this->permissions : this->other_permissions;
+        &target_process == owner_process.lock().get() ? this->permissions : this->other_permissions;
 
     // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
     if (base_address == 0 && other_permissions != MemoryPermission::DontCare) {

@@ -199,11 +199,34 @@ void ThreadManager::WaitCurrentThread_Sleep() {
 }
 
 void ThreadManager::ExitCurrentThread() {
-    Thread* thread = GetCurrentThread();
-    thread->Stop();
-    thread_list.erase(std::remove_if(thread_list.begin(), thread_list.end(),
-                                     [thread](const auto& p) { return p.get() == thread; }),
-                      thread_list.end());
+    current_thread->Stop();
+    std::erase(thread_list, current_thread);
+    kernel.PrepareReschedule();
+}
+
+void ThreadManager::TerminateProcessThreads(std::shared_ptr<Process> process) {
+    auto iter = thread_list.begin();
+    while (iter != thread_list.end()) {
+        auto& thread = *iter;
+        if (thread == current_thread || thread->owner_process.lock() != process) {
+            iter++;
+            continue;
+        }
+
+        if (thread->status != ThreadStatus::WaitSynchAny &&
+            thread->status != ThreadStatus::WaitSynchAll) {
+            // TODO: How does the real kernel handle non-waiting threads?
+            LOG_WARNING(Kernel, "Terminating non-waiting thread {}", thread->thread_id);
+        }
+
+        thread->Stop();
+        iter = thread_list.erase(iter);
+    }
+
+    // Kill the current thread last, if applicable.
+    if (current_thread != nullptr && current_thread->owner_process.lock() == process) {
+        ExitCurrentThread();
+    }
 }
 
 void ThreadManager::ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
@@ -296,32 +319,6 @@ void ThreadManager::DebugThreadQueue() {
 }
 
 /**
- * Finds a free location for the TLS section of a thread.
- * @param tls_slots The TLS page array of the thread's owner process.
- * Returns a tuple of (page, slot, alloc_needed) where:
- * page: The index of the first allocated TLS page that has free slots.
- * slot: The index of the first free slot in the indicated page.
- * alloc_needed: Whether there's a need to allocate a new TLS page (All pages are full).
- */
-static std::tuple<std::size_t, std::size_t, bool> GetFreeThreadLocalSlot(
-    std::span<const std::bitset<8>> tls_slots) {
-    // Iterate over all the allocated pages, and try to find one where not all slots are used.
-    for (std::size_t page = 0; page < tls_slots.size(); ++page) {
-        const auto& page_tls_slots = tls_slots[page];
-        if (!page_tls_slots.all()) {
-            // We found a page with at least one free slot, find which slot it is
-            for (std::size_t slot = 0; slot < page_tls_slots.size(); ++slot) {
-                if (!page_tls_slots.test(slot)) {
-                    return std::make_tuple(page, slot, false);
-                }
-            }
-        }
-    }
-
-    return std::make_tuple(0, 0, true);
-}
-
-/**
  * Resets a thread context, making it ready to be scheduled and run by the CPU
  * @param context Thread context to reset
  * @param stack_top Address of the top of the stack
@@ -376,45 +373,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     thread->name = std::move(name);
     thread_managers[processor_id]->wakeup_callback_table[thread->thread_id] = thread.get();
     thread->owner_process = owner_process;
-
-    // Find the next available TLS index, and mark it as used
-    auto& tls_slots = owner_process->tls_slots;
-
-    auto [available_page, available_slot, needs_allocation] = GetFreeThreadLocalSlot(tls_slots);
-
-    if (needs_allocation) {
-        // There are no already-allocated pages with free slots, lets allocate a new one.
-        // TLS pages are allocated from the BASE region in the linear heap.
-        auto memory_region = GetMemoryRegion(MemoryRegion::BASE);
-
-        // Allocate some memory from the end of the linear heap for this region.
-        auto offset = memory_region->LinearAllocate(Memory::CITRA_PAGE_SIZE);
-        if (!offset) {
-            LOG_ERROR(Kernel_SVC,
-                      "Not enough space in region to allocate a new TLS page for thread");
-            return ERR_OUT_OF_MEMORY;
-        }
-        owner_process->memory_used += Memory::CITRA_PAGE_SIZE;
-
-        tls_slots.emplace_back(0); // The page is completely available at the start
-        available_page = tls_slots.size() - 1;
-        available_slot = 0; // Use the first slot in the new page
-
-        auto& vm_manager = owner_process->vm_manager;
-
-        // Map the page to the current process' address space.
-        vm_manager.MapBackingMemory(
-            Memory::TLS_AREA_VADDR + static_cast<VAddr>(available_page) * Memory::CITRA_PAGE_SIZE,
-            memory.GetFCRAMRef(*offset), Memory::CITRA_PAGE_SIZE, MemoryState::Locked);
-    }
-
-    // Mark the slot as used
-    tls_slots[available_page].set(available_slot);
-    thread->tls_address = Memory::TLS_AREA_VADDR +
-                          static_cast<VAddr>(available_page) * Memory::CITRA_PAGE_SIZE +
-                          static_cast<VAddr>(available_slot) * Memory::TLS_ENTRY_SIZE;
-
-    memory.ZeroBlock(*owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);
+    CASCADE_RESULT(thread->tls_address, owner_process->AllocateThreadLocalStorage());
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context

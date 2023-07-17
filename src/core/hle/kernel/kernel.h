@@ -135,10 +135,10 @@ public:
     std::shared_ptr<Process> CreateProcess(std::shared_ptr<CodeSet> code_set);
 
     /**
-     * Removes a process from the kernel process list
-     * @param process Process to remove
+     * Terminates a process, killing its threads and removing it from the process list.
+     * @param process Process to terminate.
      */
-    void RemoveProcess(std::shared_ptr<Process> process);
+    void TerminateProcess(std::shared_ptr<Process> process);
 
     /**
      * Creates and returns a new thread. The new thread is immediately scheduled
@@ -208,7 +208,7 @@ public:
      * @param name Optional object name, used for debugging purposes.
      */
     ResultVal<std::shared_ptr<SharedMemory>> CreateSharedMemory(
-        Process* owner_process, u32 size, MemoryPermission permissions,
+        std::shared_ptr<Process> owner_process, u32 size, MemoryPermission permissions,
         MemoryPermission other_permissions, VAddr address = 0,
         MemoryRegion region = MemoryRegion::BASE, std::string name = "Unknown");
 

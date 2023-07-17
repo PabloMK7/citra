@@ -205,8 +205,7 @@ public:
     void LogLayout(Common::Log::Level log_level) const;
 
     /// Gets a list of backing memory blocks for the specified range
-    ResultVal<std::vector<std::pair<MemoryRef, u32>>> GetBackingBlocksForRange(VAddr address,
-                                                                               u32 size);
+    ResultVal<MemoryRegionInfo::IntervalSet> GetBackingBlocksForRange(VAddr address, u32 size);
 
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.
