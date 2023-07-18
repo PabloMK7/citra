@@ -6,6 +6,7 @@
 
 #include "video_core/rasterizer_cache/framebuffer_base.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
+#include "video_core/rasterizer_cache/surface_base.h"
 #include "video_core/renderer_opengl/gl_blit_helper.h"
 
 namespace VideoCore {

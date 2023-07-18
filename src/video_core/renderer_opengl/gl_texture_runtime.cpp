@@ -484,20 +484,19 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
 
 bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
                                  const VideoCore::StagingData& staging) {
-    const bool is_full_download = download.texture_rect == GetRect();
-    const bool has_sub_image = driver->HasArbGetTextureSubImage();
-    if (driver->IsOpenGLES() || (!is_full_download && !has_sub_image)) {
+    if (driver->IsOpenGLES()) {
         return false;
     }
 
-    const GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
     const auto& tuple = runtime->GetFormatTuple(pixel_format);
+    const u32 unscaled_width = download.texture_rect.GetWidth();
 
-    glActiveTexture(GL_TEXTURE0);
-    glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride));
+    glPixelStorei(GL_PACK_ROW_LENGTH, unscaled_width);
     SCOPE_EXIT({ glPixelStorei(GL_PACK_ROW_LENGTH, 0); });
 
     // Prefer glGetTextureSubImage in most cases since it's the fastest and most convenient option
+    const bool is_full_download = download.texture_rect == GetRect();
+    const bool has_sub_image = driver->HasArbGetTextureSubImage();
     if (has_sub_image) {
         const GLsizei buf_size = static_cast<GLsizei>(staging.mapped.size());
         glGetTextureSubImage(Handle(0), download.texture_level, download.texture_rect.left,
@@ -505,16 +504,19 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
                              download.texture_rect.GetHeight(), 1, tuple.format, tuple.type,
                              buf_size, staging.mapped.data());
         return true;
+    } else if (is_full_download) {
+        // This should only trigger for full texture downloads in oldish intel drivers
+        // that only support up to 4.3
+        OpenGLState state = OpenGLState::GetCurState();
+        state.texture_units[0].texture_2d = Handle(0);
+        state.Apply();
+
+        glGetTexImage(GL_TEXTURE_2D, download.texture_level, tuple.format, tuple.type,
+                      staging.mapped.data());
+
+        return true;
     }
-
-    // This should only trigger for full texture downloads in oldish intel drivers
-    // that only support up to 4.3
-    glBindTexture(GL_TEXTURE_2D, Handle(0));
-    glGetTexImage(GL_TEXTURE_2D, download.texture_level, tuple.format, tuple.type,
-                  staging.mapped.data());
-    glBindTexture(GL_TEXTURE_2D, old_tex);
-
-    return true;
+    return false;
 }
 
 void Surface::Attach(GLenum target, u32 level, u32 layer, bool scaled) {

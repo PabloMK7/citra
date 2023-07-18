@@ -14,6 +14,7 @@
 #include "core/memory.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
+#include "video_core/rasterizer_cache/surface_base.h"
 #include "video_core/regs.h"
 #include "video_core/renderer_base.h"
 #include "video_core/texture/texture_decode.h"
@@ -1212,7 +1213,7 @@ void RasterizerCache<T>::ClearAll(bool flush) {
 
     // Remove the whole cache without really looking at it.
     cached_pages -= flush_interval;
-    dirty_regions -= SurfaceInterval(0x0, 0xFFFFFFFF);
+    dirty_regions.clear();
     page_table.clear();
     remove_surfaces.clear();
 }

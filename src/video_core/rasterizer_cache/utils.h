@@ -5,23 +5,10 @@
 #pragma once
 
 #include <span>
-#include "common/hash.h"
 #include "common/math_util.h"
-#include "common/slot_vector.h"
 #include "common/vector_math.h"
-#include "video_core/regs_texturing.h"
 
 namespace VideoCore {
-
-using SurfaceId = Common::SlotId;
-using SamplerId = Common::SlotId;
-
-/// Fake surface ID for null surfaces
-constexpr SurfaceId NULL_SURFACE_ID{0};
-/// Fake surface ID for null cube surfaces
-constexpr SurfaceId NULL_SURFACE_CUBE_ID{1};
-/// Fake sampler ID for null samplers
-constexpr SamplerId NULL_SAMPLER_ID{0};
 
 struct Offset {
     u32 x = 0;
@@ -79,30 +66,6 @@ struct StagingData {
     std::span<u8> mapped;
 };
 
-struct TextureCubeConfig {
-    PAddr px;
-    PAddr nx;
-    PAddr py;
-    PAddr ny;
-    PAddr pz;
-    PAddr nz;
-    u32 width;
-    u32 levels;
-    Pica::TexturingRegs::TextureFormat format;
-
-    bool operator==(const TextureCubeConfig& rhs) const {
-        return std::memcmp(this, &rhs, sizeof(TextureCubeConfig)) == 0;
-    }
-
-    bool operator!=(const TextureCubeConfig& rhs) const {
-        return std::memcmp(this, &rhs, sizeof(TextureCubeConfig)) != 0;
-    }
-
-    const u64 Hash() const {
-        return Common::ComputeHash64(this, sizeof(TextureCubeConfig));
-    }
-};
-
 class SurfaceParams;
 
 u32 MipLevels(u32 width, u32 height, u32 max_level);
@@ -134,12 +97,3 @@ void DecodeTexture(const SurfaceParams& surface_info, PAddr start_addr, PAddr en
                    std::span<u8> source, std::span<u8> dest, bool convert = false);
 
 } // namespace VideoCore
-
-namespace std {
-template <>
-struct hash<VideoCore::TextureCubeConfig> {
-    std::size_t operator()(const VideoCore::TextureCubeConfig& config) const noexcept {
-        return config.Hash();
-    }
-};
-} // namespace std

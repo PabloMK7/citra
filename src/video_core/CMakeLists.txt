@@ -42,11 +42,13 @@ add_library(video_core STATIC
     rasterizer_cache/rasterizer_cache.h
     rasterizer_cache/rasterizer_cache_base.h
     rasterizer_cache/sampler_params.h
+    rasterizer_cache/slot_id.h
     rasterizer_cache/surface_base.cpp
     rasterizer_cache/surface_base.h
     rasterizer_cache/surface_params.cpp
     rasterizer_cache/surface_params.h
     rasterizer_cache/texture_codec.h
+    rasterizer_cache/texture_cube.h
     rasterizer_cache/utils.cpp
     rasterizer_cache/utils.h
     renderer_opengl/frame_dumper_opengl.cpp

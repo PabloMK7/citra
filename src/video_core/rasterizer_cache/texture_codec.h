@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #pragma once
+
 #include <algorithm>
 #include <bit>
 #include <span>
@@ -264,6 +265,7 @@ static constexpr void MortonCopy(u32 width, u32 height, u32 start_offset, u32 en
     const u32 aligned_down_start_offset = Common::AlignDown(start_offset, tile_size);
     const u32 aligned_start_offset = Common::AlignUp(start_offset, tile_size);
     const u32 aligned_end_offset = Common::AlignDown(end_offset, tile_size);
+    const u32 begin_pixel_index = aligned_down_start_offset * 8 / GetFormatBpp(format);
 
     ASSERT(!morton_to_linear ||
            (aligned_start_offset == start_offset && aligned_end_offset == end_offset));
@@ -271,12 +273,12 @@ static constexpr void MortonCopy(u32 width, u32 height, u32 start_offset, u32 en
     // In OpenGL the texture origin is in the bottom left corner as opposed to other
     // APIs that have it at the top left. To avoid flipping texture coordinates in
     // the shader we read/write the linear buffer from the bottom up
-    u32 linear_offset = ((height - 8) * width) * aligned_bytes_per_pixel;
+    u32 x = (begin_pixel_index % (width * 8)) / 8;
+    u32 y = (begin_pixel_index / (width * 8)) * 8;
+    u32 linear_offset = ((height - 8 - y) * width + x) * aligned_bytes_per_pixel;
     u32 tiled_offset = 0;
-    u32 x = 0;
-    u32 y = 0;
 
-    const auto LinearNextTile = [&] {
+    const auto linear_next_tile = [&] {
         x = (x + 8) % width;
         linear_offset += 8 * aligned_bytes_per_pixel;
         if (!x) {
@@ -300,7 +302,7 @@ static constexpr void MortonCopy(u32 width, u32 height, u32 start_offset, u32 en
                     std::min(aligned_start_offset, end_offset) - start_offset);
 
         tiled_offset += aligned_start_offset - start_offset;
-        LinearNextTile();
+        linear_next_tile();
     }
 
     // If the copy spans multiple tiles, copy the fully aligned tiles in between.
@@ -313,7 +315,7 @@ static constexpr void MortonCopy(u32 width, u32 height, u32 start_offset, u32 en
             auto tiled_data = tiled_buffer.subspan(tiled_offset, tile_size);
             MortonCopyTile<morton_to_linear, format, converted>(width, tiled_data, linear_data);
             tiled_offset += tile_size;
-            LinearNextTile();
+            linear_next_tile();
         }
     }
 

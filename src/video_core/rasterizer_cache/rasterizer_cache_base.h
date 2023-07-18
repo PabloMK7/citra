@@ -11,7 +11,8 @@
 #include <boost/icl/interval_map.hpp>
 #include <tsl/robin_map.h>
 #include "video_core/rasterizer_cache/sampler_params.h"
-#include "video_core/rasterizer_cache/surface_base.h"
+#include "video_core/rasterizer_cache/surface_params.h"
+#include "video_core/rasterizer_cache/texture_cube.h"
 
 namespace Memory {
 class MemorySystem;
@@ -68,12 +69,6 @@ class RasterizerCache {
     struct RenderTargets {
         SurfaceId color_id;
         SurfaceId depth_id;
-    };
-
-    struct TextureCube {
-        SurfaceId surface_id;
-        std::array<SurfaceId, 6> face_ids;
-        std::array<u64, 6> ticks;
     };
 
 public:
