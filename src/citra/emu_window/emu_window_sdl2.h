@@ -8,6 +8,7 @@
 #include "common/common_types.h"
 #include "core/frontend/emu_window.h"
 
+union SDL_Event;
 struct SDL_Window;
 
 namespace Core {
@@ -35,6 +36,9 @@ public:
     void RequestClose();
 
 protected:
+    /// Gets the ID of the window an event originated from.
+    u32 GetEventWindowId(const SDL_Event& event) const;
+
     /// Called by PollEvents when a key is pressed or released.
     void OnKeyEvent(int key, u8 state);
 

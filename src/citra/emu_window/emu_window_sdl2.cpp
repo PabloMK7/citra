@@ -128,16 +128,54 @@ void EmuWindow_SDL2::InitializeSDL2() {
     SDL_SetMainReady();
 }
 
+u32 EmuWindow_SDL2::GetEventWindowId(const SDL_Event& event) const {
+    switch (event.type) {
+    case SDL_WINDOWEVENT:
+        return event.window.windowID;
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
+        return event.key.windowID;
+    case SDL_MOUSEMOTION:
+        return event.motion.windowID;
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
+        return event.button.windowID;
+    case SDL_MOUSEWHEEL:
+        return event.wheel.windowID;
+    case SDL_FINGERDOWN:
+    case SDL_FINGERMOTION:
+    case SDL_FINGERUP:
+        return event.tfinger.windowID;
+    case SDL_TEXTEDITING:
+        return event.edit.windowID;
+    case SDL_TEXTEDITING_EXT:
+        return event.editExt.windowID;
+    case SDL_TEXTINPUT:
+        return event.text.windowID;
+    case SDL_DROPBEGIN:
+    case SDL_DROPFILE:
+    case SDL_DROPTEXT:
+    case SDL_DROPCOMPLETE:
+        return event.drop.windowID;
+    case SDL_USEREVENT:
+        return event.user.windowID;
+    default:
+        // Event is not for any particular window, so we can just pretend it's for this one.
+        return render_window_id;
+    }
+}
+
 void EmuWindow_SDL2::PollEvents() {
     SDL_Event event;
     std::vector<SDL_Event> other_window_events;
 
     // SDL_PollEvent returns 0 when there are no more events in the event queue
     while (SDL_PollEvent(&event)) {
-        if (event.window.windowID != render_window_id) {
+        if (GetEventWindowId(event) != render_window_id) {
             other_window_events.push_back(event);
             continue;
         }
+
         switch (event.type) {
         case SDL_WINDOWEVENT:
             switch (event.window.event) {
