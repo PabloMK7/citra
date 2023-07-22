@@ -263,7 +263,7 @@ u32 Module::GetRegionValue() {
     return Settings::values.region_value.GetValue();
 }
 
-void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetRegion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -282,14 +282,15 @@ void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx) {
     rb.Push<u8>(0);
 }
 
-void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetTransferableId(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 app_id_salt = rp.Pop<u32>() & 0x000FFFFF;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
 
     std::array<u8, 12> buffer;
-    const ResultCode result = cfg->GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data());
+    const ResultCode result =
+        cfg->GetConfigBlock(ConsoleUniqueID2BlockID, 8, AccessFlag::SystemRead, buffer.data());
     rb.Push(result);
     if (result.IsSuccess()) {
         std::memcpy(&buffer[8], &app_id_salt, sizeof(u32));
@@ -308,7 +309,7 @@ void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CFG, "called app_id_salt=0x{:X}", app_id_salt);
 }
 
-void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {
+void Module::Interface::IsCoppacsSupported(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
@@ -328,7 +329,8 @@ void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
     u32 data{};
 
     // TODO(Subv): Find out the correct error codes
-    rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
+    rb.Push(cfg->GetConfigBlock(ConsoleModelBlockID, 4, AccessFlag::SystemRead,
+                                reinterpret_cast<u8*>(&data)));
     ConsoleModelInfo model;
     std::memcpy(&model, &data, 4);
     if ((model.model == NINTENDO_3DS || model.model == NINTENDO_3DS_XL ||
@@ -350,12 +352,13 @@ void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
     u32 data{};
 
     // TODO(Subv): Find out the correct error codes
-    rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
+    rb.Push(cfg->GetConfigBlock(ConsoleModelBlockID, 4, AccessFlag::SystemRead,
+                                reinterpret_cast<u8*>(&data)));
     u8 model = data & 0xFF;
     rb.Push(model != Service::CFG::NINTENDO_2DS);
 }
 
-void Module::Interface::GetConfigInfoBlk2(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 size = rp.Pop<u32>();
     u32 block_id = rp.Pop<u32>();
@@ -363,12 +366,12 @@ void Module::Interface::GetConfigInfoBlk2(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     std::vector<u8> data(size);
-    rb.Push(cfg->GetConfigInfoBlock(block_id, size, 0x2, data.data()));
+    rb.Push(cfg->GetConfigBlock(block_id, size, AccessFlag::UserRead, data.data()));
     buffer.Write(data.data(), 0, data.size());
     rb.PushMappedBuffer(buffer);
 }
 
-void Module::Interface::GetConfigInfoBlk8(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetSystemConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 size = rp.Pop<u32>();
     u32 block_id = rp.Pop<u32>();
@@ -376,12 +379,12 @@ void Module::Interface::GetConfigInfoBlk8(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     std::vector<u8> data(size);
-    rb.Push(cfg->GetConfigInfoBlock(block_id, size, 0x8, data.data()));
+    rb.Push(cfg->GetConfigBlock(block_id, size, AccessFlag::SystemRead, data.data()));
     buffer.Write(data.data(), 0, data.size());
     rb.PushMappedBuffer(buffer);
 }
 
-void Module::Interface::SetConfigInfoBlk4(Kernel::HLERequestContext& ctx) {
+void Module::Interface::SetSystemConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 block_id = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
@@ -391,7 +394,7 @@ void Module::Interface::SetConfigInfoBlk4(Kernel::HLERequestContext& ctx) {
     buffer.Read(data.data(), 0, data.size());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(cfg->SetConfigInfoBlock(block_id, size, 0x4, data.data()));
+    rb.Push(cfg->SetConfigBlock(block_id, size, AccessFlag::SystemWrite, data.data()));
     rb.PushMappedBuffer(buffer);
 }
 
@@ -407,31 +410,30 @@ void Module::Interface::FormatConfig(Kernel::HLERequestContext& ctx) {
     rb.Push(cfg->FormatConfig());
 }
 
-ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 flag) {
+ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFlag accesss_flag) {
     // Read the header
-    SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
-
+    auto config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     auto itr =
         std::find_if(std::begin(config->block_entries), std::end(config->block_entries),
                      [&](const SaveConfigBlockEntry& entry) { return entry.block_id == block_id; });
 
     if (itr == std::end(config->block_entries)) {
         LOG_ERROR(Service_CFG, "Config block 0x{:X} with flags {} and size {} was not found",
-                  block_id, flag, size);
+                  block_id, accesss_flag, size);
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
-    if ((itr->flags & flag) == 0) {
-        LOG_ERROR(Service_CFG, "Invalid flag {} for config block 0x{:X} with size {}", flag,
-                  block_id, size);
+    if (False(itr->access_flags & accesss_flag)) {
+        LOG_ERROR(Service_CFG, "Invalid access flag {:X} for config block 0x{:X} with size {}",
+                  accesss_flag, block_id, size);
         return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::Config,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     if (itr->size != size) {
         LOG_ERROR(Service_CFG, "Invalid size {} for config block 0x{:X} with flags {}", size,
-                  block_id, flag);
+                  block_id, accesss_flag);
         return ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
@@ -447,28 +449,30 @@ ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 f
     return pointer;
 }
 
-ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
+ResultCode Module::GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output) {
     void* pointer = nullptr;
-    CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
+    CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
     std::memcpy(output, pointer, size);
 
     return RESULT_SUCCESS;
 }
 
-ResultCode Module::SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input) {
+ResultCode Module::SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag,
+                                  const void* input) {
     void* pointer = nullptr;
-    CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
+    CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
     std::memcpy(pointer, input, size);
     return RESULT_SUCCESS;
 }
 
-ResultCode Module::CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data) {
+ResultCode Module::CreateConfigBlock(u32 block_id, u16 size, AccessFlag access_flags,
+                                     const void* data) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
         return ResultCode(-1); // TODO(Subv): Find the right error code
 
     // Insert the block header with offset 0 for now
-    config->block_entries[config->total_entries] = {block_id, 0, size, flags};
+    config->block_entries[config->total_entries] = {block_id, 0, size, access_flags};
     if (size > 4) {
         u32 offset = config->data_entries_offset;
         // Perform a search to locate the next offset for the new data
@@ -532,63 +536,68 @@ ResultCode Module::FormatConfig() {
     u8 zero_buffer[0xC0] = {};
 
     // 0x00030001 - User time offset (Read by CECD): displayed timestamp - RTC timestamp
-    res = CreateConfigInfoBlk(UserTimeOffsetBlockID, 0x8, 0xE, zero_buffer);
+    res = CreateConfigBlock(UserTimeOffsetBlockID, 0x8, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x00050001 - Backlight controls
-    res = CreateConfigInfoBlk(BacklightControlsBlockID, sizeof(BACKLIGHT_CONTROLS), 0xC,
-                              &BACKLIGHT_CONTROLS);
+    res = CreateConfigBlock(BacklightControlsBlockID, sizeof(BACKLIGHT_CONTROLS),
+                            AccessFlag::System, &BACKLIGHT_CONTROLS);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(StereoCameraSettingsBlockID, sizeof(STEREO_CAMERA_SETTINGS), 0xE,
-                              STEREO_CAMERA_SETTINGS.data());
+    res = CreateConfigBlock(StereoCameraSettingsBlockID, sizeof(STEREO_CAMERA_SETTINGS),
+                            AccessFlag::Global, STEREO_CAMERA_SETTINGS.data());
     if (!res.IsSuccess())
         return res;
 
     // 0x00050009 - New 3DS backlight controls
-    res = CreateConfigInfoBlk(BacklightControlNew3dsBlockID, sizeof(NEW_3DS_BACKLIGHT_CONTROLS),
-                              0xC, &NEW_3DS_BACKLIGHT_CONTROLS);
+    res = CreateConfigBlock(BacklightControlNew3dsBlockID, sizeof(NEW_3DS_BACKLIGHT_CONTROLS),
+                            AccessFlag::System, &NEW_3DS_BACKLIGHT_CONTROLS);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(SoundOutputModeBlockID, sizeof(SOUND_OUTPUT_MODE), 0xE,
-                              &SOUND_OUTPUT_MODE);
+    res = CreateConfigBlock(SoundOutputModeBlockID, sizeof(SOUND_OUTPUT_MODE), AccessFlag::Global,
+                            &SOUND_OUTPUT_MODE);
     if (!res.IsSuccess())
         return res;
 
     const auto [random_number, console_id] = GenerateConsoleUniqueId();
 
     u64_le console_id_le = console_id;
-    res = CreateConfigInfoBlk(ConsoleUniqueID1BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    res = CreateConfigBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le), AccessFlag::Global,
+                            &console_id_le);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    res = CreateConfigBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), AccessFlag::Global,
+                            &console_id_le);
     if (!res.IsSuccess())
         return res;
 
     u32_le random_number_le = random_number;
-    res = CreateConfigInfoBlk(ConsoleUniqueID3BlockID, sizeof(random_number_le), 0xE,
-                              &random_number_le);
+    res = CreateConfigBlock(ConsoleUniqueID3BlockID, sizeof(random_number_le), AccessFlag::Global,
+                            &random_number_le);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(UsernameBlockID, sizeof(CONSOLE_USERNAME_BLOCK), 0xE,
-                              &CONSOLE_USERNAME_BLOCK);
+    res = CreateConfigBlock(UsernameBlockID, sizeof(CONSOLE_USERNAME_BLOCK), AccessFlag::Global,
+                            &CONSOLE_USERNAME_BLOCK);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(BirthdayBlockID, sizeof(PROFILE_BIRTHDAY), 0xE, &PROFILE_BIRTHDAY);
+    res = CreateConfigBlock(BirthdayBlockID, sizeof(PROFILE_BIRTHDAY), AccessFlag::Global,
+                            &PROFILE_BIRTHDAY);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(LanguageBlockID, sizeof(CONSOLE_LANGUAGE), 0xE, &CONSOLE_LANGUAGE);
+    res = CreateConfigBlock(LanguageBlockID, sizeof(CONSOLE_LANGUAGE), AccessFlag::Global,
+                            &CONSOLE_LANGUAGE);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(CountryInfoBlockID, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
+    res = CreateConfigBlock(CountryInfoBlockID, sizeof(COUNTRY_INFO), AccessFlag::Global,
+                            &COUNTRY_INFO);
     if (!res.IsSuccess())
         return res;
 
@@ -598,53 +607,54 @@ ResultCode Module::FormatConfig() {
         std::copy(region_name.cbegin(), region_name.cend(), country_name_buffer[i]);
     }
     // 0x000B0001 - Localized names for the profile Country
-    res = CreateConfigInfoBlk(CountryNameBlockID, sizeof(country_name_buffer), 0xE,
-                              country_name_buffer);
+    res = CreateConfigBlock(CountryNameBlockID, sizeof(country_name_buffer), AccessFlag::Global,
+                            country_name_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x000B0002 - Localized names for the profile State/Province
-    res = CreateConfigInfoBlk(StateNameBlockID, sizeof(country_name_buffer), 0xE,
-                              country_name_buffer);
+    res = CreateConfigBlock(StateNameBlockID, sizeof(country_name_buffer), AccessFlag::Global,
+                            country_name_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x000B0003 - Coordinates. A pair of s16 represents latitude and longitude, respectively. One
     // need to multiply both value by 180/32768 to get coordinates in degrees
-    res = CreateConfigInfoBlk(LatitudeLongitudeBlockID, 0x4, 0xE, zero_buffer);
+    res = CreateConfigBlock(LatitudeLongitudeBlockID, 0x4, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x000C0000 - Restricted photo exchange data, and other info (includes a mirror of Parental
     // Restrictions PIN/Secret Answer)
-    res = CreateConfigInfoBlk(RestrictedPhotoExchangeBlockID, 0xC0, 0xE, zero_buffer);
+    res = CreateConfigBlock(RestrictedPhotoExchangeBlockID, 0xC0, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x000C0001 - COPPACS restriction data
-    res = CreateConfigInfoBlk(CoppacsRestrictionBlockID, 0x14, 0xE, zero_buffer);
+    res = CreateConfigBlock(CoppacsRestrictionBlockID, 0x14, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x000D0000 - Accepted EULA version
     u32_le data = MAX_EULA_VERSION.minor + (MAX_EULA_VERSION.major << 8);
-    res = CreateConfigInfoBlk(EULAVersionBlockID, sizeof(data), 0xE, &data);
+    res = CreateConfigBlock(EULAVersionBlockID, sizeof(data), AccessFlag::Global, &data);
     if (!res.IsSuccess())
         return res;
 
     u8 unknown_data = 0;
-    res = CreateConfigInfoBlk(Unknown_0x000E0000, sizeof(unknown_data), 0x2, &unknown_data);
+    res = CreateConfigBlock(Unknown_0x000E0000, sizeof(unknown_data), AccessFlag::Global,
+                            &unknown_data);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(ConsoleModelBlockID, sizeof(CONSOLE_MODEL_OLD), 0xC,
-                              &CONSOLE_MODEL_OLD);
+    res = CreateConfigBlock(ConsoleModelBlockID, sizeof(CONSOLE_MODEL_OLD), AccessFlag::System,
+                            &CONSOLE_MODEL_OLD);
     if (!res.IsSuccess())
         return res;
 
     // 0x000F0006 - In NIM, taken as a (hopefully null terminated) string used for the
     // "X-Device-Token" http header field for NPNS url.
-    res = CreateConfigInfoBlk(XDeviceTokenBlockID, 0x28, 0xC, zero_buffer);
+    res = CreateConfigBlock(XDeviceTokenBlockID, 0x28, AccessFlag::System, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
@@ -652,22 +662,23 @@ ResultCode Module::FormatConfig() {
     // system is booted for the first time or after doing a System Format: 0 = setup required,
     // non-zero = no setup required
     u32 system_setup_flag = 1;
-    res = CreateConfigInfoBlk(SystemSetupRequiredBlockID, 0x4, 0xC, &system_setup_flag);
+    res =
+        CreateConfigBlock(SystemSetupRequiredBlockID, 0x4, AccessFlag::System, &system_setup_flag);
     if (!res.IsSuccess())
         return res;
 
     // 0x00130000 - DebugMode (0x100 for debug mode)
-    res = CreateConfigInfoBlk(DebugModeBlockID, 0x4, 0xE, zero_buffer);
+    res = CreateConfigBlock(DebugModeBlockID, 0x4, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x00160000 - Unknown, first byte is used by config service-cmd 0x00070040.
-    res = CreateConfigInfoBlk(0x00160000, 0x4, 0xE, zero_buffer);
+    res = CreateConfigBlock(0x00160000, 0x4, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
     // 0x00170000 - Miiverse (OLV) access key
-    res = CreateConfigInfoBlk(MiiverseAccessKeyBlockID, 0x4, 0xE, zero_buffer);
+    res = CreateConfigBlock(MiiverseAccessKeyBlockID, 0x4, AccessFlag::Global, zero_buffer);
     if (!res.IsSuccess())
         return res;
 
@@ -786,12 +797,12 @@ void Module::SetUsername(const std::u16string& name) {
     ASSERT(name.size() <= 10);
     UsernameBlock block{};
     name.copy(block.username, name.size());
-    SetConfigInfoBlock(UsernameBlockID, sizeof(block), 4, &block);
+    SetConfigBlock(UsernameBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
 std::u16string Module::GetUsername() {
     UsernameBlock block;
-    GetConfigInfoBlock(UsernameBlockID, sizeof(block), 8, &block);
+    GetConfigBlock(UsernameBlockID, sizeof(block), AccessFlag::SystemRead, &block);
 
     // the username string in the block isn't null-terminated,
     // so we need to find the end manually.
@@ -804,56 +815,56 @@ std::u16string Module::GetUsername() {
 
 void Module::SetBirthday(u8 month, u8 day) {
     BirthdayBlock block = {month, day};
-    SetConfigInfoBlock(BirthdayBlockID, sizeof(block), 4, &block);
+    SetConfigBlock(BirthdayBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
 std::tuple<u8, u8> Module::GetBirthday() {
     BirthdayBlock block;
-    GetConfigInfoBlock(BirthdayBlockID, sizeof(block), 8, &block);
+    GetConfigBlock(BirthdayBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return std::make_tuple(block.month, block.day);
 }
 
 void Module::SetSystemLanguage(SystemLanguage language) {
     u8 block = language;
-    SetConfigInfoBlock(LanguageBlockID, sizeof(block), 4, &block);
+    SetConfigBlock(LanguageBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
 SystemLanguage Module::GetSystemLanguage() {
     u8 block{};
-    GetConfigInfoBlock(LanguageBlockID, sizeof(block), 8, &block);
+    GetConfigBlock(LanguageBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return static_cast<SystemLanguage>(block);
 }
 
 void Module::SetSoundOutputMode(SoundOutputMode mode) {
     u8 block = mode;
-    SetConfigInfoBlock(SoundOutputModeBlockID, sizeof(block), 4, &block);
+    SetConfigBlock(SoundOutputModeBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
 SoundOutputMode Module::GetSoundOutputMode() {
     u8 block{};
-    GetConfigInfoBlock(SoundOutputModeBlockID, sizeof(block), 8, &block);
+    GetConfigBlock(SoundOutputModeBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return static_cast<SoundOutputMode>(block);
 }
 
 void Module::SetCountryCode(u8 country_code) {
     ConsoleCountryInfo block = {{0, 0}, default_subregion[country_code], country_code};
-    SetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 4, &block);
+    SetConfigBlock(CountryInfoBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
 u8 Module::GetCountryCode() {
     ConsoleCountryInfo block{};
-    GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
+    GetConfigBlock(CountryInfoBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return block.country_code;
 }
 
 void Module::SetCountryInfo(u8 country_code, u8 state_code) {
     ConsoleCountryInfo block = {{0, 0}, state_code, country_code};
-    SetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 4, &block);
+    SetConfigBlock(CountryInfoBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
 u8 Module::GetStateCode() {
     ConsoleCountryInfo block{};
-    GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
+    GetConfigBlock(CountryInfoBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return block.state_code;
 }
 
@@ -873,18 +884,19 @@ std::pair<u32, u64> Module::GenerateConsoleUniqueId() const {
 
 ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
     u64_le console_id_le = console_id;
-    ResultCode res =
-        SetConfigInfoBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    ResultCode res = SetConfigBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le),
+                                    AccessFlag::Global, &console_id_le);
     if (!res.IsSuccess())
         return res;
 
-    res = SetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    res = SetConfigBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), AccessFlag::Global,
+                         &console_id_le);
     if (!res.IsSuccess())
         return res;
 
     u32_le random_number_le = random_number;
-    res = SetConfigInfoBlock(ConsoleUniqueID3BlockID, sizeof(random_number_le), 0xE,
-                             &random_number_le);
+    res = SetConfigBlock(ConsoleUniqueID3BlockID, sizeof(random_number_le), AccessFlag::Global,
+                         &random_number_le);
     if (!res.IsSuccess())
         return res;
 
@@ -893,13 +905,14 @@ ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
 
 u64 Module::GetConsoleUniqueId() {
     u64_le console_id_le{};
-    GetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    GetConfigBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), AccessFlag::Global,
+                   &console_id_le);
     return console_id_le;
 }
 
 EULAVersion Module::GetEULAVersion() {
     u32_le data{};
-    GetConfigInfoBlock(EULAVersionBlockID, sizeof(data), 0xE, &data);
+    GetConfigBlock(EULAVersionBlockID, sizeof(data), AccessFlag::Global, &data);
     EULAVersion version;
     version.minor = data & 0xFF;
     version.major = (data >> 8) & 0xFF;
@@ -908,17 +921,17 @@ EULAVersion Module::GetEULAVersion() {
 
 void Module::SetEULAVersion(const EULAVersion& version) {
     u32_le data = version.minor + (version.major << 8);
-    SetConfigInfoBlock(EULAVersionBlockID, sizeof(data), 0xE, &data);
+    SetConfigBlock(EULAVersionBlockID, sizeof(data), AccessFlag::Global, &data);
 }
 
 void Module::SetSystemSetupNeeded(bool setup_needed) {
     u32 block = setup_needed ? 0 : 1;
-    SetConfigInfoBlock(SystemSetupRequiredBlockID, sizeof(block), 0xC, &block);
+    SetConfigBlock(SystemSetupRequiredBlockID, sizeof(block), AccessFlag::System, &block);
 }
 
 bool Module::IsSystemSetupNeeded() {
     u32 block{};
-    GetConfigInfoBlock(SystemSetupRequiredBlockID, sizeof(block), 0xC, &block);
+    GetConfigBlock(SystemSetupRequiredBlockID, sizeof(block), AccessFlag::System, &block);
     return (block & 0xFFFF) == 0;
 }
 

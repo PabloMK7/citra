@@ -53,13 +53,25 @@ struct EULAVersion {
     u8 major;
 };
 
+/// Access control flags for config blocks
+enum class AccessFlag : u16 {
+    UserRead = 1 << 1,    ///< Readable by user applications (cfg:u)
+    SystemWrite = 1 << 2, ///< Writable by system applications and services (cfg:s / cfg:i)
+    SystemRead = 1 << 3,  ///< Readable by system applications and services (cfg:s / cfg:i)
+
+    // Commonly used combinations for convenience
+    System = SystemRead | SystemWrite,
+    Global = UserRead | SystemRead | SystemWrite,
+};
+DECLARE_ENUM_FLAG_OPERATORS(AccessFlag);
+
 /// Block header in the config savedata file
 struct SaveConfigBlockEntry {
     u32 block_id;       ///< The id of the current block
     u32 offset_or_data; ///< This is the absolute offset to the block data if the size is greater
                         /// than 4 bytes, otherwise it contains the data itself
     u16 size;           ///< The size of the block
-    u16 flags;          ///< The flags of the block, possibly used for access control
+    AccessFlag access_flags; ///< The access control flags of the block
 };
 
 static constexpr u16 C(const char code[2]) {
@@ -155,7 +167,7 @@ public:
         void GetCountryCodeID(Kernel::HLERequestContext& ctx);
 
         /**
-         * CFG::SecureInfoGetRegion service function
+         * CFG::GetRegion service function
          *  Inputs:
          *      1 : None
          *  Outputs:
@@ -163,7 +175,7 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : Region value loaded from SecureInfo offset 0x100
          */
-        void SecureInfoGetRegion(Kernel::HLERequestContext& ctx);
+        void GetRegion(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::SecureInfoGetByte101 service function
@@ -177,7 +189,7 @@ public:
         void SecureInfoGetByte101(Kernel::HLERequestContext& ctx);
 
         /**
-         * CFG::GenHashConsoleUnique service function
+         * CFG::GetTransferableId service function
          *  Inputs:
          *      1 : 20 bit application ID salt
          *  Outputs:
@@ -186,10 +198,10 @@ public:
          *      2 : Hash/"ID" lower word
          *      3 : Hash/"ID" upper word
          */
-        void GenHashConsoleUnique(Kernel::HLERequestContext& ctx);
+        void GetTransferableId(Kernel::HLERequestContext& ctx);
 
         /**
-         * CFG::GetRegionCanadaUSA service function
+         * CFG::IsCoppacsSupported service function
          *  Inputs:
          *      1 : None
          *  Outputs:
@@ -197,7 +209,7 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : 1 if the system is a Canada or USA model, 0 otherwise
          */
-        void GetRegionCanadaUSA(Kernel::HLERequestContext& ctx);
+        void IsCoppacsSupported(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::GetSystemModel service function
@@ -220,7 +232,7 @@ public:
         void GetModelNintendo2DS(Kernel::HLERequestContext& ctx);
 
         /**
-         * CFG::GetConfigInfoBlk2 service function
+         * CFG::GetConfig service function
          *  Inputs:
          *      0 : 0x00010082
          *      1 : Size
@@ -230,10 +242,10 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void GetConfigInfoBlk2(Kernel::HLERequestContext& ctx);
+        void GetConfig(Kernel::HLERequestContext& ctx);
 
         /**
-         * CFG::GetConfigInfoBlk8 service function
+         * CFG::GetSystemConfig service function
          *  Inputs:
          *      0 : 0x04010082 / 0x08010082
          *      1 : Size
@@ -243,10 +255,10 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void GetConfigInfoBlk8(Kernel::HLERequestContext& ctx);
+        void GetSystemConfig(Kernel::HLERequestContext& ctx);
 
         /**
-         * CFG::SetConfigInfoBlk4 service function
+         * CFG::SetSystemConfig service function
          *  Inputs:
          *      0 : 0x04020082 / 0x08020082
          *      1 : Block ID
@@ -256,10 +268,10 @@ public:
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *  Note:
-         *      The parameters order is different from GetConfigInfoBlk2/8's,
+         *      The parameters order is different from GetConfig/GetSystemConfig's,
          *      where Block ID and Size are switched.
          */
-        void SetConfigInfoBlk4(Kernel::HLERequestContext& ctx);
+        void SetSystemConfig(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::UpdateConfigNANDSavegame service function
@@ -284,7 +296,7 @@ public:
     };
 
 private:
-    ResultVal<void*> GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 flag);
+    ResultVal<void*> GetConfigBlockPointer(u32 block_id, u32 size, AccessFlag accesss_flag);
 
     /**
      * Reads a block with the specified id and flag from the Config savegame buffer
@@ -293,11 +305,11 @@ private:
      *
      * @param block_id The id of the block we want to read
      * @param size The size of the block we want to read
-     * @param flag The requested block must have this flag set
+     * @param accesss_flag The requested block must have this access flag set
      * @param output A pointer where we will write the read data
      * @returns ResultCode indicating the result of the operation, 0 on success
      */
-    ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output);
+    ResultCode GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output);
 
     /**
      * Reads data from input and writes to a block with the specified id and flag
@@ -306,11 +318,11 @@ private:
      *
      * @param block_id The id of the block we want to write
      * @param size The size of the block we want to write
-     * @param flag The target block must have this flag set
+     * @param accesss_flag The target block must have this access flag set
      * @param input A pointer where we will read data and write to Config savegame buffer
      * @returns ResultCode indicating the result of the operation, 0 on success
      */
-    ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input);
+    ResultCode SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input);
 
     /**
      * Creates a block with the specified id and writes the input data to the cfg savegame buffer in
@@ -318,11 +330,12 @@ private:
      *
      * @param block_id The id of the block we want to create
      * @param size The size of the block we want to create
-     * @param flags The flags of the new block
+     * @param accesss_flags The access flags of the new block
      * @param data A pointer containing the data we will write to the new block
      * @returns ResultCode indicating the result of the operation, 0 on success
      */
-    ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data);
+    ResultCode CreateConfigBlock(u32 block_id, u16 size, AccessFlag accesss_flags,
+                                 const void* data);
 
     /**
      * Deletes the config savegame file from the filesystem, the buffer in memory is not affected
