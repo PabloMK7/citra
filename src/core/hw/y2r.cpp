@@ -9,6 +9,7 @@
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/common_types.h"
+#include "common/microprofileui.h"
 #include "common/vector_math.h"
 #include "core/core.h"
 #include "core/hle/service/y2r_u.h"
@@ -24,33 +25,33 @@ static const std::size_t TILE_SIZE = 8 * 8;
 using ImageTile = std::array<u32, TILE_SIZE>;
 
 /// Converts a image strip from the source YUV format into individual 8x8 RGB32 tiles.
-static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u8* input_U,
-                            const u8* input_V, ImageTile output[], unsigned int width,
-                            unsigned int height, const CoefficientSet& coefficients) {
+template <InputFormat input_format>
+static void ConvertYUVToRGB(const u8* input_Y, const u8* input_U, const u8* input_V,
+                            ImageTile output[], unsigned int width, unsigned int height,
+                            const CoefficientSet& coefficients) {
 
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
-            s32 Y = 0;
-            s32 U = 0;
-            s32 V = 0;
-            switch (input_format) {
-            case InputFormat::YUV422_Indiv8:
-            case InputFormat::YUV422_Indiv16:
+            s32 Y;
+            s32 U;
+            s32 V;
+            if constexpr (input_format == InputFormat::YUV422_Indiv8 ||
+                          input_format == InputFormat::YUV422_Indiv16) {
                 Y = input_Y[y * width + x];
                 U = input_U[(y * width + x) / 2];
                 V = input_V[(y * width + x) / 2];
-                break;
-            case InputFormat::YUV420_Indiv8:
-            case InputFormat::YUV420_Indiv16:
+            } else if constexpr (input_format == InputFormat::YUV420_Indiv8 ||
+                                 input_format == InputFormat::YUV420_Indiv16) {
                 Y = input_Y[y * width + x];
                 U = input_U[((y / 2) * width + x) / 2];
                 V = input_V[((y / 2) * width + x) / 2];
-                break;
-            case InputFormat::YUYV422_Interleaved:
+            } else if constexpr (input_format == InputFormat::YUYV422_Interleaved) {
                 Y = input_Y[(y * width + x) * 2];
                 U = input_Y[(y * width + (x / 2) * 2) * 2 + 1];
                 V = input_Y[(y * width + (x / 2) * 2) * 2 + 3];
-                break;
+            } else {
+                UNREACHABLE_MSG("Unknown Y2R input format {}", input_format);
+                return;
             }
 
             // This conversion process is bit-exact with hardware, as far as could be tested.
@@ -102,8 +103,9 @@ static void ReceiveData(Memory::MemorySystem& memory, u8* output, ConversionBuff
 
 /// Convert intermediate RGB32 format to the final output format while simulating an outgoing CDMA
 /// transfer.
+template <OutputFormat output_format>
 static void SendData(Memory::MemorySystem& memory, const u32* input, ConversionBuffer& buf,
-                     int amount_of_data, OutputFormat output_format, u8 alpha) {
+                     int amount_of_data, u8 alpha) {
 
     u8* output = memory.GetPointer(buf.address);
 
@@ -113,23 +115,20 @@ static void SendData(Memory::MemorySystem& memory, const u32* input, ConversionB
             u32 color = *input++;
             Common::Vec4<u8> col_vec{(u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha};
 
-            switch (output_format) {
-            case OutputFormat::RGBA8:
+            if constexpr (output_format == OutputFormat::RGBA8) {
                 Common::Color::EncodeRGBA8(col_vec, output);
                 output += 4;
-                break;
-            case OutputFormat::RGB8:
+            } else if constexpr (output_format == OutputFormat::RGB8) {
                 Common::Color::EncodeRGB8(col_vec, output);
                 output += 3;
-                break;
-            case OutputFormat::RGB5A1:
+            } else if constexpr (output_format == OutputFormat::RGB5A1) {
                 Common::Color::EncodeRGB5A1(col_vec, output);
                 output += 2;
-                break;
-            case OutputFormat::RGB565:
+            } else if constexpr (output_format == OutputFormat::RGB565) {
                 Common::Color::EncodeRGB565(col_vec, output);
                 output += 2;
-                break;
+            } else {
+                UNREACHABLE_MSG("Unknown Y2R output format {}", output_format);
             }
 
             amount_of_data -= 1;
@@ -210,6 +209,8 @@ static void WriteTileToOutput(u32* output, const ImageTile& tile, int height, in
     }
 }
 
+MICROPROFILE_DEFINE(Y2R_PerformConversion, "Y2R", "PerformConversion", MP_RGB(185, 66, 245));
+
 /**
  * Performs a Y2R colorspace conversion.
  *
@@ -261,6 +262,8 @@ static void WriteTileToOutput(u32* output, const ImageTile& tile, int height, in
  * so they are believed to be invalid configurations anyway.
  */
 void PerformConversion(Memory::MemorySystem& memory, ConversionConfiguration cvt) {
+    MICROPROFILE_SCOPE(Y2R_PerformConversion);
+
     ASSERT(cvt.input_line_width % 8 == 0);
     ASSERT(cvt.block_alignment != BlockAlignment::Block8x8 || cvt.input_lines % 8 == 0);
     // Tiles per row
@@ -300,33 +303,46 @@ void PerformConversion(Memory::MemorySystem& memory, ConversionConfiguration cvt
             ReceiveData<1>(memory, input_Y, cvt.src_Y, row_data_size);
             ReceiveData<1>(memory, input_U, cvt.src_U, row_data_size / 2);
             ReceiveData<1>(memory, input_V, cvt.src_V, row_data_size / 2);
+            ConvertYUVToRGB<InputFormat::YUV422_Indiv8>(input_Y, input_U, input_V, tiles.get(),
+                                                        cvt.input_line_width, row_height,
+                                                        cvt.coefficients);
             break;
         case InputFormat::YUV420_Indiv8:
             ReceiveData<1>(memory, input_Y, cvt.src_Y, row_data_size);
             ReceiveData<1>(memory, input_U, cvt.src_U, row_data_size / 4);
             ReceiveData<1>(memory, input_V, cvt.src_V, row_data_size / 4);
+            ConvertYUVToRGB<InputFormat::YUV420_Indiv8>(input_Y, input_U, input_V, tiles.get(),
+                                                        cvt.input_line_width, row_height,
+                                                        cvt.coefficients);
             break;
         case InputFormat::YUV422_Indiv16:
             ReceiveData<2>(memory, input_Y, cvt.src_Y, row_data_size);
             ReceiveData<2>(memory, input_U, cvt.src_U, row_data_size / 2);
             ReceiveData<2>(memory, input_V, cvt.src_V, row_data_size / 2);
+            ConvertYUVToRGB<InputFormat::YUV422_Indiv16>(input_Y, input_U, input_V, tiles.get(),
+                                                         cvt.input_line_width, row_height,
+                                                         cvt.coefficients);
             break;
         case InputFormat::YUV420_Indiv16:
             ReceiveData<2>(memory, input_Y, cvt.src_Y, row_data_size);
             ReceiveData<2>(memory, input_U, cvt.src_U, row_data_size / 4);
             ReceiveData<2>(memory, input_V, cvt.src_V, row_data_size / 4);
+            ConvertYUVToRGB<InputFormat::YUV420_Indiv16>(input_Y, input_U, input_V, tiles.get(),
+                                                         cvt.input_line_width, row_height,
+                                                         cvt.coefficients);
             break;
         case InputFormat::YUYV422_Interleaved:
             input_U = nullptr;
             input_V = nullptr;
             ReceiveData<1>(memory, input_Y, cvt.src_YUYV, row_data_size * 2);
+            ConvertYUVToRGB<InputFormat::YUYV422_Interleaved>(input_Y, input_U, input_V,
+                                                              tiles.get(), cvt.input_line_width,
+                                                              row_height, cvt.coefficients);
             break;
+        default:
+            UNREACHABLE_MSG("Unknown Y2R input format {}", cvt.input_format);
+            return;
         }
-
-        // Note(yuriks): If additional optimization is required, input_format can be moved to a
-        // template parameter, so that its dispatch can be moved to outside the inner loop.
-        ConvertYUVToRGB(cvt.input_format, input_Y, input_U, input_V, tiles.get(),
-                        cvt.input_line_width, row_height, cvt.coefficients);
 
         u32* output_buffer = reinterpret_cast<u32*>(data_buffer.get());
 
@@ -371,10 +387,31 @@ void PerformConversion(Memory::MemorySystem& memory, ConversionConfiguration cvt
             }
         }
 
-        // Note(yuriks): If additional optimization is required, output_format can be moved to a
-        // template parameter, so that its dispatch can be moved to outside the inner loop.
-        SendData(memory, reinterpret_cast<u32*>(data_buffer.get()), cvt.dst, (int)row_data_size,
-                 cvt.output_format, (u8)cvt.alpha);
+        switch (cvt.output_format) {
+        case OutputFormat::RGBA8:
+            SendData<OutputFormat::RGBA8>(memory, reinterpret_cast<u32*>(data_buffer.get()),
+                                          cvt.dst, static_cast<int>(row_data_size),
+                                          static_cast<u8>(cvt.alpha));
+            break;
+        case OutputFormat::RGB8:
+            SendData<OutputFormat::RGB8>(memory, reinterpret_cast<u32*>(data_buffer.get()), cvt.dst,
+                                         static_cast<int>(row_data_size),
+                                         static_cast<u8>(cvt.alpha));
+            break;
+        case OutputFormat::RGB5A1:
+            SendData<OutputFormat::RGB5A1>(memory, reinterpret_cast<u32*>(data_buffer.get()),
+                                           cvt.dst, static_cast<int>(row_data_size),
+                                           static_cast<u8>(cvt.alpha));
+            break;
+        case OutputFormat::RGB565:
+            SendData<OutputFormat::RGB565>(memory, reinterpret_cast<u32*>(data_buffer.get()),
+                                           cvt.dst, static_cast<int>(row_data_size),
+                                           static_cast<u8>(cvt.alpha));
+            break;
+        default:
+            UNREACHABLE_MSG("Unknown Y2R output format {}", cvt.output_format);
+            return;
+        }
     }
 }
 } // namespace HW::Y2R
