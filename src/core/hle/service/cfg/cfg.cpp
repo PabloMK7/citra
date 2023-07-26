@@ -23,6 +23,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/cfg/cfg_defaults.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_nor.h"
 #include "core/hle/service/cfg/cfg_s.h"
@@ -45,6 +46,15 @@ constexpr u32 CONFIG_FILE_MAX_BLOCK_ENTRIES = 1479;
 
 namespace {
 
+/// Block header in the config savedata file
+struct SaveConfigBlockEntry {
+    u32 block_id;       ///< The id of the current block
+    u32 offset_or_data; ///< This is the absolute offset to the block data if the size is greater
+    /// than 4 bytes, otherwise it contains the data itself
+    u16 size;                ///< The size of the block
+    AccessFlag access_flags; ///< The access control flags of the block
+};
+
 /**
  * The header of the config savedata file,
  * contains information about the blocks in the file
@@ -61,140 +71,68 @@ struct SaveFileConfig {
 static_assert(sizeof(SaveFileConfig) == 0x455C,
               "SaveFileConfig header must be exactly 0x455C bytes");
 
-enum ConfigBlockID {
-    ConfigSavegameVersionBlockID = 0x00000000, // Maybe?
-    RtcCompensationBlockID = 0x00010000,
-    AudioCalibrationBlockID = 0x00020000,
-    LeapYearCounterBlockID = 0x00030000,
-    UserTimeOffsetBlockID = 0x00030001,
-    SettingsTimeOffsetBlockID = 0x00030002,
-    TouchCalibrationBlockID = 0x00040000,
-    AnalogStickCalibrationBlockID = 0x00040001, // Maybe?
-    GyroscopeCalibrationBlockID = 0x00040002,
-    AccelerometerCalibrationBlockID = 0x00040003,
-    CStickCalibrationBlockID = 0x00040004,
-    ScreenFlickerCalibrationBlockID = 0x00050000,
-    BacklightControlsBlockID = 0x00050001,
-    BacklightPwmCalibrationBlockID = 0x00050002,
-    PowerSavingModeCalibrationBlockID = 0x00050003,
-    PowerSavingModeCalibrationLegacyBlockID = 0x00050004,
-    StereoCameraSettingsBlockID = 0x00050005,
-    _3dSwitchingDelayBlockID = 0x00050006,
-    Unknown_0x00050007 = 0x00050007,
-    PowerSavingModeExtraConfigBlockID = 0x00050008,
-    BacklightControlNew3dsBlockID = 0x00050009,
-    Unknown_0x00060000 = 0x00060000,
-    _3dFiltersBlockID = 0x00070000,
-    SoundOutputModeBlockID = 0x00070001,
-    MicrophoneEchoCancellationBlockID = 0x00070002,
-    WifiConfigurationSlot0BlockID = 0x00080000,
-    WifiConfigurationSlot1BlockID = 0x00080001,
-    WifiConfigurationSlot2BlockID = 0x00080002,
-    ConsoleUniqueID1BlockID = 0x00090000,
-    ConsoleUniqueID2BlockID = 0x00090001,
-    ConsoleUniqueID3BlockID = 0x00090002,
-    UsernameBlockID = 0x000A0000,
-    BirthdayBlockID = 0x000A0001,
-    LanguageBlockID = 0x000A0002,
-    CountryInfoBlockID = 0x000B0000,
-    CountryNameBlockID = 0x000B0001,
-    StateNameBlockID = 0x000B0002,
-    LatitudeLongitudeBlockID = 0x000B0003,
-    RestrictedPhotoExchangeBlockID = 0x000C0000,
-    CoppacsRestrictionBlockID = 0x000C0001,
-    ParentalRestrictionEmailBlockID = 0x000C0002,
-    EULAVersionBlockID = 0x000D0000,
-    Unknown_0x000E0000 = 0x000E0000,
-    DebugConfigurationBlockID = 0x000F0000,
-    Unknown_0x000F0001 = 0x000F0001,
-    Unknown_0x000F0003 = 0x000F0003,
-    ConsoleModelBlockID = 0x000F0004,
-    NetworkUpdatesEnabledBlockID = 0x000F0005,
-    XDeviceTokenBlockID = 0x000F0006,
-    TwlEulaInfoBlockID = 0x00100000,
-    TwlParentalRestrictionsBlockID = 0x00100001,
-    TwlCountryCodeBlockID = 0x00100002,
-    TwlMovableUniqueBlockIDBlockID = 0x00100003,
-    SystemSetupRequiredBlockID = 0x00110000,
-    LaunchMenuBlockID = 0x00110001,
-    VolumeSliderBoundsBlockID = 0x00120000,
-    DebugModeBlockID = 0x00130000,
-    ClockSequenceBlockID = 0x00150000,
-    Unknown_0x00150001 = 0x00150001,
-    NpnsUrlID = 0x00150002, // Maybe? 3dbrew documentation is weirdly written.
-    Unknown_0x00160000 = 0x00160000,
-    MiiverseAccessKeyBlockID = 0x00170000,
-    QtmInfraredLedRelatedBlockID = 0x00180000,
-    QtmCalibrationDataBlockID = 0x00180001,
-    Unknown_0x00190000 = 0x00190000,
-};
-
-struct UsernameBlock {
-    char16_t username[10]; ///< Exactly 20 bytes long, padded with zeros at the end if necessary
-    u32 zero;
-    u32 ng_word;
-};
-static_assert(sizeof(UsernameBlock) == 0x1C, "UsernameBlock must be exactly 0x1C bytes");
-
-struct BirthdayBlock {
-    u8 month; ///< The month of the birthday
-    u8 day;   ///< The day of the birthday
-};
-static_assert(sizeof(BirthdayBlock) == 2, "BirthdayBlock must be exactly 2 bytes");
-
-struct ConsoleModelInfo {
-    u8 model;      ///< The console model (3DS, 2DS, etc)
-    u8 unknown[3]; ///< Unknown data
-};
-static_assert(sizeof(ConsoleModelInfo) == 4, "ConsoleModelInfo must be exactly 4 bytes");
-
-struct ConsoleCountryInfo {
-    u8 unknown[2];   ///< Unknown data
-    u8 state_code;   ///< The state or province code.
-    u8 country_code; ///< The country code of the console
-};
-static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
-
-struct BacklightControls {
-    u8 power_saving_enabled; ///< Whether power saving mode is enabled.
-    u8 brightness_level;     ///< The configured brightness level.
-};
-static_assert(sizeof(BacklightControls) == 2, "BacklightControls must be exactly 2 bytes");
-
-struct New3dsBacklightControls {
-    u8 unknown_1[4];            ///< Unknown data
-    u8 auto_brightness_enabled; ///< Whether auto brightness is enabled.
-    u8 unknown_2[3];            ///< Unknown data
-};
-static_assert(sizeof(New3dsBacklightControls) == 8,
-              "New3dsBacklightControls must be exactly 8 bytes");
 } // namespace
 
-constexpr EULAVersion MAX_EULA_VERSION{0x7F, 0x7F};
-constexpr ConsoleModelInfo CONSOLE_MODEL_OLD{NINTENDO_3DS_XL, {0, 0, 0}};
-[[maybe_unused]] constexpr ConsoleModelInfo CONSOLE_MODEL_NEW{NEW_NINTENDO_3DS_XL, {0, 0, 0}};
-constexpr u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
-constexpr UsernameBlock CONSOLE_USERNAME_BLOCK{u"CITRA", 0, 0};
-constexpr BirthdayBlock PROFILE_BIRTHDAY{3, 25}; // March 25th, 2014
-constexpr u8 SOUND_OUTPUT_MODE = SOUND_SURROUND;
-constexpr u8 UNITED_STATES_COUNTRY_ID = 49;
-constexpr u8 WASHINGTON_DC_STATE_ID = 2;
-/// TODO(Subv): Find what the other bytes are
-constexpr ConsoleCountryInfo COUNTRY_INFO{{0, 0}, WASHINGTON_DC_STATE_ID, UNITED_STATES_COUNTRY_ID};
-constexpr BacklightControls BACKLIGHT_CONTROLS{0, 2};
-constexpr New3dsBacklightControls NEW_3DS_BACKLIGHT_CONTROLS{{0, 0, 0, 0}, 0, {0, 0, 0}};
+static constexpr u16 C(const char code[2]) {
+    return code[0] | (code[1] << 8);
+}
 
-/**
- * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
- * for example Nintendo Zone
- * Thanks Normmatt for providing this information
- */
-constexpr std::array<float, 8> STEREO_CAMERA_SETTINGS = {
-    62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
-    10.0f, 5.0f,   55.58000183105469f, 21.56999969482422f,
-};
-static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20,
-              "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
+static const std::array<u16, 187> country_codes = {{
+    0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
+    C("AI"), C("AG"), C("AR"), C("AW"), C("BS"), C("BB"), C("BZ"), C("BO"), // 8-15
+    C("BR"), C("VG"), C("CA"), C("KY"), C("CL"), C("CO"), C("CR"), C("DM"), // 16-23
+    C("DO"), C("EC"), C("SV"), C("GF"), C("GD"), C("GP"), C("GT"), C("GY"), // 24-31
+    C("HT"), C("HN"), C("JM"), C("MQ"), C("MX"), C("MS"), C("AN"), C("NI"), // 32-39
+    C("PA"), C("PY"), C("PE"), C("KN"), C("LC"), C("VC"), C("SR"), C("TT"), // 40-47
+    C("TC"), C("US"), C("UY"), C("VI"), C("VE"), 0,       0,       0,       // 48-55
+    0,       0,       0,       0,       0,       0,       0,       0,       // 56-63
+    C("AL"), C("AU"), C("AT"), C("BE"), C("BA"), C("BW"), C("BG"), C("HR"), // 64-71
+    C("CY"), C("CZ"), C("DK"), C("EE"), C("FI"), C("FR"), C("DE"), C("GR"), // 72-79
+    C("HU"), C("IS"), C("IE"), C("IT"), C("LV"), C("LS"), C("LI"), C("LT"), // 80-87
+    C("LU"), C("MK"), C("MT"), C("ME"), C("MZ"), C("NA"), C("NL"), C("NZ"), // 88-95
+    C("NO"), C("PL"), C("PT"), C("RO"), C("RU"), C("RS"), C("SK"), C("SI"), // 96-103
+    C("ZA"), C("ES"), C("SZ"), C("SE"), C("CH"), C("TR"), C("GB"), C("ZM"), // 104-111
+    C("ZW"), C("AZ"), C("MR"), C("ML"), C("NE"), C("TD"), C("SD"), C("ER"), // 112-119
+    C("DJ"), C("SO"), C("AD"), C("GI"), C("GG"), C("IM"), C("JE"), C("MC"), // 120-127
+    C("TW"), 0,       0,       0,       0,       0,       0,       0,       // 128-135
+    C("KR"), 0,       0,       0,       0,       0,       0,       0,       // 136-143
+    C("HK"), C("MO"), 0,       0,       0,       0,       0,       0,       // 144-151
+    C("ID"), C("SG"), C("TH"), C("PH"), C("MY"), 0,       0,       0,       // 152-159
+    C("CN"), 0,       0,       0,       0,       0,       0,       0,       // 160-167
+    C("AE"), C("IN"), C("EG"), C("OM"), C("QA"), C("KW"), C("SA"), C("SY"), // 168-175
+    C("BH"), C("JO"), 0,       0,       0,       0,       0,       0,       // 176-183
+    C("SM"), C("VA"), C("BM"),                                              // 184-186
+}};
+
+// Based on PKHeX's lists of subregions at
+// https://github.com/kwsch/PKHeX/tree/master/PKHeX.Core/Resources/text/locale3DS/subregions
+static const std::array<u8, 187> default_subregion = {{
+    0, 2, 0,  0, 0, 0, 0, 0, // 0-7
+    1, 2, 2,  1, 1, 1, 2, 2, // 8-15
+    2, 1, 2,  1, 2, 2, 2, 1, // 16-23
+    2, 2, 2,  1, 1, 1, 2, 2, // 24-31
+    2, 2, 2,  1, 2, 1, 1, 2, // 32-39
+    2, 2, 2,  2, 1, 1, 2, 2, // 40-47
+    1, 2, 2,  1, 2, 0, 0, 0, // 48-55
+    0, 0, 0,  0, 0, 0, 0, 0, // 56-63
+    2, 2, 2,  2, 2, 1, 2, 6, // 64-71
+    1, 2, 18, 1, 8, 2, 2, 2, // 72-79
+    2, 1, 2,  2, 1, 2, 1, 2, // 80-87
+    1, 1, 1,  1, 1, 1, 2, 2, // 88-95
+    7, 2, 2,  2, 9, 1, 2, 1, // 96-103
+    2, 2, 2,  2, 2, 2, 2, 1, // 104-111
+    1, 1, 1,  1, 1, 1, 1, 1, // 112-119
+    1, 1, 1,  1, 1, 1, 1, 1, // 120-127
+    2, 0, 0,  0, 0, 0, 0, 0, // 128-135
+    2, 0, 0,  0, 0, 0, 0, 0, // 136-143
+    1, 0, 0,  0, 0, 0, 0, 0, // 144-151
+    0, 1, 0,  0, 2, 0, 0, 0, // 152-159
+    2, 0, 0,  0, 0, 0, 0, 0, // 160-167
+    2, 2, 0,  0, 0, 0, 2, 0, // 168-175
+    0, 0, 0,  0, 0, 0, 0, 0, // 176-183
+    1, 1, 1,                 // 184-186
+}};
+std::array<u8, 2> unknown;
 
 constexpr std::array<u8, 8> cfg_system_savedata_id{
     0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00,
@@ -418,10 +356,37 @@ ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFla
                      [&](const SaveConfigBlockEntry& entry) { return entry.block_id == block_id; });
 
     if (itr == std::end(config->block_entries)) {
-        LOG_ERROR(Service_CFG, "Config block 0x{:X} with flags {} and size {} was not found",
-                  block_id, accesss_flag, size);
-        return ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        if (HasDefaultConfigBlock(static_cast<ConfigBlockID>(block_id))) {
+            LOG_WARNING(Service_CFG,
+                        "Config block 0x{:X} with flags {} and size {} was not found, creating "
+                        "from defaults.",
+                        block_id, accesss_flag, size);
+            auto default_block = GetDefaultConfigBlock(static_cast<ConfigBlockID>(block_id));
+            auto result = CreateConfigBlock(block_id, static_cast<u16>(default_block.data.size()),
+                                            default_block.access_flags, default_block.data.data());
+            if (!result.IsSuccess()) {
+                LOG_ERROR(Service_CFG,
+                          "Failed to create config block 0x{:X} from defaults: 0x{:08X}", block_id,
+                          result.raw);
+                return result;
+            }
+            result = UpdateConfigNANDSavegame();
+            if (!result.IsSuccess()) {
+                LOG_ERROR(Service_CFG, "Failed to save updated config savegame: 0x{:08X}",
+                          result.raw);
+                return result;
+            }
+            itr = std::find_if(
+                std::begin(config->block_entries), std::end(config->block_entries),
+                [&](const SaveConfigBlockEntry& entry) { return entry.block_id == block_id; });
+        } else {
+            LOG_ERROR(Service_CFG,
+                      "Config block 0x{:X} with flags {} and size {} was not found, and no default "
+                      "exists.",
+                      block_id, accesss_flag, size);
+            return ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
+                              ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        }
     }
 
     if (False(itr->access_flags & accesss_flag)) {
@@ -532,160 +497,26 @@ ResultCode Module::FormatConfig() {
     // This value is hardcoded, taken from 3dbrew, verified by hardware, it's always the same value
     config->data_entries_offset = 0x455C;
 
-    // Insert the default blocks
-    u8 zero_buffer[0xC0] = {};
-
-    // 0x00030001 - User time offset (Read by CECD): displayed timestamp - RTC timestamp
-    res = CreateConfigBlock(UserTimeOffsetBlockID, 0x8, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x00050001 - Backlight controls
-    res = CreateConfigBlock(BacklightControlsBlockID, sizeof(BACKLIGHT_CONTROLS),
-                            AccessFlag::System, &BACKLIGHT_CONTROLS);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(StereoCameraSettingsBlockID, sizeof(STEREO_CAMERA_SETTINGS),
-                            AccessFlag::Global, STEREO_CAMERA_SETTINGS.data());
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x00050009 - New 3DS backlight controls
-    res = CreateConfigBlock(BacklightControlNew3dsBlockID, sizeof(NEW_3DS_BACKLIGHT_CONTROLS),
-                            AccessFlag::System, &NEW_3DS_BACKLIGHT_CONTROLS);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(SoundOutputModeBlockID, sizeof(SOUND_OUTPUT_MODE), AccessFlag::Global,
-                            &SOUND_OUTPUT_MODE);
-    if (!res.IsSuccess())
-        return res;
-
-    const auto [random_number, console_id] = GenerateConsoleUniqueId();
-
-    u64_le console_id_le = console_id;
-    res = CreateConfigBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le), AccessFlag::Global,
-                            &console_id_le);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), AccessFlag::Global,
-                            &console_id_le);
-    if (!res.IsSuccess())
-        return res;
-
-    u32_le random_number_le = random_number;
-    res = CreateConfigBlock(ConsoleUniqueID3BlockID, sizeof(random_number_le), AccessFlag::Global,
-                            &random_number_le);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(UsernameBlockID, sizeof(CONSOLE_USERNAME_BLOCK), AccessFlag::Global,
-                            &CONSOLE_USERNAME_BLOCK);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(BirthdayBlockID, sizeof(PROFILE_BIRTHDAY), AccessFlag::Global,
-                            &PROFILE_BIRTHDAY);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(LanguageBlockID, sizeof(CONSOLE_LANGUAGE), AccessFlag::Global,
-                            &CONSOLE_LANGUAGE);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(CountryInfoBlockID, sizeof(COUNTRY_INFO), AccessFlag::Global,
-                            &COUNTRY_INFO);
-    if (!res.IsSuccess())
-        return res;
-
-    u16_le country_name_buffer[16][0x40] = {};
-    std::u16string region_name = Common::UTF8ToUTF16("Gensokyo");
-    for (std::size_t i = 0; i < 16; ++i) {
-        std::copy(region_name.cbegin(), region_name.cend(), country_name_buffer[i]);
+    // Fill the config with default block data.
+    auto default_blocks = GetDefaultConfigBlocks();
+    for (auto& entry : default_blocks) {
+        res = CreateConfigBlock(entry.first, static_cast<u16>(entry.second.data.size()),
+                                entry.second.access_flags, entry.second.data.data());
+        if (!res.IsSuccess()) {
+            return res;
+        }
     }
-    // 0x000B0001 - Localized names for the profile Country
-    res = CreateConfigBlock(CountryNameBlockID, sizeof(country_name_buffer), AccessFlag::Global,
-                            country_name_buffer);
-    if (!res.IsSuccess())
-        return res;
 
-    // 0x000B0002 - Localized names for the profile State/Province
-    res = CreateConfigBlock(StateNameBlockID, sizeof(country_name_buffer), AccessFlag::Global,
-                            country_name_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x000B0003 - Coordinates. A pair of s16 represents latitude and longitude, respectively. One
-    // need to multiply both value by 180/32768 to get coordinates in degrees
-    res = CreateConfigBlock(LatitudeLongitudeBlockID, 0x4, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x000C0000 - Restricted photo exchange data, and other info (includes a mirror of Parental
-    // Restrictions PIN/Secret Answer)
-    res = CreateConfigBlock(RestrictedPhotoExchangeBlockID, 0xC0, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x000C0001 - COPPACS restriction data
-    res = CreateConfigBlock(CoppacsRestrictionBlockID, 0x14, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x000D0000 - Accepted EULA version
-    u32_le data = MAX_EULA_VERSION.minor + (MAX_EULA_VERSION.major << 8);
-    res = CreateConfigBlock(EULAVersionBlockID, sizeof(data), AccessFlag::Global, &data);
-    if (!res.IsSuccess())
-        return res;
-
-    u8 unknown_data = 0;
-    res = CreateConfigBlock(Unknown_0x000E0000, sizeof(unknown_data), AccessFlag::Global,
-                            &unknown_data);
-    if (!res.IsSuccess())
-        return res;
-
-    res = CreateConfigBlock(ConsoleModelBlockID, sizeof(CONSOLE_MODEL_OLD), AccessFlag::System,
-                            &CONSOLE_MODEL_OLD);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x000F0006 - In NIM, taken as a (hopefully null terminated) string used for the
-    // "X-Device-Token" http header field for NPNS url.
-    res = CreateConfigBlock(XDeviceTokenBlockID, 0x28, AccessFlag::System, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x00110000 - The low u16 indicates whether the system setup is required, such as when the
-    // system is booted for the first time or after doing a System Format: 0 = setup required,
-    // non-zero = no setup required
-    u32 system_setup_flag = 1;
-    res =
-        CreateConfigBlock(SystemSetupRequiredBlockID, 0x4, AccessFlag::System, &system_setup_flag);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x00130000 - DebugMode (0x100 for debug mode)
-    res = CreateConfigBlock(DebugModeBlockID, 0x4, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x00160000 - Unknown, first byte is used by config service-cmd 0x00070040.
-    res = CreateConfigBlock(0x00160000, 0x4, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
-
-    // 0x00170000 - Miiverse (OLV) access key
-    res = CreateConfigBlock(MiiverseAccessKeyBlockID, 0x4, AccessFlag::Global, zero_buffer);
-    if (!res.IsSuccess())
-        return res;
+    // Generate a new console unique ID.
+    const auto [random_number, console_id] = GenerateConsoleUniqueId();
+    SetConsoleUniqueId(random_number, console_id);
 
     // Save the buffer to the file
     res = UpdateConfigNANDSavegame();
-    if (!res.IsSuccess())
+    if (!res.IsSuccess()) {
         return res;
+    }
+
     return RESULT_SUCCESS;
 }
 
@@ -729,12 +560,13 @@ ResultCode Module::LoadConfigNANDSaveFile() {
 Module::Module() {
     LoadConfigNANDSaveFile();
     // Check the config savegame EULA Version and update it to 0x7F7F if necessary
-    // so users will never get a promt to accept EULA
-    EULAVersion version = GetEULAVersion();
-    if (version.major != MAX_EULA_VERSION.major || version.minor != MAX_EULA_VERSION.minor) {
-        LOG_INFO(Service_CFG, "Updating accepted EULA version to {}.{}", MAX_EULA_VERSION.major,
-                 MAX_EULA_VERSION.minor);
-        SetEULAVersion(Service::CFG::MAX_EULA_VERSION);
+    // so users will never get a prompt to accept EULA
+    auto version = GetEULAVersion();
+    auto& default_version = GetDefaultEULAVersion();
+    if (version.major != default_version.major || version.minor != default_version.minor) {
+        LOG_INFO(Service_CFG, "Updating accepted EULA version to {}.{}", default_version.major,
+                 default_version.minor);
+        SetEULAVersion(default_version);
         UpdateConfigNANDSavegame();
     }
 }
@@ -796,7 +628,7 @@ void Module::SetPreferredRegionCodes(std::span<const u32> region_codes) {
 void Module::SetUsername(const std::u16string& name) {
     ASSERT(name.size() <= 10);
     UsernameBlock block{};
-    name.copy(block.username, name.size());
+    name.copy(block.username.data(), name.size());
     SetConfigBlock(UsernameBlockID, sizeof(block), AccessFlag::SystemWrite, &block);
 }
 
@@ -806,7 +638,7 @@ std::u16string Module::GetUsername() {
 
     // the username string in the block isn't null-terminated,
     // so we need to find the end manually.
-    std::u16string username(block.username, std::size(block.username));
+    std::u16string username(block.username.data(), std::size(block.username));
     const std::size_t pos = username.find(u'\0');
     if (pos != std::u16string::npos)
         username.erase(pos);
@@ -920,8 +752,7 @@ EULAVersion Module::GetEULAVersion() {
 }
 
 void Module::SetEULAVersion(const EULAVersion& version) {
-    u32_le data = version.minor + (version.major << 8);
-    SetConfigBlock(EULAVersionBlockID, sizeof(data), AccessFlag::Global, &data);
+    SetConfigBlock(EULAVersionBlockID, sizeof(version), AccessFlag::Global, &version);
 }
 
 void Module::SetSystemSetupNeeded(bool setup_needed) {

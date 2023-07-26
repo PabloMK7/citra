@@ -255,6 +255,8 @@ add_library(citra_core STATIC
     hle/service/cecd/cecd_u.h
     hle/service/cfg/cfg.cpp
     hle/service/cfg/cfg.h
+    hle/service/cfg/cfg_defaults.cpp
+    hle/service/cfg/cfg_defaults.h
     hle/service/cfg/cfg_i.cpp
     hle/service/cfg/cfg_i.h
     hle/service/cfg/cfg_nor.cpp

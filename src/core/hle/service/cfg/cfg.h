@@ -22,6 +22,74 @@ class System;
 
 namespace Service::CFG {
 
+enum ConfigBlockID {
+    ConfigSavegameVersionBlockID = 0x00000000, // Maybe?
+    RtcCompensationBlockID = 0x00010000,
+    AudioCalibrationBlockID = 0x00020000,
+    LeapYearCounterBlockID = 0x00030000,
+    UserTimeOffsetBlockID = 0x00030001,
+    SettingsTimeOffsetBlockID = 0x00030002,
+    TouchCalibrationBlockID = 0x00040000,
+    AnalogStickCalibrationBlockID = 0x00040001, // Maybe?
+    GyroscopeCalibrationBlockID = 0x00040002,
+    AccelerometerCalibrationBlockID = 0x00040003,
+    CStickCalibrationBlockID = 0x00040004,
+    ScreenFlickerCalibrationBlockID = 0x00050000,
+    BacklightControlsBlockID = 0x00050001,
+    BacklightPwmCalibrationBlockID = 0x00050002,
+    PowerSavingModeCalibrationBlockID = 0x00050003,
+    PowerSavingModeCalibrationLegacyBlockID = 0x00050004,
+    StereoCameraSettingsBlockID = 0x00050005,
+    _3dSwitchingDelayBlockID = 0x00050006,
+    Unknown_0x00050007 = 0x00050007,
+    PowerSavingModeExtraConfigBlockID = 0x00050008,
+    BacklightControlNew3dsBlockID = 0x00050009,
+    Unknown_0x00060000 = 0x00060000,
+    _3dFiltersBlockID = 0x00070000,
+    SoundOutputModeBlockID = 0x00070001,
+    MicrophoneEchoCancellationBlockID = 0x00070002,
+    WifiConfigurationSlot0BlockID = 0x00080000,
+    WifiConfigurationSlot1BlockID = 0x00080001,
+    WifiConfigurationSlot2BlockID = 0x00080002,
+    ConsoleUniqueID1BlockID = 0x00090000,
+    ConsoleUniqueID2BlockID = 0x00090001,
+    ConsoleUniqueID3BlockID = 0x00090002,
+    UsernameBlockID = 0x000A0000,
+    BirthdayBlockID = 0x000A0001,
+    LanguageBlockID = 0x000A0002,
+    CountryInfoBlockID = 0x000B0000,
+    CountryNameBlockID = 0x000B0001,
+    StateNameBlockID = 0x000B0002,
+    LatitudeLongitudeBlockID = 0x000B0003,
+    RestrictedPhotoExchangeBlockID = 0x000C0000,
+    CoppacsRestrictionBlockID = 0x000C0001,
+    ParentalRestrictionEmailBlockID = 0x000C0002,
+    EULAVersionBlockID = 0x000D0000,
+    Unknown_0x000E0000 = 0x000E0000,
+    DebugConfigurationBlockID = 0x000F0000,
+    Unknown_0x000F0001 = 0x000F0001,
+    Unknown_0x000F0003 = 0x000F0003,
+    ConsoleModelBlockID = 0x000F0004,
+    NetworkUpdatesEnabledBlockID = 0x000F0005,
+    XDeviceTokenBlockID = 0x000F0006,
+    TwlEulaInfoBlockID = 0x00100000,
+    TwlParentalRestrictionsBlockID = 0x00100001,
+    TwlCountryCodeBlockID = 0x00100002,
+    TwlMovableUniqueBlockIDBlockID = 0x00100003,
+    SystemSetupRequiredBlockID = 0x00110000,
+    LaunchMenuBlockID = 0x00110001,
+    VolumeSliderBoundsBlockID = 0x00120000,
+    DebugModeBlockID = 0x00130000,
+    ClockSequenceBlockID = 0x00150000,
+    Unknown_0x00150001 = 0x00150001,
+    NpnsUrlID = 0x00150002, // Maybe? 3dbrew documentation is weirdly written.
+    Unknown_0x00160000 = 0x00160000,
+    MiiverseAccessKeyBlockID = 0x00170000,
+    QtmInfraredLedRelatedBlockID = 0x00180000,
+    QtmCalibrationDataBlockID = 0x00180001,
+    Unknown_0x00190000 = 0x00190000,
+};
+
 enum SystemModel {
     NINTENDO_3DS = 0,
     NINTENDO_3DS_XL = 1,
@@ -51,7 +119,50 @@ enum SoundOutputMode { SOUND_MONO = 0, SOUND_STEREO = 1, SOUND_SURROUND = 2 };
 struct EULAVersion {
     u8 minor;
     u8 major;
+    INSERT_PADDING_BYTES(2);
 };
+static_assert(sizeof(EULAVersion) == 4, "EULAVersion must be exactly 0x4 bytes");
+
+struct UsernameBlock {
+    /// Exactly 20 bytes long, padded with zeros at the end if necessary
+    std::array<char16_t, 10> username;
+    u32 zero;
+    u32 ng_word;
+};
+static_assert(sizeof(UsernameBlock) == 0x1C, "UsernameBlock must be exactly 0x1C bytes");
+
+struct BirthdayBlock {
+    u8 month; ///< The month of the birthday
+    u8 day;   ///< The day of the birthday
+};
+static_assert(sizeof(BirthdayBlock) == 2, "BirthdayBlock must be exactly 2 bytes");
+
+struct ConsoleModelInfo {
+    u8 model;                  ///< The console model (3DS, 2DS, etc)
+    std::array<u8, 3> unknown; ///< Unknown data
+};
+static_assert(sizeof(ConsoleModelInfo) == 4, "ConsoleModelInfo must be exactly 4 bytes");
+
+struct ConsoleCountryInfo {
+    std::array<u8, 2> unknown; ///< Unknown data
+    u8 state_code;             ///< The state or province code.
+    u8 country_code;           ///< The country code of the console
+};
+static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
+
+struct BacklightControls {
+    u8 power_saving_enabled; ///< Whether power saving mode is enabled.
+    u8 brightness_level;     ///< The configured brightness level.
+};
+static_assert(sizeof(BacklightControls) == 2, "BacklightControls must be exactly 2 bytes");
+
+struct New3dsBacklightControls {
+    std::array<u8, 4> unknown_1; ///< Unknown data
+    u8 auto_brightness_enabled;  ///< Whether auto brightness is enabled.
+    std::array<u8, 3> unknown_2; ///< Unknown data
+};
+static_assert(sizeof(New3dsBacklightControls) == 8,
+              "New3dsBacklightControls must be exactly 8 bytes");
 
 /// Access control flags for config blocks
 enum class AccessFlag : u16 {
@@ -64,75 +175,6 @@ enum class AccessFlag : u16 {
     Global = UserRead | SystemRead | SystemWrite,
 };
 DECLARE_ENUM_FLAG_OPERATORS(AccessFlag);
-
-/// Block header in the config savedata file
-struct SaveConfigBlockEntry {
-    u32 block_id;       ///< The id of the current block
-    u32 offset_or_data; ///< This is the absolute offset to the block data if the size is greater
-                        /// than 4 bytes, otherwise it contains the data itself
-    u16 size;           ///< The size of the block
-    AccessFlag access_flags; ///< The access control flags of the block
-};
-
-static constexpr u16 C(const char code[2]) {
-    return code[0] | (code[1] << 8);
-}
-
-static const std::array<u16, 187> country_codes = {{
-    0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
-    C("AI"), C("AG"), C("AR"), C("AW"), C("BS"), C("BB"), C("BZ"), C("BO"), // 8-15
-    C("BR"), C("VG"), C("CA"), C("KY"), C("CL"), C("CO"), C("CR"), C("DM"), // 16-23
-    C("DO"), C("EC"), C("SV"), C("GF"), C("GD"), C("GP"), C("GT"), C("GY"), // 24-31
-    C("HT"), C("HN"), C("JM"), C("MQ"), C("MX"), C("MS"), C("AN"), C("NI"), // 32-39
-    C("PA"), C("PY"), C("PE"), C("KN"), C("LC"), C("VC"), C("SR"), C("TT"), // 40-47
-    C("TC"), C("US"), C("UY"), C("VI"), C("VE"), 0,       0,       0,       // 48-55
-    0,       0,       0,       0,       0,       0,       0,       0,       // 56-63
-    C("AL"), C("AU"), C("AT"), C("BE"), C("BA"), C("BW"), C("BG"), C("HR"), // 64-71
-    C("CY"), C("CZ"), C("DK"), C("EE"), C("FI"), C("FR"), C("DE"), C("GR"), // 72-79
-    C("HU"), C("IS"), C("IE"), C("IT"), C("LV"), C("LS"), C("LI"), C("LT"), // 80-87
-    C("LU"), C("MK"), C("MT"), C("ME"), C("MZ"), C("NA"), C("NL"), C("NZ"), // 88-95
-    C("NO"), C("PL"), C("PT"), C("RO"), C("RU"), C("RS"), C("SK"), C("SI"), // 96-103
-    C("ZA"), C("ES"), C("SZ"), C("SE"), C("CH"), C("TR"), C("GB"), C("ZM"), // 104-111
-    C("ZW"), C("AZ"), C("MR"), C("ML"), C("NE"), C("TD"), C("SD"), C("ER"), // 112-119
-    C("DJ"), C("SO"), C("AD"), C("GI"), C("GG"), C("IM"), C("JE"), C("MC"), // 120-127
-    C("TW"), 0,       0,       0,       0,       0,       0,       0,       // 128-135
-    C("KR"), 0,       0,       0,       0,       0,       0,       0,       // 136-143
-    C("HK"), C("MO"), 0,       0,       0,       0,       0,       0,       // 144-151
-    C("ID"), C("SG"), C("TH"), C("PH"), C("MY"), 0,       0,       0,       // 152-159
-    C("CN"), 0,       0,       0,       0,       0,       0,       0,       // 160-167
-    C("AE"), C("IN"), C("EG"), C("OM"), C("QA"), C("KW"), C("SA"), C("SY"), // 168-175
-    C("BH"), C("JO"), 0,       0,       0,       0,       0,       0,       // 176-183
-    C("SM"), C("VA"), C("BM"),                                              // 184-186
-}};
-
-// Based on PKHeX's lists of subregions at
-// https://github.com/kwsch/PKHeX/tree/master/PKHeX.Core/Resources/text/locale3DS/subregions
-static const std::array<u8, 187> default_subregion = {{
-    0, 2, 0,  0, 0, 0, 0, 0, // 0-7
-    1, 2, 2,  1, 1, 1, 2, 2, // 8-15
-    2, 1, 2,  1, 2, 2, 2, 1, // 16-23
-    2, 2, 2,  1, 1, 1, 2, 2, // 24-31
-    2, 2, 2,  1, 2, 1, 1, 2, // 32-39
-    2, 2, 2,  2, 1, 1, 2, 2, // 40-47
-    1, 2, 2,  1, 2, 0, 0, 0, // 48-55
-    0, 0, 0,  0, 0, 0, 0, 0, // 56-63
-    2, 2, 2,  2, 2, 1, 2, 6, // 64-71
-    1, 2, 18, 1, 8, 2, 2, 2, // 72-79
-    2, 1, 2,  2, 1, 2, 1, 2, // 80-87
-    1, 1, 1,  1, 1, 1, 2, 2, // 88-95
-    7, 2, 2,  2, 9, 1, 2, 1, // 96-103
-    2, 2, 2,  2, 2, 2, 2, 1, // 104-111
-    1, 1, 1,  1, 1, 1, 1, 1, // 112-119
-    1, 1, 1,  1, 1, 1, 1, 1, // 120-127
-    2, 0, 0,  0, 0, 0, 0, 0, // 128-135
-    2, 0, 0,  0, 0, 0, 0, 0, // 136-143
-    1, 0, 0,  0, 0, 0, 0, 0, // 144-151
-    0, 1, 0,  0, 2, 0, 0, 0, // 152-159
-    2, 0, 0,  0, 0, 0, 0, 0, // 160-167
-    2, 2, 0,  0, 0, 0, 2, 0, // 168-175
-    0, 0, 0,  0, 0, 0, 0, 0, // 176-183
-    1, 1, 1,                 // 184-186
-}};
 
 class Module final {
 public:
