@@ -27,7 +27,7 @@ public:
     ~Impl();
     std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request);
 
-    bool SetMediaType(const ADTSData& adts_data);
+    bool SetMediaType(const AudioCore::ADTSData& adts_data);
 
 private:
     std::optional<BinaryMessage> Initalize(const BinaryMessage& request);
@@ -36,8 +36,8 @@ private:
     Memory::MemorySystem& memory;
     std::unique_ptr<AMediaCodec, AMediaCodecRelease> decoder;
     // default: 2 channles, 48000 samplerate
-    ADTSData mADTSData{
-        /*header_length*/ 7,  /*MPEG2*/ false,   /*profile*/ 2,
+    AudioCore::ADTSData mADTSData{
+        /*header_length*/ 7,  /*mpeg2*/ false,   /*profile*/ 2,
         /*channels*/ 2,       /*channel_idx*/ 2, /*framecount*/ 0,
         /*samplerate_idx*/ 3, /*length*/ 0,      /*samplerate*/ 48000};
 };
@@ -54,7 +54,7 @@ std::optional<BinaryMessage> MediaNDKDecoder::Impl::Initalize(const BinaryMessag
     return response;
 }
 
-bool MediaNDKDecoder::Impl::SetMediaType(const ADTSData& adts_data) {
+bool MediaNDKDecoder::Impl::SetMediaType(const AudioCore::ADTSData& adts_data) {
     const char* mime = "audio/mp4a-latm";
     if (decoder && mADTSData.profile == adts_data.profile &&
         mADTSData.channel_idx == adts_data.channel_idx &&
@@ -141,8 +141,9 @@ std::optional<BinaryMessage> MediaNDKDecoder::Impl::Decode(const BinaryMessage& 
         return response;
     }
 
-    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
-    ADTSData adts_data = ParseADTS(reinterpret_cast<const char*>(data));
+    const u8* data =
+        memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
+    ADTSData adts_data = AudioCore::ParseADTS(data);
     SetMediaType(adts_data);
     response.decode_aac_response.sample_rate = GetSampleRateEnum(adts_data.samplerate);
     response.decode_aac_response.num_channels = adts_data.channels;

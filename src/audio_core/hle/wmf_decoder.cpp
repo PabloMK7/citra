@@ -23,7 +23,8 @@ private:
 
     std::optional<BinaryMessage> Decode(const BinaryMessage& request);
 
-    MFOutputState DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
+    MFOutputState DecodingLoop(AudioCore::ADTSData adts_header,
+                               std::array<std::vector<u8>, 2>& out_streams);
 
     bool transform_initialized = false;
     bool format_selected = false;
@@ -139,7 +140,7 @@ std::optional<BinaryMessage> WMFDecoder::Impl::Initalize(const BinaryMessage& re
     return response;
 }
 
-MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
+MFOutputState WMFDecoder::Impl::DecodingLoop(AudioCore::ADTSData adts_header,
                                              std::array<std::vector<u8>, 2>& out_streams) {
     std::optional<std::vector<f32>> output_buffer;
 
@@ -210,14 +211,14 @@ std::optional<BinaryMessage> WMFDecoder::Impl::Decode(const BinaryMessage& reque
                   request.decode_aac_request.src_addr);
         return std::nullopt;
     }
-    u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
+    const u8* data =
+        memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<u8>, 2> out_streams;
     unique_mfptr<IMFSample> sample;
     MFInputState input_status = MFInputState::OK;
     MFOutputState output_status = MFOutputState::OK;
-    std::optional<ADTSMeta> adts_meta =
-        DetectMediaType((char*)data, request.decode_aac_request.size);
+    std::optional<ADTSMeta> adts_meta = DetectMediaType(data, request.decode_aac_request.size);
 
     if (!adts_meta) {
         LOG_ERROR(Audio_DSP, "Unable to deduce decoding parameters from ADTS stream");

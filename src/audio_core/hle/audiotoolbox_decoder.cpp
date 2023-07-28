@@ -24,7 +24,7 @@ private:
     std::optional<BinaryMessage> Decode(const BinaryMessage& request);
 
     void Clear();
-    bool InitializeDecoder(ADTSData& adts_header);
+    bool InitializeDecoder(AudioCore::ADTSData& adts_header);
 
     static OSStatus DataFunc(AudioConverterRef in_audio_converter, u32* io_number_data_packets,
                              AudioBufferList* io_data,
@@ -33,7 +33,7 @@ private:
 
     Memory::MemorySystem& memory;
 
-    ADTSData adts_config;
+    AudioCore::ADTSData adts_config;
     AudioStreamBasicDescription output_format = {};
     AudioConverterRef converter = nullptr;
 
@@ -101,7 +101,7 @@ std::optional<BinaryMessage> AudioToolboxDecoder::Impl::ProcessRequest(
     }
 }
 
-bool AudioToolboxDecoder::Impl::InitializeDecoder(ADTSData& adts_header) {
+bool AudioToolboxDecoder::Impl::InitializeDecoder(AudioCore::ADTSData& adts_header) {
     if (converter) {
         if (adts_config.channels == adts_header.channels &&
             adts_config.samplerate == adts_header.samplerate) {
@@ -183,8 +183,9 @@ std::optional<BinaryMessage> AudioToolboxDecoder::Impl::Decode(const BinaryMessa
         return {};
     }
 
-    auto data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
-    auto adts_header = ParseADTS(reinterpret_cast<const char*>(data));
+    const auto data =
+        memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
+    auto adts_header = AudioCore::ParseADTS(data);
     curr_data = data + adts_header.header_length;
     curr_data_len = request.decode_aac_request.size - adts_header.header_length;
 

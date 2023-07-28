@@ -3,44 +3,59 @@
 // Refer to the license.txt file included.
 #include <array>
 #include "adts.h"
+#include "common/bit_field.h"
 
+namespace AudioCore {
 constexpr std::array<u32, 16> freq_table = {96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
                                             16000, 12000, 11025, 8000,  7350,  0,     0,     0};
 constexpr std::array<u8, 8> channel_table = {0, 1, 2, 3, 4, 5, 6, 8};
 
-ADTSData ParseADTS(const char* buffer) {
-    u32 tmp = 0;
-    ADTSData out;
+struct ADTSHeader {
+    union {
+        std::array<u8, 7> raw{};
+        BitFieldBE<52, 12, u64> sync_word;
+        BitFieldBE<51, 1, u64> mpeg2;
+        BitFieldBE<49, 2, u64> layer;
+        BitFieldBE<48, 1, u64> protection_absent;
+        BitFieldBE<46, 2, u64> profile;
+        BitFieldBE<42, 4, u64> samplerate_idx;
+        BitFieldBE<41, 1, u64> private_bit;
+        BitFieldBE<38, 3, u64> channel_idx;
+        BitFieldBE<37, 1, u64> originality;
+        BitFieldBE<36, 1, u64> home;
+        BitFieldBE<35, 1, u64> copyright_id;
+        BitFieldBE<34, 1, u64> copyright_id_start;
+        BitFieldBE<21, 13, u64> frame_length;
+        BitFieldBE<10, 11, u64> buffer_fullness;
+        BitFieldBE<8, 2, u64> frame_count;
+    };
+};
+
+ADTSData ParseADTS(const u8* buffer) {
+    ADTSHeader header;
+    memcpy(header.raw.data(), buffer, sizeof(header.raw));
 
     // sync word 0xfff
-    tmp = (buffer[0] << 8) | (buffer[1] & 0xf0);
-    if ((tmp & 0xffff) != 0xfff0) {
-        out.length = 0;
-        return out;
+    if (header.sync_word != 0xfff) {
+        return {};
     }
+
+    ADTSData out{};
     // bit 16 = no CRC
-    out.header_length = (buffer[1] & 0x1) ? 7 : 9;
-    out.MPEG2 = (buffer[1] >> 3) & 0x1;
+    out.header_length = header.protection_absent ? 7 : 9;
+    out.mpeg2 = static_cast<bool>(header.mpeg2);
     // bit 17 to 18
-    out.profile = (buffer[2] >> 6) + 1;
+    out.profile = static_cast<u8>(header.profile) + 1;
     // bit 19 to 22
-    tmp = (buffer[2] >> 2) & 0xf;
-    out.samplerate_idx = tmp;
-    out.samplerate = (tmp > 15) ? 0 : freq_table[tmp];
+    out.samplerate_idx = static_cast<u8>(header.samplerate_idx);
+    out.samplerate = header.samplerate_idx > 15 ? 0 : freq_table[header.samplerate_idx];
     // bit 24 to 26
-    tmp = ((buffer[2] & 0x1) << 2) | ((buffer[3] >> 6) & 0x3);
-    out.channel_idx = tmp;
-    out.channels = (tmp > 7) ? 0 : channel_table[tmp];
-
+    out.channel_idx = static_cast<u8>(header.channel_idx);
+    out.channels = (header.channel_idx > 7) ? 0 : channel_table[header.channel_idx];
     // bit 55 to 56
-    out.framecount = (buffer[6] & 0x3) + 1;
-
+    out.framecount = static_cast<u8>(header.frame_count + 1);
     // bit 31 to 43
-    tmp = (buffer[3] & 0x3) << 11;
-    tmp |= (buffer[4] << 3) & 0x7f8;
-    tmp |= (buffer[5] >> 5) & 0x7;
-
-    out.length = tmp;
+    out.length = static_cast<u32>(header.frame_length);
 
     return out;
 }
@@ -61,3 +76,4 @@ u16 MFGetAACTag(const ADTSData& input) {
 
     return tag;
 }
+} // namespace AudioCore

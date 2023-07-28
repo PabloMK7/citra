@@ -110,8 +110,9 @@ unique_mfptr<IMFSample> CreateSample(const void* data, DWORD len, DWORD alignmen
     return sample;
 }
 
-bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
-                          const UINT8* user_data, UINT32 user_data_len, GUID audio_format) {
+bool SelectInputMediaType(IMFTransform* transform, int in_stream_id,
+                          const AudioCore::ADTSData& adts, const UINT8* user_data,
+                          UINT32 user_data_len, GUID audio_format) {
     HRESULT hr = S_OK;
     unique_mfptr<IMFMediaType> t;
 
@@ -190,12 +191,12 @@ bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id, GUID audi
     return false;
 }
 
-std::optional<ADTSMeta> DetectMediaType(char* buffer, std::size_t len) {
+std::optional<ADTSMeta> DetectMediaType(const u8* buffer, std::size_t len) {
     if (len < 7) {
         return std::nullopt;
     }
 
-    ADTSData tmp;
+    AudioCore::ADTSData tmp;
     ADTSMeta result;
     // see https://docs.microsoft.com/en-us/windows/desktop/api/mmreg/ns-mmreg-heaacwaveinfo_tag
     // for the meaning of the byte array below
@@ -207,7 +208,7 @@ std::optional<ADTSMeta> DetectMediaType(char* buffer, std::size_t len) {
     UINT8 aac_tmp[] = {0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x00, 0x00};
     uint16_t tag = 0;
 
-    tmp = ParseADTS(buffer);
+    tmp = AudioCore::ParseADTS(buffer);
     if (tmp.length == 0) {
         return std::nullopt;
     }
@@ -215,7 +216,7 @@ std::optional<ADTSMeta> DetectMediaType(char* buffer, std::size_t len) {
     tag = MFGetAACTag(tmp);
     aac_tmp[12] |= (tag & 0xff00) >> 8;
     aac_tmp[13] |= (tag & 0x00ff);
-    std::memcpy(&(result.ADTSHeader), &tmp, sizeof(ADTSData));
+    std::memcpy(&(result.ADTSHeader), &tmp, sizeof(AudioCore::ADTSData));
     std::memcpy(&(result.AACTag), aac_tmp, 14);
     return result;
 }

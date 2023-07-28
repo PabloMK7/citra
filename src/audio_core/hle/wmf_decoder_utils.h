@@ -99,7 +99,7 @@ void ReportError(std::string msg, HRESULT hr);
 
 // data type for transferring ADTS metadata between functions
 struct ADTSMeta {
-    ADTSData ADTSHeader;
+    AudioCore::ADTSData ADTSHeader;
     u8 AACTag[14];
 };
 
@@ -110,10 +110,10 @@ bool InitMFDLL();
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format = MFAudioFormat_AAC);
 unique_mfptr<IMFSample> CreateSample(const void* data, DWORD len, DWORD alignment = 1,
                                      LONGLONG duration = 0);
-bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
-                          const UINT8* user_data, UINT32 user_data_len,
-                          GUID audio_format = MFAudioFormat_AAC);
-std::optional<ADTSMeta> DetectMediaType(char* buffer, std::size_t len);
+bool SelectInputMediaType(IMFTransform* transform, int in_stream_id,
+                          const AudioCore::ADTSData& adts, const UINT8* user_data,
+                          UINT32 user_data_len, GUID audio_format = MFAudioFormat_AAC);
+std::optional<ADTSMeta> DetectMediaType(const u8* buffer, std::size_t len);
 bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id,
                            GUID audio_format = MFAudioFormat_PCM);
 void MFFlush(IMFTransform* transform);
