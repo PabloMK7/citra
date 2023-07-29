@@ -232,7 +232,7 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
                       parameter.sender_id);
 
             if (parameter.buffer.size() >= sizeof(CaptureBufferInfo)) {
-                SendCaptureBufferInfo(parameter.buffer);
+                SetCaptureInfo(parameter.buffer);
                 CaptureFrameBuffers();
             }
 
@@ -510,6 +510,8 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
 
     last_library_launcher_slot = active_slot;
     last_prepared_library_applet = applet_id;
+
+    capture_buffer_info.reset();
 
     auto cfg = Service::CFG::GetModule(system);
     auto process =
@@ -849,6 +851,9 @@ ResultCode AppletManager::PrepareToJumpToHomeMenu() {
     }
 
     last_jump_to_home_slot = active_slot;
+
+    capture_buffer_info.reset();
+
     if (last_jump_to_home_slot == AppletSlot::Application) {
         EnsureHomeMenuLoaded();
     }
@@ -1250,6 +1255,8 @@ ResultCode AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType 
     app_start_parameters->next_title_id = title_id;
     app_start_parameters->next_media_type = media_type;
 
+    capture_buffer_info.reset();
+
     return RESULT_SUCCESS;
 }
 
@@ -1359,48 +1366,74 @@ void AppletManager::EnsureHomeMenuLoaded() {
     }
 }
 
-static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr src, u32 height,
-                               u32 format) {
-    static constexpr auto screen_capture_base_vaddr = static_cast<VAddr>(0x1F500000);
-    static constexpr auto screen_width = 240;
-    static constexpr auto screen_width_pow2 = 256;
-    const auto bpp = format < 2 ? 3 : 2;
+static u32 GetDisplayBufferModePixelSize(DisplayBufferMode mode) {
+    switch (mode) {
+    // NOTE: APT does in fact use pixel size 3 for R8G8B8A8 captures.
+    case DisplayBufferMode::R8G8B8A8:
+    case DisplayBufferMode::R8G8B8:
+        return 3;
+    case DisplayBufferMode::R5G6B5:
+    case DisplayBufferMode::R5G5B5A1:
+    case DisplayBufferMode::R4G4B4A4:
+        return 2;
+    case DisplayBufferMode::Unimportable:
+        return 0;
+    default:
+        UNREACHABLE_MSG("Unknown display buffer mode {}", mode);
+        return 0;
+    }
+}
 
-    Memory::RasterizerFlushVirtualRegion(src, screen_width * height * bpp,
+static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr src, u32 height,
+                               DisplayBufferMode mode) {
+    const auto bpp = GetDisplayBufferModePixelSize(mode);
+    if (bpp == 0) {
+        return;
+    }
+
+    Memory::RasterizerFlushVirtualRegion(src, GSP::FRAMEBUFFER_WIDTH * height * bpp,
                                          Memory::FlushMode::Flush);
 
-    auto dst_vaddr = screen_capture_base_vaddr + capture_offset;
+    // Address in VRAM that APT copies framebuffer captures to.
+    constexpr VAddr screen_capture_base_vaddr = Memory::VRAM_VADDR + 0x500000;
+    const auto dst_vaddr = screen_capture_base_vaddr + capture_offset;
     auto dst_ptr = system.Memory().GetPointer(dst_vaddr);
+    if (!dst_ptr) {
+        LOG_ERROR(Service_APT,
+                  "Could not retrieve framebuffer capture destination buffer, skipping screen.");
+        return;
+    }
+
     const auto src_ptr = system.Memory().GetPointer(src);
+    if (!src_ptr) {
+        LOG_ERROR(Service_APT,
+                  "Could not retrieve framebuffer capture source buffer, skipping screen.");
+        return;
+    }
+
     for (u32 y = 0; y < height; y++) {
-        for (u32 x = 0; x < screen_width; x++) {
-            auto dst_offset =
-                VideoCore::GetMortonOffset(x, y, bpp) + (y & ~7) * screen_width_pow2 * bpp;
-            auto src_offset = bpp * (screen_width * y + x);
+        for (u32 x = 0; x < GSP::FRAMEBUFFER_WIDTH; x++) {
+            const auto dst_offset = VideoCore::GetMortonOffset(x, y, bpp) +
+                                    (y & ~7) * GSP::FRAMEBUFFER_WIDTH_POW2 * bpp;
+            const auto src_offset = bpp * (GSP::FRAMEBUFFER_WIDTH * y + x);
             std::memcpy(dst_ptr + dst_offset, src_ptr + src_offset, bpp);
         }
     }
 
-    Memory::RasterizerFlushVirtualRegion(dst_vaddr, screen_width_pow2 * height * bpp,
+    Memory::RasterizerFlushVirtualRegion(dst_vaddr, GSP::FRAMEBUFFER_WIDTH_POW2 * height * bpp,
                                          Memory::FlushMode::Invalidate);
 }
 
 void AppletManager::CaptureFrameBuffers() {
-    auto gsp =
-        Core::System::GetInstance().ServiceManager().GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
-    auto active_thread_id = gsp->GetActiveThreadId();
-    auto top_screen = gsp->GetFrameBufferInfo(active_thread_id, 0);
-    auto bottom_screen = gsp->GetFrameBufferInfo(active_thread_id, 1);
-
-    auto top_fb = top_screen->framebuffer_info[top_screen->index];
-    auto bottom_fb = bottom_screen->framebuffer_info[bottom_screen->index];
-
-    CaptureFrameBuffer(system, capture_info->bottom_screen_left_offset, bottom_fb.address_left, 320,
+    CaptureFrameBuffer(system, capture_info->bottom_screen_left_offset,
+                       GSP::FRAMEBUFFER_SAVE_AREA_BOTTOM, GSP::BOTTOM_FRAMEBUFFER_HEIGHT,
                        capture_info->bottom_screen_format);
-    CaptureFrameBuffer(system, capture_info->top_screen_left_offset, top_fb.address_left, 400,
+    CaptureFrameBuffer(system, capture_info->top_screen_left_offset,
+                       GSP::FRAMEBUFFER_SAVE_AREA_TOP_LEFT, GSP::TOP_FRAMEBUFFER_HEIGHT,
                        capture_info->top_screen_format);
     if (capture_info->is_3d) {
-        CaptureFrameBuffer(system, capture_info->top_screen_right_offset, top_fb.address_right, 400,
+        CaptureFrameBuffer(system, capture_info->top_screen_right_offset,
+                           GSP::FRAMEBUFFER_SAVE_AREA_TOP_RIGHT, GSP::TOP_FRAMEBUFFER_HEIGHT,
                            capture_info->top_screen_format);
     }
 }

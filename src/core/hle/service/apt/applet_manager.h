@@ -210,6 +210,15 @@ private:
     friend class boost::serialization::access;
 };
 
+enum class DisplayBufferMode : u32_le {
+    R8G8B8A8 = 0,
+    R8G8B8 = 1,
+    R5G6B5 = 2,
+    R5G5B5A1 = 3,
+    R4G4B4A4 = 4,
+    Unimportable = 0xFFFFFFFF,
+};
+
 /// Used by the application to pass information about the current framebuffer to applets.
 struct CaptureBufferInfo {
     u32_le size;
@@ -217,10 +226,10 @@ struct CaptureBufferInfo {
     INSERT_PADDING_BYTES(0x3); // Padding for alignment
     u32_le top_screen_left_offset;
     u32_le top_screen_right_offset;
-    u32_le top_screen_format;
+    DisplayBufferMode top_screen_format;
     u32_le bottom_screen_left_offset;
     u32_le bottom_screen_right_offset;
-    u32_le bottom_screen_format;
+    DisplayBufferMode bottom_screen_format;
 
 private:
     template <class Archive>
@@ -333,16 +342,27 @@ public:
         }
         return buffer;
     }
+    void SetCaptureInfo(std::vector<u8> buffer) {
+        ASSERT_MSG(buffer.size() >= sizeof(CaptureBufferInfo), "CaptureBufferInfo is too small.");
+
+        capture_info.emplace();
+        std::memcpy(&capture_info.get(), buffer.data(), sizeof(CaptureBufferInfo));
+    }
+
     std::vector<u8> ReceiveCaptureBufferInfo() {
-        std::vector<u8> buffer = GetCaptureInfo();
-        capture_info.reset();
+        std::vector<u8> buffer;
+        if (capture_buffer_info) {
+            buffer.resize(sizeof(CaptureBufferInfo));
+            std::memcpy(buffer.data(), &capture_buffer_info.get(), sizeof(CaptureBufferInfo));
+            capture_buffer_info.reset();
+        }
         return buffer;
     }
     void SendCaptureBufferInfo(std::vector<u8> buffer) {
         ASSERT_MSG(buffer.size() >= sizeof(CaptureBufferInfo), "CaptureBufferInfo is too small.");
 
-        capture_info.emplace();
-        std::memcpy(&capture_info.get(), buffer.data(), sizeof(CaptureBufferInfo));
+        capture_buffer_info.emplace();
+        std::memcpy(&capture_buffer_info.get(), buffer.data(), sizeof(CaptureBufferInfo));
     }
 
     ResultCode PrepareToStartApplication(u64 title_id, FS::MediaType media_type);
@@ -395,6 +415,7 @@ private:
     boost::optional<DeliverArg> deliver_arg{};
 
     boost::optional<CaptureBufferInfo> capture_info;
+    boost::optional<CaptureBufferInfo> capture_buffer_info;
 
     static constexpr std::size_t NumAppletSlot = 4;
 
@@ -500,6 +521,8 @@ private:
             ar& delayed_parameter;
             ar& app_start_parameters;
             ar& deliver_arg;
+            ar& capture_info;
+            ar& capture_buffer_info;
             ar& active_slot;
             ar& last_library_launcher_slot;
             ar& last_prepared_library_applet;

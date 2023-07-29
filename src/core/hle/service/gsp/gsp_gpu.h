@@ -186,6 +186,17 @@ struct CommandBuffer {
 };
 static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrect size");
 
+constexpr u32 FRAMEBUFFER_WIDTH = 240;
+constexpr u32 FRAMEBUFFER_WIDTH_POW2 = 256;
+constexpr u32 TOP_FRAMEBUFFER_HEIGHT = 400;
+constexpr u32 BOTTOM_FRAMEBUFFER_HEIGHT = 320;
+constexpr u32 FRAMEBUFFER_HEIGHT_POW2 = 512;
+
+// These are the VRAM addresses that GSP copies framebuffers to in SaveVramSysArea.
+constexpr VAddr FRAMEBUFFER_SAVE_AREA_TOP_LEFT = Memory::VRAM_VADDR + 0x273000;
+constexpr VAddr FRAMEBUFFER_SAVE_AREA_TOP_RIGHT = Memory::VRAM_VADDR + 0x2B9800;
+constexpr VAddr FRAMEBUFFER_SAVE_AREA_BOTTOM = Memory::VRAM_VADDR + 0x4C7800;
+
 class GSP_GPU;
 
 class SessionData : public Kernel::SessionRequestHandler::SessionDataBase {

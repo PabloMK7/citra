@@ -704,17 +704,72 @@ void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_GSP, "called");
 }
 
+static void CopyFrameBuffer(Core::System& system, VAddr dst, VAddr src, u32 stride, u32 lines) {
+    auto dst_ptr = system.Memory().GetPointer(dst);
+    const auto src_ptr = system.Memory().GetPointer(src);
+    if (!dst_ptr || !src_ptr) {
+        LOG_WARNING(Service_GSP,
+                    "Could not resolve pointers for framebuffer capture, skipping screen.");
+        return;
+    }
+
+    Memory::RasterizerFlushVirtualRegion(src, stride * lines, Memory::FlushMode::Flush);
+    std::memcpy(dst_ptr, src_ptr, stride * lines);
+    Memory::RasterizerFlushVirtualRegion(dst, stride * lines, Memory::FlushMode::Invalidate);
+}
+
 void GSP_GPU::SaveVramSysArea(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
+    if (active_thread_id == std::numeric_limits<u32>::max()) {
+        LOG_WARNING(Service_GSP, "Called without an active thread.");
+
+        // TODO: Find the right error code.
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(-1);
+        return;
+    }
+
     LOG_INFO(Service_GSP, "called");
 
-    // TODO: This should also DMA framebuffers into VRAM and save LCD register state.
+    // TODO: This should also save LCD register state.
     Memory::RasterizerFlushVirtualRegion(Memory::VRAM_VADDR, Memory::VRAM_SIZE,
                                          Memory::FlushMode::Flush);
-    auto vram = system.Memory().GetPointer(Memory::VRAM_VADDR);
+    const auto vram = system.Memory().GetPointer(Memory::VRAM_VADDR);
     saved_vram.emplace(std::vector<u8>(Memory::VRAM_SIZE));
     std::memcpy(saved_vram.get().data(), vram, Memory::VRAM_SIZE);
+
+    const auto top_screen = GetFrameBufferInfo(active_thread_id, 0);
+    if (top_screen) {
+        const auto top_fb = top_screen->framebuffer_info[top_screen->index];
+        if (top_fb.address_left) {
+            CopyFrameBuffer(system, FRAMEBUFFER_SAVE_AREA_TOP_LEFT, top_fb.address_left,
+                            top_fb.stride, TOP_FRAMEBUFFER_HEIGHT);
+        } else {
+            LOG_WARNING(Service_GSP, "No framebuffer bound to top left screen, skipping capture.");
+        }
+        if (top_fb.address_right) {
+            CopyFrameBuffer(system, FRAMEBUFFER_SAVE_AREA_TOP_RIGHT, top_fb.address_right,
+                            top_fb.stride, TOP_FRAMEBUFFER_HEIGHT);
+        } else {
+            LOG_WARNING(Service_GSP, "No framebuffer bound to top right screen, skipping capture.");
+        }
+    } else {
+        LOG_WARNING(Service_GSP, "No top screen bound, skipping capture.");
+    }
+
+    const auto bottom_screen = GetFrameBufferInfo(active_thread_id, 1);
+    if (bottom_screen) {
+        const auto bottom_fb = bottom_screen->framebuffer_info[bottom_screen->index];
+        if (bottom_fb.address_left) {
+            CopyFrameBuffer(system, FRAMEBUFFER_SAVE_AREA_BOTTOM, bottom_fb.address_left,
+                            bottom_fb.stride, BOTTOM_FRAMEBUFFER_HEIGHT);
+        } else {
+            LOG_WARNING(Service_GSP, "No framebuffer bound to bottom screen, skipping capture.");
+        }
+    } else {
+        LOG_WARNING(Service_GSP, "No bottom screen bound, skipping capture.");
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -819,7 +874,7 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     return nullptr;
 }
 
-GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 2), system(system) {
+GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
