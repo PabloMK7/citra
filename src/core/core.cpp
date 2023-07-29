@@ -259,14 +259,13 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
-    std::pair<std::optional<u32>, Loader::ResultStatus> system_mode =
-        app_loader->LoadKernelSystemMode();
 
-    if (system_mode.second != Loader::ResultStatus::Success) {
+    auto memory_mode = app_loader->LoadKernelMemoryMode();
+    if (memory_mode.second != Loader::ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to determine system mode (Error {})!",
-                     static_cast<int>(system_mode.second));
+                     static_cast<int>(memory_mode.second));
 
-        switch (system_mode.second) {
+        switch (memory_mode.second) {
         case Loader::ResultStatus::ErrorEncrypted:
             return ResultStatus::ErrorLoader_ErrorEncrypted;
         case Loader::ResultStatus::ErrorInvalidFormat:
@@ -278,15 +277,15 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         }
     }
 
-    ASSERT(system_mode.first);
-    auto n3ds_mode = app_loader->LoadKernelN3dsMode();
-    ASSERT(n3ds_mode.first);
+    ASSERT(memory_mode.first);
+    auto n3ds_hw_caps = app_loader->LoadNew3dsHwCapabilities();
+    ASSERT(n3ds_hw_caps.first);
     u32 num_cores = 2;
     if (Settings::values.is_new_3ds) {
         num_cores = 4;
     }
     ResultStatus init_result{
-        Init(emu_window, secondary_window, *system_mode.first, *n3ds_mode.first, num_cores)};
+        Init(emu_window, secondary_window, *memory_mode.first, *n3ds_hw_caps.first, num_cores)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));
@@ -363,8 +362,9 @@ void System::Reschedule() {
 }
 
 System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
-                                  Frontend::EmuWindow* secondary_window, u32 system_mode,
-                                  u8 n3ds_mode, u32 num_cores) {
+                                  Frontend::EmuWindow* secondary_window,
+                                  Kernel::MemoryMode memory_mode,
+                                  const Kernel::New3dsHwCapabilities& n3ds_hw_caps, u32 num_cores) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     memory = std::make_unique<Memory::MemorySystem>();
@@ -372,7 +372,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue());
 
     kernel = std::make_unique<Kernel::KernelSystem>(
-        *memory, *timing, [this] { PrepareReschedule(); }, system_mode, num_cores, n3ds_mode);
+        *memory, *timing, [this] { PrepareReschedule(); }, memory_mode, num_cores, n3ds_hw_caps);
 
     exclusive_monitor = MakeExclusiveMonitor(*memory, num_cores);
     cpu_cores.reserve(num_cores);
@@ -673,10 +673,10 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         Shutdown(true);
 
         // Re-initialize everything like it was before
-        auto system_mode = this->app_loader->LoadKernelSystemMode();
-        auto n3ds_mode = this->app_loader->LoadKernelN3dsMode();
+        auto memory_mode = this->app_loader->LoadKernelMemoryMode();
+        auto n3ds_hw_caps = this->app_loader->LoadNew3dsHwCapabilities();
         [[maybe_unused]] const System::ResultStatus result = Init(
-            *m_emu_window, m_secondary_window, *system_mode.first, *n3ds_mode.first, num_cores);
+            *m_emu_window, m_secondary_window, *memory_mode.first, *n3ds_hw_caps.first, num_cores);
     }
 
     // flush on save, don't flush on load

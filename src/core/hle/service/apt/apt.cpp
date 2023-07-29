@@ -16,16 +16,19 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/romfs.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_a.h"
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
+#include "core/hle/service/apt/ns.h"
 #include "core/hle/service/apt/ns_c.h"
 #include "core/hle/service/apt/ns_s.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"
@@ -41,7 +44,6 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
     ar& shared_font_loaded;
     ar& shared_font_relocated;
     ar& cpu_percent;
-    ar& unknown_ns_state_field;
     ar& screen_capture_post_permission;
     ar& applet_manager;
     if (file_version > 0) {
@@ -90,14 +92,19 @@ void Module::NSInterface::RebootSystem(Kernel::HLERequestContext& ctx) {
     const auto title_id = rp.Pop<u64>();
     const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     rp.Skip(1, false); // Skip padding
+    // TODO: Utilize requested memory type.
     const auto mem_type = rp.Pop<u8>();
 
     LOG_WARNING(Service_APT,
                 "called launch_title={}, title_id={:016X}, media_type={:02X}, mem_type={:02X}",
                 launch_title, title_id, media_type, mem_type);
 
-    // TODO: Implement loading a specific title.
-    apt->system.RequestReset();
+    // TODO: Handle mem type.
+    if (launch_title) {
+        NS::RebootToTitle(apt->system, media_type, title_id);
+    } else {
+        apt->system.RequestReset();
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -371,6 +378,16 @@ void Module::APTInterface::Enable(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->Enable(attributes));
 }
 
+void Module::APTInterface::Finalize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto applet_id = rp.PopEnum<AppletId>();
+
+    LOG_DEBUG(Service_APT, "called applet_id={:08X}", applet_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->Finalize(applet_id));
+}
+
 void Module::APTInterface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto applet_pos = rp.PopEnum<AppletPos>();
@@ -391,6 +408,16 @@ void Module::APTInterface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void Module::APTInterface::CountRegisteredApplet(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    LOG_DEBUG(Service_APT, "called");
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(apt->applet_manager->CountRegisteredApplet());
+}
+
 void Module::APTInterface::IsRegistered(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto app_id = rp.PopEnum<AppletId>();
@@ -400,6 +427,23 @@ void Module::APTInterface::IsRegistered(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->IsRegistered(app_id));
 
     LOG_DEBUG(Service_APT, "called app_id={:#010X}", app_id);
+}
+
+void Module::APTInterface::GetAttribute(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto app_id = rp.PopEnum<AppletId>();
+
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}", app_id);
+
+    auto applet_attr = apt->applet_manager->GetAttribute(app_id);
+    if (applet_attr.Failed()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(applet_attr.Code());
+    } else {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push(applet_attr.Unwrap().raw);
+    }
 }
 
 void Module::APTInterface::InquireNotification(Kernel::HLERequestContext& ctx) {
@@ -557,6 +601,21 @@ void Module::APTInterface::GetProgramIdOnApplicationJump(Kernel::HLERequestConte
     rb.Push(static_cast<u8>(parameters.next_media_type));
 }
 
+void Module::APTInterface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto param_size = rp.Pop<u32>();
+    const auto hmac_size = rp.Pop<u32>();
+    const auto param = rp.PopStaticBuffer();
+    const auto hmac = rp.PopStaticBuffer();
+
+    LOG_DEBUG(Service_APT, "called param_size={:08X}, hmac_size={:08X}", param_size, hmac_size);
+
+    apt->applet_manager->SetDeliverArg(DeliverArg{param, hmac});
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
 void Module::APTInterface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto param_size = rp.Pop<u32>();
@@ -611,7 +670,7 @@ void Module::APTInterface::WakeupApplication(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(apt->applet_manager->WakeupApplication());
+    rb.Push(apt->applet_manager->WakeupApplication(nullptr, {}));
 }
 
 void Module::APTInterface::CancelApplication(Kernel::HLERequestContext& ctx) {
@@ -856,6 +915,28 @@ void Module::APTInterface::OrderToCloseSystemApplet(Kernel::HLERequestContext& c
     rb.Push(apt->applet_manager->OrderToCloseSystemApplet());
 }
 
+void Module::APTInterface::SendDspSleep(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto from_app_id = rp.PopEnum<AppletId>();
+    const auto object = rp.PopGenericObject();
+
+    LOG_DEBUG(Service_APT, "called, from_app_id={:08X}", from_app_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->SendDspSleep(from_app_id, object));
+}
+
+void Module::APTInterface::SendDspWakeUp(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto from_app_id = rp.PopEnum<AppletId>();
+    const auto object = rp.PopGenericObject();
+
+    LOG_DEBUG(Service_APT, "called, from_app_id={:08X}", from_app_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->SendDspWakeUp(from_app_id, object));
+}
+
 void Module::APTInterface::PrepareToJumpToHomeMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -972,27 +1053,122 @@ void Module::APTInterface::GetCaptureInfo(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(std::move(screen_capture_buffer), 0);
 }
 
-void Module::APTInterface::SetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::Unknown54(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+    auto in_param = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called, screen_capture_post_permission={}",
-              apt->screen_capture_post_permission);
+    LOG_DEBUG(Service_APT, "called, in_param={}", in_param);
 
-    apt->screen_capture_post_permission = static_cast<ScreencapPostPermission>(rp.Pop<u32>() & 0xF);
+    auto media_type = apt->applet_manager->Unknown54(in_param);
+    if (media_type.Failed()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(media_type.Code());
+    } else {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.PushEnum(media_type.Unwrap());
+    }
+}
+
+void Module::APTInterface::SetScreenCapturePostPermission(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto permission = rp.Pop<u32>();
+
+    LOG_DEBUG(Service_APT, "called, permission={}", permission);
+
+    apt->screen_capture_post_permission = static_cast<ScreencapPostPermission>(permission & 0xF);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 }
 
-void Module::APTInterface::GetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetScreenCapturePostPermission(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    LOG_DEBUG(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
-              apt->screen_capture_post_permission);
+    LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
+}
+
+void Module::APTInterface::WakeupApplication2(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto buffer_size = rp.Pop<u32>();
+    const auto object = rp.PopGenericObject();
+    const auto buffer = rp.PopStaticBuffer();
+
+    LOG_DEBUG(Service_APT, "called buffer_size={:#010X}", buffer_size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->WakeupApplication(object, buffer));
+}
+
+void Module::APTInterface::GetProgramId(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto process_id = rp.PopPID();
+
+    LOG_DEBUG(Service_APT, "called process_id={}", process_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    auto fs_user =
+        Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+    ASSERT_MSG(fs_user != nullptr, "fs:USER service is missing.");
+
+    auto program_info_result = fs_user->GetProgramLaunchInfo(process_id);
+    if (program_info_result.Failed()) {
+        // On failure, APT still returns a success result with a program ID of 0.
+        rb.Push<u64>(0);
+    } else {
+        rb.Push(program_info_result.Unwrap().program_id);
+    }
+}
+
+void Module::APTInterface::GetProgramInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto title_id = rp.Pop<u64>();
+    const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
+    rp.Skip(1, false); // Skip padding
+
+    LOG_WARNING(Service_APT, "called title_id={:016X}, media_type={:02X}", title_id, media_type);
+
+    std::string path = Service::AM::GetTitleContentPath(media_type, title_id);
+    auto loader = Loader::GetLoader(path);
+    if (!loader) {
+        LOG_WARNING(Service_APT, "Could not find .app for title 0x{:016x}", title_id);
+
+        // TODO: Proper error code
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_UNKNOWN);
+        return;
+    }
+
+    auto memory_mode = loader->LoadKernelMemoryMode();
+    if (memory_mode.second != Loader::ResultStatus::Success || !memory_mode.first) {
+        LOG_ERROR(Service_APT, "Could not load memory mode for title 0x{:016x}", title_id);
+
+        // TODO: Proper error code
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_UNKNOWN);
+        return;
+    }
+
+    auto core_version = loader->LoadCoreVersion();
+    if (core_version.second != Loader::ResultStatus::Success || !core_version.first) {
+        LOG_ERROR(Service_APT, "Could not load core version for title 0x{:016x}", title_id);
+
+        // TODO: Proper error code
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_UNKNOWN);
+        return;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(static_cast<u8>(memory_mode.first.value()));
+    rb.Push(core_version.first.value());
 }
 
 void Module::APTInterface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
@@ -1154,37 +1330,83 @@ void Module::APTInterface::Unwrap(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(output);
 }
 
-void Module::APTInterface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::Reboot(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto title_id = rp.Pop<u64>();
+    const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
+    rp.Skip(1, false); // Skip padding
+    const auto mem_type = rp.Pop<u8>();
+    const auto firm_tid_low = rp.Pop<u32>();
+
+    LOG_WARNING(Service_APT,
+                "called title_id={:016X}, media_type={:02X}, mem_type={:02X}, firm_tid_low={:08X}",
+                title_id, media_type, mem_type, firm_tid_low);
+
+    // TODO: Handle mem type and FIRM TID low.
+    NS::RebootToTitle(apt->system, media_type, title_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::APTInterface::HardwareResetAsync(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    LOG_WARNING(Service_APT, "(STUBBED) called");
+    LOG_WARNING(Service_APT, "called");
+
+    apt->system.RequestReset();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::APTInterface::GetTargetPlatform(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    LOG_DEBUG(Service_APT, "called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    if (apt->unknown_ns_state_field) {
-        rb.Push(RESULT_SUCCESS);
-        rb.Push<u32>(0);
-    } else {
-        PTM::CheckNew3DS(rb);
-    }
+    rb.Push(RESULT_SUCCESS);
+    rb.PushEnum(apt->applet_manager->GetTargetPlatform());
 }
 
 void Module::APTInterface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+
+    LOG_DEBUG(Service_APT, "called");
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-
-    LOG_WARNING(Service_APT, "(STUBBED) called");
-
     PTM::CheckNew3DS(rb);
 }
 
-void Module::APTInterface::Unknown0x0103(Kernel::HLERequestContext& ctx) {
+void Module::APTInterface::GetApplicationRunningMode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+
+    LOG_DEBUG(Service_APT, "called");
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-
-    LOG_WARNING(Service_APT, "(STUBBED) called");
-
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u8>(Settings::values.is_new_3ds ? 2 : 1);
+    rb.PushEnum(apt->applet_manager->GetApplicationRunningMode());
+}
+
+void Module::APTInterface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    LOG_DEBUG(Service_APT, "called");
+
+    bool is_standard;
+    if (Settings::values.is_new_3ds) {
+        // Memory layout is standard if it is not NewDev1 (178MB)
+        is_standard = apt->system.Kernel().GetNew3dsHwCapabilities().memory_mode !=
+                      Kernel::New3dsMemoryMode::NewDev1;
+    } else {
+        // Memory layout is standard if it is Prod (64MB)
+        is_standard = apt->system.Kernel().GetMemoryMode() == Kernel::MemoryMode::Prod;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(is_standard);
 }
 
 void Module::APTInterface::IsTitleAllowed(Kernel::HLERequestContext& ctx) {

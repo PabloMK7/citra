@@ -37,29 +37,20 @@ static const u32 memory_region_sizes[8][3] = {
     {0x0B200000, 0x02E00000, 0x02000000}, // 7
 };
 
-namespace MemoryMode {
-enum N3DSMode : u8 {
-    Mode6 = 1,
-    Mode7 = 2,
-    Mode6_2 = 3,
-};
-}
-
-void KernelSystem::MemoryInit(u32 mem_type, u8 n3ds_mode) {
-    ASSERT(mem_type != 1);
-
+void KernelSystem::MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode) {
     const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
-    u32 reported_mem_type = mem_type;
+    u32 mem_type_index = static_cast<u32>(memory_mode);
+    u32 reported_mem_type = static_cast<u32>(memory_mode);
     if (is_new_3ds) {
-        if (n3ds_mode == MemoryMode::Mode6 || n3ds_mode == MemoryMode::Mode6_2) {
-            mem_type = 6;
+        if (n3ds_mode == New3dsMemoryMode::NewProd || n3ds_mode == New3dsMemoryMode::NewDev2) {
+            mem_type_index = 6;
             reported_mem_type = 6;
-        } else if (n3ds_mode == MemoryMode::Mode7) {
-            mem_type = 7;
+        } else if (n3ds_mode == New3dsMemoryMode::NewDev1) {
+            mem_type_index = 7;
             reported_mem_type = 7;
         } else {
             // On the N3ds, all O3ds configurations (<=5) are forced to 6 instead.
-            mem_type = 6;
+            mem_type_index = 6;
         }
     }
 
@@ -67,7 +58,7 @@ void KernelSystem::MemoryInit(u32 mem_type, u8 n3ds_mode) {
     // the sizes specified in the memory_region_sizes table.
     VAddr base = 0;
     for (int i = 0; i < 3; ++i) {
-        memory_regions[i]->Reset(base, memory_region_sizes[mem_type][i]);
+        memory_regions[i]->Reset(base, memory_region_sizes[mem_type_index][i]);
 
         base += memory_regions[i]->size;
     }

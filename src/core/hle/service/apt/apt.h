@@ -215,6 +215,15 @@ public:
         void Enable(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::Finalize service function
+         *  Inputs:
+         *      1 : Applet ID
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void Finalize(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::GetAppletManInfo service function.
          *  Inputs:
          *      1 : Unknown
@@ -242,6 +251,15 @@ public:
         void GetAppletInfo(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::CountRegisteredApplet service function
+         *  Outputs:
+         *      0 : Return header
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Number of registered applets
+         */
+        void CountRegisteredApplet(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::IsRegistered service function. This returns whether the specified AppID is
          * registered with NS yet. An AppID is "registered" once the process associated with the
          * AppID uses APT:Enable. Home Menu uses this command to determine when the launched process
@@ -256,6 +274,17 @@ public:
          *      2 : Output, 0 = not registered, 1 = registered.
          */
         void IsRegistered(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::GetAttribute service function
+         *  Inputs:
+         *      1 : AppID
+         *  Outputs:
+         *      0 : Return header
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Applet Attributes
+         */
+        void GetAttribute(Kernel::HLERequestContext& ctx);
 
         void InquireNotification(Kernel::HLERequestContext& ctx);
 
@@ -597,6 +626,21 @@ public:
         void GetProgramIdOnApplicationJump(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::SendDeliverArg service function
+         *  Inputs:
+         *      0 : Command header [0x00340084]
+         *      1 : Parameter Size (capped to 0x300)
+         *      2 : HMAC Size (capped to 0x20)
+         *      3 : (Parameter Size << 14) | 2
+         *      4 : Input buffer for Parameter
+         *      5 : (HMAC Size << 14) | 0x802
+         *      6 : Input buffer for HMAC
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void SendDeliverArg(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::ReceiveDeliverArg service function
          *  Inputs:
          *      0 : Command header [0x00350080]
@@ -686,6 +730,30 @@ public:
          *      1 : Result code
          */
         void OrderToCloseSystemApplet(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::SendDspSleep service function
+         *  Inputs:
+         *      1 : Source App ID
+         *      2 : Handle translation header (0x0)
+         *      3 : Handle parameter
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void SendDspSleep(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::SendDspWakeUp service function
+         *  Inputs:
+         *      1 : Source App ID
+         *      2 : Handle translation header (0x0)
+         *      3 : Handle parameter
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void SendDspWakeUp(Kernel::HLERequestContext& ctx);
 
         /**
          * APT::PrepareToJumpToHomeMenu service function
@@ -818,27 +886,97 @@ public:
         void GetStartupArgument(Kernel::HLERequestContext& ctx);
 
         /**
-         * APT::SetScreenCapPostPermission service function
+         * APT::Unknown54 service function
+         *  Inputs:
+         *      0 : Header Code[0x00540040]
+         *      1 : Unknown
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Media Type
+         */
+        void Unknown54(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::SetScreenCapturePostPermission service function
          *  Inputs:
          *      0 : Header Code[0x00550040]
          *      1 : u8 The screenshot posting permission
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          */
-        void SetScreenCapPostPermission(Kernel::HLERequestContext& ctx);
+        void SetScreenCapturePostPermission(Kernel::HLERequestContext& ctx);
 
         /**
-         * APT::GetScreenCapPostPermission service function
+         * APT::GetScreenCapturePostPermission service function
          *  Inputs:
          *      0 : Header Code[0x00560000]
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : u8 The screenshot posting permission
          */
-        void GetScreenCapPostPermission(Kernel::HLERequestContext& ctx);
+        void GetScreenCapturePostPermission(Kernel::HLERequestContext& ctx);
 
         /**
-         * APT::CheckNew3DSApp service function
+         * APT::WakeupApplication2 service function.
+         *  Inputs:
+         *     1 : Buffer parameter size, (max is 0x1000)
+         *     2 : Handle translation header (0x0)
+         *     3 : Handle parameter
+         *     4 : (Buffer parameter size << 14) | 2
+         *     5 : Buffer parameter pointer
+         * Outputs:
+         *     0 : Return Header
+         *     1 : Result of function, 0 on success, otherwise error code
+         */
+        void WakeupApplication2(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::GetProgramId service function.
+         *  Inputs:
+         *     1 : Process ID translation header (0x20)
+         *     2 : Process ID (filled in by kernel)
+         * Outputs:
+         *     0 : Return Header
+         *     1 : Result of function, 0 on success, otherwise error code
+         *     2-3 : u64 Program ID
+         */
+        void GetProgramId(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::GetProgramInfo service function.
+         * Inputs:
+         *     1-2 : Title ID
+         *     3 : Media Type
+         *     4 : Padding
+         * Outputs:
+         *     1 : Result of function, 0 on success, otherwise error code
+         *     2 : Required app memory mode
+         *     3 : Required app FIRM title ID low
+         */
+        void GetProgramInfo(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::Reboot service function.
+         * Inputs:
+         *     1-2 : Title ID
+         *     3 : Media Type
+         *     4 : Padding
+         *     5 : Launch memory type
+         *     6 : FIRM title ID low 32-bits
+         * Outputs:
+         *     1 : Result of function, 0 on success, otherwise error code
+         */
+        void Reboot(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::HardwareResetAsync service function.
+         * Outputs:
+         *     1 : Result of function, 0 on success, otherwise error code
+         */
+        void HardwareResetAsync(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::GetTargetPlatform service function
          *  Outputs:
          *      1: Result code, 0 on success, otherwise error code
          *      2: u8 output: 0 = Old3DS, 1 = New3DS.
@@ -849,7 +987,7 @@ public:
          *  Normally this NS state field is zero, however this state field is set to 1
          *  when APT:PrepareToStartApplication is used with flags bit8 is set.
          */
-        void CheckNew3DSApp(Kernel::HLERequestContext& ctx);
+        void GetTargetPlatform(Kernel::HLERequestContext& ctx);
 
         /**
          * Wrapper for PTMSYSM:CheckNew3DS
@@ -861,12 +999,20 @@ public:
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
 
         /**
-         * APT::Unknown0x0103 service function. Determines whether Smash 4 allows C-Stick
+         * APT::GetApplicationRunningMode service function
          *  Outputs:
          *      1: Result code, 0 on success otherwise error code
-         *      2: u8 output: 2 = New3DS+valid/initialized (in Smash 4), 1 = Old3DS or invalid
+         *      2: u8 output: 0 = No application, 1/3 = Old 3DS, 2/4 = New 3DS
          */
-        void Unknown0x0103(Kernel::HLERequestContext& ctx);
+        void GetApplicationRunningMode(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::IsStandardMemoryLayout service function
+         *  Outputs:
+         *      1: Result code, 0 on success otherwise error code
+         *      2: bool output: Whether the system is in its standard memory layout.
+         */
+        void IsStandardMemoryLayout(Kernel::HLERequestContext& ctx);
 
         /**
          * APT::IsTitleAllowed service function
@@ -905,9 +1051,6 @@ private:
     bool shared_font_relocated = false;
 
     u32 cpu_percent = 0; ///< CPU time available to the running application
-
-    // APT::CheckNew3DSApp will check this unknown_ns_state_field to determine processing mode
-    u8 unknown_ns_state_field = 0;
 
     std::array<u8, SysMenuArgSize> sys_menu_arg_buffer;
 

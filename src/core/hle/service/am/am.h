@@ -119,6 +119,13 @@ InstallStatus InstallCIA(const std::string& path,
 InstallStatus InstallFromNus(u64 title_id, int version = -1);
 
 /**
+ * Get the update title ID for a title
+ * @param titleId the title ID
+ * @returns The update title ID
+ */
+u64 GetTitleUpdateId(u64 title_id);
+
+/**
  * Get the mediatype for an installed title
  * @param titleId the installed title ID
  * @returns MediaType which the installed title will reside on

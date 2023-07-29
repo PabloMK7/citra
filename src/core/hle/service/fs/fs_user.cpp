@@ -672,30 +672,23 @@ void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
 
 void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-
-    u32 process_id = rp.Pop<u32>();
+    const auto process_id = rp.Pop<u32>();
 
     LOG_DEBUG(Service_FS, "process_id={}", process_id);
 
-    auto program_info = program_info_map.find(process_id);
-
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
 
-    if (program_info == program_info_map.end()) {
+    auto program_info_result = GetProgramLaunchInfo(process_id);
+    if (program_info_result.Failed()) {
         // Note: In this case, the rest of the parameters are not changed but the command header
         // remains the same.
-        rb.Push(ResultCode(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
-                           ErrorSummary::NotFound, ErrorLevel::Status));
+        rb.Push(program_info_result.Code());
         rb.Skip(4, false);
         return;
     }
 
     rb.Push(RESULT_SUCCESS);
-    rb.Push(program_info->second.program_id);
-    rb.Push(static_cast<u8>(program_info->second.media_type));
-
-    // TODO(Subv): Find out what this value means.
-    rb.Push<u32>(0);
+    rb.PushRaw(program_info_result.Unwrap());
 }
 
 void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {

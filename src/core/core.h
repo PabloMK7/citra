@@ -342,8 +342,10 @@ private:
      * @return ResultStatus code, indicating if the operation succeeded.
      */
     [[nodiscard]] ResultStatus Init(Frontend::EmuWindow& emu_window,
-                                    Frontend::EmuWindow* secondary_window, u32 system_mode,
-                                    u8 n3ds_mode, u32 num_cores);
+                                    Frontend::EmuWindow* secondary_window,
+                                    Kernel::MemoryMode memory_mode,
+                                    const Kernel::New3dsHwCapabilities& n3ds_hw_caps,
+                                    u32 num_cores);
 
     /// Reschedule the core emulation
     void Reschedule();

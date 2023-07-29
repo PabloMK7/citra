@@ -17,7 +17,8 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
     Core::Timing timing(1, 100);
     Memory::MemorySystem memory;
     Kernel::KernelSystem kernel(
-        memory, timing, [] {}, 0, 1, 0);
+        memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
+        Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});
     Kernel::Process process(kernel);
     SECTION("mapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.

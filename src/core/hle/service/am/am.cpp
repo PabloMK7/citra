@@ -521,6 +521,11 @@ InstallStatus InstallFromNus(u64 title_id, int version) {
 #endif
 }
 
+u64 GetTitleUpdateId(u64 title_id) {
+    // Real services seem to just discard and replace the whole high word.
+    return (title_id & 0xFFFFFFFF) | (static_cast<u64>(TID_HIGH_UPDATE) << 32);
+}
+
 Service::FS::MediaType GetTitleMediaType(u64 titleId) {
     u16 platform = static_cast<u16>(titleId >> 48);
     u16 category = static_cast<u16>((titleId >> 32) & 0xFFFF);

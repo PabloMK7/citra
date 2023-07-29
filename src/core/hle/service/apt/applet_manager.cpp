@@ -19,7 +19,7 @@ SERVICE_CONSTRUCT_IMPL(Service::APT::AppletManager)
 namespace Service::APT {
 
 /// The interval at which the home button update callback will be called, 16.6ms
-static constexpr u64 home_button_update_interval_us = 16666;
+static constexpr u64 button_update_interval_us = 16666;
 
 struct AppletTitleData {
     // There are two possible applet ids for each applet.
@@ -407,9 +407,54 @@ ResultCode AppletManager::Enable(AppletAttributes attributes) {
     return RESULT_SUCCESS;
 }
 
+ResultCode AppletManager::Finalize(AppletId app_id) {
+    auto slot = GetAppletSlotFromId(app_id);
+    if (slot == AppletSlot::Error) {
+        return {ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                ErrorLevel::Status};
+    }
+
+    auto slot_data = GetAppletSlot(slot);
+    slot_data->Reset();
+
+    auto inactive = active_slot == AppletSlot::Error;
+    if (!inactive) {
+        auto active_slot_data = GetAppletSlot(active_slot);
+        inactive = active_slot_data->applet_id == AppletId::None ||
+                   active_slot_data->attributes.applet_pos.Value() == AppletPos::Invalid;
+    }
+
+    if (inactive) {
+        active_slot = GetAppletSlotFromPos(AppletPos::System);
+    }
+
+    return RESULT_SUCCESS;
+}
+
+u32 AppletManager::CountRegisteredApplet() {
+    return static_cast<u32>(std::count_if(applet_slots.begin(), applet_slots.end(),
+                                          [](auto& slot_data) { return slot_data.registered; }));
+}
+
 bool AppletManager::IsRegistered(AppletId app_id) {
     auto slot = GetAppletSlotFromId(app_id);
     return slot != AppletSlot::Error && GetAppletSlot(slot)->registered;
+}
+
+ResultVal<AppletAttributes> AppletManager::GetAttribute(AppletId app_id) {
+    auto slot = GetAppletSlotFromId(app_id);
+    if (slot == AppletSlot::Error) {
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                          ErrorLevel::Status);
+    }
+
+    auto slot_data = GetAppletSlot(slot);
+    if (!slot_data->registered) {
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                          ErrorLevel::Status);
+    }
+
+    return slot_data->attributes;
 }
 
 ResultVal<Notification> AppletManager::InquireNotification(AppletId app_id) {
@@ -439,6 +484,15 @@ ResultCode AppletManager::SendNotification(Notification notification) {
 
     return {ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
             ErrorLevel::Status};
+}
+
+void AppletManager::SendNotificationToAll(Notification notification) {
+    for (auto& slot_data : applet_slots) {
+        if (slot_data.registered) {
+            slot_data.notification = notification;
+            slot_data.notification_event->Signal();
+        }
+    }
 }
 
 ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
@@ -592,6 +646,71 @@ ResultCode AppletManager::CancelLibraryApplet(bool app_exiting) {
         .destination_id = slot->applet_id,
         .signal = SignalType::WakeupByCancel,
     });
+}
+
+ResultCode AppletManager::SendDspSleep(AppletId from_applet_id,
+                                       std::shared_ptr<Kernel::Object> object) {
+    auto lib_slot = GetAppletSlotFromPos(AppletPos::Library);
+    auto lib_app_id =
+        lib_slot != AppletSlot::Error ? GetAppletSlot(lib_slot)->applet_id : AppletId::None;
+    if (from_applet_id == lib_app_id) {
+        SendParameter({
+            .sender_id = from_applet_id,
+            .destination_id = AppletId::Application,
+            .signal = SignalType::DspSleep,
+            .object = std::move(object),
+        });
+    }
+
+    auto sys_lib_slot = GetAppletSlotFromPos(AppletPos::SysLibrary);
+    auto sys_lib_app_id =
+        sys_lib_slot != AppletSlot::Error ? GetAppletSlot(sys_lib_slot)->applet_id : AppletId::None;
+    if (from_applet_id == sys_lib_app_id) {
+        auto sys_slot = GetAppletSlotFromPos(AppletPos::System);
+        auto sys_app_id =
+            sys_slot != AppletSlot::Error ? GetAppletSlot(sys_slot)->applet_id : AppletId::None;
+        SendParameter({
+            .sender_id = from_applet_id,
+            .destination_id = sys_app_id,
+            .signal = SignalType::DspSleep,
+            .object = std::move(object),
+        });
+    }
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode AppletManager::SendDspWakeUp(AppletId from_applet_id,
+                                        std::shared_ptr<Kernel::Object> object) {
+    auto lib_slot = GetAppletSlotFromPos(AppletPos::Library);
+    auto lib_app_id =
+        lib_slot != AppletSlot::Error ? GetAppletSlot(lib_slot)->applet_id : AppletId::None;
+    if (from_applet_id == lib_app_id) {
+        SendParameter({
+            .sender_id = from_applet_id,
+            .destination_id = AppletId::Application,
+            .signal = SignalType::DspSleep,
+            .object = std::move(object),
+        });
+    } else {
+        auto sys_lib_slot = GetAppletSlotFromPos(AppletPos::SysLibrary);
+        auto sys_lib_app_id = sys_lib_slot != AppletSlot::Error
+                                  ? GetAppletSlot(sys_lib_slot)->applet_id
+                                  : AppletId::None;
+        if (from_applet_id == sys_lib_app_id) {
+            auto sys_slot = GetAppletSlotFromPos(AppletPos::System);
+            auto sys_app_id =
+                sys_slot != AppletSlot::Error ? GetAppletSlot(sys_slot)->applet_id : AppletId::None;
+            SendParameter({
+                .sender_id = from_applet_id,
+                .destination_id = sys_app_id,
+                .signal = SignalType::DspSleep,
+                .object = std::move(object),
+            });
+        }
+    }
+
+    return RESULT_SUCCESS;
 }
 
 ResultCode AppletManager::PrepareToStartSystemApplet(AppletId applet_id) {
@@ -963,10 +1082,7 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
                           ErrorLevel::Status);
     }
 
-    // TODO: Basic heuristic to guess media type, needs proper implementation.
-    auto media_type = ((slot_data->title_id >> 32) & 0xFFFFFFFF) == 0x00040000
-                          ? Service::FS::MediaType::SDMC
-                          : Service::FS::MediaType::NAND;
+    auto media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
     return AppletInfo{
         .title_id = slot_data->title_id,
         .media_type = media_type,
@@ -974,6 +1090,61 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
         .loaded = slot_data->loaded,
         .attributes = slot_data->attributes.raw,
     };
+}
+
+ResultVal<Service::FS::MediaType> AppletManager::Unknown54(u32 in_param) {
+    auto slot_data = GetAppletSlot(AppletSlot::Application);
+    if (slot_data->applet_id == AppletId::None) {
+        return ResultCode{ErrCodes::AppNotRunning, ErrorModule::Applet, ErrorSummary::InvalidState,
+                          ErrorLevel::Permanent};
+    }
+
+    if (in_param >= 0x80) {
+        // TODO: Add error description name when the parameter is known.
+        return ResultCode{10, ErrorModule::Applet, ErrorSummary::InvalidArgument,
+                          ErrorLevel::Usage};
+    }
+
+    // TODO: Figure out what this logic is actually for.
+    auto check_target =
+        in_param >= 0x40 ? Service::FS::MediaType::GameCard : Service::FS::MediaType::SDMC;
+    auto check_update = in_param == 0x01 || in_param == 0x42;
+
+    auto app_media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    auto app_update_media_type =
+        Service::AM::GetTitleMediaType(Service::AM::GetTitleUpdateId(slot_data->title_id));
+    if (app_media_type == check_target || (check_update && app_update_media_type == check_target)) {
+        return Service::FS::MediaType::SDMC;
+    } else {
+        return Service::FS::MediaType::NAND;
+    }
+}
+
+TargetPlatform AppletManager::GetTargetPlatform() {
+    if (Settings::values.is_new_3ds.GetValue() && !new_3ds_mode_blocked) {
+        return TargetPlatform::New3ds;
+    } else {
+        return TargetPlatform::Old3ds;
+    }
+}
+
+ApplicationRunningMode AppletManager::GetApplicationRunningMode() {
+    auto slot_data = GetAppletSlot(AppletSlot::Application);
+    if (slot_data->applet_id == AppletId::None) {
+        return ApplicationRunningMode::NoApplication;
+    }
+
+    // APT checks whether the system is a New 3DS and the 804MHz CPU speed is enabled to determine
+    // the result.
+    auto new_3ds_mode = GetTargetPlatform() == TargetPlatform::New3ds &&
+                        system.Kernel().GetNew3dsHwCapabilities().enable_804MHz_cpu;
+    if (slot_data->registered) {
+        return new_3ds_mode ? ApplicationRunningMode::New3dsRegistered
+                            : ApplicationRunningMode::Old3dsRegistered;
+    } else {
+        return new_3ds_mode ? ApplicationRunningMode::New3dsUnregistered
+                            : ApplicationRunningMode::Old3dsUnregistered;
+    }
 }
 
 ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,
@@ -988,11 +1159,8 @@ ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType
     // Save the title data to send it to the Home Menu when DoApplicationJump is called.
     auto application_slot_data = GetAppletSlot(AppletSlot::Application);
     app_jump_parameters.current_title_id = application_slot_data->title_id;
-    // TODO: Basic heuristic to guess media type, needs proper implementation.
     app_jump_parameters.current_media_type =
-        ((application_slot_data->title_id >> 32) & 0xFFFFFFFF) == 0x00040000
-            ? Service::FS::MediaType::SDMC
-            : Service::FS::MediaType::NAND;
+        Service::AM::GetTitleMediaType(application_slot_data->title_id);
     if (flags == ApplicationJumpFlags::UseCurrentParameters) {
         app_jump_parameters.next_title_id = app_jump_parameters.current_title_id;
         app_jump_parameters.next_media_type = app_jump_parameters.current_media_type;
@@ -1055,19 +1223,8 @@ ResultCode AppletManager::DoApplicationJump(const DeliverArg& arg) {
         return RESULT_SUCCESS;
         */
 
-        auto new_path = Service::AM::GetTitleContentPath(app_jump_parameters.next_media_type,
-                                                         app_jump_parameters.next_title_id);
-        if (new_path.empty() || !FileUtil::Exists(new_path)) {
-            // TODO: This can happen if the requested title is not installed. Need a way to find
-            // non-installed titles in the game list.
-            LOG_CRITICAL(
-                Service_APT,
-                "Failed to find title during application jump: {} Resetting current title instead.",
-                new_path);
-            new_path.clear();
-        }
-
-        system.RequestReset(new_path);
+        NS::RebootToTitle(system, app_jump_parameters.next_media_type,
+                          app_jump_parameters.next_title_id);
         return RESULT_SUCCESS;
     }
 }
@@ -1126,13 +1283,14 @@ ResultCode AppletManager::StartApplication(const std::vector<u8>& parameter,
     app_start_parameters.reset();
 
     if (!paused) {
-        return WakeupApplication();
+        return WakeupApplication(nullptr, {});
     }
 
     return RESULT_SUCCESS;
 }
 
-ResultCode AppletManager::WakeupApplication() {
+ResultCode AppletManager::WakeupApplication(std::shared_ptr<Kernel::Object> object,
+                                            const std::vector<u8>& buffer) {
     // Send a Wakeup signal via the apt parameter to the application once it registers itself.
     // The real APT service does this by spin waiting on another thread until the application is
     // registered.
@@ -1140,6 +1298,8 @@ ResultCode AppletManager::WakeupApplication() {
         .sender_id = AppletId::HomeMenu,
         .destination_id = AppletId::Application,
         .signal = SignalType::Wakeup,
+        .object = std::move(object),
+        .buffer = buffer,
     });
 
     return RESULT_SUCCESS;
@@ -1248,27 +1408,38 @@ void AppletManager::CaptureFrameBuffers() {
 void AppletManager::LoadInputDevices() {
     home_button = Input::CreateDevice<Input::ButtonDevice>(
         Settings::values.current_input_profile.buttons[Settings::NativeButton::Home]);
+    power_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::Power]);
 }
 
-void AppletManager::HomeButtonUpdateEvent(std::uintptr_t user_data, s64 cycles_late) {
+void AppletManager::ButtonUpdateEvent(std::uintptr_t user_data, s64 cycles_late) {
     if (is_device_reload_pending.exchange(false)) {
         LoadInputDevices();
     }
 
-    const bool state = home_button->GetStatus();
     // NOTE: We technically do support loading and jumping to home menu even if it isn't
     // initially registered. However since the home menu suspend is not bug-free, we don't
     // want normal users who didn't launch the home menu accidentally pressing the home
     // button binding and freezing their game, so for now, gate it to only environments
     // where the home menu was already loaded by the user (last condition).
-    if (state && !last_home_button_state && GetAppletSlot(AppletSlot::HomeMenu)->registered) {
-        SendNotification(Notification::HomeButtonSingle);
+
+    if (GetAppletSlot(AppletSlot::HomeMenu)->registered) {
+        const bool home_state = home_button->GetStatus();
+        if (home_state && !last_home_button_state) {
+            SendNotification(Notification::HomeButtonSingle);
+        }
+        last_home_button_state = home_state;
+
+        const bool power_state = power_button->GetStatus();
+        if (power_state && !last_power_button_state) {
+            SendNotificationToAll(Notification::PowerButtonClick);
+        }
+        last_power_button_state = power_state;
     }
-    last_home_button_state = state;
 
     // Reschedule recurrent event
-    Core::System::GetInstance().CoreTiming().ScheduleEvent(
-        usToCycles(home_button_update_interval_us) - cycles_late, home_button_update_event);
+    system.CoreTiming().ScheduleEvent(usToCycles(button_update_interval_us) - cycles_late,
+                                      button_update_event);
 }
 
 AppletManager::AppletManager(Core::System& system) : system(system) {
@@ -1286,12 +1457,11 @@ AppletManager::AppletManager(Core::System& system) : system(system) {
             system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "APT:Parameter");
     }
     HLE::Applets::Init();
-    home_button_update_event = Core::System::GetInstance().CoreTiming().RegisterEvent(
-        "Home Button Update Event", [this](std::uintptr_t user_data, s64 cycles_late) {
-            HomeButtonUpdateEvent(user_data, cycles_late);
+    button_update_event = system.CoreTiming().RegisterEvent(
+        "APT Button Update Event", [this](std::uintptr_t user_data, s64 cycles_late) {
+            ButtonUpdateEvent(user_data, cycles_late);
         });
-    Core::System::GetInstance().CoreTiming().ScheduleEvent(
-        usToCycles(home_button_update_interval_us), home_button_update_event);
+    system.CoreTiming().ScheduleEvent(usToCycles(button_update_interval_us), button_update_event);
 }
 
 AppletManager::~AppletManager() {

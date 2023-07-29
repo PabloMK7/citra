@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <boost/serialization/base_object.hpp>
 #include "common/common_types.h"
+#include "core/file_sys/errors.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -16,6 +17,13 @@ class System;
 namespace Service::FS {
 
 class ArchiveManager;
+
+struct ProgramInfo {
+    u64 program_id;
+    MediaType media_type;
+    INSERT_PADDING_BYTES(4);
+};
+static_assert(sizeof(ProgramInfo) == 0x10, "ProgramInfo struct has incorrect size");
 
 struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
     // We retrieves program ID for client process on FS::Initialize(WithSDKVersion)
@@ -44,6 +52,17 @@ public:
     void Register(u32 process_id, u64 program_id, const std::string& filepath);
 
     std::string GetCurrentGamecardPath() const;
+
+    /// Gets the registered program info of a process.
+    ResultVal<ProgramInfo> GetProgramLaunchInfo(u32 process_id) const {
+        auto info = program_info_map.find(process_id);
+        if (info != program_info_map.end()) {
+            return info->second;
+        } else {
+            return ResultCode(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
+                              ErrorSummary::NotFound, ErrorLevel::Status);
+        }
+    }
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -601,11 +620,6 @@ private:
     static ResultVal<u16> GetSpecialContentIndexFromGameCard(u64 title_id, SpecialContentType type);
     static ResultVal<u16> GetSpecialContentIndexFromTMD(MediaType media_type, u64 title_id,
                                                         SpecialContentType type);
-
-    struct ProgramInfo {
-        u64 program_id;
-        MediaType media_type;
-    };
 
     std::unordered_map<u32, ProgramInfo> program_info_map;
     std::string current_gamecard_path;

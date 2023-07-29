@@ -32,13 +32,16 @@ public:
 
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
 
+    std::pair<std::optional<u32>, ResultStatus> LoadCoreVersion() override;
+
     /**
      * Loads the Exheader and returns the system mode for this application.
      * @returns A pair with the optional system mode, and and the status.
      */
-    std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() override;
+    std::pair<std::optional<Kernel::MemoryMode>, ResultStatus> LoadKernelMemoryMode() override;
 
-    std::pair<std::optional<u8>, ResultStatus> LoadKernelN3dsMode() override;
+    std::pair<std::optional<Kernel::New3dsHwCapabilities>, ResultStatus> LoadNew3dsHwCapabilities()
+        override;
 
     ResultStatus IsExecutable(bool& out_executable) override;
 

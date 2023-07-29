@@ -16,6 +16,7 @@
 #include "core/core.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/am/am.h"
@@ -47,7 +48,7 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {
+std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadCoreVersion() {
     if (!is_loaded) {
         ResultStatus res = base_ncch.Load();
         if (res != ResultStatus::Success) {
@@ -55,12 +56,12 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
         }
     }
 
-    // Set the system mode as the one from the exheader.
-    return std::make_pair(overlay_ncch->exheader_header.arm11_system_local_caps.system_mode.Value(),
-                          ResultStatus::Success);
+    // Provide the core version from the exheader.
+    auto& ncch_caps = overlay_ncch->exheader_header.arm11_system_local_caps;
+    return std::make_pair(ncch_caps.core_version, ResultStatus::Success);
 }
 
-std::pair<std::optional<u8>, ResultStatus> AppLoader_NCCH::LoadKernelN3dsMode() {
+std::pair<std::optional<Kernel::MemoryMode>, ResultStatus> AppLoader_NCCH::LoadKernelMemoryMode() {
     if (!is_loaded) {
         ResultStatus res = base_ncch.Load();
         if (res != ResultStatus::Success) {
@@ -68,9 +69,29 @@ std::pair<std::optional<u8>, ResultStatus> AppLoader_NCCH::LoadKernelN3dsMode() 
         }
     }
 
-    // Set the system mode as the one from the exheader.
-    return std::make_pair(overlay_ncch->exheader_header.arm11_system_local_caps.n3ds_mode,
-                          ResultStatus::Success);
+    // Provide the memory mode from the exheader.
+    auto& ncch_caps = overlay_ncch->exheader_header.arm11_system_local_caps;
+    auto mode = static_cast<Kernel::MemoryMode>(ncch_caps.system_mode.Value());
+    return std::make_pair(mode, ResultStatus::Success);
+}
+
+std::pair<std::optional<Kernel::New3dsHwCapabilities>, ResultStatus>
+AppLoader_NCCH::LoadNew3dsHwCapabilities() {
+    if (!is_loaded) {
+        ResultStatus res = base_ncch.Load();
+        if (res != ResultStatus::Success) {
+            return std::make_pair(std::nullopt, res);
+        }
+    }
+
+    // Provide the capabilities from the exheader.
+    auto& ncch_caps = overlay_ncch->exheader_header.arm11_system_local_caps;
+    auto caps = Kernel::New3dsHwCapabilities{
+        ncch_caps.enable_l2_cache != 0,
+        ncch_caps.enable_804MHz_cpu != 0,
+        static_cast<Kernel::New3dsMemoryMode>(ncch_caps.n3ds_mode),
+    };
+    return std::make_pair(std::move(caps), ResultStatus::Success);
 }
 
 ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process) {
