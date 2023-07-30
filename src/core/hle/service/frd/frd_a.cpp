@@ -11,9 +11,9 @@ namespace Service::FRD {
 
 FRD_A::FRD_A(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "frd:a", 8) {
     static const FunctionInfo functions[] = {
-        {0x0001, nullptr, "HasLoggedIn"},
+        {0x0001, &FRD_A::HasLoggedIn, "HasLoggedIn"},
         {0x0002, nullptr, "IsOnline"},
-        {0x0003, nullptr, "Login"},
+        {0x0003, &FRD_A::Login, "Login"},
         {0x0004, nullptr, "Logout"},
         {0x0005, &FRD_A::GetMyFriendKey, "GetMyFriendKey"},
         {0x0006, nullptr, "GetMyPreference"},
@@ -45,7 +45,7 @@ FRD_A::FRD_A(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "f
         {0x0020, nullptr, "AttachToEventNotification"},
         {0x0021, nullptr, "SetNotificationMask"},
         {0x0022, nullptr, "GetEventNotification"},
-        {0x0023, nullptr, "GetLastResponseResult"},
+        {0x0023, &FRD_A::GetLastResponseResult, "GetLastResponseResult"},
         {0x0024, nullptr, "PrincipalIdToFriendCode"},
         {0x0025, nullptr, "FriendCodeToPrincipalId"},
         {0x0026, nullptr, "IsValidFriendCode"},
@@ -64,6 +64,14 @@ FRD_A::FRD_A(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "f
         {0x0033, nullptr, "GetMyApproachContext"},
         {0x0034, nullptr, "AddFriendWithApproach"},
         {0x0035, nullptr, "DecryptApproachContext"},
+        {0x0406, nullptr, "AddFriendOnline"},
+        {0x0409, nullptr, "RemoveFriend"},
+        {0x040a, nullptr, "UpdatePlayingGame"},
+        {0x040b, nullptr, "UpdatePreference"},
+        {0x040c, nullptr, "UpdateMii"},
+        {0x040d, nullptr, "UpdateFavoriteGame"},
+        {0x040e, nullptr, "UpdateNcPrincipalId"},
+        {0x040f, nullptr, "UpdateComment"},
     };
     RegisterHandlers(functions);
 }

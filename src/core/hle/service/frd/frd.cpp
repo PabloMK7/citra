@@ -10,6 +10,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/frd/frd.h"
@@ -155,6 +156,44 @@ void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
+}
+
+void Module::Interface::HasLoggedIn(Kernel::HLERequestContext& ctx) {
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(frd->logged_in);
+}
+
+void Module::Interface::Login(Kernel::HLERequestContext& ctx) {
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+
+    IPC::RequestParser rp(ctx);
+    frd->login_event = rp.PopObject<Kernel::Event>();
+
+    constexpr auto login_delay_ms = 500;
+    frd->login_delay_event = frd->system.CoreTiming().RegisterEvent(
+        "frd::login_event",
+        // Simulate a small login delay
+        [this](u64 thread_id, s64 cycle_late) {
+            frd->logged_in = true;
+            frd->login_event->Signal();
+            frd->system.CoreTiming().RemoveEvent(frd->login_delay_event);
+        });
+    frd->system.CoreTiming().ScheduleEvent(msToCycles(login_delay_ms), frd->login_delay_event);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::Interface::GetLastResponseResult(Kernel::HLERequestContext& ctx) {
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
 Module::Module(Core::System& system) : system(system){};

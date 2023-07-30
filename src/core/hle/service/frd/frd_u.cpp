@@ -11,9 +11,9 @@ namespace Service::FRD {
 
 FRD_U::FRD_U(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "frd:u", 8) {
     static const FunctionInfo functions[] = {
-        {0x0001, nullptr, "HasLoggedIn"},
+        {0x0001, &FRD_U::HasLoggedIn, "HasLoggedIn"},
         {0x0002, nullptr, "IsOnline"},
-        {0x0003, nullptr, "Login"},
+        {0x0003, &FRD_U::Login, "Login"},
         {0x0004, nullptr, "Logout"},
         {0x0005, &FRD_U::GetMyFriendKey, "GetMyFriendKey"},
         {0x0006, nullptr, "GetMyPreference"},
@@ -45,7 +45,7 @@ FRD_U::FRD_U(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "f
         {0x0020, nullptr, "AttachToEventNotification"},
         {0x0021, nullptr, "SetNotificationMask"},
         {0x0022, nullptr, "GetEventNotification"},
-        {0x0023, nullptr, "GetLastResponseResult"},
+        {0x0023, &FRD_U::GetLastResponseResult, "GetLastResponseResult"},
         {0x0024, nullptr, "PrincipalIdToFriendCode"},
         {0x0025, nullptr, "FriendCodeToPrincipalId"},
         {0x0026, nullptr, "IsValidFriendCode"},

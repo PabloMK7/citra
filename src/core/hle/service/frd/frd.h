@@ -12,6 +12,10 @@ namespace Core {
 class System;
 }
 
+namespace Kernel {
+class Event;
+}
+
 namespace Service::FRD {
 
 struct FriendKey {
@@ -146,6 +150,34 @@ public:
          */
         void SetClientSdkVersion(Kernel::HLERequestContext& ctx);
 
+        /**
+         * FRD::Login service function
+         *  Inputs:
+         *      65 : Address of unknown event
+         *  Outputs:
+         *      1  : Result of function, 0 on success, otherwise error code
+         */
+        void Login(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::HasLoggedIn service function
+         *  Inputs:
+         *      none
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : If the user has logged in 1, otherwise 0
+         */
+        void HasLoggedIn(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::GetLastResponseResult service function
+         *  Inputs:
+         *      none
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetLastResponseResult(Kernel::HLERequestContext& ctx);
+
     protected:
         std::shared_ptr<Module> frd;
     };
@@ -153,12 +185,16 @@ public:
 private:
     FriendKey my_friend_key = {0, 0, 0ull};
     MyPresence my_presence = {};
+    bool logged_in = false;
+    std::shared_ptr<Kernel::Event> login_event;
+    Core::TimingEventType* login_delay_event;
     Core::System& system;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& my_friend_key;
         ar& my_presence;
+        ar& logged_in;
     }
     friend class boost::serialization::access;
 };
