@@ -98,6 +98,7 @@ public:
     u16 GetContentTypeByIndex(std::size_t index) const;
     u64 GetContentSizeByIndex(std::size_t index) const;
     std::array<u8, 16> GetContentCTRByIndex(std::size_t index) const;
+    bool HasEncryptedContent() const;
 
     void SetTitleID(u64 title_id);
     void SetTitleType(u32 type);

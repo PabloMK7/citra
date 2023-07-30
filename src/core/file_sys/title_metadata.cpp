@@ -181,6 +181,12 @@ std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(std::size_t index) const 
     return ctr;
 }
 
+bool TitleMetadata::HasEncryptedContent() const {
+    return std::any_of(tmd_chunks.begin(), tmd_chunks.end(), [](auto& chunk) {
+        return (static_cast<u16>(chunk.type) & FileSys::TMDContentTypeFlag::Encrypted) != 0;
+    });
+}
+
 void TitleMetadata::SetTitleID(u64 title_id) {
     tmd_body.title_id = title_id;
 }

@@ -26,6 +26,10 @@ namespace Core {
 class System;
 }
 
+namespace FileUtil {
+class IOFile;
+}
+
 namespace Service::FS {
 enum class MediaType : u32;
 }
@@ -96,6 +100,7 @@ private:
     FileSys::CIAContainer container;
     std::vector<u8> data;
     std::vector<u64> content_written;
+    std::vector<FileUtil::IOFile> content_files;
     Service::FS::MediaType media_type;
 
     class DecryptionState;

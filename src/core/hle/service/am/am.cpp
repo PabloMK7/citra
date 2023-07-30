@@ -96,22 +96,38 @@ ResultVal<std::size_t> CIAFile::Read(u64 offset, std::size_t length, u8* buffer)
 }
 
 ResultCode CIAFile::WriteTicket() {
-    container.LoadTicket(data, container.GetTicketOffset());
+    auto load_result = container.LoadTicket(data, container.GetTicketOffset());
+    if (load_result != Loader::ResultStatus::Success) {
+        LOG_ERROR(Service_AM, "Could not read ticket from CIA.");
+        // TODO: Correct result code.
+        return {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                ErrorLevel::Permanent};
+    }
+
+    // TODO: Write out .tik files to nand?
 
     install_state = CIAInstallState::TicketLoaded;
     return RESULT_SUCCESS;
 }
 
 ResultCode CIAFile::WriteTitleMetadata() {
-    container.LoadTitleMetadata(data, container.GetTitleMetadataOffset());
+    auto load_result = container.LoadTitleMetadata(data, container.GetTitleMetadataOffset());
+    if (load_result != Loader::ResultStatus::Success) {
+        LOG_ERROR(Service_AM, "Could not read title metadata from CIA.");
+        // TODO: Correct result code.
+        return {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                ErrorLevel::Permanent};
+    }
+
     FileSys::TitleMetadata tmd = container.GetTitleMetadata();
     tmd.Print();
 
     // If a TMD already exists for this app (ie 00000000.tmd), the incoming TMD
     // will be the same plus one, (ie 00000001.tmd), both will be kept until
     // the install is finalized and old contents can be discarded.
-    if (FileUtil::Exists(GetTitleMetadataPath(media_type, tmd.GetTitleID())))
+    if (FileUtil::Exists(GetTitleMetadataPath(media_type, tmd.GetTitleID()))) {
         is_update = true;
+    }
 
     std::string tmd_path = GetTitleMetadataPath(media_type, tmd.GetTitleID(), is_update);
 
@@ -121,28 +137,49 @@ ResultCode CIAFile::WriteTitleMetadata() {
     FileUtil::CreateFullPath(tmd_folder);
 
     // Save TMD so that we can start getting new .app paths
-    if (tmd.Save(tmd_path) != Loader::ResultStatus::Success)
-        return FileSys::ERROR_INSUFFICIENT_SPACE;
+    if (tmd.Save(tmd_path) != Loader::ResultStatus::Success) {
+        LOG_ERROR(Service_AM, "Failed to install title metadata file from CIA.");
+        // TODO: Correct result code.
+        return FileSys::ERROR_FILE_NOT_FOUND;
+    }
 
     // Create any other .app folders which may not exist yet
     std::string app_folder;
-    Common::SplitPath(GetTitleContentPath(media_type, tmd.GetTitleID(),
-                                          FileSys::TMDContentIndex::Main, is_update),
-                      &app_folder, nullptr, nullptr);
+    auto main_content_path = GetTitleContentPath(media_type, tmd.GetTitleID(),
+                                                 FileSys::TMDContentIndex::Main, is_update);
+    Common::SplitPath(main_content_path, &app_folder, nullptr, nullptr);
     FileUtil::CreateFullPath(app_folder);
 
     auto content_count = container.GetTitleMetadata().GetContentCount();
     content_written.resize(content_count);
 
-    if (auto title_key = container.GetTicket().GetTitleKey()) {
-        decryption_state->content.resize(content_count);
-        for (std::size_t i = 0; i < content_count; ++i) {
-            auto ctr = tmd.GetContentCTRByIndex(i);
-            decryption_state->content[i].SetKeyWithIV(title_key->data(), title_key->size(),
-                                                      ctr.data());
+    content_files.clear();
+    for (std::size_t i = 0; i < content_count; i++) {
+        auto path = GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update);
+        auto& file = content_files.emplace_back(path, "wb");
+        if (!file.IsOpen()) {
+            LOG_ERROR(Service_AM, "Could not open output file '{}' for content {}.", path, i);
+            // TODO: Correct error code.
+            return FileSys::ERROR_FILE_NOT_FOUND;
+        }
+    }
+
+    if (container.GetTitleMetadata().HasEncryptedContent()) {
+        if (auto title_key = container.GetTicket().GetTitleKey()) {
+            decryption_state->content.resize(content_count);
+            for (std::size_t i = 0; i < content_count; ++i) {
+                auto ctr = tmd.GetContentCTRByIndex(i);
+                decryption_state->content[i].SetKeyWithIV(title_key->data(), title_key->size(),
+                                                          ctr.data());
+            }
+        } else {
+            LOG_ERROR(Service_AM, "Could not read title key from ticket for encrypted CIA.");
+            // TODO: Correct error code.
+            return FileSys::ERROR_FILE_NOT_FOUND;
         }
     } else {
-        LOG_ERROR(Service_AM, "Can't get title key from ticket");
+        LOG_INFO(Service_AM,
+                 "Title has no encrypted content, skipping initializing decryption state.");
     }
 
     install_state = CIAInstallState::TMDLoaded;
@@ -155,7 +192,7 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
     // has been written since we might get a written buffer which contains multiple .app
     // contents or only part of a larger .app's contents.
     const u64 offset_max = offset + length;
-    for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+    for (std::size_t i = 0; i < content_written.size(); i++) {
         if (content_written[i] < container.GetContentSize(i)) {
             // The size, minimum unwritten offset, and maximum unwritten offset of this content
             const u64 size = container.GetContentSize(i);
@@ -174,22 +211,12 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             // Since the incoming TMD has already been written, we can use GetTitleContentPath
             // to get the content paths to write to.
             FileSys::TitleMetadata tmd = container.GetTitleMetadata();
-            FileUtil::IOFile file(GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update),
-                                  content_written[i] ? "ab" : "wb");
-
-            if (!file.IsOpen()) {
-                return FileSys::ERROR_INSUFFICIENT_SPACE;
-            }
+            auto& file = content_files[i];
 
             std::vector<u8> temp(buffer + (range_min - offset),
                                  buffer + (range_min - offset) + available_to_write);
 
             if ((tmd.GetContentTypeByIndex(i) & FileSys::TMDContentTypeFlag::Encrypted) != 0) {
-                if (decryption_state->content.size() <= i) {
-                    // TODO: There is probably no correct error to return here. What error should be
-                    // returned?
-                    return FileSys::ERROR_INSUFFICIENT_SPACE;
-                }
                 decryption_state->content[i].ProcessData(temp.data(), temp.data(), temp.size());
             }
 
@@ -234,8 +261,9 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
     }
 
     // If we don't have a header yet, we can't pull offsets of other sections
-    if (install_state == CIAInstallState::InstallStarted)
+    if (install_state == CIAInstallState::InstallStarted) {
         return length;
+    }
 
     // If we have been given data before (or including) .app content, pull it into
     // our buffer, but only pull *up to* the content offset, no further.
@@ -251,28 +279,30 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
         std::memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
     }
 
-    // TODO(shinyquagsire23): Write out .tik files to nand?
-
     // The end of our TMD is at the beginning of Content data, so ensure we have that much
     // buffered before trying to parse.
     if (written >= container.GetContentOffset() && install_state != CIAInstallState::TMDLoaded) {
         auto result = WriteTicket();
-        if (result.IsError())
+        if (result.IsError()) {
             return result;
+        }
 
         result = WriteTitleMetadata();
-        if (result.IsError())
+        if (result.IsError()) {
             return result;
+        }
     }
 
     // Content data sizes can only be retrieved from TMD data
-    if (install_state != CIAInstallState::TMDLoaded)
+    if (install_state != CIAInstallState::TMDLoaded) {
         return length;
+    }
 
     // From this point forward, data will no longer be buffered in data
     auto result = WriteContentData(offset, length, buffer);
-    if (result.Failed())
+    if (result.Failed()) {
         return result;
+    }
 
     return length;
 }
@@ -286,11 +316,13 @@ bool CIAFile::SetSize(u64 size) const {
 }
 
 bool CIAFile::Close() const {
-    bool complete = true;
-    for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
-        if (content_written[i] < container.GetContentSize(static_cast<u16>(i)))
-            complete = false;
-    }
+    bool complete =
+        install_state >= CIAInstallState::TMDLoaded &&
+        content_written.size() == container.GetTitleMetadata().GetContentCount() &&
+        std::all_of(content_written.begin(), content_written.end(),
+                    [this, i = 0](auto& bytes_written) mutable {
+                        return bytes_written >= container.GetContentSize(static_cast<u16>(i++));
+                    });
 
     // Install aborted
     if (!complete) {
@@ -314,16 +346,17 @@ bool CIAFile::Close() const {
         // For each content ID in the old TMD, check if there is a matching ID in the new
         // TMD. If a CIA contains (and wrote to) an identical ID, it should be kept while
         // IDs which only existed for the old TMD should be deleted.
-        for (u16 old_index = 0; old_index < old_tmd.GetContentCount(); old_index++) {
+        for (std::size_t old_index = 0; old_index < old_tmd.GetContentCount(); old_index++) {
             bool abort = false;
-            for (u16 new_index = 0; new_index < new_tmd.GetContentCount(); new_index++) {
+            for (std::size_t new_index = 0; new_index < new_tmd.GetContentCount(); new_index++) {
                 if (old_tmd.GetContentIDByIndex(old_index) ==
                     new_tmd.GetContentIDByIndex(new_index)) {
                     abort = true;
                 }
             }
-            if (abort)
+            if (abort) {
                 break;
+            }
 
             // If the file to delete is the current launched rom, signal the system to delete
             // the current rom instead of deleting it now, once all the handles to the file
@@ -331,8 +364,9 @@ bool CIAFile::Close() const {
             std::string to_delete =
                 GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index);
             if (!(Core::System::GetInstance().IsPoweredOn() &&
-                  Core::System::GetInstance().SetSelfDelete(to_delete)))
+                  Core::System::GetInstance().SetSelfDelete(to_delete))) {
                 FileUtil::Delete(to_delete);
+            }
         }
 
         FileUtil::Delete(old_tmd_path);
@@ -357,29 +391,29 @@ InstallStatus InstallCIA(const std::string& path,
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
         bool title_key_available = container.GetTicket().GetTitleKey().has_value();
-
-        for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
-            if ((container.GetTitleMetadata().GetContentTypeByIndex(static_cast<u16>(i)) &
-                 FileSys::TMDContentTypeFlag::Encrypted) &&
-                !title_key_available) {
-                LOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
-                return InstallStatus::ErrorEncrypted;
-            }
+        if (!title_key_available && container.GetTitleMetadata().HasEncryptedContent()) {
+            LOG_ERROR(Service_AM, "File {} is encrypted and no title key is available! Aborting...",
+                      path);
+            return InstallStatus::ErrorEncrypted;
         }
 
         FileUtil::IOFile file(path, "rb");
-        if (!file.IsOpen())
+        if (!file.IsOpen()) {
+            LOG_ERROR(Service_AM, "Could not open CIA file '{}'.", path);
             return InstallStatus::ErrorFailedToOpenFile;
+        }
 
         std::array<u8, 0x10000> buffer;
+        auto file_size = file.GetSize();
         std::size_t total_bytes_read = 0;
-        while (total_bytes_read != file.GetSize()) {
+        while (total_bytes_read != file_size) {
             std::size_t bytes_read = file.ReadBytes(buffer.data(), buffer.size());
             auto result = installFile.Write(static_cast<u64>(total_bytes_read), bytes_read, true,
                                             static_cast<u8*>(buffer.data()));
 
-            if (update_callback)
-                update_callback(total_bytes_read, file.GetSize());
+            if (update_callback) {
+                update_callback(total_bytes_read, file_size);
+            }
             if (result.Failed()) {
                 LOG_ERROR(Service_AM, "CIA file installation aborted with error code {:08x}",
                           result.Code().raw);
