@@ -13,12 +13,11 @@
 #define _SH_DENYWR 0
 #endif
 
-#if defined(__linux__) && defined(__GNUG__) && !defined(__clang__)
+#ifdef CITRA_LINUX_GCC_BACKTRACE
 #define BOOST_STACKTRACE_USE_BACKTRACE
 #include <boost/stacktrace.hpp>
 #undef BOOST_STACKTRACE_USE_BACKTRACE
 #include <signal.h>
-#define CITRA_LINUX_GCC_BACKTRACE
 #endif
 
 #include "common/bounded_threadsafe_queue.h"
