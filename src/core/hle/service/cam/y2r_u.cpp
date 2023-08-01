@@ -11,7 +11,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/service/y2r_u.h"
+#include "core/hle/service/cam/y2r_u.h"
 #include "core/hw/y2r.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::Y2R::Y2R_U)

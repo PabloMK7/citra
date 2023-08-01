@@ -15,7 +15,7 @@
 #include "core/hle/kernel/ipc.h"
 #include "core/hle/romfs.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/hle/service/http_c.h"
+#include "core/hle/service/http/http_c.h"
 #include "core/hw/aes/key.h"
 
 SERIALIZE_EXPORT_IMPL(Service::HTTP::HTTP_C)
@@ -55,11 +55,31 @@ const ResultCode ERROR_WRONG_CERT_HANDLE = // 0xD8A0A0C9
 const ResultCode ERROR_CERT_ALREADY_SET = // 0xD8A0A03D
     ResultCode(61, ErrorModule::HTTP, ErrorSummary::InvalidState, ErrorLevel::Permanent);
 
+static std::pair<std::string, std::string> SplitUrl(const std::string& url) {
+    const std::string prefix = "://";
+    const auto scheme_end = url.find(prefix);
+    const auto prefix_end = scheme_end == std::string::npos ? 0 : scheme_end + prefix.length();
+
+    const auto path_index = url.find("/", prefix_end);
+    std::string host;
+    std::string path;
+    if (path_index == std::string::npos) {
+        // If no path is specified after the host, set it to "/"
+        host = url;
+        path = "/";
+    } else {
+        host = url.substr(0, path_index);
+        path = url.substr(path_index);
+    }
+    return std::make_pair(host, path);
+}
+
 void Context::MakeRequest() {
     ASSERT(state == RequestState::NotStarted);
 
 #ifdef ENABLE_WEB_SERVICE
-    std::unique_ptr<httplib::Client> client = std::make_unique<httplib::Client>(url.c_str());
+    const auto& [host, path] = SplitUrl(url);
+    const auto client = std::make_unique<httplib::Client>(host);
     SSL_CTX* ctx = client->ssl_context();
     if (ctx) {
         if (auto client_cert = ssl_config.client_cert_ctx.lock()) {
@@ -87,7 +107,7 @@ void Context::MakeRequest() {
     httplib::Request request;
     httplib::Error error;
     request.method = request_method_strings.at(method);
-    request.path = url;
+    request.path = path;
     // TODO(B3N30): Add post data body
     request.progress = [this](u64 current, u64 total) -> bool {
         // TODO(B3N30): Is there a state that shows response header are available
@@ -101,7 +121,7 @@ void Context::MakeRequest() {
     }
 
     if (!client->send(request, response, error)) {
-        LOG_ERROR(Service_HTTP, "Request failed: {}", error);
+        LOG_ERROR(Service_HTTP, "Request failed: {}: {}", error, httplib::to_string(error));
         state = RequestState::TimedOut;
     } else {
         LOG_DEBUG(Service_HTTP, "Request successful");
@@ -185,33 +205,7 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, context_id={}", context_handle);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to make a request on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
-        return;
-    }
-
-    // This command can only be called with a bound context
-    if (!session_data->current_http_context) {
-        LOG_ERROR(Service_HTTP, "Tried to make a request without a bound context");
-
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
-                           ErrorSummary::Internal, ErrorLevel::Permanent));
-        return;
-    }
-
-    if (session_data->current_http_context != context_handle) {
-        LOG_ERROR(
-            Service_HTTP,
-            "Tried to make a request on a mismatched session input context={} session context={}",
-            context_handle, *session_data->current_http_context);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
         return;
     }
 
@@ -238,33 +232,7 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, context_id={}", context_handle);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to make a request on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
-        return;
-    }
-
-    // This command can only be called with a bound context
-    if (!session_data->current_http_context) {
-        LOG_ERROR(Service_HTTP, "Tried to make a request without a bound context");
-
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
-                           ErrorSummary::Internal, ErrorLevel::Permanent));
-        return;
-    }
-
-    if (session_data->current_http_context != context_handle) {
-        LOG_ERROR(
-            Service_HTTP,
-            "Tried to make a request on a mismatched session input context={} session context={}",
-            context_handle, *session_data->current_http_context);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
         return;
     }
 
@@ -285,6 +253,44 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
+void HTTP_C::ReceiveData(Kernel::HLERequestContext& ctx) {
+    ReceiveDataImpl(ctx, false);
+}
+
+void HTTP_C::ReceiveDataTimeout(Kernel::HLERequestContext& ctx) {
+    ReceiveDataImpl(ctx, true);
+}
+
+void HTTP_C::ReceiveDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
+    IPC::RequestParser rp(ctx);
+    const Context::Handle context_handle = rp.Pop<u32>();
+    [[maybe_unused]] const u32 buffer_size = rp.Pop<u32>();
+    u64 timeout_nanos = 0;
+    if (timeout) {
+        timeout_nanos = rp.Pop<u64>();
+        LOG_WARNING(Service_HTTP, "(STUBBED) called, timeout={}", timeout_nanos);
+    } else {
+        LOG_WARNING(Service_HTTP, "(STUBBED) called");
+    }
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    auto itr = contexts.find(context_handle);
+    ASSERT(itr != contexts.end());
+
+    if (timeout) {
+        itr->second.request_future.wait_for(std::chrono::nanoseconds(timeout_nanos));
+        // TODO (flTobi): Return error on timeout
+    } else {
+        itr->second.request_future.wait();
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 url_size = rp.Pop<u32>();
@@ -297,14 +303,8 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url, method);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to create a context on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERROR_STATE_ERROR);
-        rb.PushMappedBuffer(buffer);
+    auto* session_data = EnsureSessionInitialized(ctx, rp);
+    if (!session_data) {
         return;
     }
 
@@ -365,13 +365,8 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, handle={}", context_handle);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to close a context on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+    auto* session_data = EnsureSessionInitialized(ctx, rp);
+    if (!session_data) {
         return;
     }
 
@@ -416,36 +411,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
               context_handle);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to add a request header on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERROR_STATE_ERROR);
-        rb.PushMappedBuffer(value_buffer);
-        return;
-    }
-
-    // This command can only be called with a bound context
-    if (!session_data->current_http_context) {
-        LOG_ERROR(Service_HTTP, "Command called without a bound context");
-
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
-                           ErrorSummary::Internal, ErrorLevel::Permanent));
-        rb.PushMappedBuffer(value_buffer);
-        return;
-    }
-
-    if (session_data->current_http_context != context_handle) {
-        LOG_ERROR(Service_HTTP,
-                  "Tried to add a request header on a mismatched session input context={} session "
-                  "context={}",
-                  context_handle, *session_data->current_http_context);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERROR_STATE_ERROR);
-        rb.PushMappedBuffer(value_buffer);
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
         return;
     }
 
@@ -492,36 +458,7 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
               context_handle);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to add post data on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERROR_STATE_ERROR);
-        rb.PushMappedBuffer(value_buffer);
-        return;
-    }
-
-    // This command can only be called with a bound context
-    if (!session_data->current_http_context) {
-        LOG_ERROR(Service_HTTP, "Command called without a bound context");
-
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
-                           ErrorSummary::Internal, ErrorLevel::Permanent));
-        rb.PushMappedBuffer(value_buffer);
-        return;
-    }
-
-    if (session_data->current_http_context != context_handle) {
-        LOG_ERROR(Service_HTTP,
-                  "Tried to add post data on a mismatched session input context={} session "
-                  "context={}",
-                  context_handle, *session_data->current_http_context);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERROR_STATE_ERROR);
-        rb.PushMappedBuffer(value_buffer);
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
         return;
     }
 
@@ -549,6 +486,46 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(value_buffer);
 }
 
+void HTTP_C::GetResponseStatusCode(Kernel::HLERequestContext& ctx) {
+    GetResponseStatusCodeImpl(ctx, false);
+}
+
+void HTTP_C::GetResponseStatusCodeTimeout(Kernel::HLERequestContext& ctx) {
+    GetResponseStatusCodeImpl(ctx, true);
+}
+
+void HTTP_C::GetResponseStatusCodeImpl(Kernel::HLERequestContext& ctx, bool timeout) {
+    IPC::RequestParser rp(ctx);
+    const Context::Handle context_handle = rp.Pop<u32>();
+    u64 timeout_nanos = 0;
+    if (timeout) {
+        timeout_nanos = rp.Pop<u64>();
+        LOG_INFO(Service_HTTP, "called, timeout={}", timeout_nanos);
+    } else {
+        LOG_INFO(Service_HTTP, "called");
+    }
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    auto itr = contexts.find(context_handle);
+    ASSERT(itr != contexts.end());
+
+    if (timeout) {
+        itr->second.request_future.wait_for(std::chrono::nanoseconds(timeout));
+        // TODO (flTobi): Return error on timeout
+    } else {
+        itr->second.request_future.wait();
+    }
+
+    const u32 response_code = itr->second.response.status;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(response_code);
+}
+
 void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
@@ -557,32 +534,7 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called with context_handle={} client_cert_handle={}", context_handle,
               client_cert_handle);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Tried to set client cert on an uninitialized session");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
-        return;
-    }
-
-    // This command can only be called with a bound context
-    if (!session_data->current_http_context) {
-        LOG_ERROR(Service_HTTP, "Tried to set client cert without a bound context");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
-                           ErrorSummary::Internal, ErrorLevel::Permanent));
-        return;
-    }
-
-    if (session_data->current_http_context != context_handle) {
-        LOG_ERROR(Service_HTTP,
-                  "Tried to add set client cert on a mismatched session input context={} session "
-                  "context={}",
-                  context_handle, *session_data->current_http_context);
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
         return;
     }
 
@@ -683,13 +635,8 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_HTTP, "called, cert_id={} cert_handle={}", cert_id, client_certs_counter);
 
-    auto* session_data = GetSessionData(ctx.Session());
-    ASSERT(session_data);
-
-    if (!session_data->initialized) {
-        LOG_ERROR(Service_HTTP, "Command called without Initialize");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+    auto* session_data = EnsureSessionInitialized(ctx, rp);
+    if (!session_data) {
         return;
     }
 
@@ -792,6 +739,85 @@ void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_HTTP, "(STUBBED) called");
 }
 
+void HTTP_C::GetDownloadSizeState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const Context::Handle context_handle = rp.Pop<u32>();
+
+    LOG_INFO(Service_HTTP, "called");
+
+    const auto* session_data = EnsureSessionInitialized(ctx, rp);
+    if (!session_data) {
+        return;
+    }
+
+    auto itr = contexts.find(context_handle);
+    ASSERT(itr != contexts.end());
+
+    // On the real console, the current downloaded progress and the total size of the content gets
+    // returned. Since we do not support chunked downloads on the host, always return the content
+    // length if the download is complete and 0 otherwise.
+    u32 content_length = 0;
+    const bool is_complete = itr->second.request_future.wait_for(std::chrono::milliseconds(0)) ==
+                             std::future_status::ready;
+    if (is_complete) {
+        const auto& headers = itr->second.response.headers;
+        const auto& it = headers.find("Content-Length");
+        if (it != headers.end()) {
+            content_length = std::stoi(it->second);
+        }
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(content_length);
+    rb.Push(content_length);
+}
+
+SessionData* HTTP_C::EnsureSessionInitialized(Kernel::HLERequestContext& ctx,
+                                              IPC::RequestParser rp) {
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to make a request on an uninitialized session");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_STATE_ERROR);
+        return nullptr;
+    }
+
+    return session_data;
+}
+
+bool HTTP_C::PerformStateChecks(Kernel::HLERequestContext& ctx, IPC::RequestParser rp,
+                                Context::Handle context_handle) {
+    const auto* session_data = EnsureSessionInitialized(ctx, rp);
+    if (!session_data) {
+        return false;
+    }
+
+    // This command can only be called with a bound context
+    if (!session_data->current_http_context) {
+        LOG_ERROR(Service_HTTP, "Tried to make a request without a bound context");
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
+                           ErrorSummary::Internal, ErrorLevel::Permanent));
+        return false;
+    }
+
+    if (session_data->current_http_context != context_handle) {
+        LOG_ERROR(
+            Service_HTTP,
+            "Tried to make a request on a mismatched session input context={} session context={}",
+            context_handle, *session_data->current_http_context);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_STATE_ERROR);
+        return false;
+    }
+
+    return true;
+}
+
 void HTTP_C::DecryptClCertA() {
     static constexpr u32 iv_length = 16;
 
@@ -875,13 +901,13 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x0003, &HTTP_C::CloseContext, "CloseContext"},
         {0x0004, nullptr, "CancelConnection"},
         {0x0005, nullptr, "GetRequestState"},
-        {0x0006, nullptr, "GetDownloadSizeState"},
+        {0x0006, &HTTP_C::GetDownloadSizeState, "GetDownloadSizeState"},
         {0x0007, nullptr, "GetRequestError"},
         {0x0008, &HTTP_C::InitializeConnectionSession, "InitializeConnectionSession"},
         {0x0009, &HTTP_C::BeginRequest, "BeginRequest"},
         {0x000A, &HTTP_C::BeginRequestAsync, "BeginRequestAsync"},
-        {0x000B, nullptr, "ReceiveData"},
-        {0x000C, nullptr, "ReceiveDataTimeout"},
+        {0x000B, &HTTP_C::ReceiveData, "ReceiveData"},
+        {0x000C, &HTTP_C::ReceiveDataTimeout, "ReceiveDataTimeout"},
         {0x000D, nullptr, "SetProxy"},
         {0x000E, nullptr, "SetProxyDefault"},
         {0x000F, nullptr, "SetBasicAuthorization"},
@@ -903,8 +929,8 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x001F, nullptr, "GetResponseHeaderTimeout"},
         {0x0020, nullptr, "GetResponseData"},
         {0x0021, nullptr, "GetResponseDataTimeout"},
-        {0x0022, nullptr, "GetResponseStatusCode"},
-        {0x0023, nullptr, "GetResponseStatusCodeTimeout"},
+        {0x0022, &HTTP_C::GetResponseStatusCode, "GetResponseStatusCode"},
+        {0x0023, &HTTP_C::GetResponseStatusCodeTimeout, "GetResponseStatusCodeTimeout"},
         {0x0024, nullptr, "AddTrustedRootCA"},
         {0x0025, nullptr, "AddDefaultCert"},
         {0x0026, nullptr, "SelectRootCertChain"},

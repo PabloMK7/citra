@@ -16,7 +16,7 @@
 #include "core/hle/service/ac/ac.h"
 #include "core/hle/service/ac/ac_i.h"
 #include "core/hle/service/ac/ac_u.h"
-#include "core/hle/service/soc_u.h"
+#include "core/hle/service/soc/soc_u.h"
 #include "core/memory.h"
 
 namespace Service::AC {

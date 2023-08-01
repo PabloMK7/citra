@@ -7,7 +7,7 @@
 #include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/service/ssl_c.h"
+#include "core/hle/service/ssl/ssl_c.h"
 
 SERIALIZE_EXPORT_IMPL(Service::SSL::SSL_C)
 namespace Service::SSL {
