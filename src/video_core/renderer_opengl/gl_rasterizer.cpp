@@ -386,21 +386,20 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         (write_depth_fb || regs.framebuffer.output_merger.depth_test_enable != 0 ||
          (has_stencil && state.stencil.test_enabled));
 
-    const Framebuffer framebuffer =
-        res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb);
-    const bool has_color = framebuffer.HasAttachment(SurfaceType::Color);
-    if (!has_color && shadow_rendering) {
+    const auto fb_helper = res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb);
+    const Framebuffer* framebuffer = fb_helper.Framebuffer();
+    if (!framebuffer->color_id && framebuffer->shadow_rendering) {
         return true;
     }
 
     // Bind the framebuffer surfaces
     if (shadow_rendering) {
-        state.image_shadow_buffer = framebuffer.Attachment(SurfaceType::Color);
+        state.image_shadow_buffer = framebuffer->Attachment(SurfaceType::Color);
     }
-    state.draw.draw_framebuffer = framebuffer.Handle();
+    state.draw.draw_framebuffer = framebuffer->Handle();
 
     // Sync the viewport
-    const auto viewport = framebuffer.Viewport();
+    const auto viewport = fb_helper.Viewport();
     state.viewport.x = static_cast<GLint>(viewport.x);
     state.viewport.y = static_cast<GLint>(viewport.y);
     state.viewport.width = static_cast<GLsizei>(viewport.width);
@@ -408,21 +407,15 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Viewport can have negative offsets or larger dimensions than our framebuffer sub-rect.
     // Enable scissor test to prevent drawing outside of the framebuffer region
-    const auto draw_rect = framebuffer.DrawRect();
+    const auto draw_rect = fb_helper.DrawRect();
     state.scissor.enabled = true;
     state.scissor.x = draw_rect.left;
     state.scissor.y = draw_rect.bottom;
     state.scissor.width = draw_rect.GetWidth();
     state.scissor.height = draw_rect.GetHeight();
 
-    const int res_scale = static_cast<int>(framebuffer.ResolutionScale());
-    if (uniform_block_data.data.framebuffer_scale != res_scale) {
-        uniform_block_data.data.framebuffer_scale = res_scale;
-        uniform_block_data.dirty = true;
-    }
-
     // Update scissor uniforms
-    const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = framebuffer.Scissor();
+    const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
     if (uniform_block_data.data.scissor_x1 != scissor_x1 ||
         uniform_block_data.data.scissor_x2 != scissor_x2 ||
         uniform_block_data.data.scissor_y1 != scissor_y1 ||
@@ -486,13 +479,12 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                         GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
     }
 
-    res_cache.InvalidateFramebuffer(framebuffer);
     use_custom_normal = false;
 
     return succeeded;
 }
 
-void RasterizerOpenGL::SyncTextureUnits(const Framebuffer& framebuffer) {
+void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
     using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
 
     const auto pica_textures = regs.texturing.GetTextures();
@@ -603,27 +595,15 @@ void RasterizerOpenGL::BindMaterial(u32 texture_index, Surface& surface) {
     }
 }
 
-bool RasterizerOpenGL::IsFeedbackLoop(u32 texture_index, const Framebuffer& framebuffer,
+bool RasterizerOpenGL::IsFeedbackLoop(u32 texture_index, const Framebuffer* framebuffer,
                                       Surface& surface) {
-    const GLuint color_attachment = framebuffer.Attachment(SurfaceType::Color);
+    const GLuint color_attachment = framebuffer->Attachment(SurfaceType::Color);
     const bool is_feedback_loop = color_attachment == surface.Handle();
     if (!is_feedback_loop) {
         return false;
     }
 
-    // Make a temporary copy of the framebuffer to sample from
-    Surface temp_surface{runtime, framebuffer.ColorParams()};
-    const VideoCore::TextureCopy copy = {
-        .src_level = 0,
-        .dst_level = 0,
-        .src_layer = 0,
-        .dst_layer = 0,
-        .src_offset = {0, 0},
-        .dst_offset = {0, 0},
-        .extent = {temp_surface.GetScaledWidth(), temp_surface.GetScaledHeight()},
-    };
-    runtime.CopyTextures(surface, temp_surface, copy);
-    state.texture_units[texture_index].texture_2d = temp_surface.Handle();
+    state.texture_units[texture_index].texture_2d = surface.CopyHandle();
     return true;
 }
 

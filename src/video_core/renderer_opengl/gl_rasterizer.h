@@ -93,7 +93,7 @@ private:
     void SyncAndUploadLUTsLF();
 
     /// Syncs all enabled PICA texture units
-    void SyncTextureUnits(const Framebuffer& framebuffer);
+    void SyncTextureUnits(const Framebuffer* framebuffer);
 
     /// Binds the PICA shadow cube required for shadow mapping
     void BindShadowCube(const Pica::TexturingRegs::FullTextureConfig& texture);
@@ -102,7 +102,7 @@ private:
     void BindTextureCube(const Pica::TexturingRegs::FullTextureConfig& texture);
 
     /// Makes a temporary copy of the framebuffer if a feedback loop is detected
-    bool IsFeedbackLoop(u32 texture_index, const Framebuffer& framebuffer, Surface& surface);
+    bool IsFeedbackLoop(u32 texture_index, const Framebuffer* framebuffer, Surface& surface);
 
     /// Unbinds all special texture unit 0 texture configurations
     void UnbindSpecial();

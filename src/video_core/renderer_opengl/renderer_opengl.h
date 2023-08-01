@@ -21,20 +21,6 @@ namespace Core {
 class System;
 }
 
-namespace Frontend {
-
-struct Frame {
-    u32 width{};                      /// Width of the frame (to detect resize)
-    u32 height{};                     /// Height of the frame
-    bool color_reloaded = false;      /// Texture attachment was recreated (ie: resized)
-    OpenGL::OGLRenderbuffer color{};  /// Buffer shared between the render/present FBO
-    OpenGL::OGLFramebuffer render{};  /// FBO created on the render thread
-    OpenGL::OGLFramebuffer present{}; /// FBO created on the present thread
-    GLsync render_fence{};            /// Fence created on the render thread
-    GLsync present_fence{};           /// Fence created on the presentation thread
-};
-} // namespace Frontend
-
 namespace OpenGL {
 
 /// Structure used for storing information about the textures for each 3DS screen
@@ -72,7 +58,6 @@ public:
 
 private:
     void InitOpenGLObjects();
-    void ReloadSampler();
     void ReloadShader();
     void PrepareRendertarget();
     void RenderScreenshot();
@@ -109,9 +94,9 @@ private:
     OGLBuffer vertex_buffer;
     OGLProgram shader;
     OGLFramebuffer screenshot_framebuffer;
-    OGLSampler filter_sampler;
+    std::array<OGLSampler, 2> samplers;
 
-    /// Display information for top and bottom screens respectively
+    // Display information for top and bottom screens respectively
     std::array<ScreenInfo, 3> screen_infos;
 
     // Shader uniform location indices

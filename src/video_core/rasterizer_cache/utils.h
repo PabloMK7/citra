@@ -67,6 +67,7 @@ struct StagingData {
 };
 
 class SurfaceParams;
+struct FramebufferParams;
 
 u32 MipLevels(u32 width, u32 height, u32 max_level);
 

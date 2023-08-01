@@ -2,20 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <queue>
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
 #include "core/core.h"
-#include "core/dumping/backend.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
-#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/gl_texture_mailbox.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
@@ -30,232 +28,6 @@ namespace OpenGL {
 
 MICROPROFILE_DEFINE(OpenGL_RenderFrame, "OpenGL", "Render Frame", MP_RGB(128, 128, 64));
 MICROPROFILE_DEFINE(OpenGL_WaitPresent, "OpenGL", "Wait For Present", MP_RGB(128, 128, 128));
-
-// If the size of this is too small, it ends up creating a soft cap on FPS as the renderer will have
-// to wait on available presentation frames. There doesn't seem to be much of a downside to a larger
-// number but 9 swap textures at 60FPS presentation allows for 800% speed so thats probably fine
-#ifdef ANDROID
-// Reduce the size of swap_chain, since the UI only allows upto 200% speed.
-constexpr std::size_t SWAP_CHAIN_SIZE = 6;
-#else
-constexpr std::size_t SWAP_CHAIN_SIZE = 9;
-#endif
-
-class OGLTextureMailboxException : public std::runtime_error {
-public:
-    using std::runtime_error::runtime_error;
-};
-
-class OGLTextureMailbox : public Frontend::TextureMailbox {
-public:
-    std::mutex swap_chain_lock;
-    std::condition_variable free_cv;
-    std::condition_variable present_cv;
-    std::array<Frontend::Frame, SWAP_CHAIN_SIZE> swap_chain{};
-    std::queue<Frontend::Frame*> free_queue{};
-    std::deque<Frontend::Frame*> present_queue{};
-    Frontend::Frame* previous_frame = nullptr;
-
-    OGLTextureMailbox(bool has_debug_tool_ = false) : has_debug_tool{has_debug_tool_} {
-        for (auto& frame : swap_chain) {
-            free_queue.push(&frame);
-        }
-    }
-
-    ~OGLTextureMailbox() override {
-        // lock the mutex and clear out the present and free_queues and notify any people who are
-        // blocked to prevent deadlock on shutdown
-        std::scoped_lock lock(swap_chain_lock);
-        std::queue<Frontend::Frame*>().swap(free_queue);
-        present_queue.clear();
-        present_cv.notify_all();
-        free_cv.notify_all();
-    }
-
-    void ReloadPresentFrame(Frontend::Frame* frame, u32 height, u32 width) override {
-        frame->present.Release();
-        frame->present.Create();
-        GLint previous_draw_fbo{};
-        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previous_draw_fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, frame->present.handle);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
-                                  frame->color.handle);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_CRITICAL(Render_OpenGL, "Failed to recreate present FBO!");
-        }
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previous_draw_fbo);
-        frame->color_reloaded = false;
-    }
-
-    void ReloadRenderFrame(Frontend::Frame* frame, u32 width, u32 height) override {
-        OpenGLState prev_state = OpenGLState::GetCurState();
-        OpenGLState state = OpenGLState::GetCurState();
-
-        // Recreate the color texture attachment
-        frame->color.Release();
-        frame->color.Create();
-        state.renderbuffer = frame->color.handle;
-        state.Apply();
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
-
-        // Recreate the FBO for the render target
-        frame->render.Release();
-        frame->render.Create();
-        state.draw.read_framebuffer = frame->render.handle;
-        state.draw.draw_framebuffer = frame->render.handle;
-        state.Apply();
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
-                                  frame->color.handle);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_CRITICAL(Render_OpenGL, "Failed to recreate render FBO!");
-        }
-        prev_state.Apply();
-        frame->width = width;
-        frame->height = height;
-        frame->color_reloaded = true;
-    }
-
-    Frontend::Frame* GetRenderFrame() override {
-        std::unique_lock<std::mutex> lock(swap_chain_lock);
-
-        // If theres no free frames, we will reuse the oldest render frame
-        if (free_queue.empty()) {
-            auto frame = present_queue.back();
-            present_queue.pop_back();
-            return frame;
-        }
-
-        Frontend::Frame* frame = free_queue.front();
-        free_queue.pop();
-        return frame;
-    }
-
-    void ReleaseRenderFrame(Frontend::Frame* frame) override {
-        std::unique_lock<std::mutex> lock(swap_chain_lock);
-        present_queue.push_front(frame);
-        present_cv.notify_one();
-
-        DebugNotifyNextFrame();
-    }
-
-    // This is virtual as it is to be overriden in OGLVideoDumpingMailbox below.
-    virtual void LoadPresentFrame() {
-        // free the previous frame and add it back to the free queue
-        if (previous_frame) {
-            free_queue.push(previous_frame);
-            free_cv.notify_one();
-        }
-
-        // the newest entries are pushed to the front of the queue
-        Frontend::Frame* frame = present_queue.front();
-        present_queue.pop_front();
-        // remove all old entries from the present queue and move them back to the free_queue
-        for (auto f : present_queue) {
-            free_queue.push(f);
-        }
-        present_queue.clear();
-        previous_frame = frame;
-    }
-
-    Frontend::Frame* TryGetPresentFrame(int timeout_ms) override {
-        DebugWaitForNextFrame();
-
-        std::unique_lock<std::mutex> lock(swap_chain_lock);
-        // wait for new entries in the present_queue
-        present_cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
-                            [&] { return !present_queue.empty(); });
-        if (present_queue.empty()) {
-            // timed out waiting for a frame to draw so return the previous frame
-            return previous_frame;
-        }
-
-        LoadPresentFrame();
-        return previous_frame;
-    }
-
-private:
-    std::mutex debug_synch_mutex;
-    std::condition_variable debug_synch_condition;
-    std::atomic_int frame_for_debug{};
-    const bool has_debug_tool; // When true, using a GPU debugger, so keep frames in lock-step
-
-    /// Signal that a new frame is available (called from GPU thread)
-    void DebugNotifyNextFrame() {
-        if (!has_debug_tool) {
-            return;
-        }
-        frame_for_debug++;
-        std::lock_guard lock{debug_synch_mutex};
-        debug_synch_condition.notify_one();
-    }
-
-    /// Wait for a new frame to be available (called from presentation thread)
-    void DebugWaitForNextFrame() {
-        if (!has_debug_tool) {
-            return;
-        }
-        const int last_frame = frame_for_debug;
-        std::unique_lock lock{debug_synch_mutex};
-        debug_synch_condition.wait(lock,
-                                   [this, last_frame] { return frame_for_debug > last_frame; });
-    }
-};
-
-/// This mailbox is different in that it will never discard rendered frames
-class OGLVideoDumpingMailbox : public OGLTextureMailbox {
-public:
-    bool quit = false;
-
-    Frontend::Frame* GetRenderFrame() override {
-        std::unique_lock<std::mutex> lock(swap_chain_lock);
-
-        // If theres no free frames, we will wait until one shows up
-        if (free_queue.empty()) {
-            free_cv.wait(lock, [&] { return (!free_queue.empty() || quit); });
-            if (quit) {
-                throw OGLTextureMailboxException("VideoDumpingMailbox quitting");
-            }
-
-            if (free_queue.empty()) {
-                LOG_CRITICAL(Render_OpenGL, "Could not get free frame");
-                return nullptr;
-            }
-        }
-
-        Frontend::Frame* frame = free_queue.front();
-        free_queue.pop();
-        return frame;
-    }
-
-    void LoadPresentFrame() override {
-        // free the previous frame and add it back to the free queue
-        if (previous_frame) {
-            free_queue.push(previous_frame);
-            free_cv.notify_one();
-        }
-
-        Frontend::Frame* frame = present_queue.back();
-        present_queue.pop_back();
-        previous_frame = frame;
-
-        // Do not remove entries from the present_queue, as video dumping would require
-        // that we preserve all frames
-    }
-
-    Frontend::Frame* TryGetPresentFrame(int timeout_ms) override {
-        std::unique_lock<std::mutex> lock(swap_chain_lock);
-        // wait for new entries in the present_queue
-        present_cv.wait_for(lock, std::chrono::milliseconds(timeout_ms),
-                            [&] { return !present_queue.empty(); });
-        if (present_queue.empty()) {
-            // timed out waiting for a frame
-            return nullptr;
-        }
-
-        LoadPresentFrame();
-        return previous_frame;
-    }
-};
 
 /**
  * Vertex structure that the drawn screen rectangles are composed of.
@@ -559,8 +331,15 @@ void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
                  Settings::values.bg_blue.GetValue(), 0.0f);
 
-    filter_sampler.Create();
-    ReloadSampler();
+    for (size_t i = 0; i < samplers.size(); i++) {
+        samplers[i].Create();
+        glSamplerParameteri(samplers[i].handle, GL_TEXTURE_MIN_FILTER,
+                            i == 0 ? GL_NEAREST : GL_LINEAR);
+        glSamplerParameteri(samplers[i].handle, GL_TEXTURE_MAG_FILTER,
+                            i == 0 ? GL_NEAREST : GL_LINEAR);
+        glSamplerParameteri(samplers[i].handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glSamplerParameteri(samplers[i].handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
 
     ReloadShader();
 
@@ -606,15 +385,6 @@ void RendererOpenGL::InitOpenGLObjects() {
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
-}
-
-void RendererOpenGL::ReloadSampler() {
-    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_MIN_FILTER,
-                        Settings::values.filter_mode ? GL_LINEAR : GL_NEAREST);
-    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_MAG_FILTER,
-                        Settings::values.filter_mode ? GL_LINEAR : GL_NEAREST);
-    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(filter_sampler.handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 void RendererOpenGL::ReloadShader() {
@@ -793,13 +563,14 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
     }
 
     const u32 scale_factor = GetResolutionScaleFactor();
+    const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
     glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
                 static_cast<float>(screen_info.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
     state.texture_units[0].texture_2d = screen_info.display_texture;
-    state.texture_units[0].sampler = filter_sampler.handle;
+    state.texture_units[0].sampler = sampler;
     state.Apply();
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
@@ -862,6 +633,7 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     }
 
     const u32 scale_factor = GetResolutionScaleFactor();
+    const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
     glUniform4f(uniform_i_resolution,
                 static_cast<float>(screen_info_l.texture.width * scale_factor),
                 static_cast<float>(screen_info_l.texture.height * scale_factor),
@@ -870,8 +642,8 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
-    state.texture_units[0].sampler = filter_sampler.handle;
-    state.texture_units[1].sampler = filter_sampler.handle;
+    state.texture_units[0].sampler = sampler;
+    state.texture_units[1].sampler = sampler;
     state.Apply();
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
@@ -892,11 +664,6 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
                      Settings::values.bg_blue.GetValue(), 0.0f);
-    }
-
-    if (settings.sampler_update_requested.exchange(false)) {
-        // Set the new filtering mode for the sampler
-        ReloadSampler();
     }
 
     if (settings.shader_update_requested.exchange(false)) {
@@ -1119,7 +886,7 @@ void RendererOpenGL::TryPresent(int timeout_ms, bool is_secondary) {
 void RendererOpenGL::PrepareVideoDumping() {
     auto* mailbox = static_cast<OGLVideoDumpingMailbox*>(frame_dumper.mailbox.get());
     {
-        std::unique_lock lock(mailbox->swap_chain_lock);
+        std::scoped_lock lock{mailbox->swap_chain_lock};
         mailbox->quit = false;
     }
     frame_dumper.StartDumping();
@@ -1129,7 +896,7 @@ void RendererOpenGL::CleanupVideoDumping() {
     frame_dumper.StopDumping();
     auto* mailbox = static_cast<OGLVideoDumpingMailbox*>(frame_dumper.mailbox.get());
     {
-        std::unique_lock lock(mailbox->swap_chain_lock);
+        std::scoped_lock lock{mailbox->swap_chain_lock};
         mailbox->quit = true;
     }
     mailbox->free_cv.notify_one();

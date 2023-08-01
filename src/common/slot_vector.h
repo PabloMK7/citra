@@ -62,10 +62,27 @@ public:
         return SlotId{index};
     }
 
+    template <typename... Args>
+    [[nodiscard]] SlotId swap_and_insert(SlotId existing_id, Args&&... args) noexcept {
+        const u32 index = FreeValueIndex();
+        T& existing_value = values[existing_id.index].object;
+
+        new (&values[index].object) T(std::move(existing_value));
+        existing_value.~T();
+        new (&values[existing_id.index].object) T(std::forward<Args>(args)...);
+        SetStorageBit(index);
+
+        return SlotId{index};
+    }
+
     void erase(SlotId id) noexcept {
         values[id.index].object.~T();
         free_list.push_back(id.index);
         ResetStorageBit(id.index);
+    }
+
+    size_t size() const noexcept {
+        return values_capacity - free_list.size();
     }
 
 private:
@@ -93,7 +110,7 @@ private:
         return ((stored_bitset[index / 64] >> (index % 64)) & 1) != 0;
     }
 
-    void ValidateIndex(SlotId id) const noexcept {
+    void ValidateIndex([[maybe_unused]] SlotId id) const noexcept {
         DEBUG_ASSERT(id);
         DEBUG_ASSERT(id.index / 64 < stored_bitset.size());
         DEBUG_ASSERT(((stored_bitset[id.index / 64] >> (id.index % 64)) & 1) != 0);

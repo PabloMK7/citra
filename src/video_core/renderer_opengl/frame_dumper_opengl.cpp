@@ -7,7 +7,7 @@
 #include <utility>
 #include "core/frontend/emu_window.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
-#include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/renderer_opengl/gl_texture_mailbox.h"
 
 namespace OpenGL {
 

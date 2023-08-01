@@ -617,9 +617,7 @@ void System::ApplySettings() {
     if (VideoCore::g_renderer) {
         auto& settings = VideoCore::g_renderer->Settings();
         settings.bg_color_update_requested = true;
-        settings.sampler_update_requested = true;
         settings.shader_update_requested = true;
-        settings.texture_filter_update_requested = true;
     }
 
     if (IsPoweredOn()) {

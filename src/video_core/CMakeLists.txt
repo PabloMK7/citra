@@ -34,7 +34,6 @@ add_library(video_core STATIC
     regs_texturing.h
     renderer_base.cpp
     renderer_base.h
-    rasterizer_cache/framebuffer_base.cpp
     rasterizer_cache/framebuffer_base.h
     rasterizer_cache/pixel_format.cpp
     rasterizer_cache/pixel_format.h
@@ -76,6 +75,8 @@ add_library(video_core STATIC
     renderer_opengl/gl_state.h
     renderer_opengl/gl_stream_buffer.cpp
     renderer_opengl/gl_stream_buffer.h
+    renderer_opengl/gl_texture_mailbox.cpp
+    renderer_opengl/gl_texture_mailbox.h
     renderer_opengl/gl_texture_runtime.cpp
     renderer_opengl/gl_texture_runtime.h
     renderer_opengl/gl_vars.cpp

@@ -31,9 +31,7 @@ struct RendererSettings {
     std::function<void()> screenshot_complete_callback;
     Layout::FramebufferLayout screenshot_framebuffer_layout;
     // Renderer
-    std::atomic_bool texture_filter_update_requested{false};
     std::atomic_bool bg_color_update_requested{false};
-    std::atomic_bool sampler_update_requested{false};
     std::atomic_bool shader_update_requested{false};
 };
 

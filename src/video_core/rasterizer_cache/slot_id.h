@@ -10,6 +10,7 @@ namespace VideoCore {
 
 using SurfaceId = Common::SlotId;
 using SamplerId = Common::SlotId;
+using FramebufferId = Common::SlotId;
 
 /// Fake surface ID for null surfaces
 constexpr SurfaceId NULL_SURFACE_ID{0};
