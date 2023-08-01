@@ -7,6 +7,7 @@
 #include <functional>
 #include <list>
 #include <optional>
+#include <span>
 #include <unordered_map>
 #include <vector>
 #include <boost/icl/interval_map.hpp>
@@ -166,6 +167,9 @@ private:
 
     /// Transfers ownership of a memory region from src_surface to dest_surface
     void DuplicateSurface(SurfaceId src_id, SurfaceId dst_id);
+
+    /// Computes the hash of the provided texture data.
+    u64 ComputeHash(const SurfaceParams& load_info, std::span<u8> upload_data);
 
     /// Update surface's texture for given region when necessary
     void ValidateSurface(SurfaceId surface, PAddr addr, u32 size);

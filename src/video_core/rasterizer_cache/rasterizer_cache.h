@@ -993,7 +993,7 @@ void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interva
                   runtime.NeedsConversion(surface.pixel_format));
 
     if (dump_textures && False(surface.flags & SurfaceFlagBits::Custom)) {
-        const u64 hash = Common::ComputeHash64(upload_data.data(), upload_data.size());
+        const u64 hash = ComputeHash(load_info, upload_data);
         const u32 level = surface.LevelOf(load_info.addr);
         custom_tex_manager.DumpTexture(load_info, level, upload_data, hash);
     }
@@ -1005,6 +1005,20 @@ void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interva
         .texture_level = surface.LevelOf(load_info.addr),
     };
     surface.Upload(upload, staging);
+}
+
+template <class T>
+u64 RasterizerCache<T>::ComputeHash(const SurfaceParams& load_info, std::span<u8> upload_data) {
+    if (!custom_tex_manager.UseNewHash()) {
+        const u32 width = load_info.width;
+        const u32 height = load_info.height;
+        const u32 bpp = GetFormatBytesPerPixel(load_info.pixel_format);
+        auto decoded = std::vector<u8>(width * height * bpp);
+        DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, decoded, false);
+        return Common::ComputeHash64(decoded.data(), decoded.size());
+    } else {
+        return Common::ComputeHash64(upload_data.data(), upload_data.size());
+    }
 }
 
 template <class T>
@@ -1021,18 +1035,7 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
     }
 
     const auto upload_data = source_ptr.GetWriteBytes(load_info.end - load_info.addr);
-    const u64 hash = [&] {
-        if (!custom_tex_manager.UseNewHash()) {
-            const u32 width = load_info.width;
-            const u32 height = load_info.height;
-            const u32 bpp = surface.GetInternalBytesPerPixel();
-            auto decoded = std::vector<u8>(width * height * bpp);
-            DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, decoded, false);
-            return Common::ComputeHash64(decoded.data(), decoded.size());
-        } else {
-            return Common::ComputeHash64(upload_data.data(), upload_data.size());
-        }
-    }();
+    const u64 hash = ComputeHash(load_info, upload_data);
 
     const u32 level = surface.LevelOf(load_info.addr);
     Material* material = custom_tex_manager.GetMaterial(hash);

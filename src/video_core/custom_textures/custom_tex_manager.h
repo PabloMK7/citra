@@ -40,8 +40,11 @@ public:
     /// Searches the load directory assigned to program_id for any custom textures and loads them
     void FindCustomTextures();
 
+    /// Reads the pack configuration file
+    bool ReadConfig(u64 title_id, bool options_only = false);
+
     /// Saves the pack configuration file template to the dump directory if it doesn't exist.
-    void WriteConfig();
+    void PrepareDumping(u64 title_id);
 
     /// Preloads all registered custom textures
     void PreloadTextures(const std::atomic_bool& stop_run,
@@ -70,8 +73,8 @@ private:
     /// Parses the custom texture filename (hash, material type, etc).
     bool ParseFilename(const FileUtil::FSTEntry& file, CustomTexture* texture);
 
-    /// Reads the pack configuration file
-    void ReadConfig(const std::string& load_path);
+    /// Returns a vector of all custom texture files.
+    std::vector<FileUtil::FSTEntry> GetTextures(u64 title_id);
 
     /// Creates the thread workers.
     void CreateWorkers();
@@ -87,10 +90,9 @@ private:
     std::unique_ptr<Common::ThreadWorker> workers;
     bool textures_loaded{false};
     bool async_custom_loading{true};
-    bool skip_mipmap{true};
+    bool skip_mipmap{false};
     bool flip_png_files{true};
-    bool use_new_hash{false};
-    bool refuse_dds{false};
+    bool use_new_hash{true};
 };
 
 } // namespace VideoCore

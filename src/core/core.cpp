@@ -321,11 +321,11 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     cheat_engine = std::make_unique<Cheats::CheatEngine>(title_id, *this);
     perf_stats = std::make_unique<PerfStats>(title_id);
 
+    if (Settings::values.dump_textures) {
+        custom_tex_manager->PrepareDumping(title_id);
+    }
     if (Settings::values.custom_textures) {
         custom_tex_manager->FindCustomTextures();
-    }
-    if (Settings::values.dump_textures) {
-        custom_tex_manager->WriteConfig();
     }
 
     status = ResultStatus::Success;

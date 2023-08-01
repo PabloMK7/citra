@@ -90,19 +90,12 @@ void CustomTexManager::FindCustomTextures() {
         CreateWorkers();
     }
 
-    const u64 program_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
-    const std::string load_path =
-        fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::LoadDir), program_id);
-
-    if (!FileUtil::Exists(load_path)) {
-        FileUtil::CreateFullPath(load_path);
+    const u64 title_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
+    const auto textures = GetTextures(title_id);
+    if (!ReadConfig(title_id)) {
+        use_new_hash = false;
+        skip_mipmap = true;
     }
-    ReadConfig(load_path);
-
-    FileUtil::FSTEntry texture_dir;
-    std::vector<FileUtil::FSTEntry> textures;
-    FileUtil::ScanDirectoryTree(load_path, texture_dir, 64);
-    FileUtil::GetAllFilesFromNestedEntries(texture_dir, textures);
 
     custom_textures.reserve(textures.size());
     for (const FileUtil::FSTEntry& file : textures) {
@@ -137,8 +130,8 @@ bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTextu
     if (file_format == CustomFileFormat::None) {
         return false;
     }
-    if (file_format == CustomFileFormat::DDS && refuse_dds) {
-        LOG_ERROR(Render, "Legacy pack is attempting to use DDS textures, skipping!");
+    if (file_format == CustomFileFormat::DDS && skip_mipmap) {
+        LOG_ERROR(Render, "Mipmap skip is incompatible with DDS textures, skipping!");
         return false;
     }
     texture->file_format = file_format;
@@ -176,10 +169,14 @@ bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTextu
     return true;
 }
 
-void CustomTexManager::WriteConfig() {
-    const u64 program_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
+void CustomTexManager::PrepareDumping(u64 title_id) {
+    // If a pack exists in the load folder that uses the old hash
+    // dump textures using the old hash.
+    ReadConfig(title_id, true);
+
+    // Write template config file
     const std::string dump_path =
-        fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::DumpDir), program_id);
+        fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::DumpDir), title_id);
     const std::string pack_config = dump_path + "pack.json";
     if (FileUtil::Exists(pack_config)) {
         return;
@@ -307,18 +304,23 @@ bool CustomTexManager::Decode(Material* material, std::function<bool()>&& upload
     return false;
 }
 
-void CustomTexManager::ReadConfig(const std::string& load_path) {
+bool CustomTexManager::ReadConfig(u64 title_id, bool options_only) {
+    const std::string load_path =
+        fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::LoadDir), title_id);
+    if (!FileUtil::Exists(load_path)) {
+        FileUtil::CreateFullPath(load_path);
+    }
+
     const std::string config_path = load_path + "pack.json";
     FileUtil::IOFile config_file{config_path, "r"};
     if (!config_file.IsOpen()) {
         LOG_INFO(Render, "Unable to find pack config file, using legacy defaults");
-        refuse_dds = true;
-        return;
+        return false;
     }
     std::string config(config_file.GetSize(), '\0');
     const std::size_t read_size = config_file.ReadBytes(config.data(), config.size());
     if (!read_size) {
-        return;
+        return false;
     }
 
     nlohmann::json json = nlohmann::json::parse(config, nullptr, false, true);
@@ -327,7 +329,10 @@ void CustomTexManager::ReadConfig(const std::string& load_path) {
     skip_mipmap = options["skip_mipmap"].get<bool>();
     flip_png_files = options["flip_png_files"].get<bool>();
     use_new_hash = options["use_new_hash"].get<bool>();
-    refuse_dds = skip_mipmap || !use_new_hash;
+
+    if (options_only) {
+        return true;
+    }
 
     const auto& textures = json["textures"];
     for (const auto& material : textures.items()) {
@@ -355,6 +360,21 @@ void CustomTexManager::ReadConfig(const std::string& load_path) {
             LOG_ERROR(Render, "Material with key {} is invalid", material.key());
         }
     }
+    return true;
+}
+
+std::vector<FileUtil::FSTEntry> CustomTexManager::GetTextures(u64 title_id) {
+    const std::string load_path =
+        fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::LoadDir), title_id);
+    if (!FileUtil::Exists(load_path)) {
+        FileUtil::CreateFullPath(load_path);
+    }
+
+    FileUtil::FSTEntry texture_dir;
+    std::vector<FileUtil::FSTEntry> textures;
+    FileUtil::ScanDirectoryTree(load_path, texture_dir, 64);
+    FileUtil::GetAllFilesFromNestedEntries(texture_dir, textures);
+    return textures;
 }
 
 void CustomTexManager::CreateWorkers() {
