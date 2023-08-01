@@ -4,9 +4,9 @@
 
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/errors.h"
-#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
@@ -15,7 +15,8 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
     auto mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
     MemoryRef block{mem};
     Core::Timing timing(1, 100);
-    Memory::MemorySystem memory;
+    Core::System system;
+    Memory::MemorySystem memory{system};
     Kernel::KernelSystem kernel(
         memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
         Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});

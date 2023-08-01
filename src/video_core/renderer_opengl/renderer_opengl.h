@@ -46,8 +46,8 @@ public:
                             Frontend::EmuWindow* secondary_window);
     ~RendererOpenGL() override;
 
-    [[nodiscard]] VideoCore::RasterizerInterface* Rasterizer() const override {
-        return rasterizer.get();
+    [[nodiscard]] VideoCore::RasterizerInterface* Rasterizer() override {
+        return &rasterizer;
     }
 
     void SwapBuffers() override;
@@ -86,8 +86,8 @@ private:
 
 private:
     Driver driver;
+    RasterizerOpenGL rasterizer;
     OpenGLState state;
-    std::unique_ptr<RasterizerOpenGL> rasterizer;
 
     // OpenGL object IDs
     OGLVertexArray vertex_array;

@@ -105,7 +105,7 @@ SurfaceInterval SurfaceBase::GetCopyableInterval(const SurfaceParams& params) co
     return result;
 }
 
-Extent SurfaceBase::RealExtent(bool scaled) {
+Extent SurfaceBase::RealExtent(bool scaled) const {
     const bool is_custom = IsCustom();
     u32 real_width = width;
     u32 real_height = height;

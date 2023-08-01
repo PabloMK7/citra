@@ -15,12 +15,16 @@ class ClientRoomWindow;
 class DirectConnectWindow;
 class ClickableLabel;
 
+namespace Core {
+class System;
+}
+
 class MultiplayerState : public QWidget {
     Q_OBJECT;
 
 public:
-    explicit MultiplayerState(QWidget* parent, QStandardItemModel* game_list, QAction* leave_room,
-                              QAction* show_room);
+    explicit MultiplayerState(Core::System& system, QWidget* parent, QStandardItemModel* game_list,
+                              QAction* leave_room, QAction* show_room);
     ~MultiplayerState();
 
     /**
@@ -71,6 +75,7 @@ signals:
     void AnnounceFailed(const Common::WebResult&);
 
 private:
+    Core::System& system;
     Lobby* lobby = nullptr;
     HostRoomWindow* host_room = nullptr;
     ClientRoomWindow* client_room = nullptr;

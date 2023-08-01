@@ -41,7 +41,7 @@ public:
     ClearValue MakeClearValue(PAddr copy_addr, PixelFormat dst_format);
 
     /// Returns the internal surface extent.
-    Extent RealExtent(bool scaled = true);
+    Extent RealExtent(bool scaled = true) const;
 
     /// Returns true if the surface contains a custom material with a normal map.
     bool HasNormalMap() const noexcept;

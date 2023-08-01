@@ -36,7 +36,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/gdbstub/hio.h"
 #include "core/hle/kernel/process.h"
-#include "core/loader/loader.h"
 #include "core/memory.h"
 
 namespace GDBStub {
@@ -1035,7 +1034,7 @@ static void RemoveBreakpoint() {
     SendReply("OK");
 }
 
-void HandlePacket() {
+void HandlePacket(Core::System& system) {
     if (!IsConnected()) {
         if (defer_start) {
             ToggleServer(true);
@@ -1076,7 +1075,7 @@ void HandlePacket() {
         Continue();
         return;
     case 'F':
-        HandleHioReply(command_buffer, command_length);
+        HandleHioReply(system, command_buffer, command_length);
         break;
     case 'g':
         ReadRegisters();

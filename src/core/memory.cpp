@@ -17,9 +17,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/global.h"
-#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/lock.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/hw/hw.h"
 #include "core/memory.h"
@@ -89,12 +87,13 @@ private:
 
 class MemorySystem::Impl {
 public:
-    // Visual Studio would try to allocate these on compile time if they are std::array, which would
-    // exceed the memory limit.
+    // Visual Studio would try to allocate these on compile time
+    // if they are std::array which would exceed the memory limit.
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
 
+    Core::System& system;
     std::shared_ptr<PageTable> current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
     std::vector<std::shared_ptr<PageTable>> page_table_list;
@@ -106,7 +105,7 @@ public:
     std::shared_ptr<BackingMem> n3ds_extra_ram_mem;
     std::shared_ptr<BackingMem> dsp_mem;
 
-    Impl();
+    Impl(Core::System& system_);
 
     const u8* GetPtr(Region r) const {
         switch (r) {
@@ -153,6 +152,10 @@ public:
         }
     }
 
+    u32 GetPC() const noexcept {
+        return system.GetRunningCore().GetPC();
+    }
+
     /**
      * This function should only be called for virtual addreses with attribute `PageType::Special`.
      */
@@ -187,7 +190,7 @@ public:
                     HW_Memory,
                     "unmapped ReadBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
                     "0x{:08X}",
-                    current_vaddr, src_addr, size, Core::GetRunningCore().GetPC());
+                    current_vaddr, src_addr, size, GetPC());
                 std::memset(dest_buffer, 0, copy_amount);
                 break;
             }
@@ -242,7 +245,7 @@ public:
                     HW_Memory,
                     "unmapped WriteBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
                     "0x{:08X}",
-                    current_vaddr, dest_addr, size, Core::GetRunningCore().GetPC());
+                    current_vaddr, dest_addr, size, GetPC());
                 break;
             }
             case PageType::Memory: {
@@ -345,13 +348,13 @@ private:
     friend class boost::serialization::access;
 };
 
-MemorySystem::Impl::Impl()
-    : fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>(*this)),
+MemorySystem::Impl::Impl(Core::System& system_)
+    : system{system_}, fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>(*this)),
       vram_mem(std::make_shared<BackingMemImpl<Region::VRAM>>(*this)),
       n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>(*this)),
       dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>(*this)) {}
 
-MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
+MemorySystem::MemorySystem(Core::System& system) : impl(std::make_unique<Impl>(system)) {}
 MemorySystem::~MemorySystem() = default;
 
 template <class Archive>
@@ -467,7 +470,7 @@ T MemorySystem::Read(const VAddr vaddr) {
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X} at PC 0x{:08X}", sizeof(T) * 8, vaddr,
-                  Core::GetRunningCore().GetPC());
+                  impl->GetPC());
         return 0;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -518,7 +521,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
-                  sizeof(data) * 8, (u32)data, vaddr, Core::GetRunningCore().GetPC());
+                  sizeof(data) * 8, (u32)data, vaddr, impl->GetPC());
         return;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -550,7 +553,7 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
-                  sizeof(data) * 8, (u32)data, vaddr, Core::GetRunningCore().GetPC());
+                  sizeof(data) * 8, static_cast<u32>(data), vaddr, impl->GetPC());
         return true;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -606,8 +609,7 @@ u8* MemorySystem::GetPointer(const VAddr vaddr) {
         return GetPointerForRasterizerCache(vaddr);
     }
 
-    LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x} at PC 0x{:08X}", vaddr,
-              Core::GetRunningCore().GetPC());
+    LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x{:08x} at PC 0x{:08X}", vaddr, impl->GetPC());
     return nullptr;
 }
 
@@ -663,7 +665,7 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
 
     if (area == memory_areas.end()) {
         LOG_ERROR(HW_Memory, "Unknown GetPhysicalPointer @ {:#08X} at PC {:#08X}", address,
-                  Core::GetRunningCore().GetPC());
+                  impl->GetPC());
         return nullptr;
     }
 
@@ -693,8 +695,7 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
     return {target_mem, offset_into_region};
 }
 
-/// For a rasterizer-accessible PAddr, gets a list of all possible VAddr
-static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
+std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return {addr - VRAM_PADDR + VRAM_VADDR};
     }
@@ -714,7 +715,7 @@ static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     // parts of the texture.
     LOG_ERROR(HW_Memory,
               "Trying to use invalid physical address for rasterizer: {:08X} at PC 0x{:08X}", addr,
-              Core::GetRunningCore().GetPC());
+              impl->GetPC());
     return {};
 }
 
@@ -729,7 +730,7 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
     for (unsigned i = 0; i < num_pages; ++i, paddr += CITRA_PAGE_SIZE) {
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
             impl->cache_marker.Mark(vaddr, cached);
-            for (auto page_table : impl->page_table_list) {
+            for (auto& page_table : impl->page_table_list) {
                 PageType& page_type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
 
                 if (cached) {
@@ -868,7 +869,7 @@ void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_add
 }
 
 void MemorySystem::ReadBlock(VAddr src_addr, void* dest_buffer, std::size_t size) {
-    const auto& process = *Core::System::GetInstance().Kernel().GetCurrentProcess();
+    const auto& process = *impl->system.Kernel().GetCurrentProcess();
     return impl->ReadBlockImpl<false>(process, src_addr, dest_buffer, size);
 }
 
@@ -911,7 +912,7 @@ void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_a
 
 void MemorySystem::WriteBlock(const VAddr dest_addr, const void* src_buffer,
                               const std::size_t size) {
-    auto& process = *Core::System::GetInstance().Kernel().GetCurrentProcess();
+    auto& process = *impl->system.Kernel().GetCurrentProcess();
     return impl->WriteBlockImpl<false>(process, dest_addr, src_buffer, size);
 }
 
@@ -934,7 +935,7 @@ void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_ad
             LOG_ERROR(HW_Memory,
                       "unmapped ZeroBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
                       "0x{:08X}",
-                      current_vaddr, dest_addr, size, Core::GetRunningCore().GetPC());
+                      current_vaddr, dest_addr, size, impl->GetPC());
             break;
         }
         case PageType::Memory: {
@@ -989,7 +990,7 @@ void MemorySystem::CopyBlock(const Kernel::Process& dest_process,
             LOG_ERROR(HW_Memory,
                       "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {}) at PC "
                       "0x{:08X}",
-                      current_vaddr, src_addr, size, Core::GetRunningCore().GetPC());
+                      current_vaddr, src_addr, size, impl->GetPC());
             ZeroBlock(dest_process, dest_addr, copy_amount);
             break;
         }

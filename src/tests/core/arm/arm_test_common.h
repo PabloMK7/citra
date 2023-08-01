@@ -85,6 +85,7 @@ private:
     std::vector<WriteRecord> write_records;
 
     std::unique_ptr<Core::Timing> timing;
+    std::unique_ptr<Core::System> system;
     std::unique_ptr<Memory::MemorySystem> memory;
     std::unique_ptr<Kernel::KernelSystem> kernel;
 };

@@ -12,7 +12,6 @@
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/game_list_p.h"
-#include "citra_qt/main.h"
 #include "citra_qt/multiplayer/host_room.h"
 #include "citra_qt/multiplayer/message.h"
 #include "citra_qt/multiplayer/state.h"
@@ -27,10 +26,10 @@
 #include "web_service/verify_user_jwt.h"
 #endif
 
-HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
+HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandardItemModel* list,
                                std::shared_ptr<Network::AnnounceMultiplayerSession> session)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(std::make_unique<Ui::HostRoom>()), announce_multiplayer_session(session) {
+      ui(std::make_unique<Ui::HostRoom>()), system{system_}, announce_multiplayer_session(session) {
     ui->setupUi(this);
 
     // set up validation for all of the fields
@@ -196,9 +195,8 @@ void HostRoomWindow::Host() {
             }
         }
 #endif
-        member->Join(ui->username->text().toStdString(),
-                     Service::CFG::GetConsoleIdHash(Core::System::GetInstance()), "127.0.0.1", port,
-                     0, Network::NoPreferredMac, password, token);
+        member->Join(ui->username->text().toStdString(), Service::CFG::GetConsoleIdHash(system),
+                     "127.0.0.1", port, 0, Network::NoPreferredMac, password, token);
 
         // Store settings
         UISettings::values.room_nickname = ui->username->text();

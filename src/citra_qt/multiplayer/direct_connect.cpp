@@ -9,10 +9,8 @@
 #include <QString>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/main.h"
-#include "citra_qt/multiplayer/client_room.h"
 #include "citra_qt/multiplayer/direct_connect.h"
 #include "citra_qt/multiplayer/message.h"
-#include "citra_qt/multiplayer/state.h"
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/uisettings.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -22,9 +20,9 @@
 
 enum class ConnectionType : u8 { TraversalServer, IP };
 
-DirectConnectWindow::DirectConnectWindow(QWidget* parent)
+DirectConnectWindow::DirectConnectWindow(Core::System& system_, QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(std::make_unique<Ui::DirectConnect>()) {
+      ui(std::make_unique<Ui::DirectConnect>()), system{system_} {
 
     ui->setupUi(this);
 
@@ -91,7 +89,7 @@ void DirectConnectWindow::Connect() {
         if (auto room_member = Network::GetRoomMember().lock()) {
             auto port = UISettings::values.port.toUInt();
             room_member->Join(ui->nickname->text().toStdString(),
-                              Service::CFG::GetConsoleIdHash(Core::System::GetInstance()),
+                              Service::CFG::GetConsoleIdHash(system),
                               ui->ip->text().toStdString().c_str(), port, 0,
                               Network::NoPreferredMac, ui->password->text().toStdString().c_str());
         }

@@ -5,12 +5,17 @@
 #pragma once
 
 #include <memory>
+#include <QWidget>
 #include "common/common_types.h"
 
 namespace Cheats {
 class CheatBase;
 class CheatEngine;
 } // namespace Cheats
+
+namespace Core {
+class System;
+}
 
 namespace Ui {
 class ConfigureCheats;
@@ -20,7 +25,7 @@ class ConfigureCheats : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureCheats(u64 title_id_, QWidget* parent = nullptr);
+    explicit ConfigureCheats(Core::System& system, u64 title_id, QWidget* parent = nullptr);
     ~ConfigureCheats();
     bool ApplyConfiguration();
 

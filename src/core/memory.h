@@ -18,6 +18,10 @@ namespace Kernel {
 class Process;
 }
 
+namespace Core {
+class System;
+}
+
 namespace AudioCore {
 class DspInterface;
 }
@@ -287,7 +291,7 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
 class MemorySystem {
 public:
-    MemorySystem();
+    explicit MemorySystem(Core::System& system);
     ~MemorySystem();
 
     /**
@@ -575,6 +579,9 @@ public:
      */
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
+    /// For a rasterizer-accessible PAddr, gets a list of all possible VAddr
+    std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr);
+
     /// Gets a pointer to the memory region beginning at the specified physical address.
     u8* GetPhysicalPointer(PAddr address) const;
 
@@ -627,6 +634,7 @@ private:
 
     void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
 
+private:
     class Impl;
     std::unique_ptr<Impl> impl;
 

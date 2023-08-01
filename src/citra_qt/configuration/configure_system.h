@@ -16,6 +16,10 @@ namespace ConfigurationShared {
 enum class CheckState;
 }
 
+namespace Core {
+class System;
+}
+
 namespace Service {
 namespace CFG {
 class Module;
@@ -26,7 +30,7 @@ class ConfigureSystem : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureSystem(QWidget* parent = nullptr);
+    explicit ConfigureSystem(Core::System& system, QWidget* parent = nullptr);
     ~ConfigureSystem() override;
 
     void ApplyConfiguration();
@@ -45,8 +49,10 @@ private:
 
     void DownloadFromNUS();
 
-    ConfigurationShared::CheckState is_new_3ds;
+private:
     std::unique_ptr<Ui::ConfigureSystem> ui;
+    Core::System& system;
+    ConfigurationShared::CheckState is_new_3ds;
     bool enabled = false;
 
     std::shared_ptr<Service::CFG::Module> cfg;

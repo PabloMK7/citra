@@ -15,7 +15,7 @@ class ConfigureStorage : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureStorage(QWidget* parent = nullptr);
+    explicit ConfigureStorage(bool is_powered_on, QWidget* parent = nullptr);
     ~ConfigureStorage() override;
 
     void ApplyConfiguration();
@@ -23,4 +23,5 @@ public:
     void SetConfiguration();
 
     std::unique_ptr<Ui::ConfigureStorage> ui;
+    bool is_powered_on;
 };

@@ -11,7 +11,6 @@
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/settings.h"
-#include "core/core.h"
 #include "ui_configure_debug.h"
 
 // The QSlider doesn't have an easy way to set a custom step amount,
@@ -25,8 +24,8 @@ static constexpr int SettingsToSlider(int value) {
     return (value - 5) / 5;
 }
 
-ConfigureDebug::ConfigureDebug(QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureDebug>()) {
+ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureDebug>()), is_powered_on{is_powered_on_} {
     ui->setupUi(this);
     SetConfiguration();
 
@@ -35,7 +34,6 @@ ConfigureDebug::ConfigureDebug(QWidget* parent)
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
-    const bool is_powered_on = Core::System::GetInstance().IsPoweredOn();
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);
 
@@ -59,7 +57,7 @@ void ConfigureDebug::SetConfiguration() {
     ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub.GetValue());
     ui->gdbport_spinbox->setEnabled(Settings::values.use_gdbstub.GetValue());
     ui->gdbport_spinbox->setValue(Settings::values.gdbstub_port.GetValue());
-    ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+    ui->toggle_console->setEnabled(!is_powered_on);
     ui->toggle_console->setChecked(UISettings::values.show_console.GetValue());
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());

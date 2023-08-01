@@ -19,7 +19,7 @@ class ConfigureAudio : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureAudio(QWidget* parent = nullptr);
+    explicit ConfigureAudio(bool is_powered_on, QWidget* parent = nullptr);
     ~ConfigureAudio() override;
 
     void ApplyConfiguration();

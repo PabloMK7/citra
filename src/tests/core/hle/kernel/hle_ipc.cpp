@@ -3,12 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch_test_macros.hpp>
-#include "common/archives.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
-#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -23,7 +21,8 @@ static std::shared_ptr<Object> MakeObject(Kernel::KernelSystem& kernel) {
 
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
     Core::Timing timing(1, 100);
-    Memory::MemorySystem memory;
+    Core::System system;
+    Memory::MemorySystem memory{system};
     Kernel::KernelSystem kernel(
         memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
         Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});
@@ -247,7 +246,8 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 
 TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     Core::Timing timing(1, 100);
-    Memory::MemorySystem memory;
+    Core::System system;
+    Memory::MemorySystem memory{system};
     Kernel::KernelSystem kernel(
         memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
         Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});

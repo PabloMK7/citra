@@ -7,11 +7,9 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/main.h"
-#include "citra_qt/multiplayer/client_room.h"
 #include "citra_qt/multiplayer/lobby.h"
 #include "citra_qt/multiplayer/lobby_p.h"
 #include "citra_qt/multiplayer/message.h"
-#include "citra_qt/multiplayer/state.h"
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
@@ -23,10 +21,10 @@
 #include "web_service/web_backend.h"
 #endif
 
-Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
+Lobby::Lobby(Core::System& system_, QWidget* parent, QStandardItemModel* list,
              std::shared_ptr<Network::AnnounceMultiplayerSession> session)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(std::make_unique<Ui::Lobby>()), announce_multiplayer_session(session) {
+      ui(std::make_unique<Ui::Lobby>()), system{system_}, announce_multiplayer_session(session) {
     ui->setupUi(this);
 
     // setup the watcher for background connections
@@ -152,8 +150,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     const std::string verify_UID =
         proxy->data(connection_index, LobbyItemHost::HostVerifyUIDRole).toString().toStdString();
 
-    // attempt to connect in a different thread
-    QFuture<void> f = QtConcurrent::run([nickname, ip, port, password, verify_UID] {
+    // Attempt to connect in a different thread
+    QFuture<void> f = QtConcurrent::run([this, nickname, ip, port, password, verify_UID] {
         std::string token;
 #ifdef ENABLE_WEB_SERVICE
         if (!NetSettings::values.citra_username.empty() &&
@@ -170,8 +168,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         }
 #endif
         if (auto room_member = Network::GetRoomMember().lock()) {
-            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(Core::System::GetInstance()),
-                              ip.c_str(), port, 0, Network::NoPreferredMac, password, token);
+            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(system), ip.c_str(), port, 0,
+                              Network::NoPreferredMac, password, token);
         }
     });
     watcher->setFuture(f);

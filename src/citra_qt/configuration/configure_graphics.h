@@ -19,7 +19,7 @@ class ConfigureGraphics : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureGraphics(QWidget* parent = nullptr);
+    explicit ConfigureGraphics(bool is_powered_on, QWidget* parent = nullptr);
     ~ConfigureGraphics() override;
 
     void ApplyConfiguration();

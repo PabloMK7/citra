@@ -10,14 +10,13 @@
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_audio.h"
 #include "common/settings.h"
-#include "core/core.h"
 #include "ui_configure_audio.h"
 
 #if defined(__APPLE__)
 #include "common/apple_authorization.h"
 #endif
 
-ConfigureAudio::ConfigureAudio(QWidget* parent)
+ConfigureAudio::ConfigureAudio(bool is_powered_on, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureAudio>()) {
     ui->setupUi(this);
 
@@ -27,8 +26,7 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
             AudioCore::GetSinkName(static_cast<AudioCore::SinkType>(type)).data()));
     }
 
-    const bool is_running = Core::System::GetInstance().IsPoweredOn();
-    ui->emulation_combo_box->setEnabled(!is_running);
+    ui->emulation_combo_box->setEnabled(!is_powered_on);
 
     connect(ui->volume_slider, &QSlider::valueChanged, this,
             &ConfigureAudio::SetVolumeIndicatorText);

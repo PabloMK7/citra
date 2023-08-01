@@ -1128,7 +1128,7 @@ void SVC::OutputDebugString(VAddr address, s32 len) {
     }
 
     if (len == 0) {
-        GDBStub::SetHioRequest(address);
+        GDBStub::SetHioRequest(system, address);
         return;
     }
 
@@ -1953,12 +1953,12 @@ ResultCode SVC::GetProcessList(s32* process_count, VAddr out_process_array,
 }
 
 ResultCode SVC::InvalidateInstructionCacheRange(u32 addr, u32 size) {
-    Core::GetRunningCore().InvalidateCacheRange(addr, size);
+    system.GetRunningCore().InvalidateCacheRange(addr, size);
     return RESULT_SUCCESS;
 }
 
 ResultCode SVC::InvalidateEntireInstructionCache() {
-    Core::GetRunningCore().ClearInstructionCache();
+    system.GetRunningCore().ClearInstructionCache();
     return RESULT_SUCCESS;
 }
 

@@ -86,7 +86,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         if (thread && running_core) {
             running_core->SaveContext(thread->context);
         }
-        GDBStub::HandlePacket();
+        GDBStub::HandlePacket(*this);
 
         // If the loop is halted and we want to step, use a tiny (1) number of instructions to
         // execute. Otherwise, get out of the loop function.
@@ -368,7 +368,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
                                   const Kernel::New3dsHwCapabilities& n3ds_hw_caps, u32 num_cores) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
-    memory = std::make_unique<Memory::MemorySystem>();
+    memory = std::make_unique<Memory::MemorySystem>(*this);
 
     timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue());
 
@@ -632,9 +632,9 @@ void System::ApplySettings() {
 
     if (IsPoweredOn()) {
         CoreTiming().UpdateClockSpeed(Settings::values.cpu_clock_percentage.GetValue());
-        Core::DSP().SetSink(Settings::values.output_type.GetValue(),
-                            Settings::values.output_device.GetValue());
-        Core::DSP().EnableStretching(Settings::values.enable_audio_stretching.GetValue());
+        dsp_core->SetSink(Settings::values.output_type.GetValue(),
+                          Settings::values.output_device.GetValue());
+        dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
         auto hid = Service::HID::GetModule(*this);
         if (hid) {

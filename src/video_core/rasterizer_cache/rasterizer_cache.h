@@ -503,26 +503,27 @@ SurfaceId RasterizerCache<T>::GetTextureSurface(const Pica::Texture::TextureInfo
     const u32 min_width = info.width >> max_level;
     const u32 min_height = info.height >> max_level;
     if (min_width % 8 != 0 || min_height % 8 != 0) {
-        if (min_width % 4 == 0 && min_height % 4 == 0) {
-            const auto [src_surface_id, rect] = GetSurfaceSubRect(params, ScaleMatch::Ignore, true);
-            Surface& src_surface = slot_surfaces[src_surface_id];
-
-            params.res_scale = src_surface.res_scale;
-            SurfaceId tmp_surface_id = CreateSurface(params);
-            Surface& tmp_surface = slot_surfaces[tmp_surface_id];
-
-            const TextureBlit blit = {
-                .src_level = src_surface.LevelOf(params.addr),
-                .dst_level = 0,
-                .src_rect = rect,
-                .dst_rect = tmp_surface.GetScaledRect(),
-            };
-            runtime.BlitTextures(src_surface, tmp_surface, blit);
-            return tmp_surface_id;
+        if (min_width % 4 != 0 || min_height % 4 != 0) {
+            LOG_CRITICAL(HW_GPU, "Texture size ({}x{}) is not multiple of 4", min_width,
+                         min_height);
+            return NULL_SURFACE_ID;
         }
+        const auto [src_surface_id, rect] = GetSurfaceSubRect(params, ScaleMatch::Ignore, true);
+        Surface& src_surface = slot_surfaces[src_surface_id];
 
-        LOG_CRITICAL(HW_GPU, "Texture size ({}x{}) is not multiple of 4", min_width, min_height);
-        return NULL_SURFACE_ID;
+        params.res_scale = src_surface.res_scale;
+        SurfaceId tmp_surface_id = CreateSurface(params);
+        Surface& tmp_surface = slot_surfaces[tmp_surface_id];
+        sentenced.emplace_back(tmp_surface_id, frame_tick);
+
+        const TextureBlit blit = {
+            .src_level = src_surface.LevelOf(params.addr),
+            .dst_level = 0,
+            .src_rect = rect,
+            .dst_rect = tmp_surface.GetScaledRect(),
+        };
+        runtime.BlitTextures(src_surface, tmp_surface, blit);
+        return tmp_surface_id;
     }
     if (info.width != (min_width << max_level) || info.height != (min_height << max_level)) {
         LOG_CRITICAL(HW_GPU, "Texture size ({}x{}) does not support required mipmap level ({})",
@@ -1054,8 +1055,9 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
         ASSERT_MSG(True(surface.flags & SurfaceFlagBits::Custom),
                    "Surface is not suitable for custom upload, aborting!");
         if (!surface.IsCustom()) {
+            const SurfaceBase old_surface{surface};
             const SurfaceId old_id =
-                slot_surfaces.swap_and_insert(surface_id, runtime, surface, material);
+                slot_surfaces.swap_and_insert(surface_id, runtime, old_surface, material);
             sentenced.emplace_back(old_id, frame_tick);
         }
         surface.UploadCustom(material, level);

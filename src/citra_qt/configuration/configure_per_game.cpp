@@ -31,13 +31,14 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
                                                 : fmt::format("{:016X}", title_id);
     game_config = std::make_unique<Config>(config_file_name, Config::ConfigType::PerGameConfig);
 
-    audio_tab = std::make_unique<ConfigureAudio>(this);
+    const bool is_powered_on = system.IsPoweredOn();
+    audio_tab = std::make_unique<ConfigureAudio>(is_powered_on, this);
     general_tab = std::make_unique<ConfigureGeneral>(this);
     enhancements_tab = std::make_unique<ConfigureEnhancements>(this);
-    graphics_tab = std::make_unique<ConfigureGraphics>(this);
-    system_tab = std::make_unique<ConfigureSystem>(this);
-    debug_tab = std::make_unique<ConfigureDebug>(this);
-    cheat_tab = std::make_unique<ConfigureCheats>(title_id, this);
+    graphics_tab = std::make_unique<ConfigureGraphics>(is_powered_on, this);
+    system_tab = std::make_unique<ConfigureSystem>(system, this);
+    debug_tab = std::make_unique<ConfigureDebug>(is_powered_on, this);
+    cheat_tab = std::make_unique<ConfigureCheats>(system, title_id, this);
 
     ui->setupUi(this);
 

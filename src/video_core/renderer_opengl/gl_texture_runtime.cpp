@@ -528,13 +528,13 @@ void Surface::ScaleUp(u32 new_scale) {
     textures[1] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, tuple,
                              DebugName(true));
 
-    VideoCore::TextureBlit blit = {
-        .src_rect = GetRect(),
-        .dst_rect = GetScaledRect(),
-    };
     for (u32 level = 0; level < levels; level++) {
-        blit.src_level = level;
-        blit.dst_level = level;
+        const VideoCore::TextureBlit blit = {
+            .src_level = level,
+            .dst_level = level,
+            .src_rect = GetRect(level),
+            .dst_rect = GetScaledRect(level),
+        };
         BlitScale(blit, true);
     }
 }

@@ -22,8 +22,7 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     const bool res_scale_enabled = graphics_api != Settings::GraphicsAPI::Software;
     ui->resolution_factor_combobox->setEnabled(res_scale_enabled);
 
-    connect(ui->render_3d_combobox,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->render_3d_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int currentIndex) {
                 updateShaders(static_cast<Settings::StereoRenderOption>(currentIndex));
             });

@@ -130,11 +130,9 @@ bool UpdaterPrivate::StartUpdateCheck() {
     main_process->setProgram(tool_info.absoluteFilePath());
     main_process->setArguments({QStringLiteral("--checkupdates"), QStringLiteral("-v")});
 
-    connect(main_process,
-            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this,
+    connect(main_process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
             &UpdaterPrivate::UpdaterReady, Qt::QueuedConnection);
-    connect(main_process,
-            static_cast<void (QProcess::*)(QProcess::ProcessError)>(&QProcess::errorOccurred), this,
+    connect(main_process, qOverload<QProcess::ProcessError>(&QProcess::errorOccurred), this,
             &UpdaterPrivate::UpdaterError, Qt::QueuedConnection);
 
     main_process->start(QIODevice::ReadOnly);
@@ -156,7 +154,7 @@ void UpdaterPrivate::StopUpdateCheck(int delay, bool async) {
             QTimer* timer = new QTimer(this);
             timer->setSingleShot(true);
 
-            connect(timer, &QTimer::timeout, [this, timer]() {
+            connect(timer, &QTimer::timeout, this, [this, timer]() {
                 StopUpdateCheck(0, false);
                 timer->deleteLater();
             });

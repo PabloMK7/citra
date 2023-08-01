@@ -78,7 +78,8 @@ static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, cons
 RendererOpenGL::RendererOpenGL(Core::System& system, Frontend::EmuWindow& window,
                                Frontend::EmuWindow* secondary_window)
     : VideoCore::RendererBase{system, window, secondary_window}, driver{system.TelemetrySession()},
-      frame_dumper{system, window} {
+      rasterizer{system.Memory(), system.CustomTexManager(), *this, driver}, frame_dumper{system,
+                                                                                          window} {
     const bool has_debug_tool = driver.HasDebugTool();
     window.mailbox = std::make_unique<OGLTextureMailbox>(has_debug_tool);
     if (secondary_window) {
@@ -86,8 +87,6 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Frontend::EmuWindow& window
     }
     frame_dumper.mailbox = std::make_unique<OGLVideoDumpingMailbox>();
     InitOpenGLObjects();
-    rasterizer = std::make_unique<RasterizerOpenGL>(system.Memory(), system.CustomTexManager(),
-                                                    *this, driver);
 }
 
 RendererOpenGL::~RendererOpenGL() = default;
@@ -121,8 +120,7 @@ void RendererOpenGL::SwapBuffers() {
 
     EndFrame();
     prev_state.Apply();
-
-    rasterizer->TickFrame();
+    rasterizer.TickFrame();
 }
 
 void RendererOpenGL::RenderScreenshot() {
@@ -273,8 +271,8 @@ void RendererOpenGL::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& fram
     // only allows rows to have a memory alignement of 4.
     ASSERT(pixel_stride % 4 == 0);
 
-    if (!Rasterizer()->AccelerateDisplay(framebuffer, framebuffer_addr,
-                                         static_cast<u32>(pixel_stride), screen_info)) {
+    if (!rasterizer.AccelerateDisplay(framebuffer, framebuffer_addr, static_cast<u32>(pixel_stride),
+                                      screen_info)) {
         // Reset the screen info's display texture to its own permanent texture
         screen_info.display_texture = screen_info.texture.resource.handle;
         screen_info.display_texcoords = Common::Rectangle<float>(0.f, 0.f, 1.f, 1.f);
@@ -903,7 +901,7 @@ void RendererOpenGL::CleanupVideoDumping() {
 }
 
 void RendererOpenGL::Sync() {
-    rasterizer->SyncEntireState();
+    rasterizer.SyncEntireState();
 }
 
 } // namespace OpenGL

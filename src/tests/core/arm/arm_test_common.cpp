@@ -16,7 +16,8 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
 
     timing = std::make_unique<Core::Timing>(1, 100);
-    memory = std::make_unique<Memory::MemorySystem>();
+    system = std::make_unique<Core::System>();
+    memory = std::make_unique<Memory::MemorySystem>(*system);
     kernel = std::make_unique<Kernel::KernelSystem>(
         *memory, *timing, [] {}, Kernel::MemoryMode::Prod, 1,
         Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});

@@ -6,14 +6,13 @@
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_graphics.h"
 #include "common/settings.h"
-#include "core/core.h"
 #include "ui_configure_graphics.h"
 
-ConfigureGraphics::ConfigureGraphics(QWidget* parent)
+ConfigureGraphics::ConfigureGraphics(bool is_powered_on, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureGraphics>()) {
     ui->setupUi(this);
 
-    ui->toggle_vsync_new->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+    ui->toggle_vsync_new->setEnabled(!is_powered_on);
     // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
     ui->graphics_api_combo->setCurrentIndex(-1);
 

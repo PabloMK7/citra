@@ -13,7 +13,7 @@ namespace SwRenderer {
 
 RendererSoftware::RendererSoftware(Core::System& system, Frontend::EmuWindow& window)
     : VideoCore::RendererBase{system, window, nullptr}, memory{system.Memory()},
-      rasterizer{std::make_unique<RasterizerSoftware>(system.Memory())} {}
+      rasterizer{system.Memory()} {}
 
 RendererSoftware::~RendererSoftware() = default;
 

@@ -9,11 +9,9 @@
 #include "core/cheats/cheat_base.h"
 #include "core/cheats/cheats.h"
 #include "core/cheats/gateway_cheat.h"
-#include "core/core.h"
-#include "core/hle/kernel/process.h"
 #include "ui_configure_cheats.h"
 
-ConfigureCheats::ConfigureCheats(u64 title_id_, QWidget* parent)
+ConfigureCheats::ConfigureCheats(Core::System& system, u64 title_id_, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureCheats>()), title_id{title_id_} {
     // Setup gui control settings
     ui->setupUi(this);
@@ -36,7 +34,7 @@ ConfigureCheats::ConfigureCheats(u64 title_id_, QWidget* parent)
             [this] { SaveCheat(ui->tableCheats->currentRow()); });
     connect(ui->buttonDelete, &QPushButton::clicked, this, &ConfigureCheats::OnDeleteCheat);
 
-    cheat_engine = std::make_unique<Cheats::CheatEngine>(title_id, Core::System::GetInstance());
+    cheat_engine = std::make_unique<Cheats::CheatEngine>(title_id, system);
 
     LoadCheats();
 }

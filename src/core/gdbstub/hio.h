@@ -6,6 +6,10 @@
 
 #include "common/common_types.h"
 
+namespace Core {
+class System;
+}
+
 namespace GDBStub {
 
 /**
@@ -47,7 +51,7 @@ static_assert(sizeof(PackedGdbHioRequest) == 152,
  *
  *  @param address The memory address of the \ref PackedGdbHioRequest.
  */
-void SetHioRequest(const VAddr address);
+void SetHioRequest(Core::System& system, const VAddr address);
 
 /**
  * If there is a pending HIO request, send it to the client.
@@ -59,6 +63,6 @@ bool HandlePendingHioRequestPacket();
 /**
  * Process an HIO reply from the client.
  */
-void HandleHioReply(const u8* const command_buffer, const u32 command_length);
+void HandleHioReply(Core::System& system, const u8* const command_buffer, const u32 command_length);
 
 } // namespace GDBStub

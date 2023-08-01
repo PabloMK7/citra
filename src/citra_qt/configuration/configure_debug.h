@@ -15,7 +15,7 @@ class ConfigureDebug : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureDebug(QWidget* parent = nullptr);
+    explicit ConfigureDebug(bool is_powered_on, QWidget* parent = nullptr);
     ~ConfigureDebug() override;
 
     void ApplyConfiguration();
@@ -25,4 +25,5 @@ public:
 
 private:
     std::unique_ptr<Ui::ConfigureDebug> ui;
+    bool is_powered_on;
 };

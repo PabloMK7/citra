@@ -17,9 +17,10 @@
 #include "citra_qt/util/clickable_label.h"
 #include "common/logging/log.h"
 
-MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_list_model,
-                                   QAction* leave_room, QAction* show_room)
-    : QWidget(parent), game_list_model(game_list_model), leave_room(leave_room),
+MultiplayerState::MultiplayerState(Core::System& system_, QWidget* parent,
+                                   QStandardItemModel* game_list_model, QAction* leave_room,
+                                   QAction* show_room)
+    : QWidget(parent), system{system_}, game_list_model(game_list_model), leave_room(leave_room),
       show_room(show_room) {
     if (auto member = Network::GetRoomMember().lock()) {
         // register the network structs to use in slots and signals
@@ -203,14 +204,14 @@ static void BringWidgetToFront(QWidget* widget) {
 
 void MultiplayerState::OnViewLobby() {
     if (lobby == nullptr) {
-        lobby = new Lobby(this, game_list_model, announce_multiplayer_session);
+        lobby = new Lobby(system, this, game_list_model, announce_multiplayer_session);
     }
     BringWidgetToFront(lobby);
 }
 
 void MultiplayerState::OnCreateRoom() {
     if (host_room == nullptr) {
-        host_room = new HostRoomWindow(this, game_list_model, announce_multiplayer_session);
+        host_room = new HostRoomWindow(system, this, game_list_model, announce_multiplayer_session);
     }
     BringWidgetToFront(host_room);
 }
@@ -274,7 +275,7 @@ void MultiplayerState::OnOpenNetworkRoom() {
 
 void MultiplayerState::OnDirectConnectToRoom() {
     if (direct_connect == nullptr) {
-        direct_connect = new DirectConnectWindow(this);
+        direct_connect = new DirectConnectWindow(system, this);
     }
     BringWidgetToFront(direct_connect);
 }

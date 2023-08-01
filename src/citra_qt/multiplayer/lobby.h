@@ -12,10 +12,14 @@
 #include "citra_qt/multiplayer/validation.h"
 #include "common/announce_multiplayer_room.h"
 #include "network/announce_multiplayer_session.h"
-#include "network/network.h"
+#include "network/room_member.h"
 
 namespace Ui {
 class Lobby;
+}
+
+namespace Core {
+class System;
 }
 
 class LobbyModel;
@@ -29,7 +33,7 @@ class Lobby : public QDialog {
     Q_OBJECT
 
 public:
-    explicit Lobby(QWidget* parent, QStandardItemModel* list,
+    explicit Lobby(Core::System& system, QWidget* parent, QStandardItemModel* list,
                    std::shared_ptr<Network::AnnounceMultiplayerSession> session);
     ~Lobby() override;
 
@@ -84,7 +88,9 @@ private:
      */
     QString PasswordPrompt();
 
+private:
     std::unique_ptr<Ui::Lobby> ui;
+    Core::System& system;
 
     QStandardItemModel* model{};
     QStandardItemModel* game_list{};

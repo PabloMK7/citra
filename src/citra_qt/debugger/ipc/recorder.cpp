@@ -16,13 +16,13 @@
 #include "core/hle/service/sm/sm.h"
 #include "ui_recorder.h"
 
-IPCRecorderWidget::IPCRecorderWidget(QWidget* parent)
-    : QDockWidget(parent), ui(std::make_unique<Ui::IPCRecorder>()) {
+IPCRecorderWidget::IPCRecorderWidget(Core::System& system_, QWidget* parent)
+    : QDockWidget(parent), ui(std::make_unique<Ui::IPCRecorder>()), system{system_} {
 
     ui->setupUi(this);
     qRegisterMetaType<IPCDebugger::RequestRecord>();
 
-    connect(ui->enabled, &QCheckBox::stateChanged,
+    connect(ui->enabled, &QCheckBox::stateChanged, this,
             [this](int new_state) { SetEnabled(new_state == Qt::Checked); });
     connect(ui->clearButton, &QPushButton::clicked, this, &IPCRecorderWidget::Clear);
     connect(ui->filter, &QLineEdit::textChanged, this, &IPCRecorderWidget::ApplyFilterToAll);
@@ -90,7 +90,7 @@ void IPCRecorderWidget::OnEntryUpdated(IPCDebugger::RequestRecord record) {
         (record.status == IPCDebugger::RequestStatus::Handled &&
          record.translated_reply_cmdbuf[1] != RESULT_SUCCESS.raw)) { // Unimplemented / Error
 
-        auto* item = ui->main->invisibleRootItem()->child(row_id);
+        auto item = ui->main->invisibleRootItem()->child(row_id);
         for (int column = 0; column < item->columnCount(); ++column) {
             item->setBackground(column, QBrush(QColor::fromRgb(255, 0, 0)));
         }
@@ -100,11 +100,11 @@ void IPCRecorderWidget::OnEntryUpdated(IPCDebugger::RequestRecord record) {
 }
 
 void IPCRecorderWidget::SetEnabled(bool enabled) {
-    if (!Core::System::GetInstance().IsPoweredOn()) {
+    if (!system.IsPoweredOn()) {
         return;
     }
 
-    auto& ipc_recorder = Core::System::GetInstance().Kernel().GetIPCRecorder();
+    auto& ipc_recorder = system.Kernel().GetIPCRecorder();
     ipc_recorder.SetEnabled(enabled);
 
     if (enabled) {
@@ -123,10 +123,10 @@ void IPCRecorderWidget::Clear() {
 }
 
 QString IPCRecorderWidget::GetServiceName(const IPCDebugger::RequestRecord& record) const {
-    if (Core::System::GetInstance().IsPoweredOn() && record.client_port.id != -1) {
-        const auto service_name =
-            Core::System::GetInstance().ServiceManager().GetServiceNameByPortId(
-                static_cast<u32>(record.client_port.id));
+    if (system.IsPoweredOn() && record.client_port.id != -1) {
+        const Service::SM::ServiceManager& sm = system.ServiceManager();
+        const u32 port_id = static_cast<u32>(record.client_port.id);
+        const auto service_name = sm.GetServiceNameByPortId(port_id);
 
         if (!service_name.empty()) {
             return QString::fromStdString(service_name);

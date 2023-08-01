@@ -353,8 +353,8 @@ void GMainWindow::InitializeWidgets() {
     });
 
     InputCommon::Init();
-    multiplayer_state = new MultiplayerState(this, game_list->GetModel(), ui->action_Leave_Room,
-                                             ui->action_Show_Room);
+    multiplayer_state = new MultiplayerState(system, this, game_list->GetModel(),
+                                             ui->action_Leave_Room, ui->action_Show_Room);
     multiplayer_state->setVisible(false);
 
 #if ENABLE_QT_UPDATER
@@ -434,7 +434,7 @@ void GMainWindow::InitializeDebugWidgets() {
     debug_menu->addAction(microProfileDialog->toggleViewAction());
 #endif
 
-    registersWidget = new RegistersWidget(this);
+    registersWidget = new RegistersWidget(system, this);
     addDockWidget(Qt::RightDockWidgetArea, registersWidget);
     registersWidget->hide();
     debug_menu->addAction(registersWidget->toggleViewAction());
@@ -448,7 +448,7 @@ void GMainWindow::InitializeDebugWidgets() {
     graphicsWidget->hide();
     debug_menu->addAction(graphicsWidget->toggleViewAction());
 
-    graphicsCommandsWidget = new GPUCommandListWidget(this);
+    graphicsCommandsWidget = new GPUCommandListWidget(system.Memory(), this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
     debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
@@ -472,7 +472,7 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
             &GraphicsTracingWidget::OnEmulationStopping);
 
-    waitTreeWidget = new WaitTreeWidget(this);
+    waitTreeWidget = new WaitTreeWidget(system, this);
     addDockWidget(Qt::LeftDockWidgetArea, waitTreeWidget);
     waitTreeWidget->hide();
     debug_menu->addAction(waitTreeWidget->toggleViewAction());
@@ -490,7 +490,7 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, waitTreeWidget,
             [this] { lleServiceModulesWidget->setDisabled(false); });
 
-    ipcRecorderWidget = new IPCRecorderWidget(this);
+    ipcRecorderWidget = new IPCRecorderWidget(system, this);
     addDockWidget(Qt::RightDockWidgetArea, ipcRecorderWidget);
     ipcRecorderWidget->hide();
     debug_menu->addAction(ipcRecorderWidget->toggleViewAction());
@@ -2046,7 +2046,6 @@ void GMainWindow::OnLoadAmiibo() {
         return;
     }
 
-    Core::System& system{Core::System::GetInstance()};
     Service::SM::ServiceManager& sm = system.ServiceManager();
     auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
     if (nfc == nullptr) {
@@ -2118,7 +2117,8 @@ void GMainWindow::OnToggleFilterBar() {
 }
 
 void GMainWindow::OnCreateGraphicsSurfaceViewer() {
-    auto graphicsSurfaceViewerWidget = new GraphicsSurfaceWidget(Pica::g_debug_context, this);
+    auto graphicsSurfaceViewerWidget =
+        new GraphicsSurfaceWidget(system.Memory(), Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
     // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
     graphicsSurfaceViewerWidget->show();

@@ -9,7 +9,6 @@
 #include "citra_qt/configuration/configure_hotkeys.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/util/sequence_dialog/sequence_dialog.h"
-#include "common/settings.h"
 #include "ui_configure_hotkeys.h"
 
 constexpr int name_column = 0;
@@ -189,9 +188,9 @@ void ConfigureHotkeys::PopupContextMenu(const QPoint& menu_location) {
     QAction* clear = context_menu.addAction(tr("Clear"));
 
     const auto hotkey_index = index.sibling(index.row(), hotkey_column);
-    connect(restore_default, &QAction::triggered,
+    connect(restore_default, &QAction::triggered, this,
             [this, hotkey_index] { RestoreHotkey(hotkey_index); });
-    connect(clear, &QAction::triggered,
+    connect(clear, &QAction::triggered, this,
             [this, hotkey_index] { model->setData(hotkey_index, QString{}); });
 
     context_menu.exec(ui->hotkey_list->viewport()->mapToGlobal(menu_location));

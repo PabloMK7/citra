@@ -223,14 +223,12 @@ static const std::array<const char*, 187> country_names = {
     QT_TRANSLATE_NOOP("ConfigureSystem", "Bermuda"), // 180-186
 };
 
-ConfigureSystem::ConfigureSystem(QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureSystem>()) {
+ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureSystem>()), system{system_} {
     ui->setupUi(this);
-    connect(ui->combo_birthmonth,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->combo_birthmonth, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateBirthdayComboBox);
-    connect(ui->combo_init_clock,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+    connect(ui->combo_init_clock, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateInitTime);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
@@ -280,7 +278,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent)
 ConfigureSystem::~ConfigureSystem() = default;
 
 void ConfigureSystem::SetConfiguration() {
-    enabled = !Core::System::GetInstance().IsPoweredOn();
+    enabled = !system.IsPoweredOn();
 
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock.GetValue()));
     QDateTime date_time;
@@ -296,7 +294,7 @@ void ConfigureSystem::SetConfiguration() {
     ui->edit_init_time_offset_time->setTime(time);
 
     if (!enabled) {
-        cfg = Service::CFG::GetModule(Core::System::GetInstance());
+        cfg = Service::CFG::GetModule(system);
         ASSERT_MSG(cfg, "CFG Module missing!");
         ReadSystemSettings();
         ui->group_system_settings->setEnabled(false);

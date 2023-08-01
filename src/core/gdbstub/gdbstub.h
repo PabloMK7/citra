@@ -10,6 +10,10 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/thread.h"
 
+namespace Core {
+class System;
+}
+
 namespace GDBStub {
 
 /// Breakpoint Method
@@ -70,7 +74,7 @@ void Break(bool is_memory_break = false);
 bool IsMemoryBreak();
 
 /// Read and handle packet from gdb client.
-void HandlePacket();
+void HandlePacket(Core::System& system);
 
 /**
  * Get the nearest breakpoint of the specified type at the given address.

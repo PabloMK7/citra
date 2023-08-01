@@ -7,11 +7,13 @@
 #include "audio_core/lle/lle.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/memory.h"
 
 TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
-    Memory::MemorySystem memory;
+    Core::System system;
+    Memory::MemorySystem memory{system};
     Core::Timing core_timing(1, 100);
 
     AudioCore::DspLle lle(memory, core_timing, true);

@@ -194,6 +194,10 @@ public:
         return *cpu_cores[core_id];
     };
 
+    [[nodiscard]] const ARM_Interface& GetCore(u32 core_id) const {
+        return *cpu_cores[core_id];
+    };
+
     [[nodiscard]] u32 GetNumCores() const {
         return static_cast<u32>(cpu_cores.size());
     }
@@ -449,10 +453,6 @@ private:
 
 [[nodiscard]] inline u32 GetNumCores() {
     return System::GetInstance().GetNumCores();
-}
-
-[[nodiscard]] inline AudioCore::DspInterface& DSP() {
-    return System::GetInstance().DSP();
 }
 
 } // namespace Core

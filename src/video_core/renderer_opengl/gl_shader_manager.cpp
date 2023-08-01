@@ -8,7 +8,6 @@
 #include <thread>
 #include <unordered_map>
 #include <variant>
-#include "common/scope_exit.h"
 #include "core/frontend/emu_window.h"
 #include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"

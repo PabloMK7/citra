@@ -13,11 +13,15 @@ namespace Ui {
 class DirectConnect;
 }
 
+namespace Core {
+class System;
+}
+
 class DirectConnectWindow : public QDialog {
     Q_OBJECT
 
 public:
-    explicit DirectConnectWindow(QWidget* parent = nullptr);
+    explicit DirectConnectWindow(Core::System& system, QWidget* parent = nullptr);
     ~DirectConnectWindow();
 
     void RetranslateUi();
@@ -39,5 +43,6 @@ private:
 
     QFutureWatcher<void>* watcher;
     std::unique_ptr<Ui::DirectConnect> ui;
+    Core::System& system;
     Validation validation;
 };

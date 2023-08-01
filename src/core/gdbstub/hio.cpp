@@ -54,7 +54,7 @@ static void SendErrorReply(int error_code, int retval = -1) {
     SendReply(packet.data());
 }
 
-void SetHioRequest(const VAddr addr) {
+void SetHioRequest(Core::System& system, const VAddr addr) {
     if (!IsServerEnabled()) {
         LOG_WARNING(Debug_GDBStub, "HIO requested but GDB stub is not running");
         return;
@@ -69,15 +69,15 @@ void SetHioRequest(const VAddr addr) {
         LOG_INFO(Debug_GDBStub, "overwriting existing HIO request that was not sent yet");
     }
 
-    auto& memory = Core::System::GetInstance().Memory();
-    const auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+    auto& memory = system.Memory();
+    const auto process = system.Kernel().GetCurrentProcess();
 
     if (!memory.IsValidVirtualAddress(*process, addr)) {
         LOG_WARNING(Debug_GDBStub, "Invalid address for HIO request");
         return;
     }
 
-    memory.ReadBlock(*process, addr, &current_hio_request, sizeof(PackedGdbHioRequest));
+    memory.ReadBlock(addr, &current_hio_request, sizeof(PackedGdbHioRequest));
 
     if (current_hio_request.magic != std::array{'G', 'D', 'B', '\0'}) {
         std::string_view bad_magic{
@@ -105,10 +105,11 @@ void SetHioRequest(const VAddr addr) {
     Break();
     SetCpuHaltFlag(true);
     SetCpuStepFlag(false);
-    Core::GetRunningCore().ClearInstructionCache();
+    system.GetRunningCore().ClearInstructionCache();
 }
 
-void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
+void HandleHioReply(Core::System& system, const u8* const command_buffer,
+                    const u32 command_length) {
     if (!IsWaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "Got HIO reply but never sent a request");
         return;
@@ -176,8 +177,8 @@ void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
               current_hio_request.retval, current_hio_request.gdb_errno,
               current_hio_request.ctrl_c);
 
-    const auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
-    auto& memory = Core::System::GetInstance().Memory();
+    const auto process = system.Kernel().GetCurrentProcess();
+    auto& memory = system.Memory();
 
     // should have been checked when we first initialized the request,
     // but just double check again before we write to memory
@@ -187,8 +188,7 @@ void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
         return;
     }
 
-    memory.WriteBlock(*process, current_hio_request_addr, &current_hio_request,
-                      sizeof(PackedGdbHioRequest));
+    memory.WriteBlock(current_hio_request_addr, &current_hio_request, sizeof(PackedGdbHioRequest));
 
     current_hio_request = {};
     current_hio_request_addr = 0;
@@ -197,7 +197,7 @@ void HandleHioReply(const u8* const command_buffer, const u32 command_length) {
     // Restore state from before the request came in
     SetCpuStepFlag(was_stepping);
     SetCpuHaltFlag(was_halted);
-    Core::GetRunningCore().ClearInstructionCache();
+    system.GetRunningCore().ClearInstructionCache();
 }
 
 bool HandlePendingHioRequestPacket() {

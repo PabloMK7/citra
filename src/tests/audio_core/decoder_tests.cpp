@@ -20,7 +20,8 @@
 #include "audio_fixures.h"
 
 TEST_CASE("DSP HLE Audio Decoder", "[audio_core]") {
-    Memory::MemorySystem memory;
+    Core::System system;
+    Memory::MemorySystem memory{system};
     SECTION("decoder should produce correct samples") {
         auto decoder =
 #ifdef HAVE_MF

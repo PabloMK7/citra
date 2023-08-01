@@ -6,7 +6,6 @@
 
 #include "core/hw/gpu.h"
 #include "video_core/rasterizer_accelerated.h"
-#include "video_core/rasterizer_cache/rasterizer_cache.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
@@ -23,6 +22,8 @@ class CustomTexManager;
 }
 
 namespace OpenGL {
+
+struct ScreenInfo;
 
 class Driver;
 class ShaderProgramManager;
@@ -48,7 +49,7 @@ public:
     bool AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) override;
     bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) override;
     bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr,
-                           u32 pixel_stride, ScreenInfo& screen_info) override;
+                           u32 pixel_stride, ScreenInfo& screen_info);
     bool AccelerateDrawBatch(bool is_indexed) override;
 
 private:
@@ -132,10 +133,9 @@ private:
 private:
     Driver& driver;
     OpenGLState state;
-    GLuint default_texture;
+    ShaderProgramManager shader_manager;
     TextureRuntime runtime;
     RasterizerCache res_cache;
-    std::unique_ptr<ShaderProgramManager> shader_program_manager;
 
     OGLVertexArray sw_vao; // VAO for software shader draw
     OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
@@ -147,7 +147,6 @@ private:
     OGLStreamBuffer index_buffer;
     OGLStreamBuffer texture_buffer;
     OGLStreamBuffer texture_lf_buffer;
-    OGLFramebuffer framebuffer;
     GLint uniform_buffer_alignment;
     std::size_t uniform_size_aligned_vs;
     std::size_t uniform_size_aligned_fs;

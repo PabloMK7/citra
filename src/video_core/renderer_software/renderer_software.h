@@ -24,8 +24,8 @@ public:
     explicit RendererSoftware(Core::System& system, Frontend::EmuWindow& window);
     ~RendererSoftware() override;
 
-    [[nodiscard]] VideoCore::RasterizerInterface* Rasterizer() const override {
-        return rasterizer.get();
+    [[nodiscard]] VideoCore::RasterizerInterface* Rasterizer() override {
+        return &rasterizer;
     }
 
     [[nodiscard]] const ScreenInfo& Screen(VideoCore::ScreenId id) const noexcept {
@@ -42,7 +42,7 @@ private:
 
 private:
     Memory::MemorySystem& memory;
-    std::unique_ptr<RasterizerSoftware> rasterizer;
+    RasterizerSoftware rasterizer;
     std::array<ScreenInfo, 3> screen_infos{};
 };
 

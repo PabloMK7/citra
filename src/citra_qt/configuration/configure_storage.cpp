@@ -8,11 +8,10 @@
 #include "citra_qt/configuration/configure_storage.h"
 #include "common/file_util.h"
 #include "common/settings.h"
-#include "core/core.h"
 #include "ui_configure_storage.h"
 
-ConfigureStorage::ConfigureStorage(QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureStorage>()) {
+ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureStorage>()), is_powered_on{is_powered_on_} {
     ui->setupUi(this);
     SetConfiguration();
 
@@ -75,7 +74,7 @@ void ConfigureStorage::SetConfiguration() {
     ui->toggle_virtual_sd->setChecked(Settings::values.use_virtual_sd.GetValue());
     ui->toggle_custom_storage->setChecked(Settings::values.use_custom_storage.GetValue());
 
-    ui->storage_group->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+    ui->storage_group->setEnabled(!is_powered_on);
 }
 
 void ConfigureStorage::ApplyConfiguration() {

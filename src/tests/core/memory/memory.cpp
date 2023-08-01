@@ -3,13 +3,15 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch_test_macros.hpp>
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
 
 TEST_CASE("memory.IsValidVirtualAddress", "[core][memory]") {
     Core::Timing timing(1, 100);
-    Memory::MemorySystem memory;
+    Core::System system;
+    Memory::MemorySystem memory{system};
     Kernel::KernelSystem kernel(
         memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
         Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});

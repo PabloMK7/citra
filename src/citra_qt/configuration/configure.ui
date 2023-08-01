@@ -21,68 +21,8 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>-1</number>
        </property>
-       <widget class="ConfigureGeneral" name="generalTab">
-        <attribute name="title">
-         <string>General</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureSystem" name="systemTab">
-        <attribute name="title">
-         <string>System</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureInput" name="inputTab">
-        <attribute name="title">
-         <string>Input</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureHotkeys" name="hotkeysTab">
-        <attribute name="title">
-         <string>Hotkeys</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureGraphics" name="graphicsTab">
-        <attribute name="title">
-         <string>Graphics</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureEnhancements" name="enhancementsTab">
-         <attribute name="title">
-           <string>Enhancements</string>
-         </attribute>
-       </widget>
-       <widget class="ConfigureAudio" name="audioTab">
-        <attribute name="title">
-         <string>Audio</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureCamera" name="cameraTab">
-        <attribute name="title">
-         <string>Camera</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureDebug" name="debugTab">
-        <attribute name="title">
-         <string>Debug</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureStorage" name="storageTab">
-        <attribute name="title">
-         <string>Storage</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureWeb" name="webTab">
-        <attribute name="title">
-         <string>Web</string>
-        </attribute>
-       </widget>
-       <widget class="ConfigureUi" name="uiTab">
-        <attribute name="title">
-         <string>UI</string>
-        </attribute>
-       </widget>
       </widget>
      </item>
     </layout>

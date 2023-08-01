@@ -14,11 +14,15 @@ namespace Ui {
 class IPCRecorder;
 }
 
+namespace Core {
+class System;
+}
+
 class IPCRecorderWidget : public QDockWidget {
     Q_OBJECT
 
 public:
-    explicit IPCRecorderWidget(QWidget* parent = nullptr);
+    explicit IPCRecorderWidget(Core::System& system, QWidget* parent = nullptr);
     ~IPCRecorderWidget();
 
     void OnEmulationStarting();
@@ -37,9 +41,10 @@ private:
     QString GetFunctionName(const IPCDebugger::RequestRecord& record) const;
     void OpenRecordDialog(QTreeWidgetItem* item, int column);
 
+private:
     std::unique_ptr<Ui::IPCRecorder> ui;
     IPCDebugger::CallbackHandle handle;
-
+    Core::System& system;
     // The offset between record id and row id, assuming record ids are assigned
     // continuously and only the 'Clear' action can be performed, this is enough.
     // The initial value is 1, which means record 1 = row 0.

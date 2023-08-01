@@ -75,13 +75,13 @@ std::size_t WaitTreeItem::Row() const {
     return row;
 }
 
-std::vector<std::unique_ptr<WaitTreeThread>> WaitTreeItem::MakeThreadItemList() {
-    const u32 num_cores = Core::GetNumCores();
+std::vector<std::unique_ptr<WaitTreeThread>> WaitTreeItem::MakeThreadItemList(
+    Core::System& system) {
+    const u32 num_cores = system.GetNumCores();
     std::vector<std::unique_ptr<WaitTreeThread>> item_list;
     item_list.reserve(num_cores);
     for (u32 i = 0; i < num_cores; ++i) {
-        const auto& threads =
-            Core::System::GetInstance().Kernel().GetThreadManager(i).GetThreadList();
+        const auto threads = system.Kernel().GetThreadManager(i).GetThreadList();
         item_list.reserve(item_list.size() + threads.size());
         for (std::size_t j = 0; j < threads.size(); ++j) {
             item_list.push_back(std::make_unique<WaitTreeThread>(*threads[j]));
@@ -435,11 +435,12 @@ void WaitTreeModel::ClearItems() {
     thread_items.clear();
 }
 
-void WaitTreeModel::InitItems() {
-    thread_items = WaitTreeItem::MakeThreadItemList();
+void WaitTreeModel::InitItems(Core::System& system) {
+    thread_items = WaitTreeItem::MakeThreadItemList(system);
 }
 
-WaitTreeWidget::WaitTreeWidget(QWidget* parent) : QDockWidget(tr("Wait Tree"), parent) {
+WaitTreeWidget::WaitTreeWidget(Core::System& system_, QWidget* parent)
+    : QDockWidget(tr("Wait Tree"), parent), system{system_} {
     setObjectName(QStringLiteral("WaitTreeWidget"));
     view = new QTreeView(this);
     view->setHeaderHidden(true);
@@ -448,9 +449,10 @@ WaitTreeWidget::WaitTreeWidget(QWidget* parent) : QDockWidget(tr("Wait Tree"), p
 }
 
 void WaitTreeWidget::OnDebugModeEntered() {
-    if (!Core::System::GetInstance().IsPoweredOn())
+    if (!system.IsPoweredOn()) {
         return;
-    model->InitItems();
+    }
+    model->InitItems(system);
     view->setModel(model);
     setEnabled(true);
 }
