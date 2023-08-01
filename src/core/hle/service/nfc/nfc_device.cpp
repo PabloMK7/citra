@@ -7,13 +7,14 @@
 #include <boost/crc.hpp>
 #include <cryptopp/osrng.h>
 
+#include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/core.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/nfc/amiibo_crypto.h"
 #include "core/hle/service/nfc/nfc_device.h"
 #include "core/hw/aes/key.h"
+#include "core/loader/loader.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::NFC::NfcDevice)
 

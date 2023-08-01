@@ -83,7 +83,7 @@ void IR_RST::UpdateCallback(std::uintptr_t user_data, s64 cycles_late) {
     s16 c_stick_x = static_cast<s16>(c_stick_x_f * MAX_CSTICK_RADIUS);
     s16 c_stick_y = static_cast<s16>(c_stick_y_f * MAX_CSTICK_RADIUS);
 
-    Core::Movie::GetInstance().HandleIrRst(state, c_stick_x, c_stick_y);
+    system.Movie().HandleIrRst(state, c_stick_x, c_stick_y);
 
     if (!raw_c_stick) {
         const HID::DirectionState direction = HID::GetStickDirectionState(c_stick_x, c_stick_y);

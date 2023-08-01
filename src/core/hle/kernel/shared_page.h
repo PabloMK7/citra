@@ -86,7 +86,7 @@ static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
 
 class Handler : public BackingMem {
 public:
-    Handler(Core::Timing& timing);
+    Handler(Core::Timing& timing, u64 override_init_time);
 
     void SetMacAddress(const MacAddress&);
 

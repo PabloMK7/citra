@@ -15,8 +15,9 @@
 #include "core/movie.h"
 #include "ui_movie_play_dialog.h"
 
-MoviePlayDialog::MoviePlayDialog(QWidget* parent, GameList* game_list_)
-    : QDialog(parent), ui(std::make_unique<Ui::MoviePlayDialog>()), game_list(game_list_) {
+MoviePlayDialog::MoviePlayDialog(QWidget* parent, GameList* game_list_, const Core::System& system_)
+    : QDialog(parent),
+      ui(std::make_unique<Ui::MoviePlayDialog>()), game_list{game_list_}, system{system_} {
     ui->setupUi(this);
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
@@ -26,10 +27,10 @@ MoviePlayDialog::MoviePlayDialog(QWidget* parent, GameList* game_list_)
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &MoviePlayDialog::accept);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &MoviePlayDialog::reject);
 
-    if (Core::System::GetInstance().IsPoweredOn()) {
+    if (system.IsPoweredOn()) {
         QString note_text;
         note_text = tr("Current running game will be stopped.");
-        if (Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording) {
+        if (system.Movie().GetPlayMode() == Core::Movie::PlayMode::Recording) {
             note_text.append(tr("<br>Current recording will be discarded."));
         }
         ui->note2Label->setText(note_text);
@@ -43,7 +44,7 @@ QString MoviePlayDialog::GetMoviePath() const {
 }
 
 QString MoviePlayDialog::GetGamePath() const {
-    const auto metadata = Core::Movie::GetInstance().GetMovieMetadata(GetMoviePath().toStdString());
+    const auto metadata = system.Movie().GetMovieMetadata(GetMoviePath().toStdString());
     return game_list->FindGameByProgramID(metadata.program_id, GameListItemPath::FullPathRole);
 }
 
@@ -67,9 +68,10 @@ void MoviePlayDialog::UpdateUIDisplay() {
     ui->lengthLineEdit->clear();
     ui->note1Label->setVisible(true);
 
+    const auto& movie = system.Movie();
     const auto path = GetMoviePath().toStdString();
 
-    const auto validation_result = Core::Movie::GetInstance().ValidateMovie(path);
+    const auto validation_result = movie.ValidateMovie(path);
     if (validation_result == Core::Movie::ValidationResult::Invalid) {
         ui->note1Label->setText(tr("Invalid movie file."));
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
@@ -94,7 +96,7 @@ void MoviePlayDialog::UpdateUIDisplay() {
         UNREACHABLE();
     }
 
-    const auto metadata = Core::Movie::GetInstance().GetMovieMetadata(path);
+    const auto metadata = movie.GetMovieMetadata(path);
 
     // Format game title
     const auto title =

@@ -5,8 +5,6 @@
 #include <fmt/format.h>
 #include "common/alignment.h"
 #include "common/settings.h"
-#include "common/string_util.h"
-#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/movie.h"
@@ -65,7 +63,8 @@ enum class ResponseID : u8 {
     ReadCalibrationData = 0x11,
 };
 
-ExtraHID::ExtraHID(SendFunc send_func, Core::Timing& timing) : IRDevice(send_func), timing(timing) {
+ExtraHID::ExtraHID(SendFunc send_func, Core::Timing& timing_, Core::Movie& movie_)
+    : IRDevice(send_func), timing{timing_}, movie{movie_} {
     LoadInputDevices();
 
     // The data below was retrieved from a New 3DS
@@ -249,7 +248,7 @@ void ExtraHID::SendHIDStatus() {
     response.buttons.r_not_held.Assign(1);
     response.unknown = 0;
 
-    Core::Movie::GetInstance().HandleExtraHidResponse(response);
+    movie.HandleExtraHidResponse(response);
 
     std::vector<u8> response_buffer(sizeof(response));
     memcpy(response_buffer.data(), &response, sizeof(response));

@@ -6,15 +6,22 @@
 
 #include "citra_qt/discord.h"
 
+namespace Core {
+class System;
+}
+
 namespace DiscordRPC {
 
 class DiscordImpl : public DiscordInterface {
 public:
-    DiscordImpl();
+    DiscordImpl(const Core::System& system);
     ~DiscordImpl() override;
 
     void Pause() override;
     void Update() override;
+
+private:
+    const Core::System& system;
 };
 
 } // namespace DiscordRPC

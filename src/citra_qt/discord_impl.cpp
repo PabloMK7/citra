@@ -9,10 +9,11 @@
 #include "citra_qt/uisettings.h"
 #include "common/common_types.h"
 #include "core/core.h"
+#include "core/loader/loader.h"
 
 namespace DiscordRPC {
 
-DiscordImpl::DiscordImpl() {
+DiscordImpl::DiscordImpl(const Core::System& system_) : system{system_} {
     DiscordEventHandlers handlers{};
 
     // The number is the client ID for Citra, it's used for images and the
@@ -34,12 +35,15 @@ void DiscordImpl::Update() {
                          std::chrono::system_clock::now().time_since_epoch())
                          .count();
     std::string title;
-    if (Core::System::GetInstance().IsPoweredOn())
-        Core::System::GetInstance().GetAppLoader().ReadTitle(title);
+    const bool is_powered_on = system.IsPoweredOn();
+    if (is_powered_on) {
+        system.GetAppLoader().ReadTitle(title);
+    }
+
     DiscordRichPresence presence{};
     presence.largeImageKey = "citra";
     presence.largeImageText = "Citra is an emulator for the Nintendo 3DS";
-    if (Core::System::GetInstance().IsPoweredOn()) {
+    if (is_powered_on) {
         presence.state = title.c_str();
         presence.details = "Currently in game";
     } else {

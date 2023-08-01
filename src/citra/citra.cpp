@@ -19,7 +19,6 @@
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
@@ -28,18 +27,15 @@
 #include "core/core.h"
 #include "core/dumping/backend.h"
 #include "core/dumping/ffmpeg_backend.h"
-#include "core/file_sys/cia_container.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/framebuffer_layout.h"
-#include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/loader/loader.h"
 #include "core/movie.h"
+#include "core/telemetry_session.h"
 #include "input_common/main.h"
 #include "network/network.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 #undef _UNICODE
 #include <getopt.h>
@@ -331,7 +327,7 @@ int main(int argc, char** argv) {
     }
 
     auto& system = Core::System::GetInstance();
-    auto& movie = Core::Movie::GetInstance();
+    auto& movie = system.Movie();
 
     if (!movie_record.empty()) {
         movie.PrepareForRecording();

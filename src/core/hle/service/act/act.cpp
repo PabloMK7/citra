@@ -4,6 +4,7 @@
 
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/act/act.h"
 #include "core/hle/service/act/act_a.h"
 #include "core/hle/service/act/act_u.h"

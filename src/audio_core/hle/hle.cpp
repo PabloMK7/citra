@@ -8,6 +8,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 #include "audio_core/audio_types.h"
+#include "common/archives.h"
 #ifdef HAVE_MF
 #include "audio_core/hle/wmf_decoder.h"
 #elif HAVE_AUDIOTOOLBOX

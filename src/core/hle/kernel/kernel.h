@@ -134,7 +134,8 @@ class KernelSystem {
 public:
     explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                           std::function<void()> prepare_reschedule_callback, MemoryMode memory_mode,
-                          u32 num_cores, const New3dsHwCapabilities& n3ds_hw_caps);
+                          u32 num_cores, const New3dsHwCapabilities& n3ds_hw_caps,
+                          u64 override_init_time = 0);
     ~KernelSystem();
 
     using PortPair = std::pair<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>>;
@@ -330,7 +331,7 @@ public:
     Core::Timing& timing;
 
 private:
-    void MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode);
+    void MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode, u64 override_init_time);
 
     std::function<void()> prepare_reschedule_callback;
 

@@ -37,7 +37,8 @@ static const u32 memory_region_sizes[8][3] = {
     {0x0B200000, 0x02E00000, 0x02000000}, // 7
 };
 
-void KernelSystem::MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode) {
+void KernelSystem::MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode,
+                              u64 override_init_time) {
     const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
     u32 mem_type_index = static_cast<u32>(memory_mode);
     u32 reported_mem_type = static_cast<u32>(memory_mode);
@@ -73,7 +74,7 @@ void KernelSystem::MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode
     config_mem.sys_mem_alloc = memory_regions[1]->size;
     config_mem.base_mem_alloc = memory_regions[2]->size;
 
-    shared_page_handler = std::make_shared<SharedPage::Handler>(timing);
+    shared_page_handler = std::make_shared<SharedPage::Handler>(timing, override_init_time);
 }
 
 std::shared_ptr<MemoryRegionInfo> KernelSystem::GetMemoryRegion(MemoryRegion region) {

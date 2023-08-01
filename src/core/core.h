@@ -10,18 +10,17 @@
 #include <string>
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
-#include "core/frontend/applets/mii_selector.h"
-#include "core/frontend/applets/swkbd.h"
-#include "core/loader/loader.h"
-#include "core/memory.h"
+#include "core/arm/arm_interface.h"
+#include "core/movie.h"
 #include "core/perf_stats.h"
-#include "core/telemetry_session.h"
 
 class ARM_Interface;
 
 namespace Frontend {
 class EmuWindow;
 class ImageInterface;
+class MiiSelector;
+class SoftwareKeyboard;
 } // namespace Frontend
 
 namespace Memory {
@@ -47,7 +46,9 @@ class ArchiveManager;
 
 namespace Kernel {
 class KernelSystem;
-}
+struct New3dsHwCapabilities;
+enum class MemoryMode : u8;
+} // namespace Kernel
 
 namespace Cheats {
 class CheatEngine;
@@ -62,8 +63,13 @@ class CustomTexManager;
 class RendererBase;
 } // namespace VideoCore
 
+namespace Loader {
+class AppLoader;
+}
+
 namespace Core {
 
+class TelemetrySession;
 class ExclusiveMonitor;
 class Timing;
 
@@ -95,6 +101,7 @@ public:
         ErrorUnknown               ///< Any other error
     };
 
+    explicit System();
     ~System();
 
     /**
@@ -258,6 +265,12 @@ public:
     /// Gets a const reference to the custom texture cache system
     [[nodiscard]] const VideoCore::CustomTexManager& CustomTexManager() const;
 
+    /// Gets a reference to the movie recorder
+    [[nodiscard]] Core::Movie& Movie();
+
+    /// Gets a const reference to the movie recorder
+    [[nodiscard]] const Core::Movie& Movie() const;
+
     /// Video Dumper interface
 
     void RegisterVideoDumper(std::shared_ptr<VideoDumper::Backend> video_dumper);
@@ -372,6 +385,9 @@ private:
     /// Frontend applets
     std::shared_ptr<Frontend::MiiSelector> registered_mii_selector;
     std::shared_ptr<Frontend::SoftwareKeyboard> registered_swkbd;
+
+    /// Movie recorder
+    Core::Movie movie;
 
     /// Cheats manager
     std::unique_ptr<Cheats::CheatEngine> cheat_engine;

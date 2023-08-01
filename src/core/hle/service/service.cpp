@@ -53,6 +53,7 @@
 #include "core/hle/service/soc_u.h"
 #include "core/hle/service/ssl_c.h"
 #include "core/hle/service/y2r_u.h"
+#include "core/loader/loader.h"
 
 namespace Service {
 

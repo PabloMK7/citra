@@ -7,6 +7,7 @@
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/telemetry_session.h"
 #include "video_core/pica_state.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"

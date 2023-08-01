@@ -6,6 +6,7 @@
 #include "audio_core/hle/decoder.h"
 #include "audio_core/lle/lle.h"
 #include "common/common_paths.h"
+#include "common/file_util.h"
 #include "core/core_timing.h"
 #include "core/memory.h"
 

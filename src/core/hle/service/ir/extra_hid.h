@@ -16,6 +16,7 @@
 namespace Core {
 struct TimingEventType;
 class Timing;
+class Movie;
 } // namespace Core
 
 namespace Service::IR {
@@ -43,7 +44,7 @@ static_assert(sizeof(ExtraHIDResponse) == 6, "HID status response has wrong size
  */
 class ExtraHID final : public IRDevice {
 public:
-    explicit ExtraHID(SendFunc send_func, Core::Timing& timing);
+    explicit ExtraHID(SendFunc send_func, Core::Timing& timing, Core::Movie& movie);
     ~ExtraHID();
 
     void OnConnect() override;
@@ -60,6 +61,7 @@ private:
     void LoadInputDevices();
 
     Core::Timing& timing;
+    Core::Movie& movie;
     u8 hid_period;
     Core::TimingEventType* hid_polling_callback_id;
     std::array<u8, 0x40> calibration_data;

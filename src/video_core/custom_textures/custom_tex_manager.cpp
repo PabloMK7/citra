@@ -11,6 +11,8 @@
 #include "common/texture.h"
 #include "core/core.h"
 #include "core/frontend/image_interface.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/process.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/rasterizer_cache/surface_params.h"
 #include "video_core/rasterizer_cache/utils.h"

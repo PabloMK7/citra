@@ -20,6 +20,6 @@ struct SaveStateInfo {
 
 constexpr u32 SaveStateSlotCount = 10; // Maximum count of savestate slots
 
-std::vector<SaveStateInfo> ListSaveStates(u64 program_id);
+std::vector<SaveStateInfo> ListSaveStates(u64 program_id, u64 movie_id);
 
 } // namespace Core

@@ -14,7 +14,6 @@
 #include "common/file_util.h"
 #include "core/file_sys/romfs_reader.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/object.h"
 
 namespace Kernel {
 struct AddressMapping;

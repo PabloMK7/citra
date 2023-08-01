@@ -9,7 +9,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include <fmt/format.h>
-#include "common/string_util.h"
+#include "common/archives.h"
 #include "common/swap.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -467,7 +467,7 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework("ir:USER", 1) {
     receive_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ReceiveEvent");
 
     extra_hid = std::make_unique<ExtraHID>([this](std::span<const u8> data) { PutToReceive(data); },
-                                           system.CoreTiming());
+                                           system.CoreTiming(), system.Movie());
 }
 
 IR_USER::~IR_USER() {

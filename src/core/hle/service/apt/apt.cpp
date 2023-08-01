@@ -33,6 +33,8 @@
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"
 #include "core/hw/aes/key.h"
+#include "core/loader/loader.h"
+#include "core/telemetry_session.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 

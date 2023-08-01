@@ -5,7 +5,6 @@
 #include <cstring>
 #include <fmt/format.h>
 
-#include "common/assert.h"
 #include "common/common_paths.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -14,7 +13,7 @@
 #include "common/settings.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
-#include "core/hle/kernel/process.h"
+#include "core/loader/loader.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 
 namespace OpenGL {

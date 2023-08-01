@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/core.h"
+#include "core/telemetry_session.h"
 #include "video_core/renderer_vulkan/vk_shader_gen_spv.h"
 
 using Pica::FramebufferRegs;

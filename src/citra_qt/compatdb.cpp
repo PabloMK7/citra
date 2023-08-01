@@ -9,6 +9,7 @@
 #include "citra_qt/compatdb.h"
 #include "common/telemetry.h"
 #include "core/core.h"
+#include "core/telemetry_session.h"
 #include "ui_compatdb.h"
 
 CompatDB::CompatDB(Core::TelemetrySession& telemetry_session_, QWidget* parent)

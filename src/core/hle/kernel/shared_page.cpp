@@ -19,7 +19,8 @@ namespace boost::serialization {
 
 template <class Archive>
 void load_construct_data(Archive& ar, SharedPage::Handler* t, const unsigned int) {
-    ::new (t) SharedPage::Handler(Core::System::GetInstance().CoreTiming());
+    ::new (t) SharedPage::Handler(Core::System::GetInstance().CoreTiming(),
+                                  Core::System::GetInstance().Movie().GetOverrideInitTime());
 }
 template void load_construct_data<iarchive>(iarchive& ar, SharedPage::Handler* t,
                                             const unsigned int);
@@ -28,8 +29,7 @@ template void load_construct_data<iarchive>(iarchive& ar, SharedPage::Handler* t
 
 namespace SharedPage {
 
-static std::chrono::seconds GetInitTime() {
-    const u64 override_init_time = Core::Movie::GetInstance().GetOverrideInitTime();
+static std::chrono::seconds GetInitTime(u64 override_init_time) {
     if (override_init_time != 0) {
         // Override the clock init time with the one in the movie
         return std::chrono::seconds(override_init_time);
@@ -62,7 +62,7 @@ static std::chrono::seconds GetInitTime() {
     }
 }
 
-Handler::Handler(Core::Timing& timing) : timing(timing) {
+Handler::Handler(Core::Timing& timing, u64 override_init_time) : timing(timing) {
     std::memset(&shared_page, 0, sizeof(shared_page));
 
     shared_page.running_hw = 0x1; // product
@@ -76,7 +76,7 @@ Handler::Handler(Core::Timing& timing) : timing(timing) {
     shared_page.battery_state.is_adapter_connected.Assign(1);
     shared_page.battery_state.is_charging.Assign(1);
 
-    init_time = GetInitTime();
+    init_time = GetInitTime(override_init_time);
 
     using namespace std::placeholders;
     update_time_event = timing.RegisterEvent("SharedPage::UpdateTimeCallback",

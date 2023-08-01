@@ -3,11 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <chrono>
+#include <sstream>
 #include <cryptopp/hex.h>
 #include <fmt/format.h>
 #include "common/archives.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
+#include "common/swap.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/movie.h"
@@ -30,8 +33,7 @@ static_assert(sizeof(CSTHeader) == 256, "CSTHeader should be 256 bytes");
 
 constexpr std::array<u8, 4> header_magic_bytes{{'C', 'S', 'T', 0x1B}};
 
-static std::string GetSaveStatePath(u64 program_id, u32 slot) {
-    const u64 movie_id = Movie::GetInstance().GetCurrentMovieID();
+static std::string GetSaveStatePath(u64 program_id, u64 movie_id, u32 slot) {
     if (movie_id) {
         return fmt::format("{}{:016X}.movie{:016X}.{:02d}.cst",
                            FileUtil::GetUserPath(FileUtil::UserPath::StatesDir), program_id,
@@ -43,8 +45,8 @@ static std::string GetSaveStatePath(u64 program_id, u32 slot) {
 }
 
 static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 program_id,
-                              u32 slot) {
-    const auto path = GetSaveStatePath(program_id, slot);
+                              u64 movie_id, u32 slot) {
+    const auto path = GetSaveStatePath(program_id, movie_id, slot);
     if (header.filetype != header_magic_bytes) {
         LOG_WARNING(Core, "Invalid save state file {}", path);
         return false;
@@ -66,11 +68,11 @@ static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 
     return true;
 }
 
-std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
+std::vector<SaveStateInfo> ListSaveStates(u64 program_id, u64 movie_id) {
     std::vector<SaveStateInfo> result;
     result.reserve(SaveStateSlotCount);
     for (u32 slot = 1; slot <= SaveStateSlotCount; ++slot) {
-        const auto path = GetSaveStatePath(program_id, slot);
+        const auto path = GetSaveStatePath(program_id, movie_id, slot);
         if (!FileUtil::Exists(path)) {
             continue;
         }
@@ -92,7 +94,7 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id) {
             LOG_ERROR(Core, "Could not read from file {}", path);
             continue;
         }
-        if (!ValidateSaveState(header, info, program_id, slot)) {
+        if (!ValidateSaveState(header, info, program_id, movie_id, slot)) {
             continue;
         }
 
@@ -111,7 +113,8 @@ void System::SaveState(u32 slot) const {
     const auto data = std::span<const u8>{reinterpret_cast<const u8*>(str.data()), str.size()};
     auto buffer = Common::Compression::CompressDataZSTDDefault(data);
 
-    const auto path = GetSaveStatePath(title_id, slot);
+    const u64 movie_id = movie.GetCurrentMovieID();
+    const auto path = GetSaveStatePath(title_id, movie_id, slot);
     if (!FileUtil::CreateFullPath(path)) {
         throw std::runtime_error("Could not create path " + path);
     }
@@ -143,7 +146,8 @@ void System::LoadState(u32 slot) {
         throw std::runtime_error("Unable to load while connected to multiplayer");
     }
 
-    const auto path = GetSaveStatePath(title_id, slot);
+    const u64 movie_id = movie.GetCurrentMovieID();
+    const auto path = GetSaveStatePath(title_id, movie_id, slot);
 
     std::vector<u8> decompressed;
     {
@@ -159,7 +163,7 @@ void System::LoadState(u32 slot) {
 
         // validate header
         SaveStateInfo info;
-        if (!ValidateSaveState(header, info, title_id, slot)) {
+        if (!ValidateSaveState(header, info, title_id, movie_id, slot)) {
             throw std::runtime_error("Invalid savestate");
         }
 

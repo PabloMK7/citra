@@ -26,6 +26,7 @@
 #include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
 #include "core/savestate.h"
+#include "core/telemetry_session.h"
 #include "jni/android_common/android_common.h"
 #include "jni/applets/mii_selector.h"
 #include "jni/applets/swkbd.h"
@@ -621,7 +622,7 @@ jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetSavestateInfo(
         return nullptr;
     }
 
-    const auto savestates = Core::ListSaveStates(title_id);
+    const auto savestates = Core::ListSaveStates(title_id, system.Movie().GetCurrentMovieID());
     const jobjectArray array =
         env->NewObjectArray(static_cast<jsize>(savestates.size()), savestate_info_class, nullptr);
     for (std::size_t i = 0; i < savestates.size(); ++i) {

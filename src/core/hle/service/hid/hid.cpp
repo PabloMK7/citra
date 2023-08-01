@@ -150,7 +150,7 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
     circle_pad_old_y.erase(circle_pad_old_y.begin());
     circle_pad_old_y.push_back(circle_pad_new_y);
 
-    Core::Movie::GetInstance().HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
+    system.Movie().HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
 
     const DirectionState direction = GetStickDirectionState(circle_pad_x, circle_pad_y);
     state.circle_up.Assign(direction.up);
@@ -200,7 +200,7 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
     touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
     touch_entry.valid.Assign(pressed ? 1 : 0);
 
-    Core::Movie::GetInstance().HandleTouchStatus(touch_entry);
+    system.Movie().HandleTouchStatus(touch_entry);
 
     // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
@@ -246,7 +246,7 @@ void Module::UpdateAccelerometerCallback(std::uintptr_t user_data, s64 cycles_la
     accelerometer_entry.y = static_cast<s16>(accel.y);
     accelerometer_entry.z = static_cast<s16>(accel.z);
 
-    Core::Movie::GetInstance().HandleAccelerometerStatus(accelerometer_entry);
+    system.Movie().HandleAccelerometerStatus(accelerometer_entry);
 
     // Make up "raw" entry
     // TODO(wwylele):
@@ -287,7 +287,7 @@ void Module::UpdateGyroscopeCallback(std::uintptr_t user_data, s64 cycles_late) 
     gyroscope_entry.y = static_cast<s16>(gyro.y);
     gyroscope_entry.z = static_cast<s16>(gyro.z);
 
-    Core::Movie::GetInstance().HandleGyroscopeStatus(gyroscope_entry);
+    system.Movie().HandleGyroscopeStatus(gyroscope_entry);
 
     // Make up "raw" entry
     mem->gyroscope.raw_entry.x = gyroscope_entry.x;

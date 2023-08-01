@@ -10,13 +10,11 @@
 #include <boost/optional.hpp>
 #include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
-#include <fmt/format.h>
+#include "common/archives.h"
 #include "common/bit_field.h"
-#include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
-#include "common/string_util.h"
 #include "common/swap.h"
 #include "common/timer.h"
 #include "core/core.h"
@@ -24,11 +22,10 @@
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hw/gpu.h"
+#include "core/loader/loader.h"
 #include "core/movie.h"
 
 namespace Core {
-
-/*static*/ Movie Movie::s_instance;
 
 enum class ControllerStateType : u8 {
     PadAndCircle,
@@ -145,6 +142,10 @@ static u64 GetInputCount(std::span<const u8> input) {
     }
     return input_count;
 }
+
+Movie::Movie(const Core::System& system_) : system{system_} {}
+
+Movie::~Movie() = default;
 
 template <class Archive>
 void Movie::serialize(Archive& ar, const unsigned int file_version) {
@@ -565,7 +566,7 @@ void Movie::StartRecording(const std::string& movie_file, const std::string& aut
 
     // Get program ID
     program_id = 0;
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+    system.GetAppLoader().ReadProgramId(program_id);
 
     LOG_INFO(Movie, "Enabling Movie recording, ID: {:016X}", id);
 }

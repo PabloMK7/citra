@@ -10,8 +10,8 @@
 #include "core/movie.h"
 #include "ui_movie_record_dialog.h"
 
-MovieRecordDialog::MovieRecordDialog(QWidget* parent)
-    : QDialog(parent), ui(std::make_unique<Ui::MovieRecordDialog>()) {
+MovieRecordDialog::MovieRecordDialog(QWidget* parent, const Core::System& system_)
+    : QDialog(parent), ui(std::make_unique<Ui::MovieRecordDialog>()), system{system_} {
     ui->setupUi(this);
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
@@ -23,9 +23,9 @@ MovieRecordDialog::MovieRecordDialog(QWidget* parent)
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &MovieRecordDialog::reject);
 
     QString note_text;
-    if (Core::System::GetInstance().IsPoweredOn()) {
+    if (system.IsPoweredOn()) {
         note_text = tr("Current running game will be restarted.");
-        if (Core::Movie::GetInstance().GetPlayMode() == Core::Movie::PlayMode::Recording) {
+        if (system.Movie().GetPlayMode() == Core::Movie::PlayMode::Recording) {
             note_text.append(tr("<br>Current recording will be discarded."));
         }
     } else {

@@ -13,6 +13,7 @@
 #include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
 #include "core/mmio.h"

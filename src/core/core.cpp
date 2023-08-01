@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <exception>
-#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <boost/serialization/array.hpp>
@@ -16,6 +14,8 @@
 #include "core/arm/arm_interface.h"
 #include "core/arm/exclusive_monitor.h"
 #include "core/hle/service/cam/cam.h"
+#include "core/hle/service/hid/hid.h"
+#include "core/hle/service/ir/ir_user.h"
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
@@ -35,9 +35,7 @@
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/gsp/gsp.h"
-#include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
-#include "core/hle/service/ir/ir_user.h"
 #include "core/hle/service/mic_u.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/hle/service/service.h"
@@ -48,6 +46,7 @@
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/rpc/server.h"
+#include "core/telemetry_session.h"
 #include "network/network.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/renderer_base.h"
@@ -71,6 +70,8 @@ template <>
 Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
+
+System::System() : movie{*this} {}
 
 System::~System() = default;
 
@@ -372,7 +373,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue());
 
     kernel = std::make_unique<Kernel::KernelSystem>(
-        *memory, *timing, [this] { PrepareReschedule(); }, memory_mode, num_cores, n3ds_hw_caps);
+        *memory, *timing, [this] { PrepareReschedule(); }, memory_mode, num_cores, n3ds_hw_caps,
+        movie.GetOverrideInitTime());
 
     exclusive_monitor = MakeExclusiveMonitor(*memory, num_cores);
     cpu_cores.reserve(num_cores);
@@ -506,6 +508,14 @@ VideoCore::CustomTexManager& System::CustomTexManager() {
 
 const VideoCore::CustomTexManager& System::CustomTexManager() const {
     return *custom_tex_manager;
+}
+
+Core::Movie& System::Movie() {
+    return movie;
+}
+
+const Core::Movie& System::Movie() const {
+    return movie;
 }
 
 void System::RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector) {
@@ -702,7 +712,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar&* kernel.get();
     VideoCore::serialize(ar, file_version);
     if (file_version >= 1) {
-        ar& Movie::GetInstance();
+        ar& movie;
     }
 
     // This needs to be set from somewhere - might as well be here!

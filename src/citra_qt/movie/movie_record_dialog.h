@@ -9,11 +9,15 @@ namespace Ui {
 class MovieRecordDialog;
 }
 
+namespace Core {
+class System;
+}
+
 class MovieRecordDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit MovieRecordDialog(QWidget* parent);
+    explicit MovieRecordDialog(QWidget* parent, const Core::System& system);
     ~MovieRecordDialog() override;
 
     QString GetPath() const;
@@ -24,4 +28,5 @@ private:
     void UpdateUIDisplay();
 
     std::unique_ptr<Ui::MovieRecordDialog> ui;
+    const Core::System& system;
 };

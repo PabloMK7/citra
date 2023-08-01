@@ -27,6 +27,7 @@
 #include "core/loader/smdh.h"
 #include "core/memory.h"
 #include "core/system_titles.h"
+#include "core/telemetry_session.h"
 #include "network/network.h"
 
 namespace Loader {

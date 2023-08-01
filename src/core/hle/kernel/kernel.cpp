@@ -25,13 +25,13 @@ namespace Kernel {
 KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
                            std::function<void()> prepare_reschedule_callback,
                            MemoryMode memory_mode, u32 num_cores,
-                           const New3dsHwCapabilities& n3ds_hw_caps)
+                           const New3dsHwCapabilities& n3ds_hw_caps, u64 override_init_time)
     : memory(memory), timing(timing),
       prepare_reschedule_callback(std::move(prepare_reschedule_callback)), memory_mode(memory_mode),
       n3ds_hw_caps(n3ds_hw_caps) {
     std::generate(memory_regions.begin(), memory_regions.end(),
                   [] { return std::make_shared<MemoryRegionInfo>(); });
-    MemoryInit(memory_mode, n3ds_hw_caps.memory_mode);
+    MemoryInit(memory_mode, n3ds_hw_caps.memory_mode, override_init_time);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     for (u32 core_id = 0; core_id < num_cores; ++core_id) {

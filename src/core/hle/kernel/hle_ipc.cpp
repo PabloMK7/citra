@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <vector>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/core.h"

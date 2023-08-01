@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <fmt/format.h>
+#include "common/archives.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -38,7 +39,6 @@
 #include "core/hle/lock.h"
 #include "core/hle/result.h"
 #include "core/hle/service/plgldr/plgldr.h"
-#include "core/hle/service/service.h"
 
 namespace Kernel {
 

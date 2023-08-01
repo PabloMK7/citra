@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
+#include "common/file_util.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/frontend/input.h"
