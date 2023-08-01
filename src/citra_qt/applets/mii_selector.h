@@ -24,7 +24,7 @@ private:
     QVBoxLayout* layout;
     QtMiiSelector* mii_selector;
     u32 return_code = 0;
-    std::vector<HLE::Applets::MiiData> miis;
+    std::vector<Mii::MiiData> miis;
 
     friend class QtMiiSelector;
 };

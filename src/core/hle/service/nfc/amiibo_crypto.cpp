@@ -86,8 +86,6 @@ NTAG215File NfcDataToEncodedData(const EncryptedNTAG215File& nfc_data) {
     encoded_data.amiibo_version = nfc_data.user_memory.amiibo_version;
     encoded_data.settings = nfc_data.user_memory.settings;
     encoded_data.owner_mii = nfc_data.user_memory.owner_mii;
-    encoded_data.padding = nfc_data.user_memory.padding;
-    encoded_data.owner_mii_aes_ccm = nfc_data.user_memory.owner_mii_aes_ccm;
     encoded_data.application_id = nfc_data.user_memory.application_id;
     encoded_data.application_write_counter = nfc_data.user_memory.application_write_counter;
     encoded_data.application_area_id = nfc_data.user_memory.application_area_id;
@@ -123,8 +121,6 @@ EncryptedNTAG215File EncodedDataToNfcData(const NTAG215File& encoded_data) {
     nfc_data.user_memory.amiibo_version = encoded_data.amiibo_version;
     nfc_data.user_memory.settings = encoded_data.settings;
     nfc_data.user_memory.owner_mii = encoded_data.owner_mii;
-    nfc_data.user_memory.padding = encoded_data.padding;
-    nfc_data.user_memory.owner_mii_aes_ccm = encoded_data.owner_mii_aes_ccm;
     nfc_data.user_memory.application_id = encoded_data.application_id;
     nfc_data.user_memory.application_write_counter = encoded_data.application_write_counter;
     nfc_data.user_memory.application_area_id = encoded_data.application_area_id;

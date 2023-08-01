@@ -184,6 +184,8 @@ add_library(citra_core STATIC
     hle/kernel/wait_object.h
     hle/lock.cpp
     hle/lock.h
+    hle/mii.h
+    hle/mii.cpp
     hle/result.h
     hle/romfs.cpp
     hle/romfs.h

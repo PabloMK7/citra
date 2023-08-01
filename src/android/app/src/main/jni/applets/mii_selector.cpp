@@ -53,7 +53,7 @@ void AndroidMiiSelector::Setup(const Frontend::MiiSelectorConfig& config) {
     const u32 return_code = static_cast<u32>(
         env->GetLongField(data, env->GetFieldID(s_mii_selector_data_class, "return_code", "J")));
     if (return_code == 1) {
-        Finalize(return_code, HLE::Applets::MiiData{});
+        Finalize(return_code, Mii::MiiData{});
         return;
     }
 

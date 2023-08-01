@@ -11,12 +11,12 @@
 
 namespace Frontend {
 
-void MiiSelector::Finalize(u32 return_code, HLE::Applets::MiiData mii) {
+void MiiSelector::Finalize(u32 return_code, Mii::MiiData mii) {
     data = {return_code, mii};
 }
 
-std::vector<HLE::Applets::MiiData> LoadMiis() {
-    std::vector<HLE::Applets::MiiData> miis;
+std::vector<Mii::MiiData> LoadMiis() {
+    std::vector<Mii::MiiData> miis;
 
     std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
@@ -36,7 +36,7 @@ std::vector<HLE::Applets::MiiData> LoadMiis() {
             u32 saved_miis_offset = 0x8;
             // The Mii Maker has a 100 Mii limit on the 3ds
             for (int i = 0; i < 100; ++i) {
-                HLE::Applets::MiiData mii;
+                Mii::MiiData mii;
                 std::array<u8, sizeof(mii)> mii_raw;
                 file->Read(saved_miis_offset, sizeof(mii), mii_raw.data());
                 std::memcpy(&mii, mii_raw.data(), sizeof(mii));
