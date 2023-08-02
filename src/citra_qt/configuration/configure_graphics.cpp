@@ -13,6 +13,7 @@ ConfigureGraphics::ConfigureGraphics(bool is_powered_on, QWidget* parent)
     ui->setupUi(this);
 
     ui->toggle_vsync_new->setEnabled(!is_powered_on);
+    ui->graphics_api_combo->setEnabled(!is_powered_on);
     // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
     ui->graphics_api_combo->setCurrentIndex(-1);
 
@@ -28,9 +29,10 @@ ConfigureGraphics::ConfigureGraphics(bool is_powered_on, QWidget* parent)
             });
 
     connect(ui->toggle_hw_shader, &QCheckBox::toggled, this, [this] {
+        const bool enabled = ui->toggle_hw_shader->isEnabled();
         const bool checked = ui->toggle_hw_shader->isChecked();
-        ui->hw_shader_group->setEnabled(checked);
-        ui->toggle_disk_shader_cache->setEnabled(checked);
+        ui->hw_shader_group->setEnabled(checked && enabled);
+        ui->toggle_disk_shader_cache->setEnabled(checked && enabled);
     });
 
     SetupPerGameUI();
