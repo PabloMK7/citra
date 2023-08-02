@@ -301,7 +301,7 @@ std::pair<int, int> SOC_U::TranslateSockOpt(int level, int opt) {
     return std::make_pair(SOL_SOCKET, opt);
 }
 
-static void TranslateSockOptDataToPlatform(std::vector<u8>& out, const std::vector<u8>& in,
+void SOC_U::TranslateSockOptDataToPlatform(std::vector<u8>& out, const std::vector<u8>& in,
                                            int platform_level, int platform_opt) {
     // linger structure may be different between 3DS and platform
     if (platform_level == SOL_SOCKET && platform_opt == SO_LINGER &&
@@ -330,6 +330,10 @@ static void TranslateSockOptDataToPlatform(std::vector<u8>& out, const std::vect
             in.size(), platform_level, platform_opt);
         out = in;
         return;
+    }
+    // Setting TTL to 0 means resetting it to the default value.
+    if (platform_level == IPPROTO_IP && platform_opt == IP_TTL && value == 0) {
+        value = SOC_TTL_DEFAULT;
     }
     out.resize(sizeof(int));
     std::memcpy(out.data(), &value, sizeof(int));
