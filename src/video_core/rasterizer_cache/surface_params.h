@@ -53,9 +53,7 @@ public:
     /// Returns a string identifier of the params object
     std::string DebugName(bool scaled, bool custom = false) const noexcept;
 
-    bool operator==(const SurfaceParams& other) const noexcept {
-        return std::memcmp(this, &other, sizeof(SurfaceParams)) == 0;
-    }
+    bool operator==(const SurfaceParams& other) const noexcept;
 
     [[nodiscard]] SurfaceInterval GetInterval() const noexcept {
         return SurfaceInterval{addr, end};

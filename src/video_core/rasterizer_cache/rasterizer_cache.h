@@ -1051,15 +1051,15 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
     surface.flags |= SurfaceFlagBits::Custom;
 
     const auto upload = [this, level, surface_id, material]() -> bool {
-        Surface& surface = slot_surfaces[surface_id];
-        ASSERT_MSG(True(surface.flags & SurfaceFlagBits::Custom),
+        ASSERT_MSG(True(slot_surfaces[surface_id].flags & SurfaceFlagBits::Custom),
                    "Surface is not suitable for custom upload, aborting!");
-        if (!surface.IsCustom()) {
-            const SurfaceBase old_surface{surface};
+        if (!slot_surfaces[surface_id].IsCustom()) {
+            const SurfaceBase old_surface{slot_surfaces[surface_id]};
             const SurfaceId old_id =
                 slot_surfaces.swap_and_insert(surface_id, runtime, old_surface, material);
             sentenced.emplace_back(old_id, frame_tick);
         }
+        Surface& surface = slot_surfaces[surface_id];
         surface.UploadCustom(material, level);
         if (custom_tex_manager.SkipMipmaps()) {
             runtime.GenerateMipmaps(surface);
@@ -1316,14 +1316,17 @@ SurfaceId RasterizerCache<T>::CreateSurface(const SurfaceParams& params) {
         const auto it = std::find_if(sentenced.begin(), sentenced.end(), [&](const auto& pair) {
             return slot_surfaces[pair.first] == params;
         });
-        if (it != sentenced.end()) {
-            const SurfaceId surface_id = it->first;
-            sentenced.erase(it);
-            return surface_id;
+        if (it == sentenced.end()) {
+            return slot_surfaces.insert(runtime, params);
         }
-        return slot_surfaces.insert(runtime, params);
+        const SurfaceId surface_id = it->first;
+        sentenced.erase(it);
+        return surface_id;
     }();
     Surface& surface = slot_surfaces[surface_id];
+    if (params.res_scale > surface.res_scale) {
+        surface.ScaleUp(params.res_scale);
+    }
     surface.MarkInvalid(surface.GetInterval());
     return surface_id;
 }
@@ -1368,8 +1371,8 @@ void RasterizerCache<T>::UnregisterSurface(SurfaceId surface_id) {
         return;
     }
 
-    std::erase_if(texture_cube_cache, [&](auto& pair) {
-        TextureCube& cube = pair.second;
+    for (auto it = texture_cube_cache.begin(); it != texture_cube_cache.end();) {
+        TextureCube& cube = it->second;
         for (SurfaceId& face_id : cube.face_ids) {
             if (face_id == surface_id) {
                 face_id = SurfaceId{};
@@ -1378,10 +1381,11 @@ void RasterizerCache<T>::UnregisterSurface(SurfaceId surface_id) {
         if (std::none_of(cube.face_ids.begin(), cube.face_ids.end(),
                          [](SurfaceId id) { return id; })) {
             sentenced.emplace_back(cube.surface_id, frame_tick);
-            return true;
+            it = texture_cube_cache.erase(it);
+        } else {
+            it++;
         }
-        return false;
-    });
+    }
 }
 
 template <class T>
