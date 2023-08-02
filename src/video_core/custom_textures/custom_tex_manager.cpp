@@ -170,9 +170,13 @@ bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTextu
 }
 
 void CustomTexManager::PrepareDumping(u64 title_id) {
-    // If a pack exists in the load folder that uses the old hash
-    // dump textures using the old hash.
-    ReadConfig(title_id, true);
+    // If a pack exists in the load folder that uses the old hash, dump textures using the old hash.
+    // This occurs either if a configuration file doesn't exist or that file sets the old hash.
+    const std::string load_path =
+        fmt::format("{}textures/{:016X}/", GetUserPath(FileUtil::UserPath::LoadDir), title_id);
+    if (FileUtil::Exists(load_path) && !ReadConfig(title_id, true)) {
+        use_new_hash = false;
+    }
 
     // Write template config file
     const std::string dump_path =
