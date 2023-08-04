@@ -16,6 +16,7 @@
 #include "citra_qt/debugger/graphics/graphics_cmdlists.h"
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"
+#include "core/core.h"
 #include "core/memory.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica_state.h"
@@ -166,7 +167,7 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         const auto format = texture.format;
 
         const auto info = Pica::Texture::TextureInfo::FromPicaRegister(config, format);
-        const u8* src = memory.GetPhysicalPointer(config.GetPhysicalAddress());
+        const u8* src = system.Memory().GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     }
     if (command_info_widget) {
@@ -180,8 +181,8 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
 }
 #undef COMMAND_IN_RANGE
 
-GPUCommandListWidget::GPUCommandListWidget(Memory::MemorySystem& memory_, QWidget* parent)
-    : QDockWidget(tr("Pica Command List"), parent), memory{memory_} {
+GPUCommandListWidget::GPUCommandListWidget(Core::System& system_, QWidget* parent)
+    : QDockWidget(tr("Pica Command List"), parent), system{system_} {
     setObjectName(QStringLiteral("Pica Command List"));
     GPUCommandListModel* model = new GPUCommandListModel(this);
 

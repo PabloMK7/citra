@@ -448,7 +448,7 @@ void GMainWindow::InitializeDebugWidgets() {
     graphicsWidget->hide();
     debug_menu->addAction(graphicsWidget->toggleViewAction());
 
-    graphicsCommandsWidget = new GPUCommandListWidget(system.Memory(), this);
+    graphicsCommandsWidget = new GPUCommandListWidget(system, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
     debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
