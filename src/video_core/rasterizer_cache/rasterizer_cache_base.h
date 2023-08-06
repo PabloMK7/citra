@@ -165,8 +165,8 @@ private:
     /// Removes any framebuffers that reference the provided surface_id.
     void RemoveFramebuffers(SurfaceId surface_id);
 
-    /// Transfers ownership of a memory region from src_surface to dest_surface
-    void DuplicateSurface(SurfaceId src_id, SurfaceId dst_id);
+    /// Removes any references of the provided surface id from cached texture cubes.
+    void RemoveTextureCubeFace(SurfaceId surface_id);
 
     /// Computes the hash of the provided texture data.
     u64 ComputeHash(const SurfaceParams& load_info, std::span<u8> upload_data);
@@ -224,7 +224,6 @@ private:
     Common::SlotVector<Framebuffer> slot_framebuffers;
     SurfaceMap dirty_regions;
     PageMap cached_pages;
-    std::vector<SurfaceId> remove_surfaces;
     u32 resolution_scale_factor;
     u64 frame_tick{};
     FramebufferParams fb_params;
