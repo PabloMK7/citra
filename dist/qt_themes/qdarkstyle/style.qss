@@ -298,6 +298,11 @@ QAbstractItemView:read-only {
     alternate-background-color: #232629;
 }
 
+/* Workaround for https://bugreports.qt.io/browse/QTBUG-115529 */
+QAbstractItemView:item {
+    border: 0px;
+}
+
 QWidget:focus {
     border: 1px solid #3daee9;
 }

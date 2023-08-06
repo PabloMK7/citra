@@ -481,6 +481,11 @@ QAbstractItemView QLineEdit {
   padding: 2px;
 }
 
+/* Workaround for https://bugreports.qt.io/browse/QTBUG-115529 */
+QAbstractItemView:item {
+    border: 0px;
+}
+
 /* QAbstractScrollArea ----------------------------------------------------
 
 https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qabstractscrollarea
