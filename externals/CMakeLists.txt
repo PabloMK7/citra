@@ -173,37 +173,38 @@ endif()
 add_library(json-headers INTERFACE)
 target_include_directories(json-headers INTERFACE ./json)
 
+# OpenSSL
+if (USE_SYSTEM_OPENSSL)
+    find_package(OpenSSL 1.1)
+    if (OPENSSL_FOUND)
+        set(OPENSSL_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+    endif()
+endif()
+
+if (NOT OPENSSL_FOUND)
+    # LibreSSL
+    set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
+    set(OPENSSLDIR "/etc/ssl/")
+    add_subdirectory(libressl EXCLUDE_FROM_ALL)
+    target_include_directories(ssl INTERFACE ./libressl/include)
+    target_compile_definitions(ssl PRIVATE -DHAVE_INET_NTOP)
+    get_directory_property(OPENSSL_LIBRARIES
+        DIRECTORY libressl
+        DEFINITION OPENSSL_LIBS)
+endif()
+
+# httplib
+add_library(httplib INTERFACE)
+target_include_directories(httplib INTERFACE ./httplib)
+target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
+target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
+
+if(ANDROID)
+    add_subdirectory(android-ifaddrs)
+endif()
+
+# cpp-jwt
 if (ENABLE_WEB_SERVICE)
-    if (USE_SYSTEM_OPENSSL)
-        find_package(OpenSSL 1.1)
-        if (OPENSSL_FOUND)
-            set(OPENSSL_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
-        endif()
-    endif()
-
-    if (NOT OPENSSL_FOUND)
-        # LibreSSL
-        set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
-        set(OPENSSLDIR "/etc/ssl/")
-        add_subdirectory(libressl EXCLUDE_FROM_ALL)
-        target_include_directories(ssl INTERFACE ./libressl/include)
-        target_compile_definitions(ssl PRIVATE -DHAVE_INET_NTOP)
-        get_directory_property(OPENSSL_LIBRARIES
-            DIRECTORY libressl
-            DEFINITION OPENSSL_LIBS)
-    endif()
-
-    if(ANDROID)
-        add_subdirectory(android-ifaddrs)
-    endif()
-
-    # httplib
-    add_library(httplib INTERFACE)
-    target_include_directories(httplib INTERFACE ./httplib)
-    target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
-    target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
-
-    # cpp-jwt
     add_library(cpp-jwt INTERFACE)
     target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
     target_compile_definitions(cpp-jwt INTERFACE CPP_JWT_USE_VENDORED_NLOHMANN_JSON)

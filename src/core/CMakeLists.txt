@@ -461,14 +461,6 @@ add_library(citra_core STATIC
     perf_stats.cpp
     perf_stats.h
     precompiled_headers.h
-    rpc/packet.cpp
-    rpc/packet.h
-    rpc/rpc_server.cpp
-    rpc/rpc_server.h
-    rpc/server.cpp
-    rpc/server.h
-    rpc/udp_server.cpp
-    rpc/udp_server.h
     savestate.cpp
     savestate.h
     system_titles.cpp
@@ -483,16 +475,30 @@ add_library(citra_core STATIC
 create_target_directory_groups(citra_core)
 
 target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
-target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams httplib)
 target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt::fmt lodepng open_source_archives)
 set_target_properties(citra_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if (ENABLE_WEB_SERVICE)
-    target_compile_definitions(citra_core PRIVATE -DENABLE_WEB_SERVICE -DCPPHTTPLIB_OPENSSL_SUPPORT)
-    target_link_libraries(citra_core PRIVATE web_service ${OPENSSL_LIBS} httplib)
+    target_compile_definitions(citra_core PRIVATE -DENABLE_WEB_SERVICE)
+    target_link_libraries(citra_core PRIVATE web_service)
     if (ANDROID)
         target_link_libraries(citra_core PRIVATE ifaddrs)
     endif()
+endif()
+
+if (ENABLE_SCRIPTING)
+    target_compile_definitions(citra_core PRIVATE -DENABLE_SCRIPTING)
+    target_sources(citra_core PRIVATE
+        rpc/packet.cpp
+        rpc/packet.h
+        rpc/rpc_server.cpp
+        rpc/rpc_server.h
+        rpc/server.cpp
+        rpc/server.h
+        rpc/udp_server.cpp
+        rpc/udp_server.h
+    )
 endif()
 
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)

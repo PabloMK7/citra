@@ -45,7 +45,9 @@
 #include "core/hw/lcd.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
+#ifdef ENABLE_SCRIPTING
 #include "core/rpc/server.h"
+#endif
 #include "core/telemetry_session.h"
 #include "network/network.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
@@ -418,7 +420,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
 
+#ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::Server>(*this);
+#endif
 
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
@@ -555,7 +559,9 @@ void System::Shutdown(bool is_deserializing) {
     }
     custom_tex_manager.reset();
     telemetry_session.reset();
+#ifdef ENABLE_SCRIPTING
     rpc_server.reset();
+#endif
     archive_manager.reset();
     service_manager.reset();
     dsp_core.reset();

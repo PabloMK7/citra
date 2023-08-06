@@ -77,7 +77,6 @@ static std::pair<std::string, std::string> SplitUrl(const std::string& url) {
 void Context::MakeRequest() {
     ASSERT(state == RequestState::NotStarted);
 
-#ifdef ENABLE_WEB_SERVICE
     const auto& [host, path] = SplitUrl(url);
     const auto client = std::make_unique<httplib::Client>(host);
     SSL_CTX* ctx = client->ssl_context();
@@ -128,10 +127,6 @@ void Context::MakeRequest() {
         // TODO(B3N30): Verify this state on HW
         state = RequestState::ReadyToDownloadContent;
     }
-#else
-    LOG_ERROR(Service_HTTP, "Tried to make request but WebServices is not enabled in this build");
-    state = RequestState::TimedOut;
-#endif
 }
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
