@@ -59,7 +59,7 @@ public:
     bool Reinterpret(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
 
     /// Fills the rectangle of the texture with the clear value provided
-    bool ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);
+    void ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);
 
     /// Copies a rectangle of source to another rectange of dest
     bool CopyTextures(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
@@ -75,6 +75,9 @@ private:
     const Driver& GetDriver() const {
         return driver;
     }
+
+    /// Fills the rectangle of the surface with the value provided, without an fbo.
+    bool ClearTextureWithoutFbo(Surface& surface, const VideoCore::TextureClear& clear);
 
 private:
     const Driver& driver;

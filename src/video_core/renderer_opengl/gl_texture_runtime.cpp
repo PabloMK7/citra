@@ -187,7 +187,41 @@ bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
     return true;
 }
 
-bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClear& clear) {
+bool TextureRuntime::ClearTextureWithoutFbo(Surface& surface,
+                                            const VideoCore::TextureClear& clear) {
+    if (!driver.HasArbClearTexture()) {
+        return false;
+    }
+    GLenum format{};
+    GLenum type{};
+    switch (surface.type) {
+    case SurfaceType::Color:
+    case SurfaceType::Texture:
+        format = GL_RGBA;
+        type = GL_FLOAT;
+        break;
+    case SurfaceType::Depth:
+        format = GL_DEPTH_COMPONENT;
+        type = GL_FLOAT;
+        break;
+    case SurfaceType::DepthStencil:
+        format = GL_DEPTH_STENCIL;
+        type = GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+        break;
+    default:
+        UNREACHABLE_MSG("Unknown surface type {}", surface.type);
+    }
+    glClearTexSubImage(surface.Handle(), clear.texture_level, clear.texture_rect.left,
+                       clear.texture_rect.bottom, 0, clear.texture_rect.GetWidth(),
+                       clear.texture_rect.GetHeight(), 1, format, type, &clear.value);
+    return true;
+}
+
+void TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClear& clear) {
+    if (ClearTextureWithoutFbo(surface, clear)) {
+        return;
+    }
+
     OpenGLState state = OpenGLState::GetCurState();
     state.scissor.enabled = true;
     state.scissor.x = clear.texture_rect.left;
@@ -222,10 +256,7 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
         break;
     default:
         UNREACHABLE_MSG("Unknown surface type {}", surface.type);
-        return false;
     }
-
-    return true;
 }
 
 bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
