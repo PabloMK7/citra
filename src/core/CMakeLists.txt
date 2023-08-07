@@ -480,15 +480,11 @@ target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt::fmt lodepn
 set_target_properties(citra_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if (ENABLE_WEB_SERVICE)
-    target_compile_definitions(citra_core PRIVATE -DENABLE_WEB_SERVICE)
     target_link_libraries(citra_core PRIVATE web_service)
-    if (ANDROID)
-        target_link_libraries(citra_core PRIVATE ifaddrs)
-    endif()
 endif()
 
 if (ENABLE_SCRIPTING)
-    target_compile_definitions(citra_core PRIVATE -DENABLE_SCRIPTING)
+    target_compile_definitions(citra_core PUBLIC -DENABLE_SCRIPTING)
     target_sources(citra_core PRIVATE
         rpc/packet.cpp
         rpc/packet.h

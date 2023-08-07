@@ -19,11 +19,7 @@ add_library(network STATIC
 create_target_directory_groups(network)
 
 if (ENABLE_WEB_SERVICE)
-    target_compile_definitions(network PRIVATE -DENABLE_WEB_SERVICE)
     target_link_libraries(network PRIVATE web_service)
-    if (ANDROID)
-        target_link_libraries(network PRIVATE ifaddrs)
-    endif()
 endif()
 
 target_link_libraries(network PRIVATE citra_common enet Boost::serialization httplib)

@@ -201,6 +201,7 @@ target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
 
 if(ANDROID)
     add_subdirectory(android-ifaddrs)
+    target_link_libraries(httplib INTERFACE ifaddrs)
 endif()
 
 # cpp-jwt
