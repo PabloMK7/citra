@@ -228,10 +228,10 @@ std::string SurfaceParams::DebugName(bool scaled, bool custom) const noexcept {
 }
 
 bool SurfaceParams::operator==(const SurfaceParams& other) const noexcept {
-    return std::tie(addr, end, width, height, stride, levels, is_tiled, texture_type,
-                    pixel_format) == std::tie(other.addr, other.end, other.width, other.height,
-                                              other.stride, other.levels, other.is_tiled,
-                                              other.texture_type, other.pixel_format);
+    return std::tie(addr, end, width, height, stride, levels, is_tiled, texture_type, pixel_format,
+                    custom_format) ==
+           std::tie(other.addr, other.end, other.width, other.height, other.stride, other.levels,
+                    other.is_tiled, other.texture_type, other.pixel_format, other.custom_format);
 }
 
 } // namespace VideoCore
