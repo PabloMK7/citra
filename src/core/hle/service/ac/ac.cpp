@@ -151,6 +151,17 @@ void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) 
     LOG_WARNING(Service_AC, "(STUBBED) called");
 }
 
+void Module::Interface::GetConnectingProxyEnable(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    constexpr bool proxy_enabled = false;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(proxy_enabled);
+
+    LOG_WARNING(Service_AC, "(STUBBED) called");
+}
+
 void Module::Interface::IsConnected(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 unk = rp.Pop<u32>();

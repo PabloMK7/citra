@@ -27,6 +27,7 @@ AC_U::AC_U(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:u"
         {0x0027, &AC_U::GetInfraPriority, "GetInfraPriority"},
         {0x002D, &AC_U::SetRequestEulaVersion, "SetRequestEulaVersion"},
         {0x0030, &AC_U::RegisterDisconnectEvent, "RegisterDisconnectEvent"},
+        {0x0036, &AC_U::GetConnectingProxyEnable, "GetConnectingProxyEnable"},
         {0x003C, nullptr, "GetAPSSIDList"},
         {0x003E, &AC_U::IsConnected, "IsConnected"},
         {0x0040, &AC_U::SetClientVersion, "SetClientVersion"},

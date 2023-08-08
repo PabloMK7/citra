@@ -121,6 +121,14 @@ public:
         void RegisterDisconnectEvent(Kernel::HLERequestContext& ctx);
 
         /**
+         * AC::GetConnectingProxyEnable service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : bool, is proxy enabled
+         */
+        void GetConnectingProxyEnable(Kernel::HLERequestContext& ctx);
+
+        /**
          * AC::IsConnected service function
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
