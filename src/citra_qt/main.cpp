@@ -1071,8 +1071,10 @@ bool GMainWindow::LoadROM(const QString& filename) {
         ShutdownGame();
     }
 
-    render_window->InitRenderTarget();
-    secondary_window->InitRenderTarget();
+    if (!render_window->InitRenderTarget() || !secondary_window->InitRenderTarget()) {
+        LOG_CRITICAL(Frontend, "Failed to initialize render targets!");
+        return false;
+    }
 
     const auto scope = render_window->Acquire();
 
