@@ -1101,8 +1101,8 @@ void NfcDevice::BuildAmiiboWithoutKeys() {
 }
 
 void NfcDevice::RescheduleTagRemoveEvent() {
-    /// The interval at which the amiibo will be removed automatically 1.5s
-    static constexpr u64 amiibo_removal_interval = nsToCycles(1500 * 1000 * 1000);
+    /// The interval at which the amiibo will be removed automatically 3s
+    static constexpr u64 amiibo_removal_interval = msToCycles(3 * 1000);
 
     system.CoreTiming().UnscheduleEvent(remove_amiibo_event, 0);
 

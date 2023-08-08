@@ -316,7 +316,7 @@ void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
 
     if (nfc->nfc_mode == CommunicationMode::TrainTag) {
         LOG_ERROR(Service_NFC, "CommunicationMode  {} not implemented", nfc->nfc_mode);
-        IPC::RequestBuilder rb = rp.MakeBuilder(26, 0);
+        IPC::RequestBuilder rb = rp.MakeBuilder(25, 0);
         rb.Push(RESULT_SUCCESS);
         rb.PushRaw<TagInfo2>({});
         return;
@@ -324,7 +324,7 @@ void Module::Interface::GetTagInfo2(Kernel::HLERequestContext& ctx) {
 
     TagInfo2 tag_info{};
     const auto result = nfc->device->GetTagInfo2(tag_info);
-    IPC::RequestBuilder rb = rp.MakeBuilder(26, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(25, 0);
     rb.Push(result);
     rb.PushRaw<TagInfo2>(tag_info);
 }
@@ -383,10 +383,14 @@ void Module::Interface::OpenApplicationArea(Kernel::HLERequestContext& ctx) {
 void Module::Interface::CreateApplicationArea(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 access_id = rp.Pop<u32>();
-    [[maybe_unused]] u32 size = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    LOG_CRITICAL(Service_NFC, "called, size={}", size);
+    LOG_INFO(Service_NFC, "called, size={}", size);
+
+    if (buffer.size() > size) {
+        buffer.resize(size);
+    }
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -402,8 +406,9 @@ void Module::Interface::CreateApplicationArea(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::ReadApplicationArea(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+    u32 size = rp.Pop<u32>();
 
-    LOG_INFO(Service_NFC, "called");
+    LOG_INFO(Service_NFC, "called, size={}", size);
 
     nfc->device->RescheduleTagRemoveEvent();
 
@@ -413,7 +418,7 @@ void Module::Interface::ReadApplicationArea(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    std::vector<u8> buffer(sizeof(ApplicationArea));
+    std::vector<u8> buffer(size);
     const auto result = nfc->device->GetApplicationArea(buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
@@ -423,11 +428,15 @@ void Module::Interface::ReadApplicationArea(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::WriteApplicationArea(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    [[maybe_unused]] u32 size = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
     std::vector<u8> tag_uuid_info = rp.PopStaticBuffer();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    LOG_CRITICAL(Service_NFC, "called, size={}", size);
+    LOG_INFO(Service_NFC, "called, size={}", size);
+
+    if (buffer.size() > size) {
+        buffer.resize(size);
+    }
 
     if (nfc->nfc_mode != CommunicationMode::Amiibo) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -540,7 +549,7 @@ void Module::Interface::GetIdentificationBlock(Kernel::HLERequestContext& ctx) {
     ModelInfo model_info{};
     const auto result = nfc->device->GetModelInfo(model_info);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(0x1F, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(14, 0);
     rb.Push(result);
     rb.PushRaw<ModelInfo>(model_info);
 }
