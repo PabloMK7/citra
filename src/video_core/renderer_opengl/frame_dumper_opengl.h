@@ -6,9 +6,8 @@
 
 #include <atomic>
 #include <memory>
-#include <thread>
-#include "core/core.h"
-#include "core/dumping/backend.h"
+
+#include "common/polyfill_thread.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 
@@ -17,6 +16,10 @@ class EmuWindow;
 class GraphicsContext;
 class TextureMailbox;
 } // namespace Frontend
+
+namespace Core {
+class System;
+}
 
 namespace OpenGL {
 
@@ -42,12 +45,12 @@ public:
 private:
     void InitializeOpenGLObjects();
     void CleanupOpenGLObjects();
-    void PresentLoop();
+    void PresentLoop(std::stop_token stop_token);
 
+private:
     Core::System& system;
     std::unique_ptr<Frontend::GraphicsContext> context;
-    std::thread present_thread;
-    std::atomic_bool stop_requested{false};
+    std::jthread present_thread;
 
     // PBOs used to dump frames faster
     std::array<OGLBuffer, 2> pbos;

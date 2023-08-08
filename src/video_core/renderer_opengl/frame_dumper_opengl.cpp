@@ -5,6 +5,9 @@
 #include <glad/glad.h>
 
 #include <utility>
+
+#include "core/core.h"
+#include "core/dumping/backend.h"
 #include "core/frontend/emu_window.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/gl_texture_mailbox.h"
@@ -12,13 +15,9 @@
 namespace OpenGL {
 
 FrameDumperOpenGL::FrameDumperOpenGL(Core::System& system_, Frontend::EmuWindow& emu_window)
-    : system(system_), context(emu_window.CreateSharedContext()) {}
+    : system{system_}, context{emu_window.CreateSharedContext()} {}
 
-FrameDumperOpenGL::~FrameDumperOpenGL() {
-    if (present_thread.joinable()) {
-        present_thread.join();
-    }
-}
+FrameDumperOpenGL::~FrameDumperOpenGL() = default;
 
 bool FrameDumperOpenGL::IsDumping() const {
     auto video_dumper = system.GetVideoDumper();
@@ -35,19 +34,19 @@ void FrameDumperOpenGL::StartDumping() {
         present_thread.join();
     }
 
-    present_thread = std::thread(&FrameDumperOpenGL::PresentLoop, this);
+    present_thread = std::jthread([this](std::stop_token stop_token) { PresentLoop(stop_token); });
 }
 
 void FrameDumperOpenGL::StopDumping() {
-    stop_requested.store(true, std::memory_order_relaxed);
+    present_thread.request_stop();
 }
 
-void FrameDumperOpenGL::PresentLoop() {
+void FrameDumperOpenGL::PresentLoop(std::stop_token stop_token) {
     const auto scope = context->Acquire();
     InitializeOpenGLObjects();
 
     const auto& layout = GetLayout();
-    while (!stop_requested.exchange(false)) {
+    while (!stop_token.stop_requested()) {
         auto frame = mailbox->TryGetPresentFrame(200);
         if (!frame) {
             continue;
