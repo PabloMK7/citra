@@ -54,7 +54,8 @@ function(download_qt target)
             set(host_flag "--autodesktop")
             set(host_prefix "${base_path}/${target}/${host_arch_path}")
         endif()
-        set(install_args install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch} ${host_flag} -m qtmultimedia)
+        set(install_args install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch} ${host_flag}
+                                    -m qtmultimedia --archives qttranslations qttools qtsvg qtbase)
     endif()
 
     if (NOT EXISTS "${prefix}")
