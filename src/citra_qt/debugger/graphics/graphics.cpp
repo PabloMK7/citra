@@ -64,15 +64,22 @@ void GPUCommandStreamItemModel::OnGXCommandFinishedInternal(int total_command_co
 }
 
 GPUCommandStreamWidget::GPUCommandStreamWidget(QWidget* parent)
-    : QDockWidget(tr("Graphics Debugger"), parent) {
+    : QDockWidget(tr("Graphics Debugger"), parent), model(this) {
     setObjectName(QStringLiteral("GraphicsDebugger"));
 
-    GPUCommandStreamItemModel* command_model = new GPUCommandStreamItemModel(this);
-    g_debugger.RegisterObserver(command_model);
-
-    QListView* command_list = new QListView;
-    command_list->setModel(command_model);
+    auto* command_list = new QListView;
+    command_list->setModel(&model);
     command_list->setFont(GetMonospaceFont());
 
     setWidget(command_list);
+}
+
+void GPUCommandStreamWidget::showEvent(QShowEvent* event) {
+    g_debugger.RegisterObserver(&model);
+    QDockWidget::showEvent(event);
+}
+
+void GPUCommandStreamWidget::hideEvent(QHideEvent* event) {
+    g_debugger.UnregisterObserver(&model);
+    QDockWidget::hideEvent(event);
 }
