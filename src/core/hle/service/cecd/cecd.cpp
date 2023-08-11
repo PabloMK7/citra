@@ -620,9 +620,9 @@ void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 dest_buffer_size = rp.Pop<u32>();
-    const CecSystemInfoType info_type = rp.PopEnum<CecSystemInfoType>();
-    const u32 param_buffer_size = rp.Pop<u32>();
+    const auto dest_buffer_size = rp.Pop<u32>();
+    const auto info_type = rp.PopEnum<CecSystemInfoType>();
+    const auto param_buffer_size = rp.Pop<u32>();
     auto& param_buffer = rp.PopMappedBuffer();
     auto& dest_buffer = rp.PopMappedBuffer();
 
@@ -631,22 +631,23 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer;
     switch (info_type) {
     case CecSystemInfoType::EulaVersion: {
-        auto cfg = Service::CFG::GetModule(cecd->system);
-        Service::CFG::EULAVersion version = cfg->GetEULAVersion();
-        dest_buffer.Write(&version, 0, sizeof(version));
+        const auto cfg = Service::CFG::GetModule(cecd->system);
+        const auto version = cfg->GetEULAVersion();
+        buffer = {version.minor, version.major};
         break;
     }
     case CecSystemInfoType::Eula:
-        buffer = {0x01}; // Eula agreed
-        dest_buffer.Write(buffer.data(), 0, buffer.size());
+        buffer = {true}; // Eula agreed
         break;
     case CecSystemInfoType::ParentControl:
-        buffer = {0x00}; // No parent control
-        dest_buffer.Write(buffer.data(), 0, buffer.size());
+        buffer = {false}; // No parent control
         break;
     default:
         LOG_ERROR(Service_CECD, "Unknown system info type={:#x}", info_type);
+        buffer = {};
     }
+    dest_buffer.Write(buffer.data(), 0,
+                      std::min(static_cast<size_t>(dest_buffer_size), buffer.size()));
 
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(param_buffer);
