@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 #include "common/common_types.h"
 
@@ -16,6 +17,7 @@ struct SaveStateInfo {
         OK,
         RevisionDismatch,
     } status;
+    std::string build_name;
 };
 
 constexpr u32 SaveStateSlotCount = 10; // Maximum count of savestate slots

@@ -15,18 +15,21 @@
 #include "core/core.h"
 #include "core/movie.h"
 #include "core/savestate.h"
+#include "core/savestate_data.h"
 #include "network/network.h"
 
 namespace Core {
 
 #pragma pack(push, 1)
 struct CSTHeader {
-    std::array<u8, 4> filetype;  /// Unique Identifier to check the file type (always "CST"0x1B)
-    u64_le program_id;           /// ID of the ROM being executed. Also called title_id
-    std::array<u8, 20> revision; /// Git hash of the revision this savestate was created with
-    u64_le time;                 /// The time when this save state was created
+    std::array<u8, 4> filetype;    /// Unique Identifier to check the file type (always "CST"0x1B)
+    u64_le program_id;             /// ID of the ROM being executed. Also called title_id
+    std::array<u8, 20> revision;   /// Git hash of the revision this savestate was created with
+    u64_le time;                   /// The time when this save state was created
+    std::array<u8, 20> build_name; /// The build name (Canary/Nightly) with the version number
+    u32_le zero = 0;               /// Should be zero, just in case.
 
-    std::array<u8, 216> reserved{}; /// Make heading 256 bytes so it has consistent size
+    std::array<u8, 192> reserved{}; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CSTHeader) == 256, "CSTHeader should be 256 bytes");
 #pragma pack(pop)
@@ -58,11 +61,26 @@ static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 
         return false;
     }
     const std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
+    const std::string build_name =
+        header.zero == 0 ? reinterpret_cast<const char*>(header.build_name.data()) : "";
+
     if (revision == Common::g_scm_rev) {
         info.status = SaveStateInfo::ValidationStatus::OK;
     } else {
-        LOG_WARNING(Core, "Save state file {} created from a different revision {}", path,
-                    revision);
+        if (!build_name.empty()) {
+            info.build_name = build_name;
+        } else if (hash_to_version.find(revision) != hash_to_version.end()) {
+            info.build_name = hash_to_version.at(revision);
+        }
+        if (info.build_name.empty()) {
+            LOG_WARNING(Core, "Save state file {} created from a different revision {}", path,
+                        revision);
+        } else {
+            LOG_WARNING(Core,
+                        "Save state file {} created from a different build {} with revision {}",
+                        path, info.build_name, revision);
+        }
+
         info.status = SaveStateInfo::ValidationStatus::RevisionDismatch;
     }
     return true;
@@ -134,6 +152,10 @@ void System::SaveState(u32 slot) const {
     header.time = std::chrono::duration_cast<std::chrono::seconds>(
                       std::chrono::system_clock::now().time_since_epoch())
                       .count();
+    const std::string build_fullname = Common::g_build_fullname;
+    std::memset(header.build_name.data(), 0, sizeof(header.build_name));
+    std::memcpy(header.build_name.data(), build_fullname.c_str(),
+                std::min(build_fullname.length(), sizeof(header.build_name) - 1));
 
     if (file.WriteBytes(&header, sizeof(header)) != sizeof(header) ||
         file.WriteBytes(buffer.data(), buffer.size()) != buffer.size()) {

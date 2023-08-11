@@ -1422,10 +1422,17 @@ void GMainWindow::UpdateSaveStates() {
         actions_save_state[i]->setText(tr("Slot %1").arg(i + 1));
     }
     for (const auto& savestate : savestates) {
-        const auto text = tr("Slot %1 - %2")
-                              .arg(savestate.slot)
-                              .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
-                                       .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")));
+        const bool display_name =
+            savestate.status == Core::SaveStateInfo::ValidationStatus::RevisionDismatch &&
+            !savestate.build_name.empty();
+        const auto text =
+            tr("Slot %1 - %2 %3")
+                .arg(savestate.slot)
+                .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
+                         .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")))
+                .arg(display_name ? QString::fromStdString(savestate.build_name) : QLatin1String())
+                .trimmed();
+
         actions_load_state[savestate.slot - 1]->setEnabled(true);
         actions_load_state[savestate.slot - 1]->setText(text);
         actions_save_state[savestate.slot - 1]->setText(text);

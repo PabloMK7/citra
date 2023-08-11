@@ -463,6 +463,7 @@ add_library(citra_core STATIC
     precompiled_headers.h
     savestate.cpp
     savestate.h
+    savestate_data.h
     system_titles.cpp
     system_titles.h
     telemetry_session.cpp
