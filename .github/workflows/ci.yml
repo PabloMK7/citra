@@ -161,9 +161,16 @@ jobs:
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
         if: ${{ matrix.target == 'msvc' }}
-      - name: Install MSVC extra tools
+      - name: Install extra tools (MSVC)
         run: choco install ccache ninja wget
         if: ${{ matrix.target == 'msvc' }}
+      - name: Set up Vulkan SDK (MSVC)
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
+        if: ${{ matrix.target == 'msvc' }}
+        with:
+          vulkan-query-version: latest
+          vulkan-components: Glslang
+          vulkan-use-cache: true
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         if: ${{ matrix.target == 'msys2' }}
@@ -172,16 +179,10 @@ jobs:
           update: true
           install: git make p7zip
           pacboy: >-
-            toolchain:p ccache:p cmake:p ninja:p
+            toolchain:p ccache:p cmake:p ninja:p glslang:p
             qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
-      - name: Setup Vulkan SDK
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
-        with:
-          vulkan-query-version: latest
-          vulkan-components: Glslang
-          vulkan-use-cache: true
-      - name: Test glslangValidator
-        run: glslangValidator --version
+      - name: Test glslang
+        run: glslang --version || glslangValidator --version
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
       - name: Build

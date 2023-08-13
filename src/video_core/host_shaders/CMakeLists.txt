@@ -27,9 +27,12 @@ set(SHADER_FILES
     vulkan_blit_depth_stencil.frag
 )
 
-find_program(GLSLANGVALIDATOR "glslangValidator")
-if ("${GLSLANGVALIDATOR}" STREQUAL "GLSLANGVALIDATOR-NOTFOUND")
-    message(FATAL_ERROR "Required program `glslangValidator` not found.")
+find_program(GLSLANG "glslang")
+if ("${GLSLANG}" STREQUAL "GLSLANG-NOTFOUND")
+    find_program(GLSLANG "glslangValidator")
+    if ("${GLSLANG}" STREQUAL "GLSLANG-NOTFOUND")
+        message(FATAL_ERROR "Required program `glslang` (or `glslangValidator`) not found.")
+    endif()
 endif()
 
 set(MACROS "-Dgl_VertexID=gl_VertexIndex")
@@ -42,11 +45,11 @@ set(HOST_SHADERS_INCLUDE ${SHADER_INCLUDE} PARENT_SCOPE)
 set(INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/source_shader.h.in)
 set(HEADER_GENERATOR ${CMAKE_CURRENT_SOURCE_DIR}/StringShaderHeader.cmake)
 
-# Check if `--quiet` is available on host's glslangValidator version
-# glslangValidator prints to STDERR iff an unrecognized flag is passed to it
+# Check if `--quiet` is available on host's glslang version
+# glslang prints to STDERR iff an unrecognized flag is passed to it
 execute_process(
     COMMAND
-        ${GLSLANGVALIDATOR} ${QUIET_FLAG}
+        ${GLSLANG} ${QUIET_FLAG}
     ERROR_VARIABLE
         GLSLANG_ERROR
     # STDOUT variable defined to silence unnecessary output during CMake configuration
@@ -55,7 +58,7 @@ execute_process(
 )
 
 if (NOT GLSLANG_ERROR STREQUAL "")
-    message(WARNING "Refusing to use unavailable flag `${QUIET_FLAG}` on `${GLSLANGVALIDATOR}`")
+    message(WARNING "Refusing to use unavailable flag `${QUIET_FLAG}` on `${GLSLANG}`")
     set(QUIET_FLAG "")
 endif()
 
@@ -87,7 +90,7 @@ foreach(FILENAME IN ITEMS ${SHADER_FILES})
             OUTPUT
                 ${SPIRV_HEADER_FILE}
             COMMAND
-                ${GLSLANGVALIDATOR} --target-env vulkan1.1 --glsl-version 450 ${QUIET_FLAG} ${MACROS} --variable-name ${SPIRV_VARIABLE_NAME} -o ${SPIRV_HEADER_FILE} ${SOURCE_FILE}
+                ${GLSLANG} --target-env vulkan1.1 --glsl-version 450 ${QUIET_FLAG} ${MACROS} --variable-name ${SPIRV_VARIABLE_NAME} -o ${SPIRV_HEADER_FILE} ${SOURCE_FILE}
             MAIN_DEPENDENCY
                 ${SOURCE_FILE}
         )
