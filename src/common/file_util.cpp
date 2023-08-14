@@ -16,6 +16,7 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/scope_exit.h"
 #include "common/string_util.h"
 
 #ifdef _WIN32
@@ -324,31 +325,32 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     return AndroidStorage::CopyFile(srcFilename, std::string(GetParentPath(destFilename)),
                                     std::string(GetFilename(destFilename)));
 #else
-    using CFilePointer = std::unique_ptr<FILE, decltype(&std::fclose)>;
 
     // Open input file
-    CFilePointer input{fopen(srcFilename.c_str(), "rb"), std::fclose};
+    FILE* input = fopen(srcFilename.c_str(), "rb");
     if (!input) {
         LOG_ERROR(Common_Filesystem, "opening input failed {} --> {}: {}", srcFilename,
                   destFilename, GetLastErrorMsg());
         return false;
     }
+    SCOPE_EXIT({ fclose(input); });
 
     // open output file
-    CFilePointer output{fopen(destFilename.c_str(), "wb"), std::fclose};
+    FILE* output = fopen(destFilename.c_str(), "wb");
     if (!output) {
         LOG_ERROR(Common_Filesystem, "opening output failed {} --> {}: {}", srcFilename,
                   destFilename, GetLastErrorMsg());
         return false;
     }
+    SCOPE_EXIT({ fclose(output); });
 
     // copy loop
     std::array<char, 1024> buffer;
-    while (!feof(input.get())) {
+    while (!feof(input)) {
         // read input
-        std::size_t rnum = fread(buffer.data(), sizeof(char), buffer.size(), input.get());
+        std::size_t rnum = fread(buffer.data(), sizeof(char), buffer.size(), input);
         if (rnum != buffer.size()) {
-            if (ferror(input.get()) != 0) {
+            if (ferror(input) != 0) {
                 LOG_ERROR(Common_Filesystem, "failed reading from source, {} --> {}: {}",
                           srcFilename, destFilename, GetLastErrorMsg());
                 return false;
@@ -356,7 +358,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         }
 
         // write output
-        std::size_t wnum = fwrite(buffer.data(), sizeof(char), rnum, output.get());
+        std::size_t wnum = fwrite(buffer.data(), sizeof(char), rnum, output);
         if (wnum != rnum) {
             LOG_ERROR(Common_Filesystem, "failed writing to output, {} --> {}: {}", srcFilename,
                       destFilename, GetLastErrorMsg());
