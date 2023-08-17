@@ -291,16 +291,18 @@ void FragmentModule::WriteLighting() {
     }
 
     const auto lookup_lighting_lut_unsigned = [this](Id lut_index, Id pos) -> Id {
-        const Id pos_int{OpConvertFToS(i32_id, OpFMul(f32_id, pos, ConstF32(256.f)))};
-        const Id index{OpSClamp(i32_id, pos_int, ConstS32(0), ConstS32(255))};
+        const Id pos_floor{OpFloor(f32_id, OpFMul(f32_id, pos, ConstF32(256.f)))};
+        const Id index_float{OpFClamp(f32_id, pos_floor, ConstF32(0.f), ConstF32(255.f))};
+        const Id index{OpConvertFToS(i32_id, index_float)};
         const Id neg_index{OpFNegate(f32_id, OpConvertSToF(f32_id, index))};
         const Id delta{OpFma(f32_id, pos, ConstF32(256.f), neg_index)};
         return LookupLightingLUT(lut_index, index, delta);
     };
 
     const auto lookup_lighting_lut_signed = [this](Id lut_index, Id pos) -> Id {
-        const Id pos_int{OpConvertFToS(i32_id, OpFMul(f32_id, pos, ConstF32(128.f)))};
-        const Id index{OpSClamp(i32_id, pos_int, ConstS32(-128), ConstS32(127))};
+        const Id pos_floor{OpFloor(f32_id, OpFMul(f32_id, pos, ConstF32(128.f)))};
+        const Id index_float{OpFClamp(f32_id, pos_floor, ConstF32(-128.f), ConstF32(127.f))};
+        const Id index{OpConvertFToS(i32_id, index_float)};
         const Id neg_index{OpFNegate(f32_id, OpConvertSToF(f32_id, index))};
         const Id delta{OpFma(f32_id, pos, ConstF32(128.f), neg_index)};
         const Id increment{

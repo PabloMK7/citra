@@ -1246,13 +1246,13 @@ float LookupLightingLUT(int lut_index, int index, float delta) {
 }
 
 float LookupLightingLUTUnsigned(int lut_index, float pos) {
-    int index = clamp(int(pos * 256.0), 0, 255);
+    int index = int(clamp(floor(pos * 256.0), 0.f, 255.f));
     float delta = pos * 256.0 - float(index);
     return LookupLightingLUT(lut_index, index, delta);
 }
 
 float LookupLightingLUTSigned(int lut_index, float pos) {
-    int index = clamp(int(pos * 128.0), -128, 127);
+    int index = int(clamp(floor(pos * 128.0), -128.f, 127.f));
     float delta = pos * 128.0 - float(index);
     if (index < 0) index += 256;
     return LookupLightingLUT(lut_index, index, delta);
