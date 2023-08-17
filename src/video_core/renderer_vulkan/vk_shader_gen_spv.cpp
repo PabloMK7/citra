@@ -21,8 +21,8 @@ FragmentModule::FragmentModule(Core::TelemetrySession& telemetry_, const PicaFSC
     DefineArithmeticTypes();
     DefineUniformStructs();
     DefineInterface();
-    if (config.state.proctex.enable) {
-        DefineProcTexSampler();
+    for (u32 i = 0; i < NUM_TEX_UNITS; i++) {
+        DefineTexSampler(i);
     }
     DefineEntryPoint();
 }
@@ -225,7 +225,8 @@ void FragmentModule::WriteLighting() {
 
     // Compute fragment normals and tangents
     const auto perturbation = [&]() -> Id {
-        const Id texel{SampleTexture(lighting.bump_selector)};
+        const Id texel{
+            OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.bump_selector])};
         const Id texel_rgb{OpVectorShuffle(vec_ids.Get(3), texel, texel, 0, 1, 2)};
         const Id rgb_mul_two{OpVectorTimesScalar(vec_ids.Get(3), texel_rgb, ConstF32(2.f))};
         return OpFSub(vec_ids.Get(3), rgb_mul_two, ConstF32(1.f, 1.f, 1.f));
@@ -284,7 +285,7 @@ void FragmentModule::WriteLighting() {
 
     Id shadow{ConstF32(1.f, 1.f, 1.f, 1.f)};
     if (lighting.enable_shadow) {
-        shadow = SampleTexture(lighting.shadow_selector);
+        shadow = OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
         if (lighting.shadow_invert) {
             shadow = OpFSub(vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow);
         }
@@ -710,89 +711,6 @@ void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) 
     }
 }
 
-Id FragmentModule::SampleTexture(u32 texture_unit) {
-    const PicaFSConfigState& state = config.state;
-    const Id zero_vec{ConstF32(0.f, 0.f, 0.f, 0.f)};
-
-    // PICA's LOD formula for 2D textures.
-    // This LOD formula is the same as the LOD lower limit defined in OpenGL.
-    // f(x, y) >= max{m_u, m_v, m_w}
-    // (See OpenGL 4.6 spec, 8.14.1 - Scale Factor and Level-of-Detail)
-    const auto sample_lod = [this, texture_unit](Id tex_id, Id texcoord_id) {
-        const Id sampled_image{OpLoad(TypeSampledImage(image2d_id), tex_id)};
-        const Id tex_image{OpImage(image2d_id, sampled_image)};
-        const Id tex_size{OpImageQuerySizeLod(ivec_ids.Get(2), tex_image, ConstS32(0))};
-        const Id texcoord{OpLoad(vec_ids.Get(2), texcoord_id)};
-        const Id coord{OpFMul(vec_ids.Get(2), texcoord, OpConvertSToF(vec_ids.Get(2), tex_size))};
-        const Id abs_dfdx_coord{OpFAbs(vec_ids.Get(2), OpDPdx(vec_ids.Get(2), coord))};
-        const Id abs_dfdy_coord{OpFAbs(vec_ids.Get(2), OpDPdy(vec_ids.Get(2), coord))};
-        const Id d{OpFMax(vec_ids.Get(2), abs_dfdx_coord, abs_dfdy_coord)};
-        const Id dx_dy_max{
-            OpFMax(f32_id, OpCompositeExtract(f32_id, d, 0), OpCompositeExtract(f32_id, d, 1))};
-        const Id lod{OpLog2(f32_id, dx_dy_max)};
-        const Id lod_bias{GetShaderDataMember(f32_id, ConstS32(28), ConstU32(texture_unit))};
-        const Id biased_lod{OpFAdd(f32_id, lod, lod_bias)};
-        return OpImageSampleExplicitLod(vec_ids.Get(4), sampled_image, texcoord,
-                                        spv::ImageOperandsMask::Lod, biased_lod);
-    };
-
-    const auto sample = [this](Id tex_id, bool projection) {
-        const Id image_type = tex_id.value == tex_cube_id.value ? image_cube_id : image2d_id;
-        const Id sampled_image{OpLoad(TypeSampledImage(image_type), tex_id)};
-        const Id texcoord0{OpLoad(vec_ids.Get(2), texcoord0_id)};
-        const Id texcoord0_w{OpLoad(f32_id, texcoord0_w_id)};
-        const Id coord{OpCompositeConstruct(vec_ids.Get(3),
-                                            OpCompositeExtract(f32_id, texcoord0, 0),
-                                            OpCompositeExtract(f32_id, texcoord0, 1), texcoord0_w)};
-        if (projection) {
-            return OpImageSampleProjImplicitLod(vec_ids.Get(4), sampled_image, coord);
-        } else {
-            return OpImageSampleImplicitLod(vec_ids.Get(4), sampled_image, coord);
-        }
-    };
-
-    switch (texture_unit) {
-    case 0:
-        // Only unit 0 respects the texturing type
-        switch (state.texture0_type) {
-        case Pica::TexturingRegs::TextureConfig::Texture2D:
-            return sample_lod(tex0_id, texcoord0_id);
-        case Pica::TexturingRegs::TextureConfig::Projection2D:
-            return sample(tex0_id, true);
-        case Pica::TexturingRegs::TextureConfig::TextureCube:
-            return sample(tex_cube_id, false);
-        case Pica::TexturingRegs::TextureConfig::Shadow2D:
-            return SampleShadow();
-        // case Pica::TexturingRegs::TextureConfig::ShadowCube:
-        // return "shadowTextureCube(texcoord0, texcoord0_w)";
-        case Pica::TexturingRegs::TextureConfig::Disabled:
-            return zero_vec;
-        default:
-            LOG_CRITICAL(Render_Vulkan, "Unhandled texture type {:x}", state.texture0_type);
-            UNIMPLEMENTED();
-            return zero_vec;
-        }
-    case 1:
-        return sample_lod(tex1_id, texcoord1_id);
-    case 2:
-        if (state.texture2_use_coord1) {
-            return sample_lod(tex2_id, texcoord1_id);
-        } else {
-            return sample_lod(tex2_id, texcoord2_id);
-        }
-    case 3:
-        if (state.proctex.enable) {
-            return OpFunctionCall(vec_ids.Get(4), proctex_func);
-        } else {
-            LOG_DEBUG(Render_Vulkan, "Using Texture3 without enabling it");
-            return zero_vec;
-        }
-    default:
-        UNREACHABLE();
-        return void_id;
-    }
-}
-
 Id FragmentModule::CompareShadow(Id pixel, Id z) {
     const Id pixel_d24{OpShiftRightLogical(u32_id, pixel, ConstS32(8))};
     const Id pixel_s8{OpConvertUToF(f32_id, OpBitwiseAnd(u32_id, pixel, ConstU32(255u)))};
@@ -802,7 +720,7 @@ Id FragmentModule::CompareShadow(Id pixel, Id z) {
 }
 
 Id FragmentModule::SampleShadow() {
-    const Id texcoord0{OpLoad(vec_ids.Get(2), texcoord0_id)};
+    const Id texcoord0{OpLoad(vec_ids.Get(2), texcoord_id[0])};
     const Id texcoord0_w{OpLoad(f32_id, texcoord0_w_id)};
     const Id abs_min_w{OpFMul(f32_id, OpFMin(f32_id, OpFAbs(f32_id, texcoord0_w), ConstF32(1.f)),
                               ConstF32(16777215.f))};
@@ -941,11 +859,145 @@ Id FragmentModule::AppendProcTexCombineAndMap(ProcTexCombiner combiner, Id u, Id
     return ProcTexLookupLUT(offset, combined);
 }
 
-void FragmentModule::DefineProcTexSampler() {
+void FragmentModule::DefineTexSampler(u32 texture_unit) {
+    const PicaFSConfigState& state = config.state;
+
     const Id func_type{TypeFunction(vec_ids.Get(4))};
-    proctex_func = OpFunction(vec_ids.Get(4), spv::FunctionControlMask::MaskNone, func_type);
+    sample_tex_unit_func[texture_unit] =
+        OpFunction(vec_ids.Get(4), spv::FunctionControlMask::MaskNone, func_type);
     AddLabel(OpLabel());
 
+    const Id zero_vec{ConstF32(0.f, 0.f, 0.f, 0.f)};
+
+    if (texture_unit == 0 && state.texture0_type == TexturingRegs::TextureConfig::Disabled) {
+        OpReturnValue(zero_vec);
+        OpFunctionEnd();
+        return;
+    }
+
+    if (texture_unit == 3) {
+        if (state.proctex.enable) {
+            OpReturnValue(ProcTexSampler());
+        } else {
+            OpReturnValue(zero_vec);
+        }
+        OpFunctionEnd();
+        return;
+    }
+
+    const Id border_label{OpLabel()};
+    const Id not_border_label{OpLabel()};
+
+    u32 texcoord_num = texture_unit == 2 && state.texture2_use_coord1 ? 1 : texture_unit;
+    const Id texcoord{OpLoad(vec_ids.Get(2), texcoord_id[texcoord_num])};
+
+    auto& texture_border_color = state.texture_border_color[texture_unit];
+    if (texture_border_color.enable_s || texture_border_color.enable_t) {
+        const Id texcoord_s{OpCompositeExtract(f32_id, texcoord, 0)};
+        const Id texcoord_t{OpCompositeExtract(f32_id, texcoord, 1)};
+
+        const Id s_lt_zero{OpFOrdLessThan(bool_id, texcoord_s, ConstF32(0.0f))};
+        const Id s_gt_one{OpFOrdGreaterThan(bool_id, texcoord_s, ConstF32(1.0f))};
+        const Id t_lt_zero{OpFOrdLessThan(bool_id, texcoord_t, ConstF32(0.0f))};
+        const Id t_gt_one{OpFOrdGreaterThan(bool_id, texcoord_t, ConstF32(1.0f))};
+
+        Id cond{};
+        if (texture_border_color.enable_s && texture_border_color.enable_t) {
+            cond = OpAny(bool_id, OpCompositeConstruct(bvec_ids.Get(4), s_lt_zero, s_gt_one,
+                                                       t_lt_zero, t_gt_one));
+        } else if (texture_border_color.enable_s) {
+            cond = OpAny(bool_id, OpCompositeConstruct(bvec_ids.Get(2), s_lt_zero, s_gt_one));
+        } else if (texture_border_color.enable_t) {
+            cond = OpAny(bool_id, OpCompositeConstruct(bvec_ids.Get(2), t_lt_zero, t_gt_one));
+        }
+
+        OpSelectionMerge(not_border_label, spv::SelectionControlMask::MaskNone);
+        OpBranchConditional(cond, border_label, not_border_label);
+
+        AddLabel(border_label);
+        const Id border_color{
+            GetShaderDataMember(vec_ids.Get(4), ConstS32(29), ConstU32(texture_unit))};
+        OpReturnValue(border_color);
+
+        AddLabel(not_border_label);
+    }
+
+    // PICA's LOD formula for 2D textures.
+    // This LOD formula is the same as the LOD lower limit defined in OpenGL.
+    // f(x, y) >= max{m_u, m_v, m_w}
+    // (See OpenGL 4.6 spec, 8.14.1 - Scale Factor and Level-of-Detail)
+    const auto sample_lod = [&](Id tex_id) {
+        const Id sampled_image{OpLoad(TypeSampledImage(image2d_id), tex_id)};
+        const Id tex_image{OpImage(image2d_id, sampled_image)};
+        const Id tex_size{OpImageQuerySizeLod(ivec_ids.Get(2), tex_image, ConstS32(0))};
+        const Id coord{OpFMul(vec_ids.Get(2), texcoord, OpConvertSToF(vec_ids.Get(2), tex_size))};
+        const Id abs_dfdx_coord{OpFAbs(vec_ids.Get(2), OpDPdx(vec_ids.Get(2), coord))};
+        const Id abs_dfdy_coord{OpFAbs(vec_ids.Get(2), OpDPdy(vec_ids.Get(2), coord))};
+        const Id d{OpFMax(vec_ids.Get(2), abs_dfdx_coord, abs_dfdy_coord)};
+        const Id dx_dy_max{
+            OpFMax(f32_id, OpCompositeExtract(f32_id, d, 0), OpCompositeExtract(f32_id, d, 1))};
+        const Id lod{OpLog2(f32_id, dx_dy_max)};
+        const Id lod_bias{GetShaderDataMember(f32_id, ConstS32(28), ConstU32(texture_unit))};
+        const Id biased_lod{OpFAdd(f32_id, lod, lod_bias)};
+        return OpImageSampleExplicitLod(vec_ids.Get(4), sampled_image, texcoord,
+                                        spv::ImageOperandsMask::Lod, biased_lod);
+    };
+
+    const auto sample_3d = [&](Id tex_id, bool projection) {
+        const Id image_type = tex_id.value == tex_cube_id.value ? image_cube_id : image2d_id;
+        const Id sampled_image{OpLoad(TypeSampledImage(image_type), tex_id)};
+        const Id texcoord0_w{OpLoad(f32_id, texcoord0_w_id)};
+        const Id coord{OpCompositeConstruct(vec_ids.Get(3), OpCompositeExtract(f32_id, texcoord, 0),
+                                            OpCompositeExtract(f32_id, texcoord, 1), texcoord0_w)};
+        if (projection) {
+            return OpImageSampleProjImplicitLod(vec_ids.Get(4), sampled_image, coord);
+        } else {
+            return OpImageSampleImplicitLod(vec_ids.Get(4), sampled_image, coord);
+        }
+    };
+
+    Id ret_val{void_id};
+    switch (texture_unit) {
+    case 0:
+        // Only unit 0 respects the texturing type
+        switch (state.texture0_type) {
+        case Pica::TexturingRegs::TextureConfig::Texture2D:
+            ret_val = sample_lod(tex0_id);
+            break;
+        case Pica::TexturingRegs::TextureConfig::Projection2D:
+            ret_val = sample_3d(tex0_id, true);
+            break;
+        case Pica::TexturingRegs::TextureConfig::TextureCube:
+            ret_val = sample_3d(tex_cube_id, false);
+            break;
+        case Pica::TexturingRegs::TextureConfig::Shadow2D:
+            ret_val = SampleShadow();
+            // case Pica::TexturingRegs::TextureConfig::ShadowCube:
+            // return "shadowTextureCube(texcoord0, texcoord0_w)";
+            break;
+        default:
+            LOG_CRITICAL(Render_Vulkan, "Unhandled texture type {:x}", state.texture0_type);
+            UNIMPLEMENTED();
+            ret_val = zero_vec;
+            break;
+        }
+        break;
+    case 1:
+        ret_val = sample_lod(tex1_id);
+        break;
+    case 2:
+        ret_val = sample_lod(tex2_id);
+        break;
+    default:
+        UNREACHABLE();
+        break;
+    }
+
+    OpReturnValue(ret_val);
+    OpFunctionEnd();
+}
+
+Id FragmentModule::ProcTexSampler() {
     // Define noise tables at the beginning of the function
     if (config.state.proctex.noise_enable) {
         noise1d_table =
@@ -957,24 +1009,11 @@ void FragmentModule::DefineProcTexSampler() {
 
     Id uv{};
     if (config.state.proctex.coord < 3) {
-        Id texcoord_id{};
-        switch (config.state.proctex.coord.Value()) {
-        case 0:
-            texcoord_id = texcoord0_id;
-            break;
-        case 1:
-            texcoord_id = texcoord1_id;
-            break;
-        case 2:
-            texcoord_id = texcoord2_id;
-            break;
-        }
-
-        const Id texcoord{OpLoad(vec_ids.Get(2), texcoord_id)};
+        const Id texcoord{OpLoad(vec_ids.Get(2), texcoord_id[config.state.proctex.coord.Value()])};
         uv = OpFAbs(vec_ids.Get(2), texcoord);
     } else {
         LOG_CRITICAL(Render_Vulkan, "Unexpected proctex.coord >= 3");
-        uv = OpFAbs(vec_ids.Get(2), OpLoad(vec_ids.Get(2), texcoord0_id));
+        uv = OpFAbs(vec_ids.Get(2), OpLoad(vec_ids.Get(2), texcoord_id[0]));
     }
 
     // This LOD formula is the same as the LOD upper limit defined in OpenGL.
@@ -1058,8 +1097,7 @@ void FragmentModule::DefineProcTexSampler() {
         final_color = OpCompositeInsert(vec_ids.Get(4), final_alpha, final_color, 3);
     }
 
-    OpReturnValue(final_color);
-    OpFunctionEnd();
+    return final_color;
 }
 
 Id FragmentModule::Byteround(Id variable_id, u32 size) {
@@ -1226,13 +1264,13 @@ Id FragmentModule::AppendSource(TevStageConfig::Source source, s32 index) {
     case Source::SecondaryFragmentColor:
         return secondary_fragment_color;
     case Source::Texture0:
-        return SampleTexture(0);
+        return OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[0]);
     case Source::Texture1:
-        return SampleTexture(1);
+        return OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[1]);
     case Source::Texture2:
-        return SampleTexture(2);
+        return OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[2]);
     case Source::Texture3:
-        return SampleTexture(3);
+        return OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[3]);
     case Source::PreviousBuffer:
         return combiner_buffer;
     case Source::Constant:
@@ -1428,9 +1466,9 @@ void FragmentModule::DefineEntryPoint() {
 
     const Id main_type{TypeFunction(TypeVoid())};
     const Id main_func{OpFunction(TypeVoid(), spv::FunctionControlMask::MaskNone, main_type)};
-    AddEntryPoint(spv::ExecutionModel::Fragment, main_func, "main", primary_color_id, texcoord0_id,
-                  texcoord1_id, texcoord2_id, texcoord0_w_id, normquat_id, view_id, color_id,
-                  gl_frag_coord_id, gl_frag_depth_id);
+    AddEntryPoint(spv::ExecutionModel::Fragment, main_func, "main", primary_color_id,
+                  texcoord_id[0], texcoord_id[1], texcoord_id[2], texcoord0_w_id, normquat_id,
+                  view_id, color_id, gl_frag_coord_id, gl_frag_depth_id);
     AddExecutionMode(main_func, spv::ExecutionMode::OriginUpperLeft);
     AddExecutionMode(main_func, spv::ExecutionMode::DepthReplacing);
 }
@@ -1443,21 +1481,25 @@ void FragmentModule::DefineUniformStructs() {
     const Id light_src_array_id{TypeArray(light_src_struct_id, ConstU32(NUM_LIGHTS))};
     const Id lighting_lut_array_id{TypeArray(ivec_ids.Get(4), ConstU32(NUM_LIGHTING_SAMPLERS / 4))};
     const Id const_color_array_id{TypeArray(vec_ids.Get(4), ConstU32(NUM_TEV_STAGES))};
+    const Id border_color_array_id{TypeArray(vec_ids.Get(4), ConstU32(NUM_NON_PROC_TEX_UNITS))};
 
-    const Id shader_data_struct_id{TypeStruct(
-        i32_id, i32_id, f32_id, f32_id, f32_id, f32_id, i32_id, i32_id, i32_id, i32_id, i32_id,
-        i32_id, i32_id, i32_id, i32_id, i32_id, f32_id, i32_id, u32_id, lighting_lut_array_id,
-        vec_ids.Get(3), vec_ids.Get(2), vec_ids.Get(2), vec_ids.Get(2), vec_ids.Get(3),
-        light_src_array_id, const_color_array_id, vec_ids.Get(4), vec_ids.Get(3), vec_ids.Get(4))};
+    const Id shader_data_struct_id{
+        TypeStruct(i32_id, i32_id, f32_id, f32_id, f32_id, f32_id, i32_id, i32_id, i32_id, i32_id,
+                   i32_id, i32_id, i32_id, i32_id, i32_id, i32_id, f32_id, i32_id, u32_id,
+                   lighting_lut_array_id, vec_ids.Get(3), vec_ids.Get(2), vec_ids.Get(2),
+                   vec_ids.Get(2), vec_ids.Get(3), light_src_array_id, const_color_array_id,
+                   vec_ids.Get(4), vec_ids.Get(3), border_color_array_id, vec_ids.Get(4))};
 
     constexpr std::array light_src_offsets{0u, 16u, 32u, 48u, 64u, 80u, 92u, 96u};
-    constexpr std::array shader_data_offsets{
-        0u,  4u,  8u,  12u, 16u, 20u,  24u,  28u,  32u,  36u,  40u,  44u,   48u,   52u,   56u,
-        60u, 64u, 68u, 72u, 80u, 176u, 192u, 200u, 208u, 224u, 240u, 1136u, 1232u, 1248u, 1264u};
+    constexpr std::array shader_data_offsets{0u,   4u,   8u,    12u,   16u,   20u,   24u,  28u,
+                                             32u,  36u,  40u,   44u,   48u,   52u,   56u,  60u,
+                                             64u,  68u,  72u,   80u,   176u,  192u,  200u, 208u,
+                                             224u, 240u, 1136u, 1232u, 1248u, 1264u, 1312u};
 
     Decorate(lighting_lut_array_id, spv::Decoration::ArrayStride, 16u);
     Decorate(light_src_array_id, spv::Decoration::ArrayStride, 112u);
     Decorate(const_color_array_id, spv::Decoration::ArrayStride, 16u);
+    Decorate(border_color_array_id, spv::Decoration::ArrayStride, 16u);
     for (u32 i = 0; i < static_cast<u32>(light_src_offsets.size()); i++) {
         MemberDecorate(light_src_struct_id, i, spv::Decoration::Offset, light_src_offsets[i]);
     }
@@ -1475,9 +1517,9 @@ void FragmentModule::DefineUniformStructs() {
 void FragmentModule::DefineInterface() {
     // Define interface block
     primary_color_id = DefineInput(vec_ids.Get(4), 1);
-    texcoord0_id = DefineInput(vec_ids.Get(2), 2);
-    texcoord1_id = DefineInput(vec_ids.Get(2), 3);
-    texcoord2_id = DefineInput(vec_ids.Get(2), 4);
+    texcoord_id[0] = DefineInput(vec_ids.Get(2), 2);
+    texcoord_id[1] = DefineInput(vec_ids.Get(2), 3);
+    texcoord_id[2] = DefineInput(vec_ids.Get(2), 4);
     texcoord0_w_id = DefineInput(f32_id, 5);
     normquat_id = DefineInput(vec_ids.Get(4), 6);
     view_id = DefineInput(vec_ids.Get(3), 7);

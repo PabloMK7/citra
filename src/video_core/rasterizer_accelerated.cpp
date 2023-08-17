@@ -599,6 +599,17 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
         SyncTextureLodBias(2);
         break;
 
+    // Texture borders
+    case PICA_REG_INDEX(texturing.texture0.border_color):
+        SyncTextureBorderColor(0);
+        break;
+    case PICA_REG_INDEX(texturing.texture1.border_color):
+        SyncTextureBorderColor(1);
+        break;
+    case PICA_REG_INDEX(texturing.texture2.border_color):
+        SyncTextureBorderColor(2);
+        break;
+
     // Clipping plane
     case PICA_REG_INDEX(rasterizer.clip_coef[0]):
     case PICA_REG_INDEX(rasterizer.clip_coef[1]):
@@ -817,6 +828,16 @@ void RasterizerAccelerated::SyncTextureLodBias(int tex_index) {
     const f32 bias = pica_textures[tex_index].config.lod.bias / 256.0f;
     if (bias != uniform_block_data.data.tex_lod_bias[tex_index]) {
         uniform_block_data.data.tex_lod_bias[tex_index] = bias;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerAccelerated::SyncTextureBorderColor(int tex_index) {
+    const auto pica_textures = regs.texturing.GetTextures();
+    const auto params = pica_textures[tex_index].config;
+    const Common::Vec4f border_color = ColorRGBA8(params.border_color.raw);
+    if (border_color != uniform_block_data.data.tex_border_color[tex_index]) {
+        uniform_block_data.data.tex_border_color[tex_index] = border_color;
         uniform_block_data.dirty = true;
     }
 }

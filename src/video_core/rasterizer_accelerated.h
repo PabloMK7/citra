@@ -97,6 +97,9 @@ protected:
     /// Syncs the texture LOD bias to match the PICA register
     void SyncTextureLodBias(int tex_index);
 
+    /// Syncs the texture border color to match the PICA registers
+    void SyncTextureBorderColor(int tex_index);
+
     /// Syncs the clip coefficients to match the PICA register
     void SyncClipCoef();
 

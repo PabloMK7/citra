@@ -409,7 +409,9 @@ bool Instance::CreateDevice() {
     const bool has_extended_dynamic_state =
         add_extension(VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME, is_arm || is_qualcomm,
                       "it is broken on Qualcomm and ARM drivers");
-    const bool has_custom_border_color = add_extension(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
+    const bool has_custom_border_color =
+        add_extension(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME, is_qualcomm,
+                      "it is broken on most Qualcomm driver versions");
     const bool has_index_type_uint8 = add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
     const bool has_pipeline_creation_cache_control =
         add_extension(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);

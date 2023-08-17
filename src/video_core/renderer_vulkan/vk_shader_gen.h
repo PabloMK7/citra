@@ -57,6 +57,11 @@ struct PicaFSConfigState {
         BitField<28, 1, u32> shadow_texture_orthographic;
     };
 
+    union {
+        BitField<0, 1, u32> enable_s;
+        BitField<1, 1, u32> enable_t;
+    } texture_border_color[3];
+
     std::array<TevStageConfigRaw, 6> tev_stages;
 
     struct {

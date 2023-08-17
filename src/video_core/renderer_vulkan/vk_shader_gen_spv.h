@@ -30,6 +30,8 @@ class FragmentModule : public Sirit::Module {
     static constexpr u32 NUM_TEV_STAGES = 6;
     static constexpr u32 NUM_LIGHTS = 8;
     static constexpr u32 NUM_LIGHTING_SAMPLERS = 24;
+    static constexpr u32 NUM_TEX_UNITS = 4;
+    static constexpr u32 NUM_NON_PROC_TEX_UNITS = 3;
 
 public:
     explicit FragmentModule(Core::TelemetrySession& telemetry, const PicaFSConfig& config);
@@ -57,14 +59,14 @@ private:
     /// Writes the code to emulate the specified TEV stage
     void WriteTevStage(s32 index);
 
-    /// Defines the tex3 proctex sampling function
-    void DefineProcTexSampler();
+    /// Defines the basic texture sampling functions for a unit
+    void DefineTexSampler(u32 texture_unit);
+
+    /// Function for sampling the procedurally generated texture unit.
+    Id ProcTexSampler();
 
     /// Writes the if-statement condition used to evaluate alpha testing.
     void WriteAlphaTestCondition(Pica::FramebufferRegs::CompareFunc func);
-
-    /// Samples the current fragment texel from the provided texture unit
-    [[nodiscard]] Id SampleTexture(u32 texture_unit);
 
     /// Samples the current fragment texel from shadow plane
     [[nodiscard]] Id SampleShadow();
@@ -237,9 +239,7 @@ private:
     Id shader_data_id{};
 
     Id primary_color_id{};
-    Id texcoord0_id{};
-    Id texcoord1_id{};
-    Id texcoord2_id{};
+    Id texcoord_id[NUM_NON_PROC_TEX_UNITS]{};
     Id texcoord0_w_id{};
     Id normquat_id{};
     Id view_id{};
@@ -276,7 +276,7 @@ private:
     Id alpha_results_2{};
     Id alpha_results_3{};
 
-    Id proctex_func{};
+    Id sample_tex_unit_func[NUM_TEX_UNITS]{};
     Id noise1d_table{};
     Id noise2d_table{};
     Id lut_offsets{};

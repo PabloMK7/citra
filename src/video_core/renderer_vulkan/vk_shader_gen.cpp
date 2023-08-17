@@ -69,6 +69,17 @@ PicaFSConfig::PicaFSConfig(const Pica::Regs& regs, const Instance& instance) {
 
     state.texture2_use_coord1.Assign(regs.texturing.main_config.texture2_use_coord1 != 0);
 
+    const auto pica_textures = regs.texturing.GetTextures();
+    for (u32 tex_index = 0; tex_index < 3; tex_index++) {
+        const auto config = pica_textures[tex_index].config;
+        state.texture_border_color[tex_index].enable_s.Assign(
+            !instance.IsCustomBorderColorSupported() &&
+            config.wrap_s == TexturingRegs::TextureConfig::WrapMode::ClampToBorder);
+        state.texture_border_color[tex_index].enable_t.Assign(
+            !instance.IsCustomBorderColorSupported() &&
+            config.wrap_t == TexturingRegs::TextureConfig::WrapMode::ClampToBorder);
+    }
+
     // Emulate logic op in the shader if not supported. This is mostly for mobile GPUs
     const bool emulate_logic_op = instance.NeedsLogicOpEmulation() &&
                                   !Pica::g_state.regs.framebuffer.output_merger.alphablend_enable;
@@ -284,54 +295,6 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
             stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
 }
 
-static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_unit) {
-    const auto& state = config.state;
-    switch (texture_unit) {
-    case 0:
-        // Only unit 0 respects the texturing type
-        switch (state.texture0_type) {
-        case TexturingRegs::TextureConfig::Texture2D:
-            return "textureLod(tex0, texcoord0, getLod(texcoord0 * "
-                   "vec2(textureSize(tex0, 0))) + tex_lod_bias[0])";
-        case TexturingRegs::TextureConfig::Projection2D:
-            // TODO (wwylele): find the exact LOD formula for projection texture
-            return "textureProj(tex0, vec3(texcoord0, texcoord0_w))";
-        case TexturingRegs::TextureConfig::TextureCube:
-            return "texture(tex_cube, vec3(texcoord0, texcoord0_w))";
-        case TexturingRegs::TextureConfig::Shadow2D:
-            return "shadowTexture(texcoord0, texcoord0_w)";
-        case TexturingRegs::TextureConfig::ShadowCube:
-            return "shadowTextureCube(texcoord0, texcoord0_w)";
-        case TexturingRegs::TextureConfig::Disabled:
-            return "vec4(0.0)";
-        default:
-            LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}", state.texture0_type);
-            UNIMPLEMENTED();
-            return "texture(tex0, texcoord0)";
-        }
-    case 1:
-        return "textureLod(tex1, texcoord1, getLod(texcoord1 * "
-               "vec2(textureSize(tex1, 0))) + tex_lod_bias[1])";
-    case 2:
-        if (state.texture2_use_coord1)
-            return "textureLod(tex2, texcoord1, getLod(texcoord1 * "
-                   "vec2(textureSize(tex2, 0))) + tex_lod_bias[2])";
-        else
-            return "textureLod(tex2, texcoord2, getLod(texcoord2 * "
-                   "vec2(textureSize(tex2, 0))) + tex_lod_bias[2])";
-    case 3:
-        if (state.proctex.enable) {
-            return "ProcTex()";
-        } else {
-            LOG_DEBUG(Render_OpenGL, "Using Texture3 without enabling it");
-            return "vec4(0.0)";
-        }
-    default:
-        UNREACHABLE();
-        return "";
-    }
-}
-
 /// Writes the specified TEV stage source component(s)
 static void AppendSource(std::string& out, const PicaFSConfig& config,
                          TevStageConfig::Source source, std::string_view index_name) {
@@ -347,16 +310,16 @@ static void AppendSource(std::string& out, const PicaFSConfig& config,
         out += "secondary_fragment_color";
         break;
     case Source::Texture0:
-        out += SampleTexture(config, 0);
+        out += "sampleTexUnit0()";
         break;
     case Source::Texture1:
-        out += SampleTexture(config, 1);
+        out += "sampleTexUnit1()";
         break;
     case Source::Texture2:
-        out += SampleTexture(config, 2);
+        out += "sampleTexUnit2()";
         break;
     case Source::Texture3:
-        out += SampleTexture(config, 3);
+        out += "sampleTexUnit3()";
         break;
     case Source::PreviousBuffer:
         out += "combiner_buffer";
@@ -656,7 +619,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
 
     // Compute fragment normals and tangents
     const auto perturbation = [&] {
-        return fmt::format("2.0 * ({}).rgb - 1.0", SampleTexture(config, lighting.bump_selector));
+        return fmt::format("2.0 * (sampleTexUnit{}()).rgb - 1.0", lighting.bump_selector);
     };
 
     switch (lighting.bump_mode) {
@@ -700,7 +663,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
            "vec3 tangent = quaternion_rotate(normalized_normquat, surface_tangent);\n";
 
     if (lighting.enable_shadow) {
-        std::string shadow_texture = SampleTexture(config, lighting.shadow_selector);
+        std::string shadow_texture = fmt::format("sampleTexUnit{}()", lighting.shadow_selector);
         if (lighting.shadow_invert) {
             out += fmt::format("vec4 shadow = vec4(1.0) - {};\n", shadow_texture);
         } else {
@@ -1310,6 +1273,7 @@ float mix2(vec4 s, vec2 a) {
 
 vec4 shadowTexture(vec2 uv, float w) {
 )";
+
     if (!config.state.shadow_texture_orthographic) {
         out += "uv /= w;";
     }
@@ -1344,9 +1308,7 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         uv = -c.xy;
         if (c.z > 0.0) uv.x = -uv.x;
     }
-)";
-    out += "uint z = uint(max(0, int(min(w, 1.0) * float(0xFFFFFF)) - shadow_texture_bias));";
-    out += R"(
+    uint z = uint(max(0, int(min(w, 1.0) * float(0xFFFFFF)) - shadow_texture_bias));
     vec2 coord = vec2(size) * (uv / w * vec2(0.5) + vec2(0.5)) - vec2(0.5);
     vec2 coord_floor = floor(coord);
     vec2 f = coord - coord_floor;
@@ -1409,10 +1371,92 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         CompareShadow(pixels.w, z));
     return vec4(mix2(s, f));
 }
-)";
+    )";
 
-    if (config.state.proctex.enable)
+    if (config.state.proctex.enable) {
         AppendProcTexSampler(out, config);
+    }
+
+    for (u32 texture_unit = 0; texture_unit < 4; texture_unit++) {
+        out += fmt::format("vec4 sampleTexUnit{}() {{", texture_unit);
+        if (texture_unit == 0 && state.texture0_type == TexturingRegs::TextureConfig::Disabled) {
+            out += "return vec4(0.0);}";
+            continue;
+        } else if (texture_unit == 3) {
+            if (state.proctex.enable) {
+                out += "return ProcTex();}";
+            } else {
+                out += "return vec4(0.0);}";
+            }
+            continue;
+        }
+
+        u32 texcoord_num = texture_unit == 2 && state.texture2_use_coord1 ? 1 : texture_unit;
+        if (config.state.texture_border_color[texture_unit].enable_s) {
+            out += fmt::format(R"(
+            if (texcoord{}.x < 0 || texcoord{}.x > 1) {{
+                return tex_border_color[{}];
+            }}
+            )",
+                               texcoord_num, texcoord_num, texture_unit);
+        }
+        if (config.state.texture_border_color[texture_unit].enable_t) {
+            out += fmt::format(R"(
+            if (texcoord{}.y < 0 || texcoord{}.y > 1) {{
+                return tex_border_color[{}];
+            }}
+            )",
+                               texcoord_num, texcoord_num, texture_unit);
+        }
+        // TODO: 3D border?
+
+        switch (texture_unit) {
+        case 0:
+            // Only unit 0 respects the texturing type
+            switch (state.texture0_type) {
+            case TexturingRegs::TextureConfig::Texture2D:
+                out += "return textureLod(tex0, texcoord0, getLod(texcoord0 * "
+                       "vec2(textureSize(tex0, 0))) + tex_lod_bias[0]);";
+                break;
+            case TexturingRegs::TextureConfig::Projection2D:
+                // TODO (wwylele): find the exact LOD formula for projection texture
+                out += "return textureProj(tex0, vec3(texcoord0, texcoord0_w));";
+                break;
+            case TexturingRegs::TextureConfig::TextureCube:
+                out += "return texture(tex_cube, vec3(texcoord0, texcoord0_w));";
+                break;
+            case TexturingRegs::TextureConfig::Shadow2D:
+                out += "return shadowTexture(texcoord0, texcoord0_w);";
+                break;
+            case TexturingRegs::TextureConfig::ShadowCube:
+                out += "return shadowTextureCube(texcoord0, texcoord0_w);";
+                break;
+            default:
+                LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}", state.texture0_type);
+                UNIMPLEMENTED();
+                out += "return texture(tex0, texcoord0);";
+                break;
+            }
+        case 1:
+            out += "return textureLod(tex1, texcoord1, getLod(texcoord1 * vec2(textureSize(tex1, "
+                   "0))) + tex_lod_bias[1]);";
+            break;
+        case 2:
+            if (state.texture2_use_coord1) {
+                out += "return textureLod(tex2, texcoord1, getLod(texcoord1 * "
+                       "vec2(textureSize(tex2, 0))) + tex_lod_bias[1]);";
+            } else {
+                out += "return textureLod(tex2, texcoord2, getLod(texcoord2 * "
+                       "vec2(textureSize(tex2, 0))) + tex_lod_bias[2]);";
+            }
+            break;
+        default:
+            UNREACHABLE();
+            break;
+        }
+
+        out += "}";
+    }
 
     // We round the interpolated primary color to the nearest 1/255th
     // This maintains the PICA's 8 bits of precision
