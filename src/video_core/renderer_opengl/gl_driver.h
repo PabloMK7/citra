@@ -38,6 +38,8 @@ enum class DriverBug {
     VertexArrayOutOfBound = 1 << 1,
     // On AMD and Intel drivers on Windows glTextureView produces incorrect results
     BrokenTextureView = 1 << 2,
+    // On Haswell and Broadwell Intel drivers glClearTexSubImage produces a black screen
+    BrokenClearTexture = 1 << 3,
 };
 
 /**
