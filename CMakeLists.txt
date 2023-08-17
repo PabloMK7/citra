@@ -69,6 +69,8 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder (preferred over FFmpeg)" ON "WIN32" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_AUDIOTOOLBOX "Use AudioToolbox decoder (preferred over FFmpeg)" ON "APPLE" OFF)
 
+CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundling target." ON "NOT ANDROID AND NOT IOS" OFF)
+
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" OFF)
@@ -397,7 +399,7 @@ else()
 endif()
 
 # Create target for outputting distributable bundles.
-if (NOT ANDROID AND NOT IOS)
+if (CITRA_ENABLE_BUNDLE_TARGET)
     include(BundleTarget)
     if (ENABLE_SDL2_FRONTEND)
         bundle_target(citra)
