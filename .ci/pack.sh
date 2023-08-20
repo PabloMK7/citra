@@ -7,13 +7,6 @@ REV_NAME="citra-${OS}-${TARGET}-${GITDATE}-${GITREV}"
 # Find out what release we are building
 if [[ "$GITHUB_REF_NAME" =~ ^canary- ]] || [[ "$GITHUB_REF_NAME" =~ ^nightly- ]]; then
     RELEASE_NAME=$(echo $GITHUB_REF_NAME | cut -d- -f1)
-    # For compatibility with existing installs, use mingw/osx in the archive and target names.
-    if [ "$TARGET" = "msys2" ]; then
-        REV_NAME="citra-${OS}-mingw-${GITDATE}-${GITREV}"
-        RELEASE_NAME="${RELEASE_NAME}-mingw"
-    elif [ "$OS" = "macos" ]; then
-        REV_NAME="citra-osx-${TARGET}-${GITDATE}-${GITREV}"
-    fi
 else
     RELEASE_NAME=head
 fi
