@@ -551,7 +551,6 @@ void ConfigureSystem::SetupPerGameUI() {
 }
 
 void ConfigureSystem::DownloadFromNUS() {
-#ifdef ENABLE_WEB_SERVICE
     ui->button_start_download->setEnabled(false);
 
     const auto mode =
@@ -590,5 +589,4 @@ void ConfigureSystem::DownloadFromNUS() {
     }
 
     ui->button_start_download->setEnabled(true);
-#endif
 }

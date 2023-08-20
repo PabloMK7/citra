@@ -31,9 +31,7 @@
 #include "core/hle/service/fs/fs_user.h"
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
-#ifdef ENABLE_WEB_SERVICE
-#include "web_service/nus_download.h"
-#endif
+#include "core/nus_download.h"
 
 namespace Service::AM {
 
@@ -463,7 +461,6 @@ InstallStatus InstallCIA(const std::string& path,
 }
 
 InstallStatus InstallFromNus(u64 title_id, int version) {
-#ifdef ENABLE_WEB_SERVICE
     LOG_DEBUG(Service_AM, "Downloading {:X}", title_id);
 
     CIAFile install_file{GetTitleMediaType(title_id)};
@@ -472,7 +469,7 @@ InstallStatus InstallFromNus(u64 title_id, int version) {
     if (version != -1) {
         path += fmt::format(".{}", version);
     }
-    auto tmd_response = WebService::NUS::Download(path);
+    auto tmd_response = Core::NUS::Download(path);
     if (!tmd_response) {
         LOG_ERROR(Service_AM, "Failed to download tmd for {:016X}", title_id);
         return InstallStatus::ErrorFileNotFound;
@@ -481,7 +478,7 @@ InstallStatus InstallFromNus(u64 title_id, int version) {
     tmd.Load(*tmd_response);
 
     path = fmt::format("/ccs/download/{:016X}/cetk", title_id);
-    auto cetk_response = WebService::NUS::Download(path);
+    auto cetk_response = Core::NUS::Download(path);
     if (!cetk_response) {
         LOG_ERROR(Service_AM, "Failed to download cetk for {:016X}", title_id);
         return InstallStatus::ErrorFileNotFound;
@@ -492,7 +489,7 @@ InstallStatus InstallFromNus(u64 title_id, int version) {
     for (std::size_t i = 0; i < content_count; ++i) {
         const std::string filename = fmt::format("{:08x}", tmd.GetContentIDByIndex(i));
         path = fmt::format("/ccs/download/{:016X}/{}", title_id, filename);
-        const auto temp_response = WebService::NUS::Download(path);
+        const auto temp_response = Core::NUS::Download(path);
         if (!temp_response) {
             LOG_ERROR(Service_AM, "Failed to download content for {:016X}", title_id);
             return InstallStatus::ErrorFileNotFound;
@@ -550,9 +547,6 @@ InstallStatus InstallFromNus(u64 title_id, int version) {
         return result;
     }
     return InstallStatus::Success;
-#else
-    return InstallStatus::ErrorFileNotFound;
-#endif
 }
 
 u64 GetTitleUpdateId(u64 title_id) {

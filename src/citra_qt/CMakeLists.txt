@@ -341,6 +341,10 @@ if (USE_DISCORD_PRESENCE)
     target_compile_definitions(citra-qt PRIVATE -DUSE_DISCORD_PRESENCE)
 endif()
 
+if (ENABLE_WEB_SERVICE)
+    target_link_libraries(citra-qt PRIVATE web_service)
+endif()
+
 if(UNIX AND NOT APPLE)
     install(TARGETS citra-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 endif()

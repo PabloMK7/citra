@@ -5,9 +5,9 @@
 #include <memory>
 #include <httplib.h>
 #include "common/logging/log.h"
-#include "web_service/nus_download.h"
+#include "core/nus_download.h"
 
-namespace WebService::NUS {
+namespace Core::NUS {
 
 std::optional<std::vector<u8>> Download(const std::string& path) {
     constexpr auto HOST = "http://nus.cdn.c.shop.nintendowifi.net";
@@ -46,4 +46,4 @@ std::optional<std::vector<u8>> Download(const std::string& path) {
     return std::vector<u8>(response.body.begin(), response.body.end());
 }
 
-} // namespace WebService::NUS
+} // namespace Core::NUS

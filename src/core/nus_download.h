@@ -8,8 +8,8 @@
 #include <vector>
 #include "common/common_types.h"
 
-namespace WebService::NUS {
+namespace Core::NUS {
 
 std::optional<std::vector<u8>> Download(const std::string& path);
 
-}
+} // namespace Core::NUS

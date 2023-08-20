@@ -458,6 +458,8 @@ add_library(citra_core STATIC
     mmio.h
     movie.cpp
     movie.h
+    nus_download.cpp
+    nus_download.h
     perf_stats.cpp
     perf_stats.h
     precompiled_headers.h
