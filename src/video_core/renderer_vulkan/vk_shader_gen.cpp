@@ -112,79 +112,100 @@ PicaFSConfig::PicaFSConfig(const Pica::Regs& regs, const Instance& instance) {
         regs.texturing.tev_combiner_buffer_input.update_mask_a.Value() << 4);
 
     // Fragment lighting
-
     state.lighting.enable.Assign(!regs.lighting.disable);
-    state.lighting.src_num.Assign(regs.lighting.max_light_index + 1);
+    if (state.lighting.enable) {
+        state.lighting.src_num.Assign(regs.lighting.max_light_index + 1);
 
-    for (u32 light_index = 0; light_index < state.lighting.src_num; ++light_index) {
-        const u32 num = regs.lighting.light_enable.GetNum(light_index);
-        const auto& light = regs.lighting.light[num];
-        state.lighting.light[light_index].num.Assign(num);
-        state.lighting.light[light_index].directional.Assign(light.config.directional != 0);
-        state.lighting.light[light_index].two_sided_diffuse.Assign(light.config.two_sided_diffuse !=
-                                                                   0);
-        state.lighting.light[light_index].geometric_factor_0.Assign(
-            light.config.geometric_factor_0 != 0);
-        state.lighting.light[light_index].geometric_factor_1.Assign(
-            light.config.geometric_factor_1 != 0);
-        state.lighting.light[light_index].dist_atten_enable.Assign(
-            !regs.lighting.IsDistAttenDisabled(num));
-        state.lighting.light[light_index].spot_atten_enable.Assign(
-            !regs.lighting.IsSpotAttenDisabled(num));
-        state.lighting.light[light_index].shadow_enable.Assign(
-            !regs.lighting.IsShadowDisabled(num));
+        for (u32 light_index = 0; light_index < state.lighting.src_num; ++light_index) {
+            const u32 num = regs.lighting.light_enable.GetNum(light_index);
+            const auto& light = regs.lighting.light[num];
+            state.lighting.light[light_index].num.Assign(num);
+            state.lighting.light[light_index].directional.Assign(light.config.directional != 0);
+            state.lighting.light[light_index].two_sided_diffuse.Assign(
+                light.config.two_sided_diffuse != 0);
+            state.lighting.light[light_index].geometric_factor_0.Assign(
+                light.config.geometric_factor_0 != 0);
+            state.lighting.light[light_index].geometric_factor_1.Assign(
+                light.config.geometric_factor_1 != 0);
+            state.lighting.light[light_index].dist_atten_enable.Assign(
+                !regs.lighting.IsDistAttenDisabled(num));
+            state.lighting.light[light_index].spot_atten_enable.Assign(
+                !regs.lighting.IsSpotAttenDisabled(num));
+            state.lighting.light[light_index].shadow_enable.Assign(
+                !regs.lighting.IsShadowDisabled(num));
+        }
+
+        state.lighting.lut_d0.enable.Assign(regs.lighting.config1.disable_lut_d0 == 0);
+        if (state.lighting.lut_d0.enable) {
+            state.lighting.lut_d0.abs_input.Assign(regs.lighting.abs_lut_input.disable_d0 == 0);
+            state.lighting.lut_d0.type.Assign(regs.lighting.lut_input.d0.Value());
+            state.lighting.lut_d0.scale =
+                regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
+        }
+
+        state.lighting.lut_d1.enable.Assign(regs.lighting.config1.disable_lut_d1 == 0);
+        if (state.lighting.lut_d1.enable) {
+            state.lighting.lut_d1.abs_input.Assign(regs.lighting.abs_lut_input.disable_d1 == 0);
+            state.lighting.lut_d1.type.Assign(regs.lighting.lut_input.d1.Value());
+            state.lighting.lut_d1.scale =
+                regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
+        }
+
+        // this is a dummy field due to lack of the corresponding register
+        state.lighting.lut_sp.enable.Assign(1);
+        state.lighting.lut_sp.abs_input.Assign(regs.lighting.abs_lut_input.disable_sp == 0);
+        state.lighting.lut_sp.type.Assign(regs.lighting.lut_input.sp.Value());
+        state.lighting.lut_sp.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.sp);
+
+        state.lighting.lut_fr.enable.Assign(regs.lighting.config1.disable_lut_fr == 0);
+        if (state.lighting.lut_fr.enable) {
+            state.lighting.lut_fr.abs_input.Assign(regs.lighting.abs_lut_input.disable_fr == 0);
+            state.lighting.lut_fr.type.Assign(regs.lighting.lut_input.fr.Value());
+            state.lighting.lut_fr.scale =
+                regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
+        }
+
+        state.lighting.lut_rr.enable.Assign(regs.lighting.config1.disable_lut_rr == 0);
+        if (state.lighting.lut_rr.enable) {
+            state.lighting.lut_rr.abs_input.Assign(regs.lighting.abs_lut_input.disable_rr == 0);
+            state.lighting.lut_rr.type.Assign(regs.lighting.lut_input.rr.Value());
+            state.lighting.lut_rr.scale =
+                regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
+        }
+
+        state.lighting.lut_rg.enable.Assign(regs.lighting.config1.disable_lut_rg == 0);
+        if (state.lighting.lut_rg.enable) {
+            state.lighting.lut_rg.abs_input.Assign(regs.lighting.abs_lut_input.disable_rg == 0);
+            state.lighting.lut_rg.type.Assign(regs.lighting.lut_input.rg.Value());
+            state.lighting.lut_rg.scale =
+                regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
+        }
+
+        state.lighting.lut_rb.enable.Assign(regs.lighting.config1.disable_lut_rb == 0);
+        if (state.lighting.lut_rb.enable) {
+            state.lighting.lut_rb.abs_input.Assign(regs.lighting.abs_lut_input.disable_rb == 0);
+            state.lighting.lut_rb.type.Assign(regs.lighting.lut_input.rb.Value());
+            state.lighting.lut_rb.scale =
+                regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
+        }
+
+        state.lighting.config.Assign(regs.lighting.config0.config);
+        state.lighting.enable_primary_alpha.Assign(regs.lighting.config0.enable_primary_alpha);
+        state.lighting.enable_secondary_alpha.Assign(regs.lighting.config0.enable_secondary_alpha);
+        state.lighting.bump_mode.Assign(regs.lighting.config0.bump_mode);
+        state.lighting.bump_selector.Assign(regs.lighting.config0.bump_selector);
+        state.lighting.bump_renorm.Assign(regs.lighting.config0.disable_bump_renorm == 0);
+        state.lighting.clamp_highlights.Assign(regs.lighting.config0.clamp_highlights != 0);
+
+        state.lighting.enable_shadow.Assign(regs.lighting.config0.enable_shadow != 0);
+        if (state.lighting.enable_shadow) {
+            state.lighting.shadow_primary.Assign(regs.lighting.config0.shadow_primary != 0);
+            state.lighting.shadow_secondary.Assign(regs.lighting.config0.shadow_secondary != 0);
+            state.lighting.shadow_invert.Assign(regs.lighting.config0.shadow_invert != 0);
+            state.lighting.shadow_alpha.Assign(regs.lighting.config0.shadow_alpha != 0);
+            state.lighting.shadow_selector.Assign(regs.lighting.config0.shadow_selector);
+        }
     }
-
-    state.lighting.lut_d0.enable.Assign(regs.lighting.config1.disable_lut_d0 == 0);
-    state.lighting.lut_d0.abs_input.Assign(regs.lighting.abs_lut_input.disable_d0 == 0);
-    state.lighting.lut_d0.type.Assign(regs.lighting.lut_input.d0.Value());
-    state.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
-
-    state.lighting.lut_d1.enable.Assign(regs.lighting.config1.disable_lut_d1 == 0);
-    state.lighting.lut_d1.abs_input.Assign(regs.lighting.abs_lut_input.disable_d1 == 0);
-    state.lighting.lut_d1.type.Assign(regs.lighting.lut_input.d1.Value());
-    state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
-
-    // this is a dummy field due to lack of the corresponding register
-    state.lighting.lut_sp.enable.Assign(1);
-    state.lighting.lut_sp.abs_input.Assign(regs.lighting.abs_lut_input.disable_sp == 0);
-    state.lighting.lut_sp.type.Assign(regs.lighting.lut_input.sp.Value());
-    state.lighting.lut_sp.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.sp);
-
-    state.lighting.lut_fr.enable.Assign(regs.lighting.config1.disable_lut_fr == 0);
-    state.lighting.lut_fr.abs_input.Assign(regs.lighting.abs_lut_input.disable_fr == 0);
-    state.lighting.lut_fr.type.Assign(regs.lighting.lut_input.fr.Value());
-    state.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
-
-    state.lighting.lut_rr.enable.Assign(regs.lighting.config1.disable_lut_rr == 0);
-    state.lighting.lut_rr.abs_input.Assign(regs.lighting.abs_lut_input.disable_rr == 0);
-    state.lighting.lut_rr.type.Assign(regs.lighting.lut_input.rr.Value());
-    state.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
-
-    state.lighting.lut_rg.enable.Assign(regs.lighting.config1.disable_lut_rg == 0);
-    state.lighting.lut_rg.abs_input.Assign(regs.lighting.abs_lut_input.disable_rg == 0);
-    state.lighting.lut_rg.type.Assign(regs.lighting.lut_input.rg.Value());
-    state.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
-
-    state.lighting.lut_rb.enable.Assign(regs.lighting.config1.disable_lut_rb == 0);
-    state.lighting.lut_rb.abs_input.Assign(regs.lighting.abs_lut_input.disable_rb == 0);
-    state.lighting.lut_rb.type.Assign(regs.lighting.lut_input.rb.Value());
-    state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
-
-    state.lighting.config.Assign(regs.lighting.config0.config);
-    state.lighting.enable_primary_alpha.Assign(regs.lighting.config0.enable_primary_alpha);
-    state.lighting.enable_secondary_alpha.Assign(regs.lighting.config0.enable_secondary_alpha);
-    state.lighting.bump_mode.Assign(regs.lighting.config0.bump_mode);
-    state.lighting.bump_selector.Assign(regs.lighting.config0.bump_selector);
-    state.lighting.bump_renorm.Assign(regs.lighting.config0.disable_bump_renorm == 0);
-    state.lighting.clamp_highlights.Assign(regs.lighting.config0.clamp_highlights != 0);
-
-    state.lighting.enable_shadow.Assign(regs.lighting.config0.enable_shadow != 0);
-    state.lighting.shadow_primary.Assign(regs.lighting.config0.shadow_primary != 0);
-    state.lighting.shadow_secondary.Assign(regs.lighting.config0.shadow_secondary != 0);
-    state.lighting.shadow_invert.Assign(regs.lighting.config0.shadow_invert != 0);
-    state.lighting.shadow_alpha.Assign(regs.lighting.config0.shadow_alpha != 0);
-    state.lighting.shadow_selector.Assign(regs.lighting.config0.shadow_selector);
 
     state.proctex.enable.Assign(regs.texturing.main_config.texture3_enable);
     if (state.proctex.enable) {
