@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <numeric>
+#include <boost/circular_buffer.hpp>
 #include <boost/container/static_vector.hpp>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
@@ -26,32 +27,64 @@ using nihstro::SwizzlePattern;
 
 namespace Pica::Shader {
 
+struct IfStackElement {
+    u32 else_address;
+    u32 end_address;
+};
+
 struct CallStackElement {
-    u32 final_address;  // Address upon which we jump to return_address
-    u32 return_address; // Where to jump when leaving scope
-    u8 repeat_counter;  // How often to repeat until this call stack element is removed
-    u8 loop_increment;  // Which value to add to the loop counter after an iteration
-                        // TODO: Should this be a signed value? Does it even matter?
-    u32 loop_address;   // The address where we'll return to after each loop iteration
+    u32 end_address;
+    u32 return_address;
+};
+
+struct LoopStackElement {
+    u32 entry_address;
+    u32 end_address;
+    u8 loop_downcounter;
+    u8 address_increment;
+    u8 previous_aL;
 };
 
 template <bool Debug>
 static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
-                           unsigned offset) {
-    // TODO: Is there a maximal size for this?
-    boost::container::static_vector<CallStackElement, 16> call_stack;
-    u32 program_counter = offset;
+                           unsigned entry_point) {
+    boost::circular_buffer<IfStackElement> if_stack(8);
+    boost::circular_buffer<CallStackElement> call_stack(4);
+    boost::circular_buffer<LoopStackElement> loop_stack(4);
+    u32 program_counter = entry_point;
 
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
 
-    auto call = [&program_counter, &call_stack](u32 offset, u32 num_instructions, u32 return_offset,
-                                                u8 repeat_count, u8 loop_increment) {
-        // -1 to make sure when incrementing the PC we end up at the correct offset
-        program_counter = offset - 1;
-        ASSERT(call_stack.size() < call_stack.capacity());
-        call_stack.push_back(
-            {offset + num_instructions, return_offset, repeat_count, loop_increment, offset});
+    const auto do_if = [&](Instruction instr, bool condition) {
+        if (condition) {
+            if_stack.push_back({
+                .else_address = instr.flow_control.dest_offset,
+                .end_address = instr.flow_control.dest_offset + instr.flow_control.num_instructions,
+            });
+        } else {
+            program_counter = instr.flow_control.dest_offset - 1;
+        }
+    };
+
+    const auto do_call = [&](Instruction instr) {
+        call_stack.push_back({
+            .end_address = instr.flow_control.dest_offset + instr.flow_control.num_instructions,
+            .return_address = program_counter + 1,
+        });
+        program_counter = instr.flow_control.dest_offset - 1;
+    };
+
+    const auto do_loop = [&](Instruction instr, const Common::Vec4<u8>& loop_param) {
+        const u8 previous_aL = static_cast<u8>(state.address_registers[2]);
+        loop_stack.push_back({
+            .entry_address = program_counter + 1,
+            .end_address = instr.flow_control.dest_offset + 1,
+            .loop_downcounter = loop_param.x,
+            .address_increment = loop_param.z,
+            .previous_aL = previous_aL,
+        });
+        state.address_registers[2] = loop_param.y;
     };
 
     auto evaluate_condition = [&state](Instruction::FlowControlType flow_control) {
@@ -82,25 +115,11 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
     // Placeholder for invalid inputs
     static f24 dummy_vec4_float24[4];
 
-    unsigned iteration = 0;
-    bool exit_loop = false;
-    while (!exit_loop) {
-        if (!call_stack.empty()) {
-            auto& top = call_stack.back();
-            if (program_counter == top.final_address) {
-                state.address_registers[2] += top.loop_increment;
-
-                if (top.repeat_counter-- == 0) {
-                    program_counter = top.return_address;
-                    call_stack.pop_back();
-                } else {
-                    program_counter = top.loop_address;
-                }
-
-                // TODO: Is "trying again" accurate to hardware?
-                continue;
-            }
-        }
+    u32 iteration = 0;
+    bool should_stop = false;
+    while (!should_stop) {
+        bool is_break = false;
+        const u32 old_program_counter = program_counter;
 
         const Instruction instr = {program_code[program_counter]};
         const SwizzlePattern swizzle = {swizzle_data[instr.common.operand_desc_id]};
@@ -538,7 +557,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             // Handle each instruction on its own
             switch (instr.opcode.Value()) {
             case OpCode::Id::END:
-                exit_loop = true;
+                should_stop = true;
                 break;
 
             case OpCode::Id::JMPC:
@@ -559,72 +578,68 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 break;
 
             case OpCode::Id::CALL:
-                call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
-                     program_counter + 1, 0, 0);
+                do_call(instr);
                 break;
 
             case OpCode::Id::CALLU:
                 Record<DebugDataRecord::COND_BOOL_IN>(
                     debug_data, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
                 if (uniforms.b[instr.flow_control.bool_uniform_id]) {
-                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
-                         program_counter + 1, 0, 0);
+                    do_call(instr);
                 }
                 break;
 
             case OpCode::Id::CALLC:
                 Record<DebugDataRecord::COND_CMP_IN>(debug_data, iteration, state.conditional_code);
                 if (evaluate_condition(instr.flow_control)) {
-                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
-                         program_counter + 1, 0, 0);
+                    do_call(instr);
                 }
                 break;
 
             case OpCode::Id::NOP:
                 break;
 
-            case OpCode::Id::IFU:
+            case OpCode::Id::IFU: {
                 Record<DebugDataRecord::COND_BOOL_IN>(
                     debug_data, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
-                if (uniforms.b[instr.flow_control.bool_uniform_id]) {
-                    call(program_counter + 1, instr.flow_control.dest_offset - program_counter - 1,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
-                         0);
-                } else {
-                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
-                         0);
-                }
-
+                const bool cond = uniforms.b[instr.flow_control.bool_uniform_id];
+                do_if(instr, cond);
                 break;
+            }
 
             case OpCode::Id::IFC: {
                 // TODO: Do we need to consider swizzlers here?
-
                 Record<DebugDataRecord::COND_CMP_IN>(debug_data, iteration, state.conditional_code);
-                if (evaluate_condition(instr.flow_control)) {
-                    call(program_counter + 1, instr.flow_control.dest_offset - program_counter - 1,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
-                         0);
-                } else {
-                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
-                         0);
-                }
-
+                const bool cond = evaluate_condition(instr.flow_control);
+                do_if(instr, cond);
                 break;
             }
 
             case OpCode::Id::LOOP: {
-                Common::Vec4<u8> loop_param(uniforms.i[instr.flow_control.int_uniform_id].x,
-                                            uniforms.i[instr.flow_control.int_uniform_id].y,
-                                            uniforms.i[instr.flow_control.int_uniform_id].z,
-                                            uniforms.i[instr.flow_control.int_uniform_id].w);
+                const Common::Vec4<u8>& loop_param = uniforms.i[instr.flow_control.int_uniform_id];
                 state.address_registers[2] = loop_param.y;
 
                 Record<DebugDataRecord::LOOP_INT_IN>(debug_data, iteration, loop_param);
-                call(program_counter + 1, instr.flow_control.dest_offset - program_counter,
-                     instr.flow_control.dest_offset + 1, loop_param.x, loop_param.z);
+                do_loop(instr, loop_param);
+                Record<DebugDataRecord::ADDR_REG_OUT>(debug_data, iteration,
+                                                      state.address_registers);
+                break;
+            }
+
+            case OpCode::Id::BREAK: {
+                is_break = true;
+                Record<DebugDataRecord::ADDR_REG_OUT>(debug_data, iteration,
+                                                      state.address_registers);
+                break;
+            }
+
+            case OpCode::Id::BREAKC: {
+                Record<DebugDataRecord::COND_CMP_IN>(debug_data, iteration, state.conditional_code);
+                if (evaluate_condition(instr.flow_control)) {
+                    is_break = true;
+                }
+                Record<DebugDataRecord::ADDR_REG_OUT>(debug_data, iteration,
+                                                      state.address_registers);
                 break;
             }
 
@@ -657,6 +672,47 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 
         ++program_counter;
         ++iteration;
+
+        // Stacks are checked in the order CALL -> IF -> LOOP. The CALL stack
+        // can be popped multiple times per instruction. A JMP at the end of a
+        // scope is never taken, this is why we compare against
+        // old_program_counter + 1 here.
+        u32 next_program_counter = old_program_counter + 1;
+        for (u32 i = 0; i < 4; i++) {
+            if (call_stack.empty() || call_stack.back().end_address != next_program_counter)
+                break;
+            // Hardware bug: when popping four CALL scopes at once, the last
+            // one doesn't update the program counter
+            if (i < 3) {
+                program_counter = call_stack.back().return_address;
+                next_program_counter = program_counter;
+            }
+            call_stack.pop_back();
+        }
+
+        // The other two stacks can only pop one entry per instruction. They
+        // are checked against the original program counter before any CALL
+        // scopes were closed and they overwrite any previous program counter
+        // updates.
+        if (!if_stack.empty() && if_stack.back().else_address == old_program_counter + 1) {
+            program_counter = if_stack.back().end_address;
+            if_stack.pop_back();
+        }
+
+        if (!loop_stack.empty() &&
+            (loop_stack.back().end_address == old_program_counter + 1 || is_break)) {
+            auto& loop = loop_stack.back();
+            state.address_registers[2] += loop.address_increment;
+            if (!is_break && loop.loop_downcounter--) {
+                program_counter = loop.entry_address;
+            } else {
+                program_counter = loop.end_address;
+                // Only restore previous value if there is a surrounding LOOP scope.
+                if (loop_stack.size() > 1)
+                    state.address_registers[2] = loop.previous_aL;
+                loop_stack.pop_back();
+            }
+        }
     }
 }
 
