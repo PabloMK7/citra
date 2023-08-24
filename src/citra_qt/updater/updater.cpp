@@ -14,6 +14,7 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/updater/updater_p.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 
 #ifdef Q_OS_OSX
@@ -110,9 +111,22 @@ QString UpdaterPrivate::ToSystemExe(QString base_path) {
 #endif
 }
 
+QFileInfo UpdaterPrivate::GetMaintenanceTool() const {
+#if defined(Q_OS_UNIX) && !defined(Q_OS_OSX)
+    const auto appimage_path = QProcessEnvironment::systemEnvironment()
+                                   .value(QStringLiteral("APPIMAGE"), {})
+                                   .toStdString();
+    if (!appimage_path.empty()) {
+        const auto appimage_dir = FileUtil::GetParentPath(appimage_path);
+        LOG_DEBUG(Frontend, "Detected app image directory: {}", appimage_dir);
+        return QFileInfo(QString::fromStdString(std::string(appimage_dir)), tool_path);
+    }
+#endif
+    return QFileInfo(QCoreApplication::applicationDirPath(), tool_path);
+}
+
 bool UpdaterPrivate::HasUpdater() const {
-    QFileInfo tool_info(QCoreApplication::applicationDirPath(), tool_path);
-    return tool_info.exists();
+    return GetMaintenanceTool().exists();
 }
 
 bool UpdaterPrivate::StartUpdateCheck() {
@@ -125,9 +139,8 @@ bool UpdaterPrivate::StartUpdateCheck() {
     last_error_code = EXIT_SUCCESS;
     last_error_log.clear();
 
-    QFileInfo tool_info(QCoreApplication::applicationDirPath(), tool_path);
     main_process = new QProcess(this);
-    main_process->setProgram(tool_info.absoluteFilePath());
+    main_process->setProgram(GetMaintenanceTool().absoluteFilePath());
     main_process->setArguments({QStringLiteral("--checkupdates"), QStringLiteral("-v")});
 
     connect(main_process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
@@ -271,7 +284,7 @@ void UpdaterPrivate::LaunchWithArguments(const QStringList& args) {
         return;
     }
 
-    QFileInfo tool_info(QCoreApplication::applicationDirPath(), tool_path);
+    QFileInfo tool_info = GetMaintenanceTool();
 
     if (!QProcess::startDetached(tool_info.absoluteFilePath(), args, tool_info.absolutePath())) {
         LOG_WARNING(Frontend, "Unable to start program {}",

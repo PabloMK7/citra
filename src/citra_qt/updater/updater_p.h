@@ -26,6 +26,7 @@ public:
 
     static QString ToSystemExe(QString base_path);
 
+    QFileInfo GetMaintenanceTool() const;
     bool HasUpdater() const;
 
     bool StartUpdateCheck();
