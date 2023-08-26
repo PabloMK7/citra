@@ -99,6 +99,11 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs, bool use_normal
         state.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
         state.tev_stages[i].ops_raw = tev_stage.ops_raw;
         state.tev_stages[i].scales_raw = tev_stage.scales_raw;
+        if (tev_stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+            state.tev_stages[i].sources_raw &= 0xFFF;
+            state.tev_stages[i].modifiers_raw &= 0xFFF;
+            state.tev_stages[i].ops_raw &= 0xF;
+        }
     }
 
     state.fog_mode = regs.texturing.fog_mode;
@@ -226,8 +231,9 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs, bool use_normal
 
     state.shadow_rendering = regs.framebuffer.output_merger.fragment_operation_mode ==
                              FramebufferRegs::FragmentOperationMode::Shadow;
-
-    state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
+    if (state.shadow_rendering) {
+        state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
+    }
 
     state.use_custom_normal_map = use_normal;
 
