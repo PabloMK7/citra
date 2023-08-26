@@ -5,6 +5,10 @@ include_directories(.)
 set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
+if (ENABLE_LTO)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 # Set compilation flags
 if (MSVC)
     set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING "" FORCE)

@@ -40,8 +40,10 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     set(IS_DEBUG_BUILD ON)
+    set(IS_RELEASE_BUILD OFF)
 else()
     set(IS_DEBUG_BUILD OFF)
+    set(IS_RELEASE_BUILD ON)
 endif()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
@@ -73,7 +75,7 @@ CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundl
 
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
-option(ENABLE_LTO "Enable link time optimization" OFF)
+option(ENABLE_LTO "Enable link time optimization" ${IS_RELEASE_BUILD})
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 

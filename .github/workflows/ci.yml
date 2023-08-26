@@ -158,6 +158,11 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.target }}-
+      - name: Increase Pagefile size
+        uses: al-cheb/configure-pagefile-action@v1.2
+        with:
+          minimum-size: 2GB
+          maximum-size: 6GB
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
         if: ${{ matrix.target == 'msvc' }}

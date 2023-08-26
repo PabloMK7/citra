@@ -43,7 +43,6 @@ endif()
 
 create_target_directory_groups(input_common)
 target_link_libraries(input_common PUBLIC citra_core PRIVATE citra_common ${Boost_LIBRARIES})
-set_target_properties(input_common PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(input_common PRIVATE precompiled_headers.h)

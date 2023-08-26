@@ -167,7 +167,6 @@ create_target_directory_groups(citra_common)
 
 target_link_libraries(citra_common PUBLIC fmt::fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
 target_link_libraries(citra_common PRIVATE libzstd_static)
-set_target_properties(citra_common PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${ENABLE_LTO})
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(citra_common PRIVATE xbyak)
