@@ -1072,6 +1072,10 @@ QPushButton:focus {
   border: 1px solid #1464A0;
 }
 
+QPushButton#button_reset_defaults {
+    padding: 3px 6px;
+}
+
 /* QToolButton ------------------------------------------------------------
 
 https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtoolbutton
