@@ -23,30 +23,37 @@ public:
     explicit Framebuffer(Memory::MemorySystem& memory, const Pica::FramebufferRegs& framebuffer);
     ~Framebuffer();
 
+    /// Updates the framebuffer addresses from the PICA registers.
+    void Bind();
+
     /// Draws a pixel at the specified coordinates.
-    void DrawPixel(int x, int y, const Common::Vec4<u8>& color) const;
+    void DrawPixel(u32 x, u32 y, const Common::Vec4<u8>& color) const;
 
     /// Returns the current color at the specified coordinates.
-    [[nodiscard]] const Common::Vec4<u8> GetPixel(int x, int y) const;
+    [[nodiscard]] const Common::Vec4<u8> GetPixel(u32 x, u32 y) const;
 
     /// Returns the depth value at the specified coordinates.
-    [[nodiscard]] u32 GetDepth(int x, int y) const;
+    [[nodiscard]] u32 GetDepth(u32 x, u32 y) const;
 
     /// Returns the stencil value at the specified coordinates.
-    [[nodiscard]] u8 GetStencil(int x, int y) const;
+    [[nodiscard]] u8 GetStencil(u32 x, u32 y) const;
 
     /// Stores the provided depth value at the specified coordinates.
-    void SetDepth(int x, int y, u32 value) const;
+    void SetDepth(u32 x, u32 y, u32 value) const;
 
     /// Stores the provided stencil value at the specified coordinates.
-    void SetStencil(int x, int y, u8 value) const;
+    void SetStencil(u32 x, u32 y, u8 value) const;
 
     /// Draws a pixel to the shadow buffer.
-    void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil) const;
+    void DrawShadowMapPixel(u32 x, u32 y, u32 depth, u8 stencil) const;
 
 private:
     Memory::MemorySystem& memory;
     const Pica::FramebufferRegs& regs;
+    PAddr color_addr;
+    u8* color_buffer{};
+    PAddr depth_addr;
+    u8* depth_buffer{};
 };
 
 u8 PerformStencilAction(Pica::FramebufferRegs::StencilAction action, u8 old_stencil, u8 ref);

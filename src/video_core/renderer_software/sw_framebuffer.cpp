@@ -41,10 +41,22 @@ Framebuffer::Framebuffer(Memory::MemorySystem& memory_, const Pica::FramebufferR
 
 Framebuffer::~Framebuffer() = default;
 
-void Framebuffer::DrawPixel(int x, int y, const Common::Vec4<u8>& color) const {
-    const auto& framebuffer = regs.framebuffer;
-    const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
+void Framebuffer::Bind() {
+    PAddr addr = regs.framebuffer.GetColorBufferPhysicalAddress();
+    if (color_addr != addr) [[unlikely]] {
+        color_addr = addr;
+        color_buffer = memory.GetPhysicalPointer(color_addr);
+    }
 
+    addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
+    if (depth_addr != addr) [[unlikely]] {
+        depth_addr = addr;
+        depth_buffer = memory.GetPhysicalPointer(depth_addr);
+    }
+}
+
+void Framebuffer::DrawPixel(u32 x, u32 y, const Common::Vec4<u8>& color) const {
+    const auto& framebuffer = regs.framebuffer;
     // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
     // NOTE: The framebuffer height register contains the actual FB height minus one.
     y = framebuffer.height - y;
@@ -54,8 +66,7 @@ void Framebuffer::DrawPixel(int x, int y, const Common::Vec4<u8>& color) const {
         GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
     const u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
                            coarse_y * framebuffer.width * bytes_per_pixel;
-    u8* depth_buffer = memory.GetPhysicalPointer(addr);
-    u8* dst_pixel = depth_buffer + dst_offset;
+    u8* dst_pixel = color_buffer + dst_offset;
 
     switch (framebuffer.color_format) {
     case FramebufferRegs::ColorFormat::RGBA8:
@@ -80,10 +91,8 @@ void Framebuffer::DrawPixel(int x, int y, const Common::Vec4<u8>& color) const {
     }
 }
 
-const Common::Vec4<u8> Framebuffer::GetPixel(int x, int y) const {
+const Common::Vec4<u8> Framebuffer::GetPixel(u32 x, u32 y) const {
     const auto& framebuffer = regs.framebuffer;
-    const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
-
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
@@ -91,7 +100,6 @@ const Common::Vec4<u8> Framebuffer::GetPixel(int x, int y) const {
         GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
     const u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
                            coarse_y * framebuffer.width * bytes_per_pixel;
-    const u8* color_buffer = memory.GetPhysicalPointer(addr);
     const u8* src_pixel = color_buffer + src_offset;
 
     switch (framebuffer.color_format) {
@@ -114,10 +122,8 @@ const Common::Vec4<u8> Framebuffer::GetPixel(int x, int y) const {
     return {0, 0, 0, 0};
 }
 
-u32 Framebuffer::GetDepth(int x, int y) const {
+u32 Framebuffer::GetDepth(u32 x, u32 y) const {
     const auto& framebuffer = regs.framebuffer;
-    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
-
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
@@ -125,7 +131,6 @@ u32 Framebuffer::GetDepth(int x, int y) const {
     const u32 stride = framebuffer.width * bytes_per_pixel;
 
     const u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
-    const u8* depth_buffer = memory.GetPhysicalPointer(addr);
     const u8* src_pixel = depth_buffer + src_offset;
 
     switch (framebuffer.depth_format) {
@@ -143,10 +148,8 @@ u32 Framebuffer::GetDepth(int x, int y) const {
     }
 }
 
-u8 Framebuffer::GetStencil(int x, int y) const {
+u8 Framebuffer::GetStencil(u32 x, u32 y) const {
     const auto& framebuffer = regs.framebuffer;
-    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
-
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
@@ -154,7 +157,6 @@ u8 Framebuffer::GetStencil(int x, int y) const {
     const u32 stride = framebuffer.width * bytes_per_pixel;
 
     const u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
-    const u8* depth_buffer = memory.GetPhysicalPointer(addr);
     const u8* src_pixel = depth_buffer + src_offset;
 
     switch (framebuffer.depth_format) {
@@ -169,10 +171,8 @@ u8 Framebuffer::GetStencil(int x, int y) const {
     }
 }
 
-void Framebuffer::SetDepth(int x, int y, u32 value) const {
+void Framebuffer::SetDepth(u32 x, u32 y, u32 value) const {
     const auto& framebuffer = regs.framebuffer;
-    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
-
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
@@ -180,7 +180,6 @@ void Framebuffer::SetDepth(int x, int y, u32 value) const {
     const u32 stride = framebuffer.width * bytes_per_pixel;
 
     const u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
-    u8* depth_buffer = memory.GetPhysicalPointer(addr);
     u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (framebuffer.depth_format) {
@@ -201,10 +200,8 @@ void Framebuffer::SetDepth(int x, int y, u32 value) const {
     }
 }
 
-void Framebuffer::SetStencil(int x, int y, u8 value) const {
+void Framebuffer::SetStencil(u32 x, u32 y, u8 value) const {
     const auto& framebuffer = regs.framebuffer;
-    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
-
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
@@ -212,7 +209,6 @@ void Framebuffer::SetStencil(int x, int y, u8 value) const {
     const u32 stride = framebuffer.width * bytes_per_pixel;
 
     const u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
-    u8* depth_buffer = memory.GetPhysicalPointer(addr);
     u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (framebuffer.depth_format) {
@@ -231,7 +227,7 @@ void Framebuffer::SetStencil(int x, int y, u8 value) const {
     }
 }
 
-void Framebuffer::DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil) const {
+void Framebuffer::DrawShadowMapPixel(u32 x, u32 y, u32 depth, u8 stencil) const {
     const auto& framebuffer = regs.framebuffer;
     const auto& shadow = regs.shadow;
     const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();

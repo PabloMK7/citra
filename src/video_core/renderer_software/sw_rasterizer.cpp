@@ -96,7 +96,9 @@ private:
 } // Anonymous namespace
 
 RasterizerSoftware::RasterizerSoftware(Memory::MemorySystem& memory_)
-    : memory{memory_}, state{Pica::g_state}, regs{state.regs}, fb{memory, regs.framebuffer} {}
+    : memory{memory_}, state{Pica::g_state}, regs{state.regs},
+      num_sw_threads{std::max(std::thread::hardware_concurrency(), 2U)},
+      sw_workers{num_sw_threads, "SwRenderer workers"}, fb{memory, regs.framebuffer} {}
 
 void RasterizerSoftware::AddTriangle(const Pica::Shader::OutputVertex& v0,
                                      const Pica::Shader::OutputVertex& v1,
@@ -289,167 +291,180 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
 
     const auto w_inverse = Common::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
-    auto textures = regs.texturing.GetTextures();
+    const auto textures = regs.texturing.GetTextures();
     const auto tev_stages = regs.texturing.GetTevStages();
+
+    fb.Bind();
 
     // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
     for (u16 y = min_y + 8; y < max_y; y += 0x10) {
-        for (u16 x = min_x + 8; x < max_x; x += 0x10) {
-            // Do not process the pixel if it's inside the scissor box and the scissor mode is set
-            // to Exclude.
-            if (regs.rasterizer.scissor_test.mode == RasterizerRegs::ScissorMode::Exclude) {
-                if (x >= scissor_x1 && x < scissor_x2 && y >= scissor_y1 && y < scissor_y2) {
+        const auto process_scanline = [&, y] {
+            for (u16 x = min_x + 8; x < max_x; x += 0x10) {
+                // Do not process the pixel if it's inside the scissor box and the scissor mode is
+                // set to Exclude.
+                if (regs.rasterizer.scissor_test.mode == RasterizerRegs::ScissorMode::Exclude) {
+                    if (x >= scissor_x1 && x < scissor_x2 && y >= scissor_y1 && y < scissor_y2) {
+                        continue;
+                    }
+                }
+
+                // Calculate the barycentric coordinates w0, w1 and w2
+                const s32 w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
+                const s32 w1 = bias1 + SignedArea(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
+                const s32 w2 = bias2 + SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});
+                const s32 wsum = w0 + w1 + w2;
+
+                // If current pixel is not covered by the current primitive
+                if (w0 < 0 || w1 < 0 || w2 < 0) {
                     continue;
                 }
-            }
 
-            // Calculate the barycentric coordinates w0, w1 and w2
-            const s32 w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
-            const s32 w1 = bias1 + SignedArea(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
-            const s32 w2 = bias2 + SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});
-            const s32 wsum = w0 + w1 + w2;
+                const auto baricentric_coordinates = Common::MakeVec(
+                    f24::FromFloat32(static_cast<f32>(w0)), f24::FromFloat32(static_cast<f32>(w1)),
+                    f24::FromFloat32(static_cast<f32>(w2)));
+                const f24 interpolated_w_inverse =
+                    f24::One() / Common::Dot(w_inverse, baricentric_coordinates);
 
-            // If current pixel is not covered by the current primitive
-            if (w0 < 0 || w1 < 0 || w2 < 0) {
-                continue;
-            }
+                // interpolated_z = z / w
+                const float interpolated_z_over_w =
+                    (v0.screenpos[2].ToFloat32() * w0 + v1.screenpos[2].ToFloat32() * w1 +
+                     v2.screenpos[2].ToFloat32() * w2) /
+                    wsum;
 
-            const auto baricentric_coordinates = Common::MakeVec(
-                f24::FromFloat32(static_cast<f32>(w0)), f24::FromFloat32(static_cast<f32>(w1)),
-                f24::FromFloat32(static_cast<f32>(w2)));
-            const f24 interpolated_w_inverse =
-                f24::One() / Common::Dot(w_inverse, baricentric_coordinates);
+                // Not fully accurate. About 3 bits in precision are missing.
+                // Z-Buffer (z / w * scale + offset)
+                const float depth_scale =
+                    f24::FromRaw(regs.rasterizer.viewport_depth_range).ToFloat32();
+                const float depth_offset =
+                    f24::FromRaw(regs.rasterizer.viewport_depth_near_plane).ToFloat32();
+                float depth = interpolated_z_over_w * depth_scale + depth_offset;
 
-            // interpolated_z = z / w
-            const float interpolated_z_over_w =
-                (v0.screenpos[2].ToFloat32() * w0 + v1.screenpos[2].ToFloat32() * w1 +
-                 v2.screenpos[2].ToFloat32() * w2) /
-                wsum;
+                // Potentially switch to W-Buffer
+                if (regs.rasterizer.depthmap_enable ==
+                    Pica::RasterizerRegs::DepthBuffering::WBuffering) {
+                    // W-Buffer (z * scale + w * offset = (z / w * scale + offset) * w)
+                    depth *= interpolated_w_inverse.ToFloat32() * wsum;
+                }
 
-            // Not fully accurate. About 3 bits in precision are missing.
-            // Z-Buffer (z / w * scale + offset)
-            const float depth_scale =
-                f24::FromRaw(regs.rasterizer.viewport_depth_range).ToFloat32();
-            const float depth_offset =
-                f24::FromRaw(regs.rasterizer.viewport_depth_near_plane).ToFloat32();
-            float depth = interpolated_z_over_w * depth_scale + depth_offset;
+                // Clamp the result
+                depth = std::clamp(depth, 0.0f, 1.0f);
 
-            // Potentially switch to W-Buffer
-            if (regs.rasterizer.depthmap_enable ==
-                Pica::RasterizerRegs::DepthBuffering::WBuffering) {
-                // W-Buffer (z * scale + w * offset = (z / w * scale + offset) * w)
-                depth *= interpolated_w_inverse.ToFloat32() * wsum;
-            }
-
-            // Clamp the result
-            depth = std::clamp(depth, 0.0f, 1.0f);
-
-            /**
-             * Perspective correct attribute interpolation:
-             * Attribute values cannot be calculated by simple linear interpolation since
-             * they are not linear in screen space. For example, when interpolating a
-             * texture coordinate across two vertices, something simple like
-             *     u = (u0*w0 + u1*w1)/(w0+w1)
-             * will not work. However, the attribute value divided by the
-             * clipspace w-coordinate (u/w) and and the inverse w-coordinate (1/w) are linear
-             * in screenspace. Hence, we can linearly interpolate these two independently and
-             * calculate the interpolated attribute by dividing the results.
-             * I.e.
-             *     u_over_w   = ((u0/v0.pos.w)*w0 + (u1/v1.pos.w)*w1)/(w0+w1)
-             *     one_over_w = (( 1/v0.pos.w)*w0 + ( 1/v1.pos.w)*w1)/(w0+w1)
-             *     u = u_over_w / one_over_w
-             *
-             * The generalization to three vertices is straightforward in baricentric coordinates.
-             **/
-            const auto get_interpolated_attribute = [&](f24 attr0, f24 attr1, f24 attr2) {
-                auto attr_over_w = Common::MakeVec(attr0, attr1, attr2);
-                f24 interpolated_attr_over_w = Common::Dot(attr_over_w, baricentric_coordinates);
-                return interpolated_attr_over_w * interpolated_w_inverse;
-            };
-
-            const Common::Vec4<u8> primary_color{
-                static_cast<u8>(
-                    round(get_interpolated_attribute(v0.color.r(), v1.color.r(), v2.color.r())
-                              .ToFloat32() *
-                          255)),
-                static_cast<u8>(
-                    round(get_interpolated_attribute(v0.color.g(), v1.color.g(), v2.color.g())
-                              .ToFloat32() *
-                          255)),
-                static_cast<u8>(
-                    round(get_interpolated_attribute(v0.color.b(), v1.color.b(), v2.color.b())
-                              .ToFloat32() *
-                          255)),
-                static_cast<u8>(
-                    round(get_interpolated_attribute(v0.color.a(), v1.color.a(), v2.color.a())
-                              .ToFloat32() *
-                          255)),
-            };
-
-            std::array<Common::Vec2<f24>, 3> uv;
-            uv[0].u() = get_interpolated_attribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
-            uv[0].v() = get_interpolated_attribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
-            uv[1].u() = get_interpolated_attribute(v0.tc1.u(), v1.tc1.u(), v2.tc1.u());
-            uv[1].v() = get_interpolated_attribute(v0.tc1.v(), v1.tc1.v(), v2.tc1.v());
-            uv[2].u() = get_interpolated_attribute(v0.tc2.u(), v1.tc2.u(), v2.tc2.u());
-            uv[2].v() = get_interpolated_attribute(v0.tc2.v(), v1.tc2.v(), v2.tc2.v());
-
-            // Sample bound texture units.
-            const f24 tc0_w = get_interpolated_attribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
-            const auto texture_color = TextureColor(uv, textures, tc0_w);
-
-            Common::Vec4<u8> primary_fragment_color = {0, 0, 0, 0};
-            Common::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
-
-            if (!regs.lighting.disable) {
-                const auto normquat =
-                    Common::Quaternion<f32>{
-                        {get_interpolated_attribute(v0.quat.x, v1.quat.x, v2.quat.x).ToFloat32(),
-                         get_interpolated_attribute(v0.quat.y, v1.quat.y, v2.quat.y).ToFloat32(),
-                         get_interpolated_attribute(v0.quat.z, v1.quat.z, v2.quat.z).ToFloat32()},
-                        get_interpolated_attribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
-                    }
-                        .Normalized();
-
-                const Common::Vec3f view{
-                    get_interpolated_attribute(v0.view.x, v1.view.x, v2.view.x).ToFloat32(),
-                    get_interpolated_attribute(v0.view.y, v1.view.y, v2.view.y).ToFloat32(),
-                    get_interpolated_attribute(v0.view.z, v1.view.z, v2.view.z).ToFloat32(),
+                /**
+                 * Perspective correct attribute interpolation:
+                 * Attribute values cannot be calculated by simple linear interpolation since
+                 * they are not linear in screen space. For example, when interpolating a
+                 * texture coordinate across two vertices, something simple like
+                 *     u = (u0*w0 + u1*w1)/(w0+w1)
+                 * will not work. However, the attribute value divided by the
+                 * clipspace w-coordinate (u/w) and and the inverse w-coordinate (1/w) are linear
+                 * in screenspace. Hence, we can linearly interpolate these two independently and
+                 * calculate the interpolated attribute by dividing the results.
+                 * I.e.
+                 *     u_over_w   = ((u0/v0.pos.w)*w0 + (u1/v1.pos.w)*w1)/(w0+w1)
+                 *     one_over_w = (( 1/v0.pos.w)*w0 + ( 1/v1.pos.w)*w1)/(w0+w1)
+                 *     u = u_over_w / one_over_w
+                 *
+                 * The generalization to three vertices is straightforward in baricentric
+                 *coordinates.
+                 **/
+                const auto get_interpolated_attribute = [&](f24 attr0, f24 attr1, f24 attr2) {
+                    auto attr_over_w = Common::MakeVec(attr0, attr1, attr2);
+                    f24 interpolated_attr_over_w =
+                        Common::Dot(attr_over_w, baricentric_coordinates);
+                    return interpolated_attr_over_w * interpolated_w_inverse;
                 };
-                std::tie(primary_fragment_color, secondary_fragment_color) = ComputeFragmentsColors(
-                    regs.lighting, state.lighting, normquat, view, texture_color);
-            }
 
-            // Write the TEV stages.
-            auto combiner_output = WriteTevConfig(texture_color, tev_stages, primary_color,
-                                                  primary_fragment_color, secondary_fragment_color);
+                const Common::Vec4<u8> primary_color{
+                    static_cast<u8>(
+                        round(get_interpolated_attribute(v0.color.r(), v1.color.r(), v2.color.r())
+                                  .ToFloat32() *
+                              255)),
+                    static_cast<u8>(
+                        round(get_interpolated_attribute(v0.color.g(), v1.color.g(), v2.color.g())
+                                  .ToFloat32() *
+                              255)),
+                    static_cast<u8>(
+                        round(get_interpolated_attribute(v0.color.b(), v1.color.b(), v2.color.b())
+                                  .ToFloat32() *
+                              255)),
+                    static_cast<u8>(
+                        round(get_interpolated_attribute(v0.color.a(), v1.color.a(), v2.color.a())
+                                  .ToFloat32() *
+                              255)),
+                };
 
-            const auto& output_merger = regs.framebuffer.output_merger;
-            if (output_merger.fragment_operation_mode ==
-                FramebufferRegs::FragmentOperationMode::Shadow) {
-                u32 depth_int = static_cast<u32>(depth * 0xFFFFFF);
-                // Use green color as the shadow intensity
-                u8 stencil = combiner_output.y;
-                fb.DrawShadowMapPixel(x >> 4, y >> 4, depth_int, stencil);
-                // Skip the normal output merger pipeline if it is in shadow mode
-                continue;
-            }
+                std::array<Common::Vec2<f24>, 3> uv;
+                uv[0].u() = get_interpolated_attribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
+                uv[0].v() = get_interpolated_attribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
+                uv[1].u() = get_interpolated_attribute(v0.tc1.u(), v1.tc1.u(), v2.tc1.u());
+                uv[1].v() = get_interpolated_attribute(v0.tc1.v(), v1.tc1.v(), v2.tc1.v());
+                uv[2].u() = get_interpolated_attribute(v0.tc2.u(), v1.tc2.u(), v2.tc2.u());
+                uv[2].v() = get_interpolated_attribute(v0.tc2.v(), v1.tc2.v(), v2.tc2.v());
 
-            // Does alpha testing happen before or after stencil?
-            if (!DoAlphaTest(combiner_output.a())) {
-                continue;
+                // Sample bound texture units.
+                const f24 tc0_w = get_interpolated_attribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
+                const auto texture_color = TextureColor(uv, textures, tc0_w);
+
+                Common::Vec4<u8> primary_fragment_color = {0, 0, 0, 0};
+                Common::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
+
+                if (!regs.lighting.disable) {
+                    const auto normquat =
+                        Common::Quaternion<f32>{
+                            {get_interpolated_attribute(v0.quat.x, v1.quat.x, v2.quat.x)
+                                 .ToFloat32(),
+                             get_interpolated_attribute(v0.quat.y, v1.quat.y, v2.quat.y)
+                                 .ToFloat32(),
+                             get_interpolated_attribute(v0.quat.z, v1.quat.z, v2.quat.z)
+                                 .ToFloat32()},
+                            get_interpolated_attribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
+                        }
+                            .Normalized();
+
+                    const Common::Vec3f view{
+                        get_interpolated_attribute(v0.view.x, v1.view.x, v2.view.x).ToFloat32(),
+                        get_interpolated_attribute(v0.view.y, v1.view.y, v2.view.y).ToFloat32(),
+                        get_interpolated_attribute(v0.view.z, v1.view.z, v2.view.z).ToFloat32(),
+                    };
+                    std::tie(primary_fragment_color, secondary_fragment_color) =
+                        ComputeFragmentsColors(regs.lighting, state.lighting, normquat, view,
+                                               texture_color);
+                }
+
+                // Write the TEV stages.
+                auto combiner_output =
+                    WriteTevConfig(texture_color, tev_stages, primary_color, primary_fragment_color,
+                                   secondary_fragment_color);
+
+                const auto& output_merger = regs.framebuffer.output_merger;
+                if (output_merger.fragment_operation_mode ==
+                    FramebufferRegs::FragmentOperationMode::Shadow) {
+                    const u32 depth_int = static_cast<u32>(depth * 0xFFFFFF);
+                    // Use green color as the shadow intensity
+                    const u8 stencil = combiner_output.y;
+                    fb.DrawShadowMapPixel(x >> 4, y >> 4, depth_int, stencil);
+                    // Skip the normal output merger pipeline if it is in shadow mode
+                    continue;
+                }
+
+                // Does alpha testing happen before or after stencil?
+                if (!DoAlphaTest(combiner_output.a())) {
+                    continue;
+                }
+                WriteFog(depth, combiner_output);
+                if (!DoDepthStencilTest(x, y, depth)) {
+                    continue;
+                }
+                const auto result = PixelColor(x, y, combiner_output);
+                if (regs.framebuffer.framebuffer.allow_color_write != 0) {
+                    fb.DrawPixel(x >> 4, y >> 4, result);
+                }
             }
-            WriteFog(combiner_output, depth);
-            if (!DoDepthStencilTest(x, y, depth)) {
-                continue;
-            }
-            const auto result = PixelColor(x, y, combiner_output);
-            if (regs.framebuffer.framebuffer.allow_color_write != 0) {
-                fb.DrawPixel(x >> 4, y >> 4, result);
-            }
-        }
+        };
+        sw_workers.QueueWork(std::move(process_scanline));
     }
+    sw_workers.WaitForRequests();
 }
 
 std::array<Common::Vec4<u8>, 4> RasterizerSoftware::TextureColor(
@@ -573,7 +588,7 @@ std::array<Common::Vec4<u8>, 4> RasterizerSoftware::TextureColor(
 }
 
 Common::Vec4<u8> RasterizerSoftware::PixelColor(u16 x, u16 y,
-                                                Common::Vec4<u8>& combiner_output) const {
+                                                Common::Vec4<u8> combiner_output) const {
     const auto dest = fb.GetPixel(x >> 4, y >> 4);
     Common::Vec4<u8> blend_output = combiner_output;
 
@@ -771,7 +786,7 @@ Common::Vec4<u8> RasterizerSoftware::WriteTevConfig(
     return combiner_output;
 }
 
-void RasterizerSoftware::WriteFog(Common::Vec4<u8>& combiner_output, float depth) const {
+void RasterizerSoftware::WriteFog(float depth, Common::Vec4<u8>& combiner_output) const {
     /**
      * Apply fog combiner. Not fully accurate. We'd have to know what data type is used to
      * store the depth etc. Using float for now until we know more about Pica datatypes.
