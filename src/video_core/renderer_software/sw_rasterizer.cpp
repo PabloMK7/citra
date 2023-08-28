@@ -422,8 +422,8 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
             }
 
             // Write the TEV stages.
-            WriteTevConfig(texture_color, tev_stages, primary_color, primary_fragment_color,
-                           secondary_fragment_color);
+            auto combiner_output = WriteTevConfig(texture_color, tev_stages, primary_color,
+                                                  primary_fragment_color, secondary_fragment_color);
 
             const auto& output_merger = regs.framebuffer.output_merger;
             if (output_merger.fragment_operation_mode ==
@@ -663,7 +663,7 @@ Common::Vec4<u8> RasterizerSoftware::PixelColor(u16 x, u16 y,
     return result;
 }
 
-void RasterizerSoftware::WriteTevConfig(
+Common::Vec4<u8> RasterizerSoftware::WriteTevConfig(
     std::span<const Common::Vec4<u8>, 4> texture_color,
     std::span<const Pica::TexturingRegs::TevStageConfig, 6> tev_stages,
     Common::Vec4<u8> primary_color, Common::Vec4<u8> primary_fragment_color,
@@ -676,6 +676,7 @@ void RasterizerSoftware::WriteTevConfig(
      * with some basic arithmetic. Alpha combiners can be configured separately but work
      * analogously.
      **/
+    Common::Vec4<u8> combiner_output = primary_color;
     Common::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
     Common::Vec4<u8> next_combiner_buffer =
         Common::MakeVec(regs.texturing.tev_combiner_buffer_color.r.Value(),
@@ -766,6 +767,8 @@ void RasterizerSoftware::WriteTevConfig(
             next_combiner_buffer.a() = combiner_output.a();
         }
     }
+
+    return combiner_output;
 }
 
 void RasterizerSoftware::WriteFog(Common::Vec4<u8>& combiner_output, float depth) const {

@@ -55,10 +55,11 @@ private:
     Common::Vec4<u8> PixelColor(u16 x, u16 y, Common::Vec4<u8>& combiner_output) const;
 
     /// Emulates the TEV configuration and returns the combiner output.
-    void WriteTevConfig(std::span<const Common::Vec4<u8>, 4> texture_color,
-                        std::span<const Pica::TexturingRegs::TevStageConfig, 6> tev_stages,
-                        Common::Vec4<u8> primary_color, Common::Vec4<u8> primary_fragment_color,
-                        Common::Vec4<u8> secondary_fragment_color);
+    Common::Vec4<u8> WriteTevConfig(
+        std::span<const Common::Vec4<u8>, 4> texture_color,
+        std::span<const Pica::TexturingRegs::TevStageConfig, 6> tev_stages,
+        Common::Vec4<u8> primary_color, Common::Vec4<u8> primary_fragment_color,
+        Common::Vec4<u8> secondary_fragment_color);
 
     /// Blends fog to the combiner output if enabled.
     void WriteFog(Common::Vec4<u8>& combiner_output, float depth) const;
@@ -74,9 +75,6 @@ private:
     Pica::State& state;
     const Pica::Regs& regs;
     Framebuffer fb;
-    // Kirby Blowout Blast relies on the combiner output of a previous draw
-    // in order to render the sky correctly.
-    Common::Vec4<u8> combiner_output{};
 };
 
 } // namespace SwRenderer

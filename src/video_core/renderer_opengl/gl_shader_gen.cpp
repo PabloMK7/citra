@@ -1485,7 +1485,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 
     out += "vec4 combiner_buffer = vec4(0.0);\n"
            "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n"
-           "vec4 last_tex_env_out = vec4(0.0);\n";
+           "vec4 last_tex_env_out = rounded_primary_color;\n";
 
     for (std::size_t index = 0; index < state.tev_stages.size(); ++index) {
         WriteTevStage(out, config, static_cast<u32>(index));
