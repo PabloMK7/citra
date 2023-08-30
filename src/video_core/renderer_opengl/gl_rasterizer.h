@@ -155,6 +155,7 @@ private:
     OGLTexture texture_buffer_lut_rg;
     OGLTexture texture_buffer_lut_rgba;
     bool use_custom_normal{};
+    bool emulate_minmax_blend{};
 };
 
 } // namespace OpenGL

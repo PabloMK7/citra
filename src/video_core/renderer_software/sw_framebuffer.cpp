@@ -311,19 +311,17 @@ Common::Vec4<u8> EvaluateBlendEquation(const Common::Vec4<u8>& src,
     case FramebufferRegs::BlendEquation::ReverseSubtract:
         result = (dst_result - src_result) / 255;
         break;
-    // TODO: How do these two actually work?  OpenGL doesn't include the blend factors in the
-    //       min/max computations, but is this what the 3DS actually does?
     case FramebufferRegs::BlendEquation::Min:
-        result.r() = std::min(src.r(), dest.r());
-        result.g() = std::min(src.g(), dest.g());
-        result.b() = std::min(src.b(), dest.b());
-        result.a() = std::min(src.a(), dest.a());
+        result.r() = std::min(src_result.r(), dst_result.r()) / 255;
+        result.g() = std::min(src_result.g(), dst_result.g()) / 255;
+        result.b() = std::min(src_result.b(), dst_result.b()) / 255;
+        result.a() = std::min(src_result.a(), dst_result.a()) / 255;
         break;
     case FramebufferRegs::BlendEquation::Max:
-        result.r() = std::max(src.r(), dest.r());
-        result.g() = std::max(src.g(), dest.g());
-        result.b() = std::max(src.b(), dest.b());
-        result.a() = std::max(src.a(), dest.a());
+        result.r() = std::max(src_result.r(), dst_result.r()) / 255;
+        result.g() = std::max(src_result.g(), dst_result.g()) / 255;
+        result.b() = std::max(src_result.b(), dst_result.b()) / 255;
+        result.a() = std::max(src_result.a(), dst_result.a()) / 255;
         break;
     default:
         LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation 0x{:x}", equation);

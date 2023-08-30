@@ -105,6 +105,16 @@ public:
         return ext_clip_cull_distance;
     }
 
+    /// Returns true if the implementation supports (EXT/ARM)_shader_framebuffer_fetch
+    bool HasShaderFramebufferFetch() const {
+        return shader_framebuffer_fetch;
+    }
+
+    /// Returns true if the implementation supports (NV/AMD)_blend_minmax_factor
+    bool HasBlendMinMaxFactor() const {
+        return blend_minmax_factor;
+    }
+
 private:
     void ReportDriverInfo();
     void DeduceVendor();
@@ -125,6 +135,8 @@ private:
     bool ext_clip_cull_distance{};
     bool ext_texture_compression_s3tc{};
     bool arb_texture_compression_bptc{};
+    bool shader_framebuffer_fetch{};
+    bool blend_minmax_factor{};
 
     std::string_view gl_version{};
     std::string_view gpu_vendor{};

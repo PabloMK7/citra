@@ -170,6 +170,9 @@ void Driver::CheckExtensionSupport() {
     arb_texture_compression_bptc = GLAD_GL_ARB_texture_compression_bptc;
     ext_clip_cull_distance = GLAD_GL_EXT_clip_cull_distance;
     ext_texture_compression_s3tc = GLAD_GL_EXT_texture_compression_s3tc;
+    shader_framebuffer_fetch =
+        GLAD_GL_EXT_shader_framebuffer_fetch || GLAD_GL_ARM_shader_framebuffer_fetch;
+    blend_minmax_factor = GLAD_GL_AMD_blend_minmax_factor || GLAD_GL_NV_blend_minmax_factor;
     is_suitable = GLAD_GL_VERSION_4_3 || GLAD_GL_ES_VERSION_3_1;
 }
 

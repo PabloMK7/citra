@@ -95,13 +95,20 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
     return gl_mode;
 }
 
-inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
+inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation, bool factor_minmax) {
     static constexpr std::array<GLenum, 5> blend_equation_table{{
         GL_FUNC_ADD,              // BlendEquation::Add
         GL_FUNC_SUBTRACT,         // BlendEquation::Subtract
         GL_FUNC_REVERSE_SUBTRACT, // BlendEquation::ReverseSubtract
         GL_MIN,                   // BlendEquation::Min
         GL_MAX,                   // BlendEquation::Max
+    }};
+    static constexpr std::array<GLenum, 5> blend_equation_table_minmax{{
+        GL_FUNC_ADD,              // BlendEquation::Add
+        GL_FUNC_SUBTRACT,         // BlendEquation::Subtract
+        GL_FUNC_REVERSE_SUBTRACT, // BlendEquation::ReverseSubtract
+        GL_FACTOR_MIN_AMD,        // BlendEquation::Min
+        GL_FACTOR_MAX_AMD,        // BlendEquation::Max
     }};
 
     const auto index = static_cast<std::size_t>(equation);
@@ -114,7 +121,7 @@ inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
         return GL_FUNC_ADD;
     }
 
-    return blend_equation_table[index];
+    return (factor_minmax ? blend_equation_table_minmax : blend_equation_table)[index];
 }
 
 inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {

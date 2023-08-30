@@ -468,13 +468,15 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                         GL_TEXTURE_UPDATE_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT);
     }
 
-    use_custom_normal = false;
-
     return succeeded;
 }
 
 void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
     using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
+
+    // Reset transient draw state
+    state.color_buffer.texture_2d = 0;
+    use_custom_normal = false;
 
     const auto pica_textures = regs.texturing.GetTextures();
     for (u32 texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
@@ -518,6 +520,10 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
             BindMaterial(texture_index, surface);
             state.texture_units[texture_index].texture_2d = surface.Handle();
         }
+    }
+
+    if (emulate_minmax_blend && !driver.HasShaderFramebufferFetch()) {
+        state.color_buffer.texture_2d = framebuffer->Attachment(SurfaceType::Color);
     }
 }
 
@@ -760,17 +766,14 @@ void RasterizerOpenGL::SyncCullMode() {
     case Pica::RasterizerRegs::CullMode::KeepAll:
         state.cull.enabled = false;
         break;
-
     case Pica::RasterizerRegs::CullMode::KeepClockWise:
         state.cull.enabled = true;
         state.cull.front_face = GL_CW;
         break;
-
     case Pica::RasterizerRegs::CullMode::KeepCounterClockWise:
         state.cull.enabled = true;
         state.cull.front_face = GL_CCW;
         break;
-
     default:
         LOG_CRITICAL(Render_OpenGL, "Unknown cull mode {}",
                      static_cast<u32>(regs.rasterizer.cull_mode.Value()));
@@ -784,10 +787,12 @@ void RasterizerOpenGL::SyncBlendEnabled() {
 }
 
 void RasterizerOpenGL::SyncBlendFuncs() {
-    state.blend.rgb_equation =
-        PicaToGL::BlendEquation(regs.framebuffer.output_merger.alpha_blending.blend_equation_rgb);
-    state.blend.a_equation =
-        PicaToGL::BlendEquation(regs.framebuffer.output_merger.alpha_blending.blend_equation_a);
+    const bool has_minmax_factor = driver.HasBlendMinMaxFactor();
+
+    state.blend.rgb_equation = PicaToGL::BlendEquation(
+        regs.framebuffer.output_merger.alpha_blending.blend_equation_rgb, has_minmax_factor);
+    state.blend.a_equation = PicaToGL::BlendEquation(
+        regs.framebuffer.output_merger.alpha_blending.blend_equation_a, has_minmax_factor);
     state.blend.src_rgb_func =
         PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_source_rgb);
     state.blend.dst_rgb_func =
@@ -796,14 +801,39 @@ void RasterizerOpenGL::SyncBlendFuncs() {
         PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_source_a);
     state.blend.dst_a_func =
         PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_dest_a);
+
+    if (has_minmax_factor) {
+        return;
+    }
+
+    // Blending with min/max equations is emulated in the fragment shader so
+    // configure blending to not modify the incoming fragment color.
+    emulate_minmax_blend = false;
+    if (state.EmulateColorBlend()) {
+        emulate_minmax_blend = true;
+        state.blend.rgb_equation = GL_FUNC_ADD;
+        state.blend.src_rgb_func = GL_ONE;
+        state.blend.dst_rgb_func = GL_ZERO;
+    }
+    if (state.EmulateAlphaBlend()) {
+        emulate_minmax_blend = true;
+        state.blend.a_equation = GL_FUNC_ADD;
+        state.blend.src_a_func = GL_ONE;
+        state.blend.dst_a_func = GL_ZERO;
+    }
 }
 
 void RasterizerOpenGL::SyncBlendColor() {
-    auto blend_color = PicaToGL::ColorRGBA8(regs.framebuffer.output_merger.blend_const.raw);
+    const auto blend_color = PicaToGL::ColorRGBA8(regs.framebuffer.output_merger.blend_const.raw);
     state.blend.color.red = blend_color[0];
     state.blend.color.green = blend_color[1];
     state.blend.color.blue = blend_color[2];
     state.blend.color.alpha = blend_color[3];
+
+    if (blend_color != uniform_block_data.data.blend_color) {
+        uniform_block_data.data.blend_color = blend_color;
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncLogicOp() {

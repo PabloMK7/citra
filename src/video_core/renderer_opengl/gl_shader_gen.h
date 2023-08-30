@@ -11,6 +11,8 @@
 
 namespace OpenGL {
 
+class Driver;
+
 namespace ShaderDecompiler {
 struct ProgramResult;
 }
@@ -115,6 +117,13 @@ struct PicaFSConfigState {
         Pica::TexturingRegs::ProcTexFilter lut_filter;
     } proctex;
 
+    struct {
+        bool emulate_blending;
+        Pica::FramebufferRegs::BlendEquation eq;
+        Pica::FramebufferRegs::BlendFactor src_factor;
+        Pica::FramebufferRegs::BlendFactor dst_factor;
+    } rgb_blend, alpha_blend;
+
     bool shadow_rendering;
     bool shadow_texture_orthographic;
     bool use_custom_normal_map;
@@ -131,7 +140,8 @@ struct PicaFSConfigState {
 struct PicaFSConfig : Common::HashableStruct<PicaFSConfigState> {
 
     /// Construct a PicaFSConfig with the given Pica register configuration.
-    static PicaFSConfig BuildFromRegs(const Pica::Regs& regs, bool use_normal = false);
+    static PicaFSConfig BuildFromRegs(const Pica::Regs& regs, bool has_blend_minmax_factor,
+                                      bool use_normal = false);
 
     bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
         return (stage_index < 4) && (state.combiner_buffer_input & (1 << stage_index));

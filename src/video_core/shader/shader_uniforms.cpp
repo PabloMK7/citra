@@ -69,6 +69,7 @@ layout ({}std140) uniform shader_data {{
     vec3 tex_lod_bias;
     vec4 tex_border_color[3];
     vec4 clip_coef;
+    vec4 blend_color;
 }};
 )";
 

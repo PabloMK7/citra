@@ -9,6 +9,7 @@
 #include "core/core.h"
 #include "core/telemetry_session.h"
 #include "video_core/pica_state.h"
+#include "video_core/renderer_opengl/gl_driver.h"
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
@@ -60,7 +61,8 @@ out gl_PerVertex {
     return out;
 }
 
-PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs, bool use_normal) {
+PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs, bool has_blend_minmax_factor,
+                                         bool use_normal) {
     PicaFSConfig res{};
 
     auto& state = res.state;
@@ -227,6 +229,29 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs, bool use_normal
         state.proctex.lod_min = regs.texturing.proctex_lut.lod_min;
         state.proctex.lod_max = regs.texturing.proctex_lut.lod_max;
         state.proctex.lut_filter = regs.texturing.proctex_lut.filter;
+    }
+
+    const auto alpha_eq = regs.framebuffer.output_merger.alpha_blending.blend_equation_a.Value();
+    const auto rgb_eq = regs.framebuffer.output_merger.alpha_blending.blend_equation_rgb.Value();
+    if (regs.framebuffer.output_merger.alphablend_enable && !has_blend_minmax_factor) {
+        if (rgb_eq == Pica::FramebufferRegs::BlendEquation::Max ||
+            rgb_eq == Pica::FramebufferRegs::BlendEquation::Min) {
+            state.rgb_blend.emulate_blending = true;
+            state.rgb_blend.eq = rgb_eq;
+            state.rgb_blend.src_factor =
+                regs.framebuffer.output_merger.alpha_blending.factor_source_rgb;
+            state.rgb_blend.dst_factor =
+                regs.framebuffer.output_merger.alpha_blending.factor_dest_rgb;
+        }
+        if (alpha_eq == Pica::FramebufferRegs::BlendEquation::Max ||
+            alpha_eq == Pica::FramebufferRegs::BlendEquation::Min) {
+            state.alpha_blend.emulate_blending = true;
+            state.alpha_blend.eq = alpha_eq;
+            state.alpha_blend.src_factor =
+                regs.framebuffer.output_merger.alpha_blending.factor_source_a;
+            state.alpha_blend.dst_factor =
+                regs.framebuffer.output_merger.alpha_blending.factor_dest_a;
+        }
     }
 
     state.shadow_rendering = regs.framebuffer.output_merger.fragment_operation_mode ==
@@ -1222,6 +1247,103 @@ float ProcTexNoiseCoef(vec2 x) {
     }
 }
 
+static void WriteLogicOp(std::string& out, const PicaFSConfig& config) {
+    if (!GLES || config.state.alphablend_enable) {
+        return;
+    }
+    switch (config.state.logic_op) {
+    case FramebufferRegs::LogicOp::Clear:
+        out += "color = vec4(0);\n";
+        break;
+    case FramebufferRegs::LogicOp::Set:
+        out += "color = vec4(1);\n";
+        break;
+    case FramebufferRegs::LogicOp::Copy:
+        // Take the color output as-is
+        break;
+    case FramebufferRegs::LogicOp::CopyInverted:
+        out += "color = ~color;\n";
+        break;
+    case FramebufferRegs::LogicOp::NoOp:
+        // We need to discard the color, but not necessarily the depth. This is not possible
+        // with fragment shader alone, so we emulate this behavior on GLES with glColorMask.
+        break;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unhandled logic_op {:x}", static_cast<int>(config.state.logic_op));
+        UNIMPLEMENTED();
+    }
+}
+
+static void WriteBlending(std::string& out, const PicaFSConfig& config) {
+    if (!config.state.rgb_blend.emulate_blending && !config.state.alpha_blend.emulate_blending)
+        [[likely]] {
+        return;
+    }
+
+    using BlendFactor = Pica::FramebufferRegs::BlendFactor;
+    out += R"(
+vec4 source_color = last_tex_env_out;
+#if defined(GL_EXT_shader_framebuffer_fetch)
+vec4 dest_color = color;
+#elif defined(GL_ARM_shader_framebuffer_fetch)
+vec4 dest_color = gl_LastFragColorARM;
+#else
+vec4 dest_color = texelFetch(colorBuffer, ivec2(gl_FragCoord.xy), 0);
+#endif
+)";
+    const auto get_factor = [&](BlendFactor factor) -> std::string {
+        switch (factor) {
+        case BlendFactor::Zero:
+            return "vec4(0.f)";
+        case BlendFactor::One:
+            return "vec4(1.f)";
+        case BlendFactor::SourceColor:
+            return "source_color";
+        case BlendFactor::OneMinusSourceColor:
+            return "vec4(1.f) - source_color";
+        case BlendFactor::DestColor:
+            return "dest_color";
+        case BlendFactor::OneMinusDestColor:
+            return "vec4(1.f) - dest_color";
+        case BlendFactor::SourceAlpha:
+            return "source_color.aaaa";
+        case BlendFactor::OneMinusSourceAlpha:
+            return "vec4(1.f) - source_color.aaaa";
+        case BlendFactor::DestAlpha:
+            return "dest_color.aaaa";
+        case BlendFactor::OneMinusDestAlpha:
+            return "vec4(1.f) - dest_color.aaaa";
+        case BlendFactor::ConstantColor:
+            return "blend_color";
+        case BlendFactor::OneMinusConstantColor:
+            return "vec4(1.f) - blend_color";
+        case BlendFactor::ConstantAlpha:
+            return "blend_color.aaaa";
+        case BlendFactor::OneMinusConstantAlpha:
+            return "vec4(1.f) - blend_color.aaaa";
+        default:
+            LOG_CRITICAL(Render_OpenGL, "Unknown blend factor {}", factor);
+            return "vec4(1.f)";
+        }
+    };
+    const auto get_func = [](Pica::FramebufferRegs::BlendEquation eq) {
+        return eq == Pica::FramebufferRegs::BlendEquation::Min ? "min" : "max";
+    };
+
+    if (config.state.rgb_blend.emulate_blending) {
+        out += fmt::format(
+            "last_tex_env_out.rgb = {}(source_color.rgb * ({}).rgb, dest_color.rgb * ({}).rgb);\n",
+            get_func(config.state.rgb_blend.eq), get_factor(config.state.rgb_blend.src_factor),
+            get_factor(config.state.rgb_blend.dst_factor));
+    }
+    if (config.state.alpha_blend.emulate_blending) {
+        out += fmt::format(
+            "last_tex_env_out.a = {}(source_color.a * ({}).a, dest_color.a * ({}).a);\n",
+            get_func(config.state.alpha_blend.eq), get_factor(config.state.alpha_blend.src_factor),
+            get_factor(config.state.alpha_blend.dst_factor));
+    }
+}
+
 ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& config,
                                                        bool separable_shader) {
     const auto& state = config.state;
@@ -1235,6 +1357,17 @@ ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& confi
         out += fragment_shader_precision_OES;
     }
 
+    out += R"(
+#if defined(GL_EXT_shader_framebuffer_fetch)
+#extension GL_EXT_shader_framebuffer_fetch : enable
+#elif defined(GL_ARM_shader_framebuffer_fetch)
+#extension GL_ARM_shader_framebuffer_fetch : enable
+#else
+layout(location = 10) uniform sampler2D colorBuffer;
+#endif
+
+)";
+
     out += GetVertexInterfaceDeclaration(false, separable_shader);
 
     out += R"(
@@ -1242,7 +1375,7 @@ ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& confi
 in vec4 gl_FragCoord;
 #endif // CITRA_GLES
 
-out vec4 color;
+layout(location = 0) out vec4 color;
 
 uniform sampler2D tex0;
 uniform sampler2D tex1;
@@ -1552,34 +1685,12 @@ do {
     } else {
         out += "gl_FragDepth = depth;\n";
         // Round the final fragment color to maintain the PICA's 8 bits of precision
-        out += "color = byteround(last_tex_env_out);\n";
+        out += "last_tex_env_out = byteround(last_tex_env_out);\n";
+        WriteBlending(out, config);
+        out += "color = last_tex_env_out;\n";
     }
 
-    if (GLES) {
-        if (!state.alphablend_enable) {
-            switch (state.logic_op) {
-            case FramebufferRegs::LogicOp::Clear:
-                out += "color = vec4(0);\n";
-                break;
-            case FramebufferRegs::LogicOp::Set:
-                out += "color = vec4(1);\n";
-                break;
-            case FramebufferRegs::LogicOp::Copy:
-                // Take the color output as-is
-                break;
-            case FramebufferRegs::LogicOp::CopyInverted:
-                out += "color = ~color;\n";
-                break;
-            case FramebufferRegs::LogicOp::NoOp:
-                // We need to discard the color, but not necessarily the depth. This is not possible
-                // with fragment shader alone, so we emulate this behavior on GLES with glColorMask.
-                break;
-            default:
-                LOG_CRITICAL(HW_GPU, "Unhandled logic_op {:x}", static_cast<int>(state.logic_op));
-                UNIMPLEMENTED();
-            }
-        }
-    }
+    WriteLogicOp(out, config);
 
     out += '}';
 

@@ -418,7 +418,8 @@ void ShaderProgramManager::UseTrivialGeometryShader() {
 }
 
 void ShaderProgramManager::UseFragmentShader(const Pica::Regs& regs, bool use_normal) {
-    PicaFSConfig config = PicaFSConfig::BuildFromRegs(regs, use_normal);
+    PicaFSConfig config =
+        PicaFSConfig::BuildFromRegs(regs, driver.HasBlendMinMaxFactor(), use_normal);
     auto [handle, result] = impl->fragment_shaders.Get(config);
     impl->current.fs = handle;
     impl->current.fs_hash = config.Hash();
@@ -543,7 +544,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                     impl->programmable_vertex_shaders.Inject(conf, decomp->second.result.code,
                                                              std::move(shader));
                 } else if (raw.GetProgramType() == ProgramType::FS) {
-                    PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig());
+                    PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig(),
+                                                                    driver.HasBlendMinMaxFactor());
                     std::scoped_lock lock(mutex);
                     impl->fragment_shaders.Inject(conf, std::move(shader));
                 } else {
@@ -655,7 +657,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 std::scoped_lock lock(mutex);
                 impl->programmable_vertex_shaders.Inject(conf, result->code, std::move(stage));
             } else if (raw.GetProgramType() == ProgramType::FS) {
-                PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig());
+                PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig(),
+                                                                driver.HasBlendMinMaxFactor());
                 result = GenerateFragmentShader(conf, impl->separable);
                 OGLShaderStage stage{impl->separable};
                 stage.Create(result->code.c_str(), GL_FRAGMENT_SHADER);
