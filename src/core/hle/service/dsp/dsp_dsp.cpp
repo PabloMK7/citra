@@ -309,7 +309,7 @@ void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
 // that's waiting for an interrupt event. Immediately after this interrupt event, userland
 // normally updates the state in the next region and increments the relevant frame counter by two.
 void DSP_DSP::SignalInterrupt(InterruptType type, DspPipe pipe) {
-    LOG_DEBUG(Service_DSP, "called, type={}, pipe={}", type, pipe);
+    LOG_TRACE(Service_DSP, "called, type={}, pipe={}", type, pipe);
     const auto& event = GetInterruptEvent(type, pipe);
     if (event)
         event->Signal();

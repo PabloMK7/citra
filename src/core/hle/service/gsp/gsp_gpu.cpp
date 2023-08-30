@@ -336,31 +336,31 @@ void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
 
 void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 address = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
+    [[maybe_unused]] u32 address = rp.Pop<u32>();
+    [[maybe_unused]] u32 size = rp.Pop<u32>();
+    [[maybe_unused]] auto process = rp.PopObject<Kernel::Process>();
 
     // TODO(purpasmart96): Verify return header on HW
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+    LOG_TRACE(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
               size, process->process_id);
 }
 
 void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 address = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
+    [[maybe_unused]] u32 address = rp.Pop<u32>();
+    [[maybe_unused]] u32 size = rp.Pop<u32>();
+    [[maybe_unused]] auto process = rp.PopObject<Kernel::Process>();
 
     // TODO(purpasmart96): Verify return header on HW
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+    LOG_TRACE(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
               size, process->process_id);
 }
 
