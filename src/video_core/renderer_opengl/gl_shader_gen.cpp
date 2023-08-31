@@ -256,9 +256,7 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs, bool has_blend_
 
     state.shadow_rendering = regs.framebuffer.output_merger.fragment_operation_mode ==
                              FramebufferRegs::FragmentOperationMode::Shadow;
-    if (state.shadow_rendering) {
-        state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
-    }
+    state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
 
     state.use_custom_normal_map = use_normal;
 

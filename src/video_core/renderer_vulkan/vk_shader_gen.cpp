@@ -235,9 +235,7 @@ PicaFSConfig::PicaFSConfig(const Pica::Regs& regs, const Instance& instance) {
 
     state.shadow_rendering.Assign(regs.framebuffer.output_merger.fragment_operation_mode ==
                                   FramebufferRegs::FragmentOperationMode::Shadow);
-    if (state.shadow_rendering) {
-        state.shadow_texture_orthographic.Assign(regs.texturing.shadow.orthographic != 0);
-    }
+    state.shadow_texture_orthographic.Assign(regs.texturing.shadow.orthographic != 0);
 }
 
 void PicaShaderConfigCommon::Init(const Pica::RasterizerRegs& rasterizer,
