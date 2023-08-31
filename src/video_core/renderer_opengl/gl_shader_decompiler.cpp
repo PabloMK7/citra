@@ -476,12 +476,22 @@ private:
             }
 
             case OpCode::Id::MAX: {
-                SetDest(swizzle, dest_reg, fmt::format("max({}, {})", src1, src2), 4, 4);
+                if (sanitize_mul) {
+                    SetDest(swizzle, dest_reg,
+                            fmt::format("mix({1}, {0}, greaterThan({0}, {1}))", src1, src2), 4, 4);
+                } else {
+                    SetDest(swizzle, dest_reg, fmt::format("max({}, {})", src1, src2), 4, 4);
+                }
                 break;
             }
 
             case OpCode::Id::MIN: {
-                SetDest(swizzle, dest_reg, fmt::format("min({}, {})", src1, src2), 4, 4);
+                if (sanitize_mul) {
+                    SetDest(swizzle, dest_reg,
+                            fmt::format("mix({1}, {0}, lessThan({0}, {1}))", src1, src2), 4, 4);
+                } else {
+                    SetDest(swizzle, dest_reg, fmt::format("min({}, {})", src1, src2), 4, 4);
+                }
                 break;
             }
 
