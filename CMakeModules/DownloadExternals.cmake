@@ -1,31 +1,38 @@
 
-# This function downloads Qt using aqt.
+# This function downloads Qt using aqt. The path of the downloaded content will be added to the CMAKE_PREFIX_PATH.
 # Params:
 #   target: Qt dependency to install. Specify a version number to download Qt, or "tools_(name)" for a specific build tool.
-#   prefix_var: Name of a variable which will be set with the path to the extracted contents.
 function(download_qt target)
+    if (target MATCHES "tools_.*")
+        set(DOWNLOAD_QT_TOOL ON)
+    else()
+        set(DOWNLOAD_QT_TOOL OFF)
+    endif()
+
     # Determine installation parameters for OS, architecture, and compiler
     if (WIN32)
         set(host "windows")
         set(type "desktop")
-        if (MINGW)
-            set(arch "win64_mingw")
-            set(arch_path "mingw_64")
-        elseif (MSVC)
-            if ("arm64" IN_LIST ARCHITECTURE)
-                set(arch_path "msvc2019_arm64")
-            elseif ("x86_64" IN_LIST ARCHITECTURE)
-                set(arch_path "msvc2019_64")
+        if (NOT DOWNLOAD_QT_TOOL)
+            if (MINGW)
+                set(arch "win64_mingw")
+                set(arch_path "mingw_64")
+            elseif (MSVC)
+                if ("arm64" IN_LIST ARCHITECTURE)
+                    set(arch_path "msvc2019_arm64")
+                elseif ("x86_64" IN_LIST ARCHITECTURE)
+                    set(arch_path "msvc2019_64")
+                else()
+                    message(FATAL_ERROR "Unsupported bundled Qt architecture. Enable USE_SYSTEM_QT and provide your own.")
+                endif()
+                set(arch "win64_${arch_path}")
             else()
-                message(FATAL_ERROR "Unsupported bundled Qt architecture. Enable USE_SYSTEM_QT and provide your own.")
+                message(FATAL_ERROR "Unsupported bundled Qt toolchain. Enable USE_SYSTEM_QT and provide your own.")
             endif()
-            set(arch "win64_${arch_path}")
-        else()
-            message(FATAL_ERROR "Unsupported bundled Qt toolchain. Enable USE_SYSTEM_QT and provide your own.")
         endif()
     elseif (APPLE)
         set(host "mac")
-        if (IOS)
+        if (IOS AND NOT DOWNLOAD_QT_TOOL)
             set(type "ios")
             set(arch "ios")
             set(arch_path "ios")
@@ -45,8 +52,8 @@ function(download_qt target)
     get_external_prefix(qt base_path)
     file(MAKE_DIRECTORY "${base_path}")
 
-    if (target MATCHES "tools_.*")
-        set(prefix "${base_path}")
+    if (DOWNLOAD_QT_TOOL)
+        set(prefix "${base_path}/Tools")
         set(install_args install-tool --outputdir ${base_path} ${host} desktop ${target})
     else()
         set(prefix "${base_path}/${target}/${arch_path}")
@@ -63,7 +70,7 @@ function(download_qt target)
         if (WIN32)
             set(aqt_path "${base_path}/aqt.exe")
             file(DOWNLOAD
-                https://github.com/miurahr/aqtinstall/releases/download/v3.1.4/aqt.exe
+                https://github.com/miurahr/aqtinstall/releases/download/v3.1.7/aqt.exe
                 ${aqt_path} SHOW_PROGRESS)
             execute_process(COMMAND ${aqt_path} ${install_args}
                     WORKING_DIRECTORY ${base_path})

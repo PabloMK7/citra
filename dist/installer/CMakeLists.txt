@@ -13,6 +13,8 @@ set(BUILD_DIR "${CMAKE_BINARY_DIR}/installer")
 set(DIST_DIR "${BUILD_DIR}/dist")
 set(TARGET_FILE "${DIST_DIR}/citra-setup-${PLATFORM}")
 
+file(MAKE_DIRECTORY "${BUILD_DIR}" "${DIST_DIR}")
+
 # Adds a custom target that will run the BuildInstaller.cmake file
 # CMake can't just run a cmake function as a custom command, so this is a way around it.
 # Calls the cmake command and runs a cmake file in "scripting" mode passing in variables with -D

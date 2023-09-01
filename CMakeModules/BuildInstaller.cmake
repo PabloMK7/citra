@@ -1,4 +1,5 @@
 # To use this as a script, make sure you pass in the variables BASE_DIR, SRC_DIR, BUILD_DIR, and TARGET_FILE
+cmake_minimum_required(VERSION 3.15)
 
 if(WIN32)
     set(PLATFORM "windows")
@@ -12,7 +13,8 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${BASE_DIR}/CMakeModules")
 include(DownloadExternals)
-download_qt(tools_ifw QT_PREFIX)
+download_qt(tools_ifw)
+get_external_prefix(qt QT_PREFIX)
 
 file(GLOB_RECURSE INSTALLER_BASE "${QT_PREFIX}/**/installerbase*")
 file(GLOB_RECURSE BINARY_CREATOR "${QT_PREFIX}/**/binarycreator*")
