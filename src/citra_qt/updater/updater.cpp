@@ -141,7 +141,7 @@ bool UpdaterPrivate::StartUpdateCheck() {
 
     main_process = new QProcess(this);
     main_process->setProgram(GetMaintenanceTool().absoluteFilePath());
-    main_process->setArguments({QStringLiteral("--checkupdates"), QStringLiteral("-v")});
+    main_process->setArguments({QStringLiteral("--checkupdates")});
 
     connect(main_process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
             &UpdaterPrivate::UpdaterReady, Qt::QueuedConnection);
