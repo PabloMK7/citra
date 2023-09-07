@@ -26,7 +26,7 @@ using VSOutputAttributes = RasterizerRegs::VSOutputAttributes;
 
 namespace OpenGL {
 
-const std::string UniformBlockDef = Pica::Shader::BuildShaderUniformDefinitions();
+const std::string UniformBlockDef = Pica::Shader::BuildShaderUniformDefinitions("binding = 0,");
 
 static std::string GetVertexInterfaceDeclaration(bool is_output, bool separable_shader) {
     std::string out;
@@ -1375,22 +1375,22 @@ in vec4 gl_FragCoord;
 
 layout(location = 0) out vec4 color;
 
-uniform sampler2D tex0;
-uniform sampler2D tex1;
-uniform sampler2D tex2;
-uniform sampler2D tex_normal; //< Used for custom normal maps
-uniform samplerCube tex_cube;
-uniform samplerBuffer texture_buffer_lut_lf;
-uniform samplerBuffer texture_buffer_lut_rg;
-uniform samplerBuffer texture_buffer_lut_rgba;
+layout(binding = 0) uniform sampler2D tex0;
+layout(binding = 1) uniform sampler2D tex1;
+layout(binding = 2) uniform sampler2D tex2;
+layout(binding = 3) uniform samplerBuffer texture_buffer_lut_lf;
+layout(binding = 4) uniform samplerBuffer texture_buffer_lut_rg;
+layout(binding = 5) uniform samplerBuffer texture_buffer_lut_rgba;
+layout(binding = 6) uniform samplerCube tex_cube;
+layout(binding = 7) uniform sampler2D tex_normal;
 
-layout(r32ui) uniform readonly uimage2D shadow_texture_px;
-layout(r32ui) uniform readonly uimage2D shadow_texture_nx;
-layout(r32ui) uniform readonly uimage2D shadow_texture_py;
-layout(r32ui) uniform readonly uimage2D shadow_texture_ny;
-layout(r32ui) uniform readonly uimage2D shadow_texture_pz;
-layout(r32ui) uniform readonly uimage2D shadow_texture_nz;
-layout(r32ui) uniform uimage2D shadow_buffer;
+layout(binding = 0, r32ui) uniform readonly uimage2D shadow_texture_px;
+layout(binding = 1, r32ui) uniform readonly uimage2D shadow_texture_nx;
+layout(binding = 2, r32ui) uniform readonly uimage2D shadow_texture_py;
+layout(binding = 3, r32ui) uniform readonly uimage2D shadow_texture_ny;
+layout(binding = 4, r32ui) uniform readonly uimage2D shadow_texture_pz;
+layout(binding = 5, r32ui) uniform readonly uimage2D shadow_texture_nz;
+layout(binding = 6, r32ui) uniform uimage2D shadow_buffer;
 )";
 
     out += UniformBlockDef;
@@ -1773,7 +1773,7 @@ std::optional<ShaderDecompiler::ProgramResult> GenerateVertexShader(
 
     out += R"(
 #define uniforms vs_uniforms
-layout (std140) uniform vs_config {
+layout (binding = 1, std140) uniform vs_config {
     pica_uniforms uniforms;
 };
 

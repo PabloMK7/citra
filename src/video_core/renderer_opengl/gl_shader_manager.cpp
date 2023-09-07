@@ -87,72 +87,6 @@ static std::tuple<PicaVSConfig, Pica::Shader::ShaderSetup> BuildVSConfigFromRaw(
     return {PicaVSConfig{raw.GetRawShaderConfig().vs, setup}, setup};
 }
 
-static void SetShaderUniformBlockBinding(GLuint shader, const char* name,
-                                         Pica::Shader::UniformBindings binding,
-                                         std::size_t expected_size) {
-    const GLuint ub_index = glGetUniformBlockIndex(shader, name);
-    if (ub_index == GL_INVALID_INDEX) {
-        return;
-    }
-    GLint ub_size = 0;
-    glGetActiveUniformBlockiv(shader, ub_index, GL_UNIFORM_BLOCK_DATA_SIZE, &ub_size);
-    ASSERT_MSG(static_cast<std::size_t>(ub_size) == expected_size,
-               "Uniform block size did not match! Got {}, expected {}", static_cast<int>(ub_size),
-               expected_size);
-    glUniformBlockBinding(shader, ub_index, static_cast<GLuint>(binding));
-}
-
-static void SetShaderUniformBlockBindings(GLuint shader) {
-    SetShaderUniformBlockBinding(shader, "shader_data", Pica::Shader::UniformBindings::Common,
-                                 sizeof(Pica::Shader::UniformData));
-    SetShaderUniformBlockBinding(shader, "vs_config", Pica::Shader::UniformBindings::VS,
-                                 sizeof(Pica::Shader::VSUniformData));
-}
-
-static void SetShaderSamplerBinding(GLuint shader, const char* name,
-                                    TextureUnits::TextureUnit binding) {
-    GLint uniform_tex = glGetUniformLocation(shader, name);
-    if (uniform_tex != -1) {
-        glUniform1i(uniform_tex, binding.id);
-    }
-}
-
-static void SetShaderImageBinding(GLuint shader, const char* name, GLuint binding) {
-    GLint uniform_tex = glGetUniformLocation(shader, name);
-    if (uniform_tex != -1) {
-        glUniform1i(uniform_tex, static_cast<GLint>(binding));
-    }
-}
-
-static void SetShaderSamplerBindings(GLuint shader) {
-    OpenGLState cur_state = OpenGLState::GetCurState();
-    GLuint old_program = std::exchange(cur_state.draw.shader_program, shader);
-    cur_state.Apply();
-
-    // Set the texture samplers to correspond to different texture units
-    SetShaderSamplerBinding(shader, "tex0", TextureUnits::PicaTexture(0));
-    SetShaderSamplerBinding(shader, "tex1", TextureUnits::PicaTexture(1));
-    SetShaderSamplerBinding(shader, "tex2", TextureUnits::PicaTexture(2));
-    SetShaderSamplerBinding(shader, "tex_cube", TextureUnits::TextureCube);
-    SetShaderSamplerBinding(shader, "tex_normal", TextureUnits::TextureNormalMap);
-
-    // Set the texture samplers to correspond to different lookup table texture units
-    SetShaderSamplerBinding(shader, "texture_buffer_lut_lf", TextureUnits::TextureBufferLUT_LF);
-    SetShaderSamplerBinding(shader, "texture_buffer_lut_rg", TextureUnits::TextureBufferLUT_RG);
-    SetShaderSamplerBinding(shader, "texture_buffer_lut_rgba", TextureUnits::TextureBufferLUT_RGBA);
-
-    SetShaderImageBinding(shader, "shadow_buffer", ImageUnits::ShadowBuffer);
-    SetShaderImageBinding(shader, "shadow_texture_px", ImageUnits::ShadowTexturePX);
-    SetShaderImageBinding(shader, "shadow_texture_nx", ImageUnits::ShadowTextureNX);
-    SetShaderImageBinding(shader, "shadow_texture_py", ImageUnits::ShadowTexturePY);
-    SetShaderImageBinding(shader, "shadow_texture_ny", ImageUnits::ShadowTextureNY);
-    SetShaderImageBinding(shader, "shadow_texture_pz", ImageUnits::ShadowTexturePZ);
-    SetShaderImageBinding(shader, "shadow_texture_nz", ImageUnits::ShadowTextureNZ);
-
-    cur_state.draw.shader_program = old_program;
-    cur_state.Apply();
-}
-
 /**
  * An object representing a shader program staging. It can be either a shader object or a program
  * object, depending on whether separable program is used.
@@ -175,11 +109,6 @@ public:
             shader.Create(source, type);
             OGLProgram& program = std::get<OGLProgram>(shader_or_program);
             program.Create(true, std::array{shader.handle});
-            SetShaderUniformBlockBindings(program.handle);
-
-            if (type == GL_FRAGMENT_SHADER) {
-                SetShaderSamplerBindings(program.handle);
-            }
         }
     }
 
@@ -192,8 +121,6 @@ public:
     }
 
     void Inject(OGLProgram&& program) {
-        SetShaderUniformBlockBindings(program.handle);
-        SetShaderSamplerBindings(program.handle);
         shader_or_program = std::move(program);
     }
 
@@ -455,9 +382,6 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
             auto& disk_cache = impl->disk_cache;
             disk_cache.SaveDumpToFile(unique_identifier, cached_program.handle,
                                       VideoCore::g_hw_shader_accurate_mul);
-
-            SetShaderUniformBlockBindings(cached_program.handle);
-            SetShaderSamplerBindings(cached_program.handle);
         }
         state.draw.shader_program = cached_program.handle;
     }
@@ -586,8 +510,6 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
             OGLProgram shader =
                 GeneratePrecompiledProgram(dump.second, supported_formats, impl->separable);
             if (shader.handle != 0) {
-                SetShaderUniformBlockBindings(shader.handle);
-                SetShaderSamplerBindings(shader.handle);
                 impl->program_cache.emplace(unique_identifier, std::move(shader));
             } else {
                 LOG_ERROR(Frontend, "Failed to link Precompiled program!");
