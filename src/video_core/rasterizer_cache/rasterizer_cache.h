@@ -272,6 +272,14 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTrans
     dst_params.pixel_format = PixelFormatFromGPUPixelFormat(config.output_format);
     dst_params.UpdateParams();
 
+    // Using flip_vertically alongside crop_input_lines produces skewed output on hardware.
+    // We have to emulate this because some games rely on this behaviour to render correctly.
+    if (config.flip_vertically && config.crop_input_lines &&
+        config.input_width > config.output_width) {
+        dst_params.addr += (config.input_width - config.output_width) * (config.output_height - 1) *
+                           GPU::Regs::BytesPerPixel(config.output_format);
+    }
+
     auto [src_surface_id, src_rect] = GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
     if (!src_surface_id) {
         return false;

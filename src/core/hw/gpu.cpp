@@ -128,7 +128,7 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
 
 static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
     const PAddr src_addr = config.GetPhysicalInputAddress();
-    const PAddr dst_addr = config.GetPhysicalOutputAddress();
+    PAddr dst_addr = config.GetPhysicalOutputAddress();
 
     // TODO: do hwtest with these cases
     if (!g_memory->IsValidPhysicalAddress(src_addr)) {
@@ -163,6 +163,14 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
     if (VideoCore::g_renderer->Rasterizer()->AccelerateDisplayTransfer(config))
         return;
+
+    // Using flip_vertically alongside crop_input_lines produces skewed output on hardware.
+    // We have to emulate this because some games rely on this behaviour to render correctly.
+    if (config.flip_vertically && config.crop_input_lines &&
+        config.input_width > config.output_width) {
+        dst_addr += (config.input_width - config.output_width) * (config.output_height - 1) *
+                    GPU::Regs::BytesPerPixel(config.output_format);
+    }
 
     u8* src_pointer = g_memory->GetPhysicalPointer(src_addr);
     u8* dst_pointer = g_memory->GetPhysicalPointer(dst_addr);
