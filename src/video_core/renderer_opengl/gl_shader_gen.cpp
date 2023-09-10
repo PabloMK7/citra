@@ -1351,20 +1351,21 @@ ShaderDecompiler::ProgramResult GenerateFragmentShader(const PicaFSConfig& confi
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
-    if (GLES) {
-        out += fragment_shader_precision_OES;
-    }
-
+    // The extension directives need to come before non-preprocessor tokens
     out += R"(
 #if defined(GL_EXT_shader_framebuffer_fetch)
 #extension GL_EXT_shader_framebuffer_fetch : enable
 #elif defined(GL_ARM_shader_framebuffer_fetch)
 #extension GL_ARM_shader_framebuffer_fetch : enable
 #else
-layout(location = 10) uniform sampler2D colorBuffer;
+#define CITRA_NO_FRAMEBUFFER_FETCH 1
 #endif
 
 )";
+
+    if (GLES) {
+        out += fragment_shader_precision_OES;
+    }
 
     out += GetVertexInterfaceDeclaration(false, separable_shader);
 
@@ -1391,6 +1392,10 @@ layout(binding = 3, r32ui) uniform readonly uimage2D shadow_texture_ny;
 layout(binding = 4, r32ui) uniform readonly uimage2D shadow_texture_pz;
 layout(binding = 5, r32ui) uniform readonly uimage2D shadow_texture_nz;
 layout(binding = 6, r32ui) uniform uimage2D shadow_buffer;
+
+#if defined(CITRA_NO_FRAMEBUFFER_FETCH)
+layout(location = 10) uniform sampler2D colorBuffer;
+#endif
 )";
 
     out += UniformBlockDef;
