@@ -1717,7 +1717,12 @@ ShaderDecompiler::ProgramResult GenerateTrivialVertexShader(bool separable_shade
 
     out += UniformBlockDef;
 
+    // Certain games render 2D elements very close to clip plane 0 resulting in very tiny
+    // negative/positive z values when computing with f32 precision,
+    // causing some vertices to get erroneously clipped. To workaround this problem,
+    // we can use a very small epsilon value for clip plane comparison.
     out += R"(
+const float EPSILON_Z = 0.00000001f;
 
 void main() {
     primary_color = vert_color;
@@ -1727,10 +1732,14 @@ void main() {
     texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
-    gl_Position = vert_position;
+    vec4 vtx_pos = vert_position;
+    if (abs(vtx_pos.z) < EPSILON_Z) {
+        vtx_pos.z = 0.f;
+    }
+    gl_Position = vtx_pos;
 #if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
-    gl_ClipDistance[0] = -vert_position.z; // fixed PICA clipping plane z <= 0
-    gl_ClipDistance[1] = dot(clip_coef, vert_position);
+    gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
+    gl_ClipDistance[1] = dot(clip_coef, vtx_pos);
 #endif // !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
 }
 )";
@@ -1830,6 +1839,7 @@ struct Vertex {
         return "0.0";
     };
 
+    out += "const float EPSILON_Z = 0.00000001f;\n\n";
     out += "vec4 GetVertexQuaternion(Vertex vtx) {\n";
     out += "    return vec4(" + semantic(VSOutputAttributes::QUATERNION_X) + ", " +
            semantic(VSOutputAttributes::QUATERNION_Y) + ", " +
@@ -1842,6 +1852,9 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Y) + ", " +
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
+    out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
+    out += "        vtx_pos.z = 0.f;\n";
+    out += "    }\n";
     out += "    gl_Position = vtx_pos;\n";
     out += "#if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)\n";
     out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0

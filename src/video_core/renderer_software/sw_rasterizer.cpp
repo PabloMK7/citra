@@ -27,6 +27,12 @@ using Pica::TexturingRegs;
 using Pica::Texture::LookupTexture;
 using Pica::Texture::TextureInfo;
 
+// Certain games render 2D elements very close to clip plane 0 resulting in very tiny
+// negative/positive z values when computing with f32 precision,
+// causing some vertices to get erroneously clipped. To workaround this problem,
+// we can use a very small epsilon value for clip plane comparison.
+constexpr f32 EPSILON_Z = 0.00000001f;
+
 struct Vertex : Pica::Shader::OutputVertex {
     Vertex(const OutputVertex& v) : OutputVertex(v) {}
 
@@ -73,7 +79,7 @@ public:
         : pos(f24::Zero()), coeffs(coeffs), bias(bias) {}
 
     bool IsInside(const Vertex& vertex) const {
-        return Common::Dot(vertex.pos + bias, coeffs) >= f24::Zero();
+        return Common::Dot(vertex.pos + bias, coeffs) >= f24::FromFloat32(-EPSILON_Z);
     }
 
     bool IsOutSide(const Vertex& vertex) const {
