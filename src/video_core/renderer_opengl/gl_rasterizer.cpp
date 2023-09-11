@@ -484,7 +484,8 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
 
         // If the texture unit is disabled unbind the corresponding gl unit
         if (!texture.enabled) {
-            state.texture_units[texture_index].texture_2d = 0;
+            const Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
+            state.texture_units[texture_index].texture_2d = null_surface.Handle();
             continue;
         }
 
