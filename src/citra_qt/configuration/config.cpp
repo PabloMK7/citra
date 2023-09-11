@@ -1269,7 +1269,7 @@ void Config::SaveUpdaterValues() {
 void Config::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    WriteSetting(QStringLiteral("enable_telemetry"), NetSettings::values.enable_telemetry, true);
+    WriteSetting(QStringLiteral("enable_telemetry"), NetSettings::values.enable_telemetry, false);
     WriteSetting(QStringLiteral("web_api_url"),
                  QString::fromStdString(NetSettings::values.web_api_url),
                  QStringLiteral("https://api.citra-emu.org"));
