@@ -130,11 +130,11 @@ jobs:
           ARTIFACTS: ${{ env.OS }}-x86_64 ${{ env.OS }}-arm64
       - name: Pack
         run: ./.ci/pack.sh
-#      - name: Upload
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ${{ env.OS }}-${{ env.TARGET }}
-#          path: artifacts/
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: artifacts/
   windows:
     runs-on: windows-latest
     strategy:
