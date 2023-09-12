@@ -483,6 +483,7 @@ void Config::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.use_gdbstub);
     ReadBasicSetting(Settings::values.gdbstub_port);
     ReadBasicSetting(Settings::values.renderer_debug);
+    ReadBasicSetting(Settings::values.dump_command_buffers);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -627,6 +628,10 @@ void Config::ReadRendererValues() {
     qt_config->beginGroup(QStringLiteral("Renderer"));
 
     ReadGlobalSetting(Settings::values.graphics_api);
+    ReadGlobalSetting(Settings::values.physical_device);
+    ReadGlobalSetting(Settings::values.spirv_shader_gen);
+    ReadGlobalSetting(Settings::values.async_shader_compilation);
+    ReadGlobalSetting(Settings::values.async_presentation);
     ReadGlobalSetting(Settings::values.use_hw_shader);
     ReadGlobalSetting(Settings::values.shaders_accurate_mul);
     ReadGlobalSetting(Settings::values.use_disk_shader_cache);
@@ -1107,6 +1112,10 @@ void Config::SaveRendererValues() {
     qt_config->beginGroup(QStringLiteral("Renderer"));
 
     WriteGlobalSetting(Settings::values.graphics_api);
+    WriteGlobalSetting(Settings::values.physical_device);
+    WriteGlobalSetting(Settings::values.spirv_shader_gen);
+    WriteGlobalSetting(Settings::values.async_shader_compilation);
+    WriteGlobalSetting(Settings::values.async_presentation);
     WriteGlobalSetting(Settings::values.use_hw_shader);
     WriteGlobalSetting(Settings::values.shaders_accurate_mul);
     WriteGlobalSetting(Settings::values.use_disk_shader_cache);

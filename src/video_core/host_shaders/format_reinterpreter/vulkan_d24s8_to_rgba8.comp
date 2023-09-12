@@ -12,15 +12,17 @@ layout(set = 0, binding = 2, rgba8) uniform highp writeonly image2D color;
 
 layout(push_constant, std140) uniform ComputeInfo {
     mediump ivec2 src_offset;
+    mediump ivec2 dst_offset;
     mediump ivec2 extent;
 };
 
 void main() {
-    ivec2 tex_coord = src_offset + ivec2(gl_GlobalInvocationID.xy);
+    ivec2 src_coord = src_offset + ivec2(gl_GlobalInvocationID.xy);
+    ivec2 dst_coord = dst_offset + ivec2(gl_GlobalInvocationID.xy);
     highp uint depth_val =
-        uint(texelFetch(depth, tex_coord, 0).x * (exp2(32.0) - 1.0));
-    lowp uint stencil_val = texelFetch(stencil, tex_coord, 0).x;
+        uint(texelFetch(depth, src_coord, 0).x * (exp2(32.0) - 1.0));
+    lowp uint stencil_val = texelFetch(stencil, src_coord, 0).x;
     highp uvec4 components =
         uvec4(stencil_val, (uvec3(depth_val) >> uvec3(24u, 16u, 8u)) & 0x000000FFu);
-    imageStore(color, tex_coord, vec4(components) / (exp2(8.0) - 1.0));
+    imageStore(color, dst_coord, vec4(components) / (exp2(8.0) - 1.0));
 }

@@ -84,7 +84,7 @@ BlitHelper::BlitHelper(const Driver& driver_)
 BlitHelper::~BlitHelper() = default;
 
 bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
-                                      const VideoCore::TextureBlit& blit) {
+                                      const VideoCore::TextureCopy& copy) {
     OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
@@ -99,32 +99,35 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
                       1);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    } else if (blit.src_rect.top > temp_rect.top || blit.src_rect.right > temp_rect.right) {
+    } else if (copy.extent.width > temp_extent.width || copy.extent.height > temp_extent.height) {
+        temp_extent = copy.extent;
         temp_tex.Release();
         temp_tex.Create();
         state.texture_units[1].texture_2d = temp_tex.handle;
         state.Apply();
         glActiveTexture(GL_TEXTURE1);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, blit.src_rect.right,
-                       blit.src_rect.top);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, temp_extent.width,
+                       temp_extent.height);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        temp_rect = blit.src_rect;
     }
     state.texture_units[1].texture_2d = temp_tex.handle;
     state.Apply();
 
     glActiveTexture(GL_TEXTURE1);
     if (!use_texture_view) {
-        glCopyImageSubData(source.Handle(), GL_TEXTURE_2D, 0, blit.src_rect.left,
-                           blit.src_rect.bottom, 0, temp_tex.handle, GL_TEXTURE_2D, 0,
-                           blit.src_rect.left, blit.src_rect.bottom, 0, blit.src_rect.GetWidth(),
-                           blit.src_rect.GetHeight(), 1);
+        glCopyImageSubData(source.Handle(), GL_TEXTURE_2D, 0, copy.src_offset.x, copy.src_offset.y,
+                           0, temp_tex.handle, GL_TEXTURE_2D, 0, copy.src_offset.x,
+                           copy.src_offset.y, 0, copy.extent.width, copy.extent.height, 1);
     }
     glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
 
-    SetParams(d24s8_to_rgba8, source.RealExtent(), blit.src_rect);
-    Draw(d24s8_to_rgba8, dest.Handle(), draw_fbo.handle, 0, blit.dst_rect);
+    const Common::Rectangle src_rect{copy.src_offset.x, copy.src_offset.y + copy.extent.height,
+                                     copy.src_offset.x + copy.extent.width, copy.src_offset.x};
+    const Common::Rectangle dst_rect{copy.dst_offset.x, copy.dst_offset.y + copy.extent.height,
+                                     copy.dst_offset.x + copy.extent.width, copy.dst_offset.x};
+    SetParams(d24s8_to_rgba8, source.RealExtent(), src_rect);
+    Draw(d24s8_to_rgba8, dest.Handle(), draw_fbo.handle, 0, dst_rect);
 
     if (use_texture_view) {
         temp_tex.Release();
@@ -138,14 +141,18 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
 }
 
 bool BlitHelper::ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest,
-                                      const VideoCore::TextureBlit& blit) {
+                                      const VideoCore::TextureCopy& copy) {
     OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
     state.texture_units[0].texture_2d = source.Handle();
 
-    SetParams(rgba4_to_rgb5a1, source.RealExtent(), blit.src_rect);
-    Draw(rgba4_to_rgb5a1, dest.Handle(), draw_fbo.handle, 0, blit.dst_rect);
+    const Common::Rectangle src_rect{copy.src_offset.x, copy.src_offset.y + copy.extent.height,
+                                     copy.src_offset.x + copy.extent.width, copy.src_offset.x};
+    const Common::Rectangle dst_rect{copy.dst_offset.x, copy.dst_offset.y + copy.extent.height,
+                                     copy.dst_offset.x + copy.extent.width, copy.dst_offset.x};
+    SetParams(rgba4_to_rgb5a1, source.RealExtent(), src_rect);
+    Draw(rgba4_to_rgb5a1, dest.Handle(), draw_fbo.handle, 0, dst_rect);
 
     return true;
 }

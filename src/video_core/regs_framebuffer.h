@@ -159,6 +159,7 @@ struct FramebufferRegs {
         } stencil_test;
 
         union {
+            u32 depth_color_mask;
             BitField<0, 1, u32> depth_test_enable;
             BitField<4, 3, CompareFunc> depth_test_func;
             BitField<8, 1, u32> red_enable;

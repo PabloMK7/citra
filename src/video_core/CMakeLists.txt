@@ -101,18 +101,47 @@ add_library(video_core STATIC
     renderer_software/sw_texturing.cpp
     renderer_software/sw_texturing.h
     renderer_vulkan/pica_to_vk.h
+    renderer_vulkan/renderer_vulkan.cpp
+    renderer_vulkan/renderer_vulkan.h
+    renderer_vulkan/vk_blit_helper.cpp
+    renderer_vulkan/vk_blit_helper.h
     renderer_vulkan/vk_common.cpp
     renderer_vulkan/vk_common.h
+    renderer_vulkan/vk_descriptor_pool.cpp
+    renderer_vulkan/vk_descriptor_pool.h
+    renderer_vulkan/vk_graphics_pipeline.cpp
+    renderer_vulkan/vk_graphics_pipeline.h
+    renderer_vulkan/vk_master_semaphore.cpp
+    renderer_vulkan/vk_master_semaphore.h
+    renderer_vulkan/vk_rasterizer.cpp
+    renderer_vulkan/vk_rasterizer.h
+    renderer_vulkan/vk_rasterizer_cache.cpp
+    renderer_vulkan/vk_scheduler.cpp
+    renderer_vulkan/vk_scheduler.h
+    renderer_vulkan/vk_resource_pool.cpp
+    renderer_vulkan/vk_resource_pool.h
     renderer_vulkan/vk_instance.cpp
     renderer_vulkan/vk_instance.h
+    renderer_vulkan/vk_pipeline_cache.cpp
+    renderer_vulkan/vk_pipeline_cache.h
     renderer_vulkan/vk_platform.cpp
     renderer_vulkan/vk_platform.h
+    renderer_vulkan/vk_present_window.cpp
+    renderer_vulkan/vk_present_window.h
+    renderer_vulkan/vk_renderpass_cache.cpp
+    renderer_vulkan/vk_renderpass_cache.h
     renderer_vulkan/vk_shader_gen.cpp
     renderer_vulkan/vk_shader_gen.h
     renderer_vulkan/vk_shader_gen_spv.cpp
     renderer_vulkan/vk_shader_gen_spv.h
     renderer_vulkan/vk_shader_util.cpp
     renderer_vulkan/vk_shader_util.h
+    renderer_vulkan/vk_stream_buffer.cpp
+    renderer_vulkan/vk_stream_buffer.h
+    renderer_vulkan/vk_swapchain.cpp
+    renderer_vulkan/vk_swapchain.h
+    renderer_vulkan/vk_texture_runtime.cpp
+    renderer_vulkan/vk_texture_runtime.h
     shader/debug_data.h
     shader/shader.cpp
     shader/shader.h

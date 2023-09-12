@@ -12,6 +12,8 @@ add_executable(citra
     emu_window/emu_window_sdl2_gl.h
     emu_window/emu_window_sdl2_sw.cpp
     emu_window/emu_window_sdl2_sw.h
+    emu_window/emu_window_sdl2_vk.cpp
+    emu_window/emu_window_sdl2_vk.h
     precompiled_headers.h
     resource.h
 )

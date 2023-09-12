@@ -45,6 +45,8 @@ public final class SettingsFile {
     public static final String KEY_PREMIUM = "premium";
 
     public static final String KEY_GRAPHICS_API = "graphics_api";
+    public static final String KEY_SPIRV_SHADER_GEN = "spirv_shader_gen";
+    public static final String KEY_ASYNC_SHADERS = "async_shader_compilation";
     public static final String KEY_RENDERER_DEBUG = "renderer_debug";
     public static final String KEY_HW_SHADER = "use_hw_shader";
     public static final String KEY_SHADERS_ACCURATE_MUL = "shaders_accurate_mul";

@@ -12,6 +12,10 @@
 #include "core/3ds.h"
 #include "core/frontend/framebuffer_layout.h"
 
+namespace Common {
+class DynamicLibrary;
+}
+
 namespace Frontend {
 
 /// Information for the Graphics Backends signifying what type of screen pointer is in
@@ -81,6 +85,11 @@ public:
 
     /// Releases (dunno if this is the "right" word) the context from the caller thread
     virtual void DoneCurrent(){};
+
+    /// Gets the GPU driver library (used by Android only)
+    virtual std::shared_ptr<Common::DynamicLibrary> GetDriverLibrary() {
+        return {};
+    }
 
     class Scoped {
     public:

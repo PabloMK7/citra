@@ -46,7 +46,7 @@ static std::string GetVertexInterfaceDeclaration(bool is_output, bool use_clip_p
     if (is_output) {
         // gl_PerVertex redeclaration is required for separate shader object
         out += "out gl_PerVertex {\n";
-        out += "    vec4 gl_Position;\n";
+        out += "    invariant vec4 gl_Position;\n";
         if (use_clip_planes) {
             out += "    float gl_ClipDistance[2];\n";
         }
@@ -236,6 +236,10 @@ PicaFSConfig::PicaFSConfig(const Pica::Regs& regs, const Instance& instance) {
     state.shadow_rendering.Assign(regs.framebuffer.output_merger.fragment_operation_mode ==
                                   FramebufferRegs::FragmentOperationMode::Shadow);
     state.shadow_texture_orthographic.Assign(regs.texturing.shadow.orthographic != 0);
+
+    // We only need fragment shader interlock when shadow rendering.
+    state.use_fragment_shader_interlock.Assign(state.shadow_rendering &&
+                                               instance.IsFragmentShaderInterlockSupported());
 }
 
 void PicaShaderConfigCommon::Init(const Pica::RasterizerRegs& rasterizer,
@@ -1194,8 +1198,31 @@ float ProcTexNoiseCoef(vec2 x) {
 
 std::string GenerateFragmentShader(const PicaFSConfig& config) {
     const auto& state = config.state;
-    std::string out = "#version 450 core\n"
-                      "#extension GL_ARB_separate_shader_objects : enable\n\n";
+    std::string out = R"(
+#version 450 core
+#extension GL_ARB_separate_shader_objects : enable
+)";
+
+    if (state.use_fragment_shader_interlock) {
+        out += R"(
+#if defined(GL_ARB_fragment_shader_interlock)
+#extension GL_ARB_fragment_shader_interlock : enable
+#define beginInvocationInterlock beginInvocationInterlockARB
+#define endInvocationInterlock endInvocationInterlockARB
+#elif defined(GL_NV_fragment_shader_interlock)
+#extension GL_NV_fragment_shader_interlock : enable
+#define beginInvocationInterlock beginInvocationInterlockNV
+#define endInvocationInterlock endInvocationInterlockNV
+#elif defined(GL_INTEL_fragment_shader_ordering)
+#extension GL_INTEL_fragment_shader_ordering : enable
+#define beginInvocationInterlock beginFragmentShaderOrderingINTEL
+#define endInvocationInterlock
+#endif
+
+layout(pixel_interlock_ordered) in;
+)";
+    }
+
     out += GetVertexInterfaceDeclaration(false);
 
     out += R"(
@@ -1278,6 +1305,19 @@ uvec2 DecodeShadow(uint pixel) {
 
 uint EncodeShadow(uvec2 pixel) {
     return (pixel.x << 8) | pixel.y;
+}
+
+uint UpdateShadow(uint pixel, uint d, uint s) {
+    uvec2 ref = DecodeShadow(pixel);
+    if (d < ref.x) {
+        if (s == 0u) {
+            ref.x = d;
+        } else {
+            s = uint(float(s) / (shadow_bias_constant + shadow_bias_linear * float(d) / float(ref.x)));
+            ref.y = min(s, ref.y);
+        }
+    }
+    return EncodeShadow(ref);
 }
 
 float CompareShadow(uint pixel, uint z) {
@@ -1511,10 +1551,11 @@ vec4 secondary_fragment_color = vec4(0.0);
                "gl_FragCoord.y < float(scissor_y2))) discard;\n";
     }
 
-    // After perspective divide, OpenGL transform z_over_w from [-1, 1] to [near, far]. Here we use
-    // default near = 0 and far = 1, and undo the transformation to get the original z_over_w, then
-    // do our own transformation according to PICA specification.
-    out += "float z_over_w = 2.0 * gl_FragCoord.z - 1.0;\n"
+    // The PICA depth range is [-1, 0] while in Vulkan that range is [0, 1].
+    // Thus in the vertex shader we flip the sign of the z component to place
+    // it in the correct range. Here we undo the transformation to get the original z_over_w,
+    // then do our own transformation according to PICA specification.
+    out += "float z_over_w = -gl_FragCoord.z;\n"
            "float depth = z_over_w * depth_scale + depth_offset;\n";
     if (state.depthmap_enable == RasterizerRegs::DepthBuffering::WBuffering) {
         out += "depth /= gl_FragCoord.w;\n";
@@ -1577,26 +1618,26 @@ vec4 secondary_fragment_color = vec4(0.0);
 uint d = uint(clamp(depth, 0.0, 1.0) * float(0xFFFFFF));
 uint s = uint(last_tex_env_out.g * float(0xFF));
 ivec2 image_coord = ivec2(gl_FragCoord.xy);
-
+)";
+        if (state.use_fragment_shader_interlock) {
+            out += R"(
+beginInvocationInterlock();
+uint old_shadow = imageLoad(shadow_buffer, image_coord).x;
+uint new_shadow = UpdateShadow(old_shadow, d, s);
+imageStore(shadow_buffer, image_coord, uvec4(new_shadow));
+endInvocationInterlock();
+)";
+        } else {
+            out += R"(
 uint old = imageLoad(shadow_buffer, image_coord).x;
 uint new1;
 uint old2;
 do {
     old2 = old;
-
-    uvec2 ref = DecodeShadow(old);
-    if (d < ref.x) {
-        if (s == 0u) {
-            ref.x = d;
-        } else {
-            s = uint(float(s) / (shadow_bias_constant + shadow_bias_linear * float(d) / float(ref.x)));
-            ref.y = min(s, ref.y);
-        }
-    }
-    new1 = EncodeShadow(ref);
-
+    new1 = UpdateShadow(old, d, s);
 } while ((old = imageAtomicCompSwap(shadow_buffer, image_coord, old, new1)) != old2);
 )";
+        }
     } else {
         out += "gl_FragDepth = depth;\n";
         // Round the final fragment color to maintain the PICA's 8 bits of precision
@@ -1652,6 +1693,7 @@ std::string GenerateTrivialVertexShader(bool use_clip_planes) {
     out += UniformBlockDef;
 
     out += R"(
+const float EPSILON_Z = 0.00000001f;
 
 void main() {
     primary_color = vert_color;
@@ -1661,14 +1703,17 @@ void main() {
     texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
-    gl_Position = vert_position;
-    gl_Position.z = (gl_Position.z + gl_Position.w) / 2.0;
+    vec4 vtx_pos = vert_position;
+    if (abs(vtx_pos.z) < EPSILON_Z) {
+        vtx_pos.z = 0.f;
+    }
+    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
     if (use_clip_planes) {
         out += R"(
-        gl_ClipDistance[0] = -vert_position.z; // fixed PICA clipping plane z <= 0
+        gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
         if (enable_clip1) {
-            gl_ClipDistance[1] = dot(clip_coef, vert_position);
+            gl_ClipDistance[1] = dot(clip_coef, vtx_pos);
         } else {
             gl_ClipDistance[1] = 0;
         }
@@ -1768,6 +1813,7 @@ layout (set = 0, binding = 0, std140) uniform vs_config {
             return "0.0";
         };
 
+        out += "const float EPSILON_Z = 0.00000001f;\n\n";
         out += "vec4 GetVertexQuaternion() {\n";
         out += "    return vec4(" + semantic(VSOutputAttributes::QUATERNION_X) + ", " +
                semantic(VSOutputAttributes::QUATERNION_Y) + ", " +
@@ -1780,8 +1826,10 @@ layout (set = 0, binding = 0, std140) uniform vs_config {
                semantic(VSOutputAttributes::POSITION_Y) + ", " +
                semantic(VSOutputAttributes::POSITION_Z) + ", " +
                semantic(VSOutputAttributes::POSITION_W) + ");\n";
-        out += "    gl_Position = vtx_pos;\n";
-        out += "    gl_Position.z = (gl_Position.z + gl_Position.w) / 2.0;\n";
+        out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
+        out += "        vtx_pos.z = 0.f;\n";
+        out += "    }\n";
+        out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
         if (config.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
             out += "    if (enable_clip1) {\n";
@@ -1855,6 +1903,7 @@ struct Vertex {
         return "0.0";
     };
 
+    out += "const float EPSILON_Z = 0.00000001f;\n\n";
     out += "vec4 GetVertexQuaternion(Vertex vtx) {\n";
     out += "    return vec4(" + semantic(VSOutputAttributes::QUATERNION_X) + ", " +
            semantic(VSOutputAttributes::QUATERNION_Y) + ", " +
@@ -1867,8 +1916,10 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Y) + ", " +
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
-    out += "    gl_Position = vtx_pos;\n";
-    out += "    gl_Position.z = (gl_Position.z + gl_Position.w) / 2.0;\n";
+    out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
+    out += "        vtx_pos.z = 0.f;\n";
+    out += "    }\n";
+    out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
     if (use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
         out += "    if (enable_clip1) {\n";

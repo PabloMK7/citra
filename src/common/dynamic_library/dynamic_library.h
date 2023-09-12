@@ -11,6 +11,7 @@ namespace Common {
 class DynamicLibrary {
 public:
     explicit DynamicLibrary();
+    explicit DynamicLibrary(void* handle);
     explicit DynamicLibrary(std::string_view name, int major = -1, int minor = -1);
     ~DynamicLibrary();
 

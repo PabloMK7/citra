@@ -185,6 +185,8 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
+    util/vk_device_info.cpp
+    util/vk_device_info.h
 )
 
 file(GLOB COMPAT_LIST

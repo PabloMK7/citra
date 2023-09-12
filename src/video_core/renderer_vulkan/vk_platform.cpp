@@ -95,7 +95,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT 
 }
 } // Anonymous namespace
 
-std::shared_ptr<Common::DynamicLibrary> OpenLibrary() {
+std::shared_ptr<Common::DynamicLibrary> OpenLibrary(
+    [[maybe_unused]] Frontend::GraphicsContext* context) {
+#ifdef ANDROID
+    // Android may override the Vulkan driver from the frontend.
+    if (auto library = context->GetDriverLibrary(); library) {
+        return library;
+    }
+#endif
     auto library = std::make_shared<Common::DynamicLibrary>();
 #ifdef __APPLE__
     const std::string filename = Common::DynamicLibrary::GetLibraryName("vulkan");
@@ -273,16 +280,14 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
     const auto vkGetInstanceProcAddr =
         library.GetSymbol<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr) {
-        LOG_CRITICAL(Render_Vulkan, "Failed GetSymbol vkGetInstanceProcAddr");
-        return {};
+        throw std::runtime_error("Failed GetSymbol vkGetInstanceProcAddr");
     }
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
     const auto extensions = GetInstanceExtensions(window_type, enable_validation);
     const u32 available_version = vk::enumerateInstanceVersion();
     if (available_version < VK_API_VERSION_1_1) {
-        LOG_CRITICAL(Render_Vulkan, "Vulkan 1.0 is not supported, 1.1 is required!");
-        return {};
+        throw std::runtime_error("Vulkan 1.0 is not supported, 1.1 is required!");
     }
 
     const vk::ApplicationInfo application_info = {
@@ -343,7 +348,7 @@ vk::UniqueDebugReportCallbackEXT CreateDebugReportCallback(vk::Instance instance
     return instance.createDebugReportCallbackEXTUnique(callback_ci);
 }
 
-DebugCallback CreateDebugCallback(vk::Instance instance) {
+DebugCallback CreateDebugCallback(vk::Instance instance, bool& debug_utils_supported) {
     if (!Settings::values.renderer_debug) {
         return {};
     }
@@ -356,7 +361,8 @@ DebugCallback CreateDebugCallback(vk::Instance instance) {
         return std::strcmp(VK_EXT_DEBUG_UTILS_EXTENSION_NAME, prop.extensionName) == 0;
     });
     // Prefer debug util messenger if available.
-    if (it != properties.end()) {
+    debug_utils_supported = it != properties.end();
+    if (debug_utils_supported) {
         return CreateDebugMessenger(instance);
     }
     // Otherwise fallback to debug report callback.

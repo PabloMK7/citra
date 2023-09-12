@@ -13,6 +13,7 @@
 
 namespace Frontend {
 class EmuWindow;
+class GraphicsContext;
 enum class WindowSystemType : u8;
 } // namespace Frontend
 
@@ -21,7 +22,8 @@ namespace Vulkan {
 using DebugCallback =
     std::variant<vk::UniqueDebugUtilsMessengerEXT, vk::UniqueDebugReportCallbackEXT>;
 
-std::shared_ptr<Common::DynamicLibrary> OpenLibrary();
+std::shared_ptr<Common::DynamicLibrary> OpenLibrary(
+    [[maybe_unused]] Frontend::GraphicsContext* context = nullptr);
 
 vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& emu_window);
 
@@ -29,6 +31,6 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
                                   Frontend::WindowSystemType window_type, bool enable_validation,
                                   bool dump_command_buffers);
 
-DebugCallback CreateDebugCallback(vk::Instance instance);
+DebugCallback CreateDebugCallback(vk::Instance instance, bool& debug_utils_supported);
 
 } // namespace Vulkan

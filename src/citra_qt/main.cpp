@@ -62,6 +62,7 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
+#include "citra_qt/util/vk_device_info.h"
 #include "common/arch.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
@@ -262,6 +263,14 @@ GMainWindow::GMainWindow(Core::System& system_)
     mouse_hide_timer.setInterval(default_mouse_timeout);
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
+
+    physical_devices = GetVulkanPhysicalDevices();
+    if (physical_devices.empty()) {
+        QMessageBox::warning(this, tr("No Suitable Vulkan Devices Detected"),
+                             tr("Vulkan initialization failed during boot.<br/>"
+                                "Your GPU may not support Vulkan 1.1, or you do not "
+                                "have the latest graphics driver."));
+    }
 
 #if ENABLE_QT_UPDATER
     if (UISettings::values.check_for_update_on_start) {
@@ -2010,7 +2019,7 @@ void GMainWindow::OnLoadState() {
 void GMainWindow::OnConfigure() {
     game_list->SetDirectoryWatcherEnabled(false);
     Settings::SetConfiguringGlobal(true);
-    ConfigureDialog configureDialog(this, hotkey_registry, system,
+    ConfigureDialog configureDialog(this, hotkey_registry, system, physical_devices,
                                     !multiplayer_state->IsHostingPublicRoom());
     connect(&configureDialog, &ConfigureDialog::LanguageChanged, this,
             &GMainWindow::OnLanguageChanged);
@@ -2470,9 +2479,11 @@ void GMainWindow::ShowMouseCursor() {
 }
 
 void GMainWindow::UpdateAPIIndicator(bool update) {
-    static std::array graphics_apis = {QStringLiteral("SOFTWARE"), QStringLiteral("OPENGL")};
+    static std::array graphics_apis = {QStringLiteral("SOFTWARE"), QStringLiteral("OPENGL"),
+                                       QStringLiteral("VULKAN")};
 
-    static std::array graphics_api_colors = {QStringLiteral("#3ae400"), QStringLiteral("#00ccdd")};
+    static std::array graphics_api_colors = {QStringLiteral("#3ae400"), QStringLiteral("#00ccdd"),
+                                             QStringLiteral("#91242a")};
 
     u32 api_index = static_cast<u32>(Settings::values.graphics_api.GetValue());
     if (update) {
@@ -2764,7 +2775,7 @@ void GMainWindow::OnConfigurePerGame() {
 
 void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_name) {
     Settings::SetConfiguringGlobal(false);
-    ConfigurePerGame dialog(this, title_id, file_name, system);
+    ConfigurePerGame dialog(this, title_id, file_name, physical_devices, system);
     const auto result = dialog.exec();
 
     if (result != QDialog::Accepted) {

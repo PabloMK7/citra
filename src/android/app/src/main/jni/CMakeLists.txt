@@ -19,6 +19,10 @@ add_library(citra-android SHARED
     default_ini.h
     emu_window/emu_window.cpp
     emu_window/emu_window.h
+    emu_window/emu_window_gl.cpp
+    emu_window/emu_window_gl.h
+    emu_window/emu_window_vk.cpp
+    emu_window/emu_window_vk.h
     game_info.cpp
     game_settings.cpp
     game_settings.h
@@ -30,7 +34,7 @@ add_library(citra-android SHARED
     ndk_motion.h
 )
 
-target_link_libraries(citra-android PRIVATE audio_core citra_common citra_core input_common network)
+target_link_libraries(citra-android PRIVATE audio_core citra_common citra_core input_common network adrenotools)
 target_link_libraries(citra-android PRIVATE android camera2ndk EGL glad inih jnigraphics log mediandk yuv)
 
 set(CPACK_PACKAGE_EXECUTABLES ${CPACK_PACKAGE_EXECUTABLES} citra-android)

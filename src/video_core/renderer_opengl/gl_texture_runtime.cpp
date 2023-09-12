@@ -170,14 +170,14 @@ const FormatTuple& TextureRuntime::GetFormatTuple(VideoCore::CustomPixelFormat p
 }
 
 bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
-                                 const VideoCore::TextureBlit& blit) {
+                                 const VideoCore::TextureCopy& copy) {
     const PixelFormat src_format = source.pixel_format;
     const PixelFormat dst_format = dest.pixel_format;
     ASSERT_MSG(src_format != dst_format, "Reinterpretation with the same format is invalid");
     if (src_format == PixelFormat::D24S8 && dst_format == PixelFormat::RGBA8) {
-        blit_helper.ConvertDS24S8ToRGBA8(source, dest, blit);
+        blit_helper.ConvertDS24S8ToRGBA8(source, dest, copy);
     } else if (src_format == PixelFormat::RGBA4 && dst_format == PixelFormat::RGB5A1) {
-        blit_helper.ConvertRGBA4ToRGB5A1(source, dest, blit);
+        blit_helper.ConvertRGBA4ToRGB5A1(source, dest, copy);
     } else {
         LOG_WARNING(Render_OpenGL, "Unimplemented reinterpretation {} -> {}",
                     VideoCore::PixelFormatAsString(src_format),

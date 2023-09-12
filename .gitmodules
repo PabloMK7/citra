@@ -82,3 +82,6 @@
 [submodule "library-headers"]
     path = externals/library-headers/library-headers
     url = https://github.com/citra-emu/ext-library-headers.git
+[submodule "libadrenotools"]
+    path = externals/libadrenotools
+    url = https://github.com/bylaws/libadrenotools

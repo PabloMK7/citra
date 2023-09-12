@@ -14,6 +14,7 @@
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/renderer_software/renderer_software.h"
+#include "video_core/renderer_vulkan/renderer_vulkan.h"
 #include "video_core/video_core.h"
 
 namespace VideoCore {
@@ -38,6 +39,9 @@ void Init(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window
     switch (graphics_api) {
     case Settings::GraphicsAPI::Software:
         g_renderer = std::make_unique<SwRenderer::RendererSoftware>(system, emu_window);
+        break;
+    case Settings::GraphicsAPI::Vulkan:
+        g_renderer = std::make_unique<Vulkan::RendererVulkan>(system, emu_window, secondary_window);
         break;
     case Settings::GraphicsAPI::OpenGL:
         g_renderer = std::make_unique<OpenGL::RendererOpenGL>(system, emu_window, secondary_window);

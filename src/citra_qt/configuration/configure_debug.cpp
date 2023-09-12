@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QDesktopServices>
+#include <QMessageBox>
 #include <QUrl>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_debug.h"
@@ -12,6 +13,7 @@
 #include "common/logging/backend.h"
 #include "common/settings.h"
 #include "ui_configure_debug.h"
+#include "video_core/renderer_vulkan/vk_instance.h"
 
 // The QSlider doesn't have an easy way to set a custom step amount,
 // so we can just convert from the sliders range (0 - 79) to the expected
@@ -34,8 +36,39 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
+    connect(ui->toggle_renderer_debug, &QCheckBox::clicked, this, [this](bool checked) {
+        if (checked && Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Vulkan) {
+            try {
+                Vulkan::Instance debug_inst{true};
+            } catch (vk::LayerNotPresentError&) {
+                ui->toggle_renderer_debug->toggle();
+                QMessageBox::warning(this, tr("Validation layer not available"),
+                                     tr("Unable to enable debug renderer because the layer "
+                                        "<strong>VK_LAYER_KHRONOS_validation</strong> is missing. "
+                                        "Please install the Vulkan SDK or the appropriate package "
+                                        "of your distribution"));
+            }
+        }
+    });
+
+    connect(ui->toggle_dump_command_buffers, &QCheckBox::clicked, this, [this](bool checked) {
+        if (checked && Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Vulkan) {
+            try {
+                Vulkan::Instance debug_inst{false, true};
+            } catch (vk::LayerNotPresentError&) {
+                ui->toggle_dump_command_buffers->toggle();
+                QMessageBox::warning(this, tr("Command buffer dumping not available"),
+                                     tr("Unable to enable command buffer dumping because the layer "
+                                        "<strong>VK_LAYER_LUNARG_api_dump</strong> is missing. "
+                                        "Please install the Vulkan SDK or the appropriate package "
+                                        "of your distribution"));
+            }
+        }
+    });
+
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);
+    ui->toggle_dump_command_buffers->setEnabled(!is_powered_on);
 
     // Set a minimum width for the label to prevent the slider from changing size.
     // This scales across DPIs. (This value should be enough for "xxx%")
@@ -62,6 +95,7 @@ void ConfigureDebug::SetConfiguration() {
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
+    ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
         if (Settings::values.cpu_clock_percentage.UsingGlobal()) {
@@ -92,6 +126,7 @@ void ConfigureDebug::ApplyConfiguration() {
     Common::Log::SetGlobalFilter(filter);
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
+    Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
 
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.cpu_clock_percentage, ui->clock_speed_combo,

@@ -26,7 +26,7 @@ using DiskResourceLoadCallback = std::function<void(LoadCallbackStage, std::size
 
 class RasterizerInterface {
 public:
-    virtual ~RasterizerInterface() {}
+    virtual ~RasterizerInterface() = default;
 
     /// Queues the primitive formed by the given vertices for rendering
     virtual void AddTriangle(const Pica::Shader::OutputVertex& v0,

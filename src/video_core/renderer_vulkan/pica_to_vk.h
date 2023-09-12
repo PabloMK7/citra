@@ -6,6 +6,7 @@
 
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/telemetry_session.h"
 #include "video_core/regs.h"
 #include "video_core/renderer_vulkan/vk_common.h"
 
@@ -172,7 +173,10 @@ inline vk::PrimitiveTopology PrimitiveTopology(Pica::PipelineRegs::TriangleTopol
         return vk::PrimitiveTopology::eTriangleList;
     case Pica::PipelineRegs::TriangleTopology::Strip:
         return vk::PrimitiveTopology::eTriangleStrip;
+    default:
+        UNREACHABLE_MSG("Unknown triangle topology {}", topology);
     }
+    return vk::PrimitiveTopology::eTriangleList;
 }
 
 inline vk::CullModeFlags CullMode(Pica::RasterizerRegs::CullMode mode) {
@@ -182,7 +186,10 @@ inline vk::CullModeFlags CullMode(Pica::RasterizerRegs::CullMode mode) {
     case Pica::RasterizerRegs::CullMode::KeepClockWise:
     case Pica::RasterizerRegs::CullMode::KeepCounterClockWise:
         return vk::CullModeFlagBits::eBack;
+    default:
+        UNREACHABLE_MSG("Unknown cull mode {}", mode);
     }
+    return vk::CullModeFlagBits::eNone;
 }
 
 inline vk::FrontFace FrontFace(Pica::RasterizerRegs::CullMode mode) {
@@ -192,7 +199,16 @@ inline vk::FrontFace FrontFace(Pica::RasterizerRegs::CullMode mode) {
         return vk::FrontFace::eCounterClockwise;
     case Pica::RasterizerRegs::CullMode::KeepCounterClockWise:
         return vk::FrontFace::eClockwise;
+    default:
+        UNREACHABLE_MSG("Unknown cull mode {}", mode);
     }
+    return vk::FrontFace::eClockwise;
+}
+
+inline Common::Vec4f ColorRGBA8(const u32 color) {
+    const auto rgba =
+        Common::Vec4u{color >> 0 & 0xFF, color >> 8 & 0xFF, color >> 16 & 0xFF, color >> 24 & 0xFF};
+    return rgba / 255.0f;
 }
 
 } // namespace PicaToVK

@@ -45,6 +45,9 @@ public:
     /// Returns the removal threshold ticks for the garbage collector
     u32 RemoveThreshold();
 
+    /// Submits and waits for current GPU work.
+    void Finish() {}
+
     /// Returns true if the provided pixel format cannot be used natively by the runtime.
     bool NeedsConversion(VideoCore::PixelFormat pixel_format) const;
 
@@ -56,7 +59,7 @@ public:
     const FormatTuple& GetFormatTuple(VideoCore::CustomPixelFormat pixel_format);
 
     /// Attempts to reinterpret a rectangle of source to another rectangle of dest
-    bool Reinterpret(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
+    bool Reinterpret(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
 
     /// Fills the rectangle of the texture with the clear value provided
     void ClearTexture(Surface& surface, const VideoCore::TextureClear& clear);

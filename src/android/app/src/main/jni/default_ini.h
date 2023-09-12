@@ -99,8 +99,16 @@ cpu_clock_percentage =
 
 [Renderer]
 # Whether to render using OpenGL
-# 1: OpenGLES (default)
+# 1: OpenGL ES (default), 2: Vulkan
 graphics_api =
+
+# Whether to compile shaders on multiple worker threads (Vulkan only)
+# 0: Off, 1: On (default)
+async_shader_compilation =
+
+# Whether to emit PICA fragment shader using SPIRV or GLSL (Vulkan only)
+# 0: GLSL, 1: SPIR-V (default)
+spirv_shader_gen =
 
 # Whether to use hardware shaders to emulate 3DS shaders
 # 0: Software, 1 (default): Hardware

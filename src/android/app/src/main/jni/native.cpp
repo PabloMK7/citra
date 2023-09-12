@@ -4,13 +4,16 @@
 
 #include <algorithm>
 #include <thread>
+#include <dlfcn.h>
 
 #include <android/api-level.h>
 #include <android/native_window_jni.h>
 
 #include "audio_core/dsp_interface.h"
 #include "common/aarch64/cpu_detect.h"
+#include "common/arch.h"
 #include "common/common_paths.h"
+#include "common/dynamic_library/dynamic_library.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -33,7 +36,8 @@
 #include "jni/camera/ndk_camera.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/config.h"
-#include "jni/emu_window/emu_window.h"
+#include "jni/emu_window/emu_window_gl.h"
+#include "jni/emu_window/emu_window_vk.h"
 #include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
@@ -42,10 +46,15 @@
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
+#if CITRA_ARCH(arm64)
+#include <adrenotools/driver.h>
+#endif
+
 namespace {
 
 ANativeWindow* s_surf;
 
+std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
 
 std::atomic<bool> stop_run{true};
@@ -123,11 +132,14 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     switch (graphics_api) {
     case Settings::GraphicsAPI::OpenGL:
-        window = std::make_unique<EmuWindow_Android>(s_surf);
+        window = std::make_unique<EmuWindow_Android_OpenGL>(s_surf);
+        break;
+    case Settings::GraphicsAPI::Vulkan:
+        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
         break;
     default:
-        LOG_CRITICAL(Frontend, "Unknown graphics API {}, using OpenGL", graphics_api);
-        window = std::make_unique<EmuWindow_Android>(s_surf);
+        LOG_CRITICAL(Frontend, "Unknown graphics API {}, using Vulkan", graphics_api);
+        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
     }
 
     Core::System& system{Core::System::GetInstance()};
@@ -228,6 +240,37 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     return Core::System::ResultStatus::Success;
 }
 
+void InitializeGpuDriver(const std::string& hook_lib_dir, const std::string& custom_driver_dir,
+                         const std::string& custom_driver_name,
+                         const std::string& file_redirect_dir) {
+#if CITRA_ARCH(arm64)
+    void* handle{};
+    const char* file_redirect_dir_{};
+    int featureFlags{};
+
+    // Enable driver file redirection when renderer debugging is enabled.
+    if (Settings::values.renderer_debug && file_redirect_dir.size()) {
+        featureFlags |= ADRENOTOOLS_DRIVER_FILE_REDIRECT;
+        file_redirect_dir_ = file_redirect_dir.c_str();
+    }
+
+    // Try to load a custom driver.
+    if (custom_driver_name.size()) {
+        handle = adrenotools_open_libvulkan(
+            RTLD_NOW, featureFlags | ADRENOTOOLS_DRIVER_CUSTOM, nullptr, hook_lib_dir.c_str(),
+            custom_driver_dir.c_str(), custom_driver_name.c_str(), file_redirect_dir_, nullptr);
+    }
+
+    // Try to load the system driver.
+    if (!handle) {
+        handle = adrenotools_open_libvulkan(RTLD_NOW, featureFlags, nullptr, hook_lib_dir.c_str(),
+                                            nullptr, nullptr, file_redirect_dir_, nullptr);
+    }
+
+    vulkan_library = std::make_shared<Common::DynamicLibrary>(handle);
+#endif
+}
+
 extern "C" {
 
 void Java_org_citra_citra_1emu_NativeLibrary_SurfaceChanged(JNIEnv* env,
@@ -237,6 +280,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_SurfaceChanged(JNIEnv* env,
 
     if (window) {
         window->OnSurfaceChanged(s_surf);
+    }
+    if (VideoCore::g_renderer) {
+        VideoCore::g_renderer->NotifySurfaceChanged();
     }
 
     LOG_INFO(Frontend, "Surface changed");
@@ -256,6 +302,15 @@ void Java_org_citra_citra_1emu_NativeLibrary_DoFrame(JNIEnv* env, [[maybe_unused
         return;
     }
     window->TryPresenting();
+}
+
+void JNICALL Java_org_yuzu_yuzu_1emu_NativeLibrary_initializeGpuDriver(JNIEnv* env, jclass clazz,
+                                                                       jstring hook_lib_dir,
+                                                                       jstring custom_driver_dir,
+                                                                       jstring custom_driver_name,
+                                                                       jstring file_redirect_dir) {
+    InitializeGpuDriver(GetJString(env, hook_lib_dir), GetJString(env, custom_driver_dir),
+                        GetJString(env, custom_driver_name), GetJString(env, file_redirect_dir));
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_NotifyOrientationChange(JNIEnv* env,

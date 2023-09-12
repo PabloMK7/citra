@@ -5,7 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <span>
 #include <QDialog>
+#include <QString>
 
 class HotkeyRegistry;
 
@@ -35,6 +37,7 @@ class ConfigureDialog : public QDialog {
 
 public:
     explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry, Core::System& system,
+                             std::span<const QString> physical_devices,
                              bool enable_web_config = true);
     ~ConfigureDialog() override;
 

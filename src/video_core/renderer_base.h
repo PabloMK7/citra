@@ -63,6 +63,9 @@ public:
     /// Synchronizes fixed function renderer state
     virtual void Sync() {}
 
+    /// This is called to notify the rendering backend of a surface change
+    virtual void NotifySurfaceChanged() {}
+
     /// Returns the resolution scale factor relative to the native 3DS screen resolution
     u32 GetResolutionScaleFactor();
 

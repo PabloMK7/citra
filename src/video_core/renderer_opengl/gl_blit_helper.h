@@ -5,12 +5,14 @@
 #pragma once
 
 #include "common/math_util.h"
+#include "video_core/rasterizer_cache/utils.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 
 namespace VideoCore {
 struct Extent;
 struct TextureBlit;
+struct TextureCopy;
 } // namespace VideoCore
 
 namespace OpenGL {
@@ -25,9 +27,9 @@ public:
 
     bool Filter(Surface& surface, const VideoCore::TextureBlit& blit);
 
-    bool ConvertDS24S8ToRGBA8(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
+    bool ConvertDS24S8ToRGBA8(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
 
-    bool ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest, const VideoCore::TextureBlit& blit);
+    bool ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
 
 private:
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -68,7 +70,7 @@ private:
     OGLProgram rgba4_to_rgb5a1;
 
     OGLTexture temp_tex;
-    Common::Rectangle<u32> temp_rect{};
+    VideoCore::Extent temp_extent{};
     bool use_texture_view{true};
 };
 

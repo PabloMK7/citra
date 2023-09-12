@@ -6,8 +6,10 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 #include <QMainWindow>
 #include <QPushButton>
+#include <QString>
 #include <QTimer>
 #include <QTranslator>
 #include "citra_qt/compatibility_list.h"
@@ -325,6 +327,8 @@ private:
     bool game_shutdown_delayed = false;
     // Whether game was paused due to stopping video dumping
     bool game_paused_for_dumping = false;
+
+    std::vector<QString> physical_devices;
 
     // Debugger panes
     ProfilerWidget* profilerWidget;

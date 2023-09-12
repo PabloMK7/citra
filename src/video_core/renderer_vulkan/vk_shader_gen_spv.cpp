@@ -53,7 +53,7 @@ void FragmentModule::Generate() {
 
     combiner_buffer = ConstF32(0.f, 0.f, 0.f, 0.f);
     next_combiner_buffer = GetShaderDataMember(vec_ids.Get(4), ConstS32(27));
-    last_tex_env_out = ConstF32(0.f, 0.f, 0.f, 0.f);
+    last_tex_env_out = rounded_primary_color;
 
     // Write shader bytecode to emulate PICA TEV stages
     for (std::size_t index = 0; index < config.state.tev_stages.size(); ++index) {
@@ -115,7 +115,7 @@ void FragmentModule::WriteDepth() {
     const Id input_pointer_id{TypePointer(spv::StorageClass::Input, f32_id)};
     const Id gl_frag_coord_z{
         OpLoad(f32_id, OpAccessChain(input_pointer_id, gl_frag_coord_id, ConstU32(2u)))};
-    const Id z_over_w{OpFma(f32_id, ConstF32(2.f), gl_frag_coord_z, ConstF32(-1.f))};
+    const Id z_over_w{OpFNegate(f32_id, gl_frag_coord_z)};
     const Id depth_scale{GetShaderDataMember(f32_id, ConstS32(2))};
     const Id depth_offset{GetShaderDataMember(f32_id, ConstS32(3))};
     depth = OpFma(f32_id, z_over_w, depth_scale, depth_offset);

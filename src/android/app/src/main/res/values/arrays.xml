@@ -177,11 +177,13 @@
     </integer-array>
 
     <string-array name="graphicsApiNames">
-        <item>OpenGLES</item>
+        <item>OpenGL ES</item>
+        <item>Vulkan</item>
     </string-array>
 
     <integer-array name="graphicsApiValues">
         <item>1</item>
+        <item>2</item>
     </integer-array>
 
     <string-array name="textureFilterNames">

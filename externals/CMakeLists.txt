@@ -242,3 +242,11 @@ target_include_directories(vma SYSTEM INTERFACE ./vma/include)
 # vulkan-headers
 add_library(vulkan-headers INTERFACE)
 target_include_directories(vulkan-headers SYSTEM INTERFACE ./vulkan-headers/include)
+if (APPLE)
+    target_include_directories(vulkan-headers SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/MoltenVK)
+endif()
+
+# adrenotools
+if (ANDROID)
+    add_subdirectory(libadrenotools)
+endif()

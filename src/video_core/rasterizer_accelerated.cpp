@@ -244,6 +244,11 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
         }
         break;
 
+    // Fragment operation mode
+    case PICA_REG_INDEX(framebuffer.output_merger.fragment_operation_mode):
+        shader_dirty = true;
+        break;
+
     // Alpha test
     case PICA_REG_INDEX(framebuffer.output_merger.alpha_test):
         SyncAlphaTest();
@@ -617,11 +622,10 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(rasterizer.clip_coef[3]):
         SyncClipCoef();
         break;
-
-    default:
-        // Forward registers that map to fixed function API features to the video backend
-        NotifyFixedFunctionPicaRegisterChanged(id);
     }
+
+    // Forward registers that map to fixed function API features to the video backend
+    NotifyFixedFunctionPicaRegisterChanged(id);
 }
 
 void RasterizerAccelerated::SyncDepthScale() {

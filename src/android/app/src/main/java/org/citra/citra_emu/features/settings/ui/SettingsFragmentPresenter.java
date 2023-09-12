@@ -359,6 +359,8 @@ public final class SettingsFragmentPresenter {
 
         SettingSection rendererSection = mSettings.getSection(Settings.SECTION_RENDERER);
         Setting graphicsApi = rendererSection.getSetting(SettingsFile.KEY_GRAPHICS_API);
+        Setting spirvShaderGen = rendererSection.getSetting(SettingsFile.KEY_SPIRV_SHADER_GEN);
+        Setting asyncShaders = rendererSection.getSetting(SettingsFile.KEY_ASYNC_SHADERS);
         Setting resolutionFactor = rendererSection.getSetting(SettingsFile.KEY_RESOLUTION_FACTOR);
         Setting filterMode = rendererSection.getSetting(SettingsFile.KEY_FILTER_MODE);
         Setting shadersAccurateMul = rendererSection.getSetting(SettingsFile.KEY_SHADERS_ACCURATE_MUL);
@@ -377,6 +379,8 @@ public final class SettingsFragmentPresenter {
 
         sl.add(new HeaderSetting(null, null, R.string.renderer, 0));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_GRAPHICS_API, Settings.SECTION_RENDERER, R.string.graphics_api, 0, R.array.graphicsApiNames, R.array.graphicsApiValues, 0, graphicsApi));
+        sl.add(new CheckBoxSetting(SettingsFile.KEY_SPIRV_SHADER_GEN, Settings.SECTION_RENDERER, R.string.spirv_shader_gen, R.string.spirv_shader_gen_description, true, spirvShaderGen));
+        sl.add(new CheckBoxSetting(SettingsFile.KEY_ASYNC_SHADERS, Settings.SECTION_RENDERER, R.string.async_shaders, R.string.async_shaders_description, false, asyncShaders));
         sl.add(new SliderSetting(SettingsFile.KEY_RESOLUTION_FACTOR, Settings.SECTION_RENDERER, R.string.internal_resolution, R.string.internal_resolution_description, 1, 4, "x", 1, resolutionFactor));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_FILTER_MODE, Settings.SECTION_RENDERER, R.string.linear_filtering, R.string.linear_filtering_description, true, filterMode));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_SHADERS_ACCURATE_MUL, Settings.SECTION_RENDERER, R.string.shaders_accurate_mul, R.string.shaders_accurate_mul_description, false, shadersAccurateMul));
@@ -424,6 +428,6 @@ public final class SettingsFragmentPresenter {
         sl.add(new CheckBoxSetting(SettingsFile.KEY_CPU_JIT, Settings.SECTION_CORE, R.string.cpu_jit, R.string.cpu_jit_description, true, useCpuJit, true, mView));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_HW_SHADER, Settings.SECTION_RENDERER, R.string.hw_shaders, R.string.hw_shaders_description, true, hardwareShader, true, mView));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_USE_VSYNC, Settings.SECTION_RENDERER, R.string.vsync, R.string.vsync_description, true, vsyncEnable));
-        sl.add(new CheckBoxSetting(SettingsFile.KEY_RENDERER_DEBUG, Settings.SECTION_RENDERER, R.string.renderer_debug, R.string.renderer_debug_description, false, rendererDebug));
+        sl.add(new CheckBoxSetting(SettingsFile.KEY_RENDERER_DEBUG, Settings.SECTION_DEBUG, R.string.renderer_debug, R.string.renderer_debug_description, false, rendererDebug));
     }
 }

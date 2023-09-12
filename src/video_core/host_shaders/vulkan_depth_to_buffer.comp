@@ -14,6 +14,7 @@ layout(binding = 2) writeonly buffer OutputBuffer{
 
 layout(push_constant, std140) uniform ComputeInfo {
     mediump ivec2 src_offset;
+    mediump ivec2 dst_offset;
     mediump ivec2 extent;
 };
 

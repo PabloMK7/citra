@@ -160,7 +160,7 @@ bool InitializeCompiler() {
 
 vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, vk::Device device) {
     if (!InitializeCompiler()) {
-        return VK_NULL_HANDLE;
+        return {};
     }
 
     EProfile profile = ECoreProfile;
@@ -182,7 +182,7 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
                        includer)) [[unlikely]] {
         LOG_INFO(Render_Vulkan, "Shader Info Log:\n{}\n{}", shader->getInfoLog(),
                  shader->getInfoDebugLog());
-        return VK_NULL_HANDLE;
+        return {};
     }
 
     // Even though there's only a single shader, we still need to link it to generate SPV
@@ -191,7 +191,7 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
     if (!program->link(messages)) {
         LOG_INFO(Render_Vulkan, "Program Info Log:\n{}\n{}", program->getInfoLog(),
                  program->getInfoDebugLog());
-        return VK_NULL_HANDLE;
+        return {};
     }
 
     glslang::TIntermediate* intermediate = program->getIntermediate(lang);
@@ -227,7 +227,7 @@ vk::ShaderModule CompileSPV(std::span<const u32> code, vk::Device device) {
         UNREACHABLE_MSG("{}", err.what());
     }
 
-    return VK_NULL_HANDLE;
+    return {};
 }
 
 } // namespace Vulkan

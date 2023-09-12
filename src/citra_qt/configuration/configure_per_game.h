@@ -4,9 +4,11 @@
 #pragma once
 
 #include <memory>
+#include <span>
 #include <string>
 #include <QDialog>
 #include <QList>
+#include <QString>
 #include "citra_qt/configuration/config.h"
 
 namespace Core {
@@ -35,9 +37,8 @@ class ConfigurePerGame : public QDialog {
     Q_OBJECT
 
 public:
-    // Cannot use std::filesystem::path due to https://bugreports.qt.io/browse/QTBUG-73263
     explicit ConfigurePerGame(QWidget* parent, u64 title_id_, const QString& file_name,
-                              Core::System& system_);
+                              std::span<const QString> physical_devices, Core::System& system_);
     ~ConfigurePerGame() override;
 
     /// Loads all button configurations to settings file

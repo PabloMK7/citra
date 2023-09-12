@@ -15,6 +15,7 @@
 #include "citra/emu_window/emu_window_sdl2.h"
 #include "citra/emu_window/emu_window_sdl2_gl.h"
 #include "citra/emu_window/emu_window_sdl2_sw.h"
+#include "citra/emu_window/emu_window_sdl2_vk.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -351,6 +352,8 @@ int main(int argc, char** argv) {
         switch (Settings::values.graphics_api.GetValue()) {
         case Settings::GraphicsAPI::OpenGL:
             return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
+        case Settings::GraphicsAPI::Vulkan:
+            return std::make_unique<EmuWindow_SDL2_VK>(system, fullscreen, is_secondary);
         case Settings::GraphicsAPI::Software:
             return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
         }

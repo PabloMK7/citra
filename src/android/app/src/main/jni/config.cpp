@@ -147,6 +147,9 @@ void Config::ReadValues() {
     Settings::values.shaders_accurate_mul =
         sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
     ReadSetting("Renderer", Settings::values.graphics_api);
+    ReadSetting("Renderer", Settings::values.async_presentation);
+    ReadSetting("Renderer", Settings::values.async_shader_compilation);
+    ReadSetting("Renderer", Settings::values.spirv_shader_gen);
     ReadSetting("Renderer", Settings::values.use_hw_shader);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
     ReadSetting("Renderer", Settings::values.resolution_factor);
