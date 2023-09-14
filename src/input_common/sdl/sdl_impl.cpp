@@ -139,6 +139,7 @@ constexpr std::array<SDL_GameControllerButton, Settings::NativeButton::NumButton
         SDL_CONTROLLER_BUTTON_INVALID,
         SDL_CONTROLLER_BUTTON_INVALID,
         SDL_CONTROLLER_BUTTON_GUIDE,
+        SDL_CONTROLLER_BUTTON_INVALID,
     }};
 
 struct SDLJoystickDeleter {
