@@ -16,7 +16,7 @@ public:
     ~DynamicLibrary();
 
     /// Returns true if the library is loaded, otherwise false.
-    [[nodiscard]] bool IsLoaded() {
+    [[nodiscard]] bool IsLoaded() const noexcept {
         return handle != nullptr;
     }
 

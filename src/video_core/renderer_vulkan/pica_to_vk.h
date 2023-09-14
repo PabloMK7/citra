@@ -77,7 +77,12 @@ inline vk::BlendOp BlendEquation(Pica::FramebufferRegs::BlendEquation equation) 
     }};
 
     const auto index = static_cast<std::size_t>(equation);
-    ASSERT_MSG(index < blend_equation_table.size(), "Unknown blend equation {}", index);
+    if (index >= blend_equation_table.size()) {
+        LOG_CRITICAL(Render_Vulkan, "Unknown blend equation {}", index);
+
+        // This return value is hwtested, not just a stub
+        return vk::BlendOp::eAdd;
+    }
     return blend_equation_table[index];
 }
 

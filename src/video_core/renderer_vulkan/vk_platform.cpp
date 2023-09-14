@@ -277,6 +277,10 @@ vk::InstanceCreateFlags GetInstanceFlags() {
 vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
                                   Frontend::WindowSystemType window_type, bool enable_validation,
                                   bool dump_command_buffers) {
+    if (!library.IsLoaded()) {
+        throw std::runtime_error("Failed to load Vulkan driver library");
+    }
+
     const auto vkGetInstanceProcAddr =
         library.GetSymbol<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr) {
