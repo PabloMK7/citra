@@ -1810,7 +1810,7 @@ layout (set = 0, binding = 0, std140) uniform vs_config {
             if (attrib < config.gs_output_attributes) {
                 return fmt::format("vs_out_attr{}.{}", attrib, "xyzw"[comp]);
             }
-            return "0.0";
+            return "1.0";
         };
 
         out += "const float EPSILON_Z = 0.00000001f;\n\n";
@@ -1900,7 +1900,7 @@ struct Vertex {
         if (attrib < config.gs_output_attributes) {
             return fmt::format("vtx.attributes[{}].{}", attrib, "xyzw"[comp]);
         }
-        return "0.0";
+        return "1.0";
     };
 
     out += "const float EPSILON_Z = 0.00000001f;\n\n";

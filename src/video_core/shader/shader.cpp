@@ -44,6 +44,10 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
         std::array<f24, 32> vertex_slots_overflow;
     };
 
+    // Some games use attributes without setting them in GPUREG_SH_OUTMAP_Oi
+    // Hardware tests have shown that they are initialized to 1.f in this case.
+    vertex_slots_overflow.fill(f24::One());
+
     // Assert that OutputVertex has enough space for 24 semantic registers
     static_assert(sizeof(std::array<f24, 24>) == sizeof(ret),
                   "Struct and array have different sizes.");

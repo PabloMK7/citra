@@ -1841,7 +1841,7 @@ struct Vertex {
         if (attrib < config.gs_output_attributes) {
             return fmt::format("vtx.attributes[{}].{}", attrib, "xyzw"[comp]);
         }
-        return "0.0";
+        return "1.0";
     };
 
     out += "const float EPSILON_Z = 0.00000001f;\n\n";
