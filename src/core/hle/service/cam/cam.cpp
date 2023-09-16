@@ -30,11 +30,7 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
     ar& cameras;
     ar& ports;
     ar& is_camera_reload_pending;
-    if (file_version > 0) {
-        ar& initialized;
-    } else {
-        initialized = true;
-    }
+    ar& initialized;
     if (Archive::is_loading::value && initialized) {
         for (int i = 0; i < NumCameras; i++) {
             LoadCameraImplementation(cameras[i], i);

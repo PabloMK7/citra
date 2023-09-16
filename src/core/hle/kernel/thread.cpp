@@ -45,16 +45,7 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar& tls_address;
     ar& held_mutexes;
     ar& pending_mutexes;
-
-    // Note: this is equivalent of what is done in boost/serialization/weak_ptr.hpp, but it's
-    // compatible with previous versions of savestates.
-    // TODO(SaveStates): When the savestate version is bumped, simplify this again.
-    std::shared_ptr<Process> shared_owner_process = owner_process.lock();
-    ar& shared_owner_process;
-    if (Archive::is_loading::value) {
-        owner_process = shared_owner_process;
-    }
-
+    ar& owner_process;
     ar& wait_objects;
     ar& wait_address;
     ar& name;

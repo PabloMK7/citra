@@ -11,9 +11,9 @@
 #include <vector>
 #include <boost/container/flat_set.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"

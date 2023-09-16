@@ -717,9 +717,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     ar&* memory.get();
     ar&* kernel.get();
     VideoCore::serialize(ar, file_version);
-    if (file_version >= 1) {
-        ar& movie;
-    }
+    ar& movie;
 
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {

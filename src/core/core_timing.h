@@ -299,13 +299,7 @@ private:
     void serialize(Archive& ar, const unsigned int file_version) {
         // event_types set during initialization of other things
         ar& timers;
-        if (file_version == 0) {
-            std::shared_ptr<Timer> x;
-            ar& x;
-            current_timer = x.get();
-        } else {
-            ar& current_timer;
-        }
+        ar& current_timer;
         if (Archive::is_loading::value) {
             event_queue_locked = true;
         }

@@ -48,9 +48,7 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
     ar& cpu_percent;
     ar& screen_capture_post_permission;
     ar& applet_manager;
-    if (file_version > 0) {
-        ar& wireless_reboot_info;
-    }
+    ar& wireless_reboot_info;
 }
 
 SERIALIZE_IMPL(Module)

@@ -681,11 +681,6 @@ private:
     private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int file_version) {
-            // For compatibility: put a nullptr here
-            if (file_version == 0) {
-                std::unique_ptr<Camera::CameraInterface> x;
-                ar& x;
-            }
             ar& contexts;
             ar& current_context;
             ar& frame_rate;

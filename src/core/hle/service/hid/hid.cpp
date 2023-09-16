@@ -46,9 +46,7 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
     if (Archive::is_loading::value) {
         LoadInputDevices();
     }
-    if (file_version >= 1) {
-        ar& state.hex;
-    }
+    ar& state.hex;
     // Update events are set in the constructor
     // Devices are set from the implementation (and are stateless afaik)
 }

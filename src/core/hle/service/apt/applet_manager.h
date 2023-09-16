@@ -188,9 +188,7 @@ private:
     void serialize(Archive& ar, const unsigned int file_version) {
         ar& next_title_id;
         ar& next_media_type;
-        if (file_version > 0) {
-            ar& flags;
-        }
+        ar& flags;
         ar& current_title_id;
         ar& current_media_type;
     }
@@ -517,25 +515,23 @@ private:
     void serialize(Archive& ar, const unsigned int file_version) {
         ar& next_parameter;
         ar& app_jump_parameters;
-        if (file_version > 0) {
-            ar& delayed_parameter;
-            ar& app_start_parameters;
-            ar& deliver_arg;
-            ar& capture_info;
-            ar& capture_buffer_info;
-            ar& active_slot;
-            ar& last_library_launcher_slot;
-            ar& last_prepared_library_applet;
-            ar& last_system_launcher_slot;
-            ar& last_jump_to_home_slot;
-            ar& ordered_to_close_sys_applet;
-            ar& ordered_to_close_application;
-            ar& application_cancelled;
-            ar& application_close_target;
-            ar& new_3ds_mode_blocked;
-            ar& lock;
-            ar& capture_info;
-        }
+        ar& delayed_parameter;
+        ar& app_start_parameters;
+        ar& deliver_arg;
+        ar& capture_info;
+        ar& capture_buffer_info;
+        ar& active_slot;
+        ar& last_library_launcher_slot;
+        ar& last_prepared_library_applet;
+        ar& last_system_launcher_slot;
+        ar& last_jump_to_home_slot;
+        ar& ordered_to_close_sys_applet;
+        ar& ordered_to_close_application;
+        ar& application_cancelled;
+        ar& application_close_target;
+        ar& new_3ds_mode_blocked;
+        ar& lock;
+        ar& capture_info;
         ar& applet_slots;
         ar& library_applet_closing_command;
 

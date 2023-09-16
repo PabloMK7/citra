@@ -400,18 +400,16 @@ private:
         ar& clamp;
         // mic interface set in constructor
         ar& state;
-        if (file_version > 0) {
-            // Maintain the internal mic state
-            ar& encoding;
-            bool is_sampling = mic && mic->IsSampling();
-            ar& is_sampling;
-            if (Archive::is_loading::value) {
-                if (is_sampling) {
-                    CreateMic();
-                    StartSampling();
-                } else if (mic) {
-                    mic->StopSampling();
-                }
+        // Maintain the internal mic state
+        ar& encoding;
+        bool is_sampling = mic && mic->IsSampling();
+        ar& is_sampling;
+        if (Archive::is_loading::value) {
+            if (is_sampling) {
+                CreateMic();
+                StartSampling();
+            } else if (mic) {
+                mic->StopSampling();
             }
         }
     }
