@@ -5,7 +5,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <memory>
+#include <type_traits>
+#include <vector>
 #include <SoundTouch.h>
 #include "audio_core/audio_types.h"
 #include "audio_core/time_stretch.h"
@@ -62,8 +65,44 @@ std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
     LOG_TRACE(Audio, "{:5}/{:5} ratio:{:0.6f} backlog:{:0.6f}", num_in, num_out, stretch_ratio,
               backlog_fullness);
 
-    sound_touch->putSamples(in, static_cast<u32>(num_in));
-    return sound_touch->receiveSamples(out, static_cast<u32>(num_out));
+    if constexpr (std::is_floating_point<soundtouch::SAMPLETYPE>()) {
+        // The SoundTouch library on most systems expects float samples
+        // use this vector to store input if soundtouch::SAMPLETYPE is a float
+        std::vector<soundtouch::SAMPLETYPE> float_in(2 * num_in);
+        std::vector<soundtouch::SAMPLETYPE> float_out(2 * num_out);
+
+        for (std::size_t i = 0; i < (2 * num_in); i++) {
+            // Conventional integer PCM uses a range of -32768 to 32767,
+            // but float samples use -1 to 1
+            // As a result we need to scale sample values during conversion
+            const float temp = static_cast<float>(in[i]) / std::numeric_limits<s16>::max();
+            float_in[i] = static_cast<soundtouch::SAMPLETYPE>(temp);
+        }
+
+        sound_touch->putSamples(float_in.data(), static_cast<u32>(num_in));
+
+        const std::size_t samples_received =
+            sound_touch->receiveSamples(float_out.data(), static_cast<u32>(num_out));
+
+        // Converting output samples back to shorts so we can use them
+        for (std::size_t i = 0; i < (2 * num_out); i++) {
+            const s16 temp = static_cast<s16>(float_out[i] * std::numeric_limits<s16>::max());
+            out[i] = temp;
+        }
+
+        return samples_received;
+    } else if (std::is_same<soundtouch::SAMPLETYPE, s16>()) {
+        // Use reinterpret_cast to workaround compile error when SAMPLETYPE is float.
+        sound_touch->putSamples(reinterpret_cast<const soundtouch::SAMPLETYPE*>(in),
+                                static_cast<u32>(num_in));
+        return sound_touch->receiveSamples(reinterpret_cast<soundtouch::SAMPLETYPE*>(out),
+                                           static_cast<u32>(num_out));
+    } else {
+        static_assert(std::is_floating_point<soundtouch::SAMPLETYPE>() ||
+                      std::is_same<soundtouch::SAMPLETYPE, s16>());
+        UNREACHABLE_MSG("Invalid SAMPLETYPE {}", typeid(soundtouch::SAMPLETYPE).name());
+        return 0;
+    }
 }
 
 void TimeStretcher::Clear() {

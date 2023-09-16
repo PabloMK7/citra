@@ -122,10 +122,13 @@ add_subdirectory(open_source_archives)
 add_subdirectory(library-headers EXCLUDE_FROM_ALL)
 
 # SoundTouch
-set(INTEGER_SAMPLES ON CACHE BOOL "")
-set(SOUNDSTRETCH OFF CACHE BOOL "")
-set(SOUNDTOUCH_DLL OFF CACHE BOOL "")
-add_subdirectory(soundtouch EXCLUDE_FROM_ALL)
+if(NOT USE_SYSTEM_SOUNDTOUCH)
+    set(INTEGER_SAMPLES ON CACHE BOOL "")
+    set(SOUNDSTRETCH OFF CACHE BOOL "")
+    set(SOUNDTOUCH_DLL OFF CACHE BOOL "")
+    add_subdirectory(soundtouch EXCLUDE_FROM_ALL)
+    target_compile_definitions(SoundTouch PUBLIC SOUNDTOUCH_INTEGER_SAMPLES)
+endif()
 
 # sirit
 add_subdirectory(sirit EXCLUDE_FROM_ALL)

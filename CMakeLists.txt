@@ -86,6 +86,7 @@ option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OF
 option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_OPENSSL "Use the system OpenSSL libs (instead of the bundled LibreSSL)" OFF)
 option(USE_SYSTEM_LIBUSB "Use the system libusb (instead of the bundled libusb)" OFF)
+option(USE_SYSTEM_SOUNDTOUCH "Use the system SoundTouch (instead of the bundled one)" OFF)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")
@@ -387,6 +388,14 @@ endif()
 if (ENABLE_LIBUSB AND USE_SYSTEM_LIBUSB)
     include(FindPkgConfig)
     find_package(LibUSB)
+endif()
+
+if (USE_SYSTEM_SOUNDTOUCH)
+    include(FindPkgConfig)
+    find_package(SoundTouch REQUIRED)
+    add_library(SoundTouch INTERFACE)
+    target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")
+    target_include_directories(SoundTouch INTERFACE "${SOUNDTOUCH_INCLUDE_DIRS}")
 endif()
 
 add_subdirectory(src)
