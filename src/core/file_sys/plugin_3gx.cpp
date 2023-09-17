@@ -184,7 +184,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     const u32 block_size = mem_region_sizes[header.infos.flags.memory_region_size.Value()];
     const u32 exe_size = (sizeof(PluginHeader) + text_section.size() + rodata_section.size() +
                           data_section.size() + header.executable.bss_size + 0x1000) &
-                         ~0xFFF;
+                         ~0xFFFu;
 
     // Allocate the framebuffer block so that is in the highest FCRAM position possible
     auto offset_fb =

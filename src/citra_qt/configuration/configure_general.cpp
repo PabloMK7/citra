@@ -31,7 +31,8 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
 
     // Set a minimum width for the label to prevent the slider from changing size.
     // This scales across DPIs, and is acceptable for uncapitalized strings.
-    ui->emulation_speed_display_label->setMinimumWidth(tr("unthrottled").size() * 6);
+    const auto width = static_cast<int>(tr("unthrottled").size() * 6);
+    ui->emulation_speed_display_label->setMinimumWidth(width);
     ui->emulation_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->screenshot_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->updateBox->setVisible(UISettings::values.updater_found);

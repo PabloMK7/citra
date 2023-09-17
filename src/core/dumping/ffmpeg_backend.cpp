@@ -513,7 +513,7 @@ bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
     }
 
     if (codec_context->frame_size) {
-        frame_size = static_cast<u64>(codec_context->frame_size);
+        frame_size = codec_context->frame_size;
     } else { // variable frame size support
         frame_size = std::tuple_size<AudioCore::StereoFrame16>::value;
     }

@@ -197,9 +197,9 @@ GatewayCheat::CheatLine::CheatLine(const std::string& line) {
         if (type_temp == "D" || type_temp == "d")
             sub_type_temp = line.substr(1, 1);
         type = static_cast<CheatType>(std::stoi(type_temp + sub_type_temp, 0, 16));
-        first = std::stoul(line.substr(0, 8), 0, 16);
+        first = static_cast<u32>(std::stoul(line.substr(0, 8), 0, 16));
         address = first & 0x0FFFFFFF;
-        value = std::stoul(line.substr(9, 8), 0, 16);
+        value = static_cast<u32>(std::stoul(line.substr(9, 8), 0, 16));
         cheat_line = line;
     } catch (const std::logic_error&) {
         type = CheatType::Null;

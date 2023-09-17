@@ -284,7 +284,7 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
     // filter by empty rooms
     if (filter_empty) {
         QModelIndex member_list = sourceModel()->index(sourceRow, Column::MEMBER, sourceParent);
-        const int player_count =
+        const qsizetype player_count =
             sourceModel()->data(member_list, LobbyItemMemberList::MemberListRole).toList().size();
         if (player_count == 0) {
             return false;
@@ -294,7 +294,7 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
     // filter by filled rooms
     if (filter_full) {
         QModelIndex member_list = sourceModel()->index(sourceRow, Column::MEMBER, sourceParent);
-        const int player_count =
+        const qsizetype player_count =
             sourceModel()->data(member_list, LobbyItemMemberList::MemberListRole).toList().size();
         const int max_players =
             sourceModel()->data(member_list, LobbyItemMemberList::MaxPlayerRole).toInt();

@@ -509,7 +509,8 @@ void SendReply(const char* reply) {
     u8* ptr = command_buffer;
     u32 left = command_length + 4;
     while (left > 0) {
-        int sent_size = send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0);
+        s32 sent_size =
+            static_cast<s32>(send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0));
         if (sent_size < 0) {
             LOG_ERROR(Debug_GDBStub, "gdb: send failed");
             return Shutdown();

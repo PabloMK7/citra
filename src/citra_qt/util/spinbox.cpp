@@ -194,7 +194,7 @@ QString CSpinBox::TextFromValue() {
 }
 
 qint64 CSpinBox::ValueFromText() {
-    unsigned strpos = prefix.length();
+    qsizetype strpos = prefix.length();
 
     QString num_string = text().mid(strpos, text().length() - strpos - suffix.length());
     return num_string.toLongLong(nullptr, base);
@@ -216,7 +216,7 @@ QValidator::State CSpinBox::validate(QString& input, int& pos) const {
     if (!prefix.isEmpty() && input.left(prefix.length()) != prefix)
         return QValidator::Invalid;
 
-    int strpos = prefix.length();
+    qsizetype strpos = prefix.length();
 
     // Empty "numbers" allowed as intermediate values
     if (strpos >= input.length() - HasSign() - suffix.length())
@@ -245,7 +245,7 @@ QValidator::State CSpinBox::validate(QString& input, int& pos) const {
 
     // Match string
     QRegularExpression num_regexp(QRegularExpression::anchoredPattern(regexp));
-    int num_pos = strpos;
+    qsizetype num_pos = strpos;
     QString sub_input = input.mid(strpos, input.length() - strpos - suffix.length());
 
     auto match = num_regexp.match(sub_input);

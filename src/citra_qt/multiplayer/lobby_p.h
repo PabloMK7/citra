@@ -198,8 +198,8 @@ public:
 
     bool operator<(const QStandardItem& other) const override {
         // sort by rooms that have the most players
-        int left_members = data(MemberListRole).toList().size();
-        int right_members = other.data(MemberListRole).toList().size();
+        qsizetype left_members = data(MemberListRole).toList().size();
+        qsizetype right_members = other.data(MemberListRole).toList().size();
         return left_members < right_members;
     }
 };

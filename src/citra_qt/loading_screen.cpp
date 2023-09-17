@@ -180,9 +180,10 @@ void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size
         }
         const auto eta_mseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             rolling_average * (total - value));
+        const auto limited_mseconds = std::max<long>(eta_mseconds.count(), 1000);
         estimate = tr("Estimated Time %1")
                        .arg(QTime(0, 0, 0, 0)
-                                .addMSecs(std::max<long>(eta_mseconds.count(), 1000))
+                                .addMSecs(static_cast<int>(limited_mseconds))
                                 .toString(QStringLiteral("mm:ss")));
     }
 

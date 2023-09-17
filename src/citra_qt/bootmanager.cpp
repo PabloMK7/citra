@@ -292,7 +292,11 @@ public:
         if (GetWindowSystemType() == Frontend::WindowSystemType::Wayland) {
             setAttribute(Qt::WA_DontCreateNativeAncestors);
         }
+#ifdef __APPLE__
+        windowHandle()->setSurfaceType(QWindow::MetalSurface);
+#else
         windowHandle()->setSurfaceType(QWindow::VulkanSurface);
+#endif
     }
 
     QPaintEngine* paintEngine() const override {

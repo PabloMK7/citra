@@ -125,8 +125,8 @@ void MoviePlayDialog::UpdateUIDisplay() {
         } else {
             const u64 msecs = Service::HID::Module::pad_update_ticks * metadata.input_count * 1000 /
                               BASE_CLOCK_RATE_ARM11;
-            ui->lengthLineEdit->setText(
-                QTime::fromMSecsSinceStartOfDay(msecs).toString(QStringLiteral("hh:mm:ss.zzz")));
+            ui->lengthLineEdit->setText(QTime::fromMSecsSinceStartOfDay(static_cast<int>(msecs))
+                                            .toString(QStringLiteral("hh:mm:ss.zzz")));
         }
     }
 }

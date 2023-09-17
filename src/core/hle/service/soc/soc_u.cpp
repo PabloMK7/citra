@@ -982,11 +982,13 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(), sizeof(ctr_dest_addr));
         sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
-        ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
-                       len, flags, &dest_addr, sizeof(dest_addr));
+        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+                                        reinterpret_cast<const char*>(input_buff.data()), len,
+                                        flags, &dest_addr, sizeof(dest_addr)));
     } else {
-        ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
-                       len, flags, nullptr, 0);
+        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+                                        reinterpret_cast<const char*>(input_buff.data()), len,
+                                        flags, nullptr, 0));
     }
 
     const auto send_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
@@ -1040,11 +1042,13 @@ void SOC_U::SendTo(Kernel::HLERequestContext& ctx) {
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buff.data(), sizeof(ctr_dest_addr));
         sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
-        ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
-                       len, flags, &dest_addr, sizeof(dest_addr));
+        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+                                        reinterpret_cast<const char*>(input_buff.data()), len,
+                                        flags, &dest_addr, sizeof(dest_addr)));
     } else {
-        ret = ::sendto(fd_info->second.socket_fd, reinterpret_cast<const char*>(input_buff.data()),
-                       len, flags, nullptr, 0);
+        ret = static_cast<s32>(::sendto(fd_info->second.socket_fd,
+                                        reinterpret_cast<const char*>(input_buff.data()), len,
+                                        flags, nullptr, 0));
     }
 
     auto send_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
@@ -1103,15 +1107,17 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
     }
 
     if (addr_len > 0) {
-        ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
-                         len, flags, &src_addr, &src_addr_len);
+        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
+                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
+                                          &src_addr, &src_addr_len));
         if (ret >= 0 && src_addr_len > 0) {
             ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
             std::memcpy(addr_buff.data(), &ctr_src_addr, addr_len);
         }
     } else {
-        ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
-                         len, flags, NULL, 0);
+        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
+                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
+                                          NULL, 0));
         addr_buff.resize(0);
     }
     int recv_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
@@ -1178,15 +1184,17 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
     }
     if (addr_len > 0) {
         // Only get src adr if input adr available
-        ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
-                         len, flags, &src_addr, &src_addr_len);
+        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
+                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
+                                          &src_addr, &src_addr_len));
         if (ret >= 0 && src_addr_len > 0) {
             ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
             std::memcpy(addr_buff.data(), &ctr_src_addr, addr_len);
         }
     } else {
-        ret = ::recvfrom(fd_info->second.socket_fd, reinterpret_cast<char*>(output_buff.data()),
-                         len, flags, NULL, 0);
+        ret = static_cast<s32>(::recvfrom(fd_info->second.socket_fd,
+                                          reinterpret_cast<char*>(output_buff.data()), len, flags,
+                                          NULL, 0));
         addr_buff.resize(0);
     }
     int recv_error = (ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
@@ -1753,7 +1761,11 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
     }
 
     InterfaceInfo ret;
-    s64 sock_fd = -1;
+#ifdef _WIN32
+    SOCKET sock_fd = -1;
+#else
+    int sock_fd = -1;
+#endif
     bool interface_found = false;
     struct sockaddr_in s_in = {.sin_family = AF_INET, .sin_port = htons(53), .sin_addr = {}};
     s_in.sin_addr.s_addr = inet_addr("8.8.8.8");

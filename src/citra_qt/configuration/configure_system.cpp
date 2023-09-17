@@ -285,12 +285,12 @@ void ConfigureSystem::SetConfiguration() {
     date_time.setSecsSinceEpoch(Settings::values.init_time.GetValue());
     ui->edit_init_time->setDateTime(date_time);
 
-    long long init_time_offset = Settings::values.init_time_offset.GetValue();
-    long long days_offset = init_time_offset / 86400;
+    s64 init_time_offset = Settings::values.init_time_offset.GetValue();
+    int days_offset = static_cast<int>(init_time_offset / 86400);
     ui->edit_init_time_offset_days->setValue(days_offset);
 
-    unsigned long long time_offset = std::abs(init_time_offset) - std::abs(days_offset * 86400);
-    QTime time = QTime::fromMSecsSinceStartOfDay(time_offset * 1000);
+    u64 time_offset = std::abs(init_time_offset) - std::abs(days_offset * 86400);
+    QTime time = QTime::fromMSecsSinceStartOfDay(static_cast<int>(time_offset * 1000));
     ui->edit_init_time_offset_time->setTime(time);
 
     if (!enabled) {

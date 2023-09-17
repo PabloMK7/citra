@@ -589,7 +589,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
         Common::SplitPath(entry.virtualName, nullptr, &filename_filename, &filename_extension);
 
         if (filename_extension == ".tmd") {
-            const u32 id = std::stoul(filename_filename, nullptr, 16);
+            const u32 id = static_cast<u32>(std::stoul(filename_filename, nullptr, 16));
             base_id = std::min(base_id, id);
             update_id = std::max(update_id, id);
         }
