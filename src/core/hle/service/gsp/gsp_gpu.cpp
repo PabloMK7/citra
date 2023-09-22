@@ -840,14 +840,14 @@ void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
 void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    u32 address = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
+    [[maybe_unused]] u32 address = rp.Pop<u32>();
+    [[maybe_unused]] u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+    LOG_TRACE(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
               size, process->process_id);
 }
 
