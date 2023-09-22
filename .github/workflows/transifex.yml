@@ -1,0 +1,20 @@
+name: citra-transifex
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  transifex:
+    runs-on: ubuntu-latest
+    container: citraemu/build-environments:linux-fresh
+    if: ${{ github.repository == 'citra-emu/citra' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Update Translation
+        run: ./.ci/transifex.sh
+        env:
+          TX_TOKEN: ${{ secrets.TRANSIFEX_API_TOKEN }}

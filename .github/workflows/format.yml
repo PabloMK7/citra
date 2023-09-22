@@ -1,0 +1,22 @@
+name: citra-format
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    container:
+      image: citraemu/build-environments:linux-fresh
+      options: -u 1001
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build
+        env:
+          COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: ./.ci/clang-format.sh
