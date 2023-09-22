@@ -141,7 +141,7 @@ struct SourceConfiguration {
             BitField<25, 1, u32> gain_0_dirty;
             BitField<26, 1, u32> gain_1_dirty;
             BitField<27, 1, u32> gain_2_dirty;
-            BitField<28, 1, u32> sync_dirty;
+            BitField<28, 1, u32> sync_count_dirty;
             BitField<29, 1, u32> reset_flag;
             BitField<30, 1, u32> embedded_buffer_dirty;
         };
@@ -251,7 +251,7 @@ struct SourceConfiguration {
         u32_dsp loop_related;
         u8 enable;
         INSERT_PADDING_BYTES(1);
-        u16_le sync;           ///< Application-side sync (See also: SourceStatus::sync)
+        u16_le sync_count;     ///< Application-side sync count (See also: SourceStatus::sync_count)
         u32_dsp play_position; ///< Position. (Units: number of samples)
         INSERT_PADDING_DSPWORDS(2);
 
@@ -313,9 +313,9 @@ struct SourceStatus {
     struct Status {
         u8 is_enabled; ///< Is this channel enabled? (Doesn't have to be playing anything.)
         u8 current_buffer_id_dirty; ///< Non-zero when current_buffer_id changes
-        u16_le sync;                ///< Is set by the DSP to the value of SourceConfiguration::sync
-        u32_dsp buffer_position;    ///< Number of samples into the current buffer
-        u16_le current_buffer_id;   ///< Updated when a buffer finishes playing
+        u16_le sync_count; ///< Is set by the DSP to the value of SourceConfiguration::sync_count
+        u32_dsp buffer_position;  ///< Number of samples into the current buffer
+        u16_le current_buffer_id; ///< Updated when a buffer finishes playing
         INSERT_PADDING_DSPWORDS(1);
     };
 
@@ -329,27 +329,35 @@ struct DspConfiguration {
     union {
         u32_le dirty_raw;
 
-        BitField<8, 1, u32> mixer1_enabled_dirty;
-        BitField<9, 1, u32> mixer2_enabled_dirty;
+        BitField<6, 1, u32> aux_front_bypass_0_dirty;
+        BitField<7, 1, u32> aux_front_bypass_1_dirty;
+        BitField<8, 1, u32> aux_bus_enable_0_dirty;
+        BitField<9, 1, u32> aux_bus_enable_1_dirty;
         BitField<10, 1, u32> delay_effect_0_dirty;
         BitField<11, 1, u32> delay_effect_1_dirty;
         BitField<12, 1, u32> reverb_effect_0_dirty;
         BitField<13, 1, u32> reverb_effect_1_dirty;
 
-        BitField<16, 1, u32> volume_0_dirty;
+        BitField<15, 1, u32> output_buffer_count_dirty;
+        BitField<16, 1, u32> master_volume_dirty;
 
-        BitField<24, 1, u32> volume_1_dirty;
-        BitField<25, 1, u32> volume_2_dirty;
+        BitField<24, 1, u32> aux_return_volume_0_dirty;
+        BitField<25, 1, u32> aux_return_volume_1_dirty;
         BitField<26, 1, u32> output_format_dirty;
-        BitField<27, 1, u32> limiter_enabled_dirty;
+        BitField<27, 1, u32> clipping_mode_dirty;
         BitField<28, 1, u32> headphones_connected_dirty;
+        BitField<29, 1, u32> surround_depth_dirty;
+        BitField<30, 1, u32> surround_speaker_position_dirty;
+        BitField<31, 1, u32> rear_ratio_dirty;
     };
 
     /// The DSP has three intermediate audio mixers. This controls the volume level (0.0-1.0) for
     /// each at the final mixer.
-    float_le volume[3];
+    float_le master_volume;
+    std::array<float_le, 2> aux_return_volume;
 
-    INSERT_PADDING_DSPWORDS(3);
+    u16_le output_buffer_count;
+    INSERT_PADDING_DSPWORDS(2);
 
     enum class OutputFormat : u16_le {
         Mono = 0,
@@ -359,12 +367,15 @@ struct DspConfiguration {
 
     OutputFormat output_format;
 
-    u16_le limiter_enabled;      ///< Not sure of the exact gain equation for the limiter.
+    u16_le clipping_mode;        ///< Not sure of the exact gain equation for the limiter.
     u16_le headphones_connected; ///< Application updates the DSP on headphone status.
-    INSERT_PADDING_DSPWORDS(4);  ///< TODO: Surround sound related
-    INSERT_PADDING_DSPWORDS(2);  ///< TODO: Intermediate mixer 1/2 related
-    u16_le mixer1_enabled;
-    u16_le mixer2_enabled;
+
+    u16_le surround_depth;
+    u16_le surround_speaker_position;
+    INSERT_PADDING_DSPWORDS(1); ///< TODO: Surround sound related
+    u16_le rear_ratio;
+    std::array<u16_le, 2> aux_front_bypass;
+    std::array<u16_le, 2> aux_bus_enable;
 
     /**
      * This is delay with feedback.
@@ -406,11 +417,19 @@ struct DspConfiguration {
 
     ReverbEffect reverb_effect[2];
 
-    INSERT_PADDING_DSPWORDS(4);
+    u16_le sync_mode;
+    INSERT_PADDING_DSPWORDS(1);
+    union {
+        u32_le dirty2_raw;
+
+        BitField<16, 1, u32> sync_mode_dirty;
+    };
 };
 ASSERT_DSP_STRUCT(DspConfiguration, 196);
 ASSERT_DSP_STRUCT(DspConfiguration::DelayEffect, 20);
 ASSERT_DSP_STRUCT(DspConfiguration::ReverbEffect, 52);
+static_assert(offsetof(DspConfiguration, sync_mode) == 0xBC);
+static_assert(offsetof(DspConfiguration, dirty2_raw) == 0xC0);
 
 struct AdpcmCoefficients {
     /// Coefficients are signed fixed point with 11 fractional bits.

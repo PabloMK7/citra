@@ -33,34 +33,34 @@ void Mixers::ParseConfig(DspConfiguration& config) {
         return;
     }
 
-    if (config.mixer1_enabled_dirty) {
-        config.mixer1_enabled_dirty.Assign(0);
-        state.mixer1_enabled = config.mixer1_enabled != 0;
-        LOG_TRACE(Audio_DSP, "mixers mixer1_enabled = {}", config.mixer1_enabled);
+    if (config.aux_bus_enable[0]) {
+        config.aux_bus_enable_0_dirty.Assign(0);
+        state.aux_bus_enable[0] = config.aux_bus_enable[0] != 0;
+        LOG_TRACE(Audio_DSP, "mixers aux_bus_enable[0] = {}", config.aux_bus_enable[0]);
     }
 
-    if (config.mixer2_enabled_dirty) {
-        config.mixer2_enabled_dirty.Assign(0);
-        state.mixer2_enabled = config.mixer2_enabled != 0;
-        LOG_TRACE(Audio_DSP, "mixers mixer2_enabled = {}", config.mixer2_enabled);
+    if (config.aux_bus_enable[1]) {
+        config.aux_bus_enable_1_dirty.Assign(0);
+        state.aux_bus_enable[1] = config.aux_bus_enable[1] != 0;
+        LOG_TRACE(Audio_DSP, "mixers aux_bus_enable[1] = {}", config.aux_bus_enable[1]);
     }
 
-    if (config.volume_0_dirty) {
-        config.volume_0_dirty.Assign(0);
-        state.intermediate_mixer_volume[0] = config.volume[0];
-        LOG_TRACE(Audio_DSP, "mixers volume[0] = {}", config.volume[0]);
+    if (config.master_volume) {
+        config.master_volume_dirty.Assign(0);
+        state.intermediate_mixer_volume[0] = config.master_volume;
+        LOG_TRACE(Audio_DSP, "mixers master_volume = {}", config.master_volume);
     }
 
-    if (config.volume_1_dirty) {
-        config.volume_1_dirty.Assign(0);
-        state.intermediate_mixer_volume[1] = config.volume[1];
-        LOG_TRACE(Audio_DSP, "mixers volume[1] = {}", config.volume[1]);
+    if (config.aux_return_volume[0]) {
+        config.aux_return_volume_0_dirty.Assign(0);
+        state.intermediate_mixer_volume[1] = config.aux_return_volume[0];
+        LOG_TRACE(Audio_DSP, "mixers aux_return_volume[0] = {}", config.aux_return_volume[0]);
     }
 
-    if (config.volume_2_dirty) {
-        config.volume_2_dirty.Assign(0);
-        state.intermediate_mixer_volume[2] = config.volume[2];
-        LOG_TRACE(Audio_DSP, "mixers volume[2] = {}", config.volume[2]);
+    if (config.aux_return_volume[1]) {
+        config.aux_return_volume_1_dirty.Assign(0);
+        state.intermediate_mixer_volume[2] = config.aux_return_volume[1];
+        LOG_TRACE(Audio_DSP, "mixers aux_return_volume[1] = {}", config.aux_return_volume[1]);
     }
 
     if (config.output_format_dirty) {
@@ -137,7 +137,7 @@ void Mixers::AuxReturn(const IntermediateMixSamples& read_samples) {
     // NOTE: read_samples.mix{1,2}.pcm32 annoyingly have their dimensions in reverse order to
     // QuadFrame32.
 
-    if (state.mixer1_enabled) {
+    if (state.aux_bus_enable[0]) {
         for (std::size_t sample = 0; sample < samples_per_frame; sample++) {
             for (std::size_t channel = 0; channel < 4; channel++) {
                 state.intermediate_mix_buffer[1][sample][channel] =
@@ -146,7 +146,7 @@ void Mixers::AuxReturn(const IntermediateMixSamples& read_samples) {
         }
     }
 
-    if (state.mixer2_enabled) {
+    if (state.aux_bus_enable[1]) {
         for (std::size_t sample = 0; sample < samples_per_frame; sample++) {
             for (std::size_t channel = 0; channel < 4; channel++) {
                 state.intermediate_mix_buffer[2][sample][channel] =
@@ -163,7 +163,7 @@ void Mixers::AuxSend(IntermediateMixSamples& write_samples,
 
     state.intermediate_mix_buffer[0] = input[0];
 
-    if (state.mixer1_enabled) {
+    if (state.aux_bus_enable[0]) {
         for (std::size_t sample = 0; sample < samples_per_frame; sample++) {
             for (std::size_t channel = 0; channel < 4; channel++) {
                 write_samples.mix1.pcm32[channel][sample] = input[1][sample][channel];
@@ -173,7 +173,7 @@ void Mixers::AuxSend(IntermediateMixSamples& write_samples,
         state.intermediate_mix_buffer[1] = input[1];
     }
 
-    if (state.mixer2_enabled) {
+    if (state.aux_bus_enable[1]) {
         for (std::size_t sample = 0; sample < samples_per_frame; sample++) {
             for (std::size_t channel = 0; channel < 4; channel++) {
                 write_samples.mix2.pcm32[channel][sample] = input[2][sample][channel];
@@ -187,6 +187,8 @@ void Mixers::AuxSend(IntermediateMixSamples& write_samples,
 void Mixers::MixCurrentFrame() {
     current_frame.fill({});
 
+    // TODO(SachinV): This is probably not accurate, based on symbols from FE:Fates,
+    // state.intermediate_mixer_volume[0] represents the master volume
     for (std::size_t mix = 0; mix < 3; mix++) {
         DownmixAndMixIntoCurrentFrame(state.intermediate_mixer_volume[mix],
                                       state.intermediate_mix_buffer[mix]);

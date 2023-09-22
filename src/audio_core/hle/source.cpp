@@ -72,10 +72,10 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         LOG_TRACE(Audio_DSP, "source_id={} enable={}", source_id, state.enabled);
     }
 
-    if (config.sync_dirty) {
-        config.sync_dirty.Assign(0);
-        state.sync = config.sync;
-        LOG_TRACE(Audio_DSP, "source_id={} sync={}", source_id, state.sync);
+    if (config.sync_count_dirty) {
+        config.sync_count_dirty.Assign(0);
+        state.sync_count = config.sync_count;
+        LOG_TRACE(Audio_DSP, "source_id={} sync={}", source_id, state.sync_count);
     }
 
     if (config.rate_multiplier_dirty) {
@@ -432,7 +432,7 @@ SourceStatus::Status Source::GetCurrentStatus() {
     state.buffer_update = false;
     ret.current_buffer_id = state.current_buffer_id;
     ret.buffer_position = state.current_sample_number;
-    ret.sync = state.sync;
+    ret.sync_count = state.sync_count;
 
     return ret;
 }

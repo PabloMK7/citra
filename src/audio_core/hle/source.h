@@ -121,7 +121,7 @@ private:
         // State variables
 
         bool enabled = false;
-        u16 sync = 0;
+        u16 sync_count = 0;
 
         // Mixing
 
@@ -164,7 +164,7 @@ private:
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {
             ar& enabled;
-            ar& sync;
+            ar& sync_count;
             ar& gain;
             ar& input_queue;
             ar& mono_or_stereo;
