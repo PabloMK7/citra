@@ -46,6 +46,13 @@ else()
     set(IS_RELEASE_BUILD ON)
 endif()
 
+# LTO takes too much memory and time using MSVC.
+if (NOT MSVC AND IS_RELEASE_BUILD)
+    set(DEFAULT_ENABLE_LTO ON)
+else()
+    set(DEFAULT_ENABLE_LTO OFF)
+endif()
+
 option(ENABLE_SDL2 "Enable using SDL2" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_SDL2_FRONTEND "Enable the SDL2 frontend" ON "ENABLE_SDL2;NOT ANDROID AND NOT IOS" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
@@ -75,7 +82,7 @@ CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundl
 
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
-option(ENABLE_LTO "Enable link time optimization" ${IS_RELEASE_BUILD})
+option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
