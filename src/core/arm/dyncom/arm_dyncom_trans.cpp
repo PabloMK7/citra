@@ -63,7 +63,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(add)(unsigned int inst, int index) {
 
     return inst_base;
 }
-static ARM_INST_PTR INTERPRETER_TRANSLATE(and)(unsigned int inst, int index) {
+static ARM_INST_PTR INTERPRETER_TRANSLATE (and)(unsigned int inst, int index) {
     arm_inst* inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(and_inst));
     and_inst* inst_cream = (and_inst*)inst_base->component;
 

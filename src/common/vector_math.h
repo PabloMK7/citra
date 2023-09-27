@@ -396,9 +396,7 @@ public:
 // _DEFINE_SWIZZLER2 defines a single such function, DEFINE_SWIZZLER2 defines all of them for all
 // component names (x<->r) and permutations (xy<->yx)
 #define _DEFINE_SWIZZLER2(a, b, name)                                                              \
-    [[nodiscard]] constexpr Vec2<T> name() const {                                                 \
-        return Vec2<T>(a, b);                                                                      \
-    }
+    [[nodiscard]] constexpr Vec2<T> name() const { return Vec2<T>(a, b); }
 #define DEFINE_SWIZZLER2(a, b, a2, b2, a3, b3, a4, b4)                                             \
     _DEFINE_SWIZZLER2(a, b, a##b);                                                                 \
     _DEFINE_SWIZZLER2(a, b, a2##b2);                                                               \
@@ -598,9 +596,7 @@ public:
 // DEFINE_SWIZZLER2_COMP2 defines two component functions for all component names (x<->r) and
 // permutations (xy<->yx)
 #define _DEFINE_SWIZZLER2(a, b, name)                                                              \
-    [[nodiscard]] constexpr Vec2<T> name() const {                                                 \
-        return Vec2<T>(a, b);                                                                      \
-    }
+    [[nodiscard]] constexpr Vec2<T> name() const { return Vec2<T>(a, b); }
 #define DEFINE_SWIZZLER2_COMP1(a, a2)                                                              \
     _DEFINE_SWIZZLER2(a, a, a##a);                                                                 \
     _DEFINE_SWIZZLER2(a, a, a2##a2)
@@ -625,9 +621,7 @@ public:
 #undef _DEFINE_SWIZZLER2
 
 #define _DEFINE_SWIZZLER3(a, b, c, name)                                                           \
-    [[nodiscard]] constexpr Vec3<T> name() const {                                                 \
-        return Vec3<T>(a, b, c);                                                                   \
-    }
+    [[nodiscard]] constexpr Vec3<T> name() const { return Vec3<T>(a, b, c); }
 #define DEFINE_SWIZZLER3_COMP1(a, a2)                                                              \
     _DEFINE_SWIZZLER3(a, a, a, a##a##a);                                                           \
     _DEFINE_SWIZZLER3(a, a, a, a2##a2##a2)
@@ -690,8 +684,8 @@ template <typename T>
 
 // linear interpolation via float: 0.0=begin, 1.0=end
 template <typename X>
-[[nodiscard]] constexpr decltype(X{} * float{} + X{} * float{})
-    Lerp(const X& begin, const X& end, const float t) {
+[[nodiscard]] constexpr decltype(X{} * float{} + X{} * float{}) Lerp(const X& begin, const X& end,
+                                                                     const float t) {
     return begin * (1.f - t) + end * t;
 }
 

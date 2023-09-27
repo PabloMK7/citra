@@ -42,9 +42,7 @@ struct CaptureSession final {
 
 #define MEMBER(type, name, func)                                                                   \
     struct type##Deleter {                                                                         \
-        void operator()(type* ptr) {                                                               \
-            type##_##func(ptr);                                                                    \
-        }                                                                                          \
+        void operator()(type* ptr) { type##_##func(ptr); }                                         \
     };                                                                                             \
     std::unique_ptr<type, type##Deleter> name
 

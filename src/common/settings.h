@@ -178,7 +178,8 @@ public:
      * @param default_val Intial value of the setting, and default value of the setting
      * @param name Label for the setting
      */
-    explicit Setting(const Type& default_val, const std::string& name) requires(!ranged)
+    explicit Setting(const Type& default_val, const std::string& name)
+        requires(!ranged)
         : value{default_val}, default_value{default_val}, label{name} {}
     virtual ~Setting() = default;
 
@@ -191,7 +192,8 @@ public:
      * @param name Label for the setting
      */
     explicit Setting(const Type& default_val, const Type& min_val, const Type& max_val,
-                     const std::string& name) requires(ranged)
+                     const std::string& name)
+        requires(ranged)
         : value{default_val},
           default_value{default_val}, maximum{max_val}, minimum{min_val}, label{name} {}
 
@@ -279,7 +281,8 @@ public:
      * @param default_val Intial value of the setting, and default value of the setting
      * @param name Label for the setting
      */
-    explicit SwitchableSetting(const Type& default_val, const std::string& name) requires(!ranged)
+    explicit SwitchableSetting(const Type& default_val, const std::string& name)
+        requires(!ranged)
         : Setting<Type>{default_val, name} {}
     virtual ~SwitchableSetting() = default;
 
@@ -292,7 +295,8 @@ public:
      * @param name Label for the setting
      */
     explicit SwitchableSetting(const Type& default_val, const Type& min_val, const Type& max_val,
-                               const std::string& name) requires(ranged)
+                               const std::string& name)
+        requires(ranged)
         : Setting<Type, true>{default_val, min_val, max_val, name} {}
 
     /**

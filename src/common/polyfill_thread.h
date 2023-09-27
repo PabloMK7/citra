@@ -205,7 +205,7 @@ public:
     using callback_type = Callback;
 
     template <typename C>
-    requires constructible_from<Callback, C>
+        requires constructible_from<Callback, C>
     explicit stop_callback(const stop_token& st,
                            C&& cb) noexcept(is_nothrow_constructible_v<Callback, C>)
         : m_stop_state(st.m_stop_state) {
@@ -214,7 +214,7 @@ public:
         }
     }
     template <typename C>
-    requires constructible_from<Callback, C>
+        requires constructible_from<Callback, C>
     explicit stop_callback(stop_token&& st,
                            C&& cb) noexcept(is_nothrow_constructible_v<Callback, C>)
         : m_stop_state(std::move(st.m_stop_state)) {
