@@ -976,7 +976,7 @@ void FragmentModule::DefineTexSampler(u32 texture_unit) {
             // return "shadowTextureCube(texcoord0, texcoord0_w)";
             break;
         default:
-            LOG_CRITICAL(Render_Vulkan, "Unhandled texture type {:x}", state.texture0_type);
+            LOG_CRITICAL(Render_Vulkan, "Unhandled texture type {:x}", state.texture0_type.Value());
             UNIMPLEMENTED();
             ret_val = zero_vec;
             break;

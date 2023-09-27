@@ -248,7 +248,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             LOG_ERROR(Audio_DSP,
                       "Skipping embedded buffer sample! Game passed in improper value for length. "
                       "addr {:X} length {:X}",
-                      config.physical_address, config.length);
+                      static_cast<u32>(config.physical_address), static_cast<u32>(config.length));
         } else {
             state.input_queue.emplace(Buffer{
                 config.physical_address,
@@ -285,7 +285,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                     LOG_ERROR(Audio_DSP,
                               "Skipping buffer queue sample! Game passed in improper value for "
                               "length. addr {:X} length {:X}",
-                              b.physical_address, b.length);
+                              static_cast<u32>(b.physical_address), static_cast<u32>(b.length));
                 } else {
                     state.input_queue.emplace(Buffer{
                         b.physical_address,

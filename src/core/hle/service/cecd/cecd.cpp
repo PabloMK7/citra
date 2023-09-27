@@ -124,8 +124,9 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CECD,
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, "
               "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-              ncch_program_id, path_type, path.AsString(), open_mode.raw, open_mode.unknown,
-              open_mode.read, open_mode.write, open_mode.create, open_mode.check);
+              ncch_program_id, path_type, path.AsString(), open_mode.raw, open_mode.unknown.Value(),
+              open_mode.read.Value(), open_mode.write.Value(), open_mode.create.Value(),
+              open_mode.check.Value());
 }
 
 void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
@@ -139,9 +140,9 @@ void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
               "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
               session_data->ncch_program_id, session_data->data_path_type,
               session_data->path.AsString(), session_data->open_mode.raw,
-              session_data->open_mode.unknown, session_data->open_mode.read,
-              session_data->open_mode.write, session_data->open_mode.create,
-              session_data->open_mode.check);
+              session_data->open_mode.unknown.Value(), session_data->open_mode.read.Value(),
+              session_data->open_mode.write.Value(), session_data->open_mode.create.Value(),
+              session_data->open_mode.check.Value());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     switch (session_data->data_path_type) {
@@ -344,9 +345,9 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
               "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
               session_data->ncch_program_id, session_data->data_path_type,
               session_data->path.AsString(), session_data->open_mode.raw,
-              session_data->open_mode.unknown, session_data->open_mode.read,
-              session_data->open_mode.write, session_data->open_mode.create,
-              session_data->open_mode.check);
+              session_data->open_mode.unknown.Value(), session_data->open_mode.read.Value(),
+              session_data->open_mode.write.Value(), session_data->open_mode.create.Value(),
+              session_data->open_mode.check.Value());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     switch (session_data->data_path_type) {
@@ -778,8 +779,8 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, buffer_size={:#x} "
               "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
               ncch_program_id, path_type, path.AsString(), buffer_size, open_mode.raw,
-              open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
-              open_mode.check);
+              open_mode.unknown.Value(), open_mode.read.Value(), open_mode.write.Value(),
+              open_mode.create.Value(), open_mode.check.Value());
 }
 
 void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
@@ -831,8 +832,8 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
               "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, buffer_size={:#x} "
               "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
               ncch_program_id, path_type, path.AsString(), buffer_size, open_mode.raw,
-              open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
-              open_mode.check);
+              open_mode.unknown.Value(), open_mode.read.Value(), open_mode.write.Value(),
+              open_mode.create.Value(), open_mode.check.Value());
 }
 
 std::string Module::EncodeBase64(std::span<const u8> in) const {

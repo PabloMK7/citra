@@ -186,7 +186,7 @@ struct Regs {
             return fmt::format("from {:#x} to {:#x} with {} scaling and stride {}, width {}",
                                GetPhysicalInputAddress(), GetPhysicalOutputAddress(),
                                scaling == NoScale ? "no" : (scaling == ScaleX ? "X" : "XY"),
-                               input_width, output_width);
+                               input_width.Value(), output_width.Value());
         }
 
         union {

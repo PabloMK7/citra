@@ -648,7 +648,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
 
     // Compute fragment normals and tangents
     const auto perturbation = [&] {
-        return fmt::format("2.0 * (sampleTexUnit{}()).rgb - 1.0", lighting.bump_selector);
+        return fmt::format("2.0 * (sampleTexUnit{}()).rgb - 1.0", lighting.bump_selector.Value());
     };
 
     switch (lighting.bump_mode) {
@@ -692,7 +692,8 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
            "vec3 tangent = quaternion_rotate(normalized_normquat, surface_tangent);\n";
 
     if (lighting.enable_shadow) {
-        std::string shadow_texture = fmt::format("sampleTexUnit{}()", lighting.shadow_selector);
+        std::string shadow_texture =
+            fmt::format("sampleTexUnit{}()", lighting.shadow_selector.Value());
         if (lighting.shadow_invert) {
             out += fmt::format("vec4 shadow = vec4(1.0) - {};\n", shadow_texture);
         } else {
@@ -767,7 +768,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
     // Write the code to emulate each enabled light
     for (unsigned light_index = 0; light_index < lighting.src_num; ++light_index) {
         const auto& light_config = lighting.light[light_index];
-        const std::string light_src = fmt::format("light_src[{}]", light_config.num);
+        const std::string light_src = fmt::format("light_src[{}]", light_config.num.Value());
 
         // Compute light vector (directional or positional)
         if (light_config.directional) {
@@ -1117,7 +1118,7 @@ float ProcTexNoiseCoef(vec2 x) {
 
     out += "vec4 ProcTex() {\n";
     if (config.state.proctex.coord < 3) {
-        out += fmt::format("vec2 uv = abs(texcoord{});\n", config.state.proctex.coord);
+        out += fmt::format("vec2 uv = abs(texcoord{});\n", config.state.proctex.coord.Value());
     } else {
         LOG_CRITICAL(Render_OpenGL, "Unexpected proctex.coord >= 3");
         out += "vec2 uv = abs(texcoord0);\n";
@@ -1497,7 +1498,7 @@ vec4 shadowTextureCube(vec2 uv, float w) {
                 out += "return shadowTextureCube(texcoord0, texcoord0_w);";
                 break;
             default:
-                LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}", state.texture0_type);
+                LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}", state.texture0_type.Value());
                 UNIMPLEMENTED();
                 out += "return texture(tex0, texcoord0);";
                 break;
