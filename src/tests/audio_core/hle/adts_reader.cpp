@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch_test_macros.hpp>
+#include <fmt/format.h>
+
 #include "audio_core/hle/adts.h"
 
 namespace {

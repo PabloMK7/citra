@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch_test_macros.hpp>
+#include <fmt/core.h>
+
 #include "audio_core/hle/decoder.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"

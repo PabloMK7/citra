@@ -344,7 +344,7 @@ void OpenGLState::Apply() const {
 
     // Clip distance
     if (!GLES || GLAD_GL_EXT_clip_cull_distance) {
-        for (size_t i = 0; i < clip_distance.size(); ++i) {
+        for (std::size_t i = 0; i < clip_distance.size(); ++i) {
             if (clip_distance[i] != cur_state.clip_distance[i]) {
                 if (clip_distance[i]) {
                     glEnable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
