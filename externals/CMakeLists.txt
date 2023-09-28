@@ -210,9 +210,15 @@ endif()
 
 # cpp-jwt
 if (ENABLE_WEB_SERVICE)
-    add_library(cpp-jwt INTERFACE)
-    target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
-    target_compile_definitions(cpp-jwt INTERFACE CPP_JWT_USE_VENDORED_NLOHMANN_JSON)
+    if (USE_SYSTEM_CPP_JWT)
+        find_package(cpp-jwt REQUIRED)
+        add_library(cpp-jwt INTERFACE)
+        target_link_libraries(cpp-jwt INTERFACE cpp-jwt::cpp-jwt)
+    else()
+        add_library(cpp-jwt INTERFACE)
+        target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
+        target_compile_definitions(cpp-jwt INTERFACE CPP_JWT_USE_VENDORED_NLOHMANN_JSON)
+    endif()
 endif()
 
 # lodepng
