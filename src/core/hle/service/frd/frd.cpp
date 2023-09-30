@@ -9,8 +9,10 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/hle/applets/mii_selector.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/mii.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/frd/frd.h"
@@ -97,11 +99,6 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
 
-    struct ScreenName {
-        // 20 bytes according to 3dbrew
-        std::array<char16_t, 10> name;
-    };
-
     auto cfg = Service::CFG::GetModule(frd->system);
     ASSERT_MSG(cfg, "CFG Module missing!");
     auto username = cfg->GetUsername();
@@ -113,7 +110,86 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     rb.PushRaw(screen_name);
     rb.Push(0);
 
-    LOG_INFO(Service_FRD, "returning the username defined in cfg");
+    LOG_DEBUG(Service_FRD, "called");
+}
+
+void Module::Interface::GetMyComment(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(10, 0);
+
+    constexpr Comment comment{.name = {u'H', u'e', u'y', '!'}};
+
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<Comment>(comment);
+    rb.Push(0);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+}
+
+void Module::Interface::GetMyMii(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(0x19, 0);
+
+    const auto mii_data = HLE::Applets::MiiSelector::GetStandardMiiResult().selected_mii_data;
+    Mii::ChecksummedMiiData mii{};
+    mii.SetMiiData(mii_data);
+
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<Mii::ChecksummedMiiData>(mii);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+}
+
+void Module::Interface::GetMyProfile(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+
+    constexpr Profile profile{.region = 1, .country = 1, .area = 1, .language = 1, .platform = 1};
+
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<Profile>(profile);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+}
+
+void Module::Interface::GetMyFavoriteGame(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+
+    constexpr Game game{.title_id = 0x0004000E00030700, .version = 1};
+
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<Game>(game);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+}
+
+void Module::Interface::GetMyPlayingGame(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+
+    constexpr Game game{.title_id = 0x0004000E00030700, .version = 1};
+
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<Game>(game);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+}
+
+void Module::Interface::GetMyPreference(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
+
+    constexpr u32 is_public = 1;
+    constexpr u32 show_game = 1;
+    constexpr u32 show_history = 0;
+
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(is_public);
+    rb.Push<u32>(show_game);
+    rb.Push<u32>(show_history);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
@@ -156,6 +232,16 @@ void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
+}
+
+void Module::Interface::IsOnline(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(frd->logged_in);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
 void Module::Interface::HasLoggedIn(Kernel::HLERequestContext& ctx) {

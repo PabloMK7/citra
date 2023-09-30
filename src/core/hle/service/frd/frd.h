@@ -49,8 +49,29 @@ struct Profile {
     u8 country;
     u8 area;
     u8 language;
-    u32 unknown;
+    u8 platform;
+    INSERT_PADDING_BYTES(0x3);
 };
+static_assert(sizeof(Profile) == 0x8, "Profile has incorrect size");
+
+struct Game {
+    u64 title_id;
+    u16 version;
+    INSERT_PADDING_BYTES(0x6);
+};
+static_assert(sizeof(Game) == 0x10, "Game has inccorect size");
+
+struct ScreenName {
+    // 20 bytes according to 3dbrew
+    std::array<char16_t, 10> name;
+};
+static_assert(sizeof(ScreenName) == 0x14, "ScreenName has inccorect size");
+
+struct Comment {
+    // 32 bytes according to 3dbrew
+    std::array<char16_t, 16> name;
+};
+static_assert(sizeof(Comment) == 0x20, "Comment has inccorect size");
 
 class Module final {
 public:
@@ -129,6 +150,56 @@ public:
         void GetMyScreenName(Kernel::HLERequestContext& ctx);
 
         /**
+         * FRD::GetMyMii service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : MiiStoreData structure
+         */
+        void GetMyMii(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::GetMyProfile service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *    2-3 : Profile structure
+         */
+        void GetMyProfile(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::GetMyComment service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : UTF16 encoded comment (max 16 symbols)
+         */
+        void GetMyComment(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::GetMyFavoriteGame service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *    2-3 : Game structure
+         */
+        void GetMyFavoriteGame(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::GetMyPlayingGame service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *    2-3 : Game structure
+         */
+        void GetMyPlayingGame(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::GetMyPreference service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Public mode (byte, 0 = private, non-zero = public)
+         *      3 : Show current game (byte, 0 = don't show, non-zero = show)
+         *      4 : Show game history (byte, 0 = don't show, non-zero = show)
+         */
+        void GetMyPreference(Kernel::HLERequestContext& ctx);
+
+        /**
          * FRD::UnscrambleLocalFriendCode service function
          *  Inputs:
          *      1 : Friend code count
@@ -160,9 +231,17 @@ public:
         void Login(Kernel::HLERequestContext& ctx);
 
         /**
-         * FRD::HasLoggedIn service function
+         * FRD::IsOnline service function
          *  Inputs:
          *      none
+         *  Outputs:
+         *      1  : Result of function, 0 on success, otherwise error code
+         *      2  : Online state (8-bit, 0 = not online, non-zero = online)
+         */
+        void IsOnline(Kernel::HLERequestContext& ctx);
+
+        /**
+         * FRD::HasLoggedIn service function
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : If the user has logged in 1, otherwise 0

@@ -90,7 +90,7 @@ MiiResult MiiSelector::GetStandardMiiResult() {
     // the LLEd Mii picker of version system version 11.8.0 to a file and then matching the values
     // to the members of the MiiResult struct
     Mii::MiiData mii_data;
-    mii_data.magic = 0x03;
+    mii_data.version = 0x03;
     mii_data.mii_options.raw = 0x00;
     mii_data.mii_pos.raw = 0x10;
     mii_data.console_identity.raw = 0x30;
@@ -114,7 +114,7 @@ MiiResult MiiSelector::GetStandardMiiResult() {
     mii_data.beard_details.raw = 0x0029;
     mii_data.glasses_details.raw = 0x0052;
     mii_data.mole_details.raw = 0x4850;
-    mii_data.author_name = {'f', 'l', 'T', 'o', 'b', 'i', 0x0, 0x0, 0x0, 0x0};
+    mii_data.author_name = {u'f', u'l', u'T', u'o', u'b', u'i'};
 
     MiiResult result;
     result.return_code = 0x0;

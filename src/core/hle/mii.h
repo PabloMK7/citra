@@ -11,10 +11,12 @@
 
 namespace Mii {
 
+using Nickname = std::array<char16_t, 10>;
+
 #pragma pack(push, 1)
 // Reference: https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/mii.h
 struct MiiData {
-    u8 magic; ///< Always 3?
+    u8 version; ///< Always 3?
 
     /// Mii options
     union {
@@ -52,23 +54,23 @@ struct MiiData {
     union {
         u16_be raw;
 
-        BitField<0, 1, u16> sex;          ///< Sex of Mii (False=Male, True=Female)
-        BitField<1, 4, u16> bday_month;   ///< Month of Mii's birthday
-        BitField<5, 5, u16> bday_day;     ///< Day of Mii's birthday
-        BitField<10, 4, u16> shirt_color; ///< Color of Mii's shirt
-        BitField<14, 1, u16> favorite;    ///< Whether the Mii is one of your 10 favorite Mii's
+        BitField<0, 1, u16> gender;          ///< Gender of Mii (0=Male, 1=Female)
+        BitField<1, 4, u16> bday_month;      ///< Month of Mii's birthday
+        BitField<5, 5, u16> bday_day;        ///< Day of Mii's birthday
+        BitField<10, 4, u16> favorite_color; ///< Color of Mii's shirt
+        BitField<14, 1, u16> favorite;       ///< Whether the Mii is one of your 10 favorite Mii's
     } mii_details;
 
-    std::array<u16_le, 10> mii_name; ///< Name of Mii (Encoded using UTF16)
-    u8 height;                       ///< How tall the Mii is
-    u8 width;                        ///< How wide the Mii is
+    Nickname mii_name; ///< Name of Mii (Encoded using UTF16)
+    u8 height;         ///< How tall the Mii is
+    u8 width;          ///< How wide the Mii is
 
     /// Face style
     union {
         u8 raw;
 
         BitField<0, 1, u8> disable_sharing; ///< Whether or not Sharing of the Mii is allowed
-        BitField<1, 4, u8> shape;           ///< Face shape
+        BitField<1, 4, u8> type;            ///< Face type
         BitField<5, 3, u8> skin_color;      ///< Color of skin
     } face_style;
 
@@ -94,13 +96,13 @@ struct MiiData {
     union {
         u32_be raw;
 
-        BitField<0, 6, u32> style;
+        BitField<0, 6, u32> type;
         BitField<6, 3, u32> color;
         BitField<9, 4, u32> scale;
-        BitField<13, 3, u32> y_scale;
-        BitField<16, 5, u32> rotation;
-        BitField<21, 4, u32> x_spacing;
-        BitField<25, 5, u32> y_position;
+        BitField<13, 3, u32> aspect;
+        BitField<16, 5, u32> rotate;
+        BitField<21, 4, u32> x;
+        BitField<25, 5, u32> y;
     } eye_details;
 
     /// Eyebrow details
@@ -110,72 +112,70 @@ struct MiiData {
         BitField<0, 5, u32> style;
         BitField<5, 3, u32> color;
         BitField<8, 4, u32> scale;
-        BitField<12, 3, u32> y_scale;
-        BitField<15, 1, u32> pad;
-        BitField<16, 5, u32> rotation;
-        BitField<21, 4, u32> x_spacing;
-        BitField<25, 5, u32> y_position;
+        BitField<12, 3, u32> aspect;
+        BitField<16, 5, u32> rotate;
+        BitField<21, 4, u32> x;
+        BitField<25, 5, u32> y;
     } eyebrow_details;
 
     /// Nose details
     union {
         u16_be raw;
 
-        BitField<0, 5, u16> style;
+        BitField<0, 5, u16> type;
         BitField<5, 4, u16> scale;
-        BitField<9, 5, u16> y_position;
+        BitField<9, 5, u16> y;
     } nose_details;
 
     /// Mouth details
     union {
         u16_be raw;
 
-        BitField<0, 6, u16> style;
+        BitField<0, 6, u16> type;
         BitField<6, 3, u16> color;
         BitField<9, 4, u16> scale;
-        BitField<13, 3, u16> y_scale;
+        BitField<13, 3, u16> aspect;
     } mouth_details;
 
     /// Mustache details
     union {
         u16_be raw;
 
-        BitField<0, 5, u16> mouth_yposition;
-        BitField<5, 3, u16> mustach_style;
-        BitField<8, 2, u16> pad;
+        BitField<0, 5, u16> mouth_y;
+        BitField<5, 3, u16> mustache_type;
     } mustache_details;
 
     /// Beard details
     union {
         u16_be raw;
 
-        BitField<0, 3, u16> style;
+        BitField<0, 3, u16> type;
         BitField<3, 3, u16> color;
         BitField<6, 4, u16> scale;
-        BitField<10, 5, u16> y_pos;
+        BitField<10, 5, u16> y;
     } beard_details;
 
     /// Glasses details
     union {
         u16_be raw;
 
-        BitField<0, 4, u16> style;
+        BitField<0, 4, u16> type;
         BitField<4, 3, u16> color;
         BitField<7, 4, u16> scale;
-        BitField<11, 5, u16> y_pos;
+        BitField<11, 5, u16> y;
     } glasses_details;
 
     /// Mole details
     union {
         u16_be raw;
 
-        BitField<0, 1, u16> enable;
-        BitField<1, 5, u16> scale;
-        BitField<6, 5, u16> x_pos;
-        BitField<11, 5, u16> y_pos;
+        BitField<0, 1, u16> type;
+        BitField<1, 4, u16> scale;
+        BitField<5, 5, u16> x;
+        BitField<10, 5, u16> y;
     } mole_details;
 
-    std::array<u16_le, 10> author_name; ///< Name of Mii's author (Encoded using UTF16)
+    Nickname author_name; ///< Name of Mii's author (Encoded using UTF16)
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -207,6 +207,11 @@ public:
         padding = 0;
         FixChecksum();
         return *this;
+    }
+
+    void SetMiiData(MiiData data) {
+        mii_data = data;
+        FixChecksum();
     }
 
     operator MiiData() const {
