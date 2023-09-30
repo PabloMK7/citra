@@ -28,6 +28,8 @@ MICROPROFILE_DEFINE(Vulkan_Drawing, "Vulkan", "Drawing", MP_RGB(128, 128, 192));
 using TriangleTopology = Pica::PipelineRegs::TriangleTopology;
 using VideoCore::SurfaceType;
 
+using namespace Pica::Shader::Generator;
+
 constexpr u64 STREAM_BUFFER_SIZE = 64 * 1024 * 1024;
 constexpr u64 UNIFORM_BUFFER_SIZE = 4 * 1024 * 1024;
 constexpr u64 TEXTURE_BUFFER_SIZE = 2 * 1024 * 1024;
@@ -76,10 +78,10 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory,
     vertex_buffers.fill(stream_buffer.Handle());
 
     uniform_buffer_alignment = instance.UniformMinAlignment();
-    uniform_size_aligned_vs =
-        Common::AlignUp(sizeof(Pica::Shader::VSUniformData), uniform_buffer_alignment);
-    uniform_size_aligned_fs =
-        Common::AlignUp(sizeof(Pica::Shader::UniformData), uniform_buffer_alignment);
+    uniform_size_aligned_vs_pica =
+        Common::AlignUp(sizeof(VSPicaUniformData), uniform_buffer_alignment);
+    uniform_size_aligned_vs = Common::AlignUp(sizeof(VSUniformData), uniform_buffer_alignment);
+    uniform_size_aligned_fs = Common::AlignUp(sizeof(FSUniformData), uniform_buffer_alignment);
 
     // Define vertex layout for software shaders
     MakeSoftwareVertexLayout();
@@ -107,11 +109,12 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory,
 
     // Since we don't have access to VK_EXT_descriptor_indexing we need to intiallize
     // all descriptor sets even the ones we don't use.
-    pipeline_cache.BindBuffer(0, uniform_buffer.Handle(), 0, sizeof(Pica::Shader::VSUniformData));
-    pipeline_cache.BindBuffer(1, uniform_buffer.Handle(), 0, sizeof(Pica::Shader::UniformData));
-    pipeline_cache.BindTexelBuffer(2, *texture_lf_view);
-    pipeline_cache.BindTexelBuffer(3, *texture_rg_view);
-    pipeline_cache.BindTexelBuffer(4, *texture_rgba_view);
+    pipeline_cache.BindBuffer(0, uniform_buffer.Handle(), 0, sizeof(VSPicaUniformData));
+    pipeline_cache.BindBuffer(1, uniform_buffer.Handle(), 0, sizeof(VSUniformData));
+    pipeline_cache.BindBuffer(2, uniform_buffer.Handle(), 0, sizeof(FSUniformData));
+    pipeline_cache.BindTexelBuffer(3, *texture_lf_view);
+    pipeline_cache.BindTexelBuffer(4, *texture_rg_view);
+    pipeline_cache.BindTexelBuffer(5, *texture_rgba_view);
 
     Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
     Surface& null_cube_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_CUBE_ID);
@@ -140,7 +143,6 @@ void RasterizerVulkan::LoadDiskResources(const std::atomic_bool& stop_loading,
 }
 
 void RasterizerVulkan::SyncFixedState() {
-    SyncClipEnabled();
     SyncCullMode();
     SyncBlendEnabled();
     SyncBlendFuncs();
@@ -478,16 +480,16 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     // Update scissor uniforms
     const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
-    if (uniform_block_data.data.scissor_x1 != scissor_x1 ||
-        uniform_block_data.data.scissor_x2 != scissor_x2 ||
-        uniform_block_data.data.scissor_y1 != scissor_y1 ||
-        uniform_block_data.data.scissor_y2 != scissor_y2) {
+    if (fs_uniform_block_data.data.scissor_x1 != scissor_x1 ||
+        fs_uniform_block_data.data.scissor_x2 != scissor_x2 ||
+        fs_uniform_block_data.data.scissor_y1 != scissor_y1 ||
+        fs_uniform_block_data.data.scissor_y2 != scissor_y2) {
 
-        uniform_block_data.data.scissor_x1 = scissor_x1;
-        uniform_block_data.data.scissor_x2 = scissor_x2;
-        uniform_block_data.data.scissor_y1 = scissor_y1;
-        uniform_block_data.data.scissor_y2 = scissor_y2;
-        uniform_block_data.dirty = true;
+        fs_uniform_block_data.data.scissor_x1 = scissor_x1;
+        fs_uniform_block_data.data.scissor_x2 = scissor_x2;
+        fs_uniform_block_data.data.scissor_y1 = scissor_y1;
+        fs_uniform_block_data.data.scissor_y2 = scissor_y2;
+        fs_uniform_block_data.dirty = true;
     }
 
     // Sync and bind the texture surfaces
@@ -670,11 +672,6 @@ void RasterizerVulkan::UnbindSpecial() {
 
 void RasterizerVulkan::NotifyFixedFunctionPicaRegisterChanged(u32 id) {
     switch (id) {
-    // Clipping plane
-    case PICA_REG_INDEX(rasterizer.clip_enable):
-        SyncClipEnabled();
-        break;
-
     // Culling
     case PICA_REG_INDEX(rasterizer.cull_mode):
         SyncCullMode();
@@ -831,14 +828,6 @@ void RasterizerVulkan::MakeSoftwareVertexLayout() {
     }
 }
 
-void RasterizerVulkan::SyncClipEnabled() {
-    bool clip_enabled = regs.rasterizer.clip_enable != 0;
-    if (clip_enabled != uniform_block_data.data.enable_clip1) {
-        uniform_block_data.data.enable_clip1 = clip_enabled;
-        uniform_block_data.dirty = true;
-    }
-}
-
 void RasterizerVulkan::SyncCullMode() {
     pipeline_info.rasterization.cull_mode.Assign(regs.rasterizer.cull_mode);
 }
@@ -946,7 +935,7 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
         sizeof(Common::Vec2f) * 256 * Pica::LightingRegs::NumLightingSampler +
         sizeof(Common::Vec2f) * 128; // fog
 
-    if (!uniform_block_data.lighting_lut_dirty_any && !uniform_block_data.fog_lut_dirty) {
+    if (!fs_uniform_block_data.lighting_lut_dirty_any && !fs_uniform_block_data.fog_lut_dirty) {
         return;
     }
 
@@ -954,9 +943,9 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
     auto [buffer, offset, invalidate] = texture_lf_buffer.Map(max_size, sizeof(Common::Vec4f));
 
     // Sync the lighting luts
-    if (uniform_block_data.lighting_lut_dirty_any || invalidate) {
-        for (unsigned index = 0; index < uniform_block_data.lighting_lut_dirty.size(); index++) {
-            if (uniform_block_data.lighting_lut_dirty[index] || invalidate) {
+    if (fs_uniform_block_data.lighting_lut_dirty_any || invalidate) {
+        for (unsigned index = 0; index < fs_uniform_block_data.lighting_lut_dirty.size(); index++) {
+            if (fs_uniform_block_data.lighting_lut_dirty[index] || invalidate) {
                 std::array<Common::Vec2f, 256> new_data;
                 const auto& source_lut = Pica::g_state.lighting.luts[index];
                 std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
@@ -968,19 +957,19 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
                     lighting_lut_data[index] = new_data;
                     std::memcpy(buffer + bytes_used, new_data.data(),
                                 new_data.size() * sizeof(Common::Vec2f));
-                    uniform_block_data.data.lighting_lut_offset[index / 4][index % 4] =
+                    fs_uniform_block_data.data.lighting_lut_offset[index / 4][index % 4] =
                         static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
-                    uniform_block_data.dirty = true;
+                    fs_uniform_block_data.dirty = true;
                     bytes_used += new_data.size() * sizeof(Common::Vec2f);
                 }
-                uniform_block_data.lighting_lut_dirty[index] = false;
+                fs_uniform_block_data.lighting_lut_dirty[index] = false;
             }
         }
-        uniform_block_data.lighting_lut_dirty_any = false;
+        fs_uniform_block_data.lighting_lut_dirty_any = false;
     }
 
     // Sync the fog lut
-    if (uniform_block_data.fog_lut_dirty || invalidate) {
+    if (fs_uniform_block_data.fog_lut_dirty || invalidate) {
         std::array<Common::Vec2f, 128> new_data;
 
         std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
@@ -992,12 +981,12 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
             fog_lut_data = new_data;
             std::memcpy(buffer + bytes_used, new_data.data(),
                         new_data.size() * sizeof(Common::Vec2f));
-            uniform_block_data.data.fog_lut_offset =
+            fs_uniform_block_data.data.fog_lut_offset =
                 static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
-            uniform_block_data.dirty = true;
+            fs_uniform_block_data.dirty = true;
             bytes_used += new_data.size() * sizeof(Common::Vec2f);
         }
-        uniform_block_data.fog_lut_dirty = false;
+        fs_uniform_block_data.fog_lut_dirty = false;
     }
 
     texture_lf_buffer.Commit(static_cast<u32>(bytes_used));
@@ -1010,10 +999,10 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
         sizeof(Common::Vec4f) * 256 +     // proctex
         sizeof(Common::Vec4f) * 256;      // proctex diff
 
-    if (!uniform_block_data.proctex_noise_lut_dirty &&
-        !uniform_block_data.proctex_color_map_dirty &&
-        !uniform_block_data.proctex_alpha_map_dirty && !uniform_block_data.proctex_lut_dirty &&
-        !uniform_block_data.proctex_diff_lut_dirty) {
+    if (!fs_uniform_block_data.proctex_noise_lut_dirty &&
+        !fs_uniform_block_data.proctex_color_map_dirty &&
+        !fs_uniform_block_data.proctex_alpha_map_dirty &&
+        !fs_uniform_block_data.proctex_lut_dirty && !fs_uniform_block_data.proctex_diff_lut_dirty) {
         return;
     }
 
@@ -1035,34 +1024,34 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
                 std::memcpy(buffer + bytes_used, new_data.data(),
                             new_data.size() * sizeof(Common::Vec2f));
                 lut_offset = static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
-                uniform_block_data.dirty = true;
+                fs_uniform_block_data.dirty = true;
                 bytes_used += new_data.size() * sizeof(Common::Vec2f);
             }
         };
 
     // Sync the proctex noise lut
-    if (uniform_block_data.proctex_noise_lut_dirty || invalidate) {
+    if (fs_uniform_block_data.proctex_noise_lut_dirty || invalidate) {
         sync_proctex_value_lut(proctex.noise_table, proctex_noise_lut_data,
-                               uniform_block_data.data.proctex_noise_lut_offset);
-        uniform_block_data.proctex_noise_lut_dirty = false;
+                               fs_uniform_block_data.data.proctex_noise_lut_offset);
+        fs_uniform_block_data.proctex_noise_lut_dirty = false;
     }
 
     // Sync the proctex color map
-    if (uniform_block_data.proctex_color_map_dirty || invalidate) {
+    if (fs_uniform_block_data.proctex_color_map_dirty || invalidate) {
         sync_proctex_value_lut(proctex.color_map_table, proctex_color_map_data,
-                               uniform_block_data.data.proctex_color_map_offset);
-        uniform_block_data.proctex_color_map_dirty = false;
+                               fs_uniform_block_data.data.proctex_color_map_offset);
+        fs_uniform_block_data.proctex_color_map_dirty = false;
     }
 
     // Sync the proctex alpha map
-    if (uniform_block_data.proctex_alpha_map_dirty || invalidate) {
+    if (fs_uniform_block_data.proctex_alpha_map_dirty || invalidate) {
         sync_proctex_value_lut(proctex.alpha_map_table, proctex_alpha_map_data,
-                               uniform_block_data.data.proctex_alpha_map_offset);
-        uniform_block_data.proctex_alpha_map_dirty = false;
+                               fs_uniform_block_data.data.proctex_alpha_map_offset);
+        fs_uniform_block_data.proctex_alpha_map_dirty = false;
     }
 
     // Sync the proctex lut
-    if (uniform_block_data.proctex_lut_dirty || invalidate) {
+    if (fs_uniform_block_data.proctex_lut_dirty || invalidate) {
         std::array<Common::Vec4f, 256> new_data;
 
         std::transform(proctex.color_table.begin(), proctex.color_table.end(), new_data.begin(),
@@ -1075,16 +1064,16 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
             proctex_lut_data = new_data;
             std::memcpy(buffer + bytes_used, new_data.data(),
                         new_data.size() * sizeof(Common::Vec4f));
-            uniform_block_data.data.proctex_lut_offset =
+            fs_uniform_block_data.data.proctex_lut_offset =
                 static_cast<int>((offset + bytes_used) / sizeof(Common::Vec4f));
-            uniform_block_data.dirty = true;
+            fs_uniform_block_data.dirty = true;
             bytes_used += new_data.size() * sizeof(Common::Vec4f);
         }
-        uniform_block_data.proctex_lut_dirty = false;
+        fs_uniform_block_data.proctex_lut_dirty = false;
     }
 
     // Sync the proctex difference lut
-    if (uniform_block_data.proctex_diff_lut_dirty || invalidate) {
+    if (fs_uniform_block_data.proctex_diff_lut_dirty || invalidate) {
         std::array<Common::Vec4f, 256> new_data;
 
         std::transform(proctex.color_diff_table.begin(), proctex.color_diff_table.end(),
@@ -1097,46 +1086,57 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
             proctex_diff_lut_data = new_data;
             std::memcpy(buffer + bytes_used, new_data.data(),
                         new_data.size() * sizeof(Common::Vec4f));
-            uniform_block_data.data.proctex_diff_lut_offset =
+            fs_uniform_block_data.data.proctex_diff_lut_offset =
                 static_cast<int>((offset + bytes_used) / sizeof(Common::Vec4f));
-            uniform_block_data.dirty = true;
+            fs_uniform_block_data.dirty = true;
             bytes_used += new_data.size() * sizeof(Common::Vec4f);
         }
-        uniform_block_data.proctex_diff_lut_dirty = false;
+        fs_uniform_block_data.proctex_diff_lut_dirty = false;
     }
 
     texture_buffer.Commit(static_cast<u32>(bytes_used));
 }
 
 void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
-    const bool sync_vs = accelerate_draw;
-    const bool sync_fs = uniform_block_data.dirty;
-
-    if (!sync_vs && !sync_fs) {
+    const bool sync_vs_pica = accelerate_draw;
+    const bool sync_vs = vs_uniform_block_data.dirty;
+    const bool sync_fs = fs_uniform_block_data.dirty;
+    if (!sync_vs_pica && !sync_vs && !sync_fs) {
         return;
     }
 
-    const u64 uniform_size = uniform_size_aligned_vs + uniform_size_aligned_fs;
+    const u64 uniform_size =
+        uniform_size_aligned_vs_pica + uniform_size_aligned_vs + uniform_size_aligned_fs;
     auto [uniforms, offset, invalidate] =
         uniform_buffer.Map(uniform_size, uniform_buffer_alignment);
 
     u32 used_bytes = 0;
-    if (sync_vs) {
-        Pica::Shader::VSUniformData vs_uniforms;
-        vs_uniforms.uniforms.SetFromRegs(regs.vs, Pica::g_state.vs);
-        std::memcpy(uniforms, &vs_uniforms, sizeof(vs_uniforms));
 
-        pipeline_cache.SetBufferOffset(0, offset);
+    if (sync_vs || invalidate) {
+        std::memcpy(uniforms + used_bytes, &vs_uniform_block_data.data,
+                    sizeof(vs_uniform_block_data.data));
+
+        pipeline_cache.SetBufferOffset(1, offset + used_bytes);
+        vs_uniform_block_data.dirty = false;
         used_bytes += static_cast<u32>(uniform_size_aligned_vs);
     }
 
     if (sync_fs || invalidate) {
-        std::memcpy(uniforms + used_bytes, &uniform_block_data.data,
-                    sizeof(Pica::Shader::UniformData));
+        std::memcpy(uniforms + used_bytes, &fs_uniform_block_data.data,
+                    sizeof(fs_uniform_block_data.data));
 
-        pipeline_cache.SetBufferOffset(1, offset + used_bytes);
-        uniform_block_data.dirty = false;
+        pipeline_cache.SetBufferOffset(2, offset + used_bytes);
+        fs_uniform_block_data.dirty = false;
         used_bytes += static_cast<u32>(uniform_size_aligned_fs);
+    }
+
+    if (sync_vs_pica) {
+        VSPicaUniformData vs_uniforms;
+        vs_uniforms.uniforms.SetFromRegs(regs.vs, Pica::g_state.vs);
+        std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
+
+        pipeline_cache.SetBufferOffset(0, offset + used_bytes);
+        used_bytes += static_cast<u32>(uniform_size_aligned_vs_pica);
     }
 
     uniform_buffer.Commit(used_bytes);

@@ -14,9 +14,9 @@
 namespace OpenGL {
 
 GLuint LoadShader(std::string_view source, GLenum type) {
-    const std::string version = GLES ? R"(#version 320 es
-
-#define CITRA_GLES
+    std::string preamble;
+    if (GLES) {
+        preamble = R"(#version 320 es
 
 #if defined(GL_ANDROID_extension_pack_es31a)
 #extension GL_ANDROID_extension_pack_es31a : enable
@@ -25,8 +25,10 @@ GLuint LoadShader(std::string_view source, GLenum type) {
 #if defined(GL_EXT_clip_cull_distance)
 #extension GL_EXT_clip_cull_distance : enable
 #endif // defined(GL_EXT_clip_cull_distance)
-)"
-                                     : "#version 430 core\n";
+)";
+    } else {
+        preamble = "#version 430 core\n";
+    }
 
     std::string_view debug_type;
     switch (type) {
@@ -43,8 +45,8 @@ GLuint LoadShader(std::string_view source, GLenum type) {
         UNREACHABLE();
     }
 
-    std::array<const GLchar*, 2> src_arr{version.data(), source.data()};
-    std::array<GLint, 2> lengths{static_cast<GLint>(version.size()),
+    std::array<const GLchar*, 2> src_arr{preamble.data(), source.data()};
+    std::array<GLint, 2> lengths{static_cast<GLint>(preamble.size()),
                                  static_cast<GLint>(source.size())};
     GLuint shader_id = glCreateShader(type);
     glShaderSource(shader_id, static_cast<GLsizei>(src_arr.size()), src_arr.data(), lengths.data());

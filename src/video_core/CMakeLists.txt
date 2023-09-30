@@ -61,12 +61,8 @@ add_library(video_core STATIC
     renderer_opengl/gl_rasterizer_cache.cpp
     renderer_opengl/gl_resource_manager.cpp
     renderer_opengl/gl_resource_manager.h
-    renderer_opengl/gl_shader_decompiler.cpp
-    renderer_opengl/gl_shader_decompiler.h
     renderer_opengl/gl_shader_disk_cache.cpp
     renderer_opengl/gl_shader_disk_cache.h
-    renderer_opengl/gl_shader_gen.cpp
-    renderer_opengl/gl_shader_gen.h
     renderer_opengl/gl_shader_manager.cpp
     renderer_opengl/gl_shader_manager.h
     renderer_opengl/gl_shader_util.cpp
@@ -130,10 +126,6 @@ add_library(video_core STATIC
     renderer_vulkan/vk_present_window.h
     renderer_vulkan/vk_renderpass_cache.cpp
     renderer_vulkan/vk_renderpass_cache.h
-    renderer_vulkan/vk_shader_gen.cpp
-    renderer_vulkan/vk_shader_gen.h
-    renderer_vulkan/vk_shader_gen_spv.cpp
-    renderer_vulkan/vk_shader_gen_spv.h
     renderer_vulkan/vk_shader_util.cpp
     renderer_vulkan/vk_shader_util.h
     renderer_vulkan/vk_stream_buffer.cpp
@@ -143,6 +135,16 @@ add_library(video_core STATIC
     renderer_vulkan/vk_texture_runtime.cpp
     renderer_vulkan/vk_texture_runtime.h
     shader/debug_data.h
+    shader/generator/glsl_shader_decompiler.cpp
+    shader/generator/glsl_shader_decompiler.h
+    shader/generator/glsl_shader_gen.cpp
+    shader/generator/glsl_shader_gen.h
+    shader/generator/shader_gen.cpp
+    shader/generator/shader_gen.h
+    shader/generator/shader_uniforms.cpp
+    shader/generator/shader_uniforms.h
+    shader/generator/spv_shader_gen.cpp
+    shader/generator/spv_shader_gen.h
     shader/shader.cpp
     shader/shader.h
     shader/shader_interpreter.cpp
@@ -151,8 +153,6 @@ add_library(video_core STATIC
     shader/shader_jit_x64_compiler.cpp
     shader/shader_jit_x64.h
     shader/shader_jit_x64_compiler.h
-    shader/shader_uniforms.cpp
-    shader/shader_uniforms.h
     texture/etc1.cpp
     texture/etc1.h
     texture/texture_decode.cpp

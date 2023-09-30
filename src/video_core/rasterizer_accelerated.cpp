@@ -54,7 +54,7 @@ RasterizerAccelerated::HardwareVertex::HardwareVertex(const Pica::Shader::Output
 
 RasterizerAccelerated::RasterizerAccelerated(Memory::MemorySystem& memory_)
     : memory{memory_}, regs{Pica::g_state.regs} {
-    uniform_block_data.lighting_lut_dirty.fill(true);
+    fs_uniform_block_data.lighting_lut_dirty.fill(true);
 }
 
 /**
@@ -135,7 +135,7 @@ void RasterizerAccelerated::SyncEntireState() {
     SyncFixedState();
 
     // Sync uniforms
-    SyncClipCoef();
+    SyncClipPlane();
     SyncDepthScale();
     SyncDepthOffset();
     SyncAlphaTest();
@@ -199,7 +199,7 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(texturing.fog_lut_data[5]):
     case PICA_REG_INDEX(texturing.fog_lut_data[6]):
     case PICA_REG_INDEX(texturing.fog_lut_data[7]):
-        uniform_block_data.fog_lut_dirty = true;
+        fs_uniform_block_data.fog_lut_dirty = true;
         break;
 
     // ProcTex state
@@ -227,19 +227,19 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
         using Pica::TexturingRegs;
         switch (regs.texturing.proctex_lut_config.ref_table.Value()) {
         case TexturingRegs::ProcTexLutTable::Noise:
-            uniform_block_data.proctex_noise_lut_dirty = true;
+            fs_uniform_block_data.proctex_noise_lut_dirty = true;
             break;
         case TexturingRegs::ProcTexLutTable::ColorMap:
-            uniform_block_data.proctex_color_map_dirty = true;
+            fs_uniform_block_data.proctex_color_map_dirty = true;
             break;
         case TexturingRegs::ProcTexLutTable::AlphaMap:
-            uniform_block_data.proctex_alpha_map_dirty = true;
+            fs_uniform_block_data.proctex_alpha_map_dirty = true;
             break;
         case TexturingRegs::ProcTexLutTable::Color:
-            uniform_block_data.proctex_lut_dirty = true;
+            fs_uniform_block_data.proctex_lut_dirty = true;
             break;
         case TexturingRegs::ProcTexLutTable::ColorDiff:
-            uniform_block_data.proctex_diff_lut_dirty = true;
+            fs_uniform_block_data.proctex_diff_lut_dirty = true;
             break;
         }
         break;
@@ -588,8 +588,8 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(lighting.lut_data[6]):
     case PICA_REG_INDEX(lighting.lut_data[7]): {
         const auto& lut_config = regs.lighting.lut_config;
-        uniform_block_data.lighting_lut_dirty[lut_config.type] = true;
-        uniform_block_data.lighting_lut_dirty_any = true;
+        fs_uniform_block_data.lighting_lut_dirty[lut_config.type] = true;
+        fs_uniform_block_data.lighting_lut_dirty_any = true;
         break;
     }
 
@@ -616,11 +616,12 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
         break;
 
     // Clipping plane
+    case PICA_REG_INDEX(rasterizer.clip_enable):
     case PICA_REG_INDEX(rasterizer.clip_coef[0]):
     case PICA_REG_INDEX(rasterizer.clip_coef[1]):
     case PICA_REG_INDEX(rasterizer.clip_coef[2]):
     case PICA_REG_INDEX(rasterizer.clip_coef[3]):
-        SyncClipCoef();
+        SyncClipPlane();
         break;
     }
 
@@ -631,18 +632,18 @@ void RasterizerAccelerated::NotifyPicaRegisterChanged(u32 id) {
 void RasterizerAccelerated::SyncDepthScale() {
     const f32 depth_scale = f24::FromRaw(regs.rasterizer.viewport_depth_range).ToFloat32();
 
-    if (depth_scale != uniform_block_data.data.depth_scale) {
-        uniform_block_data.data.depth_scale = depth_scale;
-        uniform_block_data.dirty = true;
+    if (depth_scale != fs_uniform_block_data.data.depth_scale) {
+        fs_uniform_block_data.data.depth_scale = depth_scale;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncDepthOffset() {
     const f32 depth_offset = f24::FromRaw(regs.rasterizer.viewport_depth_near_plane).ToFloat32();
 
-    if (depth_offset != uniform_block_data.data.depth_offset) {
-        uniform_block_data.data.depth_offset = depth_offset;
-        uniform_block_data.dirty = true;
+    if (depth_offset != fs_uniform_block_data.data.depth_offset) {
+        fs_uniform_block_data.data.depth_offset = depth_offset;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -654,9 +655,9 @@ void RasterizerAccelerated::SyncFogColor() {
         fog_color_regs.b.Value() / 255.0f,
     };
 
-    if (fog_color != uniform_block_data.data.fog_color) {
-        uniform_block_data.data.fog_color = fog_color;
-        uniform_block_data.dirty = true;
+    if (fog_color != fs_uniform_block_data.data.fog_color) {
+        fs_uniform_block_data.data.fog_color = fog_color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -674,13 +675,13 @@ void RasterizerAccelerated::SyncProcTexNoise() {
         Pica::f16::FromRaw(regs.texturing.proctex_noise_v.phase).ToFloat32(),
     };
 
-    if (proctex_noise_f != uniform_block_data.data.proctex_noise_f ||
-        proctex_noise_a != uniform_block_data.data.proctex_noise_a ||
-        proctex_noise_p != uniform_block_data.data.proctex_noise_p) {
-        uniform_block_data.data.proctex_noise_f = proctex_noise_f;
-        uniform_block_data.data.proctex_noise_a = proctex_noise_a;
-        uniform_block_data.data.proctex_noise_p = proctex_noise_p;
-        uniform_block_data.dirty = true;
+    if (proctex_noise_f != fs_uniform_block_data.data.proctex_noise_f ||
+        proctex_noise_a != fs_uniform_block_data.data.proctex_noise_a ||
+        proctex_noise_p != fs_uniform_block_data.data.proctex_noise_p) {
+        fs_uniform_block_data.data.proctex_noise_f = proctex_noise_f;
+        fs_uniform_block_data.data.proctex_noise_a = proctex_noise_a;
+        fs_uniform_block_data.data.proctex_noise_p = proctex_noise_p;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -688,25 +689,25 @@ void RasterizerAccelerated::SyncProcTexBias() {
     const auto proctex_bias = Pica::f16::FromRaw(regs.texturing.proctex.bias_low |
                                                  (regs.texturing.proctex_lut.bias_high << 8))
                                   .ToFloat32();
-    if (proctex_bias != uniform_block_data.data.proctex_bias) {
-        uniform_block_data.data.proctex_bias = proctex_bias;
-        uniform_block_data.dirty = true;
+    if (proctex_bias != fs_uniform_block_data.data.proctex_bias) {
+        fs_uniform_block_data.data.proctex_bias = proctex_bias;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncAlphaTest() {
     if (regs.framebuffer.output_merger.alpha_test.ref !=
-        static_cast<u32>(uniform_block_data.data.alphatest_ref)) {
-        uniform_block_data.data.alphatest_ref = regs.framebuffer.output_merger.alpha_test.ref;
-        uniform_block_data.dirty = true;
+        static_cast<u32>(fs_uniform_block_data.data.alphatest_ref)) {
+        fs_uniform_block_data.data.alphatest_ref = regs.framebuffer.output_merger.alpha_test.ref;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncCombinerColor() {
     const auto combiner_color = ColorRGBA8(regs.texturing.tev_combiner_buffer_color.raw);
-    if (combiner_color != uniform_block_data.data.tev_combiner_buffer_color) {
-        uniform_block_data.data.tev_combiner_buffer_color = combiner_color;
-        uniform_block_data.dirty = true;
+    if (combiner_color != fs_uniform_block_data.data.tev_combiner_buffer_color) {
+        fs_uniform_block_data.data.tev_combiner_buffer_color = combiner_color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -714,51 +715,51 @@ void RasterizerAccelerated::SyncTevConstColor(
     const size_t stage_index, const Pica::TexturingRegs::TevStageConfig& tev_stage) {
     const auto const_color = ColorRGBA8(tev_stage.const_color);
 
-    if (const_color == uniform_block_data.data.const_color[stage_index]) {
+    if (const_color == fs_uniform_block_data.data.const_color[stage_index]) {
         return;
     }
 
-    uniform_block_data.data.const_color[stage_index] = const_color;
-    uniform_block_data.dirty = true;
+    fs_uniform_block_data.data.const_color[stage_index] = const_color;
+    fs_uniform_block_data.dirty = true;
 }
 
 void RasterizerAccelerated::SyncGlobalAmbient() {
     const auto color = LightColor(regs.lighting.global_ambient);
-    if (color != uniform_block_data.data.lighting_global_ambient) {
-        uniform_block_data.data.lighting_global_ambient = color;
-        uniform_block_data.dirty = true;
+    if (color != fs_uniform_block_data.data.lighting_global_ambient) {
+        fs_uniform_block_data.data.lighting_global_ambient = color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncLightSpecular0(int light_index) {
     const auto color = LightColor(regs.lighting.light[light_index].specular_0);
-    if (color != uniform_block_data.data.light_src[light_index].specular_0) {
-        uniform_block_data.data.light_src[light_index].specular_0 = color;
-        uniform_block_data.dirty = true;
+    if (color != fs_uniform_block_data.data.light_src[light_index].specular_0) {
+        fs_uniform_block_data.data.light_src[light_index].specular_0 = color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncLightSpecular1(int light_index) {
     const auto color = LightColor(regs.lighting.light[light_index].specular_1);
-    if (color != uniform_block_data.data.light_src[light_index].specular_1) {
-        uniform_block_data.data.light_src[light_index].specular_1 = color;
-        uniform_block_data.dirty = true;
+    if (color != fs_uniform_block_data.data.light_src[light_index].specular_1) {
+        fs_uniform_block_data.data.light_src[light_index].specular_1 = color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncLightDiffuse(int light_index) {
     const auto color = LightColor(regs.lighting.light[light_index].diffuse);
-    if (color != uniform_block_data.data.light_src[light_index].diffuse) {
-        uniform_block_data.data.light_src[light_index].diffuse = color;
-        uniform_block_data.dirty = true;
+    if (color != fs_uniform_block_data.data.light_src[light_index].diffuse) {
+        fs_uniform_block_data.data.light_src[light_index].diffuse = color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncLightAmbient(int light_index) {
     const auto color = LightColor(regs.lighting.light[light_index].ambient);
-    if (color != uniform_block_data.data.light_src[light_index].ambient) {
-        uniform_block_data.data.light_src[light_index].ambient = color;
-        uniform_block_data.dirty = true;
+    if (color != fs_uniform_block_data.data.light_src[light_index].ambient) {
+        fs_uniform_block_data.data.light_src[light_index].ambient = color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -769,9 +770,9 @@ void RasterizerAccelerated::SyncLightPosition(int light_index) {
         Pica::f16::FromRaw(regs.lighting.light[light_index].z).ToFloat32(),
     };
 
-    if (position != uniform_block_data.data.light_src[light_index].position) {
-        uniform_block_data.data.light_src[light_index].position = position;
-        uniform_block_data.dirty = true;
+    if (position != fs_uniform_block_data.data.light_src[light_index].position) {
+        fs_uniform_block_data.data.light_src[light_index].position = position;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -780,9 +781,9 @@ void RasterizerAccelerated::SyncLightSpotDirection(int light_index) {
     const auto spot_direction =
         Common::Vec3f{light.spot_x / 2047.0f, light.spot_y / 2047.0f, light.spot_z / 2047.0f};
 
-    if (spot_direction != uniform_block_data.data.light_src[light_index].spot_direction) {
-        uniform_block_data.data.light_src[light_index].spot_direction = spot_direction;
-        uniform_block_data.dirty = true;
+    if (spot_direction != fs_uniform_block_data.data.light_src[light_index].spot_direction) {
+        fs_uniform_block_data.data.light_src[light_index].spot_direction = spot_direction;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -790,9 +791,9 @@ void RasterizerAccelerated::SyncLightDistanceAttenuationBias(int light_index) {
     const f32 dist_atten_bias =
         Pica::f20::FromRaw(regs.lighting.light[light_index].dist_atten_bias).ToFloat32();
 
-    if (dist_atten_bias != uniform_block_data.data.light_src[light_index].dist_atten_bias) {
-        uniform_block_data.data.light_src[light_index].dist_atten_bias = dist_atten_bias;
-        uniform_block_data.dirty = true;
+    if (dist_atten_bias != fs_uniform_block_data.data.light_src[light_index].dist_atten_bias) {
+        fs_uniform_block_data.data.light_src[light_index].dist_atten_bias = dist_atten_bias;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -800,9 +801,9 @@ void RasterizerAccelerated::SyncLightDistanceAttenuationScale(int light_index) {
     const f32 dist_atten_scale =
         Pica::f20::FromRaw(regs.lighting.light[light_index].dist_atten_scale).ToFloat32();
 
-    if (dist_atten_scale != uniform_block_data.data.light_src[light_index].dist_atten_scale) {
-        uniform_block_data.data.light_src[light_index].dist_atten_scale = dist_atten_scale;
-        uniform_block_data.dirty = true;
+    if (dist_atten_scale != fs_uniform_block_data.data.light_src[light_index].dist_atten_scale) {
+        fs_uniform_block_data.data.light_src[light_index].dist_atten_scale = dist_atten_scale;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -811,28 +812,28 @@ void RasterizerAccelerated::SyncShadowBias() {
     const f32 constant = Pica::f16::FromRaw(shadow.constant).ToFloat32();
     const f32 linear = Pica::f16::FromRaw(shadow.linear).ToFloat32();
 
-    if (constant != uniform_block_data.data.shadow_bias_constant ||
-        linear != uniform_block_data.data.shadow_bias_linear) {
-        uniform_block_data.data.shadow_bias_constant = constant;
-        uniform_block_data.data.shadow_bias_linear = linear;
-        uniform_block_data.dirty = true;
+    if (constant != fs_uniform_block_data.data.shadow_bias_constant ||
+        linear != fs_uniform_block_data.data.shadow_bias_linear) {
+        fs_uniform_block_data.data.shadow_bias_constant = constant;
+        fs_uniform_block_data.data.shadow_bias_linear = linear;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncShadowTextureBias() {
     const s32 bias = regs.texturing.shadow.bias << 1;
-    if (bias != uniform_block_data.data.shadow_texture_bias) {
-        uniform_block_data.data.shadow_texture_bias = bias;
-        uniform_block_data.dirty = true;
+    if (bias != fs_uniform_block_data.data.shadow_texture_bias) {
+        fs_uniform_block_data.data.shadow_texture_bias = bias;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
 void RasterizerAccelerated::SyncTextureLodBias(int tex_index) {
     const auto pica_textures = regs.texturing.GetTextures();
     const f32 bias = pica_textures[tex_index].config.lod.bias / 256.0f;
-    if (bias != uniform_block_data.data.tex_lod_bias[tex_index]) {
-        uniform_block_data.data.tex_lod_bias[tex_index] = bias;
-        uniform_block_data.dirty = true;
+    if (bias != fs_uniform_block_data.data.tex_lod_bias[tex_index]) {
+        fs_uniform_block_data.data.tex_lod_bias[tex_index] = bias;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
@@ -840,19 +841,22 @@ void RasterizerAccelerated::SyncTextureBorderColor(int tex_index) {
     const auto pica_textures = regs.texturing.GetTextures();
     const auto params = pica_textures[tex_index].config;
     const Common::Vec4f border_color = ColorRGBA8(params.border_color.raw);
-    if (border_color != uniform_block_data.data.tex_border_color[tex_index]) {
-        uniform_block_data.data.tex_border_color[tex_index] = border_color;
-        uniform_block_data.dirty = true;
+    if (border_color != fs_uniform_block_data.data.tex_border_color[tex_index]) {
+        fs_uniform_block_data.data.tex_border_color[tex_index] = border_color;
+        fs_uniform_block_data.dirty = true;
     }
 }
 
-void RasterizerAccelerated::SyncClipCoef() {
+void RasterizerAccelerated::SyncClipPlane() {
+    const bool enable_clip1 = regs.rasterizer.clip_enable != 0;
     const auto raw_clip_coef = regs.rasterizer.GetClipCoef();
     const Common::Vec4f new_clip_coef = {raw_clip_coef.x.ToFloat32(), raw_clip_coef.y.ToFloat32(),
                                          raw_clip_coef.z.ToFloat32(), raw_clip_coef.w.ToFloat32()};
-    if (new_clip_coef != uniform_block_data.data.clip_coef) {
-        uniform_block_data.data.clip_coef = new_clip_coef;
-        uniform_block_data.dirty = true;
+    if (enable_clip1 != vs_uniform_block_data.data.enable_clip1 ||
+        new_clip_coef != vs_uniform_block_data.data.clip_coef) {
+        vs_uniform_block_data.data.enable_clip1 = enable_clip1;
+        vs_uniform_block_data.data.clip_coef = new_clip_coef;
+        vs_uniform_block_data.dirty = true;
     }
 }
 

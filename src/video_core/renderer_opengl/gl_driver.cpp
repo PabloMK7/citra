@@ -168,7 +168,7 @@ void Driver::CheckExtensionSupport() {
     arb_clear_texture = GLAD_GL_ARB_clear_texture;
     arb_get_texture_sub_image = GLAD_GL_ARB_get_texture_sub_image;
     arb_texture_compression_bptc = GLAD_GL_ARB_texture_compression_bptc;
-    ext_clip_cull_distance = GLAD_GL_EXT_clip_cull_distance;
+    clip_cull_distance = !is_gles || GLAD_GL_EXT_clip_cull_distance;
     ext_texture_compression_s3tc = GLAD_GL_EXT_texture_compression_s3tc;
     shader_framebuffer_fetch =
         GLAD_GL_EXT_shader_framebuffer_fetch || GLAD_GL_ARM_shader_framebuffer_fetch;

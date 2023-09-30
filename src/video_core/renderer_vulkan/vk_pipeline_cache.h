@@ -9,6 +9,8 @@
 
 #include "video_core/renderer_vulkan/vk_descriptor_pool.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
+#include "video_core/shader/generator/glsl_shader_gen.h"
+#include "video_core/shader/generator/spv_shader_gen.h"
 
 namespace Pica {
 struct Regs;
@@ -22,7 +24,7 @@ class RenderpassCache;
 class DescriptorPool;
 
 constexpr u32 NUM_RASTERIZER_SETS = 3;
-constexpr u32 NUM_DYNAMIC_OFFSETS = 2;
+constexpr u32 NUM_DYNAMIC_OFFSETS = 3;
 
 /**
  * Stores a collection of rasterizer pipelines used during rendering.
@@ -113,10 +115,10 @@ private:
 
     std::array<u64, MAX_SHADER_STAGES> shader_hashes;
     std::array<Shader*, MAX_SHADER_STAGES> current_shaders;
-    std::unordered_map<PicaVSConfig, Shader*> programmable_vertex_map;
+    std::unordered_map<Pica::Shader::Generator::PicaVSConfig, Shader*> programmable_vertex_map;
     std::unordered_map<std::string, Shader> programmable_vertex_cache;
-    std::unordered_map<PicaFixedGSConfig, Shader> fixed_geometry_shaders;
-    std::unordered_map<PicaFSConfig, Shader> fragment_shaders;
+    std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
+    std::unordered_map<Pica::Shader::Generator::PicaFSConfig, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
 };
 

@@ -12,10 +12,10 @@ struct ShaderRegs;
 }
 
 namespace Pica::Shader {
-
 struct ShaderSetup;
+}
 
-enum class UniformBindings : u32 { Common, VS, GS };
+namespace Pica::Shader::Generator {
 
 struct LightSrc {
     alignas(16) Common::Vec3f specular_0;
@@ -34,7 +34,7 @@ struct LightSrc {
  *       the end of a uniform block is included in UNIFORM_BLOCK_DATA_SIZE or not.
  *       Not following that rule will cause problems on some AMD drivers.
  */
-struct UniformData {
+struct FSUniformData {
     int framebuffer_scale;
     int alphatest_ref;
     float depth_scale;
@@ -53,7 +53,6 @@ struct UniformData {
     int proctex_diff_lut_offset;
     float proctex_bias;
     int shadow_texture_bias;
-    alignas(4) bool enable_clip1;
     alignas(16) Common::Vec4i lighting_lut_offset[LightingRegs::NumLightingSampler / 4];
     alignas(16) Common::Vec3f fog_color;
     alignas(8) Common::Vec2f proctex_noise_f;
@@ -65,13 +64,12 @@ struct UniformData {
     alignas(16) Common::Vec4f tev_combiner_buffer_color;
     alignas(16) Common::Vec3f tex_lod_bias;
     alignas(16) Common::Vec4f tex_border_color[3];
-    alignas(16) Common::Vec4f clip_coef;
     alignas(16) Common::Vec4f blend_color;
 };
 
-static_assert(sizeof(UniformData) == 0x540,
+static_assert(sizeof(FSUniformData) == 0x530,
               "The size of the UniformData does not match the structure in the shader");
-static_assert(sizeof(UniformData) < 16384,
+static_assert(sizeof(FSUniformData) < 16384,
               "UniformData structure must be less than 16kb as per the OpenGL spec");
 
 /**
@@ -91,13 +89,20 @@ struct PicaUniformsData {
 };
 
 struct VSUniformData {
-    PicaUniformsData uniforms;
+    bool enable_clip1;
+    alignas(16) Common::Vec4f clip_coef;
 };
-static_assert(sizeof(VSUniformData) == 1856,
+static_assert(sizeof(VSUniformData) == 32,
               "The size of the VSUniformData does not match the structure in the shader");
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");
 
-std::string BuildShaderUniformDefinitions(const std::string& extra_layout_parameters = "");
+struct VSPicaUniformData {
+    alignas(16) PicaUniformsData uniforms;
+};
+static_assert(sizeof(VSPicaUniformData) == 1856,
+              "The size of the VSPicaUniformData does not match the structure in the shader");
+static_assert(sizeof(VSPicaUniformData) < 16384,
+              "VSPicaUniformData structure must be less than 16kb as per the OpenGL spec");
 
-} // namespace Pica::Shader
+} // namespace Pica::Shader::Generator

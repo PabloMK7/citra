@@ -12,9 +12,9 @@
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "video_core/renderer_opengl/gl_shader_decompiler.h"
+#include "video_core/shader/generator/glsl_shader_decompiler.h"
 
-namespace OpenGL::ShaderDecompiler {
+namespace Pica::Shader::Generator::GLSL {
 
 using nihstro::DestRegister;
 using nihstro::Instruction;
@@ -939,34 +939,20 @@ private:
     ShaderWriter shader;
 };
 
-std::string GetCommonDeclarations() {
-    return R"(
-struct pica_uniforms {
-    bool b[16];
-    uvec4 i[4];
-    vec4 f[96];
-};
-
-bool exec_shader();
-
-)";
-}
-
-std::optional<ProgramResult> DecompileProgram(const Pica::Shader::ProgramCode& program_code,
-                                              const Pica::Shader::SwizzleData& swizzle_data,
-                                              u32 main_offset, const RegGetter& inputreg_getter,
-                                              const RegGetter& outputreg_getter,
-                                              bool sanitize_mul) {
+std::string DecompileProgram(const Pica::Shader::ProgramCode& program_code,
+                             const Pica::Shader::SwizzleData& swizzle_data, u32 main_offset,
+                             const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
+                             bool sanitize_mul) {
 
     try {
         auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();
         GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
                                 inputreg_getter, outputreg_getter, sanitize_mul);
-        return {ProgramResult{generator.MoveShaderCode()}};
+        return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {
         LOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());
-        return std::nullopt;
+        return "";
     }
 }
 
-} // namespace OpenGL::ShaderDecompiler
+} // namespace Pica::Shader::Generator::GLSL

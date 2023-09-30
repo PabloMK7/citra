@@ -24,6 +24,12 @@ namespace OpenGL {
 class Driver;
 class OpenGLState;
 
+enum UniformBindings {
+    VSPicaData = 0,
+    VSData = 1,
+    FSData = 2,
+};
+
 /// A class that manage different shader stages and configures them with given config data.
 class ShaderProgramManager {
 public:

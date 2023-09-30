@@ -4,14 +4,17 @@
 
 #pragma once
 
-#include <optional>
 #include "common/hash.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
 
-namespace Vulkan {
+namespace Pica::Shader::Generator {
 
-class Instance;
+enum ProgramType : u32 {
+    VS = 0,
+    GS = 2,
+    FS = 1,
+};
 
 enum Attributes {
     ATTRIBUTE_POSITION,
@@ -31,13 +34,13 @@ struct TevStageConfigRaw {
     u32 ops_raw;
     u32 scales_raw;
     explicit operator Pica::TexturingRegs::TevStageConfig() const noexcept {
-        Pica::TexturingRegs::TevStageConfig stage;
-        stage.sources_raw = sources_raw;
-        stage.modifiers_raw = modifiers_raw;
-        stage.ops_raw = ops_raw;
-        stage.const_color = 0;
-        stage.scales_raw = scales_raw;
-        return stage;
+        return {
+            .sources_raw = sources_raw,
+            .modifiers_raw = modifiers_raw,
+            .ops_raw = ops_raw,
+            .const_color = 0,
+            .scales_raw = scales_raw,
+        };
     }
 };
 
@@ -56,6 +59,7 @@ struct PicaFSConfigState {
         BitField<27, 1, u32> shadow_rendering;
         BitField<28, 1, u32> shadow_texture_orthographic;
         BitField<29, 1, u32> use_fragment_shader_interlock;
+        BitField<30, 1, u32> use_custom_normal_map;
     };
 
     union {
@@ -127,24 +131,33 @@ struct PicaFSConfigState {
         u8 lod_min;
         u8 lod_max;
     } proctex;
+
+    struct {
+        bool emulate_blending;
+        Pica::FramebufferRegs::BlendEquation eq;
+        Pica::FramebufferRegs::BlendFactor src_factor;
+        Pica::FramebufferRegs::BlendFactor dst_factor;
+    } rgb_blend, alpha_blend;
 };
 
 /**
  * This struct contains all state used to generate the GLSL fragment shader that emulates the
  * current Pica register configuration. This struct is used as a cache key for generated GLSL shader
- * programs. The functions in gl_shader_gen.cpp should retrieve state from this struct only, not by
- * directly accessing Pica registers. This should reduce the risk of bugs in shader generation where
- * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
- * two separate shaders sharing the same key.
+ * programs. The functions in glsl_shader_gen.cpp should retrieve state from this struct only, not
+ * by directly accessing Pica registers. This should reduce the risk of bugs in shader generation
+ * where Pica state is not being captured in the shader cache key, thereby resulting in (what should
+ * be) two separate shaders sharing the same key.
  */
 struct PicaFSConfig : Common::HashableStruct<PicaFSConfigState> {
-    PicaFSConfig(const Pica::Regs& regs, const Instance& instance);
+    PicaFSConfig(const Pica::Regs& regs, bool has_fragment_shader_interlock, bool emulate_logic_op,
+                 bool emulate_custom_border_color, bool emulate_blend_minmax_factor,
+                 bool use_custom_normal_map = false);
 
-    bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
+    [[nodiscard]] bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
         return (stage_index < 4) && (state.combiner_buffer_input & (1 << stage_index));
     }
 
-    bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
+    [[nodiscard]] bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
         return (stage_index < 4) && ((state.combiner_buffer_input >> 4) & (1 << stage_index));
     }
 };
@@ -158,12 +171,36 @@ enum class AttribLoadFlags {
 DECLARE_ENUM_FLAG_OPERATORS(AttribLoadFlags)
 
 /**
- * This struct contains common information to identify a GL vertex/geometry shader generated from
- * PICA vertex/geometry shader.
+ * This struct contains common information to identify a GLSL geometry shader generated from
+ * PICA geometry shader.
  */
-struct PicaShaderConfigCommon {
-    void Init(const Pica::RasterizerRegs& rasterizer, const Pica::ShaderRegs& regs,
-              Pica::Shader::ShaderSetup& setup);
+struct PicaGSConfigState {
+    void Init(const Pica::Regs& regs, bool use_clip_planes_);
+
+    bool use_clip_planes;
+
+    u32 vs_output_attributes;
+    u32 gs_output_attributes;
+
+    struct SemanticMap {
+        u32 attribute_index;
+        u32 component_index;
+    };
+
+    // semantic_maps[semantic name] -> GS output attribute index + component index
+    std::array<SemanticMap, 24> semantic_maps;
+};
+
+/**
+ * This struct contains common information to identify a GLSL vertex shader generated from
+ * PICA vertex shader.
+ */
+struct PicaVSConfigState {
+    void Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup, bool use_clip_planes_,
+              bool use_geometry_shader_);
+
+    bool use_clip_planes;
+    bool use_geometry_shader;
 
     u64 program_hash;
     u64 swizzle_hash;
@@ -177,103 +214,46 @@ struct PicaShaderConfigCommon {
     // output_map[output register index] -> output attribute index
     std::array<u32, 16> output_map;
 
-    bool use_geometry_shader;
-    u32 vs_output_attributes;
-    u32 gs_output_attributes;
-
-    struct SemanticMap {
-        u32 attribute_index;
-        u32 component_index;
-    };
-
-    // semantic_maps[semantic name] -> GS output attribute index + component index
-    std::array<SemanticMap, 24> semantic_maps;
+    PicaGSConfigState gs_state;
 };
 
 /**
  * This struct contains information to identify a GL vertex shader generated from PICA vertex
  * shader.
  */
-struct PicaVSConfig : Common::HashableStruct<PicaShaderConfigCommon> {
-    explicit PicaVSConfig(const Pica::RasterizerRegs& rasterizer, const Pica::ShaderRegs& regs,
-                          Pica::Shader::ShaderSetup& setup, const Instance& instance);
-    bool use_clip_planes;
-};
-
-struct PicaGSConfigCommonRaw {
-    void Init(const Pica::Regs& regs);
-
-    u32 vs_output_attributes;
-    u32 gs_output_attributes;
-
-    struct SemanticMap {
-        u32 attribute_index;
-        u32 component_index;
-    };
-
-    // semantic_maps[semantic name] -> GS output attribute index + component index
-    std::array<SemanticMap, 24> semantic_maps;
+struct PicaVSConfig : Common::HashableStruct<PicaVSConfigState> {
+    explicit PicaVSConfig(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,
+                          bool use_clip_planes_, bool use_geometry_shader_);
 };
 
 /**
  * This struct contains information to identify a GL geometry shader generated from PICA no-geometry
  * shader pipeline
  */
-struct PicaFixedGSConfig : Common::HashableStruct<PicaGSConfigCommonRaw> {
-    explicit PicaFixedGSConfig(const Pica::Regs& regs, const Instance& instance);
-    bool use_clip_planes;
+struct PicaFixedGSConfig : Common::HashableStruct<PicaGSConfigState> {
+    explicit PicaFixedGSConfig(const Pica::Regs& regs, bool use_clip_planes_);
 };
 
-/**
- * Generates the GLSL vertex shader program source code that accepts vertices from software shader
- * and directly passes them to the fragment shader.
- * @param separable_shader generates shader that can be used for separate shader object
- * @returns String of the shader source code
- */
-std::string GenerateTrivialVertexShader(bool use_clip_planes);
-
-/**
- * Generates the GLSL vertex shader program source code for the given VS program
- * @returns String of the shader source code; boost::none on failure
- */
-std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
-                                                const PicaVSConfig& config);
-
-/**
- * Generates the GLSL fixed geometry shader program source code for non-GS PICA pipeline
- * @returns String of the shader source code
- */
-std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config);
-
-/**
- * Generates the GLSL fragment shader program source code for the current Pica state
- * @param config ShaderCacheKey object generated for the current Pica state, used for the shader
- *               configuration (NOTE: Use state in this struct only, not the Pica registers!)
- * @param separable_shader generates shader that can be used for separate shader object
- * @returns String of the shader source code
- */
-std::string GenerateFragmentShader(const PicaFSConfig& config);
-
-} // namespace Vulkan
+} // namespace Pica::Shader::Generator
 
 namespace std {
 template <>
-struct hash<Vulkan::PicaFSConfig> {
-    std::size_t operator()(const Vulkan::PicaFSConfig& k) const noexcept {
+struct hash<Pica::Shader::Generator::PicaFSConfig> {
+    std::size_t operator()(const Pica::Shader::Generator::PicaFSConfig& k) const noexcept {
         return k.Hash();
     }
 };
 
 template <>
-struct hash<Vulkan::PicaVSConfig> {
-    std::size_t operator()(const Vulkan::PicaVSConfig& k) const noexcept {
+struct hash<Pica::Shader::Generator::PicaVSConfig> {
+    std::size_t operator()(const Pica::Shader::Generator::PicaVSConfig& k) const noexcept {
         return k.Hash();
     }
 };
 
 template <>
-struct hash<Vulkan::PicaFixedGSConfig> {
-    std::size_t operator()(const Vulkan::PicaFixedGSConfig& k) const noexcept {
+struct hash<Pica::Shader::Generator::PicaFixedGSConfig> {
+    std::size_t operator()(const Pica::Shader::Generator::PicaFixedGSConfig& k) const noexcept {
         return k.Hash();
     }
 };

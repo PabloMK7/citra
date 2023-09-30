@@ -14,8 +14,10 @@
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
-#include "video_core/shader/shader_uniforms.h"
+#include "video_core/shader/generator/shader_uniforms.h"
 #include "video_core/video_core.h"
+
+using namespace Pica::Shader::Generator;
 
 namespace OpenGL {
 
@@ -74,7 +76,7 @@ static std::set<GLenum> GetSupportedFormats() {
 }
 
 static std::tuple<PicaVSConfig, Pica::Shader::ShaderSetup> BuildVSConfigFromRaw(
-    const ShaderDiskCacheRaw& raw) {
+    const ShaderDiskCacheRaw& raw, const Driver& driver) {
     Pica::Shader::ProgramCode program_code{};
     Pica::Shader::SwizzleData swizzle_data{};
     std::copy_n(raw.GetProgramCode().begin(), Pica::Shader::MAX_PROGRAM_CODE_LENGTH,
@@ -84,7 +86,8 @@ static std::tuple<PicaVSConfig, Pica::Shader::ShaderSetup> BuildVSConfigFromRaw(
     Pica::Shader::ShaderSetup setup;
     setup.program_code = program_code;
     setup.swizzle_data = swizzle_data;
-    return {PicaVSConfig{raw.GetRawShaderConfig().vs, setup}, setup};
+    return {PicaVSConfig{raw.GetRawShaderConfig(), setup, driver.HasClipCullDistance(), true},
+            setup};
 }
 
 /**
@@ -130,8 +133,10 @@ private:
 
 class TrivialVertexShader {
 public:
-    explicit TrivialVertexShader(bool separable) : program(separable) {
-        program.Create(GenerateTrivialVertexShader(separable).code.c_str(), GL_VERTEX_SHADER);
+    explicit TrivialVertexShader(const Driver& driver, bool separable) : program(separable) {
+        const auto code =
+            GLSL::GenerateTrivialVertexShader(driver.HasClipCullDistance(), separable);
+        program.Create(code.c_str(), GL_VERTEX_SHADER);
     }
     GLuint Get() const {
         return program.GetHandle();
@@ -141,20 +146,18 @@ private:
     OGLShaderStage program;
 };
 
-template <typename KeyConfigType,
-          ShaderDecompiler::ProgramResult (*CodeGenerator)(const KeyConfigType&, bool),
+template <typename KeyConfigType, std::string (*CodeGenerator)(const KeyConfigType&, bool),
           GLenum ShaderType>
 class ShaderCache {
 public:
     explicit ShaderCache(bool separable) : separable(separable) {}
-    std::tuple<GLuint, std::optional<ShaderDecompiler::ProgramResult>> Get(
-        const KeyConfigType& config) {
+    std::tuple<GLuint, std::optional<std::string>> Get(const KeyConfigType& config) {
         auto [iter, new_shader] = shaders.emplace(config, OGLShaderStage{separable});
         OGLShaderStage& cached_shader = iter->second;
-        std::optional<ShaderDecompiler::ProgramResult> result{};
+        std::optional<std::string> result{};
         if (new_shader) {
             result = CodeGenerator(config, separable);
-            cached_shader.Create(result->code.c_str(), ShaderType);
+            cached_shader.Create(result->c_str(), ShaderType);
         }
         return {cached_shader.GetHandle(), std::move(result)};
     }
@@ -180,29 +183,27 @@ private:
 // program buffer from the previous shader, which is hashed into the config, resulting several
 // different config values from the same shader program.
 template <typename KeyConfigType,
-          std::optional<ShaderDecompiler::ProgramResult> (*CodeGenerator)(
-              const Pica::Shader::ShaderSetup&, const KeyConfigType&, bool),
+          std::string (*CodeGenerator)(const Pica::Shader::ShaderSetup&, const KeyConfigType&,
+                                       bool),
           GLenum ShaderType>
 class ShaderDoubleCache {
 public:
     explicit ShaderDoubleCache(bool separable) : separable(separable) {}
-    std::tuple<GLuint, std::optional<ShaderDecompiler::ProgramResult>> Get(
-        const KeyConfigType& key, const Pica::Shader::ShaderSetup& setup) {
-        std::optional<ShaderDecompiler::ProgramResult> result{};
+    std::tuple<GLuint, std::optional<std::string>> Get(const KeyConfigType& key,
+                                                       const Pica::Shader::ShaderSetup& setup) {
+        std::optional<std::string> result{};
         auto map_it = shader_map.find(key);
         if (map_it == shader_map.end()) {
-            auto program_opt = CodeGenerator(setup, key, separable);
-            if (!program_opt) {
+            auto program = CodeGenerator(setup, key, separable);
+            if (program.empty()) {
                 shader_map[key] = nullptr;
                 return {0, std::nullopt};
             }
 
-            std::string& program = program_opt->code;
             auto [iter, new_shader] = shader_cache.emplace(program, OGLShaderStage{separable});
             OGLShaderStage& cached_shader = iter->second;
             if (new_shader) {
-                result.emplace();
-                result->code = program;
+                result = program;
                 cached_shader.Create(program.c_str(), ShaderType);
             }
             shader_map[key] = &cached_shader;
@@ -237,18 +238,19 @@ private:
 };
 
 using ProgrammableVertexShaders =
-    ShaderDoubleCache<PicaVSConfig, &GenerateVertexShader, GL_VERTEX_SHADER>;
+    ShaderDoubleCache<PicaVSConfig, &GLSL::GenerateVertexShader, GL_VERTEX_SHADER>;
 
 using FixedGeometryShaders =
-    ShaderCache<PicaFixedGSConfig, &GenerateFixedGeometryShader, GL_GEOMETRY_SHADER>;
+    ShaderCache<PicaFixedGSConfig, &GLSL::GenerateFixedGeometryShader, GL_GEOMETRY_SHADER>;
 
-using FragmentShaders = ShaderCache<PicaFSConfig, &GenerateFragmentShader, GL_FRAGMENT_SHADER>;
+using FragmentShaders =
+    ShaderCache<PicaFSConfig, &GLSL::GenerateFragmentShader, GL_FRAGMENT_SHADER>;
 
 class ShaderProgramManager::Impl {
 public:
-    explicit Impl(bool separable)
+    explicit Impl(const Driver& driver, bool separable)
         : separable(separable), programmable_vertex_shaders(separable),
-          trivial_vertex_shader(separable), fixed_geometry_shaders(separable),
+          trivial_vertex_shader(driver, separable), fixed_geometry_shaders(separable),
           fragment_shaders(separable), disk_cache(separable) {
         if (separable)
             pipeline.Create();
@@ -299,13 +301,13 @@ ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, con
                                            bool separable)
     : emu_window{emu_window_}, driver{driver_},
       strict_context_required{emu_window.StrictContextRequired()}, impl{std::make_unique<Impl>(
-                                                                       separable)} {}
+                                                                       driver_, separable)} {}
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
 bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::Regs& regs,
                                                        Pica::Shader::ShaderSetup& setup) {
-    PicaVSConfig config{regs.vs, setup};
+    PicaVSConfig config{regs, setup, driver.HasClipCullDistance(), true};
     auto [handle, result] = impl->programmable_vertex_shaders.Get(config, setup);
     if (handle == 0)
         return false;
@@ -333,7 +335,7 @@ void ShaderProgramManager::UseTrivialVertexShader() {
 }
 
 void ShaderProgramManager::UseFixedGeometryShader(const Pica::Regs& regs) {
-    PicaFixedGSConfig gs_config(regs);
+    PicaFixedGSConfig gs_config(regs, driver.HasClipCullDistance());
     auto [handle, _] = impl->fixed_geometry_shaders.Get(gs_config);
     impl->current.gs = handle;
     impl->current.gs_hash = gs_config.Hash();
@@ -345,8 +347,8 @@ void ShaderProgramManager::UseTrivialGeometryShader() {
 }
 
 void ShaderProgramManager::UseFragmentShader(const Pica::Regs& regs, bool use_normal) {
-    PicaFSConfig config =
-        PicaFSConfig::BuildFromRegs(regs, driver.HasBlendMinMaxFactor(), use_normal);
+    PicaFSConfig config(regs, false, driver.IsOpenGLES(), false, driver.HasBlendMinMaxFactor(),
+                        use_normal);
     auto [handle, result] = impl->fragment_shaders.Get(config);
     impl->current.fs = handle;
     impl->current.fs_hash = config.Hash();
@@ -463,13 +465,13 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 // we have both the binary shader and the decompiled, so inject it into the
                 // cache
                 if (raw.GetProgramType() == ProgramType::VS) {
-                    auto [conf, setup] = BuildVSConfigFromRaw(raw);
+                    auto [conf, setup] = BuildVSConfigFromRaw(raw, driver);
                     std::scoped_lock lock(mutex);
-                    impl->programmable_vertex_shaders.Inject(conf, decomp->second.result.code,
+                    impl->programmable_vertex_shaders.Inject(conf, decomp->second.code,
                                                              std::move(shader));
                 } else if (raw.GetProgramType() == ProgramType::FS) {
-                    PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig(),
-                                                                    driver.HasBlendMinMaxFactor());
+                    PicaFSConfig conf(raw.GetRawShaderConfig(), false, driver.IsOpenGLES(), false,
+                                      driver.HasBlendMinMaxFactor());
                     std::scoped_lock lock(mutex);
                     impl->fragment_shaders.Inject(conf, std::move(shader));
                 } else {
@@ -566,24 +568,24 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
 
             bool sanitize_mul = false;
             GLuint handle{0};
-            std::optional<ShaderDecompiler::ProgramResult> result;
+            std::string code;
             // Otherwise decompile and build the shader at boot and save the result to the
             // precompiled file
             if (raw.GetProgramType() == ProgramType::VS) {
-                auto [conf, setup] = BuildVSConfigFromRaw(raw);
-                result = GenerateVertexShader(setup, conf, impl->separable);
+                auto [conf, setup] = BuildVSConfigFromRaw(raw, driver);
+                code = GLSL::GenerateVertexShader(setup, conf, impl->separable);
                 OGLShaderStage stage{impl->separable};
-                stage.Create(result->code.c_str(), GL_VERTEX_SHADER);
+                stage.Create(code.c_str(), GL_VERTEX_SHADER);
                 handle = stage.GetHandle();
                 sanitize_mul = conf.state.sanitize_mul;
                 std::scoped_lock lock(mutex);
-                impl->programmable_vertex_shaders.Inject(conf, result->code, std::move(stage));
+                impl->programmable_vertex_shaders.Inject(conf, code, std::move(stage));
             } else if (raw.GetProgramType() == ProgramType::FS) {
-                PicaFSConfig conf = PicaFSConfig::BuildFromRegs(raw.GetRawShaderConfig(),
-                                                                driver.HasBlendMinMaxFactor());
-                result = GenerateFragmentShader(conf, impl->separable);
+                PicaFSConfig conf(raw.GetRawShaderConfig(), false, driver.IsOpenGLES(), false,
+                                  driver.HasBlendMinMaxFactor());
+                code = GLSL::GenerateFragmentShader(conf, impl->separable);
                 OGLShaderStage stage{impl->separable};
-                stage.Create(result->code.c_str(), GL_FRAGMENT_SHADER);
+                stage.Create(code.c_str(), GL_FRAGMENT_SHADER);
                 handle = stage.GetHandle();
                 std::scoped_lock lock(mutex);
                 impl->fragment_shaders.Inject(conf, std::move(stage));
@@ -602,8 +604,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
 
             std::scoped_lock lock(mutex);
             // If this is a new separable shader, add it the precompiled cache
-            if (result) {
-                disk_cache.SaveDecompiled(unique_identifier, *result, sanitize_mul);
+            if (!code.empty()) {
+                disk_cache.SaveDecompiled(unique_identifier, code, sanitize_mul);
                 disk_cache.SaveDump(unique_identifier, handle);
                 precompiled_cache_altered = true;
             }

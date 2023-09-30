@@ -20,8 +20,7 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "video_core/regs.h"
-#include "video_core/renderer_opengl/gl_shader_decompiler.h"
-#include "video_core/renderer_opengl/gl_shader_gen.h"
+#include "video_core/shader/generator/glsl_shader_gen.h"
 
 namespace Core {
 class System;
@@ -38,6 +37,7 @@ struct ShaderDiskCacheDump;
 
 using RawShaderConfig = Pica::Regs;
 using ProgramCode = std::vector<u32>;
+using ProgramType = Pica::Shader::Generator::ProgramType;
 using ShaderDecompiledMap = std::unordered_map<u64, ShaderDiskCacheDecompiled>;
 using ShaderDumpsMap = std::unordered_map<u64, ShaderDiskCacheDump>;
 
@@ -78,7 +78,7 @@ private:
 
 /// Contains decompiled data from a shader
 struct ShaderDiskCacheDecompiled {
-    ShaderDecompiler::ProgramResult result;
+    std::string code;
     bool sanitize_mul;
 };
 
@@ -109,8 +109,7 @@ public:
     void SaveRaw(const ShaderDiskCacheRaw& entry);
 
     /// Saves a decompiled entry to the precompiled file. Does not check for collisions.
-    void SaveDecompiled(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code,
-                        bool sanitize_mul);
+    void SaveDecompiled(u64 unique_identifier, const std::string& code, bool sanitize_mul);
 
     /// Saves a dump entry to the precompiled file. Does not check for collisions.
     void SaveDump(u64 unique_identifier, GLuint program);
@@ -132,11 +131,10 @@ private:
 
     /// Saves a decompiled entry to the passed file. Does not check for collisions.
     void SaveDecompiledToFile(FileUtil::IOFile& file, u64 unique_identifier,
-                              const ShaderDecompiler::ProgramResult& code, bool sanitize_mul);
+                              const std::string& code, bool sanitize_mul);
 
     /// Saves a decompiled entry to the virtual precompiled cache. Does not check for collisions.
-    bool SaveDecompiledToCache(u64 unique_identifier, const ShaderDecompiler::ProgramResult& code,
-                               bool sanitize_mul);
+    bool SaveDecompiledToCache(u64 unique_identifier, const std::string& code, bool sanitize_mul);
 
     /// Returns if the cache can be used
     bool IsUsable() const;

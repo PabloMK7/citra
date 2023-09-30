@@ -14,18 +14,13 @@
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
 #include "video_core/renderer_vulkan/vk_renderpass_cache.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
-#include "video_core/renderer_vulkan/vk_shader_gen_spv.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
+
+using namespace Pica::Shader::Generator;
 
 MICROPROFILE_DEFINE(Vulkan_Bind, "Vulkan", "Pipeline Bind", MP_RGB(192, 32, 32));
 
 namespace Vulkan {
-
-enum ProgramType : u32 {
-    VS = 0,
-    GS = 2,
-    FS = 1,
-};
 
 u32 AttribBytes(Pica::PipelineRegs::VertexAttributeFormat format, u32 size) {
     switch (format) {
@@ -52,14 +47,14 @@ AttribLoadFlags MakeAttribLoadFlag(Pica::PipelineRegs::VertexAttributeFormat for
     }
 }
 
-constexpr std::array<vk::DescriptorSetLayoutBinding, 5> BUFFER_BINDINGS = {{
+constexpr std::array<vk::DescriptorSetLayoutBinding, 6> BUFFER_BINDINGS = {{
     {0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex},
     {1, vk::DescriptorType::eUniformBufferDynamic, 1,
-     vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry |
-         vk::ShaderStageFlagBits::eFragment},
-    {2, vk::DescriptorType::eUniformTexelBuffer, 1, vk::ShaderStageFlagBits::eFragment},
+     vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry},
+    {2, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eFragment},
     {3, vk::DescriptorType::eUniformTexelBuffer, 1, vk::ShaderStageFlagBits::eFragment},
     {4, vk::DescriptorType::eUniformTexelBuffer, 1, vk::ShaderStageFlagBits::eFragment},
+    {5, vk::DescriptorType::eUniformTexelBuffer, 1, vk::ShaderStageFlagBits::eFragment},
 }};
 
 constexpr std::array<vk::DescriptorSetLayoutBinding, 4> TEXTURE_BINDINGS = {{
@@ -88,8 +83,9 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
       descriptor_set_providers{DescriptorSetProvider{instance, pool, BUFFER_BINDINGS},
                                DescriptorSetProvider{instance, pool, TEXTURE_BINDINGS},
                                DescriptorSetProvider{instance, pool, SHADOW_BINDINGS}},
-      trivial_vertex_shader{instance, vk::ShaderStageFlagBits::eVertex,
-                            GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported())} {
+      trivial_vertex_shader{
+          instance, vk::ShaderStageFlagBits::eVertex,
+          GLSL::GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported(), true)} {
     BuildLayout();
 }
 
@@ -294,8 +290,8 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
 bool PipelineCache::UseProgrammableVertexShader(const Pica::Regs& regs,
                                                 Pica::Shader::ShaderSetup& setup,
                                                 const VertexLayout& layout) {
-    PicaVSConfig config{regs.rasterizer, regs.vs, setup, instance};
-    config.state.use_geometry_shader = instance.UseGeometryShaders();
+    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(),
+                        instance.UseGeometryShaders()};
 
     for (u32 i = 0; i < layout.attribute_count; i++) {
         const VertexAttribute& attr = layout.attributes[i];
@@ -313,14 +309,13 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::Regs& regs,
 
     auto [it, new_config] = programmable_vertex_map.try_emplace(config);
     if (new_config) {
-        auto code = GenerateVertexShader(setup, config);
-        if (!code) {
+        auto program = GLSL::GenerateVertexShader(setup, config, true);
+        if (program.empty()) {
             LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
             programmable_vertex_map[config] = nullptr;
             return false;
         }
 
-        std::string& program = code.value();
         auto [iter, new_program] = programmable_vertex_cache.try_emplace(program, instance);
         auto& shader = iter->second;
 
@@ -359,13 +354,13 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::Regs& regs) {
         return true;
     }
 
-    const PicaFixedGSConfig gs_config{regs, instance};
+    const PicaFixedGSConfig gs_config{regs, instance.IsShaderClipDistanceSupported()};
     auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config, instance);
     auto& shader = it->second;
 
     if (new_shader) {
         workers.QueueWork([gs_config, device = instance.GetDevice(), &shader]() {
-            const std::string code = GenerateFixedGeometryShader(gs_config);
+            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
             shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
             shader.MarkDone();
         });
@@ -383,7 +378,9 @@ void PipelineCache::UseTrivialGeometryShader() {
 }
 
 void PipelineCache::UseFragmentShader(const Pica::Regs& regs) {
-    const PicaFSConfig config{regs, instance};
+    const PicaFSConfig config{regs, instance.IsFragmentShaderInterlockSupported(),
+                              instance.NeedsLogicOpEmulation(),
+                              !instance.IsCustomBorderColorSupported(), false};
 
     const auto [it, new_shader] = fragment_shaders.try_emplace(config, instance);
     auto& shader = it->second;
@@ -395,12 +392,12 @@ void PipelineCache::UseFragmentShader(const Pica::Regs& regs) {
                                texture0_type == Pica::TexturingRegs::TextureConfig::ShadowCube ||
                                config.state.shadow_rendering.Value();
         if (use_spirv && !is_shadow) {
-            const std::vector code = GenerateFragmentShaderSPV(config);
+            const std::vector code = SPIRV::GenerateFragmentShader(config);
             shader.module = CompileSPV(code, instance.GetDevice());
             shader.MarkDone();
         } else {
             workers.QueueWork([config, device = instance.GetDevice(), &shader]() {
-                const std::string code = GenerateFragmentShader(config);
+                const std::string code = GLSL::GenerateFragmentShader(config, true);
                 shader.module = Compile(code, vk::ShaderStageFlagBits::eFragment, device);
                 shader.MarkDone();
             });

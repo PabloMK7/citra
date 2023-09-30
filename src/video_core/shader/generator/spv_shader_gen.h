@@ -7,13 +7,13 @@
 #include <array>
 #include <sirit/sirit.h>
 
-#include "video_core/renderer_vulkan/vk_shader_gen.h"
+#include "video_core/shader/generator/shader_gen.h"
 
 namespace Core {
 class TelemetrySession;
 }
 
-namespace Vulkan {
+namespace Pica::Shader::Generator::SPIRV {
 
 using Sirit::Id;
 
@@ -41,7 +41,7 @@ public:
     void Generate();
 
 private:
-    /// Undos the vulkan perspective transformation and applies the PICA one
+    /// Undos the host perspective transformation and applies the PICA one
     void WriteDepth();
 
     /// Emits code to emulate the scissor rectangle
@@ -289,6 +289,6 @@ private:
  * @param separable_shader generates shader that can be used for separate shader object
  * @returns String of the shader source code
  */
-std::vector<u32> GenerateFragmentShaderSPV(const PicaFSConfig& config);
+std::vector<u32> GenerateFragmentShader(const PicaFSConfig& config);
 
-} // namespace Vulkan
+} // namespace Pica::Shader::Generator::SPIRV

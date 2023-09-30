@@ -11,12 +11,12 @@
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
-#include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_texture_mailbox.h"
 #include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/shader/generator/glsl_shader_gen.h"
 #include "video_core/video_core.h"
 
 #include "video_core/host_shaders/opengl_present_anaglyph_frag.h"
@@ -387,11 +387,7 @@ void RendererOpenGL::InitOpenGLObjects() {
 
 void RendererOpenGL::ReloadShader() {
     // Link shaders and get variable locations
-    std::string shader_data;
-    if (GLES) {
-        shader_data += fragment_shader_precision_OES;
-    }
-
+    std::string shader_data = fragment_shader_precision_OES;
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
         if (Settings::values.anaglyph_shader_name.GetValue() == "dubois (builtin)") {
             shader_data += HostShaders::OPENGL_PRESENT_ANAGLYPH_FRAG;

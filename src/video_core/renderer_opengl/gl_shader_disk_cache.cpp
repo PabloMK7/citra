@@ -297,35 +297,33 @@ std::optional<ShaderDiskCacheDecompiled> ShaderDiskCache::LoadDecompiledEntry() 
     }
 
     ShaderDiskCacheDecompiled entry;
-    entry.result.code = std::move(code);
+    entry.code = std::move(code);
     entry.sanitize_mul = sanitize_mul;
 
     return entry;
 }
 
 void ShaderDiskCache::SaveDecompiledToFile(FileUtil::IOFile& file, u64 unique_identifier,
-                                           const ShaderDecompiler::ProgramResult& result,
-                                           bool sanitize_mul) {
+                                           const std::string& code, bool sanitize_mul) {
     if (!IsUsable())
         return;
 
     if (file.WriteObject(static_cast<u32>(PrecompiledEntryKind::Decompiled)) != 1 ||
         file.WriteObject(unique_identifier) != 1 || file.WriteObject(sanitize_mul) != 1 ||
-        file.WriteObject(static_cast<u32>(result.code.size())) != 1 ||
-        file.WriteArray(result.code.data(), result.code.size()) != result.code.size()) {
+        file.WriteObject(static_cast<u32>(code.size())) != 1 ||
+        file.WriteArray(code.data(), code.size()) != code.size()) {
         LOG_ERROR(Render_OpenGL, "Failed to save decompiled cache entry - removing");
         file.Close();
         InvalidatePrecompiled();
     }
 }
 
-bool ShaderDiskCache::SaveDecompiledToCache(u64 unique_identifier,
-                                            const ShaderDecompiler::ProgramResult& result,
+bool ShaderDiskCache::SaveDecompiledToCache(u64 unique_identifier, const std::string& code,
                                             bool sanitize_mul) {
     if (!SaveObjectToPrecompiled(static_cast<u32>(PrecompiledEntryKind::Decompiled)) ||
         !SaveObjectToPrecompiled(unique_identifier) || !SaveObjectToPrecompiled(sanitize_mul) ||
-        !SaveObjectToPrecompiled(static_cast<u32>(result.code.size())) ||
-        !SaveArrayToPrecompiled(result.code.data(), result.code.size())) {
+        !SaveObjectToPrecompiled(static_cast<u32>(code.size())) ||
+        !SaveArrayToPrecompiled(code.data(), code.size())) {
         return false;
     }
 
@@ -374,8 +372,7 @@ void ShaderDiskCache::SaveRaw(const ShaderDiskCacheRaw& entry) {
     transferable_file.Flush();
 }
 
-void ShaderDiskCache::SaveDecompiled(u64 unique_identifier,
-                                     const ShaderDecompiler::ProgramResult& code,
+void ShaderDiskCache::SaveDecompiled(u64 unique_identifier, const std::string& code,
                                      bool sanitize_mul) {
     if (!IsUsable())
         return;

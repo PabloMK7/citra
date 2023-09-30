@@ -60,9 +60,6 @@ public:
 private:
     void NotifyFixedFunctionPicaRegisterChanged(u32 id) override;
 
-    /// Syncs the clip enabled status to match the PICA register
-    void SyncClipEnabled();
-
     /// Syncs the cull mode to match the PICA register
     void SyncCullMode();
 
@@ -163,6 +160,7 @@ private:
     vk::UniqueBufferView texture_rg_view;
     vk::UniqueBufferView texture_rgba_view;
     u64 uniform_buffer_alignment;
+    u64 uniform_size_aligned_vs_pica;
     u64 uniform_size_aligned_vs;
     u64 uniform_size_aligned_fs;
     bool async_shaders{false};

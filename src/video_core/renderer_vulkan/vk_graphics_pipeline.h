@@ -5,7 +5,8 @@
 #include "common/thread_worker.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_common.h"
-#include "video_core/renderer_vulkan/vk_shader_gen.h"
+#include "video_core/shader/generator/glsl_shader_gen.h"
+#include "video_core/shader/generator/spv_shader_gen.h"
 
 namespace Common {
 
