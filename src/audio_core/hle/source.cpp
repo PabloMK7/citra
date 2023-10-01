@@ -231,7 +231,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             }
         }
         LOG_TRACE(Audio_DSP, "partially updating embedded buffer addr={:#010x} len={} id={}",
-                  state.current_buffer_physical_address, config.length, config.buffer_id);
+                  state.current_buffer_physical_address, static_cast<u32>(config.length),
+                  config.buffer_id);
     }
 
     if (config.embedded_buffer_dirty) {
@@ -266,8 +267,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             });
         }
         LOG_TRACE(Audio_DSP, "enqueuing embedded addr={:#010x} len={} id={} start={}",
-                  config.physical_address, config.length, config.buffer_id,
-                  static_cast<u32>(config.play_position));
+                  static_cast<u32>(config.physical_address), static_cast<u32>(config.length),
+                  config.buffer_id, static_cast<u32>(config.play_position));
     }
 
     if (config.loop_related_dirty && config.loop_related != 0) {
@@ -303,7 +304,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                     });
                 }
                 LOG_TRACE(Audio_DSP, "enqueuing queued {} addr={:#010x} len={} id={}", i,
-                          b.physical_address, b.length, b.buffer_id);
+                          static_cast<u32>(b.physical_address), static_cast<u32>(b.length),
+                          b.buffer_id);
             }
         }
         config.buffers_dirty = 0;
