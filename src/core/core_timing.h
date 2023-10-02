@@ -254,9 +254,12 @@ public:
      */
     TimingEventType* RegisterEvent(const std::string& name, TimedCallback callback);
 
+    // Make sure to use thread_safe_mode = true if called from a different thread than the
+    // emulator thread, such as coroutines.
     void ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type,
                        std::uintptr_t user_data = 0,
-                       std::size_t core_id = std::numeric_limits<std::size_t>::max());
+                       std::size_t core_id = std::numeric_limits<std::size_t>::max(),
+                       bool thread_safe_mode = false);
 
     void UnscheduleEvent(const TimingEventType* event_type, std::uintptr_t user_data);
 
