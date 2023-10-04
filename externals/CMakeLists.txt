@@ -199,7 +199,12 @@ endif()
 
 # httplib
 add_library(httplib INTERFACE)
-target_include_directories(httplib INTERFACE ./httplib)
+if(USE_SYSTEM_CPP_HTTPLIB)
+    find_package(CppHttp REQUIRED)
+    target_link_libraries(httplib INTERFACE cpp-httplib::cpp-httplib)
+else()
+    target_include_directories(httplib INTERFACE ./httplib)
+endif()
 target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
 target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
 
