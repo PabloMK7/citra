@@ -408,29 +408,24 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspLle::GetDspMemory() {
     return impl->teakra.GetDspMemory();
 }
 
-void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
-    impl->teakra.SetRecvDataHandler(0, [this, dsp]() {
+void DspLle::SetInterruptHandler(
+    std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
+    impl->teakra.SetRecvDataHandler(0, [this, handler]() {
         if (!impl->loaded)
             return;
 
         std::lock_guard lock(HLE::g_hle_lock);
-        if (auto locked = dsp.lock()) {
-            locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::Zero,
-                                    static_cast<DspPipe>(0));
-        }
+        handler(Service::DSP::InterruptType::Zero, static_cast<DspPipe>(0));
     });
-    impl->teakra.SetRecvDataHandler(1, [this, dsp]() {
+    impl->teakra.SetRecvDataHandler(1, [this, handler]() {
         if (!impl->loaded)
             return;
 
         std::lock_guard lock(HLE::g_hle_lock);
-        if (auto locked = dsp.lock()) {
-            locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::One,
-                                    static_cast<DspPipe>(0));
-        }
+        handler(Service::DSP::InterruptType::One, static_cast<DspPipe>(0));
     });
 
-    auto ProcessPipeEvent = [this, dsp](bool event_from_data) {
+    auto ProcessPipeEvent = [this, handler](bool event_from_data) {
         if (!impl->loaded)
             return;
 
@@ -456,24 +451,13 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
                                impl->GetPipeReadableSize(static_cast<u8>(pipe)));
             } else {
                 std::lock_guard lock(HLE::g_hle_lock);
-                if (auto locked = dsp.lock()) {
-                    locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::Pipe,
-                                            static_cast<DspPipe>(pipe));
-                }
+                handler(Service::DSP::InterruptType::Pipe, static_cast<DspPipe>(pipe));
             }
         }
     };
 
     impl->teakra.SetRecvDataHandler(2, [ProcessPipeEvent]() { ProcessPipeEvent(true); });
     impl->teakra.SetSemaphoreHandler([ProcessPipeEvent]() { ProcessPipeEvent(false); });
-}
-
-void DspLle::SetSemaphoreHandler(std::function<void()> handler) {
-    impl->teakra.SetSemaphoreHandler(handler);
-}
-
-void DspLle::SetRecvDataHandler(u8 index, std::function<void()> handler) {
-    impl->teakra.SetRecvDataHandler(index, handler);
 }
 
 void DspLle::LoadComponent(std::span<const u8> buffer) {

@@ -34,8 +34,7 @@
 
 SERIALIZE_EXPORT_IMPL(AudioCore::DspHle)
 
-using InterruptType = Service::DSP::DSP_DSP::InterruptType;
-using Service::DSP::DSP_DSP;
+using InterruptType = Service::DSP::InterruptType;
 
 namespace AudioCore {
 
@@ -71,7 +70,8 @@ public:
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory();
 
-    void SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp);
+    void SetInterruptHandler(
+        std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler);
 
 private:
     void ResetPipes();
@@ -105,7 +105,7 @@ private:
 
     std::unique_ptr<HLE::DecoderBase> decoder{};
 
-    std::weak_ptr<DSP_DSP> dsp_dsp{};
+    std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> interrupt_handler{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -114,7 +114,8 @@ private:
         ar& dsp_memory.raw_memory;
         ar& sources;
         ar& mixers;
-        ar& dsp_dsp;
+        // interrupt_handler is function pointer and cant be serialised, fortunately though, it
+        // should be registerd before the game has started
     }
     friend class boost::serialization::access;
 };
@@ -320,10 +321,8 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
             pipe_data[static_cast<u32>(pipe_number)].resize(sizeof(value));
             std::memcpy(pipe_data[static_cast<u32>(pipe_number)].data(), &value, sizeof(value));
         }
-        auto dsp = dsp_dsp.lock();
-        if (dsp) {
-            dsp->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
-        }
+
+        interrupt_handler(InterruptType::Pipe, DspPipe::Binary);
         break;
     }
     default:
@@ -338,8 +337,9 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::Impl::GetDspMemory() {
     return dsp_memory.raw_memory;
 }
 
-void DspHle::Impl::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
-    dsp_dsp = std::move(dsp);
+void DspHle::Impl::SetInterruptHandler(
+    std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
+    interrupt_handler = handler;
 }
 
 void DspHle::Impl::ResetPipes() {
@@ -386,9 +386,7 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
         WriteU16(DspPipe::Audio, addr);
     }
     // Signal that we have data on this pipe.
-    if (auto service = dsp_dsp.lock()) {
-        service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
-    }
+    interrupt_handler(InterruptType::Pipe, DspPipe::Audio);
 }
 
 size_t DspHle::Impl::CurrentRegionIndex() const {
@@ -464,9 +462,7 @@ bool DspHle::Impl::Tick() {
 void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     if (Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
-        if (auto service = dsp_dsp.lock()) {
-            service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
-        }
+        interrupt_handler(InterruptType::Pipe, DspPipe::Audio);
     }
 
     // Reschedule recurrent event
@@ -505,9 +501,10 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
     return impl->GetDspMemory();
 }
 
-void DspHle::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
-    impl->SetServiceToInterrupt(std::move(dsp));
-}
+void DspHle::SetInterruptHandler(
+    std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
+    impl->SetInterruptHandler(handler);
+};
 
 void DspHle::LoadComponent(std::span<const u8> component_data) {
     // HLE doesn't need DSP program. Only log some info here

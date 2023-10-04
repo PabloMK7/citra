@@ -19,14 +19,13 @@ class System;
 
 namespace Service::DSP {
 
+/// There are three types of interrupts
+enum class InterruptType : u32 { Zero = 0, One = 1, Pipe = 2, Count };
+
 class DSP_DSP final : public ServiceFramework<DSP_DSP> {
 public:
     explicit DSP_DSP(Core::System& system);
     ~DSP_DSP();
-
-    /// There are three types of interrupts
-    static constexpr std::size_t NUM_INTERRUPT_TYPE = 3;
-    enum class InterruptType : u32 { Zero = 0, One = 1, Pipe = 2 };
 
     /// Actual service implementation only has 6 'slots' for interrupts.
     static constexpr std::size_t max_number_of_interrupt_events = 6;

@@ -27,10 +27,8 @@ public:
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
 
-    void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) override;
-
-    void SetSemaphoreHandler(std::function<void()> handler);
-    void SetRecvDataHandler(u8 index, std::function<void()> handler);
+    void SetInterruptHandler(
+        std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) override;
 
     void LoadComponent(const std::span<const u8> buffer) override;
     void UnloadComponent() override;

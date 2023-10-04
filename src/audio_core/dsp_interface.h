@@ -14,7 +14,7 @@
 #include "core/memory.h"
 
 namespace Service::DSP {
-class DSP_DSP;
+enum class InterruptType : u32;
 } // namespace Service::DSP
 
 namespace AudioCore {
@@ -85,8 +85,9 @@ public:
     /// Returns a reference to the array backing DSP memory
     virtual std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() = 0;
 
-    /// Sets the dsp class that we trigger interrupts for
-    virtual void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) = 0;
+    /// Sets the handler for the interrupts we trigger
+    virtual void SetInterruptHandler(
+        std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) = 0;
 
     /// Loads the DSP program
     virtual void LoadComponent(std::span<const u8> buffer) = 0;

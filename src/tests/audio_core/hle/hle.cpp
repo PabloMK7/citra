@@ -25,7 +25,7 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
     AudioCore::DspHle hle(hle_memory, hle_core_timing);
     AudioCore::DspLle lle(lle_memory, lle_core_timing, true);
 
-    // Initialiase LLE
+    // Initialise LLE
     {
         FileUtil::SetUserPath();
         // see tests/audio_core/lle/lle.cpp for details on dspaudio.cdc
@@ -41,25 +41,15 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
         std::vector<u8> firm_file_buf(firm_file.GetSize());
         firm_file.ReadArray(firm_file_buf.data(), firm_file_buf.size());
         lle.LoadComponent(firm_file_buf);
-        lle.SetSemaphoreHandler([&lle]() {
-            u16 slot = lle.RecvData(2);
-            u16 side = slot % 2;
-            u16 pipe = slot / 2;
-            fmt::print("SetSemaphoreHandler slot={}\n", slot);
-            if (pipe > 15)
-                return;
-            if (side != 0)
-                return;
-            if (pipe == 0) {
-                // pipe 0 is for debug. 3DS automatically drains this pipe and discards the
-                // data
-                lle.PipeRead(static_cast<AudioCore::DspPipe>(pipe),
-                             lle.GetPipeReadableSize(static_cast<AudioCore::DspPipe>(pipe)));
-            }
+        lle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
+            fmt::print("LLE SetInterruptHandler type={} pipe={}\n", type, pipe);
         });
-        lle.SetRecvDataHandler(0, []() { fmt::print("SetRecvDataHandler 0\n"); });
-        lle.SetRecvDataHandler(1, []() { fmt::print("SetRecvDataHandler 1\n"); });
-        lle.SetRecvDataHandler(2, []() { fmt::print("SetRecvDataHandler 2\n"); });
+    }
+    // Initialise HLE
+    {
+        hle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
+            fmt::print("HLE SetInterruptHandler type={} pipe={}\n", type, pipe);
+        });
     }
 
     SECTION("Initialise Audio Pipe") {
