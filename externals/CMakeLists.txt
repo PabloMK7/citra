@@ -175,7 +175,16 @@ endif()
 
 # JSON
 add_library(json-headers INTERFACE)
-target_include_directories(json-headers INTERFACE ./json)
+if (USE_SYSTEM_JSON)
+    find_package(nlohmann_json REQUIRED)
+    target_link_libraries(json-headers INTERFACE nlohmann_json::nlohmann_json)
+    get_target_property(NLOHMANN_PREFIX nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+    # The nlohmann-json3 package expects "#include <nlohmann/json.hpp>"
+    # Citra uses "#include <json.hpp>" so we have to add this manually
+    target_include_directories(json-headers SYSTEM INTERFACE "${NLOHMANN_PREFIX}/nlohmann")
+else()
+    target_include_directories(json-headers SYSTEM INTERFACE ./json)
+endif()
 
 # OpenSSL
 if (USE_SYSTEM_OPENSSL)
