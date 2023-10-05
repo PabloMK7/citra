@@ -14,14 +14,8 @@ if(NOT CppHttp_FOUND)
             /usr/lib
             /usr/local/lib
         )
-		
-    if(CPP-HTTP_INCLUDE_DIR AND CPP-HTTP_LIBRARIES)
-        set(CppHttp_FOUND TRUE CACHE INTERNAL "cpp-httplib found")
-        message(STATUS "Found cpp-httplib: ${CPP-HTTP_INCLUDE_DIR}, ${CPP-HTTP_LIBRARIES}")
-    else()
-        set(CppHttp_FOUND FALSE CACHE INTERNAL "cpp-httplib found")
-        message(STATUS "Cpp-httplib not found.")
-    endif()
+
+    find_package_handle_standard_args(CppHttp REQUIRED_VARS CPP-HTTP_INCLUDE_DIR CPP-HTTP_LIBRARIES VERSION_VAR HTTP_TMP_VERSION)
 	
 endif()
 
