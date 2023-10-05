@@ -828,13 +828,6 @@ private:
 
     void Generate() {
         if (sanitize_mul) {
-#ifdef ANDROID
-            // Use a cheaper sanitize_mul on Android, as mobile GPUs struggle here
-            // This seems to be sufficient at least for Ocarina of Time and Attack on Titan accurate
-            // multiplication bugs
-            shader.AddLine(
-                "#define sanitize_mul(lhs, rhs) mix(lhs * rhs, vec4(0.0), isnan(lhs * rhs))");
-#else
             shader.AddLine("vec4 sanitize_mul(vec4 lhs, vec4 rhs) {{");
             ++shader.scope;
             shader.AddLine("vec4 product = lhs * rhs;");
@@ -842,7 +835,6 @@ private:
                            "isnan(lhs)), isnan(product));");
             --shader.scope;
             shader.AddLine("}}\n");
-#endif
         }
 
         shader.AddLine("vec4 get_offset_register(int base_index, int offset) {{");
