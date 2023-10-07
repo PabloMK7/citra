@@ -78,9 +78,20 @@ endif()
 
 # Dynarmic
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
-    set(DYNARMIC_TESTS OFF CACHE BOOL "")
-    set(DYNARMIC_FRONTENDS "A32" CACHE STRING "")
-    add_subdirectory(dynarmic EXCLUDE_FROM_ALL)
+    if(USE_SYSTEM_DYNARMIC)
+        find_package(dynarmic REQUIRED)
+        add_library(dynarmic INTERFACE)
+        target_link_libraries(dynarmic INTERFACE dynarmic::dynarmic)
+        # The dynarmic package's cmake files are helpfully completely silent
+        # so we have to inform the user of its status ourselves
+        if(TARGET dynarmic::dynarmic)
+            message(STATUS "Found dynarmic")
+        endif()
+    else()
+        set(DYNARMIC_TESTS OFF CACHE BOOL "")
+        set(DYNARMIC_FRONTENDS "A32" CACHE STRING "")
+        add_subdirectory(dynarmic EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 # getopt
