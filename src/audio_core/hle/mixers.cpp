@@ -33,31 +33,31 @@ void Mixers::ParseConfig(DspConfiguration& config) {
         return;
     }
 
-    if (config.aux_bus_enable[0]) {
+    if (config.aux_bus_enable_0_dirty) {
         config.aux_bus_enable_0_dirty.Assign(0);
         state.aux_bus_enable[0] = config.aux_bus_enable[0] != 0;
         LOG_TRACE(Audio_DSP, "mixers aux_bus_enable[0] = {}", config.aux_bus_enable[0]);
     }
 
-    if (config.aux_bus_enable[1]) {
+    if (config.aux_bus_enable_1_dirty) {
         config.aux_bus_enable_1_dirty.Assign(0);
         state.aux_bus_enable[1] = config.aux_bus_enable[1] != 0;
         LOG_TRACE(Audio_DSP, "mixers aux_bus_enable[1] = {}", config.aux_bus_enable[1]);
     }
 
-    if (config.master_volume) {
+    if (config.master_volume_dirty) {
         config.master_volume_dirty.Assign(0);
         state.intermediate_mixer_volume[0] = config.master_volume;
         LOG_TRACE(Audio_DSP, "mixers master_volume = {}", config.master_volume);
     }
 
-    if (config.aux_return_volume[0]) {
+    if (config.aux_return_volume_0_dirty) {
         config.aux_return_volume_0_dirty.Assign(0);
         state.intermediate_mixer_volume[1] = config.aux_return_volume[0];
         LOG_TRACE(Audio_DSP, "mixers aux_return_volume[0] = {}", config.aux_return_volume[0]);
     }
 
-    if (config.aux_return_volume[1]) {
+    if (config.aux_return_volume_1_dirty) {
         config.aux_return_volume_1_dirty.Assign(0);
         state.intermediate_mixer_volume[2] = config.aux_return_volume[1];
         LOG_TRACE(Audio_DSP, "mixers aux_return_volume[1] = {}", config.aux_return_volume[1]);
