@@ -46,6 +46,9 @@ private:
     void UpdateInitTicks(int init_ticks_type);
     void RefreshConsoleID();
 
+    void InstallSecureData(const std::string& from_path, const std::string& to_path);
+    void RefreshSecureDataStatus();
+
     void SetupPerGameUI();
 
     void DownloadFromNUS();
