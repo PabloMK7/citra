@@ -32,6 +32,8 @@ jobs:
       options: -u 1001
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: pch_defines,time_macros
       OS: linux
       TARGET: ${{ matrix.target }}
     steps:
@@ -62,9 +64,9 @@ jobs:
       matrix:
         target: ["x86_64", "arm64"]
     env:
-      CCACHE_CPP2: yes
-      CCACHE_SLOPPINESS: time_macros
       CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: pch_defines,time_macros
       OS: macos
       TARGET: ${{ matrix.target }}
     steps:
@@ -97,8 +99,6 @@ jobs:
       TARGET: universal
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
       - name: Download x86_64 build from cache
         uses: actions/cache/restore@v3
         with:
@@ -132,6 +132,8 @@ jobs:
         shell: ${{ (matrix.target == 'msys2' && 'msys2') || 'bash' }} {0}
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: pch_defines,time_macros
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
@@ -184,6 +186,9 @@ jobs:
   android:
     runs-on: ubuntu-latest
     env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: pch_defines,time_macros
       OS: android
       TARGET: universal
     steps:
@@ -196,7 +201,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-            ~/.ccache
+            ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-android-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-android-
@@ -221,7 +226,8 @@ jobs:
         run: ../../../.ci/pack.sh
         working-directory: src/android/app
         env:
-          UPLOAD_RAW: 1
+          PACK_INDIVIDUALLY: 1
+          SKIP_7Z: 1
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
@@ -231,9 +237,9 @@ jobs:
     runs-on: macos-latest
     if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     env:
-      CCACHE_CPP2: yes
-      CCACHE_SLOPPINESS: time_macros
       CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: pch_defines,time_macros
       OS: ios
       TARGET: arm64
     steps:

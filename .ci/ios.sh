@@ -12,4 +12,4 @@ cmake .. -GNinja \
     -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON
 ninja
 
-ccache -s
+ccache -s -v

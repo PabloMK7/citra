@@ -10,8 +10,12 @@
 #include <android/native_window_jni.h>
 
 #include "audio_core/dsp_interface.h"
-#include "common/aarch64/cpu_detect.h"
 #include "common/arch.h"
+#if CITRA_ARCH(arm64)
+#include "common/aarch64/cpu_detect.h"
+#elif CITRA_ARCH(x86_64)
+#include "common/x64/cpu_detect.h"
+#endif
 #include "common/common_paths.h"
 #include "common/dynamic_library/dynamic_library.h"
 #include "common/file_util.h"

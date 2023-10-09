@@ -13,7 +13,7 @@ cmake .. -GNinja \
 ninja
 ninja bundle
 
-ccache -s
+ccache -s -v
 
 CURRENT_ARCH=`arch`
 if [ "$TARGET" = "$CURRENT_ARCH" ]; then

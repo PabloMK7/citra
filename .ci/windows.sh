@@ -12,6 +12,6 @@ cmake .. -G Ninja \
 ninja
 ninja bundle
 
-ccache -s
+ccache -s -v
 
 ctest -VV -C Release || echo "::error ::Test error occurred on Windows build"

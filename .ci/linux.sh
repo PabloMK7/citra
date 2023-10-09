@@ -13,8 +13,10 @@ ninja
 
 if [ "$TARGET" = "appimage" ]; then
     ninja bundle
+    # TODO: Our AppImage environment currently uses an older ccache version without the verbose flag.
+    ccache -s
+else
+    ccache -s -v
 fi
-
-ccache -s
 
 ctest -VV -C Release

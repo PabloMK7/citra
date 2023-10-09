@@ -2,12 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-import android.databinding.tool.ext.capitalizeUS
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("de.undercouch.download") version "5.5.0"
 }
+
+import android.databinding.tool.ext.capitalizeUS
+import de.undercouch.gradle.tasks.download.Download
 
 /**
  * Use the number of seconds/10 since Jan 1 2016 as the versionCode.
@@ -15,7 +17,9 @@ plugins {
  * next 680 years.
  */
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
-val abiFilter = listOf("arm64-v8a"/*, "x86", "x86_64"*/)
+val abiFilter = listOf("arm64-v8a", "x86_64")
+
+val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
 
 @Suppress("UnstableApiUsage")
 android {
@@ -131,6 +135,13 @@ android {
             path = file("../../../CMakeLists.txt")
         }
     }
+
+    sourceSets {
+        named("main") {
+            // Set up path for downloaded native libraries
+            jniLibs.srcDir(downloadedJniLibsPath)
+        }
+    }
 }
 
 dependencies {
@@ -156,6 +167,30 @@ dependencies {
 
     // Please don't upgrade the billing library as the newer version is not GPL-compatible
     implementation("com.android.billingclient:billing:2.0.3")
+}
+
+// Download Vulkan Validation Layers from the KhronosGroup GitHub.
+val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
+    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-1.3.261.1/android-binaries-sdk-1.3.261.1-android.zip")
+    dest(file("${buildDir}/tmp/Vulkan-ValidationLayers.zip"))
+    onlyIfModified(true)
+}
+
+// Extract Vulkan Validation Layers into the downloaded native libraries directory.
+val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLayers") {
+    dependsOn(downloadVulkanValidationLayers)
+    from(zipTree(downloadVulkanValidationLayers.get().dest)) {
+        // Exclude the top level directory in the zip as it violates the expected jniLibs directory structure.
+        eachFile {
+            relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
+        }
+        includeEmptyDirs = false
+    }
+    into(downloadedJniLibsPath)
+}
+
+tasks.named("preBuild") {
+    dependsOn(unzipVulkanValidationLayers)
 }
 
 fun getGitVersion(): String {

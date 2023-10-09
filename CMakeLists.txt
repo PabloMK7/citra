@@ -103,6 +103,11 @@ option(USE_SYSTEM_FMT "Use the system fmt (instead of the bundled one)" OFF)
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")
     set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
+
+    # This ensures that pre-compiled headers won't invalidate build caches for every fresh checkout.
+    if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        list(APPEND CMAKE_CXX_COMPILE_OPTIONS_CREATE_PCH -Xclang -fno-pch-timestamp)
+    endif()
 endif()
 
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
