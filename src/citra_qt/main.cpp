@@ -1270,10 +1270,6 @@ void GMainWindow::BootGame(const QString& filename) {
         setMouseTracking(true);
     }
 
-    // show and hide the render_window to create the context
-    render_window->show();
-    render_window->hide();
-
     loading_screen->Prepare(system.GetAppLoader());
     loading_screen->show();
 

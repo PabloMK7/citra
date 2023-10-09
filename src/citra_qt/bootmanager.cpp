@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <glad/glad.h>
-
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -29,6 +27,8 @@
 #include "video_core/video_core.h"
 
 #ifdef HAS_OPENGL
+#include <glad/glad.h>
+
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #endif
@@ -144,7 +144,13 @@ public:
     explicit OpenGLSharedContext() {
         QSurfaceFormat format;
 
-        format.setVersion(4, 3);
+        if (Settings::values.use_gles) {
+            format.setRenderableType(QSurfaceFormat::RenderableType::OpenGLES);
+            format.setVersion(3, 2);
+        } else {
+            format.setRenderableType(QSurfaceFormat::RenderableType::OpenGL);
+            format.setVersion(4, 3);
+        }
         format.setProfile(QSurfaceFormat::CoreProfile);
 
         if (Settings::values.renderer_debug) {
@@ -364,7 +370,8 @@ static Frontend::WindowSystemType GetWindowSystemType() {
         return Frontend::WindowSystemType::Windows;
     else if (platform_name == QStringLiteral("xcb"))
         return Frontend::WindowSystemType::X11;
-    else if (platform_name == QStringLiteral("wayland"))
+    else if (platform_name == QStringLiteral("wayland") ||
+             platform_name == QStringLiteral("wayland-egl"))
         return Frontend::WindowSystemType::Wayland;
     else if (platform_name == QStringLiteral("cocoa") || platform_name == QStringLiteral("ios"))
         return Frontend::WindowSystemType::MacOS;
@@ -413,7 +420,8 @@ GRenderWindow::GRenderWindow(QWidget* parent_, EmuThread* emu_thread_, Core::Sys
     setLayout(layout);
 
     this->setMouseTracking(true);
-    strict_context_required = QGuiApplication::platformName() == QStringLiteral("wayland");
+    strict_context_required = QGuiApplication::platformName() == QStringLiteral("wayland") ||
+                              QGuiApplication::platformName() == QStringLiteral("wayland-egl");
 
     GMainWindow* parent = GetMainWindow();
     connect(this, &GRenderWindow::FirstFrameDisplayed, parent, &GMainWindow::OnLoadComplete);
@@ -721,10 +729,19 @@ void GRenderWindow::InitializeSoftware() {
     main_context = std::make_unique<DummyContext>();
 }
 
+#ifdef HAS_OPENGL
+static void* GetProcAddressGL(const char* name) {
+    return reinterpret_cast<void*>(QOpenGLContext::currentContext()->getProcAddress(name));
+}
+#endif
+
 bool GRenderWindow::LoadOpenGL() {
+#ifdef HAS_OPENGL
     auto context = CreateSharedContext();
     auto scope = context->Acquire();
-    if (!gladLoadGL()) {
+
+    auto gl_load_func = Settings::values.use_gles ? gladLoadGLES2Loader : gladLoadGLLoader;
+    if (!gl_load_func(GetProcAddressGL)) {
         QMessageBox::warning(
             this, tr("Error while initializing OpenGL!"),
             tr("Your GPU may not support OpenGL, or you do not have the latest graphics driver."));
@@ -734,16 +751,28 @@ bool GRenderWindow::LoadOpenGL() {
     const QString renderer =
         QString::fromUtf8(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 
-    if (!GLAD_GL_VERSION_4_3) {
+    if (!Settings::values.use_gles && !GLAD_GL_VERSION_4_3) {
         LOG_ERROR(Frontend, "GPU does not support OpenGL 4.3: {}", renderer.toStdString());
         QMessageBox::warning(this, tr("Error while initializing OpenGL 4.3!"),
                              tr("Your GPU may not support OpenGL 4.3, or you do not have the "
                                 "latest graphics driver.<br><br>GL Renderer:<br>%1")
                                  .arg(renderer));
         return false;
+    } else if (Settings::values.use_gles && !GLAD_GL_ES_VERSION_3_2) {
+        LOG_ERROR(Frontend, "GPU does not support OpenGL ES 3.2: {}", renderer.toStdString());
+        QMessageBox::warning(this, tr("Error while initializing OpenGL ES 3.2!"),
+                             tr("Your GPU may not support OpenGL ES 3.2, or you do not have the "
+                                "latest graphics driver.<br><br>GL Renderer:<br>%1")
+                                 .arg(renderer));
+        return false;
     }
 
     return true;
+#else
+    QMessageBox::warning(this, tr("OpenGL not available!"),
+                         tr("Citra has not been compiled with OpenGL support."));
+    return false;
+#endif
 }
 
 void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
