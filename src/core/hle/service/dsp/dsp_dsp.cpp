@@ -394,6 +394,12 @@ DSP_DSP::DSP_DSP(Core::System& system)
 
     semaphore_event->SetHLENotifier(
         [this]() { this->system.DSP().SetSemaphore(preset_semaphore); });
+
+    system.DSP().SetInterruptHandler([dsp_ref = this](InterruptType type, DspPipe pipe) {
+        if (dsp_ref) {
+            dsp_ref->SignalInterrupt(type, pipe);
+        }
+    });
 }
 
 DSP_DSP::~DSP_DSP() {
@@ -405,12 +411,6 @@ void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto dsp = std::make_shared<DSP_DSP>(system);
     dsp->InstallAsService(service_manager);
-    system.DSP().SetInterruptHandler(
-        [dsp_ref = std::weak_ptr<DSP_DSP>(dsp)](InterruptType type, DspPipe pipe) {
-            if (auto locked = dsp_ref.lock()) {
-                locked->SignalInterrupt(type, pipe);
-            }
-        });
 }
 
 } // namespace Service::DSP

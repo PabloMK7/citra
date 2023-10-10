@@ -114,8 +114,7 @@ private:
         ar& dsp_memory.raw_memory;
         ar& sources;
         ar& mixers;
-        // interrupt_handler is function pointer and cant be serialised, fortunately though, it
-        // should be registerd before the game has started
+        // interrupt_handler is reregistered when loading state from DSP_DSP
     }
     friend class boost::serialization::access;
 };
