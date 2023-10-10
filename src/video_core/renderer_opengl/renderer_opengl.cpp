@@ -13,7 +13,6 @@
 #include "core/memory.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_texture_mailbox.h"
-#include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
@@ -459,7 +458,7 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
     case GPU::Regs::PixelFormat::RGBA8:
         internal_format = GL_RGBA;
         texture.gl_format = GL_RGBA;
-        texture.gl_type = GLES ? GL_UNSIGNED_BYTE : GL_UNSIGNED_INT_8_8_8_8;
+        texture.gl_type = driver.IsOpenGLES() ? GL_UNSIGNED_BYTE : GL_UNSIGNED_INT_8_8_8_8;
         break;
 
     case GPU::Regs::PixelFormat::RGB8:
@@ -470,7 +469,7 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
         internal_format = GL_RGB;
 
         // GLES Dosen't support BGR , Use RGB instead
-        texture.gl_format = GLES ? GL_RGB : GL_BGR;
+        texture.gl_format = driver.IsOpenGLES() ? GL_RGB : GL_BGR;
         texture.gl_type = GL_UNSIGNED_BYTE;
         break;
 

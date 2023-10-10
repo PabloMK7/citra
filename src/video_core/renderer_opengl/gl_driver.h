@@ -117,6 +117,7 @@ public:
 
 private:
     void ReportDriverInfo();
+    void DeduceGLES();
     void DeduceVendor();
     void CheckExtensionSupport();
     void FindBugs();

@@ -8,6 +8,7 @@
 #include "core/telemetry_session.h"
 #include "video_core/custom_textures/custom_format.h"
 #include "video_core/renderer_opengl/gl_driver.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 
 namespace OpenGL {
 
@@ -74,8 +75,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
                 GetType(type), id, message);
 }
 
-Driver::Driver(Core::TelemetrySession& telemetry_session_)
-    : telemetry_session{telemetry_session_}, is_gles{Settings::values.use_gles.GetValue()} {
+Driver::Driver(Core::TelemetrySession& telemetry_session_) : telemetry_session{telemetry_session_} {
     const bool enable_debug = Settings::values.renderer_debug.GetValue();
     if (enable_debug) {
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -83,6 +83,7 @@ Driver::Driver(Core::TelemetrySession& telemetry_session_)
     }
 
     ReportDriverInfo();
+    DeduceGLES();
     DeduceVendor();
     CheckExtensionSupport();
     FindBugs();
@@ -140,6 +141,14 @@ void Driver::ReportDriverInfo() {
     telemetry_session.AddField(user_system, "GPU_Vendor", std::string{gpu_vendor});
     telemetry_session.AddField(user_system, "GPU_Model", std::string{gpu_model});
     telemetry_session.AddField(user_system, "GPU_OpenGL_Version", std::string{gl_version});
+}
+
+void Driver::DeduceGLES() {
+    // According to the spec, all GLES version strings must start with "OpenGL ES".
+    is_gles = gl_version.starts_with("OpenGL ES");
+
+    // TODO: Eliminate this global state and replace with driver references.
+    OpenGL::GLES = is_gles;
 }
 
 void Driver::DeduceVendor() {
