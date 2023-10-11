@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -82,6 +83,15 @@ std::string UTF16BufferToUTF8(const T& text) {
         return static_cast<char16_t>(static_cast<u16>(character));
     });
     return UTF16ToUTF8(buffer);
+}
+
+/**
+ * Removes trailing null bytes from the string.
+ */
+inline void TruncateString(std::string& str) {
+    while (str.size() && str.back() == '\0') {
+        str.pop_back();
+    }
 }
 
 /**
