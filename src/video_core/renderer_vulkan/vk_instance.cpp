@@ -8,6 +8,7 @@
 #include "common/assert.h"
 #include "common/settings.h"
 #include "core/frontend/emu_window.h"
+#include "core/telemetry_session.h"
 #include "video_core/custom_textures/custom_format.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_platform.h"
@@ -21,6 +22,7 @@
 namespace Vulkan {
 
 namespace {
+
 vk::Format MakeFormat(VideoCore::PixelFormat format) {
     switch (format) {
     case VideoCore::PixelFormat::RGBA8:
@@ -125,6 +127,12 @@ std::vector<std::string> GetSupportedExtensions(vk::PhysicalDevice physical) {
     }
     return supported_extensions;
 }
+
+std::string GetReadableVersion(u32 version) {
+    return fmt::format("{}.{}.{}", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version),
+                       VK_VERSION_PATCH(version));
+}
+
 } // Anonymous namespace
 
 Instance::Instance(bool enable_validation, bool dump_command_buffers)
@@ -133,7 +141,8 @@ Instance::Instance(bool enable_validation, bool dump_command_buffers)
                                                       enable_validation, dump_command_buffers)},
       physical_devices{instance->enumeratePhysicalDevices()} {}
 
-Instance::Instance(Frontend::EmuWindow& window, u32 physical_device_index)
+Instance::Instance(Core::TelemetrySession& telemetry, Frontend::EmuWindow& window,
+                   u32 physical_device_index)
     : library{OpenLibrary(&window)}, instance{CreateInstance(
                                          *library, window.GetWindowInfo().type,
                                          Settings::values.renderer_debug.GetValue(),
@@ -146,9 +155,10 @@ Instance::Instance(Frontend::EmuWindow& window, u32 physical_device_index)
                physical_device_index, num_physical_devices);
 
     physical_device = physical_devices[physical_device_index];
+    available_extensions = GetSupportedExtensions(physical_device);
     properties = physical_device.getProperties();
 
-    CollectTelemetryParameters();
+    CollectTelemetryParameters(telemetry);
     CreateDevice();
     CollectToolingInfo();
     CreateFormatTable();
@@ -178,6 +188,25 @@ const FormatTraits& Instance::GetTraits(Pica::PipelineRegs::VertexAttributeForma
     }
     const u32 index = static_cast<u32>(format);
     return attrib_table[index * 4 + count - 1];
+}
+
+std::string Instance::GetDriverVersionName() {
+    // Extracted from
+    // https://github.com/SaschaWillems/vulkan.gpuinfo.org/blob/5dddea46ea1120b0df14eef8f15ff8e318e35462/functions.php#L308-L314
+    const u32 version = properties.driverVersion;
+    if (driver_id == vk::DriverId::eNvidiaProprietary) {
+        const u32 major = (version >> 22) & 0x3ff;
+        const u32 minor = (version >> 14) & 0x0ff;
+        const u32 secondary = (version >> 6) & 0x0ff;
+        const u32 tertiary = version & 0x003f;
+        return fmt::format("{}.{}.{}.{}", major, minor, secondary, tertiary);
+    }
+    if (driver_id == vk::DriverId::eIntelProprietaryWindows) {
+        const u32 major = version >> 14;
+        const u32 minor = version & 0x3fff;
+        return fmt::format("{}.{}", major, minor);
+    }
+    return GetReadableVersion(version);
 }
 
 FormatTraits Instance::DetermineTraits(VideoCore::PixelFormat pixel_format, vk::Format format) {
@@ -380,7 +409,6 @@ bool Instance::CreateDevice() {
                                        vk::PhysicalDevicePortabilitySubsetPropertiesKHR>();
 
     features = feature_chain.get().features;
-    available_extensions = GetSupportedExtensions(physical_device);
     if (available_extensions.empty()) {
         LOG_CRITICAL(Render_Vulkan, "No extensions supported by device.");
         return false;
@@ -598,7 +626,7 @@ void Instance::CreateAllocator() {
     }
 }
 
-void Instance::CollectTelemetryParameters() {
+void Instance::CollectTelemetryParameters(Core::TelemetrySession& telemetry) {
     const vk::StructureChain property_chain =
         physical_device
             .getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDriverProperties>();
@@ -607,6 +635,23 @@ void Instance::CollectTelemetryParameters() {
 
     driver_id = driver.driverID;
     vendor_name = driver.driverName.data();
+
+    const std::string model_name{GetModelName()};
+    const std::string driver_version = GetDriverVersionName();
+    const std::string driver_name = fmt::format("{} {}", vendor_name, driver_version);
+    const std::string api_version = GetReadableVersion(properties.apiVersion);
+    const std::string extensions = fmt::format("{}", fmt::join(available_extensions, ", "));
+
+    LOG_INFO(Render_Vulkan, "VK_DRIVER: {}", driver_name);
+    LOG_INFO(Render_Vulkan, "VK_DEVICE: {}", model_name);
+    LOG_INFO(Render_Vulkan, "VK_VERSION: {}", api_version);
+
+    static constexpr auto field = Common::Telemetry::FieldType::UserSystem;
+    telemetry.AddField(field, "GPU_Vendor", vendor_name);
+    telemetry.AddField(field, "GPU_Model", model_name);
+    telemetry.AddField(field, "GPU_Vulkan_Driver", driver_name);
+    telemetry.AddField(field, "GPU_Vulkan_Version", api_version);
+    telemetry.AddField(field, "GPU_Vulkan_Extensions", extensions);
 }
 
 void Instance::CollectToolingInfo() {

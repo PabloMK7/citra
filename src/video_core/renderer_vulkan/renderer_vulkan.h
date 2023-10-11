@@ -21,8 +21,7 @@
 
 namespace Core {
 class System;
-class TelemetrySession;
-} // namespace Core
+}
 
 namespace Memory {
 class MemorySystem;
@@ -82,7 +81,6 @@ public:
     void Sync() override;
 
 private:
-    void ReportDriver() const;
     void ReloadPipeline();
     void CompileShaders();
     void BuildLayouts();
@@ -111,7 +109,6 @@ private:
 
 private:
     Memory::MemorySystem& memory;
-    Core::TelemetrySession& telemetry_session;
 
     Instance instance;
     Scheduler scheduler;
