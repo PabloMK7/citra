@@ -80,7 +80,13 @@ endif()
 
 # Xbyak
 if ("x86_64" IN_LIST ARCHITECTURE)
-    add_subdirectory(xbyak EXCLUDE_FROM_ALL)
+    if(USE_SYSTEM_XBYAK)
+        find_package(xbyak REQUIRED)
+        add_library(xbyak INTERFACE)
+        target_link_libraries(xbyak INTERFACE xbyak::xbyak)
+    else()
+        add_subdirectory(xbyak EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 # Dynarmic
