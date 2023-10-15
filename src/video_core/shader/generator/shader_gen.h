@@ -10,10 +10,11 @@
 
 namespace Pica::Shader::Generator {
 
+// NOTE: Changing the order impacts shader transferable and precompiled cache loading.
 enum ProgramType : u32 {
     VS = 0,
-    GS = 2,
     FS = 1,
+    GS = 2,
 };
 
 enum Attributes {

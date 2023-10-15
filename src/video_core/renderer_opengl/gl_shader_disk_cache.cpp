@@ -206,6 +206,10 @@ ShaderDiskCache::LoadPrecompiledFile(FileUtil::IOFile& file, bool compressed) {
     if (compressed) {
         const std::vector<u8> decompressed =
             Common::Compression::DecompressDataZSTD(precompiled_file);
+        if (decompressed.empty()) {
+            LOG_ERROR(Render_OpenGL, "Could not decompress precompiled shader cache.");
+            return std::nullopt;
+        }
         SaveArrayToPrecompiled(decompressed.data(), decompressed.size());
     } else {
         SaveArrayToPrecompiled(precompiled_file.data(), precompiled_file.size());
