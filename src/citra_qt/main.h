@@ -73,6 +73,10 @@ namespace Service::AM {
 enum class InstallStatus : u32;
 }
 
+namespace Service::FS {
+enum class MediaType : u32;
+}
+
 class GMainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -99,6 +103,9 @@ public:
 
     bool DropAction(QDropEvent* event);
     void AcceptDropEvent(QDropEvent* event);
+
+    void UninstallTitles(
+        const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles);
 
 public slots:
     void OnAppFocusStateChanged(Qt::ApplicationState state);

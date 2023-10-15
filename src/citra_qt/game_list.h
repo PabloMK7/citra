@@ -12,6 +12,10 @@
 #include "common/common_types.h"
 #include "uisettings.h"
 
+namespace Service::FS {
+enum class MediaType : u32;
+}
+
 class GameListWorker;
 class GameListDir;
 class GameListSearchField;
@@ -105,7 +109,8 @@ private:
 
     void PopupContextMenu(const QPoint& menu_location);
     void PopupHeaderContextMenu(const QPoint& menu_location);
-    void AddGamePopup(QMenu& context_menu, const QString& path, u64 program_id, u64 extdata_id);
+    void AddGamePopup(QMenu& context_menu, const QString& path, const QString& name, u64 program_id,
+                      u64 extdata_id, Service::FS::MediaType media_type);
     void AddCustomDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddPermDirPopup(QMenu& context_menu, QModelIndex selected);
     void UpdateColumnVisibility();

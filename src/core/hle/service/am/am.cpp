@@ -1557,24 +1557,33 @@ void Module::Interface::GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx) {
     rb.Push(container.GetTitleMetadata().GetContentSizeByIndex(FileSys::TMDContentIndex::Main));
 }
 
+ResultCode UninstallProgram(const FS::MediaType media_type, const u64 title_id) {
+    // Use the content folder so we don't delete the user's save data.
+    const auto path = GetTitlePath(media_type, title_id) + "content/";
+    if (!FileUtil::Exists(path)) {
+        return {ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
+                ErrorLevel::Permanent};
+    }
+    if (!FileUtil::DeleteDirRecursively(path)) {
+        // TODO: Determine the right error code for this.
+        return {ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
+                ErrorLevel::Permanent};
+    }
+    return RESULT_SUCCESS;
+}
+
 void Module::Interface::DeleteProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    auto media_type = rp.PopEnum<FS::MediaType>();
-    u64 title_id = rp.Pop<u64>();
-    LOG_INFO(Service_AM, "Deleting title 0x{:016x}", title_id);
-    std::string path = GetTitlePath(media_type, title_id);
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    if (!FileUtil::Exists(path)) {
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
-                           ErrorLevel::Permanent));
-        LOG_ERROR(Service_AM, "Title not found");
-        return;
-    }
-    bool success = FileUtil::DeleteDirRecursively(path);
+    const auto media_type = rp.PopEnum<FS::MediaType>();
+    const auto title_id = rp.Pop<u64>();
+
+    LOG_INFO(Service_AM, "called, title={:016x}", title_id);
+
+    const auto result = UninstallProgram(media_type, title_id);
     am->ScanForAllTitles();
-    rb.Push(RESULT_SUCCESS);
-    if (!success)
-        LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(result);
 }
 
 void Module::Interface::GetSystemUpdaterMutex(Kernel::HLERequestContext& ctx) {

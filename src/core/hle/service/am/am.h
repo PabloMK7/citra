@@ -172,6 +172,14 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid);
  */
 std::string GetMediaTitlePath(Service::FS::MediaType media_type);
 
+/**
+ * Uninstalls the specified title.
+ * @param media_type the storage medium the title is installed to
+ * @param title_id the title ID to uninstall
+ * @return result of the uninstall operation
+ */
+ResultCode UninstallProgram(const FS::MediaType media_type, const u64 title_id);
+
 class Module final {
 public:
     explicit Module(Core::System& system);

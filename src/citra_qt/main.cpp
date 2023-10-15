@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QSysInfo>
+#include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
 #include <QtWidgets>
@@ -1748,6 +1749,57 @@ void GMainWindow::OnCIAInstallFinished() {
     game_list->SetDirectoryWatcherEnabled(true);
     ui->action_Install_CIA->setEnabled(true);
     game_list->PopulateAsync(UISettings::values.game_dirs);
+}
+
+void GMainWindow::UninstallTitles(
+    const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles) {
+    if (titles.empty()) {
+        return;
+    }
+
+    // Select the first title in the list as representative.
+    const auto first_name = std::get<QString>(titles[0]);
+
+    QProgressDialog progress(tr("Uninstalling '%1'...").arg(first_name), tr("Cancel"), 0,
+                             static_cast<int>(titles.size()), this);
+    progress.setWindowModality(Qt::WindowModal);
+
+    QFutureWatcher<void> future_watcher;
+    QObject::connect(&future_watcher, &QFutureWatcher<void>::finished, &progress,
+                     &QProgressDialog::reset);
+    QObject::connect(&progress, &QProgressDialog::canceled, &future_watcher,
+                     &QFutureWatcher<void>::cancel);
+    QObject::connect(&future_watcher, &QFutureWatcher<void>::progressValueChanged, &progress,
+                     &QProgressDialog::setValue);
+
+    auto failed = false;
+    QString failed_name;
+
+    const auto uninstall_title = [&future_watcher, &failed, &failed_name](const auto& title) {
+        const auto name = std::get<QString>(title);
+        const auto media_type = std::get<Service::FS::MediaType>(title);
+        const auto program_id = std::get<u64>(title);
+
+        const auto result = Service::AM::UninstallProgram(media_type, program_id);
+        if (result.IsError()) {
+            LOG_ERROR(Frontend, "Failed to uninstall '{}': 0x{:08X}", name.toStdString(),
+                      result.raw);
+            failed = true;
+            failed_name = name;
+            future_watcher.cancel();
+        }
+    };
+
+    future_watcher.setFuture(QtConcurrent::map(titles, uninstall_title));
+    progress.exec();
+    future_watcher.waitForFinished();
+
+    if (failed) {
+        QMessageBox::critical(this, tr("Citra"), tr("Failed to uninstall '%1'.").arg(failed_name));
+    } else if (!future_watcher.isCanceled()) {
+        QMessageBox::information(this, tr("Citra"),
+                                 tr("Successfully uninstalled '%1'.").arg(first_name));
+    }
 }
 
 void GMainWindow::OnMenuRecentFile() {

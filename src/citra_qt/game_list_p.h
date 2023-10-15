@@ -25,6 +25,10 @@
 #include "common/string_util.h"
 #include "core/loader/smdh.h"
 
+namespace Service::FS {
+enum class MediaType : u32;
+}
+
 enum class GameListItemType {
     Game = QStandardItem::UserType + 1,
     CustomDir = QStandardItem::UserType + 2,
@@ -153,14 +157,16 @@ public:
     static constexpr int ProgramIdRole = SortRole + 3;
     static constexpr int ExtdataIdRole = SortRole + 4;
     static constexpr int LongTitleRole = SortRole + 5;
+    static constexpr int MediaTypeRole = SortRole + 6;
 
     GameListItemPath() = default;
     GameListItemPath(const QString& game_path, std::span<const u8> smdh_data, u64 program_id,
-                     u64 extdata_id) {
+                     u64 extdata_id, Service::FS::MediaType media_type) {
         setData(type(), TypeRole);
         setData(game_path, FullPathRole);
         setData(qulonglong(program_id), ProgramIdRole);
         setData(qulonglong(extdata_id), ExtdataIdRole);
+        setData(quint32(media_type), MediaTypeRole);
 
         if (UISettings::values.game_list_icon_size.GetValue() ==
             UISettings::GameListIconSize::NoIcon) {

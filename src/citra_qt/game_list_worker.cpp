@@ -33,10 +33,11 @@ GameListWorker::GameListWorker(QVector<UISettings::GameDir>& game_dirs,
 GameListWorker::~GameListWorker() = default;
 
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
-                                             GameListDir* parent_dir) {
-    const auto callback = [this, recursion, parent_dir](u64* num_entries_out,
-                                                        const std::string& directory,
-                                                        const std::string& virtual_name) -> bool {
+                                             GameListDir* parent_dir,
+                                             Service::FS::MediaType media_type) {
+    const auto callback = [this, recursion, parent_dir,
+                           media_type](u64* num_entries_out, const std::string& directory,
+                                       const std::string& virtual_name) -> bool {
         if (stop_processing) {
             // Breaks the callback loop.
             return false;
@@ -105,7 +106,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             emit EntryReady(
                 {
                     new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
-                                         extdata_id),
+                                         extdata_id, media_type),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
                     new GameListItem(
@@ -116,7 +117,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
 
         } else if (is_dir && recursion > 0) {
             watch_list.append(QString::fromStdString(physical_name));
-            AddFstEntriesToGameList(physical_name, recursion - 1, parent_dir);
+            AddFstEntriesToGameList(physical_name, recursion - 1, parent_dir, media_type);
         }
 
         return true;
@@ -144,8 +145,10 @@ void GameListWorker::run() {
             watch_list.append(demos_path);
             auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::InstalledDir);
             emit DirEntryReady(game_list_dir);
-            AddFstEntriesToGameList(games_path.toStdString(), 2, game_list_dir);
-            AddFstEntriesToGameList(demos_path.toStdString(), 2, game_list_dir);
+            AddFstEntriesToGameList(games_path.toStdString(), 2, game_list_dir,
+                                    Service::FS::MediaType::SDMC);
+            AddFstEntriesToGameList(demos_path.toStdString(), 2, game_list_dir,
+                                    Service::FS::MediaType::SDMC);
         } else if (game_dir.path == QStringLiteral("SYSTEM")) {
             QString path =
                 QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
@@ -153,13 +156,14 @@ void GameListWorker::run() {
             watch_list.append(path);
             auto* const game_list_dir = new GameListDir(game_dir, GameListItemType::SystemDir);
             emit DirEntryReady(game_list_dir);
-            AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
+            AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir,
+                                    Service::FS::MediaType::NAND);
         } else {
             watch_list.append(game_dir.path);
             auto* const game_list_dir = new GameListDir(game_dir);
             emit DirEntryReady(game_list_dir);
             AddFstEntriesToGameList(game_dir.path.toStdString(), game_dir.deep_scan ? 256 : 0,
-                                    game_list_dir);
+                                    game_list_dir, Service::FS::MediaType::GameCard);
         }
     }
 

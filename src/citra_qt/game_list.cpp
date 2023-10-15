@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QMessageBox>
 #include <QModelIndex>
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -459,8 +460,11 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     switch (selected.data(GameListItem::TypeRole).value<GameListItemType>()) {
     case GameListItemType::Game:
         AddGamePopup(context_menu, selected.data(GameListItemPath::FullPathRole).toString(),
+                     selected.data(GameListItemPath::TitleRole).toString(),
                      selected.data(GameListItemPath::ProgramIdRole).toULongLong(),
-                     selected.data(GameListItemPath::ExtdataIdRole).toULongLong());
+                     selected.data(GameListItemPath::ExtdataIdRole).toULongLong(),
+                     static_cast<Service::FS::MediaType>(
+                         selected.data(GameListItemPath::MediaTypeRole).toUInt()));
         break;
     case GameListItemType::CustomDir:
         AddPermDirPopup(context_menu, selected);
@@ -522,27 +526,35 @@ void ForEachOpenGLCacheFile(u64 program_id, auto func) {
     }
 }
 
-void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 program_id,
-                            u64 extdata_id) {
+void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QString& name,
+                            u64 program_id, u64 extdata_id, Service::FS::MediaType media_type) {
     QAction* open_save_location = context_menu.addAction(tr("Open Save Data Location"));
     QAction* open_extdata_location = context_menu.addAction(tr("Open Extra Data Location"));
     QAction* open_application_location = context_menu.addAction(tr("Open Application Location"));
     QAction* open_update_location = context_menu.addAction(tr("Open Update Data Location"));
+    QAction* open_dlc_location = context_menu.addAction(tr("Open DLC Data Location"));
     QAction* open_texture_dump_location = context_menu.addAction(tr("Open Texture Dump Location"));
     QAction* open_texture_load_location =
         context_menu.addAction(tr("Open Custom Texture Location"));
     QAction* open_mods_location = context_menu.addAction(tr("Open Mods Location"));
-    QAction* open_dlc_location = context_menu.addAction(tr("Open DLC Data Location"));
-    QMenu* shader_menu = context_menu.addMenu(tr("Disk Shader Cache"));
     QAction* dump_romfs = context_menu.addAction(tr("Dump RomFS"));
-    QAction* navigate_to_gamedb_entry = context_menu.addAction(tr("Navigate to GameDB entry"));
-    context_menu.addSeparator();
-    QAction* properties = context_menu.addAction(tr("Properties"));
 
+    QMenu* shader_menu = context_menu.addMenu(tr("Disk Shader Cache"));
     QAction* open_shader_cache_location = shader_menu->addAction(tr("Open Shader Cache Location"));
     shader_menu->addSeparator();
     QAction* delete_opengl_disk_shader_cache =
         shader_menu->addAction(tr("Delete OpenGL Shader Cache"));
+
+    QMenu* uninstall_menu = context_menu.addMenu(tr("Uninstall"));
+    QAction* uninstall_all = uninstall_menu->addAction(tr("Everything"));
+    uninstall_menu->addSeparator();
+    QAction* uninstall_game = uninstall_menu->addAction(tr("Game"));
+    QAction* uninstall_update = uninstall_menu->addAction(tr("Update"));
+    QAction* uninstall_dlc = uninstall_menu->addAction(tr("DLC"));
+
+    QAction* navigate_to_gamedb_entry = context_menu.addAction(tr("Navigate to GameDB entry"));
+    context_menu.addSeparator();
+    QAction* properties = context_menu.addAction(tr("Properties"));
 
     const u32 program_id_high = (program_id >> 32) & 0xFFFFFFFF;
     const bool is_application = program_id_high == 0x00040000 || program_id_high == 0x00040010;
@@ -564,22 +576,36 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
         open_extdata_location->setVisible(false);
     }
 
-    auto media_type = Service::AM::GetTitleMediaType(program_id);
-    open_application_location->setEnabled(path.toStdString() ==
-                                          Service::AM::GetTitleContentPath(media_type, program_id));
-    open_update_location->setEnabled(
-        is_application && FileUtil::Exists(Service::AM::GetTitlePath(Service::FS::MediaType::SDMC,
-                                                                     program_id + 0xe00000000) +
-                                           "content/"));
-    auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
+    const auto update_program_id = program_id | 0xE00000000;
+    const auto dlc_program_id = program_id | 0x8C00000000;
 
+    const auto is_installed =
+        media_type == Service::FS::MediaType::NAND || media_type == Service::FS::MediaType::SDMC;
+    const auto has_update =
+        is_application && FileUtil::Exists(Service::AM::GetTitlePath(Service::FS::MediaType::SDMC,
+                                                                     update_program_id) +
+                                           "content/");
+    const auto has_dlc =
+        is_application &&
+        FileUtil::Exists(Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, dlc_program_id) +
+                         "content/");
+
+    open_application_location->setEnabled(is_installed);
+    open_update_location->setEnabled(has_update);
+    open_dlc_location->setEnabled(has_dlc);
     open_texture_dump_location->setEnabled(is_application);
     open_texture_load_location->setEnabled(is_application);
     open_mods_location->setEnabled(is_application);
-    open_dlc_location->setEnabled(is_application);
     dump_romfs->setEnabled(is_application);
+
     delete_opengl_disk_shader_cache->setEnabled(opengl_cache_exists);
 
+    uninstall_all->setEnabled(is_installed || has_update || has_dlc);
+    uninstall_game->setEnabled(is_installed);
+    uninstall_update->setEnabled(has_update);
+    uninstall_dlc->setEnabled(has_dlc);
+
+    auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
     navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
     connect(open_save_location, &QAction::triggered, this, [this, program_id] {
@@ -641,7 +667,63 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 progra
     connect(delete_opengl_disk_shader_cache, &QAction::triggered, this, [program_id] {
         ForEachOpenGLCacheFile(program_id, [](QFile& file) { file.remove(); });
     });
-};
+    connect(uninstall_all, &QAction::triggered, this, [=, this] {
+        QMessageBox::StandardButton answer = QMessageBox::question(
+            this, tr("Citra"),
+            tr("Are you sure you want to completely uninstall '%1'?\n\nThis will "
+               "delete the game if installed, as well as any installed updates or DLC.")
+                .arg(name),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer == QMessageBox::Yes) {
+            std::vector<std::tuple<Service::FS::MediaType, u64, QString>> titles;
+            if (is_installed) {
+                titles.emplace_back(media_type, program_id, name);
+            }
+            if (has_update) {
+                titles.emplace_back(Service::FS::MediaType::SDMC, update_program_id,
+                                    tr("%1 (Update)").arg(name));
+            }
+            if (has_dlc) {
+                titles.emplace_back(Service::FS::MediaType::SDMC, dlc_program_id,
+                                    tr("%1 (DLC)").arg(name));
+            }
+            main_window->UninstallTitles(titles);
+        }
+    });
+    connect(uninstall_game, &QAction::triggered, this, [this, name, media_type, program_id] {
+        QMessageBox::StandardButton answer = QMessageBox::question(
+            this, tr("Citra"), tr("Are you sure you want to uninstall '%1'?").arg(name),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer == QMessageBox::Yes) {
+            std::vector<std::tuple<Service::FS::MediaType, u64, QString>> titles;
+            titles.emplace_back(media_type, program_id, name);
+            main_window->UninstallTitles(titles);
+        }
+    });
+    connect(uninstall_update, &QAction::triggered, this, [this, name, update_program_id] {
+        QMessageBox::StandardButton answer = QMessageBox::question(
+            this, tr("Citra"),
+            tr("Are you sure you want to uninstall the update for '%1'?").arg(name),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer == QMessageBox::Yes) {
+            std::vector<std::tuple<Service::FS::MediaType, u64, QString>> titles;
+            titles.emplace_back(Service::FS::MediaType::SDMC, update_program_id,
+                                tr("%1 (Update)").arg(name));
+            main_window->UninstallTitles(titles);
+        }
+    });
+    connect(uninstall_dlc, &QAction::triggered, this, [this, name, dlc_program_id] {
+        QMessageBox::StandardButton answer = QMessageBox::question(
+            this, tr("Citra"), tr("Are you sure you want to uninstall all DLC for '%1'?").arg(name),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer == QMessageBox::Yes) {
+            std::vector<std::tuple<Service::FS::MediaType, u64, QString>> titles;
+            titles.emplace_back(Service::FS::MediaType::SDMC, dlc_program_id,
+                                tr("%1 (DLC)").arg(name));
+            main_window->UninstallTitles(titles);
+        }
+    });
+}
 
 void GameList::AddCustomDirPopup(QMenu& context_menu, QModelIndex selected) {
     UISettings::GameDir& game_dir =
