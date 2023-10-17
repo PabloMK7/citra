@@ -6,8 +6,8 @@
 #include <memory>
 #include <sstream>
 #include <type_traits>
+#include <INIReader.h>
 #include <SDL.h>
-#include <inih/cpp/INIReader.h>
 #include "citra/config.h"
 #include "citra/default_ini.h"
 #include "common/file_util.h"

@@ -126,7 +126,13 @@ set(BUILD_EXTERNAL OFF CACHE BOOL "")
 add_subdirectory(glslang)
 
 # inih
-add_subdirectory(inih)
+if(USE_SYSTEM_INIH)
+    find_package(inih REQUIRED COMPONENTS inih inir)
+    add_library(inih INTERFACE)
+    target_link_libraries(inih INTERFACE inih::inih inih::inir)
+else()
+    add_subdirectory(inih)
+endif()
 
 # MicroProfile
 add_library(microprofile INTERFACE)

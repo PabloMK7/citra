@@ -100,6 +100,7 @@ option(USE_SYSTEM_JSON "Use the system JSON (nlohmann-json3) package (instead of
 option(USE_SYSTEM_DYNARMIC "Use the system dynarmic (instead of the bundled one)" OFF)
 option(USE_SYSTEM_FMT "Use the system fmt (instead of the bundled one)" OFF)
 option(USE_SYSTEM_XBYAK "Use the system xbyak (instead of the bundled one)" OFF)
+option(USE_SYSTEM_INIH "Use the system inih (instead of the bundled one)" OFF)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")

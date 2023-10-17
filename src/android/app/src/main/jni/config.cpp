@@ -6,7 +6,7 @@
 #include <memory>
 #include <sstream>
 #include <unordered_map>
-#include <inih/cpp/INIReader.h>
+#include <INIReader.h>
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
