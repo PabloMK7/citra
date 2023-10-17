@@ -48,20 +48,6 @@ set(CRYPTOPP_INSTALL OFF CACHE BOOL "")
 set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp" CACHE STRING "")
 add_subdirectory(cryptopp-cmake)
 
-# HACK: The logic to set up the base include directory for CryptoPP does not work with Android SDK CMake 3.22.1.
-# Until there is a fixed version available, this code will detect and add in the proper include if it does not exist.
-if(ANDROID)
-    message(STATUS "Applying CryptoPP include fix.")
-    get_target_property(CRYPTOPP_INCLUDES cryptopp INTERFACE_INCLUDE_DIRECTORIES)
-    foreach(CRYPTOPP_INCLUDE ${CRYPTOPP_INCLUDES})
-        if("${CRYPTOPP_INCLUDE}" MATCHES "\\$<BUILD_INTERFACE:(.*)/cryptopp>")
-            message(STATUS "Fixed include path: ${CMAKE_MATCH_1}")
-            target_include_directories(cryptopp PUBLIC $<BUILD_INTERFACE:${CMAKE_MATCH_1}>)
-            break()
-        endif()
-    endforeach()
-endif()
-
 # dds-ktx
 add_library(dds-ktx INTERFACE)
 target_include_directories(dds-ktx INTERFACE ./dds-ktx)
