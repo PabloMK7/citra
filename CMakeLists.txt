@@ -101,6 +101,8 @@ option(USE_SYSTEM_DYNARMIC "Use the system dynarmic (instead of the bundled one)
 option(USE_SYSTEM_FMT "Use the system fmt (instead of the bundled one)" OFF)
 option(USE_SYSTEM_XBYAK "Use the system xbyak (instead of the bundled one)" OFF)
 option(USE_SYSTEM_INIH "Use the system inih (instead of the bundled one)" OFF)
+option(USE_SYSTEM_FDK_AAC_HEADERS "Use the system fdk-aac headers (instead of the bundled one)" OFF)
+option(USE_SYSTEM_FFMPEG_HEADERS "Use the system FFmpeg headers (instead of the bundled one)" OFF)
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     message(STATUS "Using Precompiled Headers.")
