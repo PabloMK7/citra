@@ -232,21 +232,45 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
         address_register_index = instr.common.address_register_index;
     }
 
-    if (src_num == offset_src && address_register_index != 0) {
+    if (src_reg.GetRegisterType() == RegisterType::FloatUniform && src_num == offset_src &&
+        address_register_index != 0) {
+        Xbyak::Reg64 address_reg;
         switch (address_register_index) {
-        case 1: // address offset 1
-            movaps(dest, xword[src_ptr + ADDROFFS_REG_0 + src_offset_disp]);
+        case 1:
+            address_reg = ADDROFFS_REG_0;
             break;
-        case 2: // address offset 2
-            movaps(dest, xword[src_ptr + ADDROFFS_REG_1 + src_offset_disp]);
+        case 2:
+            address_reg = ADDROFFS_REG_1;
             break;
-        case 3: // address offset 3
-            movaps(dest, xword[src_ptr + LOOPCOUNT_REG.cvt64() + src_offset_disp]);
+        case 3:
+            address_reg = LOOPCOUNT_REG.cvt64();
             break;
         default:
             UNREACHABLE();
             break;
         }
+        // s32 offset = address_reg >= -128 && address_reg <= 127 ? address_reg : 0;
+        // u32 index = (src_reg.GetIndex() + offset) & 0x7f;
+
+        // First we add 128 to address_reg so the first comparison is turned to
+        // address_reg >= 0 && address_reg < 256 which can be performed with
+        // a single unsigned comparison (cmovb)
+        lea(eax, ptr[address_reg + 128]);
+        mov(ebx, src_reg.GetIndex());
+        mov(ecx, address_reg.cvt32());
+        add(ecx, ebx);
+        cmp(eax, 256);
+        cmovb(ebx, ecx);
+        and_(ebx, 0x7f);
+
+        // index > 95 ? vec4(1.0) : uniforms.f[index];
+        movaps(dest, ONE);
+        cmp(ebx, 95);
+        Label load_end;
+        jg(load_end);
+        shl(rbx, 4);
+        movaps(dest, xword[src_ptr + rbx]);
+        L(load_end);
     } else {
         // Load the source
         movaps(dest, xword[src_ptr + src_offset_disp]);
@@ -590,24 +614,14 @@ void JitShader::Compile_MOVA(Instruction instr) {
         // Move and sign-extend high 32 bits
         shr(rax, 32);
         movsxd(ADDROFFS_REG_1, eax);
-
-        // Multiply by 16 to be used as an offset later
-        shl(ADDROFFS_REG_0, 4);
-        shl(ADDROFFS_REG_1, 4);
     } else {
         if (swiz.DestComponentEnabled(0)) {
             // Move and sign-extend low 32 bits
             movsxd(ADDROFFS_REG_0, eax);
-
-            // Multiply by 16 to be used as an offset later
-            shl(ADDROFFS_REG_0, 4);
         } else if (swiz.DestComponentEnabled(1)) {
             // Move and sign-extend high 32 bits
             shr(rax, 32);
             movsxd(ADDROFFS_REG_1, eax);
-
-            // Multiply by 16 to be used as an offset later
-            shl(ADDROFFS_REG_1, 4);
         }
     }
 }
@@ -659,9 +673,6 @@ void JitShader::Compile_END(Instruction instr) {
     mov(byte[STATE + offsetof(UnitState, conditional_code[1])], COND1.cvt8());
 
     // Save address/loop registers
-    sar(ADDROFFS_REG_0, 4);
-    sar(ADDROFFS_REG_1, 4);
-    sar(LOOPCOUNT_REG, 4);
     mov(dword[STATE + offsetof(UnitState, address_registers[0])], ADDROFFS_REG_0.cvt32());
     mov(dword[STATE + offsetof(UnitState, address_registers[1])], ADDROFFS_REG_1.cvt32());
     mov(dword[STATE + offsetof(UnitState, address_registers[2])], LOOPCOUNT_REG);
@@ -813,11 +824,11 @@ void JitShader::Compile_LOOP(Instruction instr) {
     std::size_t offset = Uniforms::GetIntUniformOffset(instr.flow_control.int_uniform_id);
     mov(LOOPCOUNT, dword[UNIFORMS + offset]);
     mov(LOOPCOUNT_REG, LOOPCOUNT);
-    shr(LOOPCOUNT_REG, 4);
-    and_(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
+    shr(LOOPCOUNT_REG, 8);
+    and_(LOOPCOUNT_REG, 0xFF); // Y-component is the start
     mov(LOOPINC, LOOPCOUNT);
-    shr(LOOPINC, 12);
-    and_(LOOPINC, 0xFF0);               // Z-component is the incrementer
+    shr(LOOPINC, 16);
+    and_(LOOPINC, 0xFF);                // Z-component is the incrementer
     movzx(LOOPCOUNT, LOOPCOUNT.cvt8()); // X-component is iteration count
     add(LOOPCOUNT, 1);                  // Iteration count is X-component + 1
 
@@ -993,9 +1004,6 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     movsxd(ADDROFFS_REG_0, dword[STATE + offsetof(UnitState, address_registers[0])]);
     movsxd(ADDROFFS_REG_1, dword[STATE + offsetof(UnitState, address_registers[1])]);
     mov(LOOPCOUNT_REG, dword[STATE + offsetof(UnitState, address_registers[2])]);
-    shl(ADDROFFS_REG_0, 4);
-    shl(ADDROFFS_REG_1, 4);
-    shl(LOOPCOUNT_REG, 4);
 
     // Load conditional code
     mov(COND0, byte[STATE + offsetof(UnitState, conditional_code[0])]);
