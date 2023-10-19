@@ -17,6 +17,12 @@ include(CMakeDependentOption)
 
 project(citra LANGUAGES C CXX ASM)
 
+# Some submodules like to pick their own default build type if not specified.
+# Make sure we default to Release build type always, unless the generator has custom types.
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 if (APPLE)
     # Silence warnings on empty objects, for example when platform-specific code is #ifdef'd out.
     set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
