@@ -34,6 +34,10 @@ if (NOT USE_SYSTEM_BOOST)
     )
     target_link_libraries(boost_iostreams PUBLIC boost)
 # Add additional boost libs here; remember to ALIAS them in the root CMakeLists!
+else()
+    unset(BOOST_ROOT CACHE)
+    unset(Boost_INCLUDE_DIR CACHE)
+    set(Boost_NO_SYSTEM_PATHS OFF CACHE BOOL "" FORCE)
 endif()
 
 # Catch2
