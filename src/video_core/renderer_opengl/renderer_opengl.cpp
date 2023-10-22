@@ -151,7 +151,7 @@ void RendererOpenGL::RenderScreenshot() {
         state.Apply();
         glDeleteRenderbuffers(1, &renderbuffer);
 
-        settings.screenshot_complete_callback();
+        settings.screenshot_complete_callback(true);
     }
 }
 

@@ -150,8 +150,7 @@ void Swapchain::FindPresentFormat() {
         return;
     }
 
-    LOG_CRITICAL(Render_Vulkan, "Unable to find required swapchain format!");
-    UNREACHABLE();
+    UNREACHABLE_MSG("Unable to find required swapchain format!");
 }
 
 void Swapchain::SetPresentMode() {

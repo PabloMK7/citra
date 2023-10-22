@@ -669,9 +669,9 @@ void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_p
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
     system.Renderer().RequestScreenshot(
         screenshot_image.bits(),
-        [this, screenshot_path] {
+        [this, screenshot_path](bool invert_y) {
             const std::string std_screenshot_path = screenshot_path.toStdString();
-            if (screenshot_image.mirrored(false, true).save(screenshot_path)) {
+            if (screenshot_image.mirrored(false, invert_y).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
             } else {
                 LOG_ERROR(Frontend, "Failed to save screenshot to \"{}\"", std_screenshot_path);

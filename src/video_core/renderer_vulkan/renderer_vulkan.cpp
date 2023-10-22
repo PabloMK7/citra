@@ -6,6 +6,7 @@
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
+#include "common/texture.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
@@ -18,6 +19,7 @@
 #include "video_core/host_shaders/vulkan_present_frag_spv.h"
 #include "video_core/host_shaders/vulkan_present_interlaced_frag_spv.h"
 #include "video_core/host_shaders/vulkan_present_vert_spv.h"
+#include "vulkan/vulkan_format_traits.hpp"
 
 #include <vk_mem_alloc.h>
 
@@ -867,20 +869,9 @@ void RendererVulkan::RenderScreenshot() {
     const u32 width = layout.width;
     const u32 height = layout.height;
 
-    const vk::ImageCreateInfo staging_image_info = {
-        .imageType = vk::ImageType::e2D,
-        .format = vk::Format::eB8G8R8A8Unorm,
-        .extent{
-            .width = width,
-            .height = height,
-            .depth = 1,
-        },
-        .mipLevels = 1,
-        .arrayLayers = 1,
-        .samples = vk::SampleCountFlagBits::e1,
-        .tiling = vk::ImageTiling::eLinear,
-        .usage = vk::ImageUsageFlagBits::eTransferDst,
-        .initialLayout = vk::ImageLayout::eUndefined,
+    const vk::BufferCreateInfo staging_buffer_info = {
+        .size = width * height * 4,
+        .usage = vk::BufferUsageFlagBits::eTransferDst,
     };
 
     const VmaAllocationCreateInfo alloc_create_info = {
@@ -893,18 +884,18 @@ void RendererVulkan::RenderScreenshot() {
         .pUserData = nullptr,
     };
 
-    VkImage unsafe_image{};
+    VkBuffer unsafe_buffer{};
     VmaAllocation allocation{};
     VmaAllocationInfo alloc_info;
-    VkImageCreateInfo unsafe_image_info = static_cast<VkImageCreateInfo>(staging_image_info);
+    VkBufferCreateInfo unsafe_buffer_info = static_cast<VkBufferCreateInfo>(staging_buffer_info);
 
-    VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info,
-                                     &alloc_create_info, &unsafe_image, &allocation, &alloc_info);
+    VkResult result = vmaCreateBuffer(instance.GetAllocator(), &unsafe_buffer_info,
+                                      &alloc_create_info, &unsafe_buffer, &allocation, &alloc_info);
     if (result != VK_SUCCESS) [[unlikely]] {
         LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
         UNREACHABLE();
     }
-    vk::Image staging_image{unsafe_image};
+    vk::Buffer staging_buffer{unsafe_buffer};
 
     Frame frame{};
     main_window.RecreateFrame(&frame, width, height);
@@ -912,73 +903,37 @@ void RendererVulkan::RenderScreenshot() {
     DrawScreens(&frame, layout, false);
 
     scheduler.Record(
-        [width, height, source_image = frame.image, staging_image](vk::CommandBuffer cmdbuf) {
-            const std::array read_barriers = {
-                vk::ImageMemoryBarrier{
-                    .srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
-                    .dstAccessMask = vk::AccessFlagBits::eTransferRead,
-                    .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
-                    .newLayout = vk::ImageLayout::eTransferSrcOptimal,
-                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = source_image,
-                    .subresourceRange{
-                        .aspectMask = vk::ImageAspectFlagBits::eColor,
-                        .baseMipLevel = 0,
-                        .levelCount = VK_REMAINING_MIP_LEVELS,
-                        .baseArrayLayer = 0,
-                        .layerCount = VK_REMAINING_ARRAY_LAYERS,
-                    },
-                },
-                vk::ImageMemoryBarrier{
-                    .srcAccessMask = vk::AccessFlagBits::eNone,
-                    .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
-                    .oldLayout = vk::ImageLayout::eUndefined,
-                    .newLayout = vk::ImageLayout::eTransferDstOptimal,
-                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = staging_image,
-                    .subresourceRange{
-                        .aspectMask = vk::ImageAspectFlagBits::eColor,
-                        .baseMipLevel = 0,
-                        .levelCount = VK_REMAINING_MIP_LEVELS,
-                        .baseArrayLayer = 0,
-                        .layerCount = VK_REMAINING_ARRAY_LAYERS,
-                    },
+        [width, height, source_image = frame.image, staging_buffer](vk::CommandBuffer cmdbuf) {
+            const vk::ImageMemoryBarrier read_barrier = {
+                .srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
+                .dstAccessMask = vk::AccessFlagBits::eTransferRead,
+                .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
+                .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = source_image,
+                .subresourceRange{
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .baseMipLevel = 0,
+                    .levelCount = VK_REMAINING_MIP_LEVELS,
+                    .baseArrayLayer = 0,
+                    .layerCount = VK_REMAINING_ARRAY_LAYERS,
                 },
             };
-            const std::array write_barriers = {
-                vk::ImageMemoryBarrier{
-                    .srcAccessMask = vk::AccessFlagBits::eTransferRead,
-                    .dstAccessMask = vk::AccessFlagBits::eMemoryWrite,
-                    .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
-                    .newLayout = vk::ImageLayout::eTransferSrcOptimal,
-                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = source_image,
-                    .subresourceRange{
-                        .aspectMask = vk::ImageAspectFlagBits::eColor,
-                        .baseMipLevel = 0,
-                        .levelCount = VK_REMAINING_MIP_LEVELS,
-                        .baseArrayLayer = 0,
-                        .layerCount = VK_REMAINING_ARRAY_LAYERS,
-                    },
-                },
-                vk::ImageMemoryBarrier{
-                    .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
-                    .dstAccessMask = vk::AccessFlagBits::eMemoryRead,
-                    .oldLayout = vk::ImageLayout::eTransferDstOptimal,
-                    .newLayout = vk::ImageLayout::eGeneral,
-                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = staging_image,
-                    .subresourceRange{
-                        .aspectMask = vk::ImageAspectFlagBits::eColor,
-                        .baseMipLevel = 0,
-                        .levelCount = VK_REMAINING_MIP_LEVELS,
-                        .baseArrayLayer = 0,
-                        .layerCount = VK_REMAINING_ARRAY_LAYERS,
-                    },
+            const vk::ImageMemoryBarrier write_barrier = {
+                .srcAccessMask = vk::AccessFlagBits::eTransferRead,
+                .dstAccessMask = vk::AccessFlagBits::eMemoryWrite,
+                .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
+                .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = source_image,
+                .subresourceRange{
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .baseMipLevel = 0,
+                    .levelCount = VK_REMAINING_MIP_LEVELS,
+                    .baseArrayLayer = 0,
+                    .layerCount = VK_REMAINING_ARRAY_LAYERS,
                 },
             };
             static constexpr vk::MemoryBarrier memory_write_barrier = {
@@ -986,41 +941,29 @@ void RendererVulkan::RenderScreenshot() {
                 .dstAccessMask = vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite,
             };
 
-            const std::array src_offsets = {
-                vk::Offset3D{0, 0, 0},
-                vk::Offset3D{static_cast<s32>(width), static_cast<s32>(height), 1},
-            };
-
-            const std::array dst_offsets = {
-                vk::Offset3D{0, static_cast<s32>(height), 0},
-                vk::Offset3D{static_cast<s32>(width), 0, 1},
-            };
-
-            const vk::ImageBlit blit_area = {
-                .srcSubresource{
-                    .aspectMask = vk::ImageAspectFlagBits::eColor,
-                    .mipLevel = 0,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1,
-                },
-                .srcOffsets = src_offsets,
-                .dstSubresource{
-                    .aspectMask = vk::ImageAspectFlagBits::eColor,
-                    .mipLevel = 0,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1,
-                },
-                .dstOffsets = dst_offsets,
+            const vk::BufferImageCopy image_copy = {
+                .bufferOffset = 0,
+                .bufferRowLength = 0,
+                .bufferImageHeight = 0,
+                .imageSubresource =
+                    {
+                        .aspectMask = vk::ImageAspectFlagBits::eColor,
+                        .mipLevel = 0,
+                        .baseArrayLayer = 0,
+                        .layerCount = 1,
+                    },
+                .imageOffset = {0, 0, 0},
+                .imageExtent = {width, height, 1},
             };
 
             cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
                                    vk::PipelineStageFlagBits::eTransfer,
-                                   vk::DependencyFlagBits::eByRegion, {}, {}, read_barriers);
-            cmdbuf.blitImage(source_image, vk::ImageLayout::eTransferSrcOptimal, staging_image,
-                             vk::ImageLayout::eTransferDstOptimal, blit_area, vk::Filter::eNearest);
+                                   vk::DependencyFlagBits::eByRegion, {}, {}, read_barrier);
+            cmdbuf.copyImageToBuffer(source_image, vk::ImageLayout::eTransferSrcOptimal,
+                                     staging_buffer, image_copy);
             cmdbuf.pipelineBarrier(
                 vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eAllCommands,
-                vk::DependencyFlagBits::eByRegion, memory_write_barrier, {}, write_barriers);
+                vk::DependencyFlagBits::eByRegion, memory_write_barrier, {}, write_barrier);
         });
 
     // Ensure the copy is fully completed before saving the screenshot
@@ -1028,27 +971,16 @@ void RendererVulkan::RenderScreenshot() {
 
     const vk::Device device = instance.GetDevice();
 
-    // Get layout of the image (including row pitch)
-    const vk::ImageSubresource subresource = {
-        .aspectMask = vk::ImageAspectFlagBits::eColor,
-        .mipLevel = 0,
-        .arrayLayer = 0,
-    };
-
-    const vk::SubresourceLayout subresource_layout =
-        device.getImageSubresourceLayout(staging_image, subresource);
-
     // Copy backing image data to the QImage screenshot buffer
-    const u8* data = reinterpret_cast<const u8*>(alloc_info.pMappedData);
-    std::memcpy(settings.screenshot_bits, data + subresource_layout.offset,
-                subresource_layout.size);
+    std::memcpy(settings.screenshot_bits, alloc_info.pMappedData, staging_buffer_info.size);
 
     // Destroy allocated resources
+    vmaDestroyBuffer(instance.GetAllocator(), unsafe_buffer, allocation);
     vmaDestroyImage(instance.GetAllocator(), frame.image, frame.allocation);
     device.destroyFramebuffer(frame.framebuffer);
     device.destroyImageView(frame.image_view);
 
-    settings.screenshot_complete_callback();
+    settings.screenshot_complete_callback(false);
 }
 
 } // namespace Vulkan

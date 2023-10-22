@@ -59,7 +59,7 @@ bool RendererBase::IsScreenshotPending() const {
     return settings.screenshot_requested;
 }
 
-void RendererBase::RequestScreenshot(void* data, std::function<void()> callback,
+void RendererBase::RequestScreenshot(void* data, std::function<void(bool)> callback,
                                      const Layout::FramebufferLayout& layout) {
     if (settings.screenshot_requested) {
         LOG_ERROR(Render, "A screenshot is already requested or in progress, ignoring the request");
