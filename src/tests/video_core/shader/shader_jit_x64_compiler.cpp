@@ -420,7 +420,7 @@ TEST_CASE("Address Register Offset", "[video_core][shader][shader_jit]") {
             shader.shader_setup->uniforms.f[i] = {color_f24, color_f24, color_f24,
                                                   Pica::f24::One()};
             f_uniforms[i] = {color, color, color, 1.f};
-        } else if (i >= 0x60 && i < 0x70) {
+        } else if (i >= 0x60 && i < 0x64) {
             const u8 color = static_cast<u8>((i - 0x60) * 0x10);
             shader.shader_setup->uniforms.i[i - 0x60] = {color, color, color, 255};
         } else if (i >= 0x70 && i < 0x80) {
