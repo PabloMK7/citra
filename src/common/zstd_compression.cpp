@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <zstd.h>
 
+#include "common/logging/log.h"
 #include "common/zstd_compression.h"
 
 namespace Common::Compression {

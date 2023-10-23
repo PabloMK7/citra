@@ -11,6 +11,7 @@
 #include <span>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <fmt/format.h>
 #include <nihstro/inline_assembly.h>
 #include "video_core/shader/shader_interpreter.h"
 #include "video_core/shader/shader_jit_x64_compiler.h"
