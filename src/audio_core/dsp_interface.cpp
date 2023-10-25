@@ -66,18 +66,22 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
 }
 
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
-    std::size_t frames_written;
+    std::size_t frames_written = 0;
     if (perform_time_stretching) {
         const std::vector<s16> in{fifo.Pop()};
         const std::size_t num_in{in.size() / 2};
         frames_written = time_stretcher.Process(in.data(), num_in, buffer, num_frames);
-    } else if (flushing_time_stretcher) {
-        time_stretcher.Flush();
-        frames_written = time_stretcher.Process(nullptr, 0, buffer, num_frames);
-        frames_written += fifo.Pop(buffer, num_frames - frames_written);
-        flushing_time_stretcher = false;
     } else {
-        frames_written = fifo.Pop(buffer, num_frames);
+        if (flushing_time_stretcher) {
+            time_stretcher.Flush();
+            frames_written = time_stretcher.Process(nullptr, 0, buffer, num_frames);
+            flushing_time_stretcher = false;
+
+            // Make sure any frames that did not fit are cleared from the time stretcher,
+            // so that they do not bleed into the next time the stretcher is enabled.
+            time_stretcher.Clear();
+        }
+        frames_written += fifo.Pop(buffer, num_frames - frames_written);
     }
 
     if (frames_written > 0) {

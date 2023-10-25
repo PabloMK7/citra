@@ -18,8 +18,7 @@
 
 namespace AudioCore {
 
-TimeStretcher::TimeStretcher()
-    : sample_rate(native_sample_rate), sound_touch(std::make_unique<soundtouch::SoundTouch>()) {
+TimeStretcher::TimeStretcher() : sound_touch(std::make_unique<soundtouch::SoundTouch>()) {
     sound_touch->setChannels(2);
     sound_touch->setSampleRate(native_sample_rate);
     sound_touch->setPitch(1.0);
@@ -30,16 +29,15 @@ TimeStretcher::~TimeStretcher() = default;
 
 void TimeStretcher::SetOutputSampleRate(unsigned int sample_rate) {
     sound_touch->setSampleRate(sample_rate);
-    sample_rate = native_sample_rate;
 }
 
 std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
                                    std::size_t num_out) {
-    const double time_delta = static_cast<double>(num_out) / sample_rate; // seconds
+    const double time_delta = static_cast<double>(num_out) / native_sample_rate; // seconds
     double current_ratio = static_cast<double>(num_in) / static_cast<double>(num_out);
 
     const double max_latency = 0.25; // seconds
-    const double max_backlog = sample_rate * max_latency;
+    const double max_backlog = native_sample_rate * max_latency;
     const double backlog_fullness = sound_touch->numSamples() / max_backlog;
     if (backlog_fullness > 4.0) {
         // Too many samples in backlog: Don't push anymore on
