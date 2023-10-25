@@ -158,7 +158,7 @@ jobs:
         if: ${{ matrix.target == 'msvc' }}
         with:
           vulkan-query-version: latest
-          vulkan-components: Glslang
+          vulkan-components: SPIRV-Tools, Glslang
           vulkan-use-cache: true
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
