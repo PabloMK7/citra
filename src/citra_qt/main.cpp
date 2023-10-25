@@ -2998,6 +2998,10 @@ int main(int argc, char* argv[]) {
     setlocale(LC_ALL, "C");
 
     auto& system{Core::System::GetInstance()};
+
+    // Register Qt image interface
+    system.RegisterImageInterface(std::make_shared<QtImageInterface>());
+
     GMainWindow main_window(system);
 
     // Register frontend applets
@@ -3005,9 +3009,6 @@ int main(int argc, char* argv[]) {
 
     system.RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
     system.RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
-
-    // Register Qt image interface
-    system.RegisterImageInterface(std::make_shared<QtImageInterface>());
 
 #ifdef __APPLE__
     // Register microphone permission check.
