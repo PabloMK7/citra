@@ -228,8 +228,14 @@ else()
 endif()
 
 # ENet
-add_subdirectory(enet)
-target_include_directories(enet INTERFACE ./enet/include)
+if(USE_SYSTEM_ENET)
+    find_package(libenet REQUIRED)
+    add_library(enet INTERFACE)
+    target_link_libraries(enet INTERFACE libenet::libenet)
+else()
+    add_subdirectory(enet)
+    target_include_directories(enet INTERFACE ./enet/include)
+endif()
 
 # Cubeb
 if (ENABLE_CUBEB)
