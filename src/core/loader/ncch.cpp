@@ -174,7 +174,16 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         auto fs_user =
             Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
                 "fs:USER");
-        fs_user->Register(process->process_id, process->codeset->program_id, filepath);
+        fs_user->RegisterProgramInfo(process->process_id, process->codeset->program_id, filepath);
+
+        Service::FS::FS_USER::ProductInfo product_info{};
+        std::memcpy(product_info.product_code.data(), overlay_ncch->ncch_header.product_code,
+                    product_info.product_code.size());
+        std::memcpy(&product_info.remaster_version,
+                    overlay_ncch->exheader_header.codeset_info.flags.remaster_version,
+                    sizeof(product_info.remaster_version));
+        product_info.maker_code = overlay_ncch->ncch_header.maker_code;
+        fs_user->RegisterProductInfo(process->process_id, product_info);
 
         process->Run(priority, stack_size);
         return ResultStatus::Success;

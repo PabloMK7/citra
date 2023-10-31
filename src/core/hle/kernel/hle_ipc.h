@@ -221,6 +221,13 @@ public:
         return session;
     }
 
+    /**
+     * Returns the client thread that made the service request.
+     */
+    std::shared_ptr<Thread> ClientThread() const {
+        return thread;
+    }
+
     class WakeupCallback {
     public:
         virtual ~WakeupCallback() = default;

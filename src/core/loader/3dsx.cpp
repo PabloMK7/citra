@@ -282,7 +282,7 @@ ResultStatus AppLoader_THREEDSX::Load(std::shared_ptr<Kernel::Process>& process)
     // On real HW this is done with FS:Reg, but we can be lazy
     auto fs_user =
         Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
-    fs_user->Register(process->GetObjectId(), process->codeset->program_id, filepath);
+    fs_user->RegisterProgramInfo(process->GetObjectId(), process->codeset->program_id, filepath);
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
