@@ -1562,7 +1562,7 @@ DebugScope::DebugScope(TextureRuntime& runtime, Common::Vec4f color, std::string
     if (!has_debug_tool) {
         return;
     }
-    scheduler.Record([color, label](vk::CommandBuffer cmdbuf) {
+    scheduler.Record([color, label = std::string(label)](vk::CommandBuffer cmdbuf) {
         const vk::DebugUtilsLabelEXT debug_label = {
             .pLabelName = label.data(),
             .color = std::array{color[0], color[1], color[2], color[3]},
