@@ -258,13 +258,15 @@ void GameList::OnUpdateThemedIcons() {
     for (int i = 0; i < item_model->invisibleRootItem()->rowCount(); i++) {
         QStandardItem* child = item_model->invisibleRootItem()->child(i);
 
+        const int icon_size = IconSizes.at(UISettings::values.game_list_icon_size.GetValue());
         switch (child->data(GameListItem::TypeRole).value<GameListItemType>()) {
         case GameListItemType::InstalledDir:
-            child->setData(QIcon::fromTheme(QStringLiteral("sd_card")).pixmap(48),
+            child->setData(QIcon::fromTheme(QStringLiteral("sd_card")).pixmap(icon_size),
                            Qt::DecorationRole);
             break;
         case GameListItemType::SystemDir:
-            child->setData(QIcon::fromTheme(QStringLiteral("chip")).pixmap(48), Qt::DecorationRole);
+            child->setData(QIcon::fromTheme(QStringLiteral("chip")).pixmap(icon_size),
+                           Qt::DecorationRole);
             break;
         case GameListItemType::CustomDir: {
             const UISettings::GameDir& game_dir =
@@ -272,11 +274,12 @@ void GameList::OnUpdateThemedIcons() {
             const QString icon_name = QFileInfo::exists(game_dir.path)
                                           ? QStringLiteral("folder")
                                           : QStringLiteral("bad_folder");
-            child->setData(QIcon::fromTheme(icon_name).pixmap(48), Qt::DecorationRole);
+            child->setData(QIcon::fromTheme(icon_name).pixmap(icon_size), Qt::DecorationRole);
             break;
         }
         case GameListItemType::AddDir:
-            child->setData(QIcon::fromTheme(QStringLiteral("plus")).pixmap(48), Qt::DecorationRole);
+            child->setData(QIcon::fromTheme(QStringLiteral("plus")).pixmap(icon_size),
+                           Qt::DecorationRole);
             break;
         default:
             break;

@@ -2741,7 +2741,10 @@ void GMainWindow::filterBarSetChecked(bool state) {
 }
 
 void GMainWindow::UpdateUITheme() {
-    const QString default_icons = QStringLiteral(":/icons/default");
+    const QString icons_base_path = QStringLiteral(":/icons/");
+    const QString default_theme = QStringLiteral("default");
+    const QString default_theme_path = icons_base_path + default_theme;
+
     const QString& current_theme = UISettings::values.theme;
     const bool is_default_theme = current_theme == QString::fromUtf8(UISettings::themes[0].second);
     QStringList theme_paths(default_theme_paths);
@@ -2759,8 +2762,8 @@ void GMainWindow::UpdateUITheme() {
             qApp->setStyleSheet({});
             setStyleSheet({});
         }
-        theme_paths.append(default_icons);
-        QIcon::setThemeName(default_icons);
+        theme_paths.append(default_theme_path);
+        QIcon::setThemeName(default_theme);
     } else {
         const QString theme_uri(QLatin1Char{':'} + current_theme + QStringLiteral("/style.qss"));
         QFile f(theme_uri);
@@ -2772,9 +2775,9 @@ void GMainWindow::UpdateUITheme() {
             LOG_ERROR(Frontend, "Unable to set style, stylesheet file not found");
         }
 
-        const QString theme_name = QStringLiteral(":/icons/") + current_theme;
-        theme_paths.append({default_icons, theme_name});
-        QIcon::setThemeName(theme_name);
+        const QString current_theme_path = icons_base_path + current_theme;
+        theme_paths.append({default_theme_path, current_theme_path});
+        QIcon::setThemeName(current_theme);
     }
 
     QIcon::setThemeSearchPaths(theme_paths);

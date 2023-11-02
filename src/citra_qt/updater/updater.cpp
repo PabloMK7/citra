@@ -17,7 +17,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
 #define DEFAULT_TOOL_PATH QStringLiteral("../../../../maintenancetool")
 #else
 #define DEFAULT_TOOL_PATH QStringLiteral("../maintenancetool")
@@ -102,7 +102,7 @@ QString UpdaterPrivate::ToSystemExe(QString base_path) {
         return base_path + QStringLiteral(".exe");
     else
         return base_path;
-#elif defined(Q_OS_OSX)
+#elif defined(Q_OS_MACOS)
     if (base_path.endsWith(QStringLiteral(".app")))
         base_path.truncate(base_path.lastIndexOf(QStringLiteral(".")));
     return base_path + QStringLiteral(".app/Contents/MacOS/") + QFileInfo(base_path).fileName();
@@ -112,7 +112,7 @@ QString UpdaterPrivate::ToSystemExe(QString base_path) {
 }
 
 QFileInfo UpdaterPrivate::GetMaintenanceTool() const {
-#if defined(Q_OS_UNIX) && !defined(Q_OS_OSX)
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
     const auto appimage_path = QProcessEnvironment::systemEnvironment()
                                    .value(QStringLiteral("APPIMAGE"), {})
                                    .toStdString();

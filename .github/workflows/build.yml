@@ -59,7 +59,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
   macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     strategy:
       matrix:
         target: ["x86_64", "arm64"]
@@ -92,7 +92,7 @@ jobs:
           path: ${{ env.OS }}-${{ env.TARGET }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
   macos-universal:
-    runs-on: macos-latest
+    runs-on: macos-13
     needs: macos
     env:
       OS: macos
@@ -234,7 +234,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
   ios:
-    runs-on: macos-latest
+    runs-on: macos-13
     if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
