@@ -46,11 +46,17 @@ set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
 add_subdirectory(catch2)
 
 # Crypto++
-set(CRYPTOPP_BUILD_DOCUMENTATION OFF CACHE BOOL "")
-set(CRYPTOPP_BUILD_TESTING OFF CACHE BOOL "")
-set(CRYPTOPP_INSTALL OFF CACHE BOOL "")
-set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp" CACHE STRING "")
-add_subdirectory(cryptopp-cmake)
+if(USE_SYSTEM_CRYPTOPP)
+    find_package(cryptopp REQUIRED)
+    add_library(cryptopp INTERFACE)
+    target_link_libraries(cryptopp INTERFACE cryptopp::cryptopp)
+else()
+    set(CRYPTOPP_BUILD_DOCUMENTATION OFF CACHE BOOL "")
+    set(CRYPTOPP_BUILD_TESTING OFF CACHE BOOL "")
+    set(CRYPTOPP_INSTALL OFF CACHE BOOL "")
+    set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp" CACHE STRING "")
+    add_subdirectory(cryptopp-cmake)
+endif()
 
 # dds-ktx
 add_library(dds-ktx INTERFACE)

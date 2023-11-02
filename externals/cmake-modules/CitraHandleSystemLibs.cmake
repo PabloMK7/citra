@@ -20,6 +20,7 @@ option(USE_SYSTEM_FFMPEG_HEADERS "Use the system FFmpeg headers (instead of the 
 option(USE_SYSTEM_GLSLANG "Use the system glslang and SPIR-V libraries (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_ZSTD "Use the system Zstandard library (instead of the bundled one)" OFF)
 option(USE_SYSTEM_ENET "Use the system libenet (instead of the bundled one)" OFF)
+option(USE_SYSTEM_CRYPTOPP "Use the system cryptopp (instead of the bundled one)" OFF)
 
 # Qt and MoltenVK are handled separately
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_SDL2 "Disable system SDL2" OFF "USE_SYSTEM_LIBS" OFF)
@@ -39,6 +40,7 @@ CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_FFMPEG_HEADERS "Disable system ffmpeg" OFF
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_GLSLANG "Disable system glslang" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_ZSTD "Disable system Zstandard" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_ENET "Disable system libenet" OFF "USE_SYSTEM_LIBS" OFF)
+CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_CRYPTOPP "Disable system cryptopp" OFF "USE_SYSTEM_LIBS" OFF)
 
 set(LIB_VAR_LIST
     SDL2
@@ -58,6 +60,7 @@ set(LIB_VAR_LIST
     GLSLANG
     ZSTD
     ENET
+    CRYPTOPP
     )
 
 # First, check that USE_SYSTEM_XXX is not used with USE_SYSTEM_LIBS
