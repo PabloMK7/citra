@@ -245,10 +245,19 @@ endif()
 
 # Cubeb
 if (ENABLE_CUBEB)
-    set(BUILD_TESTS OFF CACHE BOOL "")
-    set(BUILD_TOOLS OFF CACHE BOOL "")
-    set(BUNDLE_SPEEX ON CACHE BOOL "")
-    add_subdirectory(cubeb EXCLUDE_FROM_ALL)
+    if(USE_SYSTEM_CUBEB)
+        find_package(cubeb REQUIRED)
+        add_library(cubeb INTERFACE)
+        target_link_libraries(cubeb INTERFACE cubeb::cubeb)
+        if(TARGET cubeb::cubeb)
+            message(STATUS "Found system cubeb")
+        endif()
+    else()
+        set(BUILD_TESTS OFF CACHE BOOL "")
+        set(BUILD_TOOLS OFF CACHE BOOL "")
+        set(BUNDLE_SPEEX ON CACHE BOOL "")
+        add_subdirectory(cubeb EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 # DiscordRPC
