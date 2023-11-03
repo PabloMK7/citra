@@ -78,12 +78,11 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
         (float_regs_counter >= 3 && !uniform_setup.IsFloat32())) {
         float_regs_counter = 0;
 
-        auto& uniform = setup.uniforms.f[uniform_setup.index];
-
-        if (uniform_setup.index >= 96) {
+        if (uniform_setup.index >= setup.uniforms.f.size()) {
             LOG_ERROR(HW_GPU, "Invalid {} float uniform index {}", GetShaderSetupTypeName(setup),
                       (int)uniform_setup.index);
         } else {
+            auto& uniform = setup.uniforms.f[uniform_setup.index];
 
             // NOTE: The destination component order indeed is "backwards"
             if (uniform_setup.IsFloat32()) {
