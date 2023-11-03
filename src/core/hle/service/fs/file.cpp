@@ -57,7 +57,6 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u64 offset = rp.Pop<u64>();
     u32 length = rp.Pop<u32>();
-    auto& buffer = rp.PopMappedBuffer();
     LOG_TRACE(Service_FS, "Read {}: offset=0x{:x} length=0x{:08X}", GetName(), offset, length);
 
     const FileSessionSlot* file = GetSessionData(ctx.Session());
@@ -76,22 +75,94 @@ void File::Read(Kernel::HLERequestContext& ctx) {
                   offset, length, backend->GetSize());
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    // Conventional reading if the backend does not support cache.
+    if (!backend->AllowsCachedReads()) {
+        auto& buffer = rp.PopMappedBuffer();
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+        std::unique_ptr<u8*> data = std::make_unique<u8*>(static_cast<u8*>(operator new(length)));
+        const auto read = backend->Read(offset, length, *data);
+        if (read.Failed()) {
+            rb.Push(read.Code());
+            rb.Push<u32>(0);
+        } else {
+            buffer.Write(*data, 0, *read);
+            rb.Push(RESULT_SUCCESS);
+            rb.Push<u32>(static_cast<u32>(*read));
+        }
+        rb.PushMappedBuffer(buffer);
 
-    std::vector<u8> data(length);
-    ResultVal<std::size_t> read = backend->Read(offset, data.size(), data.data());
-    if (read.Failed()) {
-        rb.Push(read.Code());
-        rb.Push<u32>(0);
-    } else {
-        buffer.Write(data.data(), 0, *read);
-        rb.Push(RESULT_SUCCESS);
-        rb.Push<u32>(static_cast<u32>(*read));
+        std::chrono::nanoseconds read_timeout_ns{backend->GetReadDelayNs(length)};
+        ctx.SleepClientThread("file::read", read_timeout_ns, nullptr);
+        return;
     }
-    rb.PushMappedBuffer(buffer);
 
-    std::chrono::nanoseconds read_timeout_ns{backend->GetReadDelayNs(length)};
-    ctx.SleepClientThread("file::read", read_timeout_ns, nullptr);
+    struct AsyncData {
+        // Input
+        u32 length;
+        u64 offset;
+        std::chrono::steady_clock::time_point pre_timer;
+        bool cache_ready;
+
+        // Output
+        ResultCode ret{0};
+        Kernel::MappedBuffer* buffer;
+        std::unique_ptr<u8*> data;
+        size_t read_size;
+    };
+
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->buffer = &rp.PopMappedBuffer();
+    async_data->length = length;
+    async_data->offset = offset;
+    async_data->cache_ready = backend->CacheReady(offset, length);
+    if (!async_data->cache_ready) {
+        async_data->pre_timer = std::chrono::steady_clock::now();
+    }
+
+    // LOG_DEBUG(Service_FS, "cache={}, offset={}, length={}", cache_ready, offset, length);
+    ctx.RunAsync(
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            async_data->data =
+                std::make_unique<u8*>(static_cast<u8*>(operator new(async_data->length)));
+            const auto read =
+                backend->Read(async_data->offset, async_data->length, *async_data->data);
+            if (read.Failed()) {
+                async_data->ret = read.Code();
+                async_data->read_size = 0;
+            } else {
+                async_data->ret = RESULT_SUCCESS;
+                async_data->read_size = *read;
+            }
+
+            const auto read_delay = static_cast<s64>(backend->GetReadDelayNs(async_data->length));
+            if (!async_data->cache_ready) {
+                const auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                           std::chrono::steady_clock::now() - async_data->pre_timer)
+                                           .count();
+                /*
+                if (time_took > read_delay) {
+                    LOG_DEBUG(Service_FS, "Took longer! length={}, time_took={}, read_delay={}",
+                              async_data->length, time_took, read_delay);
+                }
+                */
+                return static_cast<s64>((read_delay > time_took) ? (read_delay - time_took) : 0);
+            } else {
+                return static_cast<s64>(read_delay);
+            }
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 0x0802, 2, 2);
+            if (async_data->ret.IsError()) {
+                rb.Push(async_data->ret);
+                rb.Push<u32>(0);
+            } else {
+                async_data->buffer->Write(*async_data->data, 0, async_data->read_size);
+                rb.Push(RESULT_SUCCESS);
+                rb.Push<u32>(static_cast<u32>(async_data->read_size));
+            }
+            rb.PushMappedBuffer(*async_data->buffer);
+        },
+        !async_data->cache_ready);
 }
 
 void File::Write(Kernel::HLERequestContext& ctx) {

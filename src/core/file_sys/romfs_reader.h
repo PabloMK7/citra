@@ -1,11 +1,14 @@
 #pragma once
 
 #include <array>
+#include <shared_mutex>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include "common/alignment.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/static_lru_cache.h"
 
 namespace FileSys {
 
@@ -18,6 +21,8 @@ public:
 
     virtual std::size_t GetSize() const = 0;
     virtual std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) = 0;
+    virtual bool AllowsCachedReads() const = 0;
+    virtual bool CacheReady(std::size_t file_offset, std::size_t length) = 0;
 
 private:
     template <class Archive>
@@ -48,6 +53,10 @@ public:
 
     std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) override;
 
+    bool AllowsCachedReads() const override;
+
+    bool CacheReady(std::size_t file_offset, std::size_t length) override;
+
 private:
     bool is_encrypted;
     FileUtil::IOFile file;
@@ -57,7 +66,22 @@ private:
     u64 crypto_offset;
     u64 data_size;
 
+    // Total cache size: 128KB
+    static constexpr size_t cache_line_size = (1 << 13); // About 8KB
+    static constexpr size_t cache_line_count = 16;
+
+    Common::StaticLRUCache<std::size_t, std::array<u8, cache_line_size>, cache_line_count> cache;
+    // TODO(PabloMK7): Make cache thread safe, read the comment in CacheReady function.
+    // std::shared_mutex cache_mutex;
+
     DirectRomFSReader() = default;
+
+    std::size_t OffsetToPage(std::size_t offset) {
+        return Common::AlignDown<std::size_t>(offset, cache_line_size);
+    }
+
+    std::vector<std::pair<std::size_t, std::size_t>> BreakupRead(std::size_t offset,
+                                                                 std::size_t length);
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {

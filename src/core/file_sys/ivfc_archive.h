@@ -131,6 +131,14 @@ public:
     }
     void Flush() const override {}
 
+    bool AllowsCachedReads() const override {
+        return romfs_file->AllowsCachedReads();
+    }
+
+    bool CacheReady(std::size_t file_offset, std::size_t length) override {
+        return romfs_file->CacheReady(file_offset, length);
+    }
+
 private:
     std::shared_ptr<RomFSReader> romfs_file;
 
