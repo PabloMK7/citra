@@ -4,15 +4,11 @@ add_library(audio_core STATIC
     codec.h
     dsp_interface.cpp
     dsp_interface.h
-    hle/adts.h
-    hle/adts_reader.cpp
     hle/common.h
     hle/decoder.cpp
     hle/decoder.h
-    hle/fdk_decoder.cpp
-    hle/fdk_decoder.h
-    hle/ffmpeg_decoder.cpp
-    hle/ffmpeg_decoder.h
+    hle/faad2_decoder.cpp
+    hle/faad2_decoder.h
     hle/filter.cpp
     hle/filter.h
     hle/hle.cpp
@@ -48,36 +44,7 @@ add_library(audio_core STATIC
 create_target_directory_groups(audio_core)
 
 target_link_libraries(audio_core PUBLIC citra_common citra_core)
-target_link_libraries(audio_core PRIVATE SoundTouch teakra)
-
-if(ENABLE_MF)
-    target_sources(audio_core PRIVATE
-        hle/wmf_decoder.cpp
-        hle/wmf_decoder.h
-        hle/wmf_decoder_utils.cpp
-        hle/wmf_decoder_utils.h
-    )
-    # We dynamically load the required symbols from mf.dll and mfplat.dll but mfuuid is not a dll
-    # just a static library of GUIDS so include that one directly.
-    target_link_libraries(audio_core PRIVATE mfuuid.lib)
-    target_compile_definitions(audio_core PUBLIC HAVE_MF)
-elseif(ENABLE_AUDIOTOOLBOX)
-    target_sources(audio_core PRIVATE
-        hle/audiotoolbox_decoder.cpp
-        hle/audiotoolbox_decoder.h
-    )
-    find_library(AUDIOTOOLBOX AudioToolbox)
-    target_link_libraries(audio_core PRIVATE ${AUDIOTOOLBOX})
-    target_compile_definitions(audio_core PUBLIC HAVE_AUDIOTOOLBOX)
-endif()
-
-if(ANDROID)
-    target_sources(audio_core PRIVATE
-        hle/mediandk_decoder.cpp
-        hle/mediandk_decoder.h
-    )
-    target_link_libraries(audio_core PRIVATE mediandk)
-endif()
+target_link_libraries(audio_core PRIVATE faad2 SoundTouch teakra)
 
 if(ENABLE_SDL2)
     target_link_libraries(audio_core PRIVATE SDL2::SDL2)

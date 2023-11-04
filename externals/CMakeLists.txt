@@ -156,23 +156,11 @@ endif()
 # Open Source Archives
 add_subdirectory(open_source_archives)
 
+# faad2
+add_subdirectory(faad2 EXCLUDE_FROM_ALL)
+
 # Dynamic library headers
 add_library(library-headers INTERFACE)
-
-if (USE_SYSTEM_FDK_AAC_HEADERS)
-    find_path(SYSTEM_FDK_AAC_INCLUDES NAMES fdk-aac/aacdecoder_lib.h)
-    if (SYSTEM_FDK_AAC_INCLUDES STREQUAL "SYSTEM_FDK_AAC_INCLUDES-NOTFOUND")
-        message(WARNING "System fdk-aac headers not found. Falling back on bundled headers.")
-    else()
-        message(STATUS "Using system fdk_aac headers.")
-        target_include_directories(library-headers SYSTEM INTERFACE ${SYSTEM_FDK_AAC_INCLUDES})
-        set(FOUND_FDK_AAC_HEADERS ON)
-    endif()
-endif()
-if (NOT FOUND_FDK_AAC_HEADERS)
-    message(STATUS "Using bundled fdk_aac headers.")
-    target_include_directories(library-headers SYSTEM INTERFACE ./library-headers/fdk-aac/include)
-endif()
 
 if (USE_SYSTEM_FFMPEG_HEADERS)
     find_path(SYSTEM_FFMPEG_INCLUDES NAMES libavutil/avutil.h)

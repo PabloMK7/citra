@@ -81,9 +81,6 @@ CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
-CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder (preferred over FFmpeg)" ON "WIN32" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_AUDIOTOOLBOX "Use AudioToolbox decoder (preferred over FFmpeg)" ON "APPLE" OFF)
-
 CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundling target." ON "NOT ANDROID AND NOT IOS" OFF)
 
 # Compile options

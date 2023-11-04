@@ -15,7 +15,6 @@ option(USE_SYSTEM_DYNARMIC "Use the system dynarmic (instead of the bundled one)
 option(USE_SYSTEM_FMT "Use the system fmt (instead of the bundled one)" OFF)
 option(USE_SYSTEM_XBYAK "Use the system xbyak (instead of the bundled one)" OFF)
 option(USE_SYSTEM_INIH "Use the system inih (instead of the bundled one)" OFF)
-option(USE_SYSTEM_FDK_AAC_HEADERS "Use the system fdk-aac headers (instead of the bundled one)" OFF)
 option(USE_SYSTEM_FFMPEG_HEADERS "Use the system FFmpeg headers (instead of the bundled one)" OFF)
 option(USE_SYSTEM_GLSLANG "Use the system glslang and SPIR-V libraries (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_ZSTD "Use the system Zstandard library (instead of the bundled one)" OFF)
@@ -36,7 +35,6 @@ CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_DYNARMIC "Disable system Dynarmic" OFF "US
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_FMT "Disable system fmt" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_XBYAK "Disable system xbyak" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_INIH "Disable system inih" OFF "USE_SYSTEM_LIBS" OFF)
-CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_FDK_AAC_HEADERS "Disable system fdk_aac" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_FFMPEG_HEADERS "Disable system ffmpeg" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_GLSLANG "Disable system glslang" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_ZSTD "Disable system Zstandard" OFF "USE_SYSTEM_LIBS" OFF)
@@ -57,7 +55,6 @@ set(LIB_VAR_LIST
     FMT
     XBYAK
     INIH
-    FDK_AAC_HEADERS
     FFMPEG_HEADERS
     GLSLANG
     ZSTD

@@ -1,16 +1,17 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
+
 #pragma once
 
 #include "audio_core/hle/decoder.h"
 
 namespace AudioCore::HLE {
 
-class MediaNDKDecoder final : public DecoderBase {
+class FAAD2Decoder final : public DecoderBase {
 public:
-    explicit MediaNDKDecoder(Memory::MemorySystem& memory);
-    ~MediaNDKDecoder() override;
+    explicit FAAD2Decoder(Memory::MemorySystem& memory);
+    ~FAAD2Decoder() override;
     std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request) override;
     bool IsValid() const override;
 

@@ -76,8 +76,6 @@ add_library(citra_common STATIC
     construct.h
     dynamic_library/dynamic_library.cpp
     dynamic_library/dynamic_library.h
-    dynamic_library/fdk-aac.cpp
-    dynamic_library/fdk-aac.h
     dynamic_library/ffmpeg.cpp
     dynamic_library/ffmpeg.h
     error.cpp
