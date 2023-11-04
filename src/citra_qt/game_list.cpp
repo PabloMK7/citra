@@ -560,7 +560,9 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     QAction* properties = context_menu.addAction(tr("Properties"));
 
     const u32 program_id_high = (program_id >> 32) & 0xFFFFFFFF;
-    const bool is_application = program_id_high == 0x00040000 || program_id_high == 0x00040010;
+    // TODO: Use proper bitmasks for these kinds of checks.
+    const bool is_application = program_id_high == 0x00040000 || program_id_high == 0x00040002 ||
+                                program_id_high == 0x00040010;
 
     bool opengl_cache_exists = false;
     ForEachOpenGLCacheFile(
