@@ -25,7 +25,7 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
             d.Seek(crypto_offset + offset);
             d.ProcessData(buffer, buffer, length);
         }
-        // LOG_INFO(Service_FS, "Cache SKIP: offset={}, length={}", offset, length);
+        LOG_TRACE(Service_FS, "RomFS Cache SKIP: offset={}, length={}", offset, length);
         return length;
     }
 
@@ -44,11 +44,11 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
                 d.Seek(crypto_offset + page);
                 d.ProcessData(cache_entry.second.data(), cache_entry.second.data(), read_size);
             }
-            // LOG_INFO(Service_FS, "Cache MISS: page={}, length={}, into={}", page, seg.second,
-            //          (seg.first - page));
+            LOG_TRACE(Service_FS, "RomFS Cache MISS: page={}, length={}, into={}", page, seg.second,
+                      (seg.first - page));
         } else {
-            // LOG_INFO(Service_FS, "Cache HIT: page={}, length={}, into={}", page, seg.second,
-            //          (seg.first - page));
+            LOG_TRACE(Service_FS, "RomFS Cache HIT: page={}, length={}, into={}", page, seg.second,
+                      (seg.first - page));
         }
         size_t copy_amount =
             (read_size > (seg.first - page))
