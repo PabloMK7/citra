@@ -6,7 +6,6 @@
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "core/global.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
@@ -21,7 +20,7 @@ void AddressArbiter::WaitThread(std::shared_ptr<Thread> thread, VAddr wait_addre
     waiting_threads.emplace_back(std::move(thread));
 }
 
-void AddressArbiter::ResumeAllThreads(VAddr address) {
+u64 AddressArbiter::ResumeAllThreads(VAddr address) {
     // Determine which threads are waiting on this address, those should be woken up.
     auto itr = std::stable_partition(waiting_threads.begin(), waiting_threads.end(),
                                      [address](const auto& thread) {
@@ -31,13 +30,15 @@ void AddressArbiter::ResumeAllThreads(VAddr address) {
                                      });
 
     // Wake up all the found threads
+    const u64 num_threads = std::distance(itr, waiting_threads.end());
     std::for_each(itr, waiting_threads.end(), [](auto& thread) { thread->ResumeFromWait(); });
 
     // Remove the woken up threads from the wait list.
     waiting_threads.erase(itr, waiting_threads.end());
+    return num_threads;
 }
 
-std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
+bool AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
     // Determine which threads are waiting on this address, those should be considered for wakeup.
     auto matches_start = std::stable_partition(
         waiting_threads.begin(), waiting_threads.end(), [address](const auto& thread) {
@@ -54,14 +55,15 @@ std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr addres
                                     return lhs->current_priority < rhs->current_priority;
                                 });
 
-    if (itr == waiting_threads.end())
-        return nullptr;
+    if (itr == waiting_threads.end()) {
+        return false;
+    }
 
     auto thread = *itr;
     thread->ResumeFromWait();
-
     waiting_threads.erase(itr);
-    return thread;
+
+    return true;
 }
 
 AddressArbiter::AddressArbiter(KernelSystem& kernel)
@@ -107,17 +109,28 @@ ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbi
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
-    case ArbitrationType::Signal:
+    case ArbitrationType::Signal: {
+        u64 num_threads{};
+
         // Negative value means resume all threads
         if (value < 0) {
-            ResumeAllThreads(address);
+            num_threads = ResumeAllThreads(address);
         } else {
             // Resume first N threads
-            for (int i = 0; i < value; i++)
-                ResumeHighestPriorityThread(address);
+            for (s32 i = 0; i < value; i++) {
+                num_threads += ResumeHighestPriorityThread(address);
+            }
+        }
+
+        // Prevents lag from low priority threads that spam svcArbitrateAddress and wake no threads
+        // The tick count is taken directly from official HOS kernel. The priority value is one less
+        // than official kernel as the affected FMV threads dont meet the priority threshold of 50.
+        // TODO: Revisit this when scheduler is rewritten and adjust if there isn't a problem there.
+        if (num_threads == 0 && thread->current_priority >= 49) {
+            kernel.current_cpu->GetTimer().AddTicks(1614u);
         }
         break;
-
+    }
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
         if ((s32)kernel.memory.Read32(address) < value) {
