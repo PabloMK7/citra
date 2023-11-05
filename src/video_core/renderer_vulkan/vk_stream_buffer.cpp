@@ -44,11 +44,12 @@ vk::MemoryPropertyFlags MakePropertyFlags(BufferType type) {
 }
 
 /// Find a memory type with the passed requirements
-std::optional<u32> FindMemoryType(const vk::PhysicalDeviceMemoryProperties& properties,
-                                  vk::MemoryPropertyFlags wanted) {
+std::optional<u32> FindMemoryType(
+    const vk::PhysicalDeviceMemoryProperties& properties, vk::MemoryPropertyFlags wanted,
+    vk::MemoryPropertyFlags excluded = vk::MemoryPropertyFlagBits::eProtected) {
     for (u32 i = 0; i < properties.memoryTypeCount; ++i) {
         const auto flags = properties.memoryTypes[i].propertyFlags;
-        if ((flags & wanted) == wanted) {
+        if (((flags & wanted) == wanted) && (!(flags & excluded))) {
             return i;
         }
     }
@@ -166,25 +167,46 @@ void StreamBuffer::CreateBuffers(u64 prefered_size) {
         static_cast<bool>(mem_type.propertyFlags & vk::MemoryPropertyFlagBits::eHostCoherent);
 
     // Substract from the preferred heap size some bytes to avoid getting out of memory.
-    const VkDeviceSize heap_size = memory_properties.memoryHeaps[preferred_heap].size;
+    const vk::DeviceSize heap_size = memory_properties.memoryHeaps[preferred_heap].size;
     // As per DXVK's example, using `heap_size / 2`
-    const VkDeviceSize allocable_size = heap_size / 2;
+    const vk::DeviceSize allocable_size = heap_size / 2;
     buffer = device.createBuffer({
         .size = std::min(prefered_size, allocable_size),
         .usage = usage,
     });
 
-    const auto requirements = device.getBufferMemoryRequirements(buffer);
-    stream_buffer_size = static_cast<u64>(requirements.size);
+    const auto requirements_chain =
+        device
+            .getBufferMemoryRequirements2<vk::MemoryRequirements2, vk::MemoryDedicatedRequirements>(
+                {.buffer = buffer});
+
+    const auto& requirements = requirements_chain.get<vk::MemoryRequirements2>();
+    const auto& dedicated_requirements = requirements_chain.get<vk::MemoryDedicatedRequirements>();
+
+    stream_buffer_size = static_cast<u64>(requirements.memoryRequirements.size);
 
     LOG_INFO(Render_Vulkan, "Creating {} buffer with size {} KB with flags {}",
              BufferTypeName(type), stream_buffer_size / 1024,
              vk::to_string(mem_type.propertyFlags));
 
-    memory = device.allocateMemory({
-        .allocationSize = requirements.size,
-        .memoryTypeIndex = preferred_type,
-    });
+    if (dedicated_requirements.prefersDedicatedAllocation) {
+        vk::StructureChain<vk::MemoryAllocateInfo, vk::MemoryDedicatedAllocateInfo> alloc_chain =
+            {};
+
+        auto& alloc_info = alloc_chain.get<vk::MemoryAllocateInfo>();
+        alloc_info.allocationSize = requirements.memoryRequirements.size;
+        alloc_info.memoryTypeIndex = preferred_type;
+
+        auto& dedicated_alloc_info = alloc_chain.get<vk::MemoryDedicatedAllocateInfo>();
+        dedicated_alloc_info.buffer = buffer;
+
+        memory = device.allocateMemory(alloc_chain.get());
+    } else {
+        memory = device.allocateMemory({
+            .allocationSize = requirements.memoryRequirements.size,
+            .memoryTypeIndex = preferred_type,
+        });
+    }
 
     device.bindBufferMemory(buffer, memory, 0);
     mapped = reinterpret_cast<u8*>(device.mapMemory(memory, 0, VK_WHOLE_SIZE));
