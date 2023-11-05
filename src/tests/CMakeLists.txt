@@ -15,7 +15,7 @@ add_executable(tests
     audio_core/lle/lle.cpp
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
-    video_core/shader/shader_jit_x64_compiler.cpp
+    video_core/shader/shader_jit_compiler.cpp
 )
 
 create_target_directory_groups(tests)

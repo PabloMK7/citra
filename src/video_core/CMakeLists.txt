@@ -149,6 +149,10 @@ add_library(video_core STATIC
     shader/shader.h
     shader/shader_interpreter.cpp
     shader/shader_interpreter.h
+    shader/shader_jit_a64.cpp
+    shader/shader_jit_a64_compiler.cpp
+    shader/shader_jit_a64.h
+    shader/shader_jit_a64_compiler.h
     shader/shader_jit_x64.cpp
     shader/shader_jit_x64_compiler.cpp
     shader/shader_jit_x64.h
@@ -175,6 +179,10 @@ target_link_libraries(video_core PRIVATE vulkan-headers vma glad sirit SPIRV gls
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(video_core PUBLIC xbyak)
+endif()
+
+if ("arm64" IN_LIST ARCHITECTURE)
+    target_link_libraries(video_core PUBLIC oaknut)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

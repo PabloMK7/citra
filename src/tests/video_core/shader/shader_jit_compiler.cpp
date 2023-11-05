@@ -1,9 +1,9 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/arch.h"
-#if CITRA_ARCH(x86_64)
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
 #include <algorithm>
 #include <cmath>
@@ -14,7 +14,11 @@
 #include <fmt/format.h>
 #include <nihstro/inline_assembly.h>
 #include "video_core/shader/shader_interpreter.h"
+#if CITRA_ARCH(x86_64)
 #include "video_core/shader/shader_jit_x64_compiler.h"
+#elif CITRA_ARCH(arm64)
+#include "video_core/shader/shader_jit_a64_compiler.h"
+#endif
 
 using JitShader = Pica::Shader::JitShader;
 using ShaderInterpreter = Pica::Shader::InterpreterEngine;
@@ -30,6 +34,18 @@ static constexpr Common::Vec4f vec4_one = Common::Vec4f::AssignToAll(1.0f);
 static constexpr Common::Vec4f vec4_zero = Common::Vec4f::AssignToAll(0.0f);
 
 namespace Catch {
+template <>
+struct StringMaker<Common::Vec2f> {
+    static std::string convert(Common::Vec2f value) {
+        return fmt::format("({}, {})", value.x, value.y);
+    }
+};
+template <>
+struct StringMaker<Common::Vec3f> {
+    static std::string convert(Common::Vec3f value) {
+        return fmt::format("({}, {}, {})", value.r(), value.g(), value.b());
+    }
+};
 template <>
 struct StringMaker<Common::Vec4f> {
     static std::string convert(Common::Vec4f value) {
@@ -56,6 +72,11 @@ class ShaderTest {
 public:
     explicit ShaderTest(std::initializer_list<nihstro::InlineAsm> code)
         : shader_setup(CompileShaderSetup(code)) {
+        shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
+    }
+
+    explicit ShaderTest(std::unique_ptr<Pica::Shader::ShaderSetup> input_shader_setup)
+        : shader_setup(std::move(input_shader_setup)) {
         shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
     }
 
@@ -142,6 +163,41 @@ TEST_CASE("ADD", "[video_core][shader][shader_jit]") {
     REQUIRE(std::isnan(shader.Run({+INFINITY, -INFINITY}).x));
     REQUIRE(std::isinf(shader.Run({INFINITY, +1.0f}).x));
     REQUIRE(std::isinf(shader.Run({INFINITY, -1.0f}).x));
+}
+
+TEST_CASE("CALL", "[video_core][shader][shader_jit]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader_setup = CompileShaderSetup({
+        {OpCode::Id::NOP}, // call foo
+        {OpCode::Id::END},
+        // .proc foo
+        {OpCode::Id::NOP}, // call ex2
+        {OpCode::Id::END},
+        // .proc ex2
+        {OpCode::Id::EX2, sh_output, sh_input},
+        {OpCode::Id::END},
+    });
+
+    // nihstro does not support the CALL* instructions, so the instruction-binary must be manually
+    // inserted here:
+    nihstro::Instruction CALL = {};
+    CALL.opcode = nihstro::OpCode(nihstro::OpCode::Id::CALL);
+
+    // call foo
+    CALL.flow_control.dest_offset = 2;
+    CALL.flow_control.num_instructions = 1;
+    shader_setup->program_code[0] = CALL.hex;
+
+    // call ex2
+    CALL.flow_control.dest_offset = 4;
+    CALL.flow_control.num_instructions = 1;
+    shader_setup->program_code[2] = CALL.hex;
+
+    auto shader = ShaderTest(std::move(shader_setup));
+
+    REQUIRE(shader.Run(0.f).x == Catch::Approx(1.f));
 }
 
 TEST_CASE("DP3", "[video_core][shader][shader_jit]") {
@@ -395,6 +451,39 @@ TEST_CASE("RSQ", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({0.0625f}).x == Catch::Approx(4.0f).margin(0.004f));
 }
 
+TEST_CASE("Uniform Read", "[video_core][shader][shader_jit]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_c0 = SourceRegister::MakeFloat(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader = ShaderTest({
+        // mova a0.x, sh_input.x
+        {OpCode::Id::MOVA, DestRegister{}, "x", sh_input, "x", SourceRegister{}, "",
+         nihstro::InlineAsm::RelativeAddress::A1},
+        // mov sh_output.xyzw, c0[a0.x].xyzw
+        {OpCode::Id::MOV, sh_output, "xyzw", sh_c0, "xyzw", SourceRegister{}, "",
+         nihstro::InlineAsm::RelativeAddress::A1},
+        {OpCode::Id::END},
+    });
+
+    // Prepare shader uniforms
+    std::array<Common::Vec4f, 96> f_uniforms = {};
+    for (u32 i = 0; i < 96; ++i) {
+        const float color = (i * 2.0f) / 255.0f;
+        const auto color_f24 = Pica::f24::FromFloat32(color);
+        shader.shader_setup->uniforms.f[i] = {color_f24, color_f24, color_f24, Pica::f24::One()};
+        f_uniforms[i] = {color, color, color, 1.0f};
+    }
+
+    for (u32 i = 0; i < 96; ++i) {
+        const float index = static_cast<float>(i);
+        // Add some fractional values to test proper float->integer truncation
+        const float fractional = (i % 17) / 17.0f;
+
+        REQUIRE(shader.Run(index + fractional) == f_uniforms[i]);
+    }
+}
+
 TEST_CASE("Address Register Offset", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_c40 = SourceRegister::MakeFloat(40);
@@ -445,23 +534,83 @@ TEST_CASE("Address Register Offset", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run(-129.f) == f_uniforms[40]);
 }
 
-// TODO: Requires fix from https://github.com/neobrain/nihstro/issues/68
-// TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
-//     const auto sh_input1 = SourceRegister::MakeInput(0);
-//     const auto sh_input2 = SourceRegister::MakeInput(1);
-//     const auto sh_input3 = SourceRegister::MakeInput(2);
-//     const auto sh_output = DestRegister::MakeOutput(0);
+TEST_CASE("Dest Mask", "[video_core][shader][shader_jit]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
 
-//     auto shader = ShaderTest({
-//         {OpCode::Id::MAD, sh_output, sh_input1, sh_input2, sh_input3},
-//         {OpCode::Id::END},
-//     });
+    const auto shader = [&sh_input, &sh_output](const char* dest_mask) {
+        return std::unique_ptr<ShaderTest>(new ShaderTest{
+            {OpCode::Id::MOV, sh_output, dest_mask, sh_input, "xyzw", SourceRegister{}, ""},
+            {OpCode::Id::END},
+        });
+    };
 
-//     REQUIRE(shader.Run({vec4_inf, vec4_zero, vec4_zero}).x == 0.0f);
-//     REQUIRE(std::isnan(shader.Run({vec4_nan, vec4_zero, vec4_zero}).x));
+    const Common::Vec4f iota_vec = {1.0f, 2.0f, 3.0f, 4.0f};
 
-//     REQUIRE(shader.Run({vec4_one, vec4_one, vec4_one}).x == 2.0f);
-// }
+    REQUIRE(shader("x")->Run({iota_vec}).x == iota_vec.x);
+    REQUIRE(shader("y")->Run({iota_vec}).y == iota_vec.y);
+    REQUIRE(shader("z")->Run({iota_vec}).z == iota_vec.z);
+    REQUIRE(shader("w")->Run({iota_vec}).w == iota_vec.w);
+    REQUIRE(shader("xy")->Run({iota_vec}).xy() == iota_vec.xy());
+    REQUIRE(shader("xz")->Run({iota_vec}).xz() == iota_vec.xz());
+    REQUIRE(shader("xw")->Run({iota_vec}).xw() == iota_vec.xw());
+    REQUIRE(shader("yz")->Run({iota_vec}).yz() == iota_vec.yz());
+    REQUIRE(shader("yw")->Run({iota_vec}).yw() == iota_vec.yw());
+    REQUIRE(shader("zw")->Run({iota_vec}).zw() == iota_vec.zw());
+    REQUIRE(shader("xyz")->Run({iota_vec}).xyz() == iota_vec.xyz());
+    REQUIRE(shader("xyw")->Run({iota_vec}).xyw() == iota_vec.xyw());
+    REQUIRE(shader("xzw")->Run({iota_vec}).xzw() == iota_vec.xzw());
+    REQUIRE(shader("yzw")->Run({iota_vec}).yzw() == iota_vec.yzw());
+    REQUIRE(shader("xyzw")->Run({iota_vec}) == iota_vec);
+}
+
+TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
+    const auto sh_input1 = SourceRegister::MakeInput(0);
+    const auto sh_input2 = SourceRegister::MakeInput(1);
+    const auto sh_input3 = SourceRegister::MakeInput(2);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    auto shader_setup = CompileShaderSetup({
+        // TODO: Requires fix from https://github.com/neobrain/nihstro/issues/68
+        // {OpCode::Id::MAD, sh_output, sh_input1, sh_input2, sh_input3},
+        {OpCode::Id::NOP},
+        {OpCode::Id::END},
+    });
+
+    // nihstro does not support the MAD* instructions, so the instruction-binary must be manually
+    // inserted here:
+    nihstro::Instruction MAD = {};
+    MAD.opcode = nihstro::OpCode::Id::MAD;
+    MAD.mad.operand_desc_id = 0;
+    MAD.mad.src1 = sh_input1;
+    MAD.mad.src2 = sh_input2;
+    MAD.mad.src3 = sh_input3;
+    MAD.mad.dest = sh_output;
+    shader_setup->program_code[0] = MAD.hex;
+
+    nihstro::SwizzlePattern swizzle = {};
+    swizzle.dest_mask = 0b1111;
+    swizzle.SetSelectorSrc1(0, SwizzlePattern::Selector::x);
+    swizzle.SetSelectorSrc1(1, SwizzlePattern::Selector::y);
+    swizzle.SetSelectorSrc1(2, SwizzlePattern::Selector::z);
+    swizzle.SetSelectorSrc1(3, SwizzlePattern::Selector::w);
+    swizzle.SetSelectorSrc2(0, SwizzlePattern::Selector::x);
+    swizzle.SetSelectorSrc2(1, SwizzlePattern::Selector::y);
+    swizzle.SetSelectorSrc2(2, SwizzlePattern::Selector::z);
+    swizzle.SetSelectorSrc2(3, SwizzlePattern::Selector::w);
+    swizzle.SetSelectorSrc3(0, SwizzlePattern::Selector::x);
+    swizzle.SetSelectorSrc3(1, SwizzlePattern::Selector::y);
+    swizzle.SetSelectorSrc3(2, SwizzlePattern::Selector::z);
+    swizzle.SetSelectorSrc3(3, SwizzlePattern::Selector::w);
+    shader_setup->swizzle_data[0] = swizzle.hex;
+
+    auto shader = ShaderTest(std::move(shader_setup));
+
+    REQUIRE(shader.Run({vec4_zero, vec4_zero, vec4_zero}) == vec4_zero);
+    REQUIRE(shader.Run({vec4_one, vec4_one, vec4_one}) == (vec4_one * 2.0f));
+    REQUIRE(shader.Run({vec4_inf, vec4_zero, vec4_zero}) == vec4_zero);
+    REQUIRE(shader.Run({vec4_nan, vec4_zero, vec4_zero}) == vec4_nan);
+}
 
 TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
@@ -518,4 +667,42 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
     }
 }
 
-#endif // CITRA_ARCH(x86_64)
+TEST_CASE("Source Swizzle", "[video_core][shader][shader_jit]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    const auto shader = [&sh_input, &sh_output](const char* swizzle) {
+        return std::unique_ptr<ShaderTest>(new ShaderTest{
+            {OpCode::Id::MOV, sh_output, "xyzw", sh_input, swizzle, SourceRegister{}, ""},
+            {OpCode::Id::END},
+        });
+    };
+
+    const Common::Vec4f iota_vec = {1.0f, 2.0f, 3.0f, 4.0f};
+
+    REQUIRE(shader("x")->Run({iota_vec}).x == iota_vec.x);
+    REQUIRE(shader("y")->Run({iota_vec}).x == iota_vec.y);
+    REQUIRE(shader("z")->Run({iota_vec}).x == iota_vec.z);
+    REQUIRE(shader("w")->Run({iota_vec}).x == iota_vec.w);
+    REQUIRE(shader("xy")->Run({iota_vec}).xy() == iota_vec.xy());
+    REQUIRE(shader("xz")->Run({iota_vec}).xy() == iota_vec.xz());
+    REQUIRE(shader("xw")->Run({iota_vec}).xy() == iota_vec.xw());
+    REQUIRE(shader("yz")->Run({iota_vec}).xy() == iota_vec.yz());
+    REQUIRE(shader("yw")->Run({iota_vec}).xy() == iota_vec.yw());
+    REQUIRE(shader("zw")->Run({iota_vec}).xy() == iota_vec.zw());
+    REQUIRE(shader("yy")->Run({iota_vec}).xy() == iota_vec.yy());
+    REQUIRE(shader("wx")->Run({iota_vec}).xy() == iota_vec.wx());
+    REQUIRE(shader("xyz")->Run({iota_vec}).xyz() == iota_vec.xyz());
+    REQUIRE(shader("xyw")->Run({iota_vec}).xyz() == iota_vec.xyw());
+    REQUIRE(shader("xzw")->Run({iota_vec}).xyz() == iota_vec.xzw());
+    REQUIRE(shader("yzw")->Run({iota_vec}).xyz() == iota_vec.yzw());
+    REQUIRE(shader("yyy")->Run({iota_vec}).xyz() == iota_vec.yyy());
+    REQUIRE(shader("yxw")->Run({iota_vec}).xyz() == iota_vec.yxw());
+    REQUIRE(shader("xyzw")->Run({iota_vec}) == iota_vec);
+    REQUIRE(shader("wzxy")->Run({iota_vec}) ==
+            Common::Vec4f(iota_vec.w, iota_vec.z, iota_vec.x, iota_vec.y));
+    REQUIRE(shader("yyyy")->Run({iota_vec}) ==
+            Common::Vec4f(iota_vec.y, iota_vec.y, iota_vec.y, iota_vec.y));
+}
+
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)

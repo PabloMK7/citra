@@ -53,6 +53,8 @@ add_custom_command(OUTPUT scm_rev.cpp
 add_library(citra_common STATIC
     aarch64/cpu_detect.cpp
     aarch64/cpu_detect.h
+    aarch64/oaknut_abi.h
+    aarch64/oaknut_util.h
     alignment.h
     android_storage.h
     android_storage.cpp
@@ -177,6 +179,10 @@ target_link_libraries(citra_common PRIVATE zstd)
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(citra_common PRIVATE xbyak)
+endif()
+
+if ("arm64" IN_LIST ARCHITECTURE)
+    target_link_libraries(citra_common PRIVATE oaknut)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

@@ -85,6 +85,11 @@ if ("x86_64" IN_LIST ARCHITECTURE)
     endif()
 endif()
 
+# Oaknut
+if ("arm64" IN_LIST ARCHITECTURE)
+    add_subdirectory(oaknut EXCLUDE_FROM_ALL)
+endif()
+
 # Dynarmic
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
     if(USE_SYSTEM_DYNARMIC)

@@ -15,7 +15,9 @@
 #include "video_core/shader/shader_interpreter.h"
 #if CITRA_ARCH(x86_64)
 #include "video_core/shader/shader_jit_x64.h"
-#endif // CITRA_ARCH(x86_64)
+#elif CITRA_ARCH(arm64)
+#include "video_core/shader/shader_jit_a64.h"
+#endif
 #include "video_core/video_core.h"
 
 namespace Pica::Shader {
@@ -141,27 +143,29 @@ MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
 #if CITRA_ARCH(x86_64)
 static std::unique_ptr<JitX64Engine> jit_engine;
-#endif // CITRA_ARCH(x86_64)
+#elif CITRA_ARCH(arm64)
+static std::unique_ptr<JitA64Engine> jit_engine;
+#endif
 static InterpreterEngine interpreter_engine;
 
 ShaderEngine* GetEngine() {
-#if CITRA_ARCH(x86_64)
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
     // TODO(yuriks): Re-initialize on each change rather than being persistent
     if (VideoCore::g_shader_jit_enabled) {
         if (jit_engine == nullptr) {
-            jit_engine = std::make_unique<JitX64Engine>();
+            jit_engine = std::make_unique<decltype(jit_engine)::element_type>();
         }
         return jit_engine.get();
     }
-#endif // CITRA_ARCH(x86_64)
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
     return &interpreter_engine;
 }
 
 void Shutdown() {
-#if CITRA_ARCH(x86_64)
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
     jit_engine = nullptr;
-#endif // CITRA_ARCH(x86_64)
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 }
 
 } // namespace Pica::Shader
