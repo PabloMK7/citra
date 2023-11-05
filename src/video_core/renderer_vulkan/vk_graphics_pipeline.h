@@ -89,6 +89,9 @@ struct DynamicState {
     u8 stencil_compare_mask;
     u8 stencil_write_mask;
 
+    Common::Rectangle<u32> scissor;
+    Common::Rectangle<s32> viewport;
+
     bool operator==(const DynamicState& other) const noexcept {
         return std::memcmp(this, &other, sizeof(DynamicState)) == 0;
     }

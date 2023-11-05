@@ -512,30 +512,13 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     // Configure viewport and scissor
     const auto viewport = fb_helper.Viewport();
-    scheduler.Record([viewport, draw_rect](vk::CommandBuffer cmdbuf) {
-        const vk::Viewport vk_viewport = {
-            .x = static_cast<f32>(viewport.x),
-            .y = static_cast<f32>(viewport.y),
-            .width = static_cast<f32>(viewport.width),
-            .height = static_cast<f32>(viewport.height),
-            .minDepth = 0.f,
-            .maxDepth = 1.f,
-        };
-
-        const vk::Rect2D scissor = {
-            .offset{
-                .x = static_cast<s32>(draw_rect.left),
-                .y = static_cast<s32>(draw_rect.bottom),
-            },
-            .extent{
-                .width = draw_rect.GetWidth(),
-                .height = draw_rect.GetHeight(),
-            },
-        };
-
-        cmdbuf.setViewport(0, vk_viewport);
-        cmdbuf.setScissor(0, scissor);
-    });
+    pipeline_info.dynamic.viewport = Common::Rectangle<s32>{
+        viewport.x,
+        viewport.y,
+        viewport.x + viewport.width,
+        viewport.y + viewport.height,
+    };
+    pipeline_info.dynamic.scissor = draw_rect;
 
     // Draw the vertex batch
     bool succeeded = true;
