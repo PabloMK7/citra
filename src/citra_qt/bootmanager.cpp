@@ -138,37 +138,50 @@ void EmuThread::run() {
 }
 
 #ifdef HAS_OPENGL
+static std::unique_ptr<QOpenGLContext> CreateQOpenGLContext(bool gles) {
+    QSurfaceFormat format;
+    if (gles) {
+        format.setRenderableType(QSurfaceFormat::RenderableType::OpenGLES);
+        format.setVersion(3, 2);
+    } else {
+        format.setRenderableType(QSurfaceFormat::RenderableType::OpenGL);
+        format.setVersion(4, 3);
+    }
+    format.setProfile(QSurfaceFormat::CoreProfile);
+
+    if (Settings::values.renderer_debug) {
+        format.setOption(QSurfaceFormat::FormatOption::DebugContext);
+    }
+
+    // TODO: expose a setting for buffer value (ie default/single/double/triple)
+    format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
+    format.setSwapInterval(0);
+
+    auto context = std::make_unique<QOpenGLContext>();
+    context->setFormat(format);
+    if (!context->create()) {
+        LOG_ERROR(Frontend, "Unable to create OpenGL context with GLES = {}", gles);
+        return nullptr;
+    }
+    return context;
+}
+
 class OpenGLSharedContext : public Frontend::GraphicsContext {
 public:
     /// Create the original context that should be shared from
     explicit OpenGLSharedContext() {
-        QSurfaceFormat format;
-
-        if (Settings::values.use_gles) {
-            format.setRenderableType(QSurfaceFormat::RenderableType::OpenGLES);
-            format.setVersion(3, 2);
-        } else {
-            format.setRenderableType(QSurfaceFormat::RenderableType::OpenGL);
-            format.setVersion(4, 3);
-        }
-        format.setProfile(QSurfaceFormat::CoreProfile);
-
-        if (Settings::values.renderer_debug) {
-            format.setOption(QSurfaceFormat::FormatOption::DebugContext);
-        }
-
-        // TODO: expose a setting for buffer value (ie default/single/double/triple)
-        format.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
-        format.setSwapInterval(0);
-
-        context = std::make_unique<QOpenGLContext>();
-        context->setFormat(format);
-        if (!context->create()) {
-            LOG_ERROR(Frontend, "Unable to create main openGL context");
+        // First, try to create a context with the requested type.
+        context = CreateQOpenGLContext(Settings::values.use_gles.GetValue());
+        if (context == nullptr) {
+            // On failure, fall back to context with flipped type.
+            context = CreateQOpenGLContext(!Settings::values.use_gles.GetValue());
+            if (context == nullptr) {
+                LOG_ERROR(Frontend, "Unable to create any OpenGL context.");
+            }
         }
 
         offscreen_surface = std::make_unique<QOffscreenSurface>(nullptr);
-        offscreen_surface->setFormat(format);
+        offscreen_surface->setFormat(context->format());
         offscreen_surface->create();
         surface = offscreen_surface.get();
     }
@@ -184,7 +197,7 @@ public:
         context->setShareContext(share_context);
         context->setFormat(format);
         if (!context->create()) {
-            LOG_ERROR(Frontend, "Unable to create shared openGL context");
+            LOG_ERROR(Frontend, "Unable to create shared OpenGL context");
         }
 
         surface = main_surface;
@@ -192,6 +205,10 @@ public:
 
     ~OpenGLSharedContext() {
         OpenGLSharedContext::DoneCurrent();
+    }
+
+    bool IsGLES() override {
+        return context->format().renderableType() == QSurfaceFormat::RenderableType::OpenGLES;
     }
 
     void SwapBuffers() override {
@@ -739,8 +756,9 @@ bool GRenderWindow::LoadOpenGL() {
 #ifdef HAS_OPENGL
     auto context = CreateSharedContext();
     auto scope = context->Acquire();
+    const auto gles = context->IsGLES();
 
-    auto gl_load_func = Settings::values.use_gles ? gladLoadGLES2Loader : gladLoadGLLoader;
+    auto gl_load_func = gles ? gladLoadGLES2Loader : gladLoadGLLoader;
     if (!gl_load_func(GetProcAddressGL)) {
         QMessageBox::warning(
             this, tr("Error while initializing OpenGL!"),
@@ -751,14 +769,14 @@ bool GRenderWindow::LoadOpenGL() {
     const QString renderer =
         QString::fromUtf8(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 
-    if (!Settings::values.use_gles && !GLAD_GL_VERSION_4_3) {
+    if (!gles && !GLAD_GL_VERSION_4_3) {
         LOG_ERROR(Frontend, "GPU does not support OpenGL 4.3: {}", renderer.toStdString());
         QMessageBox::warning(this, tr("Error while initializing OpenGL 4.3!"),
                              tr("Your GPU may not support OpenGL 4.3, or you do not have the "
                                 "latest graphics driver.<br><br>GL Renderer:<br>%1")
                                  .arg(renderer));
         return false;
-    } else if (Settings::values.use_gles && !GLAD_GL_ES_VERSION_3_2) {
+    } else if (gles && !GLAD_GL_ES_VERSION_3_2) {
         LOG_ERROR(Frontend, "GPU does not support OpenGL ES 3.2: {}", renderer.toStdString());
         QMessageBox::warning(this, tr("Error while initializing OpenGL ES 3.2!"),
                              tr("Your GPU may not support OpenGL ES 3.2, or you do not have the "
