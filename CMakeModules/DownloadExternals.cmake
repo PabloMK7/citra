@@ -67,11 +67,20 @@ function(download_qt target)
 
     if (NOT EXISTS "${prefix}")
         message(STATUS "Downloading binaries for Qt...")
+        set(AQT_PREBUILD_BASE_URL "https://github.com/miurahr/aqtinstall/releases/download/v3.1.9")
         if (WIN32)
             set(aqt_path "${base_path}/aqt.exe")
             file(DOWNLOAD
-                https://github.com/miurahr/aqtinstall/releases/download/v3.1.7/aqt.exe
+                ${AQT_PREBUILD_BASE_URL}/aqt.exe
                 ${aqt_path} SHOW_PROGRESS)
+            execute_process(COMMAND ${aqt_path} ${install_args}
+                    WORKING_DIRECTORY ${base_path})
+        elseif (APPLE)
+            set(aqt_path "${base_path}/aqt-macos")
+            file(DOWNLOAD
+                ${AQT_PREBUILD_BASE_URL}/aqt-macos
+                ${aqt_path} SHOW_PROGRESS)
+            execute_process(COMMAND chmod +x ${aqt_path})
             execute_process(COMMAND ${aqt_path} ${install_args}
                     WORKING_DIRECTORY ${base_path})
         else()
