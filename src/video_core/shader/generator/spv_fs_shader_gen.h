@@ -7,11 +7,7 @@
 #include <array>
 #include <sirit/sirit.h>
 
-#include "video_core/shader/generator/shader_gen.h"
-
-namespace Core {
-class TelemetrySession;
-}
+#include "video_core/shader/generator/pica_fs_config.h"
 
 namespace Pica::Shader::Generator::SPIRV {
 
@@ -34,7 +30,7 @@ class FragmentModule : public Sirit::Module {
     static constexpr u32 NUM_NON_PROC_TEX_UNITS = 3;
 
 public:
-    explicit FragmentModule(Core::TelemetrySession& telemetry, const PicaFSConfig& config);
+    explicit FragmentModule(const FSConfig& config);
     ~FragmentModule();
 
     /// Emits SPIR-V bytecode corresponding to the provided pica fragment configuration
@@ -218,8 +214,7 @@ private:
     Id CompareShadow(Id pixel, Id z);
 
 private:
-    Core::TelemetrySession& telemetry;
-    PicaFSConfig config;
+    const FSConfig& config;
     Id void_id{};
     Id bool_id{};
     Id f32_id{};
@@ -289,6 +284,6 @@ private:
  * @param separable_shader generates shader that can be used for separate shader object
  * @returns String of the shader source code
  */
-std::vector<u32> GenerateFragmentShader(const PicaFSConfig& config);
+std::vector<u32> GenerateFragmentShader(const FSConfig& config);
 
 } // namespace Pica::Shader::Generator::SPIRV

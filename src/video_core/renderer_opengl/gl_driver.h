@@ -107,7 +107,15 @@ public:
 
     /// Returns true if the implementation supports (EXT/ARM)_shader_framebuffer_fetch
     bool HasShaderFramebufferFetch() const {
-        return shader_framebuffer_fetch;
+        return ext_shader_framebuffer_fetch || arm_shader_framebuffer_fetch;
+    }
+
+    bool HasExtFramebufferFetch() const {
+        return ext_shader_framebuffer_fetch;
+    }
+
+    bool HasArmShaderFramebufferFetch() const {
+        return arm_shader_framebuffer_fetch;
     }
 
     /// Returns true if the implementation supports (NV/AMD)_blend_minmax_factor
@@ -136,7 +144,8 @@ private:
     bool clip_cull_distance{};
     bool ext_texture_compression_s3tc{};
     bool arb_texture_compression_bptc{};
-    bool shader_framebuffer_fetch{};
+    bool arm_shader_framebuffer_fetch{};
+    bool ext_shader_framebuffer_fetch{};
     bool blend_minmax_factor{};
 
     std::string_view gl_version{};

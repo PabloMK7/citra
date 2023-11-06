@@ -497,7 +497,7 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     // Sync and bind the shader
     if (shader_dirty) {
-        pipeline_cache.UseFragmentShader(regs);
+        pipeline_cache.UseFragmentShader(regs, user_config);
         shader_dirty = false;
     }
 

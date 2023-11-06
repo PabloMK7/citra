@@ -7,6 +7,7 @@
 #include "common/vector_math.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/regs_texturing.h"
+#include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/shader_uniforms.h"
 
 namespace Memory {
@@ -153,6 +154,7 @@ protected:
     Pica::Regs& regs;
 
     std::vector<HardwareVertex> vertex_batch;
+    Pica::Shader::UserConfig user_config{};
     bool shader_dirty = true;
 
     VSUniformBlockData vs_uniform_block_data{};
@@ -166,4 +168,5 @@ protected:
     std::array<Common::Vec4f, 256> proctex_lut_data{};
     std::array<Common::Vec4f, 256> proctex_diff_lut_data{};
 };
+
 } // namespace VideoCore

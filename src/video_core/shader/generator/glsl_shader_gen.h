@@ -46,12 +46,4 @@ std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const P
  */
 std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool separable_shader);
 
-/**
- * Generates the GLSL fragment shader program source code for the current Pica state
- * @param config ShaderCacheKey object generated for the current Pica state, used for the shader
- *               configuration (NOTE: Use state in this struct only, not the Pica registers!)
- * @returns String of the shader source code
- */
-std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_shader);
-
 } // namespace Pica::Shader::Generator::GLSL

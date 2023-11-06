@@ -15,8 +15,12 @@
 #include "video_core/renderer_vulkan/vk_renderpass_cache.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
+#include "video_core/shader/generator/glsl_fs_shader_gen.h"
+#include "video_core/shader/generator/glsl_shader_gen.h"
+#include "video_core/shader/generator/spv_fs_shader_gen.h"
 
 using namespace Pica::Shader::Generator;
+using Pica::Shader::FSConfig;
 
 MICROPROFILE_DEFINE(Vulkan_Bind, "Vulkan", "Pipeline Bind", MP_RGB(192, 32, 32));
 
@@ -86,6 +90,17 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
       trivial_vertex_shader{
           instance, vk::ShaderStageFlagBits::eVertex,
           GLSL::GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported(), true)} {
+    profile = Pica::Shader::Profile{
+        .has_separable_shaders = true,
+        .has_clip_planes = instance.IsShaderClipDistanceSupported(),
+        .has_geometry_shader = instance.UseGeometryShaders(),
+        .has_custom_border_color = instance.IsCustomBorderColorSupported(),
+        .has_fragment_shader_interlock = instance.IsFragmentShaderInterlockSupported(),
+        .has_blend_minmax_factor = false,
+        .has_minus_one_to_one_range = false,
+        .has_logic_op = !instance.NeedsLogicOpEmulation(),
+        .is_vulkan = true,
+    };
     BuildLayout();
 }
 
@@ -403,35 +418,30 @@ void PipelineCache::UseTrivialGeometryShader() {
     shader_hashes[ProgramType::GS] = 0;
 }
 
-void PipelineCache::UseFragmentShader(const Pica::Regs& regs) {
-    const PicaFSConfig config{regs, instance.IsFragmentShaderInterlockSupported(),
-                              instance.NeedsLogicOpEmulation(),
-                              !instance.IsCustomBorderColorSupported(), false};
-
-    const auto [it, new_shader] = fragment_shaders.try_emplace(config, instance);
+void PipelineCache::UseFragmentShader(const Pica::Regs& regs,
+                                      const Pica::Shader::UserConfig& user) {
+    const FSConfig fs_config{regs, user, profile};
+    const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config, instance);
     auto& shader = it->second;
 
     if (new_shader) {
         const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
-        const auto texture0_type = config.state.texture0_type.Value();
-        const bool is_shadow = texture0_type == Pica::TexturingRegs::TextureConfig::Shadow2D ||
-                               texture0_type == Pica::TexturingRegs::TextureConfig::ShadowCube ||
-                               config.state.shadow_rendering.Value();
-        if (use_spirv && !is_shadow) {
-            const std::vector code = SPIRV::GenerateFragmentShader(config);
+        if (use_spirv && !fs_config.UsesShadowPipeline()) {
+            const std::vector code = SPIRV::GenerateFragmentShader(fs_config);
             shader.module = CompileSPV(code, instance.GetDevice());
             shader.MarkDone();
         } else {
-            workers.QueueWork([config, device = instance.GetDevice(), &shader]() {
-                const std::string code = GLSL::GenerateFragmentShader(config, true);
-                shader.module = Compile(code, vk::ShaderStageFlagBits::eFragment, device);
+            workers.QueueWork([fs_config, this, &shader]() {
+                const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
+                shader.module =
+                    Compile(code, vk::ShaderStageFlagBits::eFragment, instance.GetDevice());
                 shader.MarkDone();
             });
         }
     }
 
     current_shaders[ProgramType::FS] = &shader;
-    shader_hashes[ProgramType::FS] = config.Hash();
+    shader_hashes[ProgramType::FS] = fs_config.Hash();
 }
 
 void PipelineCache::BindTexture(u32 binding, vk::ImageView image_view, vk::Sampler sampler) {

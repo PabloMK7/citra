@@ -426,7 +426,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Sync and bind the shader
     if (shader_dirty) {
-        shader_manager.UseFragmentShader(regs, use_custom_normal);
+        shader_manager.UseFragmentShader(regs, user_config);
         shader_dirty = false;
     }
 
@@ -479,7 +479,7 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
 
     // Reset transient draw state
     state.color_buffer.texture_2d = 0;
-    use_custom_normal = false;
+    user_config = {};
 
     const auto pica_textures = regs.texturing.GetTextures();
     for (u32 texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
@@ -577,20 +577,15 @@ void RasterizerOpenGL::BindMaterial(u32 texture_index, Surface& surface) {
         return;
     }
 
-    const auto bind_texture = [&](const TextureUnits::TextureUnit& unit, GLuint texture,
-                                  GLuint sampler) {
-        glActiveTexture(unit.Enum());
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glBindSampler(unit.id, sampler);
-    };
-
     const GLuint sampler = state.texture_units[texture_index].sampler;
     if (surface.HasNormalMap()) {
         if (regs.lighting.disable) {
             LOG_WARNING(Render_OpenGL, "Custom normal map used but scene has no light enabled");
         }
-        bind_texture(TextureUnits::TextureNormalMap, surface.Handle(2), sampler);
-        use_custom_normal = true;
+        glActiveTexture(TextureUnits::TextureNormalMap.Enum());
+        glBindTexture(GL_TEXTURE_2D, surface.Handle(2));
+        glBindSampler(TextureUnits::TextureNormalMap.id, sampler);
+        user_config.use_custom_normal.Assign(1);
     }
 }
 

@@ -135,16 +135,21 @@ add_library(video_core STATIC
     renderer_vulkan/vk_texture_runtime.cpp
     renderer_vulkan/vk_texture_runtime.h
     shader/debug_data.h
+    shader/generator/glsl_fs_shader_gen.cpp
+    shader/generator/glsl_fs_shader_gen.h
     shader/generator/glsl_shader_decompiler.cpp
     shader/generator/glsl_shader_decompiler.h
     shader/generator/glsl_shader_gen.cpp
     shader/generator/glsl_shader_gen.h
+    shader/generator/pica_fs_config.cpp
+    shader/generator/pica_fs_config.h
+    shader/generator/profile.h
     shader/generator/shader_gen.cpp
     shader/generator/shader_gen.h
     shader/generator/shader_uniforms.cpp
     shader/generator/shader_uniforms.h
-    shader/generator/spv_shader_gen.cpp
-    shader/generator/spv_shader_gen.h
+    shader/generator/spv_fs_shader_gen.cpp
+    shader/generator/spv_fs_shader_gen.h
     shader/shader.cpp
     shader/shader.h
     shader/shader_interpreter.cpp

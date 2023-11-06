@@ -9,11 +9,16 @@
 
 #include "video_core/renderer_vulkan/vk_descriptor_pool.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
-#include "video_core/shader/generator/glsl_shader_gen.h"
-#include "video_core/shader/generator/spv_shader_gen.h"
+#include "video_core/shader/generator/pica_fs_config.h"
+#include "video_core/shader/generator/profile.h"
+#include "video_core/shader/generator/shader_gen.h"
 
 namespace Pica {
 struct Regs;
+}
+
+namespace Pica::Shader {
+struct ShaderSetup;
 }
 
 namespace Vulkan {
@@ -62,7 +67,7 @@ public:
     void UseTrivialGeometryShader();
 
     /// Binds a fragment shader generated from PICA state
-    void UseFragmentShader(const Pica::Regs& regs);
+    void UseFragmentShader(const Pica::Regs& regs, const Pica::Shader::UserConfig& user);
 
     /// Binds a texture to the specified binding
     void BindTexture(u32 binding, vk::ImageView image_view, vk::Sampler sampler);
@@ -98,6 +103,7 @@ private:
     RenderpassCache& renderpass_cache;
     DescriptorPool& pool;
 
+    Pica::Shader::Profile profile{};
     vk::UniquePipelineCache pipeline_cache;
     vk::UniquePipelineLayout pipeline_layout;
     std::size_t num_worker_threads;
@@ -118,7 +124,7 @@ private:
     std::unordered_map<Pica::Shader::Generator::PicaVSConfig, Shader*> programmable_vertex_map;
     std::unordered_map<std::string, Shader> programmable_vertex_cache;
     std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
-    std::unordered_map<Pica::Shader::Generator::PicaFSConfig, Shader> fragment_shaders;
+    std::unordered_map<Pica::Shader::FSConfig, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
 };
 

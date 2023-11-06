@@ -17,7 +17,8 @@ struct Regs;
 
 namespace Pica::Shader {
 struct ShaderSetup;
-}
+union UserConfig;
+} // namespace Pica::Shader
 
 namespace OpenGL {
 
@@ -47,7 +48,7 @@ public:
 
     void UseTrivialGeometryShader();
 
-    void UseFragmentShader(const Pica::Regs& config, bool use_normal);
+    void UseFragmentShader(const Pica::Regs& config, const Pica::Shader::UserConfig& user);
 
     void ApplyTo(OpenGLState& state);
 
