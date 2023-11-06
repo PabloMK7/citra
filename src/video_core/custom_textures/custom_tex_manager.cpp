@@ -4,6 +4,7 @@
 
 #include <json.hpp>
 #include "common/file_util.h"
+#include "common/literals.h"
 #include "common/memory_detect.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
@@ -25,6 +26,8 @@ MICROPROFILE_DEFINE(CustomTexManager_TickFrame, "CustomTexManager", "TickFrame",
                     MP_RGB(54, 16, 32));
 
 constexpr std::size_t MAX_UPLOADS_PER_TICK = 8;
+
+using namespace Common::Literals;
 
 bool IsPow2(u32 value) {
     return value != 0 && (value & (value - 1)) == 0;
@@ -206,9 +209,9 @@ void CustomTexManager::PreloadTextures(const std::atomic_bool& stop_run,
     u64 size_sum = 0;
     size_t preloaded = 0;
     const u64 sys_mem = Common::GetMemInfo().total_physical_memory;
-    const u64 recommended_min_mem = 2 * size_t(1024 * 1024 * 1024);
+    const u64 recommended_min_mem = 2_GiB;
 
-    // keep 2GB memory for system stability if system RAM is 4GB+ - use half of memory in other
+    // keep 2GiB memory for system stability if system RAM is 4GiB+ - use half of memory in other
     // cases
     const u64 max_mem =
         (sys_mem / 2 < recommended_min_mem) ? (sys_mem / 2) : (sys_mem - recommended_min_mem);

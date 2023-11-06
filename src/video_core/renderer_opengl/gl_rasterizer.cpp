@@ -4,6 +4,7 @@
 
 #include "common/alignment.h"
 #include "common/assert.h"
+#include "common/literals.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
@@ -28,12 +29,13 @@ MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Display, "OpenGL", "Display", MP_RGB(128, 128, 192));
 
 using VideoCore::SurfaceType;
+using namespace Common::Literals;
 using namespace Pica::Shader::Generator;
 
-constexpr std::size_t VERTEX_BUFFER_SIZE = 16 * 1024 * 1024;
-constexpr std::size_t INDEX_BUFFER_SIZE = 2 * 1024 * 1024;
-constexpr std::size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
-constexpr std::size_t TEXTURE_BUFFER_SIZE = 2 * 1024 * 1024;
+constexpr std::size_t VERTEX_BUFFER_SIZE = 16_MiB;
+constexpr std::size_t INDEX_BUFFER_SIZE = 2_MiB;
+constexpr std::size_t UNIFORM_BUFFER_SIZE = 2_MiB;
+constexpr std::size_t TEXTURE_BUFFER_SIZE = 2_MiB;
 
 GLenum MakePrimitiveMode(Pica::PipelineRegs::TriangleTopology topology) {
     switch (topology) {

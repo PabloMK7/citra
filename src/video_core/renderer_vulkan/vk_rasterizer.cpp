@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "common/literals.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
@@ -28,11 +29,12 @@ MICROPROFILE_DEFINE(Vulkan_Drawing, "Vulkan", "Drawing", MP_RGB(128, 128, 192));
 using TriangleTopology = Pica::PipelineRegs::TriangleTopology;
 using VideoCore::SurfaceType;
 
+using namespace Common::Literals;
 using namespace Pica::Shader::Generator;
 
-constexpr u64 STREAM_BUFFER_SIZE = 64 * 1024 * 1024;
-constexpr u64 UNIFORM_BUFFER_SIZE = 4 * 1024 * 1024;
-constexpr u64 TEXTURE_BUFFER_SIZE = 2 * 1024 * 1024;
+constexpr u64 STREAM_BUFFER_SIZE = 64_MiB;
+constexpr u64 UNIFORM_BUFFER_SIZE = 4_MiB;
+constexpr u64 TEXTURE_BUFFER_SIZE = 2_MiB;
 
 constexpr vk::BufferUsageFlags BUFFER_USAGE =
     vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer;

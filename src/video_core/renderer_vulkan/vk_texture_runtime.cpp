@@ -4,6 +4,7 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include "common/literals.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "video_core/custom_textures/material.h"
@@ -35,6 +36,7 @@ using VideoCore::MapType;
 using VideoCore::PixelFormat;
 using VideoCore::SurfaceType;
 using VideoCore::TextureType;
+using namespace Common::Literals;
 
 struct RecordParams {
     vk::ImageAspectFlags aspect;
@@ -244,8 +246,8 @@ vk::ImageSubresourceRange MakeSubresourceRange(vk::ImageAspectFlags aspect, u32 
     };
 }
 
-constexpr u64 UPLOAD_BUFFER_SIZE = 512 * 1024 * 1024;
-constexpr u64 DOWNLOAD_BUFFER_SIZE = 16 * 1024 * 1024;
+constexpr u64 UPLOAD_BUFFER_SIZE = 512_MiB;
+constexpr u64 DOWNLOAD_BUFFER_SIZE = 16_MiB;
 
 } // Anonymous namespace
 
