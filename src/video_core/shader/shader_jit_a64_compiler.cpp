@@ -580,22 +580,13 @@ void JitShader::Compile_MOVA(Instruction instr) {
     MOV(XSCRATCH0, SRC1.Delem()[0]);
 
     // Handle destination enable
-    if (swiz.DestComponentEnabled(0) && swiz.DestComponentEnabled(1)) {
+    if (swiz.DestComponentEnabled(0)) {
         // Move and sign-extend low 32 bits
         SXTW(ADDROFFS_REG_0, XSCRATCH0.toW());
-
+    }
+    if (swiz.DestComponentEnabled(1)) {
         // Move and sign-extend high 32 bits
-        LSR(XSCRATCH0, XSCRATCH0, 32);
-        SXTW(ADDROFFS_REG_1, XSCRATCH0.toW());
-    } else {
-        if (swiz.DestComponentEnabled(0)) {
-            // Move and sign-extend low 32 bits
-            SXTW(ADDROFFS_REG_0, XSCRATCH0.toW());
-        } else if (swiz.DestComponentEnabled(1)) {
-            // Move and sign-extend high 32 bits
-            LSR(XSCRATCH0, XSCRATCH0, 32);
-            SXTW(ADDROFFS_REG_1, XSCRATCH0.toW());
-        }
+        ASR(ADDROFFS_REG_1, XSCRATCH0, 32);
     }
 }
 
