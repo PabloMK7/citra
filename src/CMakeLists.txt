@@ -102,7 +102,13 @@ if (MSVC)
 else()
     add_compile_options(
         -Wall
-        -Wno-attributes
+        # In case a flag isn't supported on e.g. a certain architecture, don't error.
+        -Wno-unused-command-line-argument
+        # Build fortification options
+        -Wp,-D_FORTIFY_SOURCE=2
+        -Wp,-D_GLIBCXX_ASSERTIONS
+        -fstack-protector-strong
+        -fstack-clash-protection
     )
 
     if (CITRA_WARNINGS_AS_ERRORS)
