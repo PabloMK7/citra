@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.documentfile.provider.DocumentFile;
 
@@ -14,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -48,12 +50,12 @@ public class DocumentsTree {
         Uri mUri = node.uri;
         try {
             String filename = URLDecoder.decode(name, FileUtil.DECODE_METHOD);
-            if (node.children.get(filename) != null) return true;
+            if (node.findChild(filename) != null) return true;
             DocumentFile createdFile = FileUtil.createFile(context, mUri.toString(), name);
             if (createdFile == null) return false;
             DocumentsNode document = new DocumentsNode(createdFile, false);
             document.parent = node;
-            node.children.put(document.key, document);
+            node.addChild(document);
             return true;
         } catch (Exception e) {
             Log.error("[DocumentsTree]: Cannot create file, error: " + e.getMessage());
@@ -69,12 +71,12 @@ public class DocumentsTree {
         Uri mUri = node.uri;
         try {
             String filename = URLDecoder.decode(name, FileUtil.DECODE_METHOD);
-            if (node.children.get(filename) != null) return true;
+            if (node.findChild(filename) != null) return true;
             DocumentFile createdDirectory = FileUtil.createDir(context, mUri.toString(), name);
             if (createdDirectory == null) return false;
             DocumentsNode document = new DocumentsNode(createdDirectory, true);
             document.parent = node;
-            node.children.put(document.key, document);
+            node.addChild(document);
             return true;
         } catch (Exception e) {
             Log.error("[DocumentsTree]: Cannot create file, error: " + e.getMessage());
@@ -105,7 +107,7 @@ public class DocumentsTree {
         }
         // If this directory have not been iterate struct it.
         if (!node.loaded) structTree(node);
-        return node.children.keySet().toArray(new String[0]);
+        return node.getChildNames();
     }
 
     public long getFileSize(String filepath) {
@@ -153,7 +155,7 @@ public class DocumentsTree {
             input.close();
             output.flush();
             output.close();
-            destinationNode.children.put(document.key, document);
+            destinationNode.addChild(document);
             return true;
         } catch (Exception e) {
             Log.error("[DocumentsTree]: Cannot copy file, error: " + e.getMessage());
@@ -185,7 +187,7 @@ public class DocumentsTree {
                 return false;
             }
             if (node.parent != null) {
-                node.parent.children.remove(node.key);
+                node.parent.removeChild(node);
             }
             return true;
         } catch (Exception e) {
@@ -214,7 +216,7 @@ public class DocumentsTree {
         if (parent.isDirectory && !parent.loaded) {
             structTree(parent);
         }
-        return parent.children.get(filename);
+        return parent.findChild(filename);
     }
 
     /**
@@ -227,15 +229,19 @@ public class DocumentsTree {
         for (CheapDocument document : documents) {
             DocumentsNode node = new DocumentsNode(document);
             node.parent = parent;
-            parent.children.put(node.key, node);
+            parent.addChild(node);
         }
         parent.loaded = true;
+    }
+
+    @NonNull
+    private static String toLowerCase(@NonNull String str) {
+        return str.toLowerCase(Locale.ROOT);
     }
 
     private static class DocumentsNode {
         private DocumentsNode parent;
         private final Map<String, DocumentsNode> children = new HashMap<>();
-        private String key;
         private String name;
         private Uri uri;
         private boolean loaded = false;
@@ -246,7 +252,6 @@ public class DocumentsTree {
         private DocumentsNode(CheapDocument document) {
             name = document.getFilename();
             uri = document.getUri();
-            key = FileUtil.getFilenameWithExtensions(uri);
             isDirectory = document.isDirectory();
             loaded = !isDirectory;
         }
@@ -254,18 +259,42 @@ public class DocumentsTree {
         private DocumentsNode(DocumentFile document, boolean isCreateDir) {
             name = document.getName();
             uri = document.getUri();
-            key = FileUtil.getFilenameWithExtensions(uri);
             isDirectory = isCreateDir;
             loaded = true;
         }
 
-        private void rename(String key) {
+        private void rename(String name) {
             if (parent == null) {
                 return;
             }
-            parent.children.remove(this.key);
-            this.name = key;
-            parent.children.put(key, this);
+            parent.removeChild(this);
+            this.name = name;
+            parent.addChild(this);
+        }
+
+        private void addChild(DocumentsNode node) {
+            children.put(toLowerCase(node.name), node);
+        }
+
+        private void removeChild(DocumentsNode node) {
+            children.remove(toLowerCase(node.name));
+        }
+
+        @Nullable
+        private DocumentsNode findChild(String filename) {
+            return children.get(toLowerCase(filename));
+        }
+
+        @NonNull
+        private String[] getChildNames() {
+            String[] names = new String[children.size()];
+
+            int i = 0;
+            for (DocumentsNode child : children.values()) {
+                names[i++] = child.name;
+            }
+
+            return names;
         }
     }
 }

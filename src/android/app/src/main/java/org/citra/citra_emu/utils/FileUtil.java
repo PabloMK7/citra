@@ -338,13 +338,12 @@ public class FileUtil {
             for (Pair<CheapDocument, DocumentFile> file : files) {
                 DocumentFile to = file.second;
                 Uri toUri = to.getUri();
-                String filename = getFilenameWithExtensions(toUri);
                 String toPath = toUri.getPath();
                 DocumentFile toParent = to.getParentFile();
                 if (toParent == null)
                     continue;
                 FileUtil.copyFile(context, file.first.getUri().toString(),
-                                  toParent.getUri().toString(), filename);
+                                  toParent.getUri().toString(), to.getName());
                 progress++;
                 if (listener != null) {
                     listener.onCopyProgress(toPath, progress, total);
@@ -422,15 +421,6 @@ public class FileUtil {
             Log.error("[FileUtil] Cannot determine the string is native path or not.");
         }
         return false;
-    }
-
-    public static String getFilenameWithExtensions(Uri uri) {
-        String path = uri.getPath();
-        final int slashIndex = path.lastIndexOf('/');
-        path = path.substring(slashIndex + 1);
-        // On Android versions below 10, it is possible to select the storage root, which might result in filenames with a colon.
-        final int colonIndex = path.indexOf(':');
-        return path.substring(colonIndex + 1);
     }
 
     public static double getFreeSpace(Context context, Uri uri) {
