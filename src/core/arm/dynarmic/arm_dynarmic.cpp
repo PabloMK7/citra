@@ -17,61 +17,7 @@
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
-class DynarmicThreadContext final : public ARM_Interface::ThreadContext {
-public:
-    DynarmicThreadContext() {
-        Reset();
-    }
-    ~DynarmicThreadContext() override = default;
-
-    void Reset() override {
-        regs = {};
-        ext_regs = {};
-        cpsr = 0;
-        fpscr = 0;
-        fpexc = 0;
-    }
-
-    u32 GetCpuRegister(std::size_t index) const override {
-        return regs[index];
-    }
-    void SetCpuRegister(std::size_t index, u32 value) override {
-        regs[index] = value;
-    }
-    u32 GetCpsr() const override {
-        return cpsr;
-    }
-    void SetCpsr(u32 value) override {
-        cpsr = value;
-    }
-    u32 GetFpuRegister(std::size_t index) const override {
-        return ext_regs[index];
-    }
-    void SetFpuRegister(std::size_t index, u32 value) override {
-        ext_regs[index] = value;
-    }
-    u32 GetFpscr() const override {
-        return fpscr;
-    }
-    void SetFpscr(u32 value) override {
-        fpscr = value;
-    }
-    u32 GetFpexc() const override {
-        return fpexc;
-    }
-    void SetFpexc(u32 value) override {
-        fpexc = value;
-    }
-
-private:
-    friend class ARM_Dynarmic;
-
-    std::array<u32, 16> regs;
-    std::array<u32, 64> ext_regs;
-    u32 cpsr;
-    u32 fpscr;
-    u32 fpexc;
-};
+namespace Core {
 
 class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
@@ -173,10 +119,10 @@ public:
     Memory::MemorySystem& memory;
 };
 
-ARM_Dynarmic::ARM_Dynarmic(Core::System* system_, Memory::MemorySystem& memory_, u32 core_id_,
+ARM_Dynarmic::ARM_Dynarmic(Core::System& system_, Memory::MemorySystem& memory_, u32 core_id_,
                            std::shared_ptr<Core::Timing::Timer> timer_,
                            Core::ExclusiveMonitor& exclusive_monitor_)
-    : ARM_Interface(core_id_, timer_), system(*system_), memory(memory_),
+    : ARM_Interface(core_id_, timer_), system(system_), memory(memory_),
       cb(std::make_unique<DynarmicUserCallbacks>(*this)),
       exclusive_monitor{dynamic_cast<Core::DynarmicExclusiveMonitor&>(exclusive_monitor_)} {
     SetPageTable(memory.GetCurrentPageTable());
@@ -285,30 +231,20 @@ void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {
     }
 }
 
-std::unique_ptr<ARM_Interface::ThreadContext> ARM_Dynarmic::NewContext() const {
-    return std::make_unique<DynarmicThreadContext>();
+void ARM_Dynarmic::SaveContext(ThreadContext& ctx) {
+    ctx.cpu_registers = jit->Regs();
+    ctx.cpsr = jit->Cpsr();
+    ctx.fpu_registers = jit->ExtRegs();
+    ctx.fpscr = jit->Fpscr();
+    ctx.fpexc = fpexc;
 }
 
-void ARM_Dynarmic::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
-    DynarmicThreadContext* ctx = dynamic_cast<DynarmicThreadContext*>(arg.get());
-    ASSERT(ctx);
-
-    ctx->regs = jit->Regs();
-    ctx->ext_regs = jit->ExtRegs();
-    ctx->cpsr = jit->Cpsr();
-    ctx->fpscr = jit->Fpscr();
-    ctx->fpexc = fpexc;
-}
-
-void ARM_Dynarmic::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
-    const DynarmicThreadContext* ctx = dynamic_cast<DynarmicThreadContext*>(arg.get());
-    ASSERT(ctx);
-
-    jit->Regs() = ctx->regs;
-    jit->ExtRegs() = ctx->ext_regs;
-    jit->SetCpsr(ctx->cpsr);
-    jit->SetFpscr(ctx->fpscr);
-    fpexc = ctx->fpexc;
+void ARM_Dynarmic::LoadContext(const ThreadContext& ctx) {
+    jit->Regs() = ctx.cpu_registers;
+    jit->SetCpsr(ctx.cpsr);
+    jit->ExtRegs() = ctx.fpu_registers;
+    jit->SetFpscr(ctx.fpscr);
+    fpexc = ctx.fpexc;
 }
 
 void ARM_Dynarmic::PrepareReschedule() {
@@ -337,7 +273,7 @@ std::shared_ptr<Memory::PageTable> ARM_Dynarmic::GetPageTable() const {
 
 void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) {
     current_page_table = page_table;
-    auto ctx{NewContext()};
+    ThreadContext ctx{};
     if (jit) {
         SaveContext(ctx);
     }
@@ -378,6 +314,4 @@ std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {
     return std::make_unique<Dynarmic::A32::Jit>(config);
 }
 
-void ARM_Dynarmic::PurgeState() {
-    ClearInstructionCache();
-}
+} // namespace Core

@@ -12,8 +12,6 @@
 #include "common/memory_ref.h"
 #include "core/mmio.h"
 
-class ARM_Interface;
-
 namespace Kernel {
 class Process;
 }

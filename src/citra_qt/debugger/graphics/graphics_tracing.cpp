@@ -11,7 +11,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
-#include <boost/range/algorithm/copy.hpp>
 #include <nihstro/float24.h>
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "common/common_types.h"
@@ -88,10 +87,13 @@ void GraphicsTracingWidget::StartRecording() {
                 std::back_inserter(state.lcd_registers));
     std::copy_n((u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32),
                 std::back_inserter(state.pica_registers));
-    boost::copy(default_attributes, std::back_inserter(state.default_attributes));
-    boost::copy(shader_binary, std::back_inserter(state.vs_program_binary));
-    boost::copy(swizzle_data, std::back_inserter(state.vs_swizzle_data));
-    boost::copy(vs_float_uniforms, std::back_inserter(state.vs_float_uniforms));
+    std::copy(default_attributes.begin(), default_attributes.end(),
+              std::back_inserter(state.default_attributes));
+    std::copy(shader_binary.begin(), shader_binary.end(),
+              std::back_inserter(state.vs_program_binary));
+    std::copy(swizzle_data.begin(), swizzle_data.end(), std::back_inserter(state.vs_swizzle_data));
+    std::copy(vs_float_uniforms.begin(), vs_float_uniforms.end(),
+              std::back_inserter(state.vs_float_uniforms));
     // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_program_binary));
     // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_swizzle_data));
     // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_float_uniforms));

@@ -179,9 +179,9 @@ static u32 RegRead(std::size_t id, Kernel::Thread* thread = nullptr) {
     }
 
     if (id <= PC_REGISTER) {
-        return thread->context->GetCpuRegister(id);
+        return thread->context.cpu_registers[id];
     } else if (id == CPSR_REGISTER) {
-        return thread->context->GetCpsr();
+        return thread->context.cpsr;
     } else {
         return 0;
     }
@@ -193,9 +193,9 @@ static void RegWrite(std::size_t id, u32 val, Kernel::Thread* thread = nullptr) 
     }
 
     if (id <= PC_REGISTER) {
-        return thread->context->SetCpuRegister(id, val);
+        thread->context.cpu_registers[id] = val;
     } else if (id == CPSR_REGISTER) {
-        return thread->context->SetCpsr(val);
+        thread->context.cpsr = val;
     }
 }
 
@@ -205,11 +205,11 @@ static u64 FpuRead(std::size_t id, Kernel::Thread* thread = nullptr) {
     }
 
     if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
-        u64 ret = thread->context->GetFpuRegister(2 * (id - D0_REGISTER));
-        ret |= static_cast<u64>(thread->context->GetFpuRegister(2 * (id - D0_REGISTER) + 1)) << 32;
+        u64 ret = thread->context.fpu_registers[2 * (id - D0_REGISTER)];
+        ret |= static_cast<u64>(thread->context.fpu_registers[2 * (id - D0_REGISTER) + 1]) << 32;
         return ret;
     } else if (id == FPSCR_REGISTER) {
-        return thread->context->GetFpscr();
+        return thread->context.fpscr;
     } else {
         return 0;
     }
@@ -221,10 +221,10 @@ static void FpuWrite(std::size_t id, u64 val, Kernel::Thread* thread = nullptr) 
     }
 
     if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
-        thread->context->SetFpuRegister(2 * (id - D0_REGISTER), static_cast<u32>(val));
-        thread->context->SetFpuRegister(2 * (id - D0_REGISTER) + 1, static_cast<u32>(val >> 32));
+        thread->context.fpu_registers[2 * (id - D0_REGISTER)] = static_cast<u32>(val);
+        thread->context.fpu_registers[2 * (id - D0_REGISTER) + 1] = static_cast<u32>(val >> 32);
     } else if (id == FPSCR_REGISTER) {
-        return thread->context->SetFpscr(static_cast<u32>(val));
+        thread->context.fpscr = static_cast<u32>(val);
     }
 }
 

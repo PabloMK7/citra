@@ -10,9 +10,9 @@
 #include "core/core.h"
 #include "core/memory.h"
 
-ARMul_State::ARMul_State(Core::System* system, Memory::MemorySystem& memory,
+ARMul_State::ARMul_State(Core::System& system_, Memory::MemorySystem& memory_,
                          PrivilegeMode initial_mode)
-    : system(system), memory(memory) {
+    : system{system_}, memory{memory_} {
     Reset();
     ChangePrivilegeMode(initial_mode);
 }
@@ -609,9 +609,8 @@ void ARMul_State::ServeBreak() {
         DEBUG_ASSERT(Reg[15] == last_bkpt.address);
     }
 
-    DEBUG_ASSERT(system != nullptr);
-    Kernel::Thread* thread = system->Kernel().GetCurrentThreadManager().GetCurrentThread();
-    system->GetRunningCore().SaveContext(thread->context);
+    Kernel::Thread* thread = system.Kernel().GetCurrentThreadManager().GetCurrentThread();
+    system.GetRunningCore().SaveContext(thread->context);
 
     if (last_bkpt_hit || GDBStub::IsMemoryBreak() || GDBStub::GetCpuStepFlag()) {
         last_bkpt_hit = false;

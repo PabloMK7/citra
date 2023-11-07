@@ -10,17 +10,17 @@
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armstate.h"
 
-namespace Core {
-class System;
-}
-
 namespace Memory {
 class MemorySystem;
 }
 
+namespace Core {
+
+class System;
+
 class ARM_DynCom final : public ARM_Interface {
 public:
-    explicit ARM_DynCom(Core::System* system, Memory::MemorySystem& memory,
+    explicit ARM_DynCom(Core::System& system, Memory::MemorySystem& memory,
                         PrivilegeMode initial_mode, u32 id,
                         std::shared_ptr<Core::Timing::Timer> timer);
     ~ARM_DynCom() override;
@@ -45,13 +45,11 @@ public:
     u32 GetCP15Register(CP15Register reg) const override;
     void SetCP15Register(CP15Register reg, u32 value) override;
 
-    std::unique_ptr<ThreadContext> NewContext() const override;
-    void SaveContext(const std::unique_ptr<ThreadContext>& arg) override;
-    void LoadContext(const std::unique_ptr<ThreadContext>& arg) override;
+    void SaveContext(ThreadContext& ctx) override;
+    void LoadContext(const ThreadContext& ctx) override;
 
     void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
     void PrepareReschedule() override;
-    void PurgeState() override;
 
 protected:
     std::shared_ptr<Memory::PageTable> GetPageTable() const override;
@@ -59,6 +57,8 @@ protected:
 private:
     void ExecuteInstructions(u64 num_instructions);
 
-    Core::System* system;
+    Core::System& system;
     std::unique_ptr<ARMul_State> state;
 };
+
+} // namespace Core

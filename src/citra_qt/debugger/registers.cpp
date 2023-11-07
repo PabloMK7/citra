@@ -67,7 +67,7 @@ void RegistersWidget::OnDebugModeEntered() {
     }
 
     // TODO: Handle all cores
-    const ARM_Interface& core = system.GetCore(0);
+    const auto& core = system.GetCore(0);
     for (int i = 0; i < core_registers->childCount(); ++i) {
         core_registers->child(i)->setText(
             1, QStringLiteral("0x%1").arg(core.GetReg(i), 8, 16, QLatin1Char('0')));
@@ -203,7 +203,7 @@ void RegistersWidget::CreateVFPSystemRegisterChildren() {
 
 void RegistersWidget::UpdateVFPSystemRegisterValues() {
     // TODO: handle all cores
-    const ARM_Interface& core = system.GetCore(0);
+    const auto& core = system.GetCore(0);
     const u32 fpscr_val = core.GetVFPSystemReg(VFP_FPSCR);
     const u32 fpexc_val = core.GetVFPSystemReg(VFP_FPEXC);
 

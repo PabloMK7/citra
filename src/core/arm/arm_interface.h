@@ -19,6 +19,8 @@ namespace Memory {
 struct PageTable;
 };
 
+namespace Core {
+
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
@@ -26,81 +28,44 @@ public:
         : timer(timer), id(id){};
     virtual ~ARM_Interface() {}
 
-    class ThreadContext {
-        friend class boost::serialization::access;
-
-        template <class Archive>
-        void save(Archive& ar, const unsigned int file_version) const {
-            for (std::size_t i = 0; i < 16; i++) {
-                const auto r = GetCpuRegister(i);
-                ar << r;
-            }
-            for (std::size_t i = 0; i < 64; i++) {
-                const auto r = GetFpuRegister(i);
-                ar << r;
-            }
-            const auto r1 = GetCpsr();
-            ar << r1;
-            const auto r2 = GetFpscr();
-            ar << r2;
-            const auto r3 = GetFpexc();
-            ar << r3;
-        }
-
-        template <class Archive>
-        void load(Archive& ar, const unsigned int file_version) {
-            u32 r;
-            for (std::size_t i = 0; i < 16; i++) {
-                ar >> r;
-                SetCpuRegister(i, r);
-            }
-            for (std::size_t i = 0; i < 64; i++) {
-                ar >> r;
-                SetFpuRegister(i, r);
-            }
-            ar >> r;
-            SetCpsr(r);
-            ar >> r;
-            SetFpscr(r);
-            ar >> r;
-            SetFpexc(r);
-        }
-
-        BOOST_SERIALIZATION_SPLIT_MEMBER()
-    public:
-        virtual ~ThreadContext() = default;
-
-        virtual void Reset() = 0;
-        virtual u32 GetCpuRegister(std::size_t index) const = 0;
-        virtual void SetCpuRegister(std::size_t index, u32 value) = 0;
-        virtual u32 GetCpsr() const = 0;
-        virtual void SetCpsr(u32 value) = 0;
-        virtual u32 GetFpuRegister(std::size_t index) const = 0;
-        virtual void SetFpuRegister(std::size_t index, u32 value) = 0;
-        virtual u32 GetFpscr() const = 0;
-        virtual void SetFpscr(u32 value) = 0;
-        virtual u32 GetFpexc() const = 0;
-        virtual void SetFpexc(u32 value) = 0;
-
+    struct ThreadContext {
         u32 GetStackPointer() const {
-            return GetCpuRegister(13);
+            return cpu_registers[13];
         }
         void SetStackPointer(u32 value) {
-            return SetCpuRegister(13, value);
+            cpu_registers[13] = value;
         }
 
         u32 GetLinkRegister() const {
-            return GetCpuRegister(14);
+            return cpu_registers[14];
         }
         void SetLinkRegister(u32 value) {
-            return SetCpuRegister(14, value);
+            cpu_registers[14] = value;
         }
 
         u32 GetProgramCounter() const {
-            return GetCpuRegister(15);
+            return cpu_registers[15];
         }
         void SetProgramCounter(u32 value) {
-            return SetCpuRegister(15, value);
+            cpu_registers[15] = value;
+        }
+
+        std::array<u32, 16> cpu_registers{};
+        u32 cpsr{};
+        std::array<u32, 64> fpu_registers{};
+        u32 fpscr{};
+        u32 fpexc{};
+
+    private:
+        friend class boost::serialization::access;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int file_version) {
+            ar& cpu_registers;
+            ar& fpu_registers;
+            ar& cpsr;
+            ar& fpscr;
+            ar& fpexc;
         }
     };
 
@@ -132,7 +97,7 @@ public:
      */
     virtual void SetPC(u32 addr) = 0;
 
-    /*
+    /**
      * Get the current Program Counter
      * @return Returns current PC
      */
@@ -207,27 +172,19 @@ public:
     virtual void SetCP15Register(CP15Register reg, u32 value) = 0;
 
     /**
-     * Creates a CPU context
-     * @note The created context may only be used with this instance.
-     */
-    virtual std::unique_ptr<ThreadContext> NewContext() const = 0;
-
-    /**
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
-    virtual void SaveContext(const std::unique_ptr<ThreadContext>& ctx) = 0;
+    virtual void SaveContext(ThreadContext& ctx) = 0;
 
     /**
      * Loads a CPU context
      * @param ctx Thread context to load
      */
-    virtual void LoadContext(const std::unique_ptr<ThreadContext>& ctx) = 0;
+    virtual void LoadContext(const ThreadContext& ctx) = 0;
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;
-
-    virtual void PurgeState() = 0;
 
     Core::Timing::Timer& GetTimer() {
         return *timer;
@@ -298,7 +255,7 @@ private:
 
     template <class Archive>
     void load(Archive& ar, const unsigned int file_version) {
-        PurgeState();
+        ClearInstructionCache();
         ar >> timer;
         ar >> id;
         std::shared_ptr<Memory::PageTable> page_table{};
@@ -344,5 +301,7 @@ private:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
-BOOST_CLASS_VERSION(ARM_Interface, 1)
-BOOST_CLASS_VERSION(ARM_Interface::ThreadContext, 1)
+} // namespace Core
+
+BOOST_CLASS_VERSION(Core::ARM_Interface, 1)
+BOOST_CLASS_VERSION(Core::ARM_Interface::ThreadContext, 1)

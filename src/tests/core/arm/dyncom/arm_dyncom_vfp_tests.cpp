@@ -23,7 +23,8 @@ TEST_CASE("ARM_DynCom (vfp): vadd", "[arm_dyncom]") {
     test_env.SetMemory32(0, 0xEE321A03); // vadd.f32 s2, s4, s6
     test_env.SetMemory32(4, 0xEAFFFFFE); // b +#0
 
-    ARM_DynCom dyncom(nullptr, test_env.GetMemory(), USER32MODE, 0, nullptr);
+    Core::System system;
+    Core::ARM_DynCom dyncom(system, test_env.GetMemory(), USER32MODE, 0, nullptr);
 
     std::vector<VfpTestCase> test_cases{{
 #include "vfp_vadd_f32.inc"

@@ -30,8 +30,9 @@ class MemorySystem;
 }
 
 namespace Core {
+class ARM_Interface;
 class Timing;
-}
+} // namespace Core
 
 namespace IPCDebugger {
 class Recorder;
@@ -275,9 +276,9 @@ public:
 
     void SetCurrentMemoryPageTable(std::shared_ptr<Memory::PageTable> page_table);
 
-    void SetCPUs(std::vector<std::shared_ptr<ARM_Interface>> cpu);
+    void SetCPUs(std::vector<std::shared_ptr<Core::ARM_Interface>> cpu);
 
-    void SetRunningCPU(ARM_Interface* cpu);
+    void SetRunningCPU(Core::ARM_Interface* cpu);
 
     ThreadManager& GetThreadManager(u32 core_id);
     const ThreadManager& GetThreadManager(u32 core_id) const;
@@ -324,7 +325,7 @@ public:
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, std::shared_ptr<ClientPort>> named_ports;
 
-    ARM_Interface* current_cpu = nullptr;
+    Core::ARM_Interface* current_cpu = nullptr;
 
     Memory::MemorySystem& memory;
 

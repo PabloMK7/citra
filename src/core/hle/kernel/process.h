@@ -255,6 +255,7 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version);
 };
+
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::CodeSet)
