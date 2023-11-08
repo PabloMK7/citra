@@ -15,11 +15,12 @@ using SurfaceRegions = boost::icl::interval_set<PAddr, std::less, SurfaceInterva
 struct Material;
 
 enum class SurfaceFlagBits : u32 {
-    Registered = 1 << 0, ///< Surface is registed in the rasterizer cache.
-    Picked = 1 << 1,     ///< Surface has been picked when searching for a match.
-    Tracked = 1 << 2,    ///< Surface is part of a texture cube and should be tracked.
-    Custom = 1 << 3,     ///< Surface texture has been replaced with a custom texture.
-    ShadowMap = 1 << 4,  ///< Surface is used during shadow rendering.
+    Registered = 1 << 0,   ///< Surface is registed in the rasterizer cache.
+    Picked = 1 << 1,       ///< Surface has been picked when searching for a match.
+    Tracked = 1 << 2,      ///< Surface is part of a texture cube and should be tracked.
+    Custom = 1 << 3,       ///< Surface texture has been replaced with a custom texture.
+    ShadowMap = 1 << 4,    ///< Surface is used during shadow rendering.
+    RenderTarget = 1 << 5, ///< Surface was a render target.
 };
 DECLARE_ENUM_FLAG_OPERATORS(SurfaceFlagBits);
 

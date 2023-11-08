@@ -653,7 +653,6 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         static_cast<u32>(std::clamp(viewport_rect.bottom, 0, framebuffer_height)),
     };
 
-    // get color and depth surfaces
     SurfaceParams color_params;
     color_params.is_tiled = true;
     color_params.res_scale = resolution_scale_factor;
@@ -671,14 +670,6 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     auto color_vp_interval = color_params.GetSubRectInterval(viewport_clamped);
     auto depth_vp_interval = depth_params.GetSubRectInterval(viewport_clamped);
-
-    // Make sure that framebuffers don't overlap if both color and depth are being used
-    if (using_color_fb && using_depth_fb &&
-        boost::icl::length(color_vp_interval & depth_vp_interval)) {
-        LOG_CRITICAL(HW_GPU, "Color and depth framebuffer memory regions overlap; "
-                             "overlapping framebuffers not supported!");
-        using_depth_fb = false;
-    }
 
     Common::Rectangle<u32> color_rect{};
     SurfaceId color_id{};
@@ -713,11 +704,13 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     if (color_id) {
         color_level = color_surface->LevelOf(color_params.addr);
+        color_surface->flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(color_id, boost::icl::first(color_vp_interval),
                         boost::icl::length(color_vp_interval));
     }
     if (depth_id) {
         depth_level = depth_surface->LevelOf(depth_params.addr);
+        depth_surface->flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(depth_id, boost::icl::first(depth_vp_interval),
                         boost::icl::length(depth_vp_interval));
     }
@@ -991,7 +984,9 @@ void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interva
     DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, staging.mapped,
                   runtime.NeedsConversion(surface.pixel_format));
 
-    if (dump_textures && False(surface.flags & SurfaceFlagBits::Custom)) {
+    const bool should_dump = False(surface.flags & SurfaceFlagBits::Custom) &&
+                             False(surface.flags & SurfaceFlagBits::RenderTarget);
+    if (dump_textures && should_dump) {
         const u64 hash = ComputeHash(load_info, upload_data);
         const u32 level = surface.LevelOf(load_info.addr);
         custom_tex_manager.DumpTexture(load_info, level, upload_data, hash);
