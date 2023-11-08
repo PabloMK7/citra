@@ -1,18 +1,5 @@
-# Copy source to build directory for some modifications.
-set(FAAD2_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/faad2/libfaad")
-if (NOT EXISTS "${FAAD2_SOURCE_DIR}")
-    file(COPY faad2/libfaad/ DESTINATION "${FAAD2_SOURCE_DIR}/")
-
-    # These are fixed defines for some reason and not controllable with compile flags.
-    file(READ "${FAAD2_SOURCE_DIR}/common.h" FAAD2_COMMON_H)
-    # Disable SBR decoding since we don't want it for AAC-LC.
-    string(REGEX REPLACE "#define SBR_DEC" "" FAAD2_COMMON_H "${FAAD2_COMMON_H}")
-    # Disable PS decoding. This can cause mono to be upmixed to stereo, which we don't want.
-    string(REGEX REPLACE "#define PS_DEC" "" FAAD2_COMMON_H "${FAAD2_COMMON_H}")
-    file(WRITE "${FAAD2_SOURCE_DIR}/common.h" "${FAAD2_COMMON_H}")
-endif()
-
-# Source list from faad2/libfaad/Makefile.am, cut down to just what we need for AAC-LC.
+# Sources cut down to just what we need for AAC-LC.
+set(FAAD2_SOURCE_DIR "faad2/libfaad")
 add_library(faad2 STATIC EXCLUDE_FROM_ALL
     "${FAAD2_SOURCE_DIR}/bits.c"
     "${FAAD2_SOURCE_DIR}/cfft.c"
@@ -37,10 +24,9 @@ target_include_directories(faad2 PUBLIC faad2/include PRIVATE "${FAAD2_SOURCE_DI
 
 # Configure compile definitions.
 
-# Read version from autoconf script for configuring constant.
-file(READ faad2/configure.ac CONFIGURE_SCRIPT)
-string(REGEX MATCH "AC_INIT\\(faad2, ([0-9.]+)\\)" _ ${CONFIGURE_SCRIPT})
-set(FAAD_VERSION ${CMAKE_MATCH_1})
+# Read version from properties file for configuring constant.
+file(READ faad2/properties.json FAAD_PROPERTIES_JSON)
+string(JSON FAAD_VERSION GET ${FAAD_PROPERTIES_JSON} PACKAGE_VERSION)
 message(STATUS "Building faad2 version ${FAAD_VERSION}")
 
 # Check for functions and headers.
@@ -98,5 +84,5 @@ target_compile_definitions(faad2 PRIVATE
     -DHAVE_SYS_TYPES_H=${HAVE_SYS_TYPES_H}
     -DHAVE_UNISTD_H=${HAVE_UNISTD_H}
     # Only compile for AAC-LC decoding.
-    -DLC_ONLY_DECODER
+    -DLC_ONLY_DECODER -DDISABLE_SBR
 )
