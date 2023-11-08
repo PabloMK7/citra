@@ -327,7 +327,13 @@ if (ENABLE_WEB_SERVICE)
 endif()
 
 # lodepng
-add_subdirectory(lodepng)
+if(USE_SYSTEM_LODEPNG)
+    add_library(lodepng INTERFACE)
+    find_package(lodepng REQUIRED)
+    target_link_libraries(lodepng INTERFACE lodepng::lodepng)
+else()
+    add_subdirectory(lodepng)
+endif()
 
 # (xperia64): Only use libyuv on Android b/c of build issues on Windows and mandatory JPEG
 if(ANDROID)
