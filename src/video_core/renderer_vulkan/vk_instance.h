@@ -168,6 +168,11 @@ public:
         return shader_stencil_export;
     }
 
+    /// Returns true when VK_KHR_fragment_shader_barycentric is supported
+    bool IsFragmentShaderBarycentricSupported() const {
+        return fragment_shader_barycentric;
+    }
+
     /// Returns the vendor ID of the physical device
     u32 GetVendorID() const {
         return properties.vendorID;
@@ -307,6 +312,7 @@ private:
     bool fragment_shader_interlock{};
     bool image_format_list{};
     bool pipeline_creation_cache_control{};
+    bool fragment_shader_barycentric{};
     bool shader_stencil_export{};
     bool tooling_info{};
     bool debug_utils_supported{};

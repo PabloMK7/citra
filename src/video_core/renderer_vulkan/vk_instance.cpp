@@ -403,7 +403,8 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR,
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT, vk::PhysicalDeviceIndexTypeUint8FeaturesEXT,
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT,
-        vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT>();
+        vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT,
+        vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
     const vk::StructureChain properties_chain =
         physical_device.getProperties2<vk::PhysicalDeviceProperties2,
                                        vk::PhysicalDevicePortabilitySubsetPropertiesKHR>();
@@ -436,6 +437,7 @@ bool Instance::CreateDevice() {
     };
 
     const bool is_nvidia = driver_id == vk::DriverIdKHR::eNvidiaProprietary;
+    const bool is_moltenvk = driver_id == vk::DriverIdKHR::eMoltenvk;
     const bool is_arm = driver_id == vk::DriverIdKHR::eArmProprietary;
     const bool is_qualcomm = driver_id == vk::DriverIdKHR::eQualcommProprietary;
 
@@ -459,6 +461,9 @@ bool Instance::CreateDevice() {
     const bool has_pipeline_creation_cache_control =
         add_extension(VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME, is_nvidia,
                       "it is broken on Nvidia drivers");
+    const bool has_fragment_shader_barycentric =
+        add_extension(VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME, is_moltenvk,
+                      "the PerVertexKHR attribute is not supported by MoltenVK");
 
     const auto family_properties = physical_device.getQueueFamilyProperties();
     if (family_properties.empty()) {
@@ -514,6 +519,7 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceIndexTypeUint8FeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT{},
         vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT{},
+        vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR{},
     };
 
 #define PROP_GET(structName, prop, property) property = properties_chain.get<structName>().prop;
@@ -579,6 +585,13 @@ bool Instance::CreateDevice() {
                  pipelineCreationCacheControl, pipeline_creation_cache_control)
     } else {
         device_chain.unlink<vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT>();
+    }
+
+    if (has_fragment_shader_barycentric) {
+        FEAT_SET(vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR, fragmentShaderBarycentric,
+                 fragment_shader_barycentric)
+    } else {
+        device_chain.unlink<vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
     }
 
 #undef PROP_GET

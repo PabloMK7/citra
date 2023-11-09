@@ -87,6 +87,7 @@ private:
     std::string out;
     bool use_blend_fallback{};
     bool use_fragment_shader_interlock{};
+    bool use_fragment_shader_barycentric{};
 };
 
 /**

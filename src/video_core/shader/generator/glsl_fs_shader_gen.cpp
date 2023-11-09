@@ -567,6 +567,17 @@ void FragmentModule::WriteLighting() {
         }
     }
 
+    // If the barycentric extension is enabled, perform quaternion correction here.
+    if (use_fragment_shader_barycentric) {
+        out += "vec4 normquat_0 = normquats[0];\n"
+               "vec4 normquat_1 = mix(normquats[1], -normquats[1], "
+               "bvec4(AreQuaternionsOpposite(normquats[0], normquats[1])));\n"
+               "vec4 normquat_2 = mix(normquats[2], -normquats[2], "
+               "bvec4(AreQuaternionsOpposite(normquats[0], normquats[2])));\n"
+               "vec4 normquat = gl_BaryCoord.x * normquat_0 + gl_BaryCoord.y * normquat_1 + "
+               "gl_BaryCoord.z * normquat_2;\n";
+    }
+
     // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
     // eyespace.
     out += "vec4 normalized_normquat = normalize(normquat);\n"
@@ -1231,6 +1242,20 @@ void FragmentModule::DefineExtensions() {
             use_fragment_shader_interlock = false;
         }
     }
+    if (config.lighting.enable) {
+        use_fragment_shader_barycentric = true;
+        if (profile.has_fragment_shader_barycentric) {
+            out += "#extension GL_EXT_fragment_shader_barycentric : enable\n";
+            out += "#define pervertex pervertexEXT\n";
+            out += "#define gl_BaryCoord gl_BaryCoordEXT\n";
+        } else if (profile.has_gl_nv_fragment_shader_barycentric) {
+            out += "#extension GL_NV_fragment_shader_barycentric : enable\n";
+            out += "#define pervertex pervertexNV\n";
+            out += "#define gl_BaryCoord gl_BaryCoordNV\n";
+        } else {
+            use_fragment_shader_barycentric = false;
+        }
+    }
     if (config.EmulateBlend()) {
         if (profile.has_gl_ext_framebuffer_fetch) {
             out += "#extension GL_EXT_shader_framebuffer_fetch : enable\n";
@@ -1263,7 +1288,11 @@ void FragmentModule::DefineInterface() {
     define_input("vec2 texcoord1", Semantic::Texcoord1);
     define_input("vec2 texcoord2", Semantic::Texcoord2);
     define_input("float texcoord0_w", Semantic::Texcoord0_W);
-    define_input("vec4 normquat", Semantic::Normquat);
+    if (use_fragment_shader_barycentric) {
+        define_input("pervertex vec4 normquats[]", Semantic::Normquat);
+    } else {
+        define_input("vec4 normquat", Semantic::Normquat);
+    }
     define_input("vec3 view", Semantic::View);
 
     // Output attributes
@@ -1360,6 +1389,14 @@ float LookupLightingLUTSigned(int lut_index, float pos) {
     return LookupLightingLUT(lut_index, index, delta);
 }
 )";
+
+    if (use_fragment_shader_barycentric) {
+        out += R"(
+bool AreQuaternionsOpposite(vec4 qa, vec4 qb) {
+    return (dot(qa, qb) < 0.0);
+}
+)";
+    }
 }
 
 void FragmentModule::DefineShadowHelpers() {

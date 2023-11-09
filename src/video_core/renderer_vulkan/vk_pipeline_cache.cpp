@@ -96,6 +96,7 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
         .has_geometry_shader = instance.UseGeometryShaders(),
         .has_custom_border_color = instance.IsCustomBorderColorSupported(),
         .has_fragment_shader_interlock = instance.IsFragmentShaderInterlockSupported(),
+        .has_fragment_shader_barycentric = instance.IsFragmentShaderBarycentricSupported(),
         .has_blend_minmax_factor = false,
         .has_minus_one_to_one_range = false,
         .has_logic_op = !instance.NeedsLogicOpEmulation(),
@@ -331,8 +332,13 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
 bool PipelineCache::UseProgrammableVertexShader(const Pica::Regs& regs,
                                                 Pica::Shader::ShaderSetup& setup,
                                                 const VertexLayout& layout) {
-    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(),
-                        instance.UseGeometryShaders()};
+    // Enable the geometry-shader only if we are actually doing per-fragment lighting
+    // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders.
+    // We also don't need the geometry shader if we have the barycentric extension.
+    const bool use_geometry_shader = instance.UseGeometryShaders() && !regs.lighting.disable &&
+                                     !instance.IsFragmentShaderBarycentricSupported();
+
+    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(), use_geometry_shader};
 
     for (u32 i = 0; i < layout.attribute_count; i++) {
         const VertexAttribute& attr = layout.attributes[i];

@@ -88,7 +88,12 @@ static std::tuple<PicaVSConfig, Pica::Shader::ShaderSetup> BuildVSConfigFromRaw(
     Pica::Shader::ShaderSetup setup;
     setup.program_code = program_code;
     setup.swizzle_data = swizzle_data;
-    return {PicaVSConfig{raw.GetRawShaderConfig(), setup, driver.HasClipCullDistance(), true},
+
+    // Enable the geometry-shader only if we are actually doing per-fragment lighting
+    // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
+    const bool use_geometry_shader = !raw.GetRawShaderConfig().lighting.disable;
+    return {PicaVSConfig{raw.GetRawShaderConfig(), setup, driver.HasClipCullDistance(),
+                         use_geometry_shader},
             setup};
 }
 
@@ -265,6 +270,7 @@ public:
             .has_geometry_shader = true,
             .has_custom_border_color = true,
             .has_fragment_shader_interlock = false,
+            .has_fragment_shader_barycentric = false,
             .has_blend_minmax_factor = driver.HasBlendMinMaxFactor(),
             .has_minus_one_to_one_range = true,
             .has_logic_op = !driver.IsOpenGLES(),
@@ -272,6 +278,8 @@ public:
             .has_gl_arm_framebuffer_fetch = driver.HasArmShaderFramebufferFetch(),
             .has_gl_nv_fragment_shader_interlock = driver.GetVendor() == Vendor::Nvidia,
             .has_gl_intel_fragment_shader_interlock = driver.GetVendor() == Vendor::Intel,
+            // TODO: This extension requires GLSL 450 / OpenGL 4.5 context.
+            .has_gl_nv_fragment_shader_barycentric = false,
             .is_vulkan = false,
         };
     }
@@ -327,7 +335,11 @@ ShaderProgramManager::~ShaderProgramManager() = default;
 
 bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::Regs& regs,
                                                        Pica::Shader::ShaderSetup& setup) {
-    PicaVSConfig config{regs, setup, driver.HasClipCullDistance(), true};
+    // Enable the geometry-shader only if we are actually doing per-fragment lighting
+    // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
+    const bool use_geometry_shader = !regs.lighting.disable;
+
+    PicaVSConfig config{regs, setup, driver.HasClipCullDistance(), use_geometry_shader};
     auto [handle, result] = impl->programmable_vertex_shaders.Get(config, setup);
     if (handle == 0)
         return false;

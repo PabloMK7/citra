@@ -337,6 +337,14 @@ bool RasterizerVulkan::SetupGeometryShader() {
         return false;
     }
 
+    // Enable the quaternion fix-up geometry-shader only if we are actually doing per-fragment
+    // lighting and care about proper quaternions. Otherwise just use standard vertex+fragment
+    // shaders. We also don't need a geometry shader if the barycentric extension is supported.
+    if (regs.lighting.disable || instance.IsFragmentShaderBarycentricSupported()) {
+        pipeline_cache.UseTrivialGeometryShader();
+        return true;
+    }
+
     return pipeline_cache.UseFixedGeometryShader(regs);
 }
 
