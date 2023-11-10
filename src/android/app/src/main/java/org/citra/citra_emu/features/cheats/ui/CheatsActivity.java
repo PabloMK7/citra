@@ -51,8 +51,7 @@ public class CheatsActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeUtil.applyTheme(this);
-
+        ThemeUtil.INSTANCE.setTheme(this);
         super.onCreate(savedInstanceState);
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);

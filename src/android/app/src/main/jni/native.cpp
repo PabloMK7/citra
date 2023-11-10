@@ -3,12 +3,17 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <codecvt>
 #include <thread>
 #include <dlfcn.h>
 
 #include <android/api-level.h>
 #include <android/native_window_jni.h>
+#include <core/hw/aes/key.h>
+#include <core/loader/smdh.h>
+#include <core/system_titles.h>
 
+#include <core/hle/service/cfg/cfg.h>
 #include "audio_core/dsp_interface.h"
 #include "common/arch.h"
 #if CITRA_ARCH(arm64)
@@ -45,7 +50,6 @@
 #include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
-#include "jni/native.h"
 #include "jni/ndk_motion.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -60,6 +64,7 @@ ANativeWindow* s_surf;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
+std::shared_ptr<Service::CFG::Module> cfg;
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};
@@ -277,8 +282,8 @@ void InitializeGpuDriver(const std::string& hook_lib_dir, const std::string& cus
 
 extern "C" {
 
-void Java_org_citra_citra_1emu_NativeLibrary_SurfaceChanged(JNIEnv* env,
-                                                            [[maybe_unused]] jclass clazz,
+void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
+                                                            [[maybe_unused]] jobject obj,
                                                             jobject surf) {
     s_surf = ANativeWindow_fromSurface(env, surf);
 
@@ -292,8 +297,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_SurfaceChanged(JNIEnv* env,
     LOG_INFO(Frontend, "Surface changed");
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_SurfaceDestroyed(JNIEnv* env,
-                                                              [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
     ANativeWindow_release(s_surf);
     s_surf = nullptr;
     if (window) {
@@ -301,24 +306,23 @@ void Java_org_citra_citra_1emu_NativeLibrary_SurfaceDestroyed(JNIEnv* env,
     }
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_DoFrame(JNIEnv* env, [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_doFrame([[maybe_unused]] JNIEnv* env,
+                                                     [[maybe_unused]] jobject obj) {
     if (stop_run || pause_emulation) {
         return;
     }
     window->TryPresenting();
 }
 
-void JNICALL Java_org_yuzu_yuzu_1emu_NativeLibrary_initializeGpuDriver(JNIEnv* env, jclass clazz,
-                                                                       jstring hook_lib_dir,
-                                                                       jstring custom_driver_dir,
-                                                                       jstring custom_driver_name,
-                                                                       jstring file_redirect_dir) {
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_initializeGpuDriver(
+    JNIEnv* env, jobject obj, jstring hook_lib_dir, jstring custom_driver_dir,
+    jstring custom_driver_name, jstring file_redirect_dir) {
     InitializeGpuDriver(GetJString(env, hook_lib_dir), GetJString(env, custom_driver_dir),
                         GetJString(env, custom_driver_name), GetJString(env, file_redirect_dir));
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_NotifyOrientationChange(JNIEnv* env,
-                                                                     [[maybe_unused]] jclass clazz,
+void Java_org_citra_citra_1emu_NativeLibrary_notifyOrientationChange([[maybe_unused]] JNIEnv* env,
+                                                                     [[maybe_unused]] jobject obj,
                                                                      jint layout_option,
                                                                      jint rotation) {
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layout_option);
@@ -329,7 +333,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_NotifyOrientationChange(JNIEnv* env
     Camera::NDK::g_rotation = rotation;
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_SwapScreens(JNIEnv* env, [[maybe_unused]] jclass clazz,
+void Java_org_citra_citra_1emu_NativeLibrary_swapScreens([[maybe_unused]] JNIEnv* env,
+                                                         [[maybe_unused]] jobject obj,
                                                          jboolean swap_screens, jint rotation) {
     Settings::values.swap_screen = swap_screens;
     if (VideoCore::g_renderer) {
@@ -339,13 +344,30 @@ void Java_org_citra_citra_1emu_NativeLibrary_SwapScreens(JNIEnv* env, [[maybe_un
     Camera::NDK::g_rotation = rotation;
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_SetUserDirectory(JNIEnv* env,
-                                                              [[maybe_unused]] jclass clazz,
+jboolean Java_org_citra_citra_1emu_NativeLibrary_areKeysAvailable([[maybe_unused]] JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj) {
+    HW::AES::InitKeys();
+    return HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure1) &&
+           HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure2);
+}
+
+jstring Java_org_citra_citra_1emu_NativeLibrary_getHomeMenuPath(JNIEnv* env,
+                                                                [[maybe_unused]] jobject obj,
+                                                                jint region) {
+    const std::string path = Core::GetHomeMenuNcchPath(region);
+    if (FileUtil::Exists(path)) {
+        return ToJString(env, path);
+    }
+    return ToJString(env, "");
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_setUserDirectory(JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj,
                                                               jstring j_directory) {
     FileUtil::SetCurrentDir(GetJString(env, j_directory));
 }
 
-jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetInstalledGamePaths(
+jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getInstalledGamePaths(
     JNIEnv* env, [[maybe_unused]] jclass clazz) {
     std::vector<std::string> games;
     const FileUtil::DirectoryEntryCallable ScanDir =
@@ -383,44 +405,87 @@ jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetInstalledGamePaths(
     return jgames;
 }
 
+jlongArray Java_org_citra_citra_1emu_NativeLibrary_getSystemTitleIds(JNIEnv* env,
+                                                                     [[maybe_unused]] jobject obj,
+                                                                     jint system_type,
+                                                                     jint region) {
+    const auto mode = static_cast<Core::SystemTitleSet>(system_type);
+    const std::vector<u64> titles = Core::GetSystemTitleIds(mode, region);
+    jlongArray jTitles = env->NewLongArray(titles.size());
+    env->SetLongArrayRegion(jTitles, 0, titles.size(),
+                            reinterpret_cast<const jlong*>(titles.data()));
+    return jTitles;
+}
+
+jobject Java_org_citra_citra_1emu_NativeLibrary_downloadTitleFromNus([[maybe_unused]] JNIEnv* env,
+                                                                     [[maybe_unused]] jobject obj,
+                                                                     jlong title) {
+    const auto title_id = static_cast<u64>(title);
+    Service::AM::InstallStatus status = Service::AM::InstallFromNus(title_id);
+    if (status != Service::AM::InstallStatus::Success) {
+        return IDCache::GetJavaCiaInstallStatus(status);
+    }
+    return IDCache::GetJavaCiaInstallStatus(Service::AM::InstallStatus::Success);
+}
+
+[[maybe_unused]] static bool CheckKgslPresent() {
+    constexpr auto KgslPath{"/dev/kgsl-3d0"};
+
+    return access(KgslPath, F_OK) == 0;
+}
+
+[[maybe_unused]] bool SupportsCustomDriver() {
+    return android_get_device_api_level() >= 28 && CheckKgslPresent();
+}
+
+jboolean JNICALL Java_org_citra_citra_1emu_utils_GpuDriverHelper_supportsCustomDriverLoading(
+    JNIEnv* env, jobject instance) {
+#ifdef CITRA_ARCH_arm64
+    // If the KGSL device exists custom drivers can be loaded using adrenotools
+    return SupportsCustomDriver();
+#else
+    return false;
+#endif
+}
+
 // TODO(xperia64): ensure these cannot be called in an invalid state (e.g. after StopEmulation)
-void Java_org_citra_citra_1emu_NativeLibrary_UnPauseEmulation(JNIEnv* env,
-                                                              [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_unPauseEmulation([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
     pause_emulation = false;
     running_cv.notify_all();
     InputManager::NDKMotionHandler()->EnableSensors();
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_PauseEmulation(JNIEnv* env,
-                                                            [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_pauseEmulation([[maybe_unused]] JNIEnv* env,
+                                                            [[maybe_unused]] jobject obj) {
     pause_emulation = true;
     InputManager::NDKMotionHandler()->DisableSensors();
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_StopEmulation(JNIEnv* env,
-                                                           [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIEnv* env,
+                                                           [[maybe_unused]] jobject obj) {
     stop_run = true;
     pause_emulation = false;
     window->StopPresenting();
     running_cv.notify_all();
 }
 
-jboolean Java_org_citra_citra_1emu_NativeLibrary_IsRunning(JNIEnv* env,
-                                                           [[maybe_unused]] jclass clazz) {
+jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIEnv* env,
+                                                           [[maybe_unused]] jobject obj) {
     return static_cast<jboolean>(!stop_run);
 }
 
-jlong Java_org_citra_citra_1emu_NativeLibrary_GetRunningTitleId(JNIEnv* env,
-                                                                [[maybe_unused]] jclass clazz) {
+jlong Java_org_citra_citra_1emu_NativeLibrary_getRunningTitleId([[maybe_unused]] JNIEnv* env,
+                                                                [[maybe_unused]] jobject obj) {
     u64 title_id{};
     Core::System::GetInstance().GetAppLoader().ReadProgramId(title_id);
     return static_cast<jlong>(title_id);
 }
 
-jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadEvent(JNIEnv* env,
-                                                                [[maybe_unused]] jclass clazz,
-                                                                jstring j_device, jint j_button,
-                                                                jint action) {
+jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadEvent([[maybe_unused]] JNIEnv* env,
+                                                                [[maybe_unused]] jobject obj,
+                                                                [[maybe_unused]] jstring j_device,
+                                                                jint j_button, jint action) {
     bool consumed{};
     if (action) {
         consumed = InputManager::ButtonHandler()->PressKey(j_button);
@@ -431,10 +496,9 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadEvent(JNIEnv* env,
     return static_cast<jboolean>(consumed);
 }
 
-jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadMoveEvent(JNIEnv* env,
-                                                                    [[maybe_unused]] jclass clazz,
-                                                                    jstring j_device, jint axis,
-                                                                    jfloat x, jfloat y) {
+jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadMoveEvent(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, [[maybe_unused]] jstring j_device,
+    jint axis, jfloat x, jfloat y) {
     // Clamp joystick movement to supported minimum and maximum
     // Citra uses an inverted y axis sent by the frontend
     x = std::clamp(x, -1.f, 1.f);
@@ -451,29 +515,28 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadMoveEvent(JNIEnv* env,
     return static_cast<jboolean>(InputManager::AnalogHandler()->MoveJoystick(axis, x, y));
 }
 
-jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadAxisEvent(JNIEnv* env,
-                                                                    [[maybe_unused]] jclass clazz,
-                                                                    jstring j_device, jint axis_id,
-                                                                    jfloat axis_val) {
+jboolean Java_org_citra_citra_1emu_NativeLibrary_onGamePadAxisEvent(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, [[maybe_unused]] jstring j_device,
+    jint axis_id, jfloat axis_val) {
     return static_cast<jboolean>(
         InputManager::ButtonHandler()->AnalogButtonEvent(axis_id, axis_val));
 }
 
-jboolean Java_org_citra_citra_1emu_NativeLibrary_onTouchEvent(JNIEnv* env,
-                                                              [[maybe_unused]] jclass clazz,
+jboolean Java_org_citra_citra_1emu_NativeLibrary_onTouchEvent([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj,
                                                               jfloat x, jfloat y,
                                                               jboolean pressed) {
     return static_cast<jboolean>(
         window->OnTouchEvent(static_cast<int>(x + 0.5), static_cast<int>(y + 0.5), pressed));
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_onTouchMoved(JNIEnv* env,
-                                                          [[maybe_unused]] jclass clazz, jfloat x,
+void Java_org_citra_citra_1emu_NativeLibrary_onTouchMoved([[maybe_unused]] JNIEnv* env,
+                                                          [[maybe_unused]] jobject obj, jfloat x,
                                                           jfloat y) {
     window->OnTouchMoved((int)x, (int)y);
 }
 
-jlong Java_org_citra_citra_1emu_NativeLibrary_GetTitleId(JNIEnv* env, [[maybe_unused]] jclass clazz,
+jlong Java_org_citra_citra_1emu_NativeLibrary_getTitleId(JNIEnv* env, [[maybe_unused]] jobject obj,
                                                          jstring j_filename) {
     std::string filepath = GetJString(env, j_filename);
     const auto loader = Loader::GetLoader(filepath);
@@ -485,42 +548,44 @@ jlong Java_org_citra_citra_1emu_NativeLibrary_GetTitleId(JNIEnv* env, [[maybe_un
     return static_cast<jlong>(title_id);
 }
 
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetGitRevision(JNIEnv* env,
-                                                               [[maybe_unused]] jclass clazz) {
-    return nullptr;
+jboolean Java_org_citra_citra_1emu_NativeLibrary_getIsSystemTitle(JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj,
+                                                                  jstring path) {
+    const std::string filepath = GetJString(env, path);
+    const auto loader = Loader::GetLoader(filepath);
+
+    // Since we also read through invalid file extensions, we have to check if the loader is valid
+    if (loader == nullptr) {
+        return false;
+    }
+
+    u64 program_id = 0;
+    loader->ReadProgramId(program_id);
+    return ((program_id >> 32) & 0xFFFFFFFF) == 0x00040010;
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_CreateConfigFile(JNIEnv* env,
-                                                              [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_createConfigFile([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
     Config{};
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_CreateLogFile(JNIEnv* env,
-                                                           [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_createLogFile([[maybe_unused]] JNIEnv* env,
+                                                           [[maybe_unused]] jobject obj) {
     Common::Log::Initialize();
     Common::Log::Start();
     LOG_INFO(Frontend, "Logging backend initialised");
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_LogUserDirectory(JNIEnv* env,
-                                                              [[maybe_unused]] jclass clazz,
+void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj,
                                                               jstring j_path) {
     std::string_view path = env->GetStringUTFChars(j_path, 0);
     LOG_INFO(Frontend, "User directory path: {}", path);
     env->ReleaseStringUTFChars(j_path, path.data());
 }
 
-jint Java_org_citra_citra_1emu_NativeLibrary_DefaultCPUCore(JNIEnv* env,
-                                                            [[maybe_unused]] jclass clazz) {
-    return 0;
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_Run__Ljava_lang_String_2Ljava_lang_String_2Z(
-    JNIEnv* env, [[maybe_unused]] jclass clazz, jstring j_file, jstring j_savestate,
-    jboolean j_delete_savestate) {}
-
-void Java_org_citra_citra_1emu_NativeLibrary_ReloadSettings(JNIEnv* env,
-                                                            [[maybe_unused]] jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
+                                                            [[maybe_unused]] jobject obj) {
     Config{};
     Core::System& system{Core::System::GetInstance()};
 
@@ -534,51 +599,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_ReloadSettings(JNIEnv* env,
     system.ApplySettings();
 }
 
-jstring Java_org_citra_citra_1emu_NativeLibrary_GetUserSetting(JNIEnv* env,
-                                                               [[maybe_unused]] jclass clazz,
-                                                               jstring j_game_id, jstring j_section,
-                                                               jstring j_key) {
-    std::string_view game_id = env->GetStringUTFChars(j_game_id, 0);
-    std::string_view section = env->GetStringUTFChars(j_section, 0);
-    std::string_view key = env->GetStringUTFChars(j_key, 0);
-
-    // TODO
-
-    env->ReleaseStringUTFChars(j_game_id, game_id.data());
-    env->ReleaseStringUTFChars(j_section, section.data());
-    env->ReleaseStringUTFChars(j_key, key.data());
-
-    return env->NewStringUTF("");
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_SetUserSetting(JNIEnv* env,
-                                                            [[maybe_unused]] jclass clazz,
-                                                            jstring j_game_id, jstring j_section,
-                                                            jstring j_key, jstring j_value) {
-    std::string_view game_id = env->GetStringUTFChars(j_game_id, 0);
-    std::string_view section = env->GetStringUTFChars(j_section, 0);
-    std::string_view key = env->GetStringUTFChars(j_key, 0);
-    std::string_view value = env->GetStringUTFChars(j_value, 0);
-
-    // TODO
-
-    env->ReleaseStringUTFChars(j_game_id, game_id.data());
-    env->ReleaseStringUTFChars(j_section, section.data());
-    env->ReleaseStringUTFChars(j_key, key.data());
-    env->ReleaseStringUTFChars(j_value, value.data());
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_InitGameIni(JNIEnv* env, [[maybe_unused]] jclass clazz,
-                                                         jstring j_game_id) {
-    std::string_view game_id = env->GetStringUTFChars(j_game_id, 0);
-
-    // TODO
-
-    env->ReleaseStringUTFChars(j_game_id, game_id.data());
-}
-
-jdoubleArray Java_org_citra_citra_1emu_NativeLibrary_GetPerfStats(JNIEnv* env,
-                                                                  [[maybe_unused]] jclass clazz) {
+jdoubleArray Java_org_citra_citra_1emu_NativeLibrary_getPerfStats(JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj) {
     auto& core = Core::System::GetInstance();
     jdoubleArray j_stats = env->NewDoubleArray(4);
 
@@ -595,15 +617,8 @@ jdoubleArray Java_org_citra_citra_1emu_NativeLibrary_GetPerfStats(JNIEnv* env,
     return j_stats;
 }
 
-void Java_org_citra_citra_1emu_utils_DirectoryInitialization_SetSysDirectory(
-    JNIEnv* env, [[maybe_unused]] jclass clazz, jstring j_path) {
-    std::string_view path = env->GetStringUTFChars(j_path, 0);
-
-    env->ReleaseStringUTFChars(j_path, path.data());
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_Run__Ljava_lang_String_2(JNIEnv* env,
-                                                                      [[maybe_unused]] jclass clazz,
+void Java_org_citra_citra_1emu_NativeLibrary_run__Ljava_lang_String_2(JNIEnv* env,
+                                                                      [[maybe_unused]] jobject obj,
                                                                       jstring j_path) {
     const std::string path = GetJString(env, j_path);
 
@@ -619,13 +634,15 @@ void Java_org_citra_citra_1emu_NativeLibrary_Run__Ljava_lang_String_2(JNIEnv* en
     }
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_ReloadCameraDevices(JNIEnv* env, jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_reloadCameraDevices([[maybe_unused]] JNIEnv* env,
+                                                                 [[maybe_unused]] jobject obj) {
     if (g_ndk_factory) {
         g_ndk_factory->ReloadCameraDevices();
     }
 }
 
-jboolean Java_org_citra_citra_1emu_NativeLibrary_LoadAmiibo(JNIEnv* env, jclass clazz,
+jboolean Java_org_citra_citra_1emu_NativeLibrary_loadAmiibo(JNIEnv* env,
+                                                            [[maybe_unused]] jobject obj,
                                                             jstring j_file) {
     std::string filepath = GetJString(env, j_file);
     Core::System& system{Core::System::GetInstance()};
@@ -638,7 +655,8 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_LoadAmiibo(JNIEnv* env, jclass 
     return static_cast<jboolean>(nfc->LoadAmiibo(filepath));
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_RemoveAmiibo(JNIEnv* env, jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_removeAmiibo([[maybe_unused]] JNIEnv* env,
+                                                          [[maybe_unused]] jobject obj) {
     Core::System& system{Core::System::GetInstance()};
     Service::SM::ServiceManager& sm = system.ServiceManager();
     auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
@@ -649,7 +667,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_RemoveAmiibo(JNIEnv* env, jclass cl
     nfc->RemoveAmiibo();
 }
 
-JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_InstallCIA(
+JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_installCIA(
     JNIEnv* env, jobject jobj, jstring jpath) {
     std::string path = GetJString(env, jpath);
     Service::AM::InstallStatus res =
@@ -661,8 +679,8 @@ JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_Insta
     return IDCache::GetJavaCiaInstallStatus(res);
 }
 
-jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetSavestateInfo(
-    JNIEnv* env, [[maybe_unused]] jclass clazz) {
+jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getSavestateInfo(
+    JNIEnv* env, [[maybe_unused]] jobject obj) {
     const jclass date_class = env->FindClass("java/util/Date");
     const auto date_constructor = env->GetMethodID(date_class, "<init>", "(J)V");
 
@@ -695,20 +713,48 @@ jobjectArray Java_org_citra_citra_1emu_NativeLibrary_GetSavestateInfo(
     return array;
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_SaveState(JNIEnv* env, jclass clazz, jint slot) {
+void Java_org_citra_citra_1emu_NativeLibrary_saveState([[maybe_unused]] JNIEnv* env,
+                                                       [[maybe_unused]] jobject obj, jint slot) {
     Core::System::GetInstance().SendSignal(Core::System::Signal::Save, slot);
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_LoadState(JNIEnv* env, jclass clazz, jint slot) {
+void Java_org_citra_citra_1emu_NativeLibrary_loadState([[maybe_unused]] JNIEnv* env,
+                                                       [[maybe_unused]] jobject obj, jint slot) {
     Core::System::GetInstance().SendSignal(Core::System::Signal::Load, slot);
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_LogDeviceInfo(JNIEnv* env, jclass clazz) {
+void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIEnv* env,
+                                                           [[maybe_unused]] jobject obj) {
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
     LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
     // There is no decent way to get the OS version, so we log the API level instead.
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_loadSystemConfig([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
+    if (Core::System::GetInstance().IsPoweredOn()) {
+        cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    } else {
+        cfg = std::make_shared<Service::CFG::Module>();
+    }
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_saveSystemConfig([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
+    cfg->UpdateConfigNANDSavegame();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_setSystemSetupNeeded([[maybe_unused]] JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj,
+                                                                  jboolean needed) {
+    cfg->SetSystemSetupNeeded(needed);
+}
+
+jboolean Java_org_citra_citra_1emu_NativeLibrary_getIsSystemSetupNeeded(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return cfg->IsSystemSetupNeeded();
 }
 
 } // extern "C"

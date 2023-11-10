@@ -6,7 +6,6 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
-#include "jni/native.h"
 #include "jni/ndk_motion.h"
 
 namespace InputManager {

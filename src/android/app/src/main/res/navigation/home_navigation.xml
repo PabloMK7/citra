@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/home_navigation"
+    app:startDestination="@id/gamesFragment">
+
+    <fragment
+        android:id="@+id/gamesFragment"
+        android:name="org.citra.citra_emu.fragments.GamesFragment"
+        android:label="PlatformGamesFragment" />
+
+    <fragment
+        android:id="@+id/homeSettingsFragment"
+        android:name="org.citra.citra_emu.fragments.HomeSettingsFragment"
+        android:label="HomeSettingsFragment" >
+        <action
+            android:id="@+id/action_homeSettingsFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
+        <action
+            android:id="@+id/action_homeSettingsFragment_to_systemFilesFragment"
+            app:destination="@id/systemFilesFragment" />
+        <action
+            android:id="@+id/action_homeSettingsFragment_to_driverManagerFragment"
+            app:destination="@id/driverManagerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/firstTimeSetupFragment"
+        android:name="org.citra.citra_emu.fragments.SetupFragment"
+        android:label="FirstTimeSetupFragment">
+        <action
+            android:id="@+id/action_firstTimeSetupFragment_to_gamesFragment"
+            app:destination="@id/gamesFragment"
+            app:popUpTo="@id/firstTimeSetupFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="org.citra.citra_emu.fragments.SearchFragment"
+        android:label="SearchFragment" />
+
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="org.citra.citra_emu.fragments.AboutFragment"
+        android:label="AboutFragment" >
+        <action
+            android:id="@+id/action_aboutFragment_to_licensesFragment"
+            app:destination="@id/licensesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/licensesFragment"
+        android:name="org.citra.citra_emu.fragments.LicensesFragment"
+        android:label="LicensesFragment" />
+
+    <activity
+        android:id="@+id/emulationActivity"
+        android:name="org.citra.citra_emu.activities.EmulationActivity"
+        android:label="EmulationActivity">
+        <argument
+            android:name="game"
+            app:argType="org.citra.citra_emu.model.Game"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </activity>
+
+    <fragment
+        android:id="@+id/systemFilesFragment"
+        android:name="org.citra.citra_emu.fragments.SystemFilesFragment"
+        android:label="SystemFilesFragment" />
+
+    <fragment
+        android:id="@+id/driverManagerFragment"
+        android:name="org.citra.citra_emu.fragments.DriverManagerFragment"
+        android:label="DriverManagerFragment" />
+
+</navigation>

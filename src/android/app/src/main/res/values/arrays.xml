@@ -203,4 +203,34 @@
         <item>4</item>
         <item>5</item>
     </integer-array>
+
+    <string-array name="systemFileRegions">
+        <item>@string/system_region_jpn</item>
+        <item>@string/system_region_usa</item>
+        <item>@string/system_region_eur</item>
+        <item>@string/system_region_aus</item>
+        <item>@string/system_region_chn</item>
+        <item>@string/system_region_kor</item>
+        <item>@string/system_region_twn</item>
+    </string-array>
+    <integer-array name="systemFileRegionValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+    </integer-array>
+
+    <string-array name="systemFileTypes">
+        <item>@string/system_type_minimal</item>
+        <item>@string/system_type_old_3ds</item>
+        <item>@string/system_type_new_3ds</item>
+    </string-array>
+    <integer-array name="systemFileTypeValues">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+    </integer-array>
 </resources>

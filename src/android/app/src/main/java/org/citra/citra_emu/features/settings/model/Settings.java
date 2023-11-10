@@ -14,7 +14,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class Settings {
-    public static final String SECTION_PREMIUM = "Premium";
+    public static final String PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch";
+    public static final String PREF_MATERIAL_YOU = "MaterialYouTheme";
+    public static final String PREF_THEME_MODE = "ThemeMode";
+    public static final String PREF_BLACK_BACKGROUNDS = "BlackBackgrounds";
+    public static final String PREF_SHOW_HOME_APPS = "ShowHomeApps";
+
     public static final String SECTION_CORE = "Core";
     public static final String SECTION_SYSTEM = "System";
     public static final String SECTION_CAMERA = "Camera";
@@ -30,7 +35,7 @@ public class Settings {
     private static final Map<String, List<String>> configFileSectionsMap = new HashMap<>();
 
     static {
-        configFileSectionsMap.put(SettingsFile.FILE_NAME_CONFIG, Arrays.asList(SECTION_PREMIUM, SECTION_CORE, SECTION_SYSTEM, SECTION_CAMERA, SECTION_CONTROLS, SECTION_RENDERER, SECTION_LAYOUT, SECTION_UTILITY, SECTION_AUDIO, SECTION_DEBUG));
+        configFileSectionsMap.put(SettingsFile.FILE_NAME_CONFIG, Arrays.asList(SECTION_CORE, SECTION_SYSTEM, SECTION_CAMERA, SECTION_CONTROLS, SECTION_RENDERER, SECTION_LAYOUT, SECTION_UTILITY, SECTION_AUDIO, SECTION_DEBUG));
     }
 
     /**
@@ -109,7 +114,7 @@ public class Settings {
 
     public void saveSettings(SettingsActivityView view) {
         if (TextUtils.isEmpty(gameId)) {
-            view.showToastMessage(CitraApplication.getAppContext().getString(R.string.ini_saved), false);
+            view.showToastMessage(CitraApplication.Companion.getAppContext().getString(R.string.ini_saved), false);
 
             for (Map.Entry<String, List<String>> entry : configFileSectionsMap.entrySet()) {
                 String fileName = entry.getKey();
@@ -121,12 +126,6 @@ public class Settings {
 
                 SettingsFile.saveFile(fileName, iniSections, view);
             }
-        } else {
-            // custom game settings
-            view.showToastMessage(CitraApplication.getAppContext().getString(R.string.gameid_saved, gameId), false);
-
-            SettingsFile.saveCustomGameSettings(gameId, sections);
         }
-
     }
 }

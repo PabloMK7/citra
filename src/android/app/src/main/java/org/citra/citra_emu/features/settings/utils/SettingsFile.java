@@ -42,7 +42,6 @@ public final class SettingsFile {
 
     public static final String KEY_DESIGN = "design";
 
-    public static final String KEY_PREMIUM = "premium";
 
     public static final String KEY_GRAPHICS_API = "graphics_api";
     public static final String KEY_SPIRV_SHADER_GEN = "spirv_shader_gen";
@@ -160,7 +159,7 @@ public final class SettingsFile {
         BufferedReader reader = null;
 
         try {
-            Context context = CitraApplication.getAppContext();
+            Context context = CitraApplication.Companion.getAppContext();
             InputStream inputStream = context.getContentResolver().openInputStream(ini.getUri());
             reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -226,7 +225,7 @@ public final class SettingsFile {
         DocumentFile ini = getSettingsFile(fileName);
 
         try {
-            Context context = CitraApplication.getAppContext();
+            Context context = CitraApplication.Companion.getAppContext();
             InputStream inputStream = context.getContentResolver().openInputStream(ini.getUri());
             Wini writer = new Wini(inputStream);
 
@@ -242,24 +241,7 @@ public final class SettingsFile {
             outputStream.close();
         } catch (IOException e) {
             Log.error("[SettingsFile] File not found: " + fileName + ".ini: " + e.getMessage());
-            view.showToastMessage(CitraApplication.getAppContext().getString(R.string.error_saving, fileName, e.getMessage()), false);
-        }
-    }
-
-
-    public static void saveCustomGameSettings(final String gameId, final HashMap<String, SettingSection> sections) {
-        Set<String> sortedSections = new TreeSet<>(sections.keySet());
-
-        for (String sectionKey : sortedSections) {
-            SettingSection section = sections.get(sectionKey);
-
-            HashMap<String, Setting> settings = section.getSettings();
-            Set<String> sortedKeySet = new TreeSet<>(settings.keySet());
-
-            for (String settingKey : sortedKeySet) {
-                Setting setting = settings.get(settingKey);
-                NativeLibrary.SetUserSetting(gameId, mapSectionNameFromIni(section.getName()), setting.getKey(), setting.getValueAsString());
-            }
+            view.showToastMessage(CitraApplication.Companion.getAppContext().getString(R.string.error_saving, fileName, e.getMessage()), false);
         }
     }
 
@@ -280,13 +262,13 @@ public final class SettingsFile {
     }
 
     public static DocumentFile getSettingsFile(String fileName) {
-        DocumentFile root = DocumentFile.fromTreeUri(CitraApplication.getAppContext(), Uri.parse(DirectoryInitialization.getUserDirectory()));
+        DocumentFile root = DocumentFile.fromTreeUri(CitraApplication.Companion.getAppContext(), Uri.parse(DirectoryInitialization.INSTANCE.getUserDirectory()));
         DocumentFile configDirectory = root.findFile("config");
         return configDirectory.findFile(fileName + ".ini");
     }
 
     private static DocumentFile getCustomGameSettingsFile(String gameId) {
-        DocumentFile root = DocumentFile.fromTreeUri(CitraApplication.getAppContext(), Uri.parse(DirectoryInitialization.getUserDirectory()));
+        DocumentFile root = DocumentFile.fromTreeUri(CitraApplication.Companion.getAppContext(), Uri.parse(DirectoryInitialization.INSTANCE.getUserDirectory()));
         DocumentFile configDirectory = root.findFile("GameSettings");
         return configDirectory.findFile(gameId + ".ini");
     }

@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import androidx.work.ForegroundInfo;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import org.citra.citra_emu.NativeLibrary.InstallStatus;
 import org.citra.citra_emu.R;
 
 public class CiaInstallWorker extends Worker {
@@ -54,15 +56,6 @@ public class CiaInstallWorker extends Worker {
             @NonNull Context context,
             @NonNull WorkerParameters params) {
         super(context, params);
-    }
-
-    enum InstallStatus {
-        Success,
-        ErrorFailedToOpenFile,
-        ErrorFileNotFound,
-        ErrorAborted,
-        ErrorInvalid,
-        ErrorEncrypted,
     }
 
     private void notifyInstallStatus(String filename, InstallStatus status) {
@@ -126,10 +119,10 @@ public class CiaInstallWorker extends Worker {
 
         int i = 0;
         for (String file : selectedFiles) {
-            String filename = FileUtil.getFilename(mContext, file);
+            String filename = FileUtil.getFilename(Uri.parse(file));
             mInstallProgressBuilder.setContentText(mContext.getString(
                     R.string.cia_install_notification_installing, filename, ++i, selectedFiles.length));
-            InstallStatus res = InstallCIA(file);
+            InstallStatus res = installCIA(file);
             notifyInstallStatus(filename, res);
         }
         mNotificationManager.cancel(PROGRESS_NOTIFICATION_ID);
@@ -156,5 +149,5 @@ public class CiaInstallWorker extends Worker {
         return new ForegroundInfo(PROGRESS_NOTIFICATION_ID, mInstallProgressBuilder.build());
     }
 
-    private native InstallStatus InstallCIA(String path);
+    private native InstallStatus installCIA(String path);
 }

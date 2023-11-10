@@ -25,9 +25,6 @@ static jclass s_savestate_info_class;
 
 static jclass s_native_library_class;
 static jmethodID s_on_core_error;
-static jmethodID s_display_alert_msg;
-static jmethodID s_display_alert_prompt;
-static jmethodID s_alert_prompt_button;
 static jmethodID s_is_portrait_mode;
 static jmethodID s_landscape_screen_layout;
 static jmethodID s_exit_emulation_activity;
@@ -85,18 +82,6 @@ jclass GetNativeLibraryClass() {
 
 jmethodID GetOnCoreError() {
     return s_on_core_error;
-}
-
-jmethodID GetDisplayAlertMsg() {
-    return s_display_alert_msg;
-}
-
-jmethodID GetDisplayAlertPrompt() {
-    return s_display_alert_prompt;
-}
-
-jmethodID GetAlertPromptButton() {
-    return s_alert_prompt_button;
 }
 
 jmethodID GetIsPortraitMode() {
@@ -182,7 +167,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 
     // Initialize misc classes
     s_savestate_info_class = reinterpret_cast<jclass>(
-        env->NewGlobalRef(env->FindClass("org/citra/citra_emu/NativeLibrary$SavestateInfo")));
+        env->NewGlobalRef(env->FindClass("org/citra/citra_emu/NativeLibrary$SaveStateInfo")));
     s_core_error_class = reinterpret_cast<jclass>(
         env->NewGlobalRef(env->FindClass("org/citra/citra_emu/NativeLibrary$CoreError")));
 
@@ -190,24 +175,17 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     const jclass native_library_class = env->FindClass("org/citra/citra_emu/NativeLibrary");
     s_native_library_class = reinterpret_cast<jclass>(env->NewGlobalRef(native_library_class));
     s_on_core_error = env->GetStaticMethodID(
-        s_native_library_class, "OnCoreError",
+        s_native_library_class, "onCoreError",
         "(Lorg/citra/citra_emu/NativeLibrary$CoreError;Ljava/lang/String;)Z");
-    s_display_alert_msg = env->GetStaticMethodID(s_native_library_class, "displayAlertMsg",
-                                                 "(Ljava/lang/String;Ljava/lang/String;Z)Z");
-    s_display_alert_prompt =
-        env->GetStaticMethodID(s_native_library_class, "displayAlertPrompt",
-                               "(Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
-    s_alert_prompt_button =
-        env->GetStaticMethodID(s_native_library_class, "alertPromptButton", "()I");
     s_is_portrait_mode = env->GetStaticMethodID(s_native_library_class, "isPortraitMode", "()Z");
     s_landscape_screen_layout =
         env->GetStaticMethodID(s_native_library_class, "landscapeScreenLayout", "()I");
     s_exit_emulation_activity =
         env->GetStaticMethodID(s_native_library_class, "exitEmulationActivity", "(I)V");
     s_request_camera_permission =
-        env->GetStaticMethodID(s_native_library_class, "RequestCameraPermission", "()Z");
+        env->GetStaticMethodID(s_native_library_class, "requestCameraPermission", "()Z");
     s_request_mic_permission =
-        env->GetStaticMethodID(s_native_library_class, "RequestMicPermission", "()Z");
+        env->GetStaticMethodID(s_native_library_class, "requestMicPermission", "()Z");
     env->DeleteLocalRef(native_library_class);
 
     // Initialize Cheat
@@ -225,7 +203,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 
     // Initialize GameInfo
     const jclass game_info_class = env->FindClass("org/citra/citra_emu/model/GameInfo");
-    s_game_info_pointer = env->GetFieldID(game_info_class, "mPointer", "J");
+    s_game_info_pointer = env->GetFieldID(game_info_class, "pointer", "J");
     env->DeleteLocalRef(game_info_class);
 
     // Initialize Disk Shader Cache Progress Dialog
@@ -262,13 +240,13 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         env->GetMethodID(s_cia_install_helper_class, "setProgressCallback", "(II)V");
     // Initialize CIA InstallStatus map
     jclass cia_install_status_class =
-        env->FindClass("org/citra/citra_emu/utils/CiaInstallWorker$InstallStatus");
+        env->FindClass("org/citra/citra_emu/NativeLibrary$InstallStatus");
     const auto to_java_cia_install_status = [env,
                                              cia_install_status_class](const std::string& stage) {
         return env->NewGlobalRef(env->GetStaticObjectField(
             cia_install_status_class, env->GetStaticFieldID(cia_install_status_class, stage.c_str(),
-                                                            "Lorg/citra/citra_emu/utils/"
-                                                            "CiaInstallWorker$InstallStatus;")));
+                                                            "Lorg/citra/citra_emu/"
+                                                            "NativeLibrary$InstallStatus;")));
     };
     s_java_cia_install_status.emplace(Service::AM::InstallStatus::Success,
                                       to_java_cia_install_status("Success"));

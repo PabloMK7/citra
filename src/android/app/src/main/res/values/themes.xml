@@ -7,8 +7,7 @@
         <item name="postSplashScreenTheme">@style/Theme.Citra.Main</item>
     </style>
 
-
-    <style name="Theme.Citra.Main" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Citra" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Main theme colors -->
         <item name="colorPrimary">@color/citra_primary</item>
         <item name="colorOnPrimary">@color/citra_onPrimary</item>
@@ -37,15 +36,15 @@
         <item name="colorSurfaceInverse">@color/citra_inverseSurface</item>
         <item name="colorPrimaryInverse">@color/citra_inversePrimary</item>
 
-        <item name="homeAsUpIndicator">@drawable/ic_back</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:textColorLink">@color/citra_primary</item>
-        <item name="materialAlertDialogTheme">@style/CitraMaterialDialog</item>
-        <item name="popupMenuStyle">@style/CitraShapedPopup</item>
-        <item name="popupTheme">@style/CitraPopup</item>
+
         <item name="sliderStyle">@style/CitraSlider</item>
-        <item name="floatingActionButtonStyle">@style/Widget.Citra.FloatingActionButton</item>
+
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
+
+    <!-- Trick for API >= 29 specific changes -->
+    <style name="Theme.Citra.Main" parent="Theme.Citra" />
 
 </resources>

@@ -27,7 +27,6 @@ import org.citra.citra_emu.activities.EmulationActivity;
 import org.citra.citra_emu.overlay.InputOverlay;
 import org.citra.citra_emu.utils.DirectoryInitialization;
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState;
-import org.citra.citra_emu.utils.DirectoryStateReceiver;
 import org.citra.citra_emu.utils.EmulationMenuSettings;
 import org.citra.citra_emu.utils.Log;
 
@@ -41,8 +40,6 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
     private InputOverlay mInputOverlay;
 
     private EmulationState mEmulationState;
-
-    private DirectoryStateReceiver directoryStateReceiver;
 
     private EmulationActivity activity;
 
@@ -65,7 +62,7 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
 
         if (context instanceof EmulationActivity) {
             activity = (EmulationActivity) context;
-            NativeLibrary.setEmulationActivity((EmulationActivity) context);
+            NativeLibrary.INSTANCE.setEmulationActivity((EmulationActivity) context);
         } else {
             throw new IllegalStateException("EmulationFragment must have EmulationActivity parent");
         }
@@ -116,20 +113,11 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
     public void onResume() {
         super.onResume();
         Choreographer.getInstance().postFrameCallback(this);
-        if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            mEmulationState.run(activity.isActivityRecreated());
-        } else {
-            setupCitraDirectoriesThenStartEmulation();
-        }
+        mEmulationState.run(activity.isActivityRecreated());
     }
 
     @Override
     public void onPause() {
-        if (directoryStateReceiver != null) {
-            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(directoryStateReceiver);
-            directoryStateReceiver = null;
-        }
-
         if (mEmulationState.isRunning()) {
             mEmulationState.pause();
         }
@@ -140,37 +128,8 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
 
     @Override
     public void onDetach() {
-        NativeLibrary.clearEmulationActivity();
+        NativeLibrary.INSTANCE.clearEmulationActivity();
         super.onDetach();
-    }
-
-    private void setupCitraDirectoriesThenStartEmulation() {
-        IntentFilter statusIntentFilter = new IntentFilter(
-                DirectoryInitialization.BROADCAST_ACTION);
-
-        directoryStateReceiver =
-                new DirectoryStateReceiver(directoryInitializationState ->
-                {
-                    if (directoryInitializationState ==
-                            DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED) {
-                        mEmulationState.run(activity.isActivityRecreated());
-                    } else if (directoryInitializationState ==
-                            DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED) {
-                        Toast.makeText(getContext(), R.string.write_permission_needed, Toast.LENGTH_SHORT)
-                                .show();
-                    } else if (directoryInitializationState ==
-                            DirectoryInitializationState.CANT_FIND_EXTERNAL_STORAGE) {
-                        Toast.makeText(getContext(), R.string.external_storage_not_mounted,
-                                Toast.LENGTH_SHORT)
-                                .show();
-                    }
-                });
-
-        // Registers the DirectoryStateReceiver and its intent filters
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
-                directoryStateReceiver,
-                statusIntentFilter);
-        DirectoryInitialization.start(getActivity());
     }
 
     public void refreshInputOverlay() {
@@ -195,7 +154,7 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
 
             perfStatsUpdater = () ->
             {
-                final double[] perfStats = NativeLibrary.GetPerfStats();
+                final double[] perfStats = NativeLibrary.INSTANCE.getPerfStats();
                 if (perfStats[FPS] > 0) {
                     mPerfStats.setText(String.format("FPS: %d Speed: %d%%", (int) (perfStats[FPS] + 0.5),
                             (int) (perfStats[SPEED] * 100.0 + 0.5)));
@@ -235,7 +194,7 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
     @Override
     public void doFrame(long frameTimeNanos) {
         Choreographer.getInstance().postFrameCallback(this);
-        NativeLibrary.DoFrame();
+        NativeLibrary.INSTANCE.doFrame();
     }
 
     public void stopEmulation() {
@@ -286,7 +245,7 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
             if (state != State.STOPPED) {
                 Log.debug("[EmulationFragment] Stopping emulation.");
                 state = State.STOPPED;
-                NativeLibrary.StopEmulation();
+                NativeLibrary.INSTANCE.stopEmulation();
             } else {
                 Log.warning("[EmulationFragment] Stop called while already stopped.");
             }
@@ -300,8 +259,8 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
                 Log.debug("[EmulationFragment] Pausing emulation.");
 
                 // Release the surface before pausing, since emulation has to be running for that.
-                NativeLibrary.SurfaceDestroyed();
-                NativeLibrary.PauseEmulation();
+                NativeLibrary.INSTANCE.surfaceDestroyed();
+                NativeLibrary.INSTANCE.pauseEmulation();
             } else {
                 Log.warning("[EmulationFragment] Pause called while already paused.");
             }
@@ -309,7 +268,7 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
 
         public synchronized void run(boolean isActivityRecreated) {
             if (isActivityRecreated) {
-                if (NativeLibrary.IsRunning()) {
+                if (NativeLibrary.INSTANCE.isRunning()) {
                     state = State.PAUSED;
                 }
             } else {
@@ -340,7 +299,7 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
                 Log.debug("[EmulationFragment] Surface destroyed.");
 
                 if (state == State.RUNNING) {
-                    NativeLibrary.SurfaceDestroyed();
+                    NativeLibrary.INSTANCE.surfaceDestroyed();
                     state = State.PAUSED;
                 } else if (state == State.PAUSED) {
                     Log.warning("[EmulationFragment] Surface cleared while emulation paused.");
@@ -353,18 +312,18 @@ public final class EmulationFragment extends Fragment implements SurfaceHolder.C
         private void runWithValidSurface() {
             mRunWhenSurfaceIsValid = false;
             if (state == State.STOPPED) {
-                NativeLibrary.SurfaceChanged(mSurface);
+                NativeLibrary.INSTANCE.surfaceChanged(mSurface);
                 Thread mEmulationThread = new Thread(() ->
                 {
                     Log.debug("[EmulationFragment] Starting emulation thread.");
-                    NativeLibrary.Run(mGamePath);
+                    NativeLibrary.INSTANCE.run(mGamePath);
                 }, "NativeEmulation");
                 mEmulationThread.start();
 
             } else if (state == State.PAUSED) {
                 Log.debug("[EmulationFragment] Resuming emulation.");
-                NativeLibrary.SurfaceChanged(mSurface);
-                NativeLibrary.UnPauseEmulation();
+                NativeLibrary.INSTANCE.surfaceChanged(mSurface);
+                NativeLibrary.INSTANCE.unPauseEmulation();
             } else {
                 Log.debug("[EmulationFragment] Bug, run called while already running.");
             }

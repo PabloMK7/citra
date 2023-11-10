@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll_view_settings"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:scrollbars="vertical"
+    android:fadeScrollbars="false"
+    android:clipToPadding="false">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/linear_layout_settings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="?attr/colorSurface">
+
+        <ImageView
+            android:id="@+id/logo_image"
+            android:layout_width="175dp"
+            android:layout_height="175dp"
+            android:layout_margin="64dp"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/ic_citra_full" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/home_settings_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.core.widget.NestedScrollView>

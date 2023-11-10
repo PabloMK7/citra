@@ -17,8 +17,6 @@ import org.citra.citra_emu.features.settings.model.view.CheckBoxSetting;
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting;
 import org.citra.citra_emu.features.settings.model.view.HeaderSetting;
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting;
-import org.citra.citra_emu.features.settings.model.view.PremiumHeader;
-import org.citra.citra_emu.features.settings.model.view.PremiumSingleChoiceSetting;
 import org.citra.citra_emu.features.settings.model.view.SettingsItem;
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting;
 import org.citra.citra_emu.features.settings.model.view.SliderSetting;
@@ -107,9 +105,6 @@ public final class SettingsFragmentPresenter {
             case SettingsFile.FILE_NAME_CONFIG:
                 addConfigSettings(sl);
                 break;
-            case Settings.SECTION_PREMIUM:
-                addPremiumSettings(sl);
-                break;
             case Settings.SECTION_CORE:
                 addGeneralSettings(sl);
                 break;
@@ -143,7 +138,6 @@ public final class SettingsFragmentPresenter {
     private void addConfigSettings(ArrayList<SettingsItem> sl) {
         mView.getActivity().setTitle(R.string.preferences_settings);
 
-        sl.add(new SubmenuSetting(null, null, R.string.preferences_premium, 0, Settings.SECTION_PREMIUM));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_general, 0, Settings.SECTION_CORE));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_system, 0, Settings.SECTION_SYSTEM));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_camera, 0, Settings.SECTION_CAMERA));
@@ -151,25 +145,6 @@ public final class SettingsFragmentPresenter {
         sl.add(new SubmenuSetting(null, null, R.string.preferences_graphics, 0, Settings.SECTION_RENDERER));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_audio, 0, Settings.SECTION_AUDIO));
         sl.add(new SubmenuSetting(null, null, R.string.preferences_debug, 0, Settings.SECTION_DEBUG));
-    }
-
-    private void addPremiumSettings(ArrayList<SettingsItem> sl) {
-        mView.getActivity().setTitle(R.string.preferences_premium);
-
-        SettingSection premiumSection = mSettings.getSection(Settings.SECTION_PREMIUM);
-        Setting design = premiumSection.getSetting(SettingsFile.KEY_DESIGN);
-
-        sl.add(new PremiumHeader());
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            sl.add(new PremiumSingleChoiceSetting(SettingsFile.KEY_DESIGN, Settings.SECTION_PREMIUM, R.string.design, 0, R.array.designNames, R.array.designValues, 0, design, mView));
-        } else {
-            // Pre-Android 10 does not support System Default
-            sl.add(new PremiumSingleChoiceSetting(SettingsFile.KEY_DESIGN, Settings.SECTION_PREMIUM, R.string.design, 0, R.array.designNamesOld, R.array.designValuesOld, 0, design, mView));
-        }
-
-        Setting textureFilterName = premiumSection.getSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME);
-        sl.add(new SingleChoiceSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME, Settings.SECTION_PREMIUM, R.string.texture_filter_name, 0, R.array.textureFilterNames, R.array.textureFilterValues, 0, textureFilterName));
     }
 
     private void addGeneralSettings(ArrayList<SettingsItem> sl) {
@@ -367,6 +342,7 @@ public final class SettingsFragmentPresenter {
         Setting render3dMode = rendererSection.getSetting(SettingsFile.KEY_RENDER_3D);
         Setting factor3d = rendererSection.getSetting(SettingsFile.KEY_FACTOR_3D);
         Setting useDiskShaderCache = rendererSection.getSetting(SettingsFile.KEY_USE_DISK_SHADER_CACHE);
+        Setting textureFilterName = rendererSection.getSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME);
         SettingSection layoutSection = mSettings.getSection(Settings.SECTION_LAYOUT);
         Setting cardboardScreenSize = layoutSection.getSetting(SettingsFile.KEY_CARDBOARD_SCREEN_SIZE);
         Setting cardboardXShift = layoutSection.getSetting(SettingsFile.KEY_CARDBOARD_X_SHIFT);
@@ -385,6 +361,7 @@ public final class SettingsFragmentPresenter {
         sl.add(new CheckBoxSetting(SettingsFile.KEY_FILTER_MODE, Settings.SECTION_RENDERER, R.string.linear_filtering, R.string.linear_filtering_description, true, filterMode));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_SHADERS_ACCURATE_MUL, Settings.SECTION_RENDERER, R.string.shaders_accurate_mul, R.string.shaders_accurate_mul_description, false, shadersAccurateMul));
         sl.add(new CheckBoxSetting(SettingsFile.KEY_USE_DISK_SHADER_CACHE, Settings.SECTION_RENDERER, R.string.use_disk_shader_cache, R.string.use_disk_shader_cache_description, true, useDiskShaderCache));
+        sl.add(new SingleChoiceSetting(SettingsFile.KEY_TEXTURE_FILTER_NAME, Settings.SECTION_RENDERER, R.string.texture_filter_name, 0, R.array.textureFilterNames, R.array.textureFilterValues, 0, textureFilterName));
 
         sl.add(new HeaderSetting(null, null, R.string.stereoscopy, 0));
         sl.add(new SingleChoiceSetting(SettingsFile.KEY_RENDER_3D, Settings.SECTION_RENDERER, R.string.render3d, 0, R.array.render3dModes, R.array.render3dValues, 0, render3dMode));

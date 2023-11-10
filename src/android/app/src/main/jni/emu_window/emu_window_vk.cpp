@@ -51,3 +51,7 @@ bool EmuWindow_Android_Vulkan::CreateWindowSurface() {
 std::unique_ptr<Frontend::GraphicsContext> EmuWindow_Android_Vulkan::CreateSharedContext() const {
     return std::make_unique<GraphicsContext_Android>(driver_library);
 }
+
+std::shared_ptr<Common::DynamicLibrary> EmuWindow_Android_Vulkan::GetDriverLibrary() {
+    return driver_library;
+}

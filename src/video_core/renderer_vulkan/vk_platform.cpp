@@ -304,7 +304,7 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "Citra Vulkan",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = available_version,
+        .apiVersion = VK_API_VERSION_1_3,
     };
 
     boost::container::static_vector<const char*, 2> layers;

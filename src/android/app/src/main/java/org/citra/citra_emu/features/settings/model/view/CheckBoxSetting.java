@@ -59,7 +59,7 @@ public final class CheckBoxSetting extends SettingsItem {
     public IntSetting setChecked(boolean checked) {
         // Show a performance warning if the setting has been disabled
         if (mShowPerformanceWarning && !checked) {
-            mView.showToastMessage(CitraApplication.getAppContext().getString(R.string.performance_warning), true);
+            mView.showToastMessage(CitraApplication.Companion.getAppContext().getString(R.string.performance_warning), true);
         }
 
         if (getSetting() == null) {

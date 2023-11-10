@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +49,7 @@ import org.citra.citra_emu.utils.EmulationMenuSettings;
 import org.citra.citra_emu.utils.FileBrowserHelper;
 import org.citra.citra_emu.utils.FileUtil;
 import org.citra.citra_emu.utils.ForegroundService;
+import org.citra.citra_emu.utils.Log;
 import org.citra.citra_emu.utils.ThemeUtil;
 
 import java.io.File;
@@ -169,8 +171,8 @@ public final class EmulationActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeUtil.applyTheme(this);
-
+        Log.gameLaunched = true;
+        ThemeUtil.INSTANCE.setTheme(this);
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState == null) {
@@ -210,7 +212,7 @@ public final class EmulationActivity extends AppCompatActivity {
         startForegroundService(foregroundService);
 
         // Override Citra core INI with the one set by our in game menu
-        NativeLibrary.SwapScreens(EmulationMenuSettings.getSwapScreens(),
+        NativeLibrary.INSTANCE.swapScreens(EmulationMenuSettings.getSwapScreens(),
                 getWindowManager().getDefaultDisplay().getRotation());
     }
 
@@ -224,15 +226,12 @@ public final class EmulationActivity extends AppCompatActivity {
     protected void restoreState(Bundle savedInstanceState) {
         mPath = savedInstanceState.getString(EXTRA_SELECTED_GAME);
         mSelectedTitle = savedInstanceState.getString(EXTRA_SELECTED_TITLE);
-
-        // If an alert prompt was in progress when state was restored, retry displaying it
-        NativeLibrary.retryDisplayAlertPrompt();
     }
 
     @Override
     public void onRestart() {
         super.onRestart();
-        NativeLibrary.ReloadCameraDevices();
+        NativeLibrary.INSTANCE.reloadCameraDevices();
     }
 
     @Override
@@ -257,7 +256,7 @@ public final class EmulationActivity extends AppCompatActivity {
                             .setPositiveButton(android.R.string.ok, null)
                             .show();
                 }
-                NativeLibrary.CameraPermissionResult(grantResults[0] == PackageManager.PERMISSION_GRANTED);
+                NativeLibrary.INSTANCE.cameraPermissionResult(grantResults[0] == PackageManager.PERMISSION_GRANTED);
                 break;
             case NativeLibrary.REQUEST_CODE_NATIVE_MIC:
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED &&
@@ -268,7 +267,7 @@ public final class EmulationActivity extends AppCompatActivity {
                             .setPositiveButton(android.R.string.ok, null)
                             .show();
                 }
-                NativeLibrary.MicPermissionResult(grantResults[0] == PackageManager.PERMISSION_GRANTED);
+                NativeLibrary.INSTANCE.micPermissionResult(grantResults[0] == PackageManager.PERMISSION_GRANTED);
                 break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -281,6 +280,10 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void enableFullscreenImmersive() {
+        // TODO: Remove this once we properly account for display insets in the input overlay
+        getWindow().getAttributes().layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
                         View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
@@ -323,7 +326,7 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void DisplaySavestateWarning() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.getAppContext());
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.Companion.getAppContext());
         if (preferences.getBoolean("savestateWarningShown", false)) {
             return;
         }
@@ -350,7 +353,7 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void updateSavestateMenuOptions(Menu menu) {
-        final NativeLibrary.SavestateInfo[] savestates = NativeLibrary.GetSavestateInfo();
+        final NativeLibrary.SaveStateInfo[] savestates = NativeLibrary.INSTANCE.getSavestateInfo();
         if (savestates == null) {
             menu.findItem(R.id.menu_emulation_save_state).setVisible(false);
             menu.findItem(R.id.menu_emulation_load_state).setVisible(false);
@@ -370,18 +373,18 @@ public final class EmulationActivity extends AppCompatActivity {
             final String text = getString(R.string.emulation_empty_state_slot, slot);
             saveStateMenu.add(text).setEnabled(true).setOnMenuItemClickListener((item) -> {
                 DisplaySavestateWarning();
-                NativeLibrary.SaveState(slot);
+                NativeLibrary.INSTANCE.saveState(slot);
                 return true;
             });
             loadStateMenu.add(text).setEnabled(false).setOnMenuItemClickListener((item) -> {
-                NativeLibrary.LoadState(slot);
+                NativeLibrary.INSTANCE.loadState(slot);
                 return true;
             });
         }
-        for (final NativeLibrary.SavestateInfo info : savestates) {
-            final String text = getString(R.string.emulation_occupied_state_slot, info.slot, info.time);
-            saveStateMenu.getItem(info.slot - 1).setTitle(text);
-            loadStateMenu.getItem(info.slot - 1).setTitle(text).setEnabled(true);
+        for (final NativeLibrary.SaveStateInfo info : savestates) {
+            final String text = getString(R.string.emulation_occupied_state_slot, info.getSlot(), info.getTime());
+            saveStateMenu.getItem(info.getSlot() - 1).setTitle(text);
+            loadStateMenu.getItem(info.getSlot() - 1).setTitle(text).setEnabled(true);
         }
     }
 
@@ -441,7 +444,7 @@ public final class EmulationActivity extends AppCompatActivity {
                 EmulationMenuSettings.setSwapScreens(isEnabled);
                 item.setChecked(isEnabled);
 
-                NativeLibrary.SwapScreens(isEnabled, getWindowManager().getDefaultDisplay()
+                NativeLibrary.INSTANCE.swapScreens(isEnabled, getWindowManager().getDefaultDisplay()
                         .getRotation());
                 break;
             }
@@ -491,11 +494,11 @@ public final class EmulationActivity extends AppCompatActivity {
                 break;
 
             case MENU_ACTION_OPEN_CHEATS:
-                CheatsActivity.launch(this, NativeLibrary.GetRunningTitleId());
+                CheatsActivity.launch(this, NativeLibrary.INSTANCE.getRunningTitleId());
                 break;
 
             case MENU_ACTION_CLOSE_GAME:
-                NativeLibrary.PauseEmulation();
+                NativeLibrary.INSTANCE.pauseEmulation();
                 new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.emulation_close_game)
                         .setMessage(R.string.emulation_close_game_message)
@@ -504,8 +507,8 @@ public final class EmulationActivity extends AppCompatActivity {
                             mEmulationFragment.stopEmulation();
                             finish();
                         })
-                        .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> NativeLibrary.UnPauseEmulation())
-                        .setOnCancelListener(dialogInterface -> NativeLibrary.UnPauseEmulation())
+                        .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> NativeLibrary.INSTANCE.unPauseEmulation())
+                        .setOnCancelListener(dialogInterface -> NativeLibrary.INSTANCE.unPauseEmulation())
                         .show();
                 break;
         }
@@ -515,7 +518,7 @@ public final class EmulationActivity extends AppCompatActivity {
 
     private void changeScreenOrientation(int layoutOption, MenuItem item) {
         item.setChecked(true);
-        NativeLibrary.NotifyOrientationChange(layoutOption, getWindowManager().getDefaultDisplay()
+        NativeLibrary.INSTANCE.notifyOrientationChange(layoutOption, getWindowManager().getDefaultDisplay()
                 .getRotation());
         EmulationMenuSettings.setLandscapeScreenLayout(layoutOption);
     }
@@ -558,7 +561,7 @@ public final class EmulationActivity extends AppCompatActivity {
             return false;
         }
 
-        return NativeLibrary.onGamePadEvent(input.getDescriptor(), button, action);
+        return NativeLibrary.INSTANCE.onGamePadEvent(input.getDescriptor(), button, action);
     }
 
     @Override
@@ -570,7 +573,7 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void onAmiiboSelected(String selectedFile) {
-        boolean success = NativeLibrary.LoadAmiibo(selectedFile);
+        boolean success = NativeLibrary.INSTANCE.loadAmiibo(selectedFile);
 
         if (!success) {
             new MaterialAlertDialogBuilder(this)
@@ -582,7 +585,7 @@ public final class EmulationActivity extends AppCompatActivity {
     }
 
     private void RemoveAmiibo() {
-        NativeLibrary.RemoveAmiibo();
+        NativeLibrary.INSTANCE.removeAmiibo();
     }
 
     private void toggleControls() {
@@ -725,47 +728,47 @@ public final class EmulationActivity extends AppCompatActivity {
         }
 
         // Circle-Pad and C-Stick status
-        NativeLibrary.onGamePadMoveEvent(input.getDescriptor(), NativeLibrary.ButtonType.STICK_LEFT, axisValuesCirclePad[0], axisValuesCirclePad[1]);
-        NativeLibrary.onGamePadMoveEvent(input.getDescriptor(), NativeLibrary.ButtonType.STICK_C, axisValuesCStick[0], axisValuesCStick[1]);
+        NativeLibrary.INSTANCE.onGamePadMoveEvent(input.getDescriptor(), NativeLibrary.ButtonType.STICK_LEFT, axisValuesCirclePad[0], axisValuesCirclePad[1]);
+        NativeLibrary.INSTANCE.onGamePadMoveEvent(input.getDescriptor(), NativeLibrary.ButtonType.STICK_C, axisValuesCStick[0], axisValuesCStick[1]);
 
         // Triggers L/R and ZL/ZR
         if (isTriggerPressedLMapped) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.TRIGGER_L, isTriggerPressedL ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.TRIGGER_L, isTriggerPressedL ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
         }
         if (isTriggerPressedRMapped) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.TRIGGER_R, isTriggerPressedR ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.TRIGGER_R, isTriggerPressedR ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
         }
         if (isTriggerPressedZLMapped) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.BUTTON_ZL, isTriggerPressedZL ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.BUTTON_ZL, isTriggerPressedZL ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
         }
         if (isTriggerPressedZRMapped) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.BUTTON_ZR, isTriggerPressedZR ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.BUTTON_ZR, isTriggerPressedZR ? NativeLibrary.ButtonState.PRESSED : NativeLibrary.ButtonState.RELEASED);
         }
 
         // Work-around to allow D-pad axis to be bound to emulated buttons
         if (axisValuesDPad[0] == 0.f) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonState.RELEASED);
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonState.RELEASED);
         }
         if (axisValuesDPad[0] < 0.f) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonState.PRESSED);
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonState.PRESSED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonState.RELEASED);
         }
         if (axisValuesDPad[0] > 0.f) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonState.RELEASED);
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonState.PRESSED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_LEFT, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_RIGHT, NativeLibrary.ButtonState.PRESSED);
         }
         if (axisValuesDPad[1] == 0.f) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonState.RELEASED);
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonState.RELEASED);
         }
         if (axisValuesDPad[1] < 0.f) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonState.PRESSED);
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonState.PRESSED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonState.RELEASED);
         }
         if (axisValuesDPad[1] > 0.f) {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonState.RELEASED);
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonState.PRESSED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_UP, NativeLibrary.ButtonState.RELEASED);
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.DPAD_DOWN, NativeLibrary.ButtonState.PRESSED);
         }
 
         return true;

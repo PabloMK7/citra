@@ -24,7 +24,6 @@ import org.citra.citra_emu.features.settings.model.StringSetting;
 import org.citra.citra_emu.features.settings.model.view.CheckBoxSetting;
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting;
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting;
-import org.citra.citra_emu.features.settings.model.view.PremiumSingleChoiceSetting;
 import org.citra.citra_emu.features.settings.model.view.SettingsItem;
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting;
 import org.citra.citra_emu.features.settings.model.view.SliderSetting;
@@ -34,12 +33,10 @@ import org.citra.citra_emu.features.settings.ui.viewholder.CheckBoxSettingViewHo
 import org.citra.citra_emu.features.settings.ui.viewholder.DateTimeViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.HeaderViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.InputBindingSettingViewHolder;
-import org.citra.citra_emu.features.settings.ui.viewholder.PremiumViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SettingViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SingleChoiceViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SliderViewHolder;
 import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder;
-import org.citra.citra_emu.ui.main.MainActivity;
 import org.citra.citra_emu.utils.Log;
 
 import java.util.ArrayList;
@@ -97,10 +94,6 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
                 view = inflater.inflate(R.layout.list_item_setting, parent, false);
                 return new DateTimeViewHolder(view, this);
 
-            case SettingsItem.TYPE_PREMIUM:
-                view = inflater.inflate(R.layout.premium_item_setting, parent, false);
-                return new PremiumViewHolder(view, this, mView);
-
             default:
                 Log.error("[SettingsAdapter] Invalid view type: " + viewType);
                 return null;
@@ -146,17 +139,6 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
         mView.onSettingChanged();
     }
 
-    public void onSingleChoiceClick(PremiumSingleChoiceSetting item) {
-        mClickedItem = item;
-
-        int value = getSelectionForSingleChoiceValue(item);
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(mView.getActivity())
-                .setTitle(item.getNameId())
-                .setSingleChoiceItems(item.getChoicesId(), value, this);
-        mDialog = builder.show();
-    }
-
     public void onSingleChoiceClick(SingleChoiceSetting item) {
         mClickedItem = item;
 
@@ -170,28 +152,7 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
 
     public void onSingleChoiceClick(SingleChoiceSetting item, int position) {
         mClickedPosition = position;
-
-        if (!item.isPremium() || MainActivity.isPremiumActive()) {
-            // Setting is either not Premium, or the user has Premium
-            onSingleChoiceClick(item);
-            return;
-        }
-
-        // User needs Premium, invoke the billing flow
-        MainActivity.invokePremiumBilling(() -> onSingleChoiceClick(item));
-    }
-
-    public void onSingleChoiceClick(PremiumSingleChoiceSetting item, int position) {
-        mClickedPosition = position;
-
-        if (!item.isPremium() || MainActivity.isPremiumActive()) {
-            // Setting is either not Premium, or the user has Premium
-            onSingleChoiceClick(item);
-            return;
-        }
-
-        // User needs Premium, invoke the billing flow
-        MainActivity.invokePremiumBilling(() -> onSingleChoiceClick(item));
+        onSingleChoiceClick(item);
     }
 
     public void onStringSingleChoiceClick(StringSingleChoiceSetting item) {
@@ -205,15 +166,7 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
 
     public void onStringSingleChoiceClick(StringSingleChoiceSetting item, int position) {
         mClickedPosition = position;
-
-        if (!item.isPremium() || MainActivity.isPremiumActive()) {
-            // Setting is either not Premium, or the user has Premium
-            onStringSingleChoiceClick(item);
-            return;
-        }
-
-        // User needs Premium, invoke the billing flow
-        MainActivity.invokePremiumBilling(() -> onStringSingleChoiceClick(item));
+        onStringSingleChoiceClick(item);
     }
 
     DialogInterface.OnClickListener defaultCancelListener = (dialog, which) -> closeDialog();
@@ -352,10 +305,6 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
             }
 
             closeDialog();
-        } else if (mClickedItem instanceof PremiumSingleChoiceSetting) {
-            PremiumSingleChoiceSetting scSetting = (PremiumSingleChoiceSetting) mClickedItem;
-            scSetting.setSelectedValue(getValueForSingleChoiceSelection(scSetting, which));
-            closeDialog();
         } else if (mClickedItem instanceof StringSingleChoiceSetting) {
             StringSingleChoiceSetting scSetting = (StringSingleChoiceSetting) mClickedItem;
             String value = scSetting.getValueAt(which);
@@ -417,37 +366,7 @@ public final class SettingsAdapter extends RecyclerView.Adapter<SettingViewHolde
         }
     }
 
-    private int getValueForSingleChoiceSelection(PremiumSingleChoiceSetting item, int which) {
-        int valuesId = item.getValuesId();
-
-        if (valuesId > 0) {
-            int[] valuesArray = mContext.getResources().getIntArray(valuesId);
-            return valuesArray[which];
-        } else {
-            return which;
-        }
-    }
-
     private int getSelectionForSingleChoiceValue(SingleChoiceSetting item) {
-        int value = item.getSelectedValue();
-        int valuesId = item.getValuesId();
-
-        if (valuesId > 0) {
-            int[] valuesArray = mContext.getResources().getIntArray(valuesId);
-            for (int index = 0; index < valuesArray.length; index++) {
-                int current = valuesArray[index];
-                if (current == value) {
-                    return index;
-                }
-            }
-        } else {
-            return value;
-        }
-
-        return -1;
-    }
-
-    private int getSelectionForSingleChoiceValue(PremiumSingleChoiceSetting item) {
         int value = item.getSelectedValue();
         int valuesId = item.getValuesId();
 

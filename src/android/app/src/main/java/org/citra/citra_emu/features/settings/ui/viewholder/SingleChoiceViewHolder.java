@@ -5,7 +5,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.citra.citra_emu.R;
-import org.citra.citra_emu.features.settings.model.view.PremiumSingleChoiceSetting;
 import org.citra.citra_emu.features.settings.model.view.SettingsItem;
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting;
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting;
@@ -46,17 +45,6 @@ public final class SingleChoiceViewHolder extends SettingViewHolder {
                     mTextSettingDescription.setText(choices[i]);
                 }
             }
-        } else if (item instanceof PremiumSingleChoiceSetting) {
-            PremiumSingleChoiceSetting setting = (PremiumSingleChoiceSetting) item;
-            int selected = setting.getSelectedValue();
-            Resources resMgr = mTextSettingDescription.getContext().getResources();
-            String[] choices = resMgr.getStringArray(setting.getChoicesId());
-            int[] values = resMgr.getIntArray(setting.getValuesId());
-            for (int i = 0; i < values.length; ++i) {
-                if (values[i] == selected) {
-                    mTextSettingDescription.setText(choices[i]);
-                }
-            }
         } else {
             mTextSettingDescription.setVisibility(View.GONE);
         }
@@ -67,8 +55,6 @@ public final class SingleChoiceViewHolder extends SettingViewHolder {
         int position = getAdapterPosition();
         if (mItem instanceof SingleChoiceSetting) {
             getAdapter().onSingleChoiceClick((SingleChoiceSetting) mItem, position);
-        } else if (mItem instanceof PremiumSingleChoiceSetting) {
-            getAdapter().onSingleChoiceClick((PremiumSingleChoiceSetting) mItem, position);
         } else if (mItem instanceof StringSingleChoiceSetting) {
             getAdapter().onStringSingleChoiceClick((StringSingleChoiceSetting) mItem, position);
         }

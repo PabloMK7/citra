@@ -440,13 +440,15 @@ bool Instance::CreateDevice() {
     const bool is_moltenvk = driver_id == vk::DriverIdKHR::eMoltenvk;
     const bool is_arm = driver_id == vk::DriverIdKHR::eArmProprietary;
     const bool is_qualcomm = driver_id == vk::DriverIdKHR::eQualcommProprietary;
+    const bool is_turnip = driver_id == vk::DriverIdKHR::eMesaTurnip;
 
     add_extension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     image_format_list = add_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
     shader_stencil_export = add_extension(VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME);
-    const bool has_timeline_semaphores = add_extension(
-        VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME, is_qualcomm, "it is broken on Qualcomm drivers");
+    const bool has_timeline_semaphores =
+        add_extension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME, is_qualcomm || is_turnip,
+                      "it is broken on Qualcomm drivers");
     const bool has_portability_subset = add_extension(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
     const bool has_extended_dynamic_state =
         add_extension(VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME, is_arm || is_qualcomm,

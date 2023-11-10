@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/materialCardViewOutlinedStyle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="12dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center"
+        android:padding="16dp">
+
+        <RadioButton
+            android:id="@+id/radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:clickable="false"
+            android:checked="false" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/title"
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="none"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:requiresFadingEdge="horizontal"
+                android:singleLine="true"
+                android:textAlignment="viewStart"
+                tools:text="@string/select_gpu_driver_default" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/version"
+                style="@style/TextAppearance.Material3.BodyMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="none"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:requiresFadingEdge="horizontal"
+                android:singleLine="true"
+                android:textAlignment="viewStart"
+                tools:text="@string/install_gpu_driver_description" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/description"
+                style="@style/TextAppearance.Material3.BodyMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="none"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:requiresFadingEdge="horizontal"
+                android:singleLine="true"
+                android:textAlignment="viewStart"
+                tools:text="@string/install_gpu_driver_description" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_delete"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:contentDescription="@string/delete"
+            android:tooltipText="@string/delete"
+            app:icon="@drawable/ic_delete"
+            app:iconTint="?attr/colorControlNormal" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

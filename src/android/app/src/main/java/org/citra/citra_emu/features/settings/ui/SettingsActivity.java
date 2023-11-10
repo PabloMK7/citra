@@ -26,7 +26,6 @@ import com.google.android.material.appbar.MaterialToolbar;
 import org.citra.citra_emu.NativeLibrary;
 import org.citra.citra_emu.R;
 import org.citra.citra_emu.utils.DirectoryInitialization;
-import org.citra.citra_emu.utils.DirectoryStateReceiver;
 import org.citra.citra_emu.utils.EmulationMenuSettings;
 import org.citra.citra_emu.utils.InsetsHelper;
 import org.citra.citra_emu.utils.ThemeUtil;
@@ -48,8 +47,7 @@ public final class SettingsActivity extends AppCompatActivity implements Setting
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeUtil.applyTheme(this);
-
+        ThemeUtil.INSTANCE.setTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
@@ -109,7 +107,7 @@ public final class SettingsActivity extends AppCompatActivity implements Setting
         mPresenter.onStop(isFinishing());
 
         // Update framebuffer layout when closing the settings
-        NativeLibrary.NotifyOrientationChange(EmulationMenuSettings.getLandscapeScreenLayout(),
+        NativeLibrary.INSTANCE.notifyOrientationChange(EmulationMenuSettings.getLandscapeScreenLayout(),
                 getWindowManager().getDefaultDisplay().getRotation());
     }
 
@@ -145,19 +143,6 @@ public final class SettingsActivity extends AppCompatActivity implements Setting
                 getContentResolver(),
                 Settings.Global.TRANSITION_ANIMATION_SCALE, 1);
         return duration != 0 && transition != 0;
-    }
-
-    @Override
-    public void startDirectoryInitializationService(DirectoryStateReceiver receiver, IntentFilter filter) {
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                receiver,
-                filter);
-        DirectoryInitialization.start(this);
-    }
-
-    @Override
-    public void stopListeningToDirectoryInitializationService(DirectoryStateReceiver receiver) {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }
 
     @Override

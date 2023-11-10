@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
@@ -25,6 +26,7 @@ import org.citra.citra_emu.utils.Log;
 
 import java.util.Objects;
 
+@Keep
 public class DiskShaderCacheProgress {
 
     // Equivalent to VideoCore::LoadCallbackStage

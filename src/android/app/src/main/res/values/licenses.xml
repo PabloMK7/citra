@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="license_mit" translatable="false">
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:\n\n
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.\n\n
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+    </string>
+
+    <string name="license_adreno_tools" translatable="false">Adreno Tools</string>
+    <string name="license_adreno_tools_description" translatable="false">A library for applying rootless Adreno GPU driver modifications/replacements</string>
+    <string name="license_adreno_tools_link" translatable="false">https://github.com/bylaws/libadrenotools</string>
+    <string name="license_adreno_tools_copyright" translatable="false">Copyright © 2021, Billy Laws</string>
+    <string name="license_adreno_tools_text" translatable="false">
+BSD 2-Clause License\n\n
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:\n\n
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.\n\n
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.\n\n
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </string>
+    <string name="license_sirit" translatable="false">Sirit</string>
+    <string name="license_sirit_description" translatable="false">A runtime SPIR-V assembler</string>
+    <string name="license_sirit_link" translatable="false">https://github.com/ReinUsesLisp/sirit</string>
+    <string name="license_sirit_copyright" translatable="false">Copyright © 2019, sirit All rights reserved.</string>
+    <string name="license_sirit_text" translatable="false">
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:\n
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.\n
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.\n
+* Neither the name of the organization nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.\n\n
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </string>
+    <string name="license_dynarmic" translatable="false">Dynarmic</string>
+    <string name="license_dynarmic_description" translatable="false">An ARM dynamic recompiler</string>
+    <string name="license_dynarmic_link" translatable="false">https://github.com/merryhime/dynarmic</string>
+    <string name="license_dynarmic_copyright" translatable="false">Copyright © 2017 merryhime</string>
+    <string name="license_dynarmic_text" translatable="false">
+Permission to use, copy, modify, and/or distribute this software for
+any purpose with or without fee is hereby granted.\n\n
+
+THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    </string>
+    <string name="license_cubeb" translatable="false">cubeb</string>
+    <string name="license_cubeb_description" translatable="false">Cross platform audio library</string>
+    <string name="license_cubeb_link" translatable="false">https://github.com/mozilla/cubeb</string>
+    <string name="license_cubeb_copyright" translatable="false">Copyright © 2011 Mozilla Foundation</string>
+    <string name="license_cubeb_text" translatable="false">
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.\n\n
+
+THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    </string>
+    <string name="license_cryptopp" translatable="false">Crypto++</string>
+    <string name="license_cryptopp_description" translatable="false">Free C++ class library of cryptographic schemes</string>
+    <string name="license_cryptopp_link" translatable="false">https://github.com/weidai11/cryptopp</string>
+    <string name="license_cryptopp_copyright" translatable="false">Compilation Copyright © 1995-2019 by Wei Dai.  All rights reserved.</string>
+    <string name="license_cryptopp_text" translatable="false">
+This copyright applies only to this software distribution package
+as a compilation, and does not imply a copyright on any particular
+file in the package.\n\n
+
+All individual files in this compilation are placed in the public domain by
+Wei Dai and other contributors.\n\n
+
+I would like to thank the following authors for placing their works into
+the public domain:\n\n
+
+Joan Daemen - 3way.cpp\n
+Leonard Janke - cast.cpp, seal.cpp\n
+Steve Reid - cast.cpp\n
+Phil Karn - des.cpp\n
+Andrew M. Kuchling - md2.cpp, md4.cpp\n
+Colin Plumb - md5.cpp\n
+Seal Woods - rc6.cpp\n
+Chris Morgan - rijndael.cpp\n
+Paulo Baretto - rijndael.cpp, skipjack.cpp, square.cpp\n
+Richard De Moliner - safer.cpp\n
+Matthew Skala - twofish.cpp\n
+Kevin Springle - camellia.cpp, shacal2.cpp, ttmac.cpp, whrlpool.cpp, ripemd.cpp\n
+Ronny Van Keer - sha3.cpp\n
+Aumasson, Neves, Wilcox-O\'Hearn and Winnerlein - blake2.cpp, blake2b_simd.cpp, blake2s_simd.cpp\n
+Aaram Yun - aria.cpp, aria_simd.cpp\n
+Han Lulu, Markku-Juhani O. Saarinen - sm4.cpp sm4_simd.cpp\n
+Daniel J. Bernstein, Jack Lloyd - chacha.cpp, chacha_simd.cpp, chacha_avx.cpp\n
+Andrew Moon - ed25519, x25519, donna_32.cpp, donna_64.cpp, donna_sse.cpp\n\n
+
+The Crypto++ Library uses portions of Andy Polyakov\'s CRYPTOGAMS on Linux
+for 32-bit ARM with files aes_armv4.S, sha1_armv4.S and sha256_armv4.S.
+CRYPTOGAMS is dual licensed with a permissive BSD-style license. The
+CRYPTOGAMS license is reproduced below. You can disable Cryptogams code by
+undefining the relevant macros in config_asm.h.\n\n
+
+The Crypto++ Library uses portions of Jack Lloyd\'s Botan for ChaCha SSE2 and
+AVX. Botan placed the code in public domain for Crypto++ to use.\n\n
+
+The Crypto++ Library (as a compilation) is currently licensed under the Boost
+Software License 1.0 (http://www.boost.org/users/license.html).\n\n
+
+Boost Software License - Version 1.0 - August 17th, 2003\n\n
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of the software and accompanying documentation covered by
+this license (the "Software") to use, reproduce, display, distribute,
+execute, and transmit the Software, and to prepare derivative works of the
+Software, and to permit third-parties to whom the Software is furnished to
+do so, all subject to the following:\n\n
+
+The copyright notices in the Software and this entire statement, including
+the above license grant, this restriction and the following disclaimer,
+must be included in all copies of the Software, in whole or in part, and
+all derivative works of the Software, unless such copies or derivative
+works are solely in the form of machine-executable object code generated by
+a source language processor.\n\n
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.\n\n
+
+CRYPTOGAMS License\n\n
+
+Copyright © 2006-2017, CRYPTOGAMS by appro\@openssl.org\n
+All rights reserved.\n\n
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:\n\n
+
+* Redistributions of source code must retain copyright notices,
+  this list of conditions and the following disclaimer.\n
+* Redistributions in binary form must reproduce the above
+  copyright notice, this list of conditions and the following
+  disclaimer in the documentation and/or other materials
+  provided with the distribution.\n
+* Neither the name of the CRYPTOGAMS nor the names of its copyright
+  holder and contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+    </string>
+    <string name="license_fmt" translatable="false">fmt</string>
+    <string name="license_fmt_description" translatable="false">A modern formatting library</string>
+    <string name="license_fmt_link" translatable="false">https://github.com/fmtlib/fmt</string>
+    <string name="license_fmt_copyright" translatable="false">Copyright © 2012 - present, Victor Zverovich and {fmt} contributors</string>
+    <string name="license_fmt_text" translatable="false">
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:\n\n
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.\n\n
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n
+
+--- Optional exception to the license ---\n\n
+
+As an exception, if, as a result of your compiling your source code, portions
+of this Software are embedded into a machine-executable object form of such
+source code, you may redistribute such embedded portions in such object form
+without including the above copyright and permission notices.
+    </string>
+    <string name="license_boost" translatable="false">boost</string>
+    <string name="license_boost_description" translatable="false">Free peer-reviewed portable C++ source libraries</string>
+    <string name="license_boost_link" translatable="false">https://www.boost.org/</string>
+    <string name="license_boost_text" translatable="false">
+Boost Software License - Version 1.0 - August 17th, 2003\n\n
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of the software and accompanying documentation covered by
+this license (the "Software") to use, reproduce, display, distribute,
+execute, and transmit the Software, and to prepare derivative works of the
+Software, and to permit third-parties to whom the Software is furnished to
+do so, all subject to the following:\n\n
+
+The copyright notices in the Software and this entire statement, including
+the above license grant, this restriction and the following disclaimer,
+must be included in all copies of the Software, in whole or in part, and
+all derivative works of the Software, unless such copies or derivative
+works are solely in the form of machine-executable object code generated by
+a source language processor.\n\n
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
+FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+    </string>
+    <string name="license_nihstro" translatable="false">nihstro</string>
+    <string name="license_nihstro_description" translatable="false">3DS shader assembler and disassembler</string>
+    <string name="license_nihstro_link" translatable="false">https://github.com/neobrain/nihstro</string>
+    <string name="license_nihstro_copyright" translatable="false">Copyright © 2014 Tony Wasserka, All rights reserved.</string>
+    <string name="license_nihstro_text" translatable="false">
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:\n\n
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.\n
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.\n
+    * Neither the name of the owner nor the names of its contributors may
+      be used to endorse or promote products derived from this software
+      without specific prior written permission.\n\n
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </string>
+    <string name="license_httplib" translatable="false">cpp-httplib</string>
+    <string name="license_httplib_description" translatable="false">A C++ header-only HTTP/HTTPS server and client library</string>
+    <string name="license_httplib_link" translatable="false">https://github.com/yhirose/cpp-httplib</string>
+    <string name="license_httplib_copyright" translatable="false">Copyright © 2017 yhirose</string>
+    <string name="license_teakra" translatable="false">Teakra</string>
+    <string name="license_teakra_description" translatable="false">DSi/3DS DSP emulator, disassembler, assembler, and tester</string>
+    <string name="license_teakra_link" translatable="false">https://github.com/wwylele/teakra</string>
+    <string name="license_teakra_copyright" translatable="false">Copyright © 2018 Weiyi Wang</string>
+    <string name="license_enet" translatable="false">ENet</string>
+    <string name="license_enet_description" translatable="false">Reliable UDP networking library</string>
+    <string name="license_enet_link" translatable="false">https://github.com/lsalzman/enet</string>
+    <string name="license_enet_copyright" translatable="false">Copyright © 2002-2020 Lee Salzman</string>
+    <string name="license_glad" translatable="false">glad</string>
+    <string name="license_glad_description" translatable="false">Multi-Language Vulkan/GL/GLES/EGL/GLX/WGL Loader-Generator based on the official specs</string>
+    <string name="license_glad_link" translatable="false">https://github.com/Dav1dde/glad</string>
+    <string name="license_glad_copyright" translatable="false">Copyright © 2013-2022 David Herberth</string>
+    <string name="license_glslang" translatable="false">Glslang</string>
+    <string name="license_glslang_description" translatable="false">Khronos-reference front end for GLSL/ESSL, partial front end for HLSL, and a SPIR-V generator</string>
+    <string name="license_glslang_link" translatable="false">https://github.com/KhronosGroup/glslang</string>
+    <string name="license_glslang_link_license" translatable="false">https://github.com/KhronosGroup/glslang/blob/main/LICENSE.txt</string>
+    <string name="license_openal" translatable="false">OpenAL Soft</string>
+    <string name="license_openal_description" translatable="false">Software implementation of the OpenAL 3D audio API</string>
+    <string name="license_openal_link" translatable="false">https://github.com/kcat/openal-soft</string>
+    <string name="license_openal_copyright" translatable="false">
+Copyright (c) 2015, Archontis Politis\n
+Copyright (c) 2019, Anis A. Hireche\n
+Copyright (c) 2019, Christopher Robinson\n
+All rights reserved
+    </string>
+    <string name="license_openal_text" translatable="false">
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:\n\n
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.\n\n
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.\n\n
+
+* Neither the name of Spherical-Harmonic-Transform nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.\n\n
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </string>
+    <string name="license_sdl" translatable="false">SDL</string>
+    <string name="license_sdl_description" translatable="false">Cross-platform development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D</string>
+    <string name="license_sdl_link" translatable="false">https://github.com/libsdl-org/SDL</string>
+    <string name="license_sdl_copyright" translatable="false">Copyright (C) 1997-2023 Sam Lantinga slouken@libsdl.org</string>
+    <string name="license_sdl_text" translatable="false">
+This software is provided \'as-is\', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.\n\n
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:\n\n
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.\n
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.\n
+3. This notice may not be removed or altered from any source distribution.
+    </string>
+    <string name="license_vma" translatable="false">Vulkan Memory Allocator</string>
+    <string name="license_vma_description" translatable="false">Easy to integrate Vulkan memory allocation library</string>
+    <string name="license_vma_link" translatable="false">https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator</string>
+    <string name="license_vma_copyright" translatable="false">Copyright (c) 2017-2022 Advanced Micro Devices, Inc. All rights reserved.</string>
+    <string name="license_zstd" translatable="false">Zstandard</string>
+    <string name="license_zstd_description" translatable="false">Fast real-time compression algorithm</string>
+    <string name="license_zstd_link" translatable="false">https://github.com/facebook/zstd</string>
+    <string name="license_zstd_copyright" translatable="false">Copyright (c) Meta Platforms, Inc. and affiliates. All rights reserved.</string>
+    <string name="license_zstd_text" translatable="false">
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:\n\n
+
+ * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.\n\n
+
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.\n\n
+
+ * Neither the name Facebook, nor Meta, nor the names of its contributors may
+   be used to endorse or promote products derived from this software without
+   specific prior written permission.\n\n
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </string>
+</resources>

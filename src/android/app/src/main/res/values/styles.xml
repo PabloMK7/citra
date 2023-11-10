@@ -1,40 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="CitraMaterialDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/citra_surface</item>
-        <item name="colorSurface">@color/citra_surface</item>
-        <item name="colorSecondary">@color/citra_primary</item>
-        <item name="buttonBarPositiveButtonStyle">@style/CitraButton</item>
-        <item name="buttonBarNegativeButtonStyle">@style/CitraButton</item>
-        <item name="buttonBarNeutralButtonStyle">@style/CitraButton</item>
-    </style>
-
-    <style name="CitraButton" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/citra_primary</item>
-        <item name="rippleColor">@color/citra_secondaryContainer</item>
-    </style>
-
-    <style name="CitraShapedPopup" parent="Widget.Material3.PopupMenu">
-        <item name="android:popupBackground">@drawable/popup_background</item>
-    </style>
-
-    <style name="CitraPopup" parent="ThemeOverlay.Material3">
-        <item name="colorPrimary">@color/citra_surface</item>
-    </style>
-
     <style name="CitraSlider" parent="Widget.Material3.Slider">
         <item name="tickVisible">false</item>
         <item name="labelBehavior">gone</item>
-    </style>
-
-    <style name="Widget.Citra.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
-        <item name="materialThemeOverlay">@style/ThemeOverlay.Citra.FloatingActionButton</item>
-    </style>
-
-    <style name="ThemeOverlay.Citra.FloatingActionButton" parent="">
-        <item name="colorContainer">@color/citra_primary</item>
-        <item name="colorOnContainer">@color/citra_onPrimary</item>
     </style>
 
 </resources>

@@ -29,6 +29,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -44,8 +45,7 @@
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
             android:theme="@style/Theme.Citra.Splash.Main"
-            android:exported="true"
-            android:resizeableActivity="false">
+            android:exported="true">
 
             <!-- This intentfilter marks this Activity as the one that gets launched from Home screen. -->
             <intent-filter>
@@ -68,21 +68,15 @@
             android:theme="@style/Theme.Citra.Main"
             android:launchMode="singleTop"/>
 
-        <service android:name="org.citra.citra_emu.utils.ForegroundService"/>
+        <service android:name="org.citra.citra_emu.utils.ForegroundService" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Keep emulation running in background"/>
+        </service>
 
         <activity
             android:name="org.citra.citra_emu.features.cheats.ui.CheatsActivity"
             android:exported="false"
             android:theme="@style/Theme.Citra.Main"
             android:label="@string/cheats"/>
-
-
-        <provider
-            android:name="org.citra.citra_emu.model.GameProvider"
-            android:authorities="${applicationId}.provider"
-            android:enabled="true"
-            android:exported="false">
-        </provider>
     </application>
 
 </manifest>

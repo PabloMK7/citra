@@ -1,77 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/materialCardViewOutlinedStyle"
+    android:id="@+id/card_game"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?android:attr/selectableItemBackground"
-    android:transitionName="card_game"
+    app:cardCornerRadius="8dp"
     tools:layout_width="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/card_contents"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:padding="8dp">
 
         <ImageView
             android:id="@+id/image_game_screen"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:adjustViewBounds="false"
-            android:cropToPadding="false"
-            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:scaleType="fitCenter" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/text_game_title"
-            style="@android:style/TextAppearance.Material.Subhead"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginStart="8dp"
-            android:baselineAligned="false"
-            android:ellipsize="end"
-            android:lines="1"
-            android:maxLines="1"
-            android:textAlignment="viewStart"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/image_game_screen"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="The Legend of Zelda\nOcarina of Time 3D" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/text_company"
-            style="@android:style/TextAppearance.Material.Caption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:lines="1"
-            android:maxLines="1"
-            app:layout_constraintBottom_toBottomOf="@+id/image_game_screen"
-            app:layout_constraintStart_toStartOf="@+id/text_game_title"
-            app:layout_constraintTop_toBottomOf="@+id/text_game_title"
-            app:layout_constraintVertical_bias="0.842"
-            tools:text="Nintendo" />
+            <TextView
+                android:id="@+id/text_game_title"
+                style="@style/TextAppearance.Material3.BodyMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewStart"
+                android:singleLine="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:ellipsize="none"
+                android:requiresFadingEdge="horizontal"
+                tools:text="The Legend of Zelda\nOcarina of Time 3D" />
 
-        <TextView
-            android:id="@+id/text_filename"
-            style="@android:style/TextAppearance.Material.Caption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:lines="1"
-            android:maxLines="1"
-            app:layout_constraintBottom_toBottomOf="@+id/image_game_screen"
-            app:layout_constraintStart_toStartOf="@+id/text_game_title"
-            app:layout_constraintTop_toBottomOf="@+id/text_game_title"
-            app:layout_constraintVertical_bias="0.0"
-            tools:text="Pilotwings_Resort.cxi" />
+            <TextView
+                android:id="@+id/text_company"
+                style="@style/TextAppearance.Material3.BodySmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewStart"
+                android:singleLine="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:ellipsize="none"
+                android:requiresFadingEdge="horizontal"
+                tools:text="Nintendo" />
+
+            <TextView
+                android:id="@+id/text_filename"
+                style="@style/TextAppearance.Material3.BodySmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewStart"
+                android:singleLine="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:ellipsize="none"
+                android:requiresFadingEdge="horizontal"
+                tools:text="Pilotwings_Resort.cxi" />
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

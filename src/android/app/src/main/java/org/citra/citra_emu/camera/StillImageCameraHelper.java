@@ -13,6 +13,7 @@ import org.citra.citra_emu.R;
 import org.citra.citra_emu.activities.EmulationActivity;
 import org.citra.citra_emu.utils.PicassoUtils;
 
+import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
 // Used in native code.
@@ -23,6 +24,7 @@ public final class StillImageCameraHelper {
     String filePickerPath;
 
     // Opens file picker for camera.
+    @Keep
     public static @Nullable
     String OpenFilePicker() {
         final EmulationActivity emulationActivity = NativeLibrary.sEmulationActivity.get();
@@ -58,6 +60,7 @@ public final class StillImageCameraHelper {
     }
 
     // Blocking call. Load image from file and crop/resize it to fit in width x height.
+    @Keep
     @Nullable
     public static Bitmap LoadImageFromFile(String uri, int width, int height) {
         return PicassoUtils.LoadBitmapFromFile(uri, width, height);

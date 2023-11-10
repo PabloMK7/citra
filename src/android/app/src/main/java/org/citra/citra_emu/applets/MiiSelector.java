@@ -18,13 +18,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+@Keep
 public final class MiiSelector {
+    @Keep
     public static class MiiSelectorConfig implements java.io.Serializable {
         public boolean enable_cancel_button;
         public String title;

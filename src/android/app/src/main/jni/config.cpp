@@ -139,9 +139,6 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.use_cpu_jit);
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
-    // Premium
-    ReadSetting("Premium", Settings::values.texture_filter);
-
     // Renderer
     Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", true);
     Settings::values.shaders_accurate_mul =
@@ -155,6 +152,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.resolution_factor);
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync_new);
+    ReadSetting("Renderer", Settings::values.texture_filter);
 
     // Work around to map Android setting for enabling the frame limiter to the format Citra expects
     if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {

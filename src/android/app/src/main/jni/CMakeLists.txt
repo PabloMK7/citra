@@ -29,7 +29,6 @@ add_library(citra-android SHARED
     id_cache.cpp
     id_cache.h
     native.cpp
-    native.h
     ndk_motion.cpp
     ndk_motion.h
 )

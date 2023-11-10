@@ -147,4 +147,13 @@ jintArray Java_org_citra_citra_1emu_model_GameInfo_getIcon(JNIEnv* env, jobject 
 
     return icon;
 }
+
+jboolean Java_org_citra_citra_1emu_model_GameInfo_getIsVisibleSystemTitle(JNIEnv* env,
+                                                                          jobject obj) {
+    Loader::SMDH* smdh = GetPointer(env, obj);
+    if (smdh == nullptr) {
+        return false;
+    }
+    return smdh->flags & Loader::SMDH::Flags::Visible;
+}
 }

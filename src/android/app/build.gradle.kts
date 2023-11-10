@@ -2,14 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+import android.databinding.tool.ext.capitalizeUS
+import de.undercouch.gradle.tasks.download.Download
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("de.undercouch.download") version "5.5.0"
+    id("kotlin-parcelize")
+    kotlin("plugin.serialization") version "1.8.21"
+    id("androidx.navigation.safeargs.kotlin")
 }
-
-import android.databinding.tool.ext.capitalizeUS
-import de.undercouch.gradle.tasks.download.Download
 
 /**
  * Use the number of seconds/10 since Jan 1 2016 as the versionCode.
@@ -25,7 +28,7 @@ val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-33"
+    compileSdkVersion = "android-34"
     ndkVersion = "25.2.9519653"
 
     compileOptions {
@@ -35,6 +38,11 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    packaging {
+        // This is necessary for libadrenotools custom driver loading
+        jniLibs.useLegacyPackaging = true
     }
 
     buildFeatures {
@@ -51,7 +59,7 @@ android {
         // TODO If this is ever modified, change application_id in strings.xml
         applicationId = "org.citra.citra_emu"
         minSdk = 28
-        targetSdk = 33
+        targetSdk = 34
         versionCode = autoVersion
         versionName = getGitVersion()
 
@@ -69,6 +77,9 @@ android {
                 )
             }
         }
+
+        buildConfigField("String", "GIT_HASH", "\"${getGitHash()}\"")
+        buildConfigField("String", "BRANCH", "\"${getBranch()}\"")
     }
 
     val keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
@@ -92,6 +103,12 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
         }
 
         // builds a release build that doesn't need signing
@@ -101,9 +118,15 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             isDebuggable = true
             isJniDebuggable = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
+            isDefault = true
         }
 
         // Signed by debug key disallowing distribution on Play Store.
@@ -145,8 +168,9 @@ android {
 }
 
 dependencies {
-    implementation("androidx.activity:activity-ktx:1.7.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.activity:activity-ktx:1.8.0")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
@@ -158,15 +182,14 @@ dependencies {
     // For loading huge screenshots from the disk.
     implementation("com.squareup.picasso:picasso:2.71828")
 
-    // Allows FRP-style asynchronous operations in Android.
-    implementation("io.reactivex:rxandroid:1.2.1")
-
     implementation("org.ini4j:ini4j:0.5.4")
-    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-
-    // Please don't upgrade the billing library as the newer version is not GPL-compatible
-    implementation("com.android.billingclient:billing:2.0.3")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
+    implementation("info.debatty:java-string-similarity:2.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("io.coil-kt:coil:2.2.2")
 }
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.
@@ -214,6 +237,34 @@ fun getGitVersion(): String {
     }
 
     return versionName
+}
+
+fun getGitHash(): String =
+    runGitCommand(ProcessBuilder("git", "rev-parse", "--short", "HEAD")) ?: "dummy-hash"
+
+fun getBranch(): String =
+    runGitCommand(ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")) ?: "dummy-branch"
+
+fun runGitCommand(command: ProcessBuilder) : String? {
+    try {
+        command.directory(project.rootDir)
+        val process = command.start()
+        val inputStream = process.inputStream
+        val errorStream = process.errorStream
+        process.waitFor()
+
+        return if (process.exitValue() == 0) {
+            inputStream.bufferedReader()
+                .use { it.readText().trim() } // return the value of gitHash
+        } else {
+            val errorMessage = errorStream.bufferedReader().use { it.readText().trim() }
+            logger.error("Error running git command: $errorMessage")
+            return null
+        }
+    } catch (e: Exception) {
+        logger.error("$e: Cannot find git")
+        return null
+    }
 }
 
 android.applicationVariants.configureEach {

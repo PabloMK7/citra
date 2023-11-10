@@ -347,7 +347,7 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
             if (!button.updateStatus(event)) {
                 continue;
             }
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.getId(), button.getStatus());
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.getId(), button.getStatus());
             shouldUpdateView = true;
         }
 
@@ -355,10 +355,10 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
             if (!dpad.updateStatus(event, EmulationMenuSettings.getDpadSlideEnable())) {
                 continue;
             }
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getUpId(), dpad.getUpStatus());
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getDownId(), dpad.getDownStatus());
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getLeftId(), dpad.getLeftStatus());
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getRightId(), dpad.getRightStatus());
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getUpId(), dpad.getUpStatus());
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getDownId(), dpad.getDownStatus());
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getLeftId(), dpad.getLeftStatus());
+            NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getRightId(), dpad.getRightStatus());
             shouldUpdateView = true;
         }
 
@@ -367,7 +367,7 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
                 continue;
             }
             int axisID = joystick.getJoystickId();
-            NativeLibrary
+            NativeLibrary.INSTANCE
                     .onGamePadMoveEvent(NativeLibrary.TouchScreenDevice, axisID, joystick.getXAxis(), joystick.getYAxis());
             shouldUpdateView = true;
         }
@@ -390,7 +390,7 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
         boolean isActionUp = motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP;
 
         if (isActionDown && !isTouchInputConsumed(pointerId)) {
-            NativeLibrary.onTouchEvent(xPosition, yPosition, true);
+            NativeLibrary.INSTANCE.onTouchEvent(xPosition, yPosition, true);
         }
 
         if (isActionMove) {
@@ -399,12 +399,12 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
                 if (isTouchInputConsumed(fingerId)) {
                     continue;
                 }
-                NativeLibrary.onTouchMoved(xPosition, yPosition);
+                NativeLibrary.INSTANCE.onTouchMoved(xPosition, yPosition);
             }
         }
 
         if (isActionUp && !isTouchInputConsumed(pointerId)) {
-            NativeLibrary.onTouchEvent(0, 0, false);
+            NativeLibrary.INSTANCE.onTouchEvent(0, 0, false);
         }
 
         return true;

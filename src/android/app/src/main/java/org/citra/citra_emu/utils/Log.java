@@ -8,6 +8,9 @@ import org.citra.citra_emu.BuildConfig;
  * levels in release builds.
  */
 public final class Log {
+    // Tracks whether we should share the old log or the current log
+    public static boolean gameLaunched = false;
+
     private static final String TAG = "Citra Frontend";
 
     private Log() {

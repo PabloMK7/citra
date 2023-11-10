@@ -1,44 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:textSize="@dimen/text_medium"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_medlarge"
-        android:layout_marginLeft="@dimen/spacing_large"
-        android:layout_marginRight="@dimen/spacing_large"
-        android:text="@string/select_citra_user_folder" />
-
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/path"
-        android:textSize="@dimen/text_medium"
+        style="@style/TextAppearance.Material3.BodyMedium"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_small"
-        android:layout_marginLeft="@dimen/spacing_large"
-        android:layout_marginRight="@dimen/spacing_large"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="@dimen/spacing_medlarge"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:requiresFadingEdge="horizontal"
+        android:singleLine="true"
         android:text="@string/fatal_error" />
-
-    <TextView
-        android:id="@+id/space"
-        android:textSize="@dimen/text_medium"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_small"
-        android:layout_marginLeft="@dimen/spacing_large"
-        android:layout_marginRight="@dimen/spacing_large"
-        android:text="@string/free_space" />
 
     <CheckBox
         android:id="@+id/checkBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
         android:layout_marginTop="@dimen/spacing_small"
-        android:layout_marginLeft="@dimen/spacing_large"
-        android:layout_marginRight="@dimen/spacing_large"
         android:text="@string/move_data" />
+
 </LinearLayout>
