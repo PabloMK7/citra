@@ -19,7 +19,7 @@ struct Profile {
     bool has_gl_ext_framebuffer_fetch{};
     bool has_gl_arm_framebuffer_fetch{};
     bool has_gl_nv_fragment_shader_interlock{};
-    bool has_gl_intel_fragment_shader_interlock{};
+    bool has_gl_intel_fragment_shader_ordering{};
     bool has_gl_nv_fragment_shader_barycentric{};
     bool is_vulkan{};
 };

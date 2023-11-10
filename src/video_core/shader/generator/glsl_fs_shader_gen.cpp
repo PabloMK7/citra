@@ -1234,10 +1234,11 @@ void FragmentModule::DefineExtensions() {
             out += "#extension GL_NV_fragment_shader_interlock : enable\n";
             out += "#define beginInvocationInterlock beginInvocationInterlockNV\n";
             out += "#define endInvocationInterlock endInvocationInterlockNV\n";
-        } else if (profile.has_gl_intel_fragment_shader_interlock) {
+        } else if (profile.has_gl_intel_fragment_shader_ordering) {
+            // NOTE: Intel does not have an end function for this.
             out += "#extension GL_INTEL_fragment_shader_ordering : enable\n";
             out += "#define beginInvocationInterlock beginFragmentShaderOrderingINTEL\n";
-            out += "#define endInvocationInterlock\n";
+            out += "#define endInvocationInterlock()\n";
         } else {
             use_fragment_shader_interlock = false;
         }

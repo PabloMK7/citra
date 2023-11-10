@@ -118,6 +118,18 @@ public:
         return arm_shader_framebuffer_fetch;
     }
 
+    bool HasArbFragmentShaderInterlock() const {
+        return arb_fragment_shader_interlock;
+    }
+
+    bool HasNvFragmentShaderInterlock() const {
+        return nv_fragment_shader_interlock;
+    }
+
+    bool HasIntelFragmentShaderOrdering() const {
+        return intel_fragment_shader_ordering;
+    }
+
     /// Returns true if the implementation supports (NV/AMD)_blend_minmax_factor
     bool HasBlendMinMaxFactor() const {
         return blend_minmax_factor;
@@ -146,6 +158,9 @@ private:
     bool arb_texture_compression_bptc{};
     bool arm_shader_framebuffer_fetch{};
     bool ext_shader_framebuffer_fetch{};
+    bool arb_fragment_shader_interlock{};
+    bool nv_fragment_shader_interlock{};
+    bool intel_fragment_shader_ordering{};
     bool blend_minmax_factor{};
 
     std::string_view gl_version{};
