@@ -22,6 +22,7 @@ option(USE_SYSTEM_ENET "Use the system libenet (instead of the bundled one)" OFF
 option(USE_SYSTEM_CRYPTOPP "Use the system cryptopp (instead of the bundled one)" OFF)
 option(USE_SYSTEM_CUBEB "Use the system cubeb (instead of the bundled one)" OFF)
 option(USE_SYSTEM_LODEPNG "Use the system lodepng (instead of the bundled one)" OFF)
+option(USE_SYSTEM_OPENAL "Use the system OpenAL (instead of the bundled one)" OFF)
 
 # Qt and MoltenVK are handled separately
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_SDL2 "Disable system SDL2" OFF "USE_SYSTEM_LIBS" OFF)
@@ -43,6 +44,7 @@ CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_ENET "Disable system libenet" OFF "USE_SYS
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_CRYPTOPP "Disable system cryptopp" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_CUBEB "Disable system cubeb" OFF "USE_SYSTEM_LIBS" OFF)
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_LODEPNG "Disable system lodepng" OFF "USE_SYSTEM_LIBS" OFF)
+CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_OPENAL "Disable system OpenAL" OFF "USE_SYSTEM_LIBS" OFF)
 
 set(LIB_VAR_LIST
     SDL2
@@ -64,6 +66,7 @@ set(LIB_VAR_LIST
     CRYPTOPP
     CUBEB
     LODEPNG
+    OPENAL
     )
 
 # First, check that USE_SYSTEM_XXX is not used with USE_SYSTEM_LIBS
