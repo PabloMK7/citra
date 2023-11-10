@@ -835,6 +835,19 @@ SDLState::SDLState() {
 #endif
 #endif
 
+    // Prevent SDL from adding undesired axis
+#ifdef SDL_HINT_ACCELEROMETER_AS_JOYSTICK
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#endif
+
+    // Enable HIDAPI rumble. This prevents SDL from disabling motion on PS4 and PS5 controllers
+#ifdef SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
+#endif
+#ifdef SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
+#endif
+
     SDL_AddEventWatch(&SDLEventWatcher, this);
 
     initialized = true;
