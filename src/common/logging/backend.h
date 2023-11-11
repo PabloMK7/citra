@@ -16,6 +16,9 @@ void Initialize(std::string_view log_file = "");
 
 void Start();
 
+/// Explictily stops the logger thread and flushes the buffers
+void Stop();
+
 void DisableLoggingInTests();
 
 /**
