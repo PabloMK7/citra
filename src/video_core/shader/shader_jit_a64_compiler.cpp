@@ -257,28 +257,40 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
 
     // Generate instructions for source register swizzling as needed
     u8 sel = swiz.GetRawSelector(src_num);
-    if (sel != NO_SRC_REG_SWIZZLE) {
+    switch (sel) {
+    case NO_SRC_REG_SWIZZLE:
+        // NOP
+        break;
+    case 0b00'00'00'00:
+        DUP(dest.S4(), dest.Selem()[0]);
+        break;
+    case 0b01'01'01'01:
+        DUP(dest.S4(), dest.Selem()[1]);
+        break;
+    case 0b10'10'10'10:
+        DUP(dest.S4(), dest.Selem()[2]);
+        break;
+    case 0b11'11'11'11:
+        DUP(dest.S4(), dest.Selem()[3]);
+        break;
+    default: {
         const int table[] = {
             ((sel & 0b11'00'00'00) >> 6),
             ((sel & 0b00'11'00'00) >> 4),
             ((sel & 0b00'00'11'00) >> 2),
             ((sel & 0b00'00'00'11) >> 0),
         };
-
-        // Generate table-vector
-        MOV(XSCRATCH0.toW(), u32(0x03'02'01'00u + (table[0] * 0x04'04'04'04u)));
-        MOV(VSCRATCH0.Selem()[0], XSCRATCH0.toW());
-
-        MOV(XSCRATCH0.toW(), u32(0x03'02'01'00u + (table[1] * 0x04'04'04'04u)));
-        MOV(VSCRATCH0.Selem()[1], XSCRATCH0.toW());
-
-        MOV(XSCRATCH0.toW(), u32(0x03'02'01'00u + (table[2] * 0x04'04'04'04u)));
-        MOV(VSCRATCH0.Selem()[2], XSCRATCH0.toW());
-
-        MOV(XSCRATCH0.toW(), u32(0x03'02'01'00u + (table[3] * 0x04'04'04'04u)));
-        MOV(VSCRATCH0.Selem()[3], XSCRATCH0.toW());
-
-        TBL(dest.B16(), List{dest.B16()}, VSCRATCH0.B16());
+        MOV(VSCRATCH0.B16(), dest.B16());
+        if (table[0] != 0)
+            MOV(dest.Selem()[0], VSCRATCH0.Selem()[table[0]]);
+        if (table[1] != 1)
+            MOV(dest.Selem()[1], VSCRATCH0.Selem()[table[1]]);
+        if (table[2] != 2)
+            MOV(dest.Selem()[2], VSCRATCH0.Selem()[table[2]]);
+        if (table[3] != 3)
+            MOV(dest.Selem()[3], VSCRATCH0.Selem()[table[3]]);
+        break;
+    }
     }
 
     // If the source register should be negated, flip the negative bit using XOR
