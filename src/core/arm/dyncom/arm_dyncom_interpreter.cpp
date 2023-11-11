@@ -3864,7 +3864,6 @@ SUB_INST : {
 }
 SWI_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-        DEBUG_ASSERT(cpu->system != nullptr);
         swi_inst* const inst_cream = (swi_inst*)inst_base->component;
         cpu->system.GetRunningCore().GetTimer().AddTicks(num_instrs);
         cpu->NumInstrsToExecute =
