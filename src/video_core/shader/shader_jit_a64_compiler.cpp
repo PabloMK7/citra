@@ -548,13 +548,8 @@ void JitShader::Compile_MAX(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    // VSCRATCH0 = Ordinal(SRC1)
-    FCMEQ(VSCRATCH0.S4(), SRC1.S4(), SRC1.S4());
-
-    // FMAX will always pick the NaN
-    FMAX(SRC1.S4(), SRC1.S4(), SRC2.S4());
-
-    // In the case of NaN, pick SRC2
+    // Equivalent to (b < a) ? a : b with associated NaN caveats
+    FCMGT(VSCRATCH0.S4(), SRC1.S4(), SRC2.S4());
     BIF(SRC1.B16(), SRC2.B16(), VSCRATCH0.B16());
 
     Compile_DestEnable(instr, SRC1);
@@ -564,13 +559,8 @@ void JitShader::Compile_MIN(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    // VSCRATCH0 = Ordinal(SRC1)
-    FCMEQ(VSCRATCH0.S4(), SRC1.S4(), SRC1.S4());
-
-    // FMIN will always pick the NaN
-    FMIN(SRC1.S4(), SRC1.S4(), SRC2.S4());
-
-    // In the case of NaN, pick SRC2
+    // Equivalent to (a < b) ? a : b with associated NaN caveats
+    FCMGT(VSCRATCH0.S4(), SRC2.S4(), SRC1.S4());
     BIF(SRC1.B16(), SRC2.B16(), VSCRATCH0.B16());
 
     Compile_DestEnable(instr, SRC1);
