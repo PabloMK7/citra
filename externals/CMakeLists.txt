@@ -362,8 +362,17 @@ if (ENABLE_OPENAL)
 endif()
 
 # VMA
-add_library(vma INTERFACE)
-target_include_directories(vma SYSTEM INTERFACE ./vma/include)
+if(USE_SYSTEM_VMA)
+    add_library(vma INTERFACE)
+    find_package(VulkanMemoryAllocator REQUIRED)
+    if(TARGET GPUOpen::VulkanMemoryAllocator)
+        message(STATUS "Found VulkanMemoryAllocator")
+        target_link_libraries(vma INTERFACE GPUOpen::VulkanMemoryAllocator)
+    endif()
+else()
+    add_library(vma INTERFACE)
+    target_include_directories(vma SYSTEM INTERFACE ./vma/include)
+endif()
 
 # vulkan-headers
 add_library(vulkan-headers INTERFACE)
