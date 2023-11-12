@@ -15,17 +15,29 @@ namespace AudioCore {
 class StaticInput final : public Input {
 public:
     StaticInput();
-    ~StaticInput() override;
+    ~StaticInput() = default;
 
-    void StartSampling(const InputParameters& params) override;
-    void StopSampling() override;
-    void AdjustSampleRate(u32 sample_rate) override;
+    void StartSampling(const InputParameters& params) {
+        parameters = params;
+        is_sampling = true;
+    }
 
-    Samples Read() override;
+    void StopSampling() {
+        is_sampling = false;
+    }
+
+    bool IsSampling() {
+        return is_sampling;
+    }
+
+    void AdjustSampleRate(u32 sample_rate) {}
+
+    Samples Read() {
+        return (parameters.sample_size == 8) ? CACHE_8_BIT : CACHE_16_BIT;
+    }
 
 private:
-    u16 sample_rate = 0;
-    u8 sample_size = 0;
+    bool is_sampling = false;
     std::vector<u8> CACHE_8_BIT;
     std::vector<u8> CACHE_16_BIT;
 };

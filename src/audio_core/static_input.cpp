@@ -19,24 +19,4 @@ StaticInput::StaticInput()
     : CACHE_8_BIT{NOISE_SAMPLE_8_BIT.begin(), NOISE_SAMPLE_8_BIT.end()},
       CACHE_16_BIT{NOISE_SAMPLE_16_BIT.begin(), NOISE_SAMPLE_16_BIT.end()} {}
 
-StaticInput::~StaticInput() = default;
-
-void StaticInput::StartSampling(const InputParameters& params) {
-    sample_rate = params.sample_rate;
-    sample_size = params.sample_size;
-
-    parameters = params;
-    is_sampling = true;
-}
-
-void StaticInput::StopSampling() {
-    is_sampling = false;
-}
-
-void StaticInput::AdjustSampleRate(u32 sample_rate) {}
-
-Samples StaticInput::Read() {
-    return (sample_size == 8) ? CACHE_8_BIT : CACHE_16_BIT;
-}
-
 } // namespace AudioCore

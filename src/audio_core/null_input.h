@@ -23,13 +23,18 @@ public:
         is_sampling = false;
     }
 
-    void AdjustSampleRate(u32 sample_rate) override {
-        parameters.sample_rate = sample_rate;
+    bool IsSampling() override {
+        return is_sampling;
     }
+
+    void AdjustSampleRate(u32 sample_rate) override {}
 
     Samples Read() override {
         return {};
     }
+
+private:
+    bool is_sampling = false;
 };
 
 } // namespace AudioCore

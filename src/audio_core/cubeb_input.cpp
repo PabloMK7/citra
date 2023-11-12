@@ -19,7 +19,7 @@ struct CubebInput::Impl {
     cubeb* ctx = nullptr;
     cubeb_stream* stream = nullptr;
 
-    std::unique_ptr<SampleQueue> sample_queue{};
+    SampleQueue sample_queue{};
     u8 sample_size_in_bytes = 0;
 
     static long DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
@@ -28,37 +28,33 @@ struct CubebInput::Impl {
 };
 
 CubebInput::CubebInput(std::string device_id)
-    : impl(std::make_unique<Impl>()), device_id(std::move(device_id)) {
-    if (cubeb_init(&impl->ctx, "Citra Input", nullptr) != CUBEB_OK) {
-        LOG_ERROR(Audio, "cubeb_init failed! Mic will not work properly");
-        return;
-    }
-    impl->sample_queue = std::make_unique<SampleQueue>();
-}
+    : impl(std::make_unique<Impl>()), device_id(std::move(device_id)) {}
 
 CubebInput::~CubebInput() {
-    if (impl->stream) {
-        if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
-            LOG_ERROR(Audio, "Error stopping cubeb input stream.");
-        }
-        cubeb_stream_destroy(impl->stream);
-    }
-
-    if (impl->ctx) {
-        cubeb_destroy(impl->ctx);
-    }
+    StopSampling();
 }
 
 void CubebInput::StartSampling(const InputParameters& params) {
+    if (IsSampling()) {
+        return;
+    }
+
     // Cubeb apparently only supports signed 16 bit PCM (and float32 which the 3ds doesn't support)
     // TODO: Resample the input stream.
     if (params.sign == Signedness::Unsigned) {
-        LOG_ERROR(Audio,
-                  "Application requested unsupported unsigned pcm format. Falling back to signed.");
+        LOG_WARNING(
+            Audio,
+            "Application requested unsupported unsigned pcm format. Falling back to signed.");
     }
 
     parameters = params;
     impl->sample_size_in_bytes = params.sample_size / 8;
+
+    auto init_result = cubeb_init(&impl->ctx, "Citra Input", nullptr);
+    if (init_result != CUBEB_OK) {
+        LOG_CRITICAL(Audio, "cubeb_init failed: {}", init_result);
+        return;
+    }
 
     cubeb_devid input_device = nullptr;
     if (device_id != auto_device_name && !device_id.empty()) {
@@ -87,25 +83,28 @@ void CubebInput::StartSampling(const InputParameters& params) {
     };
 
     u32 latency_frames = 512; // Firefox default
-    if (cubeb_get_min_latency(impl->ctx, &input_params, &latency_frames) != CUBEB_OK) {
-        LOG_WARNING(Audio, "Error getting minimum input latency, falling back to default latency.");
+    auto latency_result = cubeb_get_min_latency(impl->ctx, &input_params, &latency_frames);
+    if (latency_result != CUBEB_OK) {
+        LOG_WARNING(
+            Audio, "cubeb_get_min_latency failed, falling back to default latency of {} frames: {}",
+            latency_frames, latency_result);
     }
 
-    if (cubeb_stream_init(impl->ctx, &impl->stream, "Citra Microphone", input_device, &input_params,
-                          nullptr, nullptr, latency_frames, Impl::DataCallback, Impl::StateCallback,
-                          impl.get()) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "Error creating cubeb input stream.");
+    auto stream_init_result = cubeb_stream_init(
+        impl->ctx, &impl->stream, "Citra Microphone", input_device, &input_params, nullptr, nullptr,
+        latency_frames, Impl::DataCallback, Impl::StateCallback, impl.get());
+    if (stream_init_result != CUBEB_OK) {
+        LOG_CRITICAL(Audio, "cubeb_stream_init failed: {}", stream_init_result);
+        StopSampling();
         return;
     }
 
-    if (cubeb_stream_start(impl->stream) != CUBEB_OK) {
-        LOG_CRITICAL(Audio, "Error starting cubeb input stream.");
-        cubeb_stream_destroy(impl->stream);
-        impl->stream = nullptr;
+    auto start_result = cubeb_stream_start(impl->stream);
+    if (start_result != CUBEB_OK) {
+        LOG_CRITICAL(Audio, "cubeb_stream_start failed: {}", start_result);
+        StopSampling();
         return;
     }
-
-    is_sampling = true;
 }
 
 void CubebInput::StopSampling() {
@@ -114,11 +113,18 @@ void CubebInput::StopSampling() {
         cubeb_stream_destroy(impl->stream);
         impl->stream = nullptr;
     }
-    is_sampling = false;
+    if (impl->ctx) {
+        cubeb_destroy(impl->ctx);
+        impl->ctx = nullptr;
+    }
+}
+
+bool CubebInput::IsSampling() {
+    return impl->ctx && impl->stream;
 }
 
 void CubebInput::AdjustSampleRate(u32 sample_rate) {
-    if (!is_sampling) {
+    if (!IsSampling()) {
         return;
     }
 
@@ -129,9 +135,13 @@ void CubebInput::AdjustSampleRate(u32 sample_rate) {
 }
 
 Samples CubebInput::Read() {
+    if (!IsSampling()) {
+        return {};
+    }
+
     Samples samples{};
     Samples queue;
-    while (impl->sample_queue->Pop(queue)) {
+    while (impl->sample_queue.Pop(queue)) {
         samples.insert(samples.end(), queue.begin(), queue.end());
     }
     return samples;
@@ -162,7 +172,7 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
         const u8* data = reinterpret_cast<const u8*>(input_buffer);
         samples.insert(samples.begin(), data, data + num_frames * impl->sample_size_in_bytes);
     }
-    impl->sample_queue->Push(samples);
+    impl->sample_queue.Push(samples);
 
     // returning less than num_frames here signals cubeb to stop sampling
     return num_frames;

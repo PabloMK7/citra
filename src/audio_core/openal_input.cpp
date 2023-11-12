@@ -26,7 +26,7 @@ OpenALInput::~OpenALInput() {
 }
 
 void OpenALInput::StartSampling(const InputParameters& params) {
-    if (is_sampling) {
+    if (IsSampling()) {
         return;
     }
 
@@ -45,19 +45,20 @@ void OpenALInput::StartSampling(const InputParameters& params) {
     impl->device = alcCaptureOpenDevice(
         device_id != auto_device_name && !device_id.empty() ? device_id.c_str() : nullptr,
         params.sample_rate, format, static_cast<ALsizei>(params.buffer_size));
-    if (!impl->device) {
-        LOG_CRITICAL(Audio, "alcCaptureOpenDevice failed.");
+    auto open_error = alcGetError(impl->device);
+    if (impl->device == nullptr || open_error != ALC_NO_ERROR) {
+        LOG_CRITICAL(Audio, "alcCaptureOpenDevice failed: {}", open_error);
+        StopSampling();
         return;
     }
 
     alcCaptureStart(impl->device);
-    auto error = alcGetError(impl->device);
-    if (error != ALC_NO_ERROR) {
-        LOG_CRITICAL(Audio, "alcCaptureStart failed: {}", error);
+    auto capture_error = alcGetError(impl->device);
+    if (capture_error != ALC_NO_ERROR) {
+        LOG_CRITICAL(Audio, "alcCaptureStart failed: {}", capture_error);
+        StopSampling();
         return;
     }
-
-    is_sampling = true;
 }
 
 void OpenALInput::StopSampling() {
@@ -66,11 +67,14 @@ void OpenALInput::StopSampling() {
         alcCaptureCloseDevice(impl->device);
         impl->device = nullptr;
     }
-    is_sampling = false;
+}
+
+bool OpenALInput::IsSampling() {
+    return impl->device != nullptr;
 }
 
 void OpenALInput::AdjustSampleRate(u32 sample_rate) {
-    if (!is_sampling) {
+    if (!IsSampling()) {
         return;
     }
 
@@ -81,7 +85,7 @@ void OpenALInput::AdjustSampleRate(u32 sample_rate) {
 }
 
 Samples OpenALInput::Read() {
-    if (!is_sampling) {
+    if (!IsSampling()) {
         return {};
     }
 

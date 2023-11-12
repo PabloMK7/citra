@@ -17,7 +17,7 @@ namespace Service::MIC {
 class MIC_U final : public ServiceFramework<MIC_U> {
 public:
     explicit MIC_U(Core::System& system);
-    ~MIC_U();
+    ~MIC_U() override;
 
     void ReloadMic();
 

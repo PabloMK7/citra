@@ -76,6 +76,8 @@ struct State {
     u32 initial_offset = 0;
     bool looped_buffer = false;
     u8 sample_size = 0;
+    u8 gain = 0;
+    bool power = false;
     SampleRate sample_rate = SampleRate::Rate16360;
 
     void WriteSamples(std::span<const u8> samples) {
@@ -124,6 +126,8 @@ private:
         ar& initial_offset;
         ar& looped_buffer;
         ar& sample_size;
+        ar& gain;
+        ar& power;
         ar& sample_rate;
         sharedmem_buffer = _memory_ref ? _memory_ref->GetPointer() : nullptr;
     }
@@ -167,12 +171,13 @@ struct MIC_U::Impl {
     }
 
     void UpdateSharedMemBuffer(std::uintptr_t user_data, s64 cycles_late) {
+        // If the event was scheduled before the application requested the mic to stop sampling
+        if (!mic || !mic->IsSampling()) {
+            return;
+        }
+
         if (change_mic_impl_requested.exchange(false)) {
             CreateMic();
-        }
-        // If the event was scheduled before the application requested the mic to stop sampling
-        if (!mic->IsSampling()) {
-            return;
         }
 
         AudioCore::Samples samples = mic->Read();
@@ -204,10 +209,11 @@ struct MIC_U::Impl {
         u32 audio_buffer_size = rp.Pop<u32>();
         bool audio_buffer_loop = rp.Pop<bool>();
 
-        if (mic->IsSampling()) {
+        if (mic && mic->IsSampling()) {
             LOG_CRITICAL(Service_MIC,
                          "Application started sampling again before stopping sampling");
             mic->StopSampling();
+            mic.reset();
         }
 
         u8 sample_size = encoding == Encoding::PCM8Signed || encoding == Encoding::PCM8 ? 8 : 16;
@@ -218,6 +224,7 @@ struct MIC_U::Impl {
         state.looped_buffer = audio_buffer_loop;
         state.size = audio_buffer_size;
 
+        CreateMic();
         StartSampling();
 
         timing.ScheduleEvent(GetBufferUpdatePeriod(state.sample_rate), buffer_write_event);
@@ -233,7 +240,10 @@ struct MIC_U::Impl {
     void AdjustSampling(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp(ctx);
         SampleRate sample_rate = rp.PopEnum<SampleRate>();
-        mic->AdjustSampleRate(GetSampleRateInHz(sample_rate));
+        state.sample_rate = sample_rate;
+        if (mic) {
+            mic->AdjustSampleRate(GetSampleRateInHz(sample_rate));
+        }
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
@@ -245,8 +255,11 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        mic->StopSampling();
         timing.RemoveEvent(buffer_write_event);
+        if (mic) {
+            mic->StopSampling();
+            mic.reset();
+        }
         LOG_TRACE(Service_MIC, "called");
     }
 
@@ -255,7 +268,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
-        bool is_sampling = mic->IsSampling();
+        bool is_sampling = mic && mic->IsSampling();
         rb.Push<bool>(is_sampling);
         LOG_TRACE(Service_MIC, "IsSampling: {}", is_sampling);
     }
@@ -272,7 +285,7 @@ struct MIC_U::Impl {
     void SetGain(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp(ctx);
         u8 gain = rp.Pop<u8>();
-        mic->SetGain(gain);
+        state.gain = gain;
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
@@ -284,15 +297,14 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
-        u8 gain = mic->GetGain();
-        rb.Push<u8>(gain);
+        rb.Push<u8>(state.gain);
         LOG_TRACE(Service_MIC, "gain={}", gain);
     }
 
     void SetPower(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp(ctx);
         bool power = rp.Pop<bool>();
-        mic->SetPower(power);
+        state.power = power;
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
@@ -304,8 +316,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
-        bool mic_power = mic->GetPower();
-        rb.Push<u8>(mic_power);
+        rb.Push<u8>(state.power);
         LOG_TRACE(Service_MIC, "called");
     }
 
@@ -358,21 +369,18 @@ struct MIC_U::Impl {
     }
 
     void CreateMic() {
-        std::unique_ptr<AudioCore::Input> new_mic = AudioCore::CreateInputFromID(
-            Settings::values.input_type.GetValue(), Settings::values.input_device.GetValue());
-
-        // If theres already a mic, copy over any data to the new mic impl
-        if (mic) {
-            new_mic->SetGain(mic->GetGain());
-            new_mic->SetPower(mic->GetPower());
-            auto params = mic->GetParameters();
-            if (mic->IsSampling()) {
-                mic->StopSampling();
-                new_mic->StartSampling(params);
-            }
+        const auto was_sampling = mic && mic->IsSampling();
+        if (was_sampling) {
+            mic->StopSampling();
+            mic.reset();
         }
 
-        mic = std::move(new_mic);
+        mic = AudioCore::CreateInputFromID(Settings::values.input_type.GetValue(),
+                                           Settings::values.input_device.GetValue());
+        if (was_sampling) {
+            StartSampling();
+        }
+
         change_mic_impl_requested.store(false);
     }
 
@@ -503,12 +511,14 @@ MIC_U::MIC_U(Core::System& system)
         // clang-format on
     };
 
-    impl->CreateMic();
     RegisterHandlers(functions);
 }
 
 MIC_U::~MIC_U() {
-    impl->mic->StopSampling();
+    if (impl->mic) {
+        impl->mic->StopSampling();
+        impl->mic.reset();
+    }
 }
 
 void MIC_U::ReloadMic() {

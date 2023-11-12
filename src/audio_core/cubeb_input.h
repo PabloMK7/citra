@@ -17,11 +17,9 @@ public:
     ~CubebInput() override;
 
     void StartSampling(const InputParameters& params) override;
-
     void StopSampling() override;
-
+    bool IsSampling() override;
     void AdjustSampleRate(u32 sample_rate) override;
-
     Samples Read() override;
 
 private:

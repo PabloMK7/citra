@@ -37,12 +37,8 @@ public:
     /// Stops the microphone. Called by Core
     virtual void StopSampling() = 0;
 
-    /**
-     * Called from the actual event timing at a constant period under a given sample rate.
-     * When sampling is enabled this function is expected to return a buffer of 16 samples in ideal
-     * conditions, but can be lax if the data is coming in from another source like a real mic.
-     */
-    virtual Samples Read() = 0;
+    /// Checks whether the microphone is currently sampling.
+    virtual bool IsSampling() = 0;
 
     /**
      * Adjusts the Parameters. Implementations should update the parameters field in addition to
@@ -50,36 +46,15 @@ public:
      */
     virtual void AdjustSampleRate(u32 sample_rate) = 0;
 
-    /// Value from 0 - 100 to adjust the mic gain setting. Called by Core
-    virtual void SetGain(u8 mic_gain) {
-        gain = mic_gain;
-    }
-
-    u8 GetGain() const {
-        return gain;
-    }
-
-    void SetPower(bool power) {
-        powered = power;
-    }
-
-    bool GetPower() const {
-        return powered;
-    }
-
-    bool IsSampling() const {
-        return is_sampling;
-    }
-
-    const InputParameters& GetParameters() const {
-        return parameters;
-    }
+    /**
+     * Called from the actual event timing at a constant period under a given sample rate.
+     * When sampling is enabled this function is expected to return a buffer of 16 samples in ideal
+     * conditions, but can be lax if the data is coming in from another source like a real mic.
+     */
+    virtual Samples Read() = 0;
 
 protected:
     InputParameters parameters;
-    u8 gain = 0;
-    bool is_sampling = false;
-    bool powered = false;
 };
 
 } // namespace AudioCore
