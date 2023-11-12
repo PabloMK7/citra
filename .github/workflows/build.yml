@@ -33,7 +33,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
-      CCACHE_SLOPPINESS: pch_defines,time_macros
+      CCACHE_SLOPPINESS: time_macros
       OS: linux
       TARGET: ${{ matrix.target }}
     steps:
@@ -66,7 +66,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
-      CCACHE_SLOPPINESS: pch_defines,time_macros
+      CCACHE_SLOPPINESS: time_macros
       OS: macos
       TARGET: ${{ matrix.target }}
     steps:
@@ -133,7 +133,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
-      CCACHE_SLOPPINESS: pch_defines,time_macros
+      CCACHE_SLOPPINESS: time_macros
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
@@ -188,7 +188,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
-      CCACHE_SLOPPINESS: pch_defines,time_macros
+      CCACHE_SLOPPINESS: time_macros
       OS: android
       TARGET: universal
     steps:
@@ -239,7 +239,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
-      CCACHE_SLOPPINESS: pch_defines,time_macros
+      CCACHE_SLOPPINESS: time_macros
       OS: ios
       TARGET: arm64
     steps:
