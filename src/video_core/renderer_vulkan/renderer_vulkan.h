@@ -90,6 +90,8 @@ private:
     void ConfigureRenderPipeline();
     void PrepareRendertarget();
     void RenderScreenshot();
+    void RenderScreenshotWithStagingCopy();
+    bool TryRenderScreenshotWithHostMemory();
     void PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                         bool flipped);

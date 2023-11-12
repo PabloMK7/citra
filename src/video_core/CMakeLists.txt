@@ -109,6 +109,8 @@ add_library(video_core STATIC
     renderer_vulkan/vk_graphics_pipeline.h
     renderer_vulkan/vk_master_semaphore.cpp
     renderer_vulkan/vk_master_semaphore.h
+    renderer_vulkan/vk_memory_util.cpp
+    renderer_vulkan/vk_memory_util.h
     renderer_vulkan/vk_rasterizer.cpp
     renderer_vulkan/vk_rasterizer.h
     renderer_vulkan/vk_rasterizer_cache.cpp

@@ -4,6 +4,7 @@
 
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "common/memory_detect.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
 #include "common/texture.h"
@@ -13,6 +14,7 @@
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "video_core/renderer_vulkan/renderer_vulkan.h"
+#include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
 #include "video_core/host_shaders/vulkan_present_anaglyph_frag_spv.h"
@@ -865,6 +867,16 @@ void RendererVulkan::RenderScreenshot() {
         return;
     }
 
+    if (!TryRenderScreenshotWithHostMemory()) {
+        RenderScreenshotWithStagingCopy();
+    }
+
+    settings.screenshot_complete_callback(false);
+}
+
+void RendererVulkan::RenderScreenshotWithStagingCopy() {
+    const vk::Device device = instance.GetDevice();
+
     const Layout::FramebufferLayout layout{settings.screenshot_framebuffer_layout};
     const u32 width = layout.width;
     const u32 height = layout.height;
@@ -895,6 +907,7 @@ void RendererVulkan::RenderScreenshot() {
         LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
         UNREACHABLE();
     }
+
     vk::Buffer staging_buffer{unsafe_buffer};
 
     Frame frame{};
@@ -969,18 +982,169 @@ void RendererVulkan::RenderScreenshot() {
     // Ensure the copy is fully completed before saving the screenshot
     scheduler.Finish();
 
-    const vk::Device device = instance.GetDevice();
-
     // Copy backing image data to the QImage screenshot buffer
     std::memcpy(settings.screenshot_bits, alloc_info.pMappedData, staging_buffer_info.size);
 
     // Destroy allocated resources
-    vmaDestroyBuffer(instance.GetAllocator(), unsafe_buffer, allocation);
+    vmaDestroyBuffer(instance.GetAllocator(), staging_buffer, allocation);
     vmaDestroyImage(instance.GetAllocator(), frame.image, frame.allocation);
     device.destroyFramebuffer(frame.framebuffer);
     device.destroyImageView(frame.image_view);
+}
 
-    settings.screenshot_complete_callback(false);
+bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
+    // If the host-memory import alignment matches the allocation granularity of the platform, then
+    // the entire span of memory can be trivially imported
+    const bool trivial_import =
+        instance.IsExternalMemoryHostSupported() &&
+        instance.GetMinImportedHostPointerAlignment() == Common::GetPageSize();
+    if (!trivial_import) {
+        return false;
+    }
+
+    const vk::Device device = instance.GetDevice();
+
+    const Layout::FramebufferLayout layout{settings.screenshot_framebuffer_layout};
+    const u32 width = layout.width;
+    const u32 height = layout.height;
+
+    // For a span of memory [x, x + s], import [AlignDown(x, alignment), AlignUp(x + s, alignment)]
+    // and maintain an offset to the start of the data
+    const u64 import_alignment = instance.GetMinImportedHostPointerAlignment();
+    const uintptr_t address = reinterpret_cast<uintptr_t>(settings.screenshot_bits);
+    void* aligned_pointer = reinterpret_cast<void*>(Common::AlignDown(address, import_alignment));
+    const u64 offset = address % import_alignment;
+    const u64 aligned_size = Common::AlignUp(offset + width * height * 4ull, import_alignment);
+
+    // Buffer<->Image mapping for the imported imported buffer
+    const vk::BufferImageCopy buffer_image_copy = {
+        .bufferOffset = offset,
+        .bufferRowLength = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource =
+            {
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        .imageOffset = {0, 0, 0},
+        .imageExtent = {width, height, 1},
+    };
+
+    const vk::MemoryHostPointerPropertiesEXT import_properties =
+        device.getMemoryHostPointerPropertiesEXT(
+            vk::ExternalMemoryHandleTypeFlagBits::eHostAllocationEXT, aligned_pointer);
+
+    if (!import_properties.memoryTypeBits) {
+        // Could not import memory
+        return false;
+    }
+
+    const std::optional<u32> memory_type_index = FindMemoryType(
+        instance.GetPhysicalDevice().getMemoryProperties(),
+        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+        import_properties.memoryTypeBits);
+
+    if (!memory_type_index.has_value()) {
+        // Could not find memory type index
+        return false;
+    }
+
+    const vk::StructureChain<vk::MemoryAllocateInfo, vk::ImportMemoryHostPointerInfoEXT>
+        allocation_chain = {
+            vk::MemoryAllocateInfo{
+                .allocationSize = aligned_size,
+                .memoryTypeIndex = memory_type_index.value(),
+            },
+            vk::ImportMemoryHostPointerInfoEXT{
+                .handleType = vk::ExternalMemoryHandleTypeFlagBits::eHostAllocationEXT,
+                .pHostPointer = aligned_pointer,
+            },
+        };
+
+    // Import host memory
+    const vk::UniqueDeviceMemory imported_memory =
+        device.allocateMemoryUnique(allocation_chain.get());
+
+    const vk::StructureChain<vk::BufferCreateInfo, vk::ExternalMemoryBufferCreateInfo> buffer_info =
+        {
+            vk::BufferCreateInfo{
+                .size = aligned_size,
+                .usage = vk::BufferUsageFlagBits::eTransferDst,
+                .sharingMode = vk::SharingMode::eExclusive,
+            },
+            vk::ExternalMemoryBufferCreateInfo{
+                .handleTypes = vk::ExternalMemoryHandleTypeFlagBits::eHostAllocationEXT,
+            },
+        };
+
+    // Bind imported memory to buffer
+    const vk::UniqueBuffer imported_buffer = device.createBufferUnique(buffer_info.get());
+    device.bindBufferMemory(imported_buffer.get(), imported_memory.get(), 0);
+
+    Frame frame{};
+    main_window.RecreateFrame(&frame, width, height);
+
+    DrawScreens(&frame, layout, false);
+
+    scheduler.Record([buffer_image_copy, source_image = frame.image,
+                      imported_buffer = imported_buffer.get()](vk::CommandBuffer cmdbuf) {
+        const vk::ImageMemoryBarrier read_barrier = {
+            .srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
+            .dstAccessMask = vk::AccessFlagBits::eTransferRead,
+            .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
+            .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = source_image,
+            .subresourceRange{
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .baseMipLevel = 0,
+                .levelCount = VK_REMAINING_MIP_LEVELS,
+                .baseArrayLayer = 0,
+                .layerCount = VK_REMAINING_ARRAY_LAYERS,
+            },
+        };
+        const vk::ImageMemoryBarrier write_barrier = {
+            .srcAccessMask = vk::AccessFlagBits::eTransferRead,
+            .dstAccessMask = vk::AccessFlagBits::eMemoryWrite,
+            .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
+            .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = source_image,
+            .subresourceRange{
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .baseMipLevel = 0,
+                .levelCount = VK_REMAINING_MIP_LEVELS,
+                .baseArrayLayer = 0,
+                .layerCount = VK_REMAINING_ARRAY_LAYERS,
+            },
+        };
+        static constexpr vk::MemoryBarrier memory_write_barrier = {
+            .srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
+            .dstAccessMask = vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite,
+        };
+
+        cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
+                               vk::PipelineStageFlagBits::eTransfer,
+                               vk::DependencyFlagBits::eByRegion, {}, {}, read_barrier);
+        cmdbuf.copyImageToBuffer(source_image, vk::ImageLayout::eTransferSrcOptimal,
+                                 imported_buffer, buffer_image_copy);
+        cmdbuf.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eAllCommands,
+            vk::DependencyFlagBits::eByRegion, memory_write_barrier, {}, write_barrier);
+    });
+
+    // Ensure the copy is fully completed before saving the screenshot
+    scheduler.Finish();
+
+    // Image data has been copied directly to host memory
+    device.destroyFramebuffer(frame.framebuffer);
+    device.destroyImageView(frame.image_view);
+
+    return true;
 }
 
 } // namespace Vulkan

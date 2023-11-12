@@ -407,7 +407,8 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
     const vk::StructureChain properties_chain =
         physical_device.getProperties2<vk::PhysicalDeviceProperties2,
-                                       vk::PhysicalDevicePortabilitySubsetPropertiesKHR>();
+                                       vk::PhysicalDevicePortabilitySubsetPropertiesKHR,
+                                       vk::PhysicalDeviceExternalMemoryHostPropertiesEXT>();
 
     features = feature_chain.get().features;
     if (available_extensions.empty()) {
@@ -415,7 +416,7 @@ bool Instance::CreateDevice() {
         return false;
     }
 
-    boost::container::static_vector<const char*, 12> enabled_extensions;
+    boost::container::static_vector<const char*, 13> enabled_extensions;
     const auto add_extension = [&](std::string_view extension, bool blacklist = false,
                                    std::string_view reason = "") -> bool {
         const auto result =
@@ -445,6 +446,7 @@ bool Instance::CreateDevice() {
     add_extension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     image_format_list = add_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
     shader_stencil_export = add_extension(VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
+    external_memory_host = add_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
     tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME);
     const bool has_timeline_semaphores =
         add_extension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME, is_qualcomm || is_turnip,
@@ -587,6 +589,11 @@ bool Instance::CreateDevice() {
                  pipelineCreationCacheControl, pipeline_creation_cache_control)
     } else {
         device_chain.unlink<vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT>();
+    }
+
+    if (external_memory_host) {
+        PROP_GET(vk::PhysicalDeviceExternalMemoryHostPropertiesEXT, minImportedHostPointerAlignment,
+                 min_imported_host_pointer_alignment);
     }
 
     if (has_fragment_shader_barycentric) {

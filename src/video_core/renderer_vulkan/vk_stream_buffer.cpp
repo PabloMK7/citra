@@ -7,6 +7,7 @@
 #include "common/alignment.h"
 #include "common/assert.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
+#include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_stream_buffer.h"
 
@@ -41,19 +42,6 @@ vk::MemoryPropertyFlags MakePropertyFlags(BufferType type) {
         UNREACHABLE_MSG("Unknown buffer type {}", type);
         return vk::MemoryPropertyFlagBits::eHostVisible;
     }
-}
-
-/// Find a memory type with the passed requirements
-std::optional<u32> FindMemoryType(
-    const vk::PhysicalDeviceMemoryProperties& properties, vk::MemoryPropertyFlags wanted,
-    vk::MemoryPropertyFlags excluded = vk::MemoryPropertyFlagBits::eProtected) {
-    for (u32 i = 0; i < properties.memoryTypeCount; ++i) {
-        const auto flags = properties.memoryTypes[i].propertyFlags;
-        if (((flags & wanted) == wanted) && (!(flags & excluded))) {
-            return i;
-        }
-    }
-    return std::nullopt;
 }
 
 /// Get the preferred host visible memory type.

@@ -19,4 +19,10 @@ struct MemoryInfo {
  */
 [[nodiscard]] const MemoryInfo GetMemInfo();
 
+/**
+ * Gets the page size of the host system
+ * @return Page size in bytes of the host system
+ */
+u64 GetPageSize();
+
 } // namespace Common

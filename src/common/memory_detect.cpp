@@ -8,12 +8,11 @@
 #include <sysinfoapi.h>
 #else
 #include <sys/types.h>
+#include <unistd.h>
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/sysctl.h>
 #elif defined(__linux__)
 #include <sys/sysinfo.h>
-#else
-#include <unistd.h>
 #endif
 #endif
 
@@ -62,6 +61,16 @@ const MemoryInfo GetMemInfo() {
 #endif
 
     return mem_info;
+}
+
+u64 GetPageSize() {
+#ifdef _WIN32
+    SYSTEM_INFO info;
+    ::GetSystemInfo(&info);
+    return static_cast<u64>(info.dwPageSize);
+#else
+    return static_cast<u64>(sysconf(_SC_PAGESIZE));
+#endif
 }
 
 } // namespace Common
