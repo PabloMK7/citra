@@ -235,7 +235,7 @@ void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
 void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 addr = rp.Pop<u32>();
-    LOG_WARNING(Service_CSND, "(STUBBED) called, addr=0x{:08X}", addr);
+    LOG_DEBUG(Service_CSND, "(STUBBED) called, addr=0x{:08X}", addr);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (!shared_memory) {
