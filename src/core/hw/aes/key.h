@@ -76,7 +76,6 @@ using AESIV = std::array<u8, AES_BLOCK_SIZE>;
 
 void InitKeys(bool force = false);
 
-void SetGeneratorConstant(const AESKey& key);
 void SetKeyX(std::size_t slot_id, const AESKey& key);
 void SetKeyY(std::size_t slot_id, const AESKey& key);
 void SetNormalKey(std::size_t slot_id, const AESKey& key);
