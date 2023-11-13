@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/container/small_vector.hpp>
 #include "video_core/shader/generator/spv_fs_shader_gen.h"
 
 namespace Pica::Shader::Generator::SPIRV {
@@ -14,8 +15,10 @@ using TevStageConfig = TexturingRegs::TevStageConfig;
 
 constexpr u32 SPIRV_VERSION_1_3 = 0x00010300;
 
-FragmentModule::FragmentModule(const FSConfig& config_)
-    : Sirit::Module{SPIRV_VERSION_1_3}, config{config_} {
+FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
+    : Sirit::Module{SPIRV_VERSION_1_3}, config{config_}, profile{profile_},
+      use_fragment_shader_barycentric{profile.has_fragment_shader_barycentric &&
+                                      config.lighting.enable} {
     DefineArithmeticTypes();
     DefineUniformStructs();
     DefineInterface();
@@ -270,9 +273,48 @@ void FragmentModule::WriteLighting() {
         return OpFAdd(vec_ids.Get(3), v, val2);
     };
 
+    // Perform quaternion correction in the fragment shader if fragment_shader_barycentric is
+    // supported.
+    Id normquat{};
+    if (use_fragment_shader_barycentric) {
+        const auto are_quaternions_opposite = [&](Id qa, Id qb) {
+            const Id dot_q{OpDot(f32_id, qa, qb)};
+            const Id dot_le_zero{OpFOrdLessThan(bool_id, dot_q, ConstF32(0.f))};
+            return OpCompositeConstruct(bvec_ids.Get(4), dot_le_zero, dot_le_zero, dot_le_zero,
+                                        dot_le_zero);
+        };
+
+        const Id input_pointer_id{TypePointer(spv::StorageClass::Input, vec_ids.Get(4))};
+        const Id normquat_0{
+            OpLoad(vec_ids.Get(4), OpAccessChain(input_pointer_id, normquat_id, ConstS32(0)))};
+        const Id normquat_1{
+            OpLoad(vec_ids.Get(4), OpAccessChain(input_pointer_id, normquat_id, ConstS32(1)))};
+        const Id normquat_1_correct{OpSelect(vec_ids.Get(4),
+                                             are_quaternions_opposite(normquat_0, normquat_1),
+                                             OpFNegate(vec_ids.Get(4), normquat_1), normquat_1)};
+        const Id normquat_2{
+            OpLoad(vec_ids.Get(4), OpAccessChain(input_pointer_id, normquat_id, ConstS32(2)))};
+        const Id normquat_2_correct{OpSelect(vec_ids.Get(4),
+                                             are_quaternions_opposite(normquat_0, normquat_2),
+                                             OpFNegate(vec_ids.Get(4), normquat_2), normquat_2)};
+        const Id bary_coord{OpLoad(vec_ids.Get(3), gl_bary_coord_id)};
+        const Id bary_coord_x{OpCompositeExtract(f32_id, bary_coord, 0)};
+        const Id bary_coord_y{OpCompositeExtract(f32_id, bary_coord, 1)};
+        const Id bary_coord_z{OpCompositeExtract(f32_id, bary_coord, 2)};
+        const Id normquat_0_final{OpVectorTimesScalar(vec_ids.Get(4), normquat_0, bary_coord_x)};
+        const Id normquat_1_final{
+            OpVectorTimesScalar(vec_ids.Get(4), normquat_1_correct, bary_coord_y)};
+        const Id normquat_2_final{
+            OpVectorTimesScalar(vec_ids.Get(4), normquat_2_correct, bary_coord_z)};
+        normquat = OpFAdd(vec_ids.Get(4), normquat_0_final,
+                          OpFAdd(vec_ids.Get(4), normquat_1_final, normquat_2_final));
+    } else {
+        normquat = OpLoad(vec_ids.Get(4), normquat_id);
+    }
+
     // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
     // eyespace.
-    const Id normalized_normquat{OpNormalize(vec_ids.Get(4), OpLoad(vec_ids.Get(4), normquat_id))};
+    const Id normalized_normquat{OpNormalize(vec_ids.Get(4), normquat)};
     const Id normal{quaternion_rotate(normalized_normquat, surface_normal)};
     const Id tangent{quaternion_rotate(normalized_normquat, surface_tangent)};
 
@@ -1452,13 +1494,24 @@ void FragmentModule::DefineEntryPoint() {
     AddCapability(spv::Capability::Shader);
     AddCapability(spv::Capability::SampledBuffer);
     AddCapability(spv::Capability::ImageQuery);
+    if (use_fragment_shader_barycentric) {
+        AddCapability(spv::Capability::FragmentBarycentricKHR);
+        AddExtension("SPV_KHR_fragment_shader_barycentric");
+    }
     SetMemoryModel(spv::AddressingModel::Logical, spv::MemoryModel::GLSL450);
 
     const Id main_type{TypeFunction(TypeVoid())};
     const Id main_func{OpFunction(TypeVoid(), spv::FunctionControlMask::MaskNone, main_type)};
-    AddEntryPoint(spv::ExecutionModel::Fragment, main_func, "main", primary_color_id,
-                  texcoord_id[0], texcoord_id[1], texcoord_id[2], texcoord0_w_id, normquat_id,
-                  view_id, color_id, gl_frag_coord_id, gl_frag_depth_id);
+
+    boost::container::small_vector<Id, 11> interface_ids{
+        primary_color_id, texcoord_id[0], texcoord_id[1], texcoord_id[2],   texcoord0_w_id,
+        normquat_id,      view_id,        color_id,       gl_frag_coord_id, gl_frag_depth_id,
+    };
+    if (use_fragment_shader_barycentric) {
+        interface_ids.push_back(gl_bary_coord_id);
+    }
+
+    AddEntryPoint(spv::ExecutionModel::Fragment, main_func, "main", interface_ids);
     AddExecutionMode(main_func, spv::ExecutionMode::OriginUpperLeft);
     AddExecutionMode(main_func, spv::ExecutionMode::DepthReplacing);
 }
@@ -1510,7 +1563,12 @@ void FragmentModule::DefineInterface() {
     texcoord_id[1] = DefineInput(vec_ids.Get(2), 3);
     texcoord_id[2] = DefineInput(vec_ids.Get(2), 4);
     texcoord0_w_id = DefineInput(f32_id, 5);
-    normquat_id = DefineInput(vec_ids.Get(4), 6);
+    if (use_fragment_shader_barycentric) {
+        normquat_id = DefineInput(TypeArray(vec_ids.Get(4), ConstU32(3U)), 6);
+        Decorate(normquat_id, spv::Decoration::PerVertexKHR);
+    } else {
+        normquat_id = DefineInput(vec_ids.Get(4), 6);
+    }
     view_id = DefineInput(vec_ids.Get(3), 7);
     color_id = DefineOutput(vec_ids.Get(4), 0);
 
@@ -1537,10 +1595,14 @@ void FragmentModule::DefineInterface() {
     gl_frag_depth_id = DefineVar(f32_id, spv::StorageClass::Output);
     Decorate(gl_frag_coord_id, spv::Decoration::BuiltIn, spv::BuiltIn::FragCoord);
     Decorate(gl_frag_depth_id, spv::Decoration::BuiltIn, spv::BuiltIn::FragDepth);
+    if (use_fragment_shader_barycentric) {
+        gl_bary_coord_id = DefineVar(vec_ids.Get(3), spv::StorageClass::Input);
+        Decorate(gl_bary_coord_id, spv::Decoration::BuiltIn, spv::BuiltIn::BaryCoordKHR);
+    }
 }
 
-std::vector<u32> GenerateFragmentShader(const FSConfig& config) {
-    FragmentModule module{config};
+std::vector<u32> GenerateFragmentShader(const FSConfig& config, const Profile& profile) {
+    FragmentModule module{config, profile};
     module.Generate();
     return module.Assemble();
 }

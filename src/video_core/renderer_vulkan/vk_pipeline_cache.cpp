@@ -472,7 +472,7 @@ void PipelineCache::UseFragmentShader(const Pica::Regs& regs,
     if (new_shader) {
         const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
         if (use_spirv && !fs_config.UsesShadowPipeline()) {
-            const std::vector code = SPIRV::GenerateFragmentShader(fs_config);
+            const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
             shader.module = CompileSPV(code, instance.GetDevice());
             shader.MarkDone();
         } else {
