@@ -195,18 +195,13 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
 
             // TODO(Subv): Perform permission checks.
 
-            // Reserve a page of memory before the mapped buffer
-            std::shared_ptr<BackingMem> reserve_buffer =
-                std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-            dst_process->vm_manager.MapBackingMemoryToBase(
-                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer,
-                Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Reserved);
-
+            // Create a buffer which contains the mapped buffer and two additional guard pages.
             std::shared_ptr<BackingMem> buffer =
-                std::make_shared<BufferMem>(num_pages * Memory::CITRA_PAGE_SIZE);
-            memory.ReadBlock(*src_process, source_address, buffer->GetPtr() + page_offset, size);
+                std::make_shared<BufferMem>((num_pages + 2) * Memory::CITRA_PAGE_SIZE);
+            memory.ReadBlock(*src_process, source_address,
+                             buffer->GetPtr() + Memory::CITRA_PAGE_SIZE + page_offset, size);
 
-            // Map the page(s) into the target process' address space.
+            // Map the guard pages and mapped pages at once.
             target_address =
                 dst_process->vm_manager
                     .MapBackingMemoryToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
@@ -214,16 +209,25 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
                                             Kernel::MemoryState::Shared)
                     .Unwrap();
 
+            // Change the permissions and state of the guard pages.
+            const VAddr low_guard_address = target_address;
+            const VAddr high_guard_address =
+                low_guard_address + static_cast<VAddr>(buffer->GetSize()) - Memory::CITRA_PAGE_SIZE;
+            ASSERT(dst_process->vm_manager.ChangeMemoryState(
+                       low_guard_address, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Shared,
+                       Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Reserved,
+                       Kernel::VMAPermission::None) == RESULT_SUCCESS);
+            ASSERT(dst_process->vm_manager.ChangeMemoryState(
+                       high_guard_address, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Shared,
+                       Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Reserved,
+                       Kernel::VMAPermission::None) == RESULT_SUCCESS);
+
+            // Get proper mapped buffer address and store it in the cmd buffer.
+            target_address += Memory::CITRA_PAGE_SIZE;
             cmd_buf[i++] = target_address + page_offset;
 
-            // Reserve a page of memory after the mapped buffer
-            dst_process->vm_manager.MapBackingMemoryToBase(
-                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer,
-                static_cast<u32>(reserve_buffer->GetSize()), Kernel::MemoryState::Reserved);
-
             mapped_buffer_context.push_back({permissions, size, source_address,
-                                             target_address + page_offset, std::move(buffer),
-                                             std::move(reserve_buffer)});
+                                             target_address + page_offset, std::move(buffer)});
 
             break;
         }
