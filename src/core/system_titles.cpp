@@ -21,7 +21,7 @@ struct SystemTitleCategory {
     std::vector<SystemTitle> titles;
 };
 
-static constexpr u32 NUM_SYSTEM_TITLE_CATEGORIES = 7;
+static constexpr u32 NUM_SYSTEM_TITLE_CATEGORIES = 9;
 
 static constexpr u64 home_menu_title_id_high = 0x00040030;
 static constexpr SystemTitle home_menu_title = {
@@ -1128,6 +1128,36 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                              .sets = SystemTitleSet::New3ds,
                              .title_id_lows = {0x20000202, 0x20000202, 0x20000202, 0x20000202,
                                                0x20000202, 0x20000202, 0x20000202},
+                         },
+                     }},
+                {.name = "TWL System Applications",
+                 .title_id_high = 0x00048005,
+                 .titles =
+                     {
+                         {
+                             .name = "DS Internet",
+                             .title_id_lows = {0x42383841, 0x42383841, 0x42383841, 0x42383841,
+                                               0x42383841, 0x42383841, 0x42383841},
+                         },
+                         {
+                             .name = "DS Download Play",
+                             .title_id_lows = {0x484E4441, 0x484E4441, 0x484E4441, 0x484E4441,
+                                               0x484E4443, 0x484E444B, 0x484E4441},
+                         },
+                     }},
+                {.name = "TWL System Data Archives",
+                 .title_id_high = 0x0004800F,
+                 .titles =
+                     {
+                         {
+                             .name = "DS Card Whitelist",
+                             .title_id_lows = {0x484E4841, 0x484E4841, 0x484E4841, 0x484E4841,
+                                               0x484E4841, 0x484E4841, 0x484E4841},
+                         },
+                         {
+                             .name = "DS Version Data",
+                             .title_id_lows = {0x484E4C41, 0x484E4C41, 0x484E4C41, 0x484E4C41,
+                                               0x484E4C41, 0x484E4C41, 0x484E4C41},
                          },
                      }},
             }};

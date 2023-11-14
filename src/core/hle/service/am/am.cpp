@@ -646,6 +646,8 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, std:
 }
 
 std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
+    // TODO(PabloMK7) TWL titles should be in TWL Nand. Assuming CTR Nand for now.
+
     u32 high = static_cast<u32>(tid >> 32);
     u32 low = static_cast<u32>(tid & 0xFFFFFFFF);
 
@@ -698,9 +700,19 @@ void Module::ScanForTitles(Service::FS::MediaType media_type) {
             if (tid_string.length() == TITLE_ID_VALID_LENGTH) {
                 const u64 tid = std::stoull(tid_string, nullptr, 16);
 
-                FileSys::NCCHContainer container(GetTitleContentPath(media_type, tid));
-                if (container.Load() == Loader::ResultStatus::Success)
-                    am_title_list[static_cast<u32>(media_type)].push_back(tid);
+                if (tid & TWL_TITLE_ID_FLAG) {
+                    // TODO(PabloMK7) Move to TWL Nand, for now only check that
+                    // the contents exists in CTR Nand as this is a SRL file
+                    // instead of NCCH.
+                    if (FileUtil::Exists(GetTitleContentPath(media_type, tid))) {
+                        am_title_list[static_cast<u32>(media_type)].push_back(tid);
+                    }
+                } else {
+                    FileSys::NCCHContainer container(GetTitleContentPath(media_type, tid));
+                    if (container.Load() == Loader::ResultStatus::Success) {
+                        am_title_list[static_cast<u32>(media_type)].push_back(tid);
+                    }
+                }
             }
         }
     }
