@@ -286,7 +286,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     rb.PushMoveObjects(port.Unwrap());
 }
 
-SRV::SRV(Core::System& system) : ServiceFramework("srv:", 4), system(system) {
+SRV::SRV(Core::System& system) : ServiceFramework("srv:", 64), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, &SRV::RegisterClient, "RegisterClient"},

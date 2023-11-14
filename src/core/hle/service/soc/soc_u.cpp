@@ -1790,7 +1790,7 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(std::move(serv), 1);
 }
 
-SOC_U::SOC_U() : ServiceFramework("soc:U") {
+SOC_U::SOC_U() : ServiceFramework("soc:U", 18) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, &SOC_U::InitializeSockets, "InitializeSockets"},
