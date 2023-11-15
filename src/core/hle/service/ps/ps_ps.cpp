@@ -9,6 +9,7 @@
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/ps/ps_ps.h"
+#include "core/hle/service/ssl/ssl_c.h"
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
 
@@ -146,6 +147,20 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(destination);
 }
 
+void PS_PS::GenerateRandomBytes(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 size = rp.Pop<u32>();
+    auto buffer = rp.PopMappedBuffer();
+
+    std::vector<u8> out_data(size);
+    SSL::GenerateRandomData(out_data);
+    buffer.Write(out_data.data(), 0, size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(buffer);
+}
+
 PS_PS::PS_PS() : ServiceFramework("ps:ps", DefaultMaxSessions) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -160,7 +175,7 @@ PS_PS::PS_PS() : ServiceFramework("ps:ps", DefaultMaxSessions) {
         {0x000A, nullptr, "GetLocalFriendCodeSeed"},
         {0x000B, nullptr, "GetDeviceId"},
         {0x000C, nullptr, "SeedRNG"},
-        {0x000D, nullptr, "GenerateRandomBytes"},
+        {0x000D, &PS_PS::GenerateRandomBytes, "GenerateRandomBytes"},
         {0x000E, nullptr, "InterfaceForPXI_0x04010084"},
         {0x000F, nullptr, "InterfaceForPXI_0x04020082"},
         {0x0010, nullptr, "InterfaceForPXI_0x04030044"},

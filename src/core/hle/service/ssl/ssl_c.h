@@ -21,13 +21,12 @@ private:
     void Initialize(Kernel::HLERequestContext& ctx);
     void GenerateRandomData(Kernel::HLERequestContext& ctx);
 
-    // TODO: Implement a proper CSPRNG in the future when actual security is needed
-    std::mt19937 rand_gen;
-
     SERVICE_SERIALIZATION_SIMPLE
 };
 
 void InstallInterfaces(Core::System& system);
+
+void GenerateRandomData(std::vector<u8>& out);
 
 } // namespace Service::SSL
 
