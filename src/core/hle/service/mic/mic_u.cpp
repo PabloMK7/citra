@@ -298,7 +298,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(state.gain);
-        LOG_TRACE(Service_MIC, "gain={}", gain);
+        LOG_TRACE(Service_MIC, "gain={}", state.gain);
     }
 
     void SetPower(Kernel::HLERequestContext& ctx) {
