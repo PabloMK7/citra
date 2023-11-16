@@ -241,19 +241,27 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
 
     connect(ui->button_secure_info, &QPushButton::clicked, this, [this] {
         ui->button_secure_info->setEnabled(false);
-        const QString file_path_qtstr =
-            QFileDialog::getOpenFileName(this, tr("Select SecureInfo_A"), QString(),
-                                         tr("SecureInfo_A (SecureInfo_A);;All Files (*.*)"));
+        const QString file_path_qtstr = QFileDialog::getOpenFileName(
+            this, tr("Select SecureInfo_A/B"), QString(),
+            tr("SecureInfo_A/B (SecureInfo_A SecureInfo_B);;All Files (*.*)"));
         ui->button_secure_info->setEnabled(true);
         InstallSecureData(file_path_qtstr.toStdString(), cfg->GetSecureInfoAPath());
     });
     connect(ui->button_friend_code_seed, &QPushButton::clicked, this, [this] {
         ui->button_friend_code_seed->setEnabled(false);
-        const QString file_path_qtstr = QFileDialog::getOpenFileName(
-            this, tr("Select LocalFriendCodeSeed_B"), QString(),
-            tr("LocalFriendCodeSeed_B (LocalFriendCodeSeed_B);;All Files (*.*)"));
+        const QString file_path_qtstr =
+            QFileDialog::getOpenFileName(this, tr("Select LocalFriendCodeSeed_A/B"), QString(),
+                                         tr("LocalFriendCodeSeed_A/B (LocalFriendCodeSeed_A "
+                                            "LocalFriendCodeSeed_B);;All Files (*.*)"));
         ui->button_friend_code_seed->setEnabled(true);
         InstallSecureData(file_path_qtstr.toStdString(), cfg->GetLocalFriendCodeSeedBPath());
+    });
+    connect(ui->button_ct_cert, &QPushButton::clicked, this, [this] {
+        ui->button_ct_cert->setEnabled(false);
+        const QString file_path_qtstr = QFileDialog::getOpenFileName(
+            this, tr("Select CTCert"), QString(), tr("CTCert.bin (*.bin);;All Files (*.*)"));
+        ui->button_ct_cert->setEnabled(true);
+        InstallCTCert(file_path_qtstr.toStdString());
     });
 
     for (u8 i = 0; i < country_names.size(); i++) {
@@ -320,6 +328,7 @@ void ConfigureSystem::SetConfiguration() {
     ui->edit_init_ticks_value->setText(
         QString::number(Settings::values.init_ticks_override.GetValue()));
 
+    am = Service::AM::GetModule(system);
     cfg = Service::CFG::GetModule(system);
     ReadSystemSettings();
 
@@ -559,6 +568,19 @@ void ConfigureSystem::InstallSecureData(const std::string& from_path, const std:
     RefreshSecureDataStatus();
 }
 
+void ConfigureSystem::InstallCTCert(const std::string& from_path) {
+    std::string from =
+        FileUtil::SanitizePath(from_path, FileUtil::DirectorySeparator::PlatformDefault);
+    std::string to =
+        FileUtil::SanitizePath(am->GetCTCertPath(), FileUtil::DirectorySeparator::PlatformDefault);
+    if (from.empty() || from == to) {
+        return;
+    }
+    FileUtil::Copy(from, to);
+    am->InvalidateCTCertData();
+    RefreshSecureDataStatus();
+}
+
 void ConfigureSystem::RefreshSecureDataStatus() {
     auto status_to_str = [](Service::CFG::SecureDataLoadStatus status) {
         switch (status) {
@@ -579,6 +601,10 @@ void ConfigureSystem::RefreshSecureDataStatus() {
         tr((std::string("Status: ") + status_to_str(cfg->LoadSecureInfoAFile())).c_str()));
     ui->label_friend_code_seed_status->setText(
         tr((std::string("Status: ") + status_to_str(cfg->LoadLocalFriendCodeSeedBFile())).c_str()));
+    ui->label_ct_cert_status->setText(
+        tr((std::string("Status: ") +
+            status_to_str(static_cast<Service::CFG::SecureDataLoadStatus>(am->LoadCTCertFile())))
+               .c_str()));
 }
 
 void ConfigureSystem::RetranslateUI() {

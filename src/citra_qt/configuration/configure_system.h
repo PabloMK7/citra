@@ -21,6 +21,12 @@ class System;
 }
 
 namespace Service {
+namespace AM {
+class Module;
+} // namespace AM
+} // namespace Service
+
+namespace Service {
 namespace CFG {
 class Module;
 } // namespace CFG
@@ -47,6 +53,7 @@ private:
     void RefreshConsoleID();
 
     void InstallSecureData(const std::string& from_path, const std::string& to_path);
+    void InstallCTCert(const std::string& from_path);
     void RefreshSecureDataStatus();
 
     void SetupPerGameUI();
@@ -60,6 +67,7 @@ private:
     ConfigurationShared::CheckState lle_applets;
     bool enabled = false;
 
+    std::shared_ptr<Service::AM::Module> am;
     std::shared_ptr<Service::CFG::Module> cfg;
     std::u16string username;
     int birthmonth = 0;
