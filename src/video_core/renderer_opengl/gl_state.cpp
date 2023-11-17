@@ -50,11 +50,11 @@ OpenGLState::OpenGLState() {
 
     for (auto& texture_unit : texture_units) {
         texture_unit.texture_2d = 0;
+        texture_unit.target = GL_TEXTURE_2D;
         texture_unit.sampler = 0;
     }
 
-    texture_cube_unit.texture_cube = 0;
-    texture_cube_unit.sampler = 0;
+    color_buffer.texture_2d = 0;
 
     texture_buffer_lut_lf.texture_buffer = 0;
     texture_buffer_lut_rg.texture_buffer = 0;
@@ -213,19 +213,11 @@ void OpenGLState::Apply() const {
     for (u32 i = 0; i < texture_units.size(); ++i) {
         if (texture_units[i].texture_2d != cur_state.texture_units[i].texture_2d) {
             glActiveTexture(TextureUnits::PicaTexture(i).Enum());
-            glBindTexture(GL_TEXTURE_2D, texture_units[i].texture_2d);
+            glBindTexture(texture_units[i].target, texture_units[i].texture_2d);
         }
         if (texture_units[i].sampler != cur_state.texture_units[i].sampler) {
             glBindSampler(i, texture_units[i].sampler);
         }
-    }
-
-    if (texture_cube_unit.texture_cube != cur_state.texture_cube_unit.texture_cube) {
-        glActiveTexture(TextureUnits::TextureCube.Enum());
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_cube_unit.texture_cube);
-    }
-    if (texture_cube_unit.sampler != cur_state.texture_cube_unit.sampler) {
-        glBindSampler(TextureUnits::TextureCube.id, texture_cube_unit.sampler);
     }
 
     // Texture buffer LUTs
@@ -368,8 +360,6 @@ OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
             unit.texture_2d = 0;
         }
     }
-    if (texture_cube_unit.texture_cube == handle)
-        texture_cube_unit.texture_cube = 0;
     if (texture_buffer_lut_lf.texture_buffer == handle)
         texture_buffer_lut_lf.texture_buffer = 0;
     if (texture_buffer_lut_rg.texture_buffer == handle)
@@ -398,9 +388,6 @@ OpenGLState& OpenGLState::ResetSampler(GLuint handle) {
         if (unit.sampler == handle) {
             unit.sampler = 0;
         }
-    }
-    if (texture_cube_unit.sampler == handle) {
-        texture_cube_unit.sampler = 0;
     }
     return *this;
 }

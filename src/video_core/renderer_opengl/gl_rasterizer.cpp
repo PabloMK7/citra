@@ -14,7 +14,7 @@
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
-#include "video_core/shader/generator/glsl_shader_gen.h"
+#include "video_core/shader/generator/shader_gen.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/video_core.h"
 
@@ -576,10 +576,9 @@ void RasterizerOpenGL::BindTextureCube(const Pica::TexturingRegs::FullTextureCon
 
     Surface& surface = res_cache.GetTextureCube(config);
     Sampler& sampler = res_cache.GetSampler(texture.config);
-
-    state.texture_cube_unit.texture_cube = surface.Handle();
-    state.texture_cube_unit.sampler = sampler.Handle();
-    state.texture_units[0].texture_2d = 0;
+    state.texture_units[0].target = GL_TEXTURE_CUBE_MAP;
+    state.texture_units[0].texture_2d = surface.Handle();
+    state.texture_units[0].sampler = sampler.Handle();
 }
 
 void RasterizerOpenGL::BindMaterial(u32 texture_index, Surface& surface) {
@@ -612,7 +611,8 @@ bool RasterizerOpenGL::IsFeedbackLoop(u32 texture_index, const Framebuffer* fram
 }
 
 void RasterizerOpenGL::UnbindSpecial() {
-    state.texture_cube_unit.texture_cube = 0;
+    state.texture_units[0].texture_2d = 0;
+    state.texture_units[0].target = GL_TEXTURE_2D;
     state.image_shadow_texture_px = 0;
     state.image_shadow_texture_nx = 0;
     state.image_shadow_texture_py = 0;

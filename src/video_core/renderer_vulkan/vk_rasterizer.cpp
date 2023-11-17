@@ -119,12 +119,10 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory,
     pipeline_cache.BindTexelBuffer(5, *texture_rgba_view);
 
     Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
-    Surface& null_cube_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_CUBE_ID);
     Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SAMPLER_ID);
     for (u32 i = 0; i < 3; i++) {
         pipeline_cache.BindTexture(i, null_surface.ImageView(), null_sampler.Handle());
     }
-    pipeline_cache.BindTexture(3, null_cube_surface.ImageView(), null_sampler.Handle());
 
     for (u32 i = 0; i < 7; i++) {
         pipeline_cache.BindStorageImage(i, null_surface.StorageView());
@@ -637,7 +635,7 @@ void RasterizerVulkan::BindTextureCube(const Pica::TexturingRegs::FullTextureCon
 
     Surface& surface = res_cache.GetTextureCube(config);
     Sampler& sampler = res_cache.GetSampler(texture.config);
-    pipeline_cache.BindTexture(3, surface.ImageView(), sampler.Handle());
+    pipeline_cache.BindTexture(0, surface.ImageView(), sampler.Handle());
 }
 
 bool RasterizerVulkan::IsFeedbackLoop(u32 texture_index, const Framebuffer* framebuffer,
@@ -655,9 +653,6 @@ bool RasterizerVulkan::IsFeedbackLoop(u32 texture_index, const Framebuffer* fram
 
 void RasterizerVulkan::UnbindSpecial() {
     Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
-    const Surface& null_cube_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_CUBE_ID);
-    const Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SAMPLER_ID);
-    pipeline_cache.BindTexture(3, null_cube_surface.ImageView(), null_sampler.Handle());
     for (u32 i = 0; i < 6; i++) {
         pipeline_cache.BindStorageImage(i, null_surface.StorageView());
     }

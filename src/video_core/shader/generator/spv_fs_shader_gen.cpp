@@ -12,6 +12,7 @@ using Pica::LightingRegs;
 using Pica::RasterizerRegs;
 using Pica::TexturingRegs;
 using TevStageConfig = TexturingRegs::TevStageConfig;
+using TextureType = TexturingRegs::TextureConfig::TextureType;
 
 constexpr u32 SPIRV_VERSION_1_3 = 0x00010300;
 
@@ -977,7 +978,7 @@ void FragmentModule::DefineTexSampler(u32 texture_unit) {
     };
 
     const auto sample_3d = [&](Id tex_id, bool projection) {
-        const Id image_type = tex_id.value == tex_cube_id.value ? image_cube_id : image2d_id;
+        const Id image_type = !projection ? image_cube_id : image2d_id;
         const Id sampled_image{OpLoad(TypeSampledImage(image_type), tex_id)};
         const Id texcoord0_w{OpLoad(f32_id, texcoord0_w_id)};
         const Id coord{OpCompositeConstruct(vec_ids.Get(3), OpCompositeExtract(f32_id, texcoord, 0),
@@ -1001,7 +1002,7 @@ void FragmentModule::DefineTexSampler(u32 texture_unit) {
             ret_val = sample_3d(tex0_id, true);
             break;
         case Pica::TexturingRegs::TextureConfig::TextureCube:
-            ret_val = sample_3d(tex_cube_id, false);
+            ret_val = sample_3d(tex0_id, false);
             break;
         case Pica::TexturingRegs::TextureConfig::Shadow2D:
             ret_val = SampleShadow();
@@ -1564,20 +1565,24 @@ void FragmentModule::DefineInterface() {
     view_id = DefineInput(vec_ids.Get(3), 7);
     color_id = DefineOutput(vec_ids.Get(4), 0);
 
-    // Define the texture unit samplers/uniforms
+    // Define the texture unit samplers types
     image_buffer_id = TypeImage(f32_id, spv::Dim::Buffer, 0, 0, 0, 1, spv::ImageFormat::Unknown);
     image2d_id = TypeImage(f32_id, spv::Dim::Dim2D, 0, 0, 0, 1, spv::ImageFormat::Unknown);
     image_cube_id = TypeImage(f32_id, spv::Dim::Cube, 0, 0, 0, 1, spv::ImageFormat::Unknown);
     image_r32_id = TypeImage(u32_id, spv::Dim::Dim2D, 0, 0, 0, 2, spv::ImageFormat::R32ui);
     sampler_id = TypeSampler();
 
+    // Define lighting texture buffers
     texture_buffer_lut_lf_id = DefineUniformConst(image_buffer_id, 0, 3);
     texture_buffer_lut_rg_id = DefineUniformConst(image_buffer_id, 0, 4);
     texture_buffer_lut_rgba_id = DefineUniformConst(image_buffer_id, 0, 5);
-    tex0_id = DefineUniformConst(TypeSampledImage(image2d_id), 1, 0);
+
+    // Define texture unit samplers
+    const auto texture_type = config.texture.texture0_type.Value();
+    const auto tex0_type = texture_type == TextureType::TextureCube ? image_cube_id : image2d_id;
+    tex0_id = DefineUniformConst(TypeSampledImage(tex0_type), 1, 0);
     tex1_id = DefineUniformConst(TypeSampledImage(image2d_id), 1, 1);
     tex2_id = DefineUniformConst(TypeSampledImage(image2d_id), 1, 2);
-    tex_cube_id = DefineUniformConst(TypeSampledImage(image_cube_id), 1, 3);
 
     // Define shadow textures
     shadow_texture_px_id = DefineUniformConst(image_r32_id, 2, 0, true);

@@ -10,6 +10,7 @@ using ProcTexClamp = TexturingRegs::ProcTexClamp;
 using ProcTexShift = TexturingRegs::ProcTexShift;
 using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
 using ProcTexFilter = TexturingRegs::ProcTexFilter;
+using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
 
 constexpr static size_t RESERVE_SIZE = 8 * 1024 * 1024;
 
@@ -1265,7 +1266,7 @@ void FragmentModule::DefineExtensions() {
             out += "#extension GL_ARM_shader_framebuffer_fetch : enable\n";
             out += "#define destFactor gl_LastFragColorARM\n";
         } else {
-            out += "#define destFactor texelFetch(color_buffer, ivec2(gl_FragCoord.xy), 0)\n";
+            out += "#define destFactor texelFetch(tex_color, ivec2(gl_FragCoord.xy), 0)\n";
             use_blend_fallback = true;
         }
     }
@@ -1301,27 +1302,32 @@ void FragmentModule::DefineInterface() {
 }
 
 void FragmentModule::DefineBindings() {
+    // Uniform and texture buffers
     out += FSUniformBlockDef;
     out += "layout(binding = 3) uniform samplerBuffer texture_buffer_lut_lf;\n";
     out += "layout(binding = 4) uniform samplerBuffer texture_buffer_lut_rg;\n";
     out += "layout(binding = 5) uniform samplerBuffer texture_buffer_lut_rgba;\n\n";
 
-    const std::string_view texunit_set = profile.is_vulkan ? "set = 1, " : "";
+    // Texture samplers
+    const auto texunit_set = profile.is_vulkan ? "set = 1, " : "";
+    const auto texture_type = config.texture.texture0_type.Value();
     for (u32 i = 0; i < 3; i++) {
-        out += fmt::format("layout({0}binding = {1}) uniform sampler2D tex{1};\n", texunit_set, i);
+        const auto sampler =
+            i == 0 && texture_type == TextureType::TextureCube ? "samplerCube" : "sampler2D";
+        out +=
+            fmt::format("layout({0}binding = {1}) uniform {2} tex{1};\n", texunit_set, i, sampler);
     }
-
-    out += fmt::format("layout({}binding = 3) uniform samplerCube tex_cube;\n\n", texunit_set);
 
     if (config.user.use_custom_normal && !profile.is_vulkan) {
-        out += "layout(binding = 7) uniform sampler2D tex_normal;\n";
+        out += "layout(binding = 6) uniform sampler2D tex_normal;\n";
     }
     if (use_blend_fallback && !profile.is_vulkan) {
-        out += "layout(location = 10) uniform sampler2D color_buffer;\n";
+        out += "layout(location = 7) uniform sampler2D tex_color;\n";
     }
 
+    // Storage images
     static constexpr std::array postfixes = {"px", "nx", "py", "ny", "pz", "nz"};
-    const std::string_view shadow_set = profile.is_vulkan ? "set = 2, " : "";
+    const auto shadow_set = profile.is_vulkan ? "set = 2, " : "";
     for (u32 i = 0; i < postfixes.size(); i++) {
         out += fmt::format(
             "layout({}binding = {}, r32ui) uniform readonly uimage2D shadow_texture_{};\n",
@@ -1591,7 +1597,7 @@ void FragmentModule::DefineTexUnitSampler(u32 texture_unit) {
             out += "return textureProj(tex0, vec3(texcoord0, texcoord0_w));";
             break;
         case TexturingRegs::TextureConfig::TextureCube:
-            out += "return texture(tex_cube, vec3(texcoord0, texcoord0_w));";
+            out += "return texture(tex0, vec3(texcoord0, texcoord0_w));";
             break;
         case TexturingRegs::TextureConfig::Shadow2D:
             out += "return shadowTexture(texcoord0, texcoord0_w);";

@@ -252,7 +252,6 @@ private:
     Id tex0_id{};
     Id tex1_id{};
     Id tex2_id{};
-    Id tex_cube_id{};
     Id texture_buffer_lut_lf_id{};
     Id texture_buffer_lut_rg_id{};
     Id texture_buffer_lut_rgba_id{};
