@@ -24,6 +24,7 @@
 // windows.h needs to be included before other windows headers
 #include <direct.h> // getcwd
 #include <io.h>
+#include <share.h>
 #include <shellapi.h>
 #include <shlobj.h> // for SHGetFolderPath
 #include <tchar.h>
@@ -1058,14 +1059,13 @@ bool IOFile::Open() {
     Close();
 
 #ifdef _WIN32
-    if (flags != 0) {
-        m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(),
-                          Common::UTF8ToUTF16W(openmode).c_str(), flags);
-        m_good = m_file != nullptr;
-    } else {
-        m_good = _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(),
-                           Common::UTF8ToUTF16W(openmode).c_str()) == 0;
+    if (flags == 0) {
+        flags = _SH_DENYNO;
     }
+    m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(),
+                      Common::UTF8ToUTF16W(openmode).c_str(), flags);
+    m_good = m_file != nullptr;
+
 #elif ANDROID
     // Check whether filepath is startsWith content
     AndroidStorage::AndroidOpenMode android_open_mode = AndroidStorage::ParseOpenmode(openmode);
