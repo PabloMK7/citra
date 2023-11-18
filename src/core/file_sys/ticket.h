@@ -50,6 +50,9 @@ public:
 
     Loader::ResultStatus Load(std::span<const u8> file_data, std::size_t offset = 0);
     std::optional<std::array<u8, 16>> GetTitleKey() const;
+    u64 GetTitleID() const {
+        return ticket_body.title_id;
+    }
 
 private:
     Body ticket_body;

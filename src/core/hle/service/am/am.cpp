@@ -374,6 +374,45 @@ bool CIAFile::Close() const {
 
 void CIAFile::Flush() const {}
 
+TicketFile::TicketFile() {}
+
+TicketFile::~TicketFile() {
+    Close();
+}
+
+ResultVal<std::size_t> TicketFile::Read(u64 offset, std::size_t length, u8* buffer) const {
+    UNIMPLEMENTED();
+    return length;
+}
+
+ResultVal<std::size_t> TicketFile::Write(u64 offset, std::size_t length, bool flush,
+                                         const u8* buffer) {
+    written += length;
+    data.resize(written);
+    std::memcpy(data.data() + offset, buffer, length);
+    return length;
+}
+
+u64 TicketFile::GetSize() const {
+    return written;
+}
+
+bool TicketFile::SetSize(u64 size) const {
+    return false;
+}
+
+bool TicketFile::Close() const {
+    FileSys::Ticket ticket;
+    if (ticket.Load(data, 0) == Loader::ResultStatus::Success) {
+        LOG_WARNING(Service_AM, "Discarding ticket for {:#016X}.", ticket.GetTitleID());
+    } else {
+        LOG_ERROR(Service_AM, "Invalid ticket provided to TicketFile.");
+    }
+    return true;
+}
+
+void TicketFile::Flush() const {}
+
 InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback) {
     LOG_INFO(Service_AM, "Installing {}...", path);
@@ -942,6 +981,10 @@ void Module::Interface::GetProgramInfos(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(title_info_out);
 }
 
+void Module::Interface::GetProgramInfosIgnorePlatform(Kernel::HLERequestContext& ctx) {
+    GetProgramInfos(ctx);
+}
+
 void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto media_type = rp.PopEnum<FS::MediaType>();
@@ -1177,6 +1220,16 @@ void Module::Interface::NeedsCleanup(Kernel::HLERequestContext& ctx) {
     rb.Push<bool>(false);
 }
 
+void Module::Interface::DoCleanup(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto media_type = rp.Pop<u8>();
+
+    LOG_DEBUG(Service_AM, "(STUBBED) called, media_type={:#02x}", media_type);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
 void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u8 media_type = rp.Pop<u8>();
@@ -1186,6 +1239,45 @@ void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& c
     rb.Push(true);
 
     LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
+}
+
+void Module::Interface::GetPersonalizedTicketInfoList(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    [[maybe_unused]] u32 ticket_count = rp.Pop<u32>();
+    [[maybe_unused]] auto& buffer = rp.PopMappedBuffer();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(0);
+
+    LOG_WARNING(Service_AM, "(STUBBED) called, ticket_count={}", ticket_count);
+}
+
+void Module::Interface::GetNumImportTitleContextsFiltered(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u8 media_type = rp.Pop<u8>();
+    u8 filter = rp.Pop<u8>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(0);
+
+    LOG_WARNING(Service_AM, "(STUBBED) called, media_type={}, filter={}", media_type, filter);
+}
+
+void Module::Interface::GetImportTitleContextListFiltered(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    [[maybe_unused]] const u32 count = rp.Pop<u32>();
+    const u8 media_type = rp.Pop<u8>();
+    const u8 filter = rp.Pop<u8>();
+    auto& buffer = rp.PopMappedBuffer();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(0);
+    rb.PushMappedBuffer(buffer);
+
+    LOG_WARNING(Service_AM, "(STUBBED) called, media_type={}, filter={}", media_type, filter);
 }
 
 void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
@@ -1672,6 +1764,30 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(output_buffer);
+}
+
+void Module::Interface::BeginImportTicket(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    // Create our TicketFile handle for the app to write to
+    auto file = std::make_shared<Service::FS::File>(am->kernel, std::make_unique<TicketFile>(),
+                                                    FileSys::Path{});
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.PushCopyObjects(file->Connect());
+
+    LOG_WARNING(Service_AM, "(STUBBED) called");
+}
+
+void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    [[maybe_unused]] const auto ticket = rp.PopObject<Kernel::ClientSession>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_AM, "(STUBBED) called");
 }
 
 Module::Module(Core::System& system) : kernel(system.Kernel()) {

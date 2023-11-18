@@ -29,7 +29,7 @@ AM_SYS::AM_SYS(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
         {0x0011, nullptr, "GetImportContentContexts"},
         {0x0012, nullptr, "DeleteImportContentContexts"},
         {0x0013, &AM_SYS::NeedsCleanup, "NeedsCleanup"},
-        {0x0014, nullptr, "DoCleanup"},
+        {0x0014, &AM_SYS::DoCleanup, "DoCleanup"},
         {0x0015, nullptr, "DeleteAllImportContexts"},
         {0x0016, nullptr, "DeleteAllTemporaryPrograms"},
         {0x0017, nullptr, "ImportTwlBackupLegacy"},

@@ -109,6 +109,25 @@ private:
     std::unique_ptr<DecryptionState> decryption_state;
 };
 
+// A file handled returned for Tickets to be written into and subsequently installed.
+class TicketFile final : public FileSys::FileBackend {
+public:
+    explicit TicketFile();
+    ~TicketFile();
+
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() const override;
+    void Flush() const override;
+
+private:
+    u64 written = 0;
+    std::vector<u8> data;
+};
+
 /**
  * Installs a CIA file from a specified file path.
  * @param path file path of the CIA file to install
@@ -273,6 +292,18 @@ public:
         void GetProgramInfos(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::GetProgramInfosIgnorePlatform service function
+         *  Inputs:
+         *      1 : u8 Mediatype
+         *      2 : Total titles
+         *      4 : TitleIDList pointer
+         *      6 : TitleList pointer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void GetProgramInfosIgnorePlatform(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::DeleteUserProgram service function
          * Deletes a user program
          *  Inputs:
@@ -390,6 +421,15 @@ public:
         void NeedsCleanup(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::DoCleanup service function
+         *  Inputs:
+         *      1 : Media Type
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void DoCleanup(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::QueryAvailableTitleDatabase service function
          *  Inputs:
          *      1 : Media Type
@@ -398,6 +438,42 @@ public:
          *      2 : Boolean, database availability
          */
         void QueryAvailableTitleDatabase(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetPersonalizedTicketInfoList service function
+         *  Inputs:
+         *      1 : Count
+         *      2-3 : Buffer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Out count
+         */
+        void GetPersonalizedTicketInfoList(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetNumImportTitleContextsFiltered service function
+         *  Inputs:
+         *      1 : Count
+         *      2 : Filter
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Num import titles
+         */
+        void GetNumImportTitleContextsFiltered(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetImportTitleContextListFiltered service function
+         *  Inputs:
+         *      1 : Count
+         *      2 : Media type
+         *      3 : filter
+         *      4-5 : Buffer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Out count
+         *      3-4 : Out buffer
+         */
+        void GetImportTitleContextListFiltered(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::CheckContentRights service function
@@ -601,6 +677,25 @@ public:
          *      1 : Result, 0 on success, otherwise error code
          */
         void GetMetaDataFromCia(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::BeginImportTicket service function
+         *  Inputs:
+         *      1 : Media type to install title to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2-3 : TicketHandle handle for application to write to
+         */
+        void BeginImportTicket(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::EndImportTicket service function
+         *  Inputs:
+         *      1-2 : TicketHandle handle application wrote to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void EndImportTicket(Kernel::HLERequestContext& ctx);
 
     protected:
         std::shared_ptr<Module> am;
