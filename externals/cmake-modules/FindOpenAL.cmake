@@ -1,5 +1,5 @@
 if(NOT OPENAL_FOUND)
-    pkg_check_modules(OOPENAL_TMP libopanal)
+    pkg_check_modules(OPENAL_TMP openal)
 
     find_path(OPENAL_INCLUDE_DIRS NAMES al.h
             PATHS
