@@ -41,9 +41,15 @@ else()
 endif()
 
 # Catch2
-set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
-set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
-add_subdirectory(catch2)
+add_library(catch2 INTERFACE)
+if(USE_SYSTEM_CATCH2)
+    find_package(Catch2 3.0.0 REQUIRED)
+else()
+    set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
+    set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
+    add_subdirectory(catch2)
+endif()
+target_link_libraries(catch2 INTERFACE Catch2::Catch2WithMain)
 
 # Crypto++
 if(USE_SYSTEM_CRYPTOPP)
