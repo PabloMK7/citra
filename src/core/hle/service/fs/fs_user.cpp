@@ -875,7 +875,7 @@ void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     // TODO: Implement Secure Value Lookup & Generation
 
     rb.Push<bool>(false); // indicates that the secure value doesn't exist
-    rb.Push<bool>(false); // looks like a boolean value, purpose unknown
+    rb.Push<bool>(true);  // seems to override checking the validity so should be true
     rb.Push<u64>(0);      // the secure value
 }
 
@@ -913,7 +913,7 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     // TODO: Implement Secure Value Lookup & Generation
 
     rb.Push<bool>(false); // indicates that the secure value doesn't exist
-    rb.Push<bool>(false); // looks like a boolean value, purpose unknown
+    rb.Push<bool>(true);  // seems to override checking the validity so should be true
     rb.Push<u64>(0);      // the secure value
 }
 
