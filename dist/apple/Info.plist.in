@@ -21,6 +21,8 @@
     <string>${MACOSX_BUNDLE_INFO_STRING}</string>
     <key>NSHumanReadableCopyright</key>
     <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
     <!-- Fixed -->
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.games</string>
