@@ -1,20 +1,19 @@
 if(NOT CRYPTOPP_FOUND)
-    pkg_check_modules(CRYPTOPP_TMP libcrypto++)
+    pkg_search_module(CRYPTOPP_TMP crypto++ cryptopp)
 
     find_path(CRYPTOPP_INCLUDE_DIRS NAMES cryptlib.h
             PATHS
             ${CRYPTOPP_TMP_INCLUDE_DIRS}
             /usr/include
-            /usr/include/crypto++
             /usr/local/include
-            /usr/local/include/crypto++
+            PATH_SUFFIXES crypto++ cryptopp
             )
 
-    find_library(CRYPTOPP_LIBRARY_DIRS NAMES crypto++
+    find_library(CRYPTOPP_LIBRARY_DIRS NAMES crypto++ cryptopp
             PATHS
             ${CRYPTOPP_TMP_LIBRARY_DIRS}
             /usr/lib
-            /usr/locallib
+            /usr/local/lib
             )
 
     if(CRYPTOPP_INCLUDE_DIRS AND CRYPTOPP_LIBRARY_DIRS)
