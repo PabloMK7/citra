@@ -34,6 +34,8 @@ CFG_S::CFG_S(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
         {0x0407, &CFG_S::SecureInfoGetByte101, "SecureInfoGetByte101"},
         {0x0408, nullptr, "SecureInfoGetSerialNo"},
         {0x0409, nullptr, "UpdateConfigBlk00040003"},
+        {0x040D, &CFG_S::SetUUIDClockSequence, "SetUUIDClockSequence"},
+        {0x040E, &CFG_S::GetUUIDClockSequence, "GetUUIDClockSequence"},
         // clang-format on
     };
     RegisterHandlers(functions);

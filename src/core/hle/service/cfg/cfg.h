@@ -82,7 +82,7 @@ enum ConfigBlockID {
     DebugModeBlockID = 0x00130000,
     ClockSequenceBlockID = 0x00150000,
     Unknown_0x00150001 = 0x00150001,
-    NpnsUrlID = 0x00150002, // Maybe? 3dbrew documentation is weirdly written.
+    ServerType = 0x00150002,
     Unknown_0x00160000 = 0x00160000,
     MiiverseAccessKeyBlockID = 0x00170000,
     QtmInfraredLedRelatedBlockID = 0x00180000,
@@ -231,6 +231,27 @@ public:
         void SecureInfoGetByte101(Kernel::HLERequestContext& ctx);
 
         /**
+         * CFG::SetUUIDClockSequence service function
+         *  Inputs:
+         *      1 : UUID Clock Sequence
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void SetUUIDClockSequence(Kernel::HLERequestContext& ctx);
+
+        /**
+         * CFG::GetUUIDClockSequence service function
+         *  Inputs:
+         *      1 : None
+         *  Outputs:
+         *      0 : Result Header code
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : UUID Clock Sequence
+         */
+        void GetUUIDClockSequence(Kernel::HLERequestContext& ctx);
+
+        /**
          * CFG::GetTransferableId service function
          *  Inputs:
          *      1 : 20 bit application ID salt
@@ -338,6 +359,25 @@ public:
     };
 
 private:
+    // Represents save data that would normally be stored in the MCU
+    // on real hardware. Try to keep this struct backwards compatible
+    // if a new version is needed to prevent data loss.
+    struct MCUData {
+        struct Header {
+            static constexpr u32 MAGIC_VALUE = 0x4455434D;
+            static constexpr u32 VERSION_VALUE = 1;
+            u32 magic = MAGIC_VALUE;
+            u32 version = VERSION_VALUE;
+            u64 reserved = 0;
+        };
+        Header header;
+        u32 clock_sequence = 0;
+
+        [[nodiscard]] bool IsValid() const {
+            return header.magic == Header::MAGIC_VALUE && header.version == Header::VERSION_VALUE;
+        }
+    };
+
     ResultVal<void*> GetConfigBlockPointer(u32 block_id, u32 size, AccessFlag accesss_flag);
 
     /**
@@ -396,6 +436,11 @@ private:
      * @returns ResultCode indicating the result of the operation, 0 on success
      */
     ResultCode LoadConfigNANDSaveFile();
+
+    /**
+     * Loads MCU specific data
+     */
+    void LoadMCUConfig();
 
 public:
     u32 GetRegionValue();
@@ -538,11 +583,17 @@ public:
      */
     ResultCode UpdateConfigNANDSavegame();
 
+    /**
+     * Saves MCU specific data
+     */
+    void SaveMCUConfig();
+
 private:
     static constexpr u32 CONFIG_SAVEFILE_SIZE = 0x8000;
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
     u32 preferred_region_code = 0;
+    MCUData mcu_data{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

@@ -220,6 +220,24 @@ void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx) {
     rb.Push<u8>(0);
 }
 
+void Module::Interface::SetUUIDClockSequence(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    cfg->mcu_data.clock_sequence = rp.Pop<u16>();
+    cfg->SaveMCUConfig();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::Interface::GetUUIDClockSequence(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u16>(static_cast<u16>(cfg->mcu_data.clock_sequence));
+}
+
 void Module::Interface::GetTransferableId(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 app_id_salt = rp.Pop<u32>() & 0x000FFFFF;
@@ -557,8 +575,33 @@ ResultCode Module::LoadConfigNANDSaveFile() {
     return FormatConfig();
 }
 
+void Module::LoadMCUConfig() {
+    FileUtil::IOFile mcu_data_file(
+        fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "r");
+
+    if (mcu_data_file.IsOpen() && mcu_data_file.GetSize() >= sizeof(MCUData) &&
+        mcu_data_file.ReadBytes(&mcu_data, sizeof(MCUData)) == sizeof(MCUData)) {
+        if (mcu_data.IsValid()) {
+            return;
+        }
+    }
+    mcu_data_file.Close();
+    mcu_data = MCUData();
+    SaveMCUConfig();
+}
+
+void Module::SaveMCUConfig() {
+    FileUtil::IOFile mcu_data_file(
+        fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "w");
+
+    if (mcu_data_file.IsOpen()) {
+        mcu_data_file.WriteBytes(&mcu_data, sizeof(MCUData));
+    }
+}
+
 Module::Module() {
     LoadConfigNANDSaveFile();
+    LoadMCUConfig();
     // Check the config savegame EULA Version and update it to 0x7F7F if necessary
     // so users will never get a prompt to accept EULA
     auto version = GetEULAVersion();
