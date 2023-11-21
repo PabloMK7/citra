@@ -469,19 +469,18 @@ void PipelineCache::UseFragmentShader(const Pica::Regs& regs,
     auto& shader = it->second;
 
     if (new_shader) {
-        const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
-        if (use_spirv && !fs_config.UsesShadowPipeline()) {
-            const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
-            shader.module = CompileSPV(code, instance.GetDevice());
-            shader.MarkDone();
-        } else {
-            workers.QueueWork([fs_config, this, &shader]() {
+        workers.QueueWork([fs_config, this, &shader]() {
+            const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
+            if (use_spirv && !fs_config.UsesShadowPipeline()) {
+                const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
+                shader.module = CompileSPV(code, instance.GetDevice());
+            } else {
                 const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
                 shader.module =
                     Compile(code, vk::ShaderStageFlagBits::eFragment, instance.GetDevice());
-                shader.MarkDone();
-            });
-        }
+            }
+            shader.MarkDone();
+        });
     }
 
     current_shaders[ProgramType::FS] = &shader;

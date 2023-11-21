@@ -8,7 +8,6 @@
 #include <utility>
 #include "common/alignment.h"
 #include "common/common_funcs.h"
-#include "common/logging/log.h"
 #include "common/polyfill_thread.h"
 #include "video_core/renderer_vulkan/vk_master_semaphore.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
@@ -17,21 +16,18 @@ namespace Vulkan {
 
 enum class StateFlags {
     AllDirty = 0,
-    Renderpass = 1 << 0,
-    Pipeline = 1 << 1,
-    DescriptorSets = 1 << 2
+    Pipeline = 1 << 0,
+    DescriptorSets = 1 << 1,
 };
-
 DECLARE_ENUM_FLAG_OPERATORS(StateFlags)
 
 class Instance;
-class RenderpassCache;
 
 /// The scheduler abstracts command buffer and fence management with an interface that's able to do
 /// OpenGL-like operations on Vulkan command buffers.
 class Scheduler {
 public:
-    explicit Scheduler(const Instance& instance, RenderpassCache& renderpass_cache);
+    explicit Scheduler(const Instance& instance);
     ~Scheduler();
 
     /// Sends the current execution context to the GPU.
@@ -191,7 +187,6 @@ private:
     void AcquireNewChunk();
 
 private:
-    RenderpassCache& renderpass_cache;
     std::unique_ptr<MasterSemaphore> master_semaphore;
     CommandPool command_pool;
     std::unique_ptr<CommandChunk> chunk;

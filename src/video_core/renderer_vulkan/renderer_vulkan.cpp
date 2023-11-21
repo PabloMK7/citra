@@ -7,7 +7,6 @@
 #include "common/memory_detect.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
-#include "common/texture.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
@@ -21,7 +20,6 @@
 #include "video_core/host_shaders/vulkan_present_frag_spv.h"
 #include "video_core/host_shaders/vulkan_present_interlaced_frag_spv.h"
 #include "video_core/host_shaders/vulkan_present_vert_spv.h"
-#include "vulkan/vulkan_format_traits.hpp"
 
 #include <vk_mem_alloc.h>
 
@@ -57,7 +55,7 @@ RendererVulkan::RendererVulkan(Core::System& system, Frontend::EmuWindow& window
                                Frontend::EmuWindow* secondary_window)
     : RendererBase{system, window, secondary_window}, memory{system.Memory()},
       instance{system.TelemetrySession(), window, Settings::values.physical_device.GetValue()},
-      scheduler{instance, renderpass_cache}, renderpass_cache{instance, scheduler}, pool{instance},
+      scheduler{instance}, renderpass_cache{instance, scheduler}, pool{instance},
       main_window{window, instance, scheduler},
       vertex_buffer{instance, scheduler, vk::BufferUsageFlagBits::eVertexBuffer,
                     VERTEX_BUFFER_SIZE},

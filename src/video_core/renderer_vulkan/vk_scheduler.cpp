@@ -42,8 +42,8 @@ void Scheduler::CommandChunk::ExecuteAll(vk::CommandBuffer cmdbuf) {
     last = nullptr;
 }
 
-Scheduler::Scheduler(const Instance& instance, RenderpassCache& renderpass_cache)
-    : renderpass_cache{renderpass_cache}, master_semaphore{MakeMasterSemaphore(instance)},
+Scheduler::Scheduler(const Instance& instance)
+    : master_semaphore{MakeMasterSemaphore(instance)},
       command_pool{instance, master_semaphore.get()}, use_worker_thread{true} {
     AllocateWorkerCommandBuffers();
     if (use_worker_thread) {
@@ -173,7 +173,6 @@ void Scheduler::SubmitExecution(vk::Semaphore signal_semaphore, vk::Semaphore wa
     state = StateFlags::AllDirty;
     const u64 signal_value = master_semaphore->NextTick();
 
-    renderpass_cache.EndRendering();
     Record([signal_semaphore, wait_semaphore, signal_value, this](vk::CommandBuffer cmdbuf) {
         MICROPROFILE_SCOPE(Vulkan_Submit);
         std::scoped_lock lock{submit_mutex};
