@@ -577,7 +577,7 @@ ResultCode Module::LoadConfigNANDSaveFile() {
 
 void Module::LoadMCUConfig() {
     FileUtil::IOFile mcu_data_file(
-        fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "r");
+        fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "rb");
 
     if (mcu_data_file.IsOpen() && mcu_data_file.GetSize() >= sizeof(MCUData) &&
         mcu_data_file.ReadBytes(&mcu_data, sizeof(MCUData)) == sizeof(MCUData)) {
@@ -592,7 +592,7 @@ void Module::LoadMCUConfig() {
 
 void Module::SaveMCUConfig() {
     FileUtil::IOFile mcu_data_file(
-        fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "w");
+        fmt::format("{}/mcu.dat", FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir)), "wb");
 
     if (mcu_data_file.IsOpen()) {
         mcu_data_file.WriteBytes(&mcu_data, sizeof(MCUData));
