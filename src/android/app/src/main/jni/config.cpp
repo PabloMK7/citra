@@ -75,13 +75,6 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
     InputManager::N3DS_STICK_C,
 }};
 
-void Config::UpdateCFG() {
-    std::shared_ptr<Service::CFG::Module> cfg = std::make_shared<Service::CFG::Module>();
-    cfg->SetSystemLanguage(static_cast<Service::CFG::SystemLanguage>(
-        sdl2_config->GetInteger("System", "language", Service::CFG::SystemLanguage::LANGUAGE_EN)));
-    cfg->UpdateConfigNANDSavegame();
-}
-
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
     std::string setting_value = sdl2_config->Get(group, setting.GetLabel(), setting.GetDefault());
@@ -215,24 +208,11 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
-        std::tm t;
-        t.tm_sec = 1;
-        t.tm_min = 0;
-        t.tm_hour = 0;
-        t.tm_mday = 1;
-        t.tm_mon = 0;
-        t.tm_year = 100;
-        t.tm_isdst = 0;
-        std::istringstream string_stream(
-            sdl2_config->GetString("System", "init_time", "2000-01-01 00:00:01"));
-        string_stream >> std::get_time(&t, "%Y-%m-%d %H:%M:%S");
-        if (string_stream.fail()) {
-            LOG_ERROR(Config, "Failed To parse init_time. Using 2000-01-01 00:00:01");
+        std::string time = sdl2_config->GetString("System", "init_time", "946681277");
+        try {
+            Settings::values.init_time = std::stoll(time);
+        } catch (...) {
         }
-        Settings::values.init_time =
-            std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
-                .count();
     }
     ReadSetting("System", Settings::values.plugin_loader_enabled);
     ReadSetting("System", Settings::values.allow_plugin_loader);
@@ -286,9 +266,6 @@ void Config::ReadValues() {
         sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
     NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
     NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
-
-    // Update CFG file based on settings
-    UpdateCFG();
 }
 
 void Config::Reload() {

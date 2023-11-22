@@ -535,7 +535,7 @@ public final class EmulationActivity extends AppCompatActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int action;
-        int button = mPreferences.getInt(InputBindingSetting.getInputButtonKey(event.getKeyCode()), event.getKeyCode());
+        int button = mPreferences.getInt(InputBindingSetting.Companion.getInputButtonKey(event.getKeyCode()), event.getKeyCode());
 
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
@@ -693,8 +693,8 @@ public final class EmulationActivity extends AppCompatActivity {
             int axis = range.getAxis();
             float origValue = event.getAxisValue(axis);
             float value = mControllerMappingHelper.scaleAxis(input, axis, origValue);
-            int nextMapping = mPreferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1);
-            int guestOrientation = mPreferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1);
+            int nextMapping = mPreferences.getInt(InputBindingSetting.Companion.getInputAxisButtonKey(axis), -1);
+            int guestOrientation = mPreferences.getInt(InputBindingSetting.Companion.getInputAxisOrientationKey(axis), -1);
 
             if (nextMapping == -1 || guestOrientation == -1) {
                 // Axis is unmapped

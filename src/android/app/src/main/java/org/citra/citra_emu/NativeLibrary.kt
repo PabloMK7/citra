@@ -515,14 +515,6 @@ object NativeLibrary {
      */
     external fun logDeviceInfo()
 
-    external fun loadSystemConfig()
-
-    external fun saveSystemConfig()
-
-    external fun setSystemSetupNeeded(needed: Boolean)
-
-    external fun getIsSystemSetupNeeded(): Boolean
-
     @Keep
     @JvmStatic
     fun createFile(directory: String, filename: String): Boolean =

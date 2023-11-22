@@ -16,6 +16,7 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.ui.main.ThemeProvider
 import kotlin.math.roundToInt
 
 object ThemeUtil {
@@ -26,6 +27,20 @@ object ThemeUtil {
 
     fun setTheme(activity: AppCompatActivity) {
         setThemeMode(activity)
+        if (preferences.getBoolean(Settings.PREF_MATERIAL_YOU, false)) {
+            activity.setTheme(R.style.Theme_Citra_Main_MaterialYou)
+        } else {
+            activity.setTheme(R.style.Theme_Citra_Main)
+        }
+
+        // Using a specific night mode check because this could apply incorrectly when using the
+        // light app mode, dark system mode, and black backgrounds. Launching the settings activity
+        // will then show light mode colors/navigation bars but with black backgrounds.
+        if (preferences.getBoolean(Settings.PREF_BLACK_BACKGROUNDS, false) &&
+            isNightMode(activity)
+        ) {
+            activity.setTheme(R.style.ThemeOverlay_Citra_Dark)
+        }
     }
 
     fun setThemeMode(activity: AppCompatActivity) {
@@ -62,6 +77,14 @@ object ThemeUtil {
     private fun setDarkModeSystemBars(windowController: WindowInsetsControllerCompat) {
         windowController.isAppearanceLightStatusBars = false
         windowController.isAppearanceLightNavigationBars = false
+    }
+
+    fun setCorrectTheme(activity: AppCompatActivity) {
+        val currentTheme = (activity as ThemeProvider).themeId
+        setTheme(activity)
+        if (currentTheme != (activity as ThemeProvider).themeId) {
+            activity.recreate()
+        }
     }
 
     @ColorInt

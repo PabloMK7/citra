@@ -17,7 +17,6 @@ private:
 
     bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
-    void UpdateCFG();
 
 public:
     Config();

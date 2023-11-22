@@ -105,9 +105,12 @@
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_triggers">Triggers</string>
+    <string name="controller_trigger">Trigger</string>
     <string name="controller_dpad">D-Pad</string>
     <string name="controller_axis_vertical">Up/Down Axis</string>
     <string name="controller_axis_horizontal">Left/Right Axis</string>
+    <string name="input_dialog_title">Bind %1$s %2$s</string>
+    <string name="input_dialog_description">Press or move an input.</string>
     <string name="input_binding">Input Binding</string>
     <string name="input_binding_description">Press or move an input to bind it to %1$s.</string>
     <string name="input_binding_description_vertical_axis">Move your joystick up or down.</string>
@@ -116,6 +119,7 @@
     <string name="button_b" translatable="false">B</string>
     <string name="button_select" translatable="false">SELECT</string>
     <string name="button_start" translatable="false">START</string>
+    <string name="button_home">HOME</string>
     <string name="button_x" translatable="false">X</string>
     <string name="button_y" translatable="false">Y</string>
     <string name="button_l" translatable="false">L</string>
@@ -137,13 +141,6 @@
     <string name="how_to_get_keys"><![CDATA[<a href="https://citra-emu.org/wiki/aes-keys/">How to get keys?</a>]]></string>
     <string name="show_home_apps">Show HOME menu apps in games list</string>
     <string name="run_system_setup">Run System Setup when the HOME Menu is launched</string>
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
     <string name="system_type_minimal">Minimal</string>
     <string name="system_type_old_3ds">Old 3DS</string>
     <string name="system_type_new_3ds">New 3DS</string>
@@ -161,19 +158,31 @@
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Buttons</string>
+    <string name="button">Button</string>
 
     <!-- Core settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Uses the Just-in-Time (JIT) compiler for CPU emulation. When enabled, game performance will be significantly improved.</string>
     <string name="init_clock">Clock</string>
     <string name="init_clock_description">Set the emulated 3DS clock to either reflect that of your device or start at a simulated date and time.</string>
+    <string name="cpu_clock_speed">CPU Clock Speed</string>
 
     <!-- System settings strings -->
+    <string name="username">Username</string>
+    <string name="new_3ds">New 3DS Mode</string>
     <string name="clock">Clock</string>
     <string name="init_time">Offset Time</string>
     <string name="init_time_description">If the clock is set to \"Simulated clock\", this changes the fixed date and time to start at.</string>
     <string name="emulated_region">Region</string>
     <string name="emulated_language">Language</string>
+    <string name="birthday">Birthday</string>
+    <string name="birthday_month">Month</string>
+    <string name="birthday_day">Day</string>
+    <string name="country">Country</string>
+    <string name="play_coins">Play Coins</string>
+    <string name="console_id">Console ID</string>
+    <string name="regenerate_console_id">Regenerate Console ID</string>
+    <string name="regenerate_console_id_description">This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects in games. This might fail if you use an outdated config savegame. Continue?</string>
     <string name="plugin_loader">3GX Plugin Loader</string>
     <string name="plugin_loader_description">Loads 3GX plugins from the emulated SD card if they are available.</string>
     <string name="allow_plugin_loader">Allow Games to Change Plugin Loader State</string>
@@ -246,9 +255,11 @@
     <string name="async_custom_loading_description">Load custom textures asynchronously with background threads to reduce loading stutter.</string>
 
     <!-- Audio settings strings -->
+    <string name="audio_volume">Volume</string>
     <string name="audio_stretch">Audio Stretching</string>
     <string name="audio_stretch_description">Stretches audio to reduce stuttering. When enabled, increases audio latency and slightly reduces performance.</string>
     <string name="audio_input_type">Audio Input Device</string>
+    <string name="sound_output_mode">Sound Output Mode</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Clear</string>
@@ -261,7 +272,7 @@
     <string name="back">Back</string>
     <string name="learn_more">Learn More</string>
     <string name="close">Close</string>
-    <string name="reset_to_default">Reset to default</string>
+    <string name="reset_to_default">Reset to Default</string>
     <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://citra-emu.org/wiki/dumping-game-cartridges/">game cartidges</a> or <a href="https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
     <string name="option_default">Default</string>
     <string name="none">None</string>
@@ -269,6 +280,15 @@
     <string name="off">Off</string>
     <string name="install">Install</string>
     <string name="delete">Delete</string>
+    <string name="reset_all_settings">Reset All Settings?</string>
+    <string name="reset_all_settings_description">All advanced settings will be reset to their default configuration. This can not be undone.</string>
+    <string name="settings_reset">Settings reset</string>
+    <string name="select_rtc_date">Select RTC date</string>
+    <string name="select_rtc_time">Select RTC time</string>
+    <string name="reset_setting_confirmation">Do you want to reset this setting back to its default value?</string>
+    <string name="setting_not_editable">You can\'t edit this now</string>
+    <string name="setting_not_editable_description">This option can\'t be changed while a game is running.</string>
+    <string name="auto_select">Auto-Select</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Select Game Folder</string>
@@ -286,6 +306,7 @@
     <string name="preferences_graphics">Graphics</string>
     <string name="preferences_audio">Audio</string>
     <string name="preferences_debug">Debug</string>
+    <string name="preferences_theme">Theme and Color</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Your ROM is Encrypted</string>
@@ -408,4 +429,235 @@
     <string name="cia_install_error_invalid">\"%s\" is not a valid CIA</string>
     <string name="cia_install_error_encrypted">\"%s\" must be decrypted before being used with Citra.\n A real 3DS is required</string>
     <string name="cia_install_error_unknown">An unknown error occurred while installing \"%s\".\n Please see the log for more details</string>
+
+    <!-- Theme Modes -->
+    <string name="change_theme_mode">Change Theme Mode</string>
+    <string name="theme_mode_follow_system">Follow System</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_description">Use system colors across the app</string>
+
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">Black Backgrounds</string>
+    <string name="use_black_backgrounds_description">When using the dark theme, apply black backgrounds.</string>
+
+    <!-- Clock types -->
+    <string name="device_clock">Device Clock</string>
+    <string name="simulated_clock">Simulated Clock</string>
+
+    <!-- Region names -->
+    <string name="system_region_jpn">JPN</string>
+    <string name="system_region_usa">USA</string>
+    <string name="system_region_eur">EUR</string>
+    <string name="system_region_aus">AUS</string>
+    <string name="system_region_chn">CHN</string>
+    <string name="system_region_kor">KOR</string>
+    <string name="system_region_twn">TWN</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">Japanese (日本語)</string>
+    <string name="language_english">English</string>
+    <string name="language_french">French (Français)</string>
+    <string name="language_german">German (Deutsch)</string>
+    <string name="language_italian">Italian (Italiano)</string>
+    <string name="language_spanish">Spanish (Español)</string>
+    <string name="language_simplified_chinese">Simplified Chinese (简体中文)</string>
+    <string name="language_korean">Korean (한국어)</string>
+    <string name="language_dutch">Dutch (Nederlands)</string>
+    <string name="language_portuguese">Portuguese (Português)</string>
+    <string name="language_russian">Russian (Русский)</string>
+    <string name="language_traditional_chinese">Traditional Chinese (正體中文)</string>
+
+    <!-- Camera image sources -->
+    <string name="blank">Blank</string>
+    <string name="still_image">Still Image</string>
+    <string name="device_camera">Device Camera</string>
+
+    <!-- Camera device names -->
+    <string name="any_front_camera">Any Front Camera</string>
+    <string name="any_back_camera">Any Back Camera</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">Horizontal</string>
+    <string name="vertical">Vertical</string>
+    <string name="reverse">Reverse</string>
+
+    <!-- Audio input types -->
+    <string name="static_noise">Static Noise</string>
+    <string name="real_cubeb">Real Device (cubeb)</string>
+    <string name="real_openal">Real Device (OpenAL)</string>
+
+    <!-- Render 3D modes -->
+    <string name="side_by_side">Side by Side</string>
+    <string name="anaglyph">Anaglyph</string>
+    <string name="interlaced">Interlaced</string>
+    <string name="reverse_interlaced">Reverse Interlaced</string>
+
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
+    <string name="bicubic">Bicubic</string>
+    <string name="nearest_neighbor">Nearest Neighbor</string>
+    <string name="scaleforce">ScaleForce</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">Mono</string>
+    <string name="stereo">Stereo</string>
+    <string name="surround">Surround</string>
+
+    <!-- Countries -->
+    <string name="japan">Japan</string>
+    <string name="anguilla">Anguilla</string>
+    <string name="antigua_and_barbuda">Antigua and Barbuda</string>
+    <string name="argentina">Argentina</string>
+    <string name="aruba">Aruba</string>
+    <string name="bahamas">Bahamas</string>
+    <string name="barbados">Barbados</string>
+    <string name="belize">Belize</string>
+    <string name="bolivia">Bolivia</string>
+    <string name="brazil">Brazil</string>
+    <string name="british_virgin_islands">British Virgin Islands</string>
+    <string name="canada">Canada</string>
+    <string name="cayman_islands">Cayman Islands</string>
+    <string name="chile">Chile</string>
+    <string name="colombia">Colombia</string>
+    <string name="costa_rica">Costa Rica</string>
+    <string name="dominica">Dominica</string>
+    <string name="dominican_republic">Dominican Republic</string>
+    <string name="ecuador">Ecuador</string>
+    <string name="el_salvador">El Salvador</string>
+    <string name="french_guiana">French Guiana</string>
+    <string name="grenada">Grenada</string>
+    <string name="guadeloupe">Guadeloupe</string>
+    <string name="guatemala">Guatemala</string>
+    <string name="guyana">Guyana</string>
+    <string name="haiti">Haiti</string>
+    <string name="honduras">Honduras</string>
+    <string name="jamaica">Jamaica</string>
+    <string name="matinique">Martinique</string>
+    <string name="mexico">Mexico</string>
+    <string name="monsterrat">Montserrat</string>
+    <string name="netherlands_antilles">Netherlands Antilles</string>
+    <string name="nicaragua">Nicaragua</string>
+    <string name="panama">Panama</string>
+    <string name="paraguay">Paraguay</string>
+    <string name="peru">Peru</string>
+    <string name="saint_kittis_and_nevis">Saint Kitts and Nevis</string>
+    <string name="saint_lucia">Saint Lucia</string>
+    <string name="saint_vincent_and_the_grenadines">Saint Vincent and the Grenadines</string>
+    <string name="suriname">Suriname</string>
+    <string name="trinidad_and_tobago">Trinidad and Tobago</string>
+    <string name="turks_and_caicos_islands">Turks and Caicos Islands</string>
+    <string name="united_states">United States</string>
+    <string name="uruguay">Uruguay</string>
+    <string name="us_virgin_islands">US Virgin Islands</string>
+    <string name="venezuela">Venezuela</string>
+    <string name="albania">Albania</string>
+    <string name="australia">Australia</string>
+    <string name="austria">Austria</string>
+    <string name="belgium">Belgium</string>
+    <string name="bosnia_and_herzegovnia">Bosnia and Herzegovina</string>
+    <string name="botswana">Botswana</string>
+    <string name="bulgaria">Bulgaria</string>
+    <string name="croatia">Croatia</string>
+    <string name="cyprus">Cyprus</string>
+    <string name="czech_republic">Czech Republic</string>
+    <string name="denmark">Denmark</string>
+    <string name="estonia">Estonia</string>
+    <string name="finland">Finland</string>
+    <string name="france">France</string>
+    <string name="germany">Germany</string>
+    <string name="greece">Greece</string>
+    <string name="hungary">Hungary</string>
+    <string name="iceland">Iceland</string>
+    <string name="ireland">Ireland</string>
+    <string name="italy">Italy</string>
+    <string name="latvia">Latvia</string>
+    <string name="lesotho">Lesotho</string>
+    <string name="liechtenstein">Liechtenstein</string>
+    <string name="lithuania">Lithuania</string>
+    <string name="luxembourg">Luxembourg</string>
+    <string name="macedonia">Macedonia</string>
+    <string name="malta">Malta</string>
+    <string name="montenegro">Montenegro</string>
+    <string name="mozambique">Mozambique</string>
+    <string name="namibia">Namibia</string>
+    <string name="netherlands">Netherlands</string>
+    <string name="new_zealand">New Zealand</string>
+    <string name="norway">Norway</string>
+    <string name="poland">Poland</string>
+    <string name="portugal">Portugal</string>
+    <string name="romania">Romania</string>
+    <string name="russia">Russia</string>
+    <string name="serbia">Serbia</string>
+    <string name="slovakia">Slovakia</string>
+    <string name="slovenia">Slovenia</string>
+    <string name="south_africa">South Africa</string>
+    <string name="spain">Spain</string>
+    <string name="swaziland">Swaziland</string>
+    <string name="sweden">Sweden</string>
+    <string name="switzerland">Switzerland</string>
+    <string name="turkey">Turkey</string>
+    <string name="united_kingdom">United Kingdom</string>
+    <string name="zambia">Zambia</string>
+    <string name="zimbabwe">Zimbabwe</string>
+    <string name="azerbaijan">Azerbaijan</string>
+    <string name="mauritania">Mauritania</string>
+    <string name="mali">Mali</string>
+    <string name="niger">Niger</string>
+    <string name="chad">Chad</string>
+    <string name="sudan">Sudan</string>
+    <string name="eritrea">Eritrea</string>
+    <string name="djibouti">Djibouti</string>
+    <string name="somalia">Somalia</string>
+    <string name="andorra">Andorra</string>
+    <string name="gibraltar">Gibraltar</string>
+    <string name="guernsey">Guernsey</string>
+    <string name="isle_of_man">Isle of Man</string>
+    <string name="jersey">Jersey</string>
+    <string name="monaco">Monaco</string>
+    <string name="taiwan">Taiwan</string>
+    <string name="south_korea">South Korea</string>
+    <string name="hong_kong">Hong Kong</string>
+    <string name="macau">Macau</string>
+    <string name="indonesia">Indonesia</string>
+    <string name="singapore">Singapore</string>
+    <string name="thailand">Thailand</string>
+    <string name="philippines">Philippines</string>
+    <string name="malaysia">Malaysia</string>
+    <string name="china">China</string>
+    <string name="united_arab_emirates">United Arab Emirates</string>
+    <string name="india">India</string>
+    <string name="egypt">Egypt</string>
+    <string name="oman">Oman</string>
+    <string name="qatar">Qatar</string>
+    <string name="kuwait">Kuwait</string>
+    <string name="saudi_arabia">Saudi Arabia</string>
+    <string name="syria">Syria</string>
+    <string name="bahrain">Bahrain</string>
+    <string name="jordan">Jordan</string>
+    <string name="san_marino">San Marino</string>
+    <string name="vatican_city">Vatican City</string>
+    <string name="bermuda">Bermuda</string>
+
+    <!-- Months -->
+    <string name="january">January</string>
+    <string name="february">February</string>
+    <string name="march">March</string>
+    <string name="april">April</string>
+    <string name="may">May</string>
+    <string name="june">June</string>
+    <string name="july">July</string>
+    <string name="august">August</string>
+    <string name="september">September</string>
+    <string name="october">October</string>
+    <string name="november">November</string>
+    <string name="december">December</string>
+
 </resources>

@@ -28,6 +28,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.HomeSettingAdapter
 import org.citra.citra_emu.databinding.FragmentHomeSettingsBinding
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.model.HomeSetting
@@ -123,6 +124,12 @@ class HomeSettingsFragment : Fragment() {
                 R.drawable.ic_add,
                 { getGamesDirectory.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).data) },
                 details = homeViewModel.gamesDir
+            ),
+            HomeSetting(
+                R.string.preferences_theme,
+                R.string.theme_and_color_description,
+                R.drawable.ic_palette,
+                { SettingsActivity.launch(requireContext(), Settings.SECTION_THEME, "") }
             ),
             HomeSetting(
                 R.string.about,

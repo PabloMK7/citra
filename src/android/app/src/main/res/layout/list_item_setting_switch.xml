@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,44 +7,46 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:gravity="center_vertical"
     android:minHeight="72dp"
-    android:padding="@dimen/spacing_large">
+    android:paddingVertical="@dimen/spacing_large"
+    android:paddingStart="@dimen/spacing_large"
+    android:paddingEnd="24dp">
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switch_widget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="@dimen/spacing_large"
+        android:layout_toStartOf="@+id/switch_widget"
+        android:gravity="center_vertical"
         android:orientation="vertical">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/text_setting_name"
             style="@style/TextAppearance.Material3.HeadlineMedium"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAlignment="viewStart"
             android:textSize="16sp"
             app:lineHeight="22dp"
-            tools:text="Setting Name" />
+            tools:text="@string/frame_limit_enable" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/text_setting_description"
             style="@style/TextAppearance.Material3.BodySmall"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_small"
             android:textAlignment="viewStart"
-            tools:text="@string/app_disclaimer" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/text_setting_value"
-            style="@style/TextAppearance.Material3.LabelMedium"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_small"
-            android:textAlignment="viewStart"
-            android:textStyle="bold"
-            android:visibility="gone"
-            tools:text="1x" />
+            tools:text="@string/frame_limit_enable_description" />
 
     </LinearLayout>
 

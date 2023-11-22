@@ -64,7 +64,6 @@ ANativeWindow* s_surf;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
-std::shared_ptr<Service::CFG::Module> cfg;
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};
@@ -730,31 +729,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
     // There is no decent way to get the OS version, so we log the API level instead.
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_loadSystemConfig([[maybe_unused]] JNIEnv* env,
-                                                              [[maybe_unused]] jobject obj) {
-    if (Core::System::GetInstance().IsPoweredOn()) {
-        cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    } else {
-        cfg = std::make_shared<Service::CFG::Module>();
-    }
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_saveSystemConfig([[maybe_unused]] JNIEnv* env,
-                                                              [[maybe_unused]] jobject obj) {
-    cfg->UpdateConfigNANDSavegame();
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_setSystemSetupNeeded([[maybe_unused]] JNIEnv* env,
-                                                                  [[maybe_unused]] jobject obj,
-                                                                  jboolean needed) {
-    cfg->SetSystemSetupNeeded(needed);
-}
-
-jboolean Java_org_citra_citra_1emu_NativeLibrary_getIsSystemSetupNeeded(
-    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
-    return cfg->IsSystemSetupNeeded();
 }
 
 } // extern "C"

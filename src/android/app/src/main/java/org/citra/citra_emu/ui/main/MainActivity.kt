@@ -41,6 +41,7 @@ import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
@@ -54,17 +55,25 @@ import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ThemeProvider {
     private lateinit var binding: ActivityMainBinding
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val gamesViewModel: GamesViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
+
+    override var themeId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition {
             !DirectoryInitialization.areCitraDirectoriesReady() &&
                     PermissionsHandler.hasWriteAccess(this)
+        }
+
+        if (PermissionsHandler.hasWriteAccess(applicationContext) &&
+            DirectoryInitialization.areCitraDirectoriesReady()) {
+            settingsViewModel.settings.loadSettings()
         }
 
         ThemeUtil.setTheme(this)
@@ -155,12 +164,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         checkUserPermissions()
+
+        ThemeUtil.setCorrectTheme(this)
         super.onResume()
     }
 
     override fun onDestroy() {
         EmulationActivity.tryDismissRunningNotification(this)
         super.onDestroy()
+    }
+
+    override fun setTheme(resId: Int) {
+        super.setTheme(resId)
+        themeId = resId
     }
 
     private fun checkUserPermissions() {

@@ -25,7 +25,6 @@ import androidx.navigation.findNavController
 import androidx.preference.PreferenceManager
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.transition.MaterialSharedAxis
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
@@ -33,6 +32,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.databinding.FragmentSystemFilesBinding
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
 import org.citra.citra_emu.viewmodel.SystemFilesViewModel
@@ -74,7 +74,7 @@ class SystemFilesFragment : Fragment() {
         super.onCreate(savedInstanceState)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
-        NativeLibrary.loadSystemConfig()
+        SystemSaveGame.load()
     }
 
     override fun onCreateView(
@@ -149,15 +149,15 @@ class SystemFilesFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        NativeLibrary.saveSystemConfig()
+        SystemSaveGame.save()
     }
 
     private fun reloadUi() {
         val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
-        binding.switchRunSystemSetup.isChecked = NativeLibrary.getIsSystemSetupNeeded()
+        binding.switchRunSystemSetup.isChecked = SystemSaveGame.getIsSystemSetupNeeded()
         binding.switchRunSystemSetup.setOnCheckedChangeListener { _, isChecked ->
-            NativeLibrary.setSystemSetupNeeded(isChecked)
+            SystemSaveGame.setSystemSetupNeeded(isChecked)
         }
 
         val showHomeApps = preferences.getBoolean(Settings.PREF_SHOW_HOME_APPS, false)
