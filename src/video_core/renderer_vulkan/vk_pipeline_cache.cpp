@@ -8,6 +8,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
+#include "common/scope_exit.h"
 #include "common/settings.h"
 #include "video_core/renderer_vulkan/pica_to_vk.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -128,34 +129,42 @@ void PipelineCache::LoadDiskCache() {
         return;
     }
 
-    const std::string cache_file_path = fmt::format("{}{:x}{:x}.bin", GetPipelineCacheDir(),
-                                                    instance.GetVendorID(), instance.GetDeviceID());
-    vk::PipelineCacheCreateInfo cache_info = {
-        .initialDataSize = 0,
-        .pInitialData = nullptr,
-    };
+    const auto cache_dir = GetPipelineCacheDir();
+    const u32 vendor_id = instance.GetVendorID();
+    const u32 device_id = instance.GetDeviceID();
+    const auto cache_file_path = fmt::format("{}{:x}{:x}.bin", cache_dir, vendor_id, device_id);
 
+    vk::PipelineCacheCreateInfo cache_info{};
     std::vector<u8> cache_data;
-    FileUtil::IOFile cache_file{cache_file_path, "r"};
-    if (cache_file.IsOpen()) {
-        LOG_INFO(Render_Vulkan, "Loading pipeline cache");
 
-        const u64 cache_file_size = cache_file.GetSize();
-        cache_data.resize(cache_file_size);
-        if (cache_file.ReadBytes(cache_data.data(), cache_file_size)) {
-            if (!IsCacheValid(cache_data)) {
-                LOG_WARNING(Render_Vulkan, "Pipeline cache provided invalid, ignoring");
-            } else {
-                cache_info.initialDataSize = cache_file_size;
-                cache_info.pInitialData = cache_data.data();
-            }
-        }
+    SCOPE_EXIT({
+        const vk::Device device = instance.GetDevice();
+        pipeline_cache = device.createPipelineCacheUnique(cache_info);
+    });
 
-        cache_file.Close();
+    FileUtil::IOFile cache_file{cache_file_path, "rb"};
+    if (!cache_file.IsOpen()) {
+        LOG_INFO(Render_Vulkan, "No pipeline cache found for device");
+        return;
     }
 
-    vk::Device device = instance.GetDevice();
-    pipeline_cache = device.createPipelineCacheUnique(cache_info);
+    const u64 cache_file_size = cache_file.GetSize();
+    cache_data.resize(cache_file_size);
+    if (cache_file.ReadBytes(cache_data.data(), cache_file_size) != cache_file_size) {
+        LOG_ERROR(Render_Vulkan, "Error during pipeline cache read");
+        return;
+    }
+
+    if (!IsCacheValid(cache_data)) {
+        LOG_WARNING(Render_Vulkan, "Pipeline cache provided invalid, removing");
+        cache_file.Close();
+        FileUtil::Delete(cache_file_path);
+        return;
+    }
+
+    LOG_INFO(Render_Vulkan, "Loading pipeline cache with size {} KB", cache_file_size / 1024);
+    cache_info.initialDataSize = cache_file_size;
+    cache_info.pInitialData = cache_data.data();
 }
 
 void PipelineCache::SaveDiskCache() {
@@ -163,22 +172,23 @@ void PipelineCache::SaveDiskCache() {
         return;
     }
 
-    const std::string cache_file_path = fmt::format("{}{:x}{:x}.bin", GetPipelineCacheDir(),
-                                                    instance.GetVendorID(), instance.GetDeviceID());
+    const auto cache_dir = GetPipelineCacheDir();
+    const u32 vendor_id = instance.GetVendorID();
+    const u32 device_id = instance.GetDeviceID();
+    const auto cache_file_path = fmt::format("{}{:x}{:x}.bin", cache_dir, vendor_id, device_id);
+
     FileUtil::IOFile cache_file{cache_file_path, "wb"};
     if (!cache_file.IsOpen()) {
         LOG_ERROR(Render_Vulkan, "Unable to open pipeline cache for writing");
         return;
     }
 
-    vk::Device device = instance.GetDevice();
-    auto cache_data = device.getPipelineCacheData(*pipeline_cache);
-    if (!cache_file.WriteBytes(cache_data.data(), cache_data.size())) {
+    const vk::Device device = instance.GetDevice();
+    const auto cache_data = device.getPipelineCacheData(*pipeline_cache);
+    if (cache_file.WriteBytes(cache_data.data(), cache_data.size()) != cache_data.size()) {
         LOG_ERROR(Render_Vulkan, "Error during pipeline cache write");
         return;
     }
-
-    cache_file.Close();
 }
 
 bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
