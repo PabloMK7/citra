@@ -30,20 +30,20 @@ OpenALSink::OpenALSink(std::string device_name) : impl(std::make_unique<Impl>())
         device_name != auto_device_name && !device_name.empty() ? device_name.c_str() : nullptr);
     if (!impl->device) {
         LOG_CRITICAL(Audio_Sink, "alcOpenDevice failed.");
+        Close();
         return;
     }
 
     impl->context = alcCreateContext(impl->device, nullptr);
     if (impl->context == nullptr) {
         LOG_CRITICAL(Audio_Sink, "alcCreateContext failed: {}", alcGetError(impl->device));
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 
     if (alcMakeContextCurrent(impl->context) == ALC_FALSE) {
         LOG_CRITICAL(Audio_Sink, "alcMakeContextCurrent failed: {}", alcGetError(impl->device));
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 
@@ -53,25 +53,21 @@ OpenALSink::OpenALSink(std::string device_name) : impl(std::make_unique<Impl>())
         } else {
             LOG_CRITICAL(Audio_Sink, "Missing required extension AL_SOFT_callback_buffer.");
         }
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 
     alGenBuffers(1, &impl->buffer);
     if (alGetError() != AL_NO_ERROR) {
         LOG_CRITICAL(Audio_Sink, "alGetError failed: {}", alGetError());
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 
     alGenSources(1, &impl->source);
     if (alGetError() != AL_NO_ERROR) {
         LOG_CRITICAL(Audio_Sink, "alGenSources failed: {}", alGetError());
-        alDeleteBuffers(1, &impl->buffer);
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 
@@ -81,35 +77,44 @@ OpenALSink::OpenALSink(std::string device_name) : impl(std::make_unique<Impl>())
                          impl.get());
     if (alGetError() != AL_NO_ERROR) {
         LOG_CRITICAL(Audio_Sink, "alBufferCallbackSOFT failed: {}", alGetError());
-        alDeleteSources(1, &impl->source);
-        alDeleteBuffers(1, &impl->buffer);
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 
     alSourcei(impl->source, AL_BUFFER, static_cast<ALint>(impl->buffer));
     if (alGetError() != AL_NO_ERROR) {
-        LOG_CRITICAL(Audio_Sink, "alSourcei failed: {}", alGetError());
-        alDeleteSources(1, &impl->source);
-        alDeleteBuffers(1, &impl->buffer);
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        LOG_CRITICAL(Audio_Sink, "alSourcei(AL_BUFFER) failed: {}", alGetError());
+        Close();
         return;
+    }
+
+    if (alIsExtensionPresent("AL_SOFT_direct_channels") == AL_TRUE) {
+        // Set up direct channels to bypass processing spatialization and other effects we don't
+        // need.
+        alSourcei(impl->source, AL_DIRECT_CHANNELS_SOFT, AL_TRUE);
+        if (alGetError() != AL_NO_ERROR) {
+            LOG_CRITICAL(Audio_Sink, "alSourcei(AL_DIRECT_CHANNELS_SOFT) failed: {}", alGetError());
+            Close();
+            return;
+        }
+    } else {
+        LOG_WARNING(Audio_Sink,
+                    "AL_SOFT_direct_channels not present, audio latency may be higher.");
     }
 
     alSourcePlay(impl->source);
     if (alGetError() != AL_NO_ERROR) {
         LOG_CRITICAL(Audio_Sink, "alSourcePlay failed: {}", alGetError());
-        alDeleteSources(1, &impl->source);
-        alDeleteBuffers(1, &impl->buffer);
-        alcDestroyContext(impl->context);
-        alcCloseDevice(impl->device);
+        Close();
         return;
     }
 }
 
 OpenALSink::~OpenALSink() {
+    Close();
+}
+
+void OpenALSink::Close() {
     if (impl->source) {
         alSourceStop(impl->source);
         alDeleteSources(1, &impl->source);

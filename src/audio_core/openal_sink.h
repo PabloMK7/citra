@@ -23,6 +23,8 @@ public:
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;
+
+    void Close();
 };
 
 std::vector<std::string> ListOpenALSinkDevices();
