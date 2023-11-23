@@ -7,6 +7,7 @@
 #include <bitset>
 #include <optional>
 
+#include "common/common_types.h"
 #include "video_core/renderer_vulkan/vk_common.h"
 
 namespace Vulkan {
