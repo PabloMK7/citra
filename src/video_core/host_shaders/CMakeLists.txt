@@ -7,7 +7,6 @@ set(SHADER_FILES
     format_reinterpreter/rgba4_to_rgb5a1.frag
     format_reinterpreter/vulkan_d24s8_to_rgba8.comp
     texture_filtering/bicubic.frag
-    texture_filtering/nearest_neighbor.frag
     texture_filtering/refine.frag
     texture_filtering/scale_force.frag
     texture_filtering/xbrz_freescale.frag

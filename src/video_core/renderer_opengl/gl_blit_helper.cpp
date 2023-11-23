@@ -15,7 +15,6 @@
 #include "video_core/host_shaders/full_screen_triangle_vert.h"
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
 #include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
-#include "video_core/host_shaders/texture_filtering/nearest_neighbor_frag.h"
 #include "video_core/host_shaders/texture_filtering/refine_frag.h"
 #include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
 #include "video_core/host_shaders/texture_filtering/x_gradient_frag.h"
@@ -58,7 +57,6 @@ BlitHelper::BlitHelper(const Driver& driver_)
     : driver{driver_}, linear_sampler{CreateSampler(GL_LINEAR)},
       nearest_sampler{CreateSampler(GL_NEAREST)}, bicubic_program{CreateProgram(
                                                       HostShaders::BICUBIC_FRAG)},
-      nearest_program{CreateProgram(HostShaders::NEAREST_NEIGHBOR_FRAG)},
       scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG)},
       xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG)},
       mmpx_program{CreateProgram(HostShaders::MMPX_FRAG)}, gradient_x_program{CreateProgram(
@@ -175,9 +173,6 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
     case TextureFilter::Bicubic:
         FilterBicubic(surface, blit);
         break;
-    case TextureFilter::NearestNeighbor:
-        FilterNearest(surface, blit);
-        break;
     case TextureFilter::ScaleForce:
         FilterScaleForce(surface, blit);
         break;
@@ -255,14 +250,6 @@ void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& b
     state.texture_units[0].texture_2d = surface.Handle(0);
     SetParams(bicubic_program, surface.RealExtent(false), blit.src_rect);
     Draw(bicubic_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
-}
-
-void BlitHelper::FilterNearest(Surface& surface, const VideoCore::TextureBlit& blit) {
-    const OpenGLState prev_state = OpenGLState::GetCurState();
-    SCOPE_EXIT({ prev_state.Apply(); });
-    state.texture_units[2].texture_2d = surface.Handle(0);
-    SetParams(nearest_program, surface.RealExtent(false), blit.src_rect);
-    Draw(nearest_program, surface.Handle(), draw_fbo.handle, blit.dst_level, blit.dst_rect);
 }
 
 void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit& blit) {

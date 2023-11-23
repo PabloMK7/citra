@@ -35,10 +35,7 @@ public:
                        const VideoCore::BufferTextureCopy& copy);
 
 private:
-    /// Creates compute pipelines used for blit
     vk::Pipeline MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout);
-
-    /// Creates graphics pipelines used for blit
     vk::Pipeline MakeDepthStencilBlitPipeline();
 
 private:

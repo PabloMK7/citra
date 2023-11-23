@@ -72,10 +72,15 @@ enum class TextureFilter : u32 {
     None = 0,
     Anime4K = 1,
     Bicubic = 2,
-    NearestNeighbor = 3,
-    ScaleForce = 4,
-    xBRZ = 5,
-    MMPX = 6
+    ScaleForce = 3,
+    xBRZ = 4,
+    MMPX = 5,
+};
+
+enum class TextureSampling : u32 {
+    GameControlled = 0,
+    NearestNeighbor = 1,
+    Linear = 2,
 };
 
 namespace NativeButton {
@@ -451,6 +456,8 @@ struct Values {
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<u16, true> frame_limit{100, 0, 1000, "frame_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::None, "texture_filter"};
+    SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
+                                                        "texture_sampling"};
 
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};

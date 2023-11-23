@@ -33,20 +33,13 @@ public:
 
 private:
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
-
     void FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit);
-
-    void FilterNearest(Surface& surface, const VideoCore::TextureBlit& blit);
-
     void FilterScaleForce(Surface& surface, const VideoCore::TextureBlit& blit);
-
     void FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit);
-
     void FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit);
 
     void SetParams(OGLProgram& program, const VideoCore::Extent& src_extent,
                    Common::Rectangle<u32> src_rect);
-
     void Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 dst_level,
               Common::Rectangle<u32> dst_rect);
 
@@ -59,7 +52,6 @@ private:
     OGLSampler nearest_sampler;
 
     OGLProgram bicubic_program;
-    OGLProgram nearest_program;
     OGLProgram scale_force_program;
     OGLProgram xbrz_program;
     OGLProgram mmpx_program;

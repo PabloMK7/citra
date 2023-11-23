@@ -71,11 +71,17 @@ void ConfigureGraphics::SetConfiguration() {
                                           !Settings::values.physical_device.UsingGlobal());
         ConfigurationShared::SetPerGameSetting(ui->physical_device_combo,
                                                &Settings::values.physical_device);
+        ConfigurationShared::SetPerGameSetting(ui->texture_sampling_combobox,
+                                               &Settings::values.texture_sampling);
+        ConfigurationShared::SetHighlight(ui->widget_texture_sampling,
+                                          !Settings::values.texture_sampling.UsingGlobal());
     } else {
         ui->graphics_api_combo->setCurrentIndex(
             static_cast<int>(Settings::values.graphics_api.GetValue()));
         ui->physical_device_combo->setCurrentIndex(
             static_cast<int>(Settings::values.physical_device.GetValue()));
+        ui->texture_sampling_combobox->setCurrentIndex(
+            static_cast<int>(Settings::values.texture_sampling.GetValue()));
     }
 
     ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader.GetValue());
@@ -106,6 +112,8 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              use_hw_shader);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.shaders_accurate_mul,
                                              ui->toggle_accurate_mul, shaders_accurate_mul);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.texture_sampling,
+                                             ui->texture_sampling_combobox);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_disk_shader_cache,
                                              ui->toggle_disk_shader_cache, use_disk_shader_cache);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync_new, ui->toggle_vsync_new,
@@ -132,6 +140,7 @@ void ConfigureGraphics::SetupPerGameUI() {
                                          Settings::values.use_vsync_new.UsingGlobal());
         ui->toggle_async_shaders->setEnabled(
             Settings::values.async_shader_compilation.UsingGlobal());
+        ui->widget_texture_sampling->setEnabled(Settings::values.texture_sampling.UsingGlobal());
         ui->toggle_async_present->setEnabled(Settings::values.async_presentation.UsingGlobal());
         ui->graphics_api_combo->setEnabled(Settings::values.graphics_api.UsingGlobal());
         ui->physical_device_combo->setEnabled(Settings::values.physical_device.UsingGlobal());
@@ -147,6 +156,10 @@ void ConfigureGraphics::SetupPerGameUI() {
     ConfigurationShared::SetColoredComboBox(
         ui->physical_device_combo, ui->physical_device_group,
         static_cast<u32>(Settings::values.physical_device.GetValue(true)));
+
+    ConfigurationShared::SetColoredComboBox(
+        ui->texture_sampling_combobox, ui->widget_texture_sampling,
+        static_cast<int>(Settings::values.texture_sampling.GetValue(true)));
 
     ConfigurationShared::SetColoredTristate(ui->toggle_hw_shader, Settings::values.use_hw_shader,
                                             use_hw_shader);

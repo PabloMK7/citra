@@ -361,10 +361,25 @@ typename T::Sampler& RasterizerCache<T>::GetSampler(SamplerId sampler_id) {
 template <class T>
 typename T::Sampler& RasterizerCache<T>::GetSampler(
     const Pica::TexturingRegs::TextureConfig& config) {
+    using TextureFilter = Pica::TexturingRegs::TextureConfig::TextureFilter;
+
+    const auto get_filter = [](TextureFilter filter) {
+        switch (Settings::values.texture_sampling.GetValue()) {
+        case Settings::TextureSampling::GameControlled:
+            return filter;
+        case Settings::TextureSampling::NearestNeighbor:
+            return TextureFilter::Nearest;
+        case Settings::TextureSampling::Linear:
+            return TextureFilter::Linear;
+        default:
+            return filter;
+        }
+    };
+
     const SamplerParams params = {
-        .mag_filter = config.mag_filter,
-        .min_filter = config.min_filter,
-        .mip_filter = config.mip_filter,
+        .mag_filter = get_filter(config.mag_filter),
+        .min_filter = get_filter(config.min_filter),
+        .mip_filter = get_filter(config.mip_filter),
         .wrap_s = config.wrap_s,
         .wrap_t = config.wrap_t,
         .border_color = config.border_color.raw,
