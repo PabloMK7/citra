@@ -28,7 +28,9 @@
 #include "core/hle/service/cfg/cfg_nor.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
+#include "core/loader/loader.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::CFG::Module)
 SERIALIZE_EXPORT_IMPL(Service::CFG::Module)
 
 namespace Service::CFG {
@@ -195,8 +197,10 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
 }
 
 u32 Module::GetRegionValue() {
-    if (Settings::values.region_value.GetValue() == Settings::REGION_VALUE_AUTO_SELECT)
+    if (Settings::values.region_value.GetValue() == Settings::REGION_VALUE_AUTO_SELECT) {
+        UpdatePreferredRegionCode();
         return preferred_region_code;
+    }
 
     return Settings::values.region_value.GetValue();
 }
@@ -599,7 +603,7 @@ void Module::SaveMCUConfig() {
     }
 }
 
-Module::Module() {
+Module::Module(Core::System& system_) : system(system_) {
     LoadConfigNANDSaveFile();
     LoadMCUConfig();
     // Check the config savegame EULA Version and update it to 0x7F7F if necessary
@@ -651,20 +655,23 @@ static std::tuple<u32 /*region*/, SystemLanguage> AdjustLanguageInfoBlock(
     return {default_region, region_languages[default_region][0]};
 }
 
-void Module::SetPreferredRegionCodes(std::span<const u32> region_codes) {
-    const SystemLanguage current_language = GetSystemLanguage();
+void Module::UpdatePreferredRegionCode() {
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+
+    const auto preferred_regions = system.GetAppLoader().GetPreferredRegions();
+    const auto current_language = GetRawSystemLanguage();
     const auto [region, adjusted_language] =
-        AdjustLanguageInfoBlock(region_codes, current_language);
+        AdjustLanguageInfoBlock(preferred_regions, current_language);
 
     preferred_region_code = region;
     LOG_INFO(Service_CFG, "Preferred region code set to {}", preferred_region_code);
 
-    if (Settings::values.region_value.GetValue() == Settings::REGION_VALUE_AUTO_SELECT) {
-        if (current_language != adjusted_language) {
-            LOG_WARNING(Service_CFG, "System language {} does not fit the region. Adjusted to {}",
-                        current_language, adjusted_language);
-            SetSystemLanguage(adjusted_language);
-        }
+    if (current_language != adjusted_language) {
+        LOG_WARNING(Service_CFG, "System language {} does not fit the region. Adjusted to {}",
+                    current_language, adjusted_language);
+        SetSystemLanguage(adjusted_language);
     }
 }
 
@@ -705,6 +712,13 @@ void Module::SetSystemLanguage(SystemLanguage language) {
 }
 
 SystemLanguage Module::GetSystemLanguage() {
+    if (Settings::values.region_value.GetValue() == Settings::REGION_VALUE_AUTO_SELECT) {
+        UpdatePreferredRegionCode();
+    }
+    return GetRawSystemLanguage();
+}
+
+SystemLanguage Module::GetRawSystemLanguage() {
     u8 block{};
     GetConfigBlock(LanguageBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return static_cast<SystemLanguage>(block);
@@ -810,15 +824,21 @@ bool Module::IsSystemSetupNeeded() {
 }
 
 std::shared_ptr<Module> GetModule(Core::System& system) {
-    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
-    if (!cfg)
-        return nullptr;
-    return cfg->GetModule();
+    if (system.IsPoweredOn()) {
+        auto cfg = system.ServiceManager().GetService<Module::Interface>("cfg:u");
+        if (cfg) {
+            return cfg->GetModule();
+        }
+    }
+
+    // If the system is not running or the module is missing,
+    // create an ad-hoc module instance to read data from.
+    return std::make_shared<Module>(system);
 }
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto cfg = std::make_shared<Module>();
+    auto cfg = std::make_shared<Module>(system);
     std::make_shared<CFG_I>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_U>(cfg)->InstallAsService(service_manager);
@@ -826,15 +846,8 @@ void InstallInterfaces(Core::System& system) {
 }
 
 std::string GetConsoleIdHash(Core::System& system) {
-    u64_le console_id{};
+    u64_le console_id = GetModule(system)->GetConsoleUniqueId();
     std::array<u8, sizeof(console_id)> buffer;
-    if (system.IsPoweredOn()) {
-        auto cfg = GetModule(system);
-        ASSERT_MSG(cfg, "CFG Module missing!");
-        console_id = cfg->GetConsoleUniqueId();
-    } else {
-        console_id = std::make_unique<Service::CFG::Module>()->GetConsoleUniqueId();
-    }
     std::memcpy(buffer.data(), &console_id, sizeof(console_id));
 
     std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash;

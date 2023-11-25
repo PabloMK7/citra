@@ -148,7 +148,6 @@ void DefaultKeyboard::Execute(const Frontend::KeyboardConfig& config_) {
     SoftwareKeyboard::Execute(config_);
 
     auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    ASSERT_MSG(cfg, "CFG Module missing!");
     std::string username = Common::UTF16ToUTF8(cfg->GetUsername());
     switch (this->config.button_config) {
     case ButtonConfig::None:

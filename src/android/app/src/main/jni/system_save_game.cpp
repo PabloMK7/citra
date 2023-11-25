@@ -19,11 +19,7 @@ void Java_org_citra_citra_1emu_utils_SystemSaveGame_save([[maybe_unused]] JNIEnv
 
 void Java_org_citra_citra_1emu_utils_SystemSaveGame_load([[maybe_unused]] JNIEnv* env,
                                                          [[maybe_unused]] jobject obj) {
-    if (Core::System::GetInstance().IsPoweredOn()) {
-        cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    } else {
-        cfg = std::make_shared<Service::CFG::Module>();
-    }
+    cfg = Service::CFG::GetModule(Core::System::GetInstance());
 }
 
 jboolean Java_org_citra_citra_1emu_utils_SystemSaveGame_getIsSystemSetupNeeded(

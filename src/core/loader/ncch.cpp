@@ -196,8 +196,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
         return;
     }
 
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    ASSERT_MSG(cfg, "CFG Module missing!");
+    preferred_regions.clear();
 
     std::vector<u8> smdh_buffer;
     if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
@@ -205,19 +204,16 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
         std::memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
         u32 region_lockout = smdh.region_lockout;
         constexpr u32 REGION_COUNT = 7;
-        std::vector<u32> regions;
         for (u32 region = 0; region < REGION_COUNT; ++region) {
             if (region_lockout & 1) {
-                regions.push_back(region);
+                preferred_regions.push_back(region);
             }
             region_lockout >>= 1;
         }
-        cfg->SetPreferredRegionCodes(regions);
     } else {
         const auto region = Core::GetSystemTitleRegion(program_id);
         if (region.has_value()) {
-            const std::array regions{region.value()};
-            cfg->SetPreferredRegionCodes(regions);
+            preferred_regions.push_back(region.value());
         }
     }
 }

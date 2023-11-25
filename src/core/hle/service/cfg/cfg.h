@@ -178,7 +178,7 @@ DECLARE_ENUM_FLAG_OPERATORS(AccessFlag);
 
 class Module final {
 public:
-    Module();
+    Module(Core::System& system_);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -445,13 +445,6 @@ private:
 public:
     u32 GetRegionValue();
 
-    /**
-     * Set the region codes preferred by the game so that CFG will adjust to it when the region
-     * setting is auto.
-     * @param region_codes the preferred region codes to set
-     */
-    void SetPreferredRegionCodes(std::span<const u32> region_codes);
-
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.
 
@@ -589,6 +582,11 @@ public:
     void SaveMCUConfig();
 
 private:
+    void UpdatePreferredRegionCode();
+    SystemLanguage GetRawSystemLanguage();
+
+    Core::System& system;
+
     static constexpr u32 CONFIG_SAVEFILE_SIZE = 0x8000;
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
@@ -609,4 +607,5 @@ std::string GetConsoleIdHash(Core::System& system);
 
 } // namespace Service::CFG
 
+SERVICE_CONSTRUCT(Service::CFG::Module)
 BOOST_CLASS_EXPORT_KEY(Service::CFG::Module)

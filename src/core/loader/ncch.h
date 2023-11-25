@@ -30,6 +30,10 @@ public:
         return IdentifyType(file);
     }
 
+    [[nodiscard]] std::span<const u32> GetPreferredRegions() const override {
+        return preferred_regions;
+    }
+
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
 
     std::pair<std::optional<u32>, ResultStatus> LoadCoreVersion() override;
@@ -86,6 +90,8 @@ private:
     FileSys::NCCHContainer base_ncch;
     FileSys::NCCHContainer update_ncch;
     FileSys::NCCHContainer* overlay_ncch;
+
+    std::vector<u32> preferred_regions;
 
     std::string filepath;
 };

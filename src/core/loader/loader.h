@@ -92,6 +92,14 @@ public:
     virtual FileType GetFileType() = 0;
 
     /**
+     * Returns the preferred region codes of this file
+     * @return A vector of the preferred region codes
+     */
+    [[nodiscard]] virtual std::span<const u32> GetPreferredRegions() const {
+        return {};
+    }
+
+    /**
      * Load the application and return the created Process instance
      * @param process The newly created process.
      * @return The status result of the operation.

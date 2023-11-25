@@ -293,16 +293,11 @@ void ConfigureSystem::SetConfiguration() {
     QTime time = QTime::fromMSecsSinceStartOfDay(static_cast<int>(time_offset * 1000));
     ui->edit_init_time_offset_time->setTime(time);
 
-    if (!enabled) {
-        cfg = Service::CFG::GetModule(system);
-        ASSERT_MSG(cfg, "CFG Module missing!");
-        ReadSystemSettings();
-        ui->group_system_settings->setEnabled(false);
-    } else {
-        // This tab is enabled only when game is not running (i.e. all service are not initialized).
-        cfg = std::make_shared<Service::CFG::Module>();
-        ReadSystemSettings();
+    cfg = Service::CFG::GetModule(system);
+    ReadSystemSettings();
 
+    ui->group_system_settings->setEnabled(enabled);
+    if (enabled) {
         ui->label_disable_info->hide();
     }
 

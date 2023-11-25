@@ -1358,8 +1358,6 @@ void AppletManager::EnsureHomeMenuLoaded() {
     }
 
     auto cfg = Service::CFG::GetModule(system);
-    ASSERT_MSG(cfg, "CFG Module missing!");
-
     auto menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, cfg->GetRegionValue());
     auto process = NS::LaunchTitle(FS::MediaType::NAND, menu_title_id);
     if (!process) {

@@ -100,7 +100,6 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
 
     auto cfg = Service::CFG::GetModule(frd->system);
-    ASSERT_MSG(cfg, "CFG Module missing!");
     auto username = cfg->GetUsername();
     ASSERT_MSG(username.length() <= 10, "Username longer than expected!");
     ScreenName screen_name{};
