@@ -70,10 +70,7 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
 
         auto backing_blocks = vm_manager.GetBackingBlocksForRange(address, size);
         ASSERT(backing_blocks.Succeeded()); // should success after verifying memory state above
-        for (const auto& interval : backing_blocks.Unwrap()) {
-            shared_memory->backing_blocks.emplace_back(memory.GetFCRAMRef(interval.lower()),
-                                                       interval.upper() - interval.lower());
-        }
+        shared_memory->backing_blocks = std::move(backing_blocks).Unwrap();
     }
 
     shared_memory->base_address = address;

@@ -300,14 +300,15 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
 
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
-    for (const auto& backing_block : backing_blocks) {
-        memory_region->Free(backing_block.lower(), backing_block.upper() - backing_block.lower());
+    for (const auto& [backing_memory, block_size] : backing_blocks) {
+        const auto backing_offset = kernel.memory.GetFCRAMOffset(backing_memory.GetPtr());
+        memory_region->Free(backing_offset, block_size);
+        holding_memory -= MemoryRegionInfo::Interval(backing_offset, backing_offset + block_size);
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
     ASSERT(result.IsSuccess());
 
-    holding_memory -= backing_blocks;
     memory_used -= size;
     resource_limit->current_commit -= size;
 
@@ -504,9 +505,7 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
 
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(source, size));
     VAddr interval_target = target;
-    for (const auto& backing_block : backing_blocks) {
-        auto backing_memory = kernel.memory.GetFCRAMRef(backing_block.lower());
-        auto block_size = backing_block.upper() - backing_block.lower();
+    for (const auto& [backing_memory, block_size] : backing_blocks) {
         auto target_vma =
             vm_manager.MapBackingMemory(interval_target, backing_memory, block_size, target_state);
         ASSERT(target_vma.Succeeded());
