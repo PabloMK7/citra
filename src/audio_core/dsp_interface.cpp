@@ -13,7 +13,8 @@
 
 namespace AudioCore {
 
-DspInterface::DspInterface() = default;
+DspInterface::DspInterface(Core::System& system_) : system(system_) {}
+
 DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(AudioCore::SinkType sink_type, std::string_view audio_device) {
@@ -32,13 +33,7 @@ Sink& DspInterface::GetSink() {
 }
 
 void DspInterface::EnableStretching(bool enable) {
-    if (perform_time_stretching == enable)
-        return;
-
-    if (!enable) {
-        flushing_time_stretcher = true;
-    }
-    perform_time_stretching = enable;
+    enable_time_stretching = enable;
 }
 
 void DspInterface::OutputFrame(StereoFrame16 frame) {
@@ -47,7 +42,7 @@ void DspInterface::OutputFrame(StereoFrame16 frame) {
 
     fifo.Push(frame.data(), frame.size());
 
-    auto video_dumper = Core::System::GetInstance().GetVideoDumper();
+    auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
         video_dumper->AddAudioFrame(std::move(frame));
     }
@@ -59,15 +54,24 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
 
     fifo.Push(&sample, 1);
 
-    auto video_dumper = Core::System::GetInstance().GetVideoDumper();
+    auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
         video_dumper->AddAudioSample(std::move(sample));
     }
 }
 
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
+    // Determine if we should stretch based on the current emulation speed.
+    const auto perf_stats = system.GetLastPerfStats();
+    const auto should_stretch = enable_time_stretching && perf_stats.emulation_speed <= 95;
+    if (performing_time_stretching && !should_stretch) {
+        // If we just stopped stretching, flush the stretcher before returning to normal output.
+        flushing_time_stretcher = true;
+    }
+    performing_time_stretching = should_stretch;
+
     std::size_t frames_written = 0;
-    if (perform_time_stretching) {
+    if (performing_time_stretching) {
         const std::vector<s16> in{fifo.Pop()};
         const std::size_t num_in{in.size() / 2};
         frames_written = time_stretcher.Process(in.data(), num_in, buffer, num_frames);

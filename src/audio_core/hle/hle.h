@@ -14,6 +14,10 @@
 #include "core/hle/service/dsp/dsp_dsp.h"
 #include "core/memory.h"
 
+namespace Core {
+class Timing;
+}
+
 namespace Memory {
 class MemorySystem;
 }
@@ -22,7 +26,8 @@ namespace AudioCore {
 
 class DspHle final : public DspInterface {
 public:
-    explicit DspHle(Memory::MemorySystem& memory, Core::Timing& timing);
+    explicit DspHle(Core::System& system);
+    explicit DspHle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing);
     ~DspHle();
 
     u16 RecvData(u32 register_number) override;

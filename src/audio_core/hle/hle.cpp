@@ -31,7 +31,10 @@ using InterruptType = Service::DSP::InterruptType;
 namespace AudioCore {
 
 DspHle::DspHle()
-    : DspHle(Core::System::GetInstance().Memory(), Core::System::GetInstance().CoreTiming()) {}
+    : DspHle(Core::System::GetInstance(), Core::System::GetInstance().Memory(),
+             Core::System::GetInstance().CoreTiming()) {}
+
+DspHle::DspHle(Core::System& system) : DspHle(system, system.Memory(), system.CoreTiming()) {}
 
 template <class Archive>
 void DspHle::serialize(Archive& ar, const unsigned int) {
@@ -442,8 +445,8 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     core_timing.ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
 }
 
-DspHle::DspHle(Memory::MemorySystem& memory, Core::Timing& timing)
-    : impl(std::make_unique<Impl>(*this, memory, timing)) {}
+DspHle::DspHle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing)
+    : DspInterface(system), impl(std::make_unique<Impl>(*this, memory, timing)) {}
 DspHle::~DspHle() = default;
 
 u16 DspHle::RecvData(u32 register_number) {

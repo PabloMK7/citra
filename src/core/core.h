@@ -174,6 +174,8 @@ public:
 
     [[nodiscard]] PerfStats::Results GetAndResetPerfStats();
 
+    [[nodiscard]] PerfStats::Results GetLastPerfStats();
+
     /**
      * Gets a reference to the emulated CPU.
      * @returns A reference to the emulated CPU.

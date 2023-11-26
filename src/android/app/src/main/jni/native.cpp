@@ -202,20 +202,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     SCOPE_EXIT({ TryShutdown(); });
 
-    // Audio stretching on Android is only useful with lower framerates, disable it when fullspeed
-    Core::TimingEventType* audio_stretching_event{};
-    const s64 audio_stretching_ticks{msToCycles(500)};
-    audio_stretching_event =
-        system.CoreTiming().RegisterEvent("AudioStretchingEvent", [&](u64, s64 cycles_late) {
-            if (Settings::values.enable_audio_stretching) {
-                system.DSP().EnableStretching(system.GetAndResetPerfStats().emulation_speed < 0.95);
-            }
-
-            system.CoreTiming().ScheduleEvent(audio_stretching_ticks - cycles_late,
-                                              audio_stretching_event);
-        });
-    system.CoreTiming().ScheduleEvent(audio_stretching_ticks, audio_stretching_event);
-
     // Start running emulation
     while (!stop_run) {
         if (!pause_emulation) {

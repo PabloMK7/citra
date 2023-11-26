@@ -468,8 +468,12 @@ void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle(Memory::MemorySystem& memory, Core::Timing& timing, bool multithread)
-    : impl(std::make_unique<Impl>(timing, multithread)) {
+DspLle::DspLle(Core::System& system, bool multithread)
+    : DspLle(system, system.Memory(), system.CoreTiming(), multithread) {}
+
+DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
+               bool multithread)
+    : DspInterface(system), impl(std::make_unique<Impl>(timing, multithread)) {
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);

@@ -18,7 +18,7 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
     Memory::MemorySystem memory{system};
     Core::Timing core_timing(1, 100);
 
-    AudioCore::DspLle lle(memory, core_timing, true);
+    AudioCore::DspLle lle(system, memory, core_timing, true);
     {
         FileUtil::SetUserPath();
         // dspaudio.cdc can be dumped from Pokemon X & Y, It can be found in the romfs at

@@ -47,13 +47,13 @@ PerfStats::~PerfStats() {
 }
 
 void PerfStats::BeginSystemFrame() {
-    std::lock_guard lock{object_mutex};
+    std::scoped_lock lock{object_mutex};
 
     frame_begin = Clock::now();
 }
 
 void PerfStats::EndSystemFrame() {
-    std::lock_guard lock{object_mutex};
+    std::scoped_lock lock{object_mutex};
 
     auto frame_end = Clock::now();
     const auto frame_time = frame_end - frame_begin;
@@ -69,13 +69,13 @@ void PerfStats::EndSystemFrame() {
 }
 
 void PerfStats::EndGameFrame() {
-    std::lock_guard lock{object_mutex};
+    std::scoped_lock lock{object_mutex};
 
     game_frames += 1;
 }
 
 double PerfStats::GetMeanFrametime() const {
-    std::lock_guard lock{object_mutex};
+    std::scoped_lock lock{object_mutex};
 
     if (current_index <= IgnoreFrames) {
         return 0;
@@ -87,7 +87,7 @@ double PerfStats::GetMeanFrametime() const {
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {
-    std::lock_guard lock(object_mutex);
+    std::scoped_lock lock{object_mutex};
 
     const auto now = Clock::now();
     // Walltime elapsed since stats were reset
@@ -95,12 +95,11 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
 
     const auto system_us_per_second = (current_system_time_us - reset_point_system_us) / interval;
 
-    Results results{};
-    results.system_fps = static_cast<double>(system_frames) / interval;
-    results.game_fps = static_cast<double>(game_frames) / interval;
-    results.frametime = duration_cast<DoubleSecs>(accumulated_frametime).count() /
-                        static_cast<double>(system_frames);
-    results.emulation_speed = system_us_per_second.count() / 1'000'000.0;
+    last_stats.system_fps = static_cast<double>(system_frames) / interval;
+    last_stats.game_fps = static_cast<double>(game_frames) / interval;
+    last_stats.frametime = duration_cast<DoubleSecs>(accumulated_frametime).count() /
+                           static_cast<double>(system_frames);
+    last_stats.emulation_speed = system_us_per_second.count() / 1'000'000.0;
 
     // Reset counters
     reset_point = now;
@@ -109,11 +108,17 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
     system_frames = 0;
     game_frames = 0;
 
-    return results;
+    return last_stats;
+}
+
+PerfStats::Results PerfStats::GetLastStats() {
+    std::scoped_lock lock{object_mutex};
+
+    return last_stats;
 }
 
 double PerfStats::GetLastFrameTimeScale() const {
-    std::lock_guard lock{object_mutex};
+    std::scoped_lock lock{object_mutex};
 
     constexpr double FRAME_LENGTH = 1.0 / GPU::SCREEN_REFRESH_RATE;
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;

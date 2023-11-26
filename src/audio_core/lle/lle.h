@@ -11,11 +11,17 @@ namespace Core {
 class Timing;
 }
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace AudioCore {
 
 class DspLle final : public DspInterface {
 public:
-    explicit DspLle(Memory::MemorySystem& memory, Core::Timing& timing, bool multithread);
+    explicit DspLle(Core::System& system, bool multithread);
+    explicit DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
+                    bool multithread);
     ~DspLle() override;
 
     u16 RecvData(u32 register_number) override;

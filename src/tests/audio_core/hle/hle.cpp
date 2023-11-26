@@ -22,8 +22,8 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
     Memory::MemorySystem lle_memory{system};
     Core::Timing lle_core_timing(1, 100);
 
-    AudioCore::DspHle hle(hle_memory, hle_core_timing);
-    AudioCore::DspLle lle(lle_memory, lle_core_timing, true);
+    AudioCore::DspHle hle(system, hle_memory, hle_core_timing);
+    AudioCore::DspLle lle(system, lle_memory, lle_core_timing, true);
 
     // Initialise LLE
     {

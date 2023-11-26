@@ -354,6 +354,10 @@ PerfStats::Results System::GetAndResetPerfStats() {
                                   : PerfStats::Results{};
 }
 
+PerfStats::Results System::GetLastPerfStats() {
+    return perf_stats ? perf_stats->GetLastStats() : PerfStats::Results{};
+}
+
 void System::Reschedule() {
     if (!reschedule_pending) {
         return;
@@ -408,10 +412,10 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     const auto audio_emulation = Settings::values.audio_emulation.GetValue();
     if (audio_emulation == Settings::AudioEmulation::HLE) {
-        dsp_core = std::make_unique<AudioCore::DspHle>(*memory, *timing);
+        dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     } else {
         const bool multithread = audio_emulation == Settings::AudioEmulation::LLEMultithreaded;
-        dsp_core = std::make_unique<AudioCore::DspLle>(*memory, *timing, multithread);
+        dsp_core = std::make_unique<AudioCore::DspLle>(*this, multithread);
     }
 
     memory->SetDSP(*dsp_core);

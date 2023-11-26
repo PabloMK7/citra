@@ -13,6 +13,10 @@
 #include "common/ring_buffer.h"
 #include "core/memory.h"
 
+namespace Core {
+class System;
+} // namespace Core
+
 namespace Service::DSP {
 enum class InterruptType : u32;
 } // namespace Service::DSP
@@ -24,7 +28,7 @@ enum class SinkType : u32;
 
 class DspInterface {
 public:
-    DspInterface();
+    DspInterface(Core::System& system_);
     virtual ~DspInterface();
 
     DspInterface(const DspInterface&) = delete;
@@ -110,7 +114,10 @@ private:
     void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
 
-    std::atomic<bool> perform_time_stretching = false;
+    Core::System& system;
+
+    std::atomic<bool> enable_time_stretching = false;
+    std::atomic<bool> performing_time_stretching = false;
     std::atomic<bool> flushing_time_stretcher = false;
     Common::RingBuffer<s16, 0x2000, 2> fifo;
     std::array<s16, 2> last_frame{};
