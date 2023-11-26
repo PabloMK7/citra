@@ -36,7 +36,7 @@ class JitShader : public Xbyak::CodeGenerator {
 public:
     JitShader();
 
-    void Run(const ShaderSetup& setup, UnitState& state, unsigned offset) const {
+    void Run(const ShaderSetup& setup, UnitState& state, u32 offset) const {
         program(&setup.uniforms, &state, instruction_labels[offset].getAddress());
     }
 
@@ -74,10 +74,10 @@ public:
     void Compile_SETE(Instruction instr);
 
 private:
-    void Compile_Block(unsigned end);
+    void Compile_Block(u32 end);
     void Compile_NextInstr();
 
-    void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+    void Compile_SwizzleSrc(Instruction instr, u32 src_num, SourceRegister src_reg,
                             Xbyak::Xmm dest);
     void Compile_DestEnable(Instruction instr, Xbyak::Xmm dest);
 
@@ -128,10 +128,10 @@ private:
     std::vector<Xbyak::Label> loop_break_labels;
 
     /// Offsets in code where a return needs to be inserted
-    std::vector<unsigned> return_offsets;
+    std::vector<u32> return_offsets;
 
-    unsigned program_counter = 0; ///< Offset of the next instruction to decode
-    u8 loop_depth = 0;            ///< Depth of the (nested) loops currently compiled
+    u32 program_counter = 0; ///< Offset of the next instruction to decode
+    u8 loop_depth = 0;       ///< Depth of the (nested) loops currently compiled
 
     using CompiledShader = void(const void* setup, void* state, const u8* start_addr);
     CompiledShader* program = nullptr;

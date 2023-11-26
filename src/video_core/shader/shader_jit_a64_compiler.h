@@ -37,7 +37,7 @@ class JitShader : private oaknut::CodeBlock, public oaknut::CodeGenerator {
 public:
     JitShader();
 
-    void Run(const ShaderSetup& setup, UnitState& state, unsigned offset) const {
+    void Run(const ShaderSetup& setup, UnitState& state, u32 offset) const {
         program(&setup.uniforms, &state, instruction_labels[offset].ptr<const std::byte*>());
     }
 
@@ -75,10 +75,10 @@ public:
     void Compile_SETE(Instruction instr);
 
 private:
-    void Compile_Block(unsigned end);
+    void Compile_Block(u32 end);
     void Compile_NextInstr();
 
-    void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+    void Compile_SwizzleSrc(Instruction instr, u32 src_num, SourceRegister src_reg,
                             oaknut::QReg dest);
     void Compile_DestEnable(Instruction instr, oaknut::QReg dest);
 
@@ -129,10 +129,10 @@ private:
     std::vector<oaknut::Label> loop_break_labels;
 
     /// Offsets in code where a return needs to be inserted
-    std::vector<unsigned> return_offsets;
+    std::vector<u32> return_offsets;
 
-    unsigned program_counter = 0; ///< Offset of the next instruction to decode
-    u8 loop_depth = 0;            ///< Depth of the (nested) loops currently compiled
+    u32 program_counter = 0; ///< Offset of the next instruction to decode
+    u8 loop_depth = 0;       ///< Depth of the (nested) loops currently compiled
 
     using CompiledShader = void(const void* setup, void* state, const std::byte* start_addr);
     CompiledShader* program = nullptr;

@@ -1,11 +1,11 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include "common/arch.h"
-#if CITRA_ARCH(arm64)
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
 #include <memory>
 #include <unordered_map>
@@ -16,12 +16,12 @@ namespace Pica::Shader {
 
 class JitShader;
 
-class JitA64Engine final : public ShaderEngine {
+class JitEngine final : public ShaderEngine {
 public:
-    JitA64Engine();
-    ~JitA64Engine() override;
+    JitEngine();
+    ~JitEngine() override;
 
-    void SetupBatch(ShaderSetup& setup, unsigned int entry_point) override;
+    void SetupBatch(ShaderSetup& setup, u32 entry_point) override;
     void Run(const ShaderSetup& setup, UnitState& state) const override;
 
 private:
@@ -30,4 +30,4 @@ private:
 
 } // namespace Pica::Shader
 
-#endif // CITRA_ARCH(arm64)
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)

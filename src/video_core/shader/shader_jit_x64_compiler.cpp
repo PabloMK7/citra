@@ -187,7 +187,7 @@ void JitShader::Compile_Assert(bool condition, const char* msg) {
  * @param src_reg SourceRegister object corresponding to the source register to load
  * @param dest Destination XMM register to store the loaded, swizzled source register
  */
-void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+void JitShader::Compile_SwizzleSrc(Instruction instr, u32 src_num, SourceRegister src_reg,
                                    Xmm dest) {
     Reg64 src_ptr;
     std::size_t src_offset;
@@ -213,13 +213,13 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     ASSERT_MSG(src_offset == static_cast<std::size_t>(src_offset_disp),
                "Source register offset too large for int type");
 
-    unsigned operand_desc_id;
+    u32 operand_desc_id;
 
     const bool is_inverted =
         (0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed));
 
-    unsigned address_register_index;
-    unsigned offset_src;
+    u32 address_register_index;
+    u32 offset_src;
 
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
         instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI) {
@@ -254,7 +254,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
 
         // First we add 128 to address_reg so the first comparison is turned to
         // address_reg >= 0 && address_reg < 256 which can be performed with
-        // a single unsigned comparison (cmovb)
+        // a single u32 comparison (cmovb)
         lea(eax, ptr[address_reg + 128]);
         mov(ebx, src_reg.GetIndex());
         mov(ecx, address_reg.cvt32());
@@ -297,7 +297,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
 
 void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
     DestRegister dest;
-    unsigned operand_desc_id;
+    u32 operand_desc_id;
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
         instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI) {
         operand_desc_id = instr.mad.operand_desc_id;
@@ -915,7 +915,7 @@ void JitShader::Compile_SETE(Instruction instr) {
     L(end);
 }
 
-void JitShader::Compile_Block(unsigned end) {
+void JitShader::Compile_Block(u32 end) {
     while (program_counter < end) {
         Compile_NextInstr();
     }
@@ -943,7 +943,7 @@ void JitShader::Compile_NextInstr() {
     Instruction instr = {(*program_code)[program_counter++]};
 
     OpCode::Id opcode = instr.opcode.Value();
-    auto instr_func = instr_table[static_cast<unsigned>(opcode)];
+    auto instr_func = instr_table[static_cast<u32>(opcode)];
 
     if (instr_func) {
         // JIT the instruction!
@@ -1023,7 +1023,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     jmp(ABI_PARAM3);
 
     // Compile entire program
-    Compile_Block(static_cast<unsigned>(program_code->size()));
+    Compile_Block(static_cast<u32>(program_code->size()));
 
     // Free memory that's no longer needed
     program_code = nullptr;

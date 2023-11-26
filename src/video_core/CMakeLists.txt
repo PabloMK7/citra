@@ -156,13 +156,11 @@ add_library(video_core STATIC
     shader/shader.h
     shader/shader_interpreter.cpp
     shader/shader_interpreter.h
-    shader/shader_jit_a64.cpp
+    shader/shader_jit.cpp
+    shader/shader_jit.h
     shader/shader_jit_a64_compiler.cpp
-    shader/shader_jit_a64.h
     shader/shader_jit_a64_compiler.h
-    shader/shader_jit_x64.cpp
     shader/shader_jit_x64_compiler.cpp
-    shader/shader_jit_x64.h
     shader/shader_jit_x64_compiler.h
     texture/etc1.cpp
     texture/etc1.h

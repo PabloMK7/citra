@@ -13,17 +13,15 @@
 #include "video_core/regs_shader.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
-#if CITRA_ARCH(x86_64)
-#include "video_core/shader/shader_jit_x64.h"
-#elif CITRA_ARCH(arm64)
-#include "video_core/shader/shader_jit_a64.h"
-#endif
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
+#include "video_core/shader/shader_jit.h"
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 #include "video_core/video_core.h"
 
 namespace Pica::Shader {
 
 void OutputVertex::ValidateSemantics(const RasterizerRegs& regs) {
-    unsigned int num_attributes = regs.vs_output_total;
+    u32 num_attributes = regs.vs_output_total;
     ASSERT(num_attributes <= 7);
     for (std::size_t attrib = 0; attrib < num_attributes; ++attrib) {
         u32 output_register_map = regs.vs_output_attributes[attrib].raw;
@@ -54,7 +52,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
     static_assert(sizeof(std::array<f24, 24>) == sizeof(ret),
                   "Struct and array have different sizes.");
 
-    unsigned int num_attributes = regs.vs_output_total & 7;
+    u32 num_attributes = regs.vs_output_total & 7;
     for (std::size_t attrib = 0; attrib < num_attributes; ++attrib) {
         const auto output_register_map = regs.vs_output_attributes[attrib];
         vertex_slots_overflow[output_register_map.map_x] = input.attr[attrib][0];
@@ -65,7 +63,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
 
     // The hardware takes the absolute and saturates vertex colors like this, *before* doing
     // interpolation
-    for (unsigned i = 0; i < 4; ++i) {
+    for (u32 i = 0; i < 4; ++i) {
         float c = std::fabs(ret.color[i].ToFloat32());
         ret.color[i] = f24::FromFloat32(c < 1.0f ? c : 1.0f);
     }
@@ -84,10 +82,10 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
 }
 
 void UnitState::LoadInput(const ShaderRegs& config, const AttributeBuffer& input) {
-    const unsigned max_attribute = config.max_input_attribute_index;
+    const u32 max_attribute = config.max_input_attribute_index;
 
-    for (unsigned attr = 0; attr <= max_attribute; ++attr) {
-        unsigned reg = config.GetRegisterForAttribute(attr);
+    for (u32 attr = 0; attr <= max_attribute; ++attr) {
+        u32 reg = config.GetRegisterForAttribute(attr);
         registers.input[reg] = input.attr[attr];
     }
 }
@@ -141,11 +139,9 @@ void GSUnitState::ConfigOutput(const ShaderRegs& config) {
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-#if CITRA_ARCH(x86_64)
-static std::unique_ptr<JitX64Engine> jit_engine;
-#elif CITRA_ARCH(arm64)
-static std::unique_ptr<JitA64Engine> jit_engine;
-#endif
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
+static std::unique_ptr<JitEngine> jit_engine;
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 static InterpreterEngine interpreter_engine;
 
 ShaderEngine* GetEngine() {
@@ -153,7 +149,7 @@ ShaderEngine* GetEngine() {
     // TODO(yuriks): Re-initialize on each change rather than being persistent
     if (VideoCore::g_shader_jit_enabled) {
         if (jit_engine == nullptr) {
-            jit_engine = std::make_unique<decltype(jit_engine)::element_type>();
+            jit_engine = std::make_unique<JitEngine>();
         }
         return jit_engine.get();
     }
@@ -164,7 +160,7 @@ ShaderEngine* GetEngine() {
 
 void Shutdown() {
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
-    jit_engine = nullptr;
+    jit_engine.reset();
 #endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 }
 

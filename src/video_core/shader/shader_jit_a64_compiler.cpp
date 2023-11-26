@@ -163,7 +163,7 @@ void JitShader::Compile_Assert(bool condition, const char* msg) {}
  * @param src_reg SourceRegister object corresponding to the source register to load
  * @param dest Destination QReg register to store the loaded, swizzled source register
  */
-void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+void JitShader::Compile_SwizzleSrc(Instruction instr, u32 src_num, SourceRegister src_reg,
                                    QReg dest) {
     XReg src_ptr = XZR;
     std::size_t src_offset;
@@ -855,7 +855,7 @@ void JitShader::Compile_SETE(Instruction instr) {
     l(end);
 }
 
-void JitShader::Compile_Block(unsigned end) {
+void JitShader::Compile_Block(u32 end) {
     while (program_counter < end) {
         Compile_NextInstr();
     }
@@ -957,7 +957,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     BR(ABI_PARAM3);
 
     // Compile entire program
-    Compile_Block(static_cast<unsigned>(program_code->size()));
+    Compile_Block(static_cast<u32>(program_code->size()));
 
     // Free memory that's no longer needed
     program_code = nullptr;

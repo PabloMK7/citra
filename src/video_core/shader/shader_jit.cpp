@@ -1,29 +1,34 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/arch.h"
-#if CITRA_ARCH(arm64)
+#if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
 #include "common/assert.h"
 #include "common/microprofile.h"
 #include "video_core/shader/shader.h"
-#include "video_core/shader/shader_jit_a64.h"
+#include "video_core/shader/shader_jit.h"
+#if CITRA_ARCH(arm64)
 #include "video_core/shader/shader_jit_a64_compiler.h"
+#endif
+#if CITRA_ARCH(x86_64)
+#include "video_core/shader/shader_jit_x64_compiler.h"
+#endif
 
 namespace Pica::Shader {
 
-JitA64Engine::JitA64Engine() = default;
-JitA64Engine::~JitA64Engine() = default;
+JitEngine::JitEngine() = default;
+JitEngine::~JitEngine() = default;
 
-void JitA64Engine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
+void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
     setup.engine_data.entry_point = entry_point;
 
-    u64 code_hash = setup.GetProgramCodeHash();
-    u64 swizzle_hash = setup.GetSwizzleDataHash();
+    const u64 code_hash = setup.GetProgramCodeHash();
+    const u64 swizzle_hash = setup.GetSwizzleDataHash();
 
-    u64 cache_key = code_hash ^ swizzle_hash;
+    const u64 cache_key = Common::HashCombine(code_hash, swizzle_hash);
     auto iter = cache.find(cache_key);
     if (iter != cache.end()) {
         setup.engine_data.cached_shader = iter->second.get();
@@ -37,7 +42,7 @@ void JitA64Engine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
 
 MICROPROFILE_DECLARE(GPU_Shader);
 
-void JitA64Engine::Run(const ShaderSetup& setup, UnitState& state) const {
+void JitEngine::Run(const ShaderSetup& setup, UnitState& state) const {
     ASSERT(setup.engine_data.cached_shader != nullptr);
 
     MICROPROFILE_SCOPE(GPU_Shader);
@@ -48,4 +53,4 @@ void JitA64Engine::Run(const ShaderSetup& setup, UnitState& state) const {
 
 } // namespace Pica::Shader
 
-#endif // CITRA_ARCH(arm64)
+#endif // CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
