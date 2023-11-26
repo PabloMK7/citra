@@ -10,7 +10,6 @@
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/memory.h"
-#include "core/mmio.h"
 
 namespace Kernel {
 
@@ -31,9 +30,6 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     }
     if (type == VMAType::BackingMemory &&
         backing_memory.GetPtr() + size != next.backing_memory.GetPtr()) {
-        return false;
-    }
-    if (type == VMAType::MMIO && paddr + size != next.paddr) {
         return false;
     }
     return true;
@@ -118,26 +114,6 @@ ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, Memory
     return MergeAdjacent(vma_handle);
 }
 
-ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size,
-                                                   MemoryState state,
-                                                   Memory::MMIORegionPointer mmio_handler) {
-    ASSERT(!is_locked);
-
-    // This is the appropriately sized VMA that will turn into our allocation.
-    CASCADE_RESULT(VMAIter vma_handle, CarveVMA(target, size));
-    VirtualMemoryArea& final_vma = vma_handle->second;
-    ASSERT(final_vma.size == size);
-
-    final_vma.type = VMAType::MMIO;
-    final_vma.permissions = VMAPermission::ReadWrite;
-    final_vma.meminfo_state = state;
-    final_vma.paddr = paddr;
-    final_vma.mmio_handler = mmio_handler;
-    UpdatePageTableForVMA(final_vma);
-
-    return MergeAdjacent(vma_handle);
-}
-
 ResultCode VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
                                         VMAPermission expected_perms, MemoryState new_state,
                                         VMAPermission new_perms) {
@@ -185,9 +161,7 @@ VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
     vma.type = VMAType::Free;
     vma.permissions = VMAPermission::None;
     vma.meminfo_state = MemoryState::Free;
-
     vma.backing_memory = nullptr;
-    vma.paddr = 0;
 
     UpdatePageTableForVMA(vma);
 
@@ -344,9 +318,6 @@ VMManager::VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma) {
     case VMAType::BackingMemory:
         new_vma.backing_memory += offset_in_vma;
         break;
-    case VMAType::MMIO:
-        new_vma.paddr += offset_in_vma;
-        break;
     }
 
     ASSERT(old_vma.CanBeMergedWith(new_vma));
@@ -380,9 +351,6 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         break;
     case VMAType::BackingMemory:
         memory.MapMemoryRegion(*page_table, vma.base, vma.size, vma.backing_memory);
-        break;
-    case VMAType::MMIO:
-        memory.MapIoRegion(*page_table, vma.base, vma.size, vma.mmio_handler);
         break;
     }
 

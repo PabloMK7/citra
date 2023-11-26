@@ -10,7 +10,6 @@
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
-#include "core/mmio.h"
 
 namespace Kernel {
 class Process;
@@ -43,23 +42,6 @@ enum class PageType {
     /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
     /// invalidation
     RasterizerCachedMemory,
-    /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
-    Special,
-};
-
-struct SpecialRegion {
-    VAddr base;
-    u32 size;
-    MMIORegionPointer handler;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& base;
-        ar& size;
-        ar& handler;
-    }
-    friend class boost::serialization::access;
 };
 
 /**
@@ -109,12 +91,6 @@ struct PageTable {
     Pointers pointers;
 
     /**
-     * Contains MMIO handlers that back memory regions whose entries in the `attribute` array is of
-     * type `Special`.
-     */
-    std::vector<SpecialRegion> special_regions;
-
-    /**
      * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
      * the corresponding entry in `pointers` MUST be set to null.
      */
@@ -130,7 +106,6 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& pointers.refs;
-        ar& special_regions;
         ar& attributes;
         for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
             pointers.raw[i] = pointers.refs[i].GetPtr();
@@ -301,15 +276,6 @@ public:
      * @param target Buffer with the memory backing the mapping. Must be of length at least `size`.
      */
     void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, MemoryRef target);
-
-    /**
-     * Maps a region of the emulated process address space as a IO region.
-     * @param page_table The page table of the emulated process.
-     * @param base The address to start mapping at. Must be page-aligned.
-     * @param size The amount of bytes to map. Must be page-aligned.
-     * @param mmio_handler The handler that backs the mapping.
-     */
-    void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler);
 
     void UnmapRegion(PageTable& page_table, VAddr base, u32 size);
 
