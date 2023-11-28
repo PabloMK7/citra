@@ -51,6 +51,10 @@ if (MSVC)
         /Zc:throwingNew
         /GT
 
+        # Some flags for more deterministic builds, to aid caching.
+        /experimental:deterministic
+        /d1trimfile:"${CMAKE_SOURCE_DIR}"
+
         # External headers diagnostics
         /experimental:external  # Enables the external headers options. This option isn't required in Visual Studio 2019 version 16.10 and later
         /external:anglebrackets # Treats all headers included by #include <header>, where the header file is enclosed in angle brackets (< >), as external headers
@@ -87,7 +91,8 @@ if (MSVC)
 
     # Since MSVC's debugging information is not very deterministic, so we have to disable it
     # when using ccache or other caching tools
-    if (CITRA_USE_CCACHE OR CITRA_USE_PRECOMPILED_HEADERS)
+    if (CMAKE_C_COMPILER_LAUNCHER STREQUAL "ccache" OR CMAKE_CXX_COMPILER_LAUNCHER STREQUAL "ccache"
+            OR CITRA_USE_PRECOMPILED_HEADERS)
         # Precompiled headers are deleted if not using /Z7. See https://github.com/nanoant/CMakePCHCompiler/issues/21
         add_compile_options(/Z7)
     else()
@@ -98,7 +103,7 @@ if (MSVC)
     add_compile_options("$<$<CONFIG:Release>:/GS->")
 
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "/DEBUG /MANIFEST:NO" CACHE STRING "" FORCE)
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /MANIFEST:NO /INCREMENTAL:NO /OPT:REF,ICF" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /MANIFEST:NO /INCREMENTAL:NO /OPT:REF,ICF /PDBALTPATH:%_PDB%" CACHE STRING "" FORCE)
 else()
     add_compile_options(
         -Wall
