@@ -8,6 +8,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <string>
 #include <unordered_map>
@@ -322,6 +323,10 @@ public:
         return n3ds_hw_caps;
     }
 
+    std::recursive_mutex& GetHLELock() {
+        return hle_lock;
+    }
+
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, std::shared_ptr<ClientPort>> named_ports;
 
@@ -369,6 +374,15 @@ private:
 
     MemoryMode memory_mode;
     New3dsHwCapabilities n3ds_hw_caps;
+
+    /*
+     * Synchronizes access to the internal HLE kernel structures, it is acquired when a guest
+     * application thread performs a syscall. It should be acquired by any host threads that read or
+     * modify the HLE kernel state. Note: Any operation that directly or indirectly reads from or
+     * writes to the emulated memory is not protected by this mutex, and should be avoided in any
+     * threads other than the CPU thread.
+     */
+    std::recursive_mutex hle_lock;
 
     friend class boost::serialization::access;
     template <class Archive>

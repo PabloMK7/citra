@@ -104,7 +104,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     Signal signal{Signal::None};
     u32 param{};
     {
-        std::lock_guard lock{signal_mutex};
+        std::scoped_lock lock{signal_mutex};
         if (current_signal != Signal::None) {
             signal = current_signal;
             param = signal_param;
@@ -242,7 +242,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
 }
 
 bool System::SendSignal(System::Signal signal, u32 param) {
-    std::lock_guard lock{signal_mutex};
+    std::scoped_lock lock{signal_mutex};
     if (current_signal != signal && current_signal != Signal::None) {
         LOG_ERROR(Core, "Unable to {} as {} is ongoing", signal, current_signal);
         return false;

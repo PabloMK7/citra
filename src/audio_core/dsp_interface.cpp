@@ -37,8 +37,9 @@ void DspInterface::EnableStretching(bool enable) {
 }
 
 void DspInterface::OutputFrame(StereoFrame16 frame) {
-    if (!sink)
+    if (!sink) {
         return;
+    }
 
     fifo.Push(frame.data(), frame.size());
 
@@ -49,8 +50,9 @@ void DspInterface::OutputFrame(StereoFrame16 frame) {
 }
 
 void DspInterface::OutputSample(std::array<s16, 2> sample) {
-    if (!sink)
+    if (!sink) {
         return;
+    }
 
     fifo.Push(&sample, 1);
 

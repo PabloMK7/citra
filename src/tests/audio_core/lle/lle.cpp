@@ -11,6 +11,7 @@
 #include "common/file_util.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/memory.h"
 
 TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {

@@ -2118,6 +2118,7 @@ void GMainWindow::OnLoadAmiibo() {
         return;
     }
 
+    std::scoped_lock lock{system.Kernel().GetHLELock()};
     if (nfc->IsTagActive()) {
         QMessageBox::warning(this, tr("Error opening amiibo data file"),
                              tr("A tag is already in use."));
@@ -2148,6 +2149,7 @@ void GMainWindow::LoadAmiibo(const QString& filename) {
         return;
     }
 
+    std::scoped_lock lock{system.Kernel().GetHLELock()};
     if (!nfc->LoadAmiibo(filename.toStdString())) {
         QMessageBox::warning(this, tr("Error opening amiibo data file"),
                              tr("Unable to open amiibo file \"%1\" for reading.").arg(filename));
@@ -2164,6 +2166,7 @@ void GMainWindow::OnRemoveAmiibo() {
         return;
     }
 
+    std::scoped_lock lock{system.Kernel().GetHLELock()};
     nfc->RemoveAmiibo();
     ui->action_Remove_Amiibo->setEnabled(false);
 }

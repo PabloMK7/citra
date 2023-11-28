@@ -395,7 +395,8 @@ DSP_DSP::DSP_DSP(Core::System& system)
     semaphore_event->SetHLENotifier(
         [this]() { this->system.DSP().SetSemaphore(preset_semaphore); });
 
-    system.DSP().SetInterruptHandler([dsp_ref = this](InterruptType type, DspPipe pipe) {
+    system.DSP().SetInterruptHandler([dsp_ref = this, &system](InterruptType type, DspPipe pipe) {
+        std::scoped_lock lock{system.Kernel().GetHLELock()};
         if (dsp_ref) {
             dsp_ref->SignalInterrupt(type, pipe);
         }

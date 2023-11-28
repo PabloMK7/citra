@@ -64,7 +64,7 @@ void FFmpegStream::WritePacket(AVPacket* packet) {
     FFmpeg::av_packet_rescale_ts(packet, codec_context->time_base, stream->time_base);
     packet->stream_index = stream->index;
     {
-        std::lock_guard lock{*format_context_mutex};
+        std::scoped_lock lock{*format_context_mutex};
         FFmpeg::av_interleaved_write_frame(format_context, packet);
     }
 }
@@ -727,7 +727,7 @@ void FFmpegMuxer::FlushAudio() {
 }
 
 void FFmpegMuxer::WriteTrailer() {
-    std::lock_guard lock{format_context_mutex};
+    std::scoped_lock lock{format_context_mutex};
     FFmpeg::av_interleaved_write_frame(format_context.get(), nullptr);
     FFmpeg::av_write_trailer(format_context.get());
 }

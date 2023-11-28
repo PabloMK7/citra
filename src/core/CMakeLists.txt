@@ -182,8 +182,6 @@ add_library(citra_core STATIC
     hle/kernel/vm_manager.h
     hle/kernel/wait_object.cpp
     hle/kernel/wait_object.h
-    hle/lock.cpp
-    hle/lock.h
     hle/mii.h
     hle/mii.cpp
     hle/result.h

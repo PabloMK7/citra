@@ -5,8 +5,6 @@
 #include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/kernel/event.h"
-#include "core/hle/lock.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
@@ -680,26 +678,21 @@ std::shared_ptr<Module> Module::Interface::GetModule() const {
 }
 
 bool Module::Interface::IsSearchingForAmiibos() {
-    std::lock_guard lock(HLE::g_hle_lock);
-
     const auto state = nfc->device->GetCurrentState();
     return state == DeviceState::SearchingForTag;
 }
 
 bool Module::Interface::IsTagActive() {
-    std::lock_guard lock(HLE::g_hle_lock);
-
     const auto state = nfc->device->GetCurrentState();
     return state == DeviceState::TagFound || state == DeviceState::TagMounted ||
            state == DeviceState::TagPartiallyMounted;
 }
+
 bool Module::Interface::LoadAmiibo(const std::string& fullpath) {
-    std::lock_guard lock(HLE::g_hle_lock);
     return nfc->device->LoadAmiibo(fullpath);
 }
 
 void Module::Interface::RemoveAmiibo() {
-    std::lock_guard lock(HLE::g_hle_lock);
     nfc->device->UnloadAmiibo();
 }
 

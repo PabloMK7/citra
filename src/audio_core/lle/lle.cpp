@@ -13,7 +13,6 @@
 #include "common/thread.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/hle/lock.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
 
 namespace AudioCore {
@@ -411,17 +410,15 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspLle::GetDspMemory() {
 void DspLle::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
     impl->teakra.SetRecvDataHandler(0, [this, handler]() {
-        if (!impl->loaded)
+        if (!impl->loaded) {
             return;
-
-        std::lock_guard lock(HLE::g_hle_lock);
+        }
         handler(Service::DSP::InterruptType::Zero, static_cast<DspPipe>(0));
     });
     impl->teakra.SetRecvDataHandler(1, [this, handler]() {
-        if (!impl->loaded)
+        if (!impl->loaded) {
             return;
-
-        std::lock_guard lock(HLE::g_hle_lock);
+        }
         handler(Service::DSP::InterruptType::One, static_cast<DspPipe>(0));
     });
 
@@ -450,7 +447,6 @@ void DspLle::SetInterruptHandler(
                 impl->ReadPipe(static_cast<u8>(pipe),
                                impl->GetPipeReadableSize(static_cast<u8>(pipe)));
             } else {
-                std::lock_guard lock(HLE::g_hle_lock);
                 handler(Service::DSP::InterruptType::Pipe, static_cast<DspPipe>(pipe));
             }
         }

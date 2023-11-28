@@ -4,12 +4,10 @@
 
 #pragma once
 
-#include <atomic>
 #include <memory>
 #include <boost/serialization/binary_object.hpp>
 #include "common/common_types.h"
 #include "core/hle/service/nfc/nfc_device.h"
-#include "core/hle/service/nfc/nfc_types.h"
 #include "core/hle/service/service.h"
 
 namespace Core {

@@ -36,7 +36,6 @@
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/kernel/wait_object.h"
-#include "core/hle/lock.h"
 #include "core/hle/result.h"
 #include "core/hle/service/plgldr/plgldr.h"
 
@@ -2300,8 +2299,8 @@ MICROPROFILE_DEFINE(Kernel_SVC, "Kernel", "SVC", MP_RGB(70, 200, 70));
 void SVC::CallSVC(u32 immediate) {
     MICROPROFILE_SCOPE(Kernel_SVC);
 
-    // Lock the global kernel mutex when we enter the kernel HLE.
-    std::lock_guard lock{HLE::g_hle_lock};
+    // Lock the kernel mutex when we enter the kernel HLE.
+    std::scoped_lock lock{kernel.GetHLELock()};
 
     DEBUG_ASSERT_MSG(kernel.GetCurrentProcess()->status == ProcessStatus::Running,
                      "Running threads from exiting processes is unimplemented");
