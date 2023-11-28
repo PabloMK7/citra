@@ -13,6 +13,7 @@
 #include <QString>
 #include <QStyleOption>
 #include <QTime>
+#include <fmt/format.h>
 #include "citra_qt/loading_screen.h"
 #include "common/logging/log.h"
 #include "core/loader/loader.h"
@@ -129,11 +130,17 @@ void LoadingScreen::Prepare(Loader::AppLoader& loader) {
     if (loader.ReadIcon(buffer) == Loader::ResultStatus::Success) {
         QPixmap icon = GetQPixmapFromSMDH(buffer);
         ui->icon->setPixmap(icon);
+    } else {
+        ui->icon->clear();
     }
     std::string title;
-    if (loader.ReadTitle(title) == Loader::ResultStatus::Success) {
-        ui->title->setText(tr("Now Loading\n%1").arg(QString::fromStdString(title)));
+    if (loader.ReadTitle(title) != Loader::ResultStatus::Success) {
+        u64 program_id;
+        if (loader.ReadProgramId(program_id) == Loader::ResultStatus::Success) {
+            title = fmt::format("{:016x}", program_id);
+        }
     }
+    ui->title->setText(tr("Now Loading\n%1").arg(QString::fromStdString(title)));
     eta_shown = false;
     OnLoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 }
