@@ -661,6 +661,10 @@ void Module::UpdatePreferredRegionCode() {
     }
 
     const auto preferred_regions = system.GetAppLoader().GetPreferredRegions();
+    if (preferred_regions.empty()) {
+        return;
+    }
+
     const auto current_language = GetRawSystemLanguage();
     const auto [region, adjusted_language] =
         AdjustLanguageInfoBlock(preferred_regions, current_language);
