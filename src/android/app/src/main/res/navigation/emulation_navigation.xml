@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/emulation_navigation"
+    app:startDestination="@id/emulationFragment">
+
+    <fragment
+        android:id="@+id/emulationFragment"
+        android:name="org.citra.citra_emu.fragments.EmulationFragment"
+        android:label="fragment_emulation"
+        tools:layout="@layout/fragment_emulation" >
+        <argument
+            android:name="game"
+            app:argType="org.citra.citra_emu.model.Game"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <activity
+        android:id="@+id/cheatsActivity"
+        android:name="org.citra.citra_emu.features.cheats.ui.CheatsActivity"
+        android:label="CheatsActivity">
+        <argument
+            android:name="titleId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </activity>
+
+    <action
+        android:id="@+id/action_global_cheatsActivity"
+        app:destination="@id/cheatsActivity" />
+
+</navigation>

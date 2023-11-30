@@ -1,46 +1,141 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
-    tools:context="org.citra.citra_emu.fragments.EmulationFragment">
+    tools:openDrawer="start">
 
-    <!-- This is what everything is rendered to during emulation -->
-    <SurfaceView
-        android:id="@+id/surface_emulation"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:focusable="false"
-        android:focusableInTouchMode="false" />
+        android:layout_height="match_parent">
 
-    <!-- This is the onscreen input overlay -->
-    <org.citra.citra_emu.overlay.InputOverlay
-        android:id="@+id/surface_input_overlay"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        android:focusable="true"
-        android:focusableInTouchMode="true" />
+        <!-- This is what everything is rendered to during emulation -->
+        <SurfaceView
+            android:id="@+id/surface_emulation"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:defaultFocusHighlightEnabled="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false" />
 
-    <TextView
-        android:id="@+id/show_fps_text"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="2dp"
+        <!-- This is the onscreen input overlay -->
+        <org.citra.citra_emu.overlay.InputOverlay
+            android:id="@+id/surface_input_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/done_control_config"
+            style="@style/Widget.Material3.Button.ElevatedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/emulation_done"
+            android:visibility="gone" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/loading_indicator"
+            style="?attr/materialCardViewOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:focusable="false">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/loading_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="24dp"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/loading_image"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:src="@drawable/no_icon" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:orientation="vertical"
+                    android:animateLayoutChanges="true"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/loading_image"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/loading_title"
+                        style="@style/TextAppearance.Material3.TitleMedium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="viewStart"
+                        tools:text="@string/games" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/loading_text"
+                        style="@style/TextAppearance.Material3.TitleSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/loading"
+                        android:textAlignment="viewStart" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/loading_progress_indicator"
+                        android:layout_width="192dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:indeterminate="true"
+                        app:trackCornerRadius="8dp" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/loading_progress_text"
+                        style="@style/TextAppearance.Material3.LabelSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textAlignment="viewStart"
+                        tools:text="10/100" />
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/show_fps_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:clickable="false"
+            android:focusable="false"
+            android:shadowColor="@android:color/black"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            tools:ignore="RtlHardcoded" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/in_game_menu"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="false"
-        android:linksClickable="false"
-        android:longClickable="false"
-        android:shadowColor="@android:color/black"
-        android:textColor="@android:color/white"
-        android:textSize="12sp" />
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/header_in_game"
+        app:menu="@menu/menu_in_game"
+        tools:visibility="gone" />
 
-    <Button
-        android:id="@+id/done_control_config"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:padding="@dimen/spacing_small"
-        android:text="@string/emulation_done"
-        android:visibility="gone" />
-
-</FrameLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

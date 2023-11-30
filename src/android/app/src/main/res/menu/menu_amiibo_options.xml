@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/menu_emulation_amiibo">
+
+    <item
+        android:id="@+id/menu_emulation_amiibo_load"
+        android:title="@string/menu_emulation_amiibo_load" />
+
+    <item
+        android:id="@+id/menu_emulation_amiibo_remove"
+        android:title="@string/menu_emulation_amiibo_remove" />
+
+</menu>

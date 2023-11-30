@@ -1,23 +1,9 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/frame_content"
+<androidx.fragment.app.FragmentContainerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragment_container"
+    android:name="androidx.navigation.fragment.NavHostFragment"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <FrameLayout
-        android:id="@+id/frame_emulation_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <ImageView
-        android:id="@+id/image_icon"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:transitionName="image_game_icon" />
-
-    <View
-        android:id="@+id/menu_anchor"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_gravity="top|end" />
-
-</FrameLayout>
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    app:defaultNavHost="true" />

@@ -312,6 +312,7 @@
     <string name="loader_error_encrypted">Your ROM is Encrypted</string>
     <string name="loader_error_invalid_format">Invalid ROM format</string>
     <string name="loader_error_file_not_found">ROM file does not exist</string>
+    <string name="no_game_present">No bootable game present!</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Press Back to access the menu.</string>
@@ -320,6 +321,7 @@
     <string name="emulation_empty_state_slot">Slot %1$d</string>
     <string name="emulation_occupied_state_slot">Slot %1$d - %2$tF %2$tR</string>
     <string name="emulation_show_fps">Show FPS</string>
+    <string name="emulation_overlay_options">Overlay Options</string>
     <string name="emulation_configure_controls">Configure Controls</string>
     <string name="emulation_edit_layout">Edit Layout</string>
     <string name="emulation_done">Done</string>
@@ -345,6 +347,10 @@
     <string name="select_amiibo">Select Amiibo File</string>
     <string name="amiibo_load_error">Error Loading Amiibo</string>
     <string name="amiibo_load_error_message">While loading the specified Amiibo file, an error occurred. Please check that the file is correct.</string>
+    <string name="pause_emulation">Pause Emulation</string>
+    <string name="resume_emulation">Resume Emulation</string>
+    <string name="lock_drawer">Lock Drawer</string>
+    <string name="unlock_drawer">Unlock Drawer</string>
 
     <string name="write_permission_needed">You need to allow write access to external storage for the emulator to work</string>
     <string name="load_settings">Loading Settings…</string>
@@ -360,7 +366,7 @@
     <string name="moving_data">Moving Data…</string>
     <string name="copy_file_name">Copy file: %s</string>
     <string name="copy_complete">Copy Complete</string>
-    <string name="savestate_warning_title">Savestates</string>
+    <string name="savestates">Save States</string>
     <string name="savestate_warning_message">Warning: Savestates are NOT a replacement for in-game saves, and are not meant to be reliable.\n\nUse at your own risk!</string>
 
     <!-- Software Keyboard -->

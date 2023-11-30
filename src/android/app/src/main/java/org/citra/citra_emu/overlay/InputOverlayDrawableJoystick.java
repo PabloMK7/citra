@@ -94,7 +94,7 @@ public final class InputOverlayDrawableJoystick {
             mPressedState = true;
             mOuterBitmap.setAlpha(0);
             mBoundsBoxBitmap.setAlpha(255);
-            if (EmulationMenuSettings.getJoystickRelCenter()) {
+            if (EmulationMenuSettings.INSTANCE.getJoystickRelCenter()) {
                 getVirtBounds().offset(xPosition - getVirtBounds().centerX(),
                         yPosition - getVirtBounds().centerY());
             }

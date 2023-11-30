@@ -64,9 +64,18 @@
         <activity
             android:name="org.citra.citra_emu.activities.EmulationActivity"
             android:exported="true"
-            android:resizeableActivity="false"
             android:theme="@style/Theme.Citra.Main"
-            android:launchMode="singleTop"/>
+            android:launchMode="singleTop">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:mimeType="application/octet-stream"
+                    android:scheme="content" />
+            </intent-filter>
+
+        </activity>
 
         <service android:name="org.citra.citra_emu.utils.ForegroundService" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Keep emulation running in background"/>

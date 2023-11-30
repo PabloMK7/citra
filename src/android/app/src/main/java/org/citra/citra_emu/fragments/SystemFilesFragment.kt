@@ -27,11 +27,13 @@ import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.HomeNavigationDirections
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.databinding.FragmentSystemFilesBinding
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
@@ -199,7 +201,13 @@ class SystemFilesFragment : Fragment() {
         populateHomeMenuOptions()
         binding.buttonStartHomeMenu.setOnClickListener {
             val menuPath = homeMenuMap[binding.dropdownSystemRegionStart.text.toString()]!!
-            EmulationActivity.launch(requireActivity(), menuPath, getString(R.string.home_menu))
+            val menu = Game(
+                title = getString(R.string.home_menu),
+                path = menuPath,
+                filename = ""
+            )
+            val action = HomeNavigationDirections.actionGlobalEmulationActivity(menu)
+            binding.root.findNavController().navigate(action)
         }
     }
 

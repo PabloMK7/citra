@@ -252,7 +252,7 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun landscapeScreenLayout(): Int = EmulationMenuSettings.getLandscapeScreenLayout()
+    fun landscapeScreenLayout(): Int = EmulationMenuSettings.landscapeScreenLayout
 
     @Keep
     @JvmStatic

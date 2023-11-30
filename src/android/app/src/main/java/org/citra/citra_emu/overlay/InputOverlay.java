@@ -352,7 +352,7 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
         }
 
         for (InputOverlayDrawableDpad dpad : overlayDpads) {
-            if (!dpad.updateStatus(event, EmulationMenuSettings.getDpadSlideEnable())) {
+            if (!dpad.updateStatus(event, EmulationMenuSettings.INSTANCE.getDpadSlide())) {
                 continue;
             }
             NativeLibrary.INSTANCE.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.getUpId(), dpad.getUpStatus());
@@ -608,7 +608,7 @@ public final class InputOverlay extends SurfaceView implements OnTouchListener {
                         "-Portrait" : "";
 
         // Add all the enabled overlay items back to the HashSet.
-        if (EmulationMenuSettings.getShowOverlay()) {
+        if (EmulationMenuSettings.INSTANCE.getShowOverlay()) {
             addOverlayControls(orientation);
         }
 

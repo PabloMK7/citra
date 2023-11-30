@@ -65,6 +65,11 @@
             android:defaultValue="@null" />
     </activity>
 
+    <action
+        android:id="@+id/action_global_emulationActivity"
+        app:destination="@id/emulationActivity"
+        app:launchSingleTop="true" />
+
     <fragment
         android:id="@+id/systemFilesFragment"
         android:name="org.citra.citra_emu.fragments.SystemFilesFragment"

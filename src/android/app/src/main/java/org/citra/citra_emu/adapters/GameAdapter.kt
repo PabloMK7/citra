@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.citra.citra_emu.HomeNavigationDirections
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.activities.EmulationActivity
@@ -77,7 +79,8 @@ class GameAdapter(private val activity: AppCompatActivity) :
             )
             .apply()
 
-        EmulationActivity.launch(activity, holder.game.path, holder.game.title)
+        val action = HomeNavigationDirections.actionGlobalEmulationActivity(holder.game)
+        view.findNavController().navigate(action)
     }
 
     /**

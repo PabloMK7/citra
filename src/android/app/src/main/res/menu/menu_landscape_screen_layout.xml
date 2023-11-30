@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/menu_screen_layout_landscape"
+            android:title="@string/emulation_screen_layout_landscape" />
+
+        <item
+            android:id="@+id/menu_screen_layout_portrait"
+            android:title="@string/emulation_screen_layout_portrait" />
+
+        <item
+            android:id="@+id/menu_screen_layout_single"
+            android:title="@string/emulation_screen_layout_single" />
+
+        <item
+            android:id="@+id/menu_screen_layout_sidebyside"
+            android:title="@string/emulation_screen_layout_sidebyside" />
+
+    </group>
+
+</menu>
