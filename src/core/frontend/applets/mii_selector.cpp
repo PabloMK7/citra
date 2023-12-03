@@ -19,7 +19,8 @@ std::vector<Mii::MiiData> LoadMiis() {
     std::vector<Mii::MiiData> miis;
 
     std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
-    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
+    FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory,
+                                                                FileSys::ExtSaveDataType::Shared);
 
     auto archive_result = extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id, 0);
     if (archive_result.Succeeded()) {

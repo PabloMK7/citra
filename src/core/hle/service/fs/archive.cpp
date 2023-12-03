@@ -349,13 +349,17 @@ void ArchiveManager::RegisterArchiveTypes() {
     RegisterArchiveType(std::move(other_savedata_general_factory),
                         ArchiveIdCode::OtherSaveDataGeneral);
 
-    auto extsavedata_factory =
-        std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false);
+    auto extsavedata_factory = std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(
+        sdmc_directory, FileSys::ExtSaveDataType::Normal);
     RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
 
-    auto sharedextsavedata_factory =
-        std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
+    auto sharedextsavedata_factory = std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(
+        nand_directory, FileSys::ExtSaveDataType::Shared);
     RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
+
+    auto bossextsavedata_factory = std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(
+        sdmc_directory, FileSys::ExtSaveDataType::Boss);
+    RegisterArchiveType(std::move(bossextsavedata_factory), ArchiveIdCode::BossExtSaveData);
 
     // Create the NCCH archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();

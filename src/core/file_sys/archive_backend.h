@@ -41,6 +41,7 @@ class Path {
 public:
     Path() : type(LowPathType::Invalid) {}
     Path(const char* path) : type(LowPathType::Char), string(path) {}
+    Path(std::string path) : type(LowPathType::Char), string(std::move(path)) {}
     Path(std::vector<u8> binary_data) : type(LowPathType::Binary), binary(std::move(binary_data)) {}
     template <std::size_t size>
     Path(const std::array<u8, size>& binary_data)

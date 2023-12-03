@@ -216,14 +216,16 @@ Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
 }
 
 ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location,
-                                                       bool shared)
-    : shared(shared), mount_point(GetExtDataContainerPath(mount_location, shared)) {
+                                                       ExtSaveDataType type_)
+    : type(type_),
+      mount_point(GetExtDataContainerPath(mount_location, type_ == ExtSaveDataType::Shared)) {
     LOG_DEBUG(Service_FS, "Directory {} set as base for ExtSaveData.", mount_point);
 }
 
 Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
-    if (!shared)
+    if (type != ExtSaveDataType::Shared) {
         return path;
+    }
 
     static constexpr u32 SharedExtDataHigh = 0x48000;
 
@@ -242,11 +244,12 @@ Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path,
                                                                             u64 program_id) {
-    std::string fullpath = GetExtSaveDataPath(mount_point, GetCorrectedPath(path)) + "user/";
+    const auto directory = type == ExtSaveDataType::Boss ? "boss/" : "user/";
+    const auto fullpath = GetExtSaveDataPath(mount_point, GetCorrectedPath(path)) + directory;
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
-        if (!shared) {
+        if (type != ExtSaveDataType::Shared) {
             return ERR_NOT_FOUND_INVALID_STATE;
         } else {
             return ERR_NOT_FORMATTED;
