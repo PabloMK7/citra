@@ -132,6 +132,13 @@ static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter is not stand
  */
 struct UnitState {
     explicit UnitState(GSEmitter* emitter = nullptr);
+
+    // Two Address registers and one loop counter
+    // TODO: How many bits do these actually have?
+    s32 address_registers[3];
+
+    bool conditional_code[2];
+
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
@@ -149,12 +156,6 @@ struct UnitState {
         }
     } registers;
     static_assert(std::is_trivial_v<Registers>, "Structure is not POD");
-
-    bool conditional_code[2];
-
-    // Two Address registers and one loop counter
-    // TODO: How many bits do these actually have?
-    s32 address_registers[3];
 
     GSEmitter* emitter_ptr;
 

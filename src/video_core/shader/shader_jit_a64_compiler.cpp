@@ -632,8 +632,8 @@ void JitShader::Compile_END(Instruction instr) {
     STRB(COND1.toW(), STATE, u32(offsetof(UnitState, conditional_code[1])));
 
     // Save address/loop registers
-    STR(ADDROFFS_REG_0.toW(), STATE, u32(offsetof(UnitState, address_registers[0])));
-    STR(ADDROFFS_REG_1.toW(), STATE, u32(offsetof(UnitState, address_registers[1])));
+    STP(ADDROFFS_REG_0.toW(), ADDROFFS_REG_1.toW(), STATE,
+        u32(offsetof(UnitState, address_registers)));
     STR(LOOPCOUNT_REG.toW(), STATE, u32(offsetof(UnitState, address_registers[2])));
 
     ABI_PopRegisters(*this, ABI_ALL_CALLEE_SAVED, 16);
@@ -942,8 +942,8 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     MOV(STATE, ABI_PARAM2);
 
     // Load address/loop registers
-    LDR(ADDROFFS_REG_0.toW(), STATE, u32(offsetof(UnitState, address_registers[0])));
-    LDR(ADDROFFS_REG_1.toW(), STATE, u32(offsetof(UnitState, address_registers[1])));
+    LDP(ADDROFFS_REG_0.toW(), ADDROFFS_REG_1.toW(), STATE,
+        u32(offsetof(UnitState, address_registers)));
     LDR(LOOPCOUNT_REG.toW(), STATE, u32(offsetof(UnitState, address_registers[2])));
 
     //// Load conditional code
