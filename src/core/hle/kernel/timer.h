@@ -44,6 +44,8 @@ private:
     }
 };
 
+class ResourceLimit;
+
 class Timer final : public WaitObject {
 public:
     explicit Timer(KernelSystem& kernel);
@@ -96,6 +98,8 @@ public:
      */
     void Signal(s64 cycles_late);
 
+    std::shared_ptr<ResourceLimit> resource_limit;
+
 private:
     ResetType reset_type; ///< The ResetType of this timer
 
@@ -123,6 +127,7 @@ private:
         ar& signaled;
         ar& name;
         ar& callback_id;
+        ar& resource_limit;
     }
 };
 

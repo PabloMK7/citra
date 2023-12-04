@@ -277,7 +277,7 @@ ResultStatus AppLoader_THREEDSX::Load(std::shared_ptr<Kernel::Process>& process)
 
     // Attach the default resource limit (APPLICATION) to the process
     process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-        Kernel::ResourceLimitCategory::APPLICATION);
+        Kernel::ResourceLimitCategory::Application);
 
     // On real HW this is done with FS:Reg, but we can be lazy
     auto fs_user =

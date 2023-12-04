@@ -6,6 +6,7 @@
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/memory.h"
 
@@ -14,6 +15,7 @@ SERIALIZE_EXPORT_IMPL(Kernel::SharedMemory)
 namespace Kernel {
 
 SharedMemory::SharedMemory(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+
 SharedMemory::~SharedMemory() {
     for (const auto& interval : holding_memory) {
         kernel.GetMemoryRegion(MemoryRegion::SYSTEM)
@@ -22,6 +24,7 @@ SharedMemory::~SharedMemory() {
 
     auto process = owner_process.lock();
     if (process) {
+        process->resource_limit->Release(ResourceLimitType::SharedMemory, 1);
         if (base_address != 0) {
             process->vm_manager.ChangeMemoryState(base_address, size, MemoryState::Locked,
                                                   VMAPermission::None, MemoryState::Private,
@@ -35,8 +38,8 @@ SharedMemory::~SharedMemory() {
 ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
     std::shared_ptr<Process> owner_process, u32 size, MemoryPermission permissions,
     MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
-    auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
+    auto shared_memory = std::make_shared<SharedMemory>(*this);
     shared_memory->owner_process = owner_process;
     shared_memory->name = std::move(name);
     shared_memory->size = size;

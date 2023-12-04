@@ -8,6 +8,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include "core/global.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/service.h"
 
 namespace Core {

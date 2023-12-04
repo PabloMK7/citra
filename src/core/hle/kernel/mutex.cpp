@@ -2,15 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <vector>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "core/core.h"
-#include "core/global.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Mutex)
@@ -27,18 +26,23 @@ void ReleaseThreadMutexes(Thread* thread) {
 }
 
 Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
-Mutex::~Mutex() {}
+
+Mutex::~Mutex() {
+    if (resource_limit) {
+        resource_limit->Release(ResourceLimitType::Mutex, 1);
+    }
+}
 
 std::shared_ptr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
-    auto mutex{std::make_shared<Mutex>(*this)};
-
+    auto mutex = std::make_shared<Mutex>(*this);
     mutex->lock_count = 0;
     mutex->name = std::move(name);
     mutex->holding_thread = nullptr;
 
     // Acquire mutex with current thread if initialized as locked
-    if (initial_locked)
-        mutex->Acquire(thread_managers[current_cpu->GetID()]->GetCurrentThread());
+    if (initial_locked) {
+        mutex->Acquire(GetCurrentThreadManager().GetCurrentThread());
+    }
 
     return mutex;
 }

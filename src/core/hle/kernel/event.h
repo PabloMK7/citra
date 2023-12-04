@@ -7,8 +7,8 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/string.hpp>
-#include "common/common_types.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
 
 namespace Kernel {
@@ -45,6 +45,8 @@ public:
     void Signal();
     void Clear();
 
+    std::shared_ptr<ResourceLimit> resource_limit;
+
 private:
     ResetType reset_type; ///< Current ResetType
 
@@ -60,6 +62,7 @@ private:
         ar& reset_type;
         ar& signaled;
         ar& name;
+        ar& resource_limit;
     }
 };
 

@@ -137,6 +137,10 @@ const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
 }
 
+ConfigMem::Handler& KernelSystem::GetConfigMemHandler() {
+    return *config_mem_handler;
+}
+
 IPCDebugger::Recorder& KernelSystem::GetIPCRecorder() {
     return *ipc_recorder;
 }

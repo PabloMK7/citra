@@ -185,6 +185,11 @@ void Process::Set3dsxKernelCaps() {
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
     memory_region = kernel.GetMemoryRegion(flags.memory_region);
 
+    // Ensure we can reserve a thread. Real kernel returns 0xC860180C if this fails.
+    if (!resource_limit->Reserve(ResourceLimitType::Thread, 1)) {
+        return;
+    }
+
     auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions,
                           MemoryState memory_state) {
         HeapAllocate(segment.addr, segment.size, permissions, memory_state, true);
@@ -281,7 +286,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
 
     holding_memory += allocated_fcram;
     memory_used += size;
-    resource_limit->current_commit += size;
+    resource_limit->Reserve(ResourceLimitType::Commit, size);
 
     return target;
 }
@@ -310,7 +315,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     ASSERT(result.IsSuccess());
 
     memory_used -= size;
-    resource_limit->current_commit -= size;
+    resource_limit->Release(ResourceLimitType::Commit, size);
 
     return RESULT_SUCCESS;
 }
@@ -356,7 +361,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
 
     holding_memory += MemoryRegionInfo::Interval(physical_offset, physical_offset + size);
     memory_used += size;
-    resource_limit->current_commit += size;
+    resource_limit->Reserve(ResourceLimitType::Commit, size);
 
     LOG_DEBUG(Kernel, "Allocated at target={:08X}", target);
     return target;
@@ -385,7 +390,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
 
     holding_memory -= MemoryRegionInfo::Interval(physical_offset, physical_offset + size);
     memory_used -= size;
-    resource_limit->current_commit -= size;
+    resource_limit->Release(ResourceLimitType::Commit, size);
 
     return RESULT_SUCCESS;
 }
@@ -569,7 +574,7 @@ void Process::FreeAllMemory() {
         auto size = entry.upper() - entry.lower();
         memory_region->Free(entry.lower(), size);
         memory_used -= size;
-        resource_limit->current_commit -= size;
+        resource_limit->Release(ResourceLimitType::Commit, size);
     }
     holding_memory.clear();
 
@@ -590,7 +595,7 @@ void Process::FreeAllMemory() {
     // leaks in these values still.
     LOG_DEBUG(Kernel, "Remaining memory used after process cleanup: 0x{:08X}", memory_used);
     LOG_DEBUG(Kernel, "Remaining memory resource commit after process cleanup: 0x{:08X}",
-              resource_limit->current_commit);
+              resource_limit->GetCurrentValue(ResourceLimitType::Commit));
 }
 
 Kernel::Process::Process(KernelSystem& kernel)

@@ -16,6 +16,7 @@
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
+#include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
@@ -389,6 +390,8 @@ private:
     ResultCode GetResourceLimitCurrentValues(VAddr values, Handle resource_limit_handle,
                                              VAddr names, u32 name_count);
     ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limit_handle, VAddr names,
+                                           u32 name_count);
+    ResultCode SetResourceLimitLimitValues(Handle res_limit, VAddr names, VAddr resource_list,
                                            u32 name_count);
     ResultCode CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr stack_top,
                             u32 priority, s32 processor_id);
@@ -1070,9 +1073,18 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
 
 /// Create an address arbiter (to allocate access to shared resources)
 ResultCode SVC::CreateAddressArbiter(Handle* out_handle) {
-    std::shared_ptr<AddressArbiter> arbiter = kernel.CreateAddressArbiter();
-    CASCADE_RESULT(*out_handle,
-                   kernel.GetCurrentProcess()->handle_table.Create(std::move(arbiter)));
+    // Update address arbiter count in resource limit.
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    if (!resource_limit->Reserve(ResourceLimitType::AddressArbiter, 1)) {
+        return ResultCode(ErrCodes::OutOfAddressArbiters, ErrorModule::OS,
+                          ErrorSummary::OutOfResource, ErrorLevel::Status);
+    }
+
+    // Create address arbiter.
+    const auto arbiter = kernel.CreateAddressArbiter();
+    arbiter->resource_limit = resource_limit;
+    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(arbiter)));
     LOG_TRACE(Kernel_SVC, "returned handle=0x{:08X}", *out_handle);
     return RESULT_SUCCESS;
 }
@@ -1161,14 +1173,15 @@ ResultCode SVC::GetResourceLimitCurrentValues(VAddr values, Handle resource_limi
     LOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}",
               resource_limit_handle, names, name_count);
 
-    std::shared_ptr<ResourceLimit> resource_limit =
+    const auto resource_limit =
         kernel.GetCurrentProcess()->handle_table.Get<ResourceLimit>(resource_limit_handle);
-    if (resource_limit == nullptr)
+    if (!resource_limit) {
         return ERR_INVALID_HANDLE;
+    }
 
-    for (unsigned int i = 0; i < name_count; ++i) {
-        u32 name = memory.Read32(names + i * sizeof(u32));
-        s64 value = resource_limit->GetCurrentResourceValue(name);
+    for (u32 i = 0; i < name_count; ++i) {
+        const u32 name = memory.Read32(names + i * sizeof(u32));
+        const s64 value = resource_limit->GetCurrentValue(static_cast<ResourceLimitType>(name));
         memory.Write64(values + i * sizeof(u64), value);
     }
 
@@ -1181,15 +1194,50 @@ ResultCode SVC::GetResourceLimitLimitValues(VAddr values, Handle resource_limit_
     LOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}",
               resource_limit_handle, names, name_count);
 
-    std::shared_ptr<ResourceLimit> resource_limit =
+    const auto resource_limit =
         kernel.GetCurrentProcess()->handle_table.Get<ResourceLimit>(resource_limit_handle);
-    if (resource_limit == nullptr)
+    if (!resource_limit) {
         return ERR_INVALID_HANDLE;
+    }
 
-    for (unsigned int i = 0; i < name_count; ++i) {
-        u32 name = memory.Read32(names + i * sizeof(u32));
-        s64 value = resource_limit->GetMaxResourceValue(name);
+    for (u32 i = 0; i < name_count; ++i) {
+        const auto name = static_cast<ResourceLimitType>(memory.Read32(names + i * sizeof(u32)));
+        if (name >= ResourceLimitType::Max) {
+            return ERR_INVALID_ENUM_VALUE;
+        }
+        const s64 value = resource_limit->GetLimitValue(name);
         memory.Write64(values + i * sizeof(u64), value);
+    }
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode SVC::SetResourceLimitLimitValues(Handle res_limit, VAddr names, VAddr resource_list,
+                                            u32 name_count) {
+    LOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}", res_limit,
+              names, name_count);
+
+    const auto resource_limit =
+        kernel.GetCurrentProcess()->handle_table.Get<ResourceLimit>(res_limit);
+    if (!resource_limit) {
+        return ERR_INVALID_HANDLE;
+    }
+
+    for (u32 i = 0; i < name_count; ++i) {
+        const auto name = static_cast<ResourceLimitType>(memory.Read32(names + i * sizeof(u32)));
+        if (name >= ResourceLimitType::Max) {
+            return ERR_INVALID_ENUM_VALUE;
+        }
+        const s64 value = memory.Read64(resource_list + i * sizeof(u64));
+        const s32 value_high = value >> 32;
+        if (value_high < 0) {
+            return ERR_OUT_OF_RANGE_KERNEL;
+        }
+        if (name == ResourceLimitType::Commit && value_high != 0) {
+            auto& config_mem = kernel.GetConfigMemHandler().GetConfigMem();
+            config_mem.app_mem_alloc = value_high;
+        }
+        resource_limit->SetLimitValue(name, static_cast<s32>(value));
     }
 
     return RESULT_SUCCESS;
@@ -1204,11 +1252,10 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
         return ERR_OUT_OF_RANGE;
     }
 
-    std::shared_ptr<Process> current_process = kernel.GetCurrentProcess();
-
-    std::shared_ptr<ResourceLimit>& resource_limit = current_process->resource_limit;
-    if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority &&
-        !current_process->no_thread_restrictions) {
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    const u32 max_priority = resource_limit->GetLimitValue(ResourceLimitType::Priority);
+    if (max_priority > priority && !current_process->no_thread_restrictions) {
         return ERR_NOT_AUTHORIZED;
     }
 
@@ -1240,6 +1287,13 @@ ResultCode SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr
         break;
     }
 
+    // Update thread count in resource limit.
+    if (!resource_limit->Reserve(ResourceLimitType::Thread, 1)) {
+        return ResultCode(ErrCodes::OutOfThreads, ErrorModule::OS, ErrorSummary::OutOfResource,
+                          ErrorLevel::Status);
+    }
+
+    // Create thread.
     CASCADE_RESULT(std::shared_ptr<Thread> thread,
                    kernel.CreateThread(name, entry_point, priority, arg, processor_id, stack_top,
                                        current_process));
@@ -1284,14 +1338,16 @@ ResultCode SVC::SetThreadPriority(Handle handle, u32 priority) {
         return ERR_OUT_OF_RANGE;
     }
 
-    std::shared_ptr<Thread> thread = kernel.GetCurrentProcess()->handle_table.Get<Thread>(handle);
-    if (thread == nullptr)
+    const auto thread = kernel.GetCurrentProcess()->handle_table.Get<Thread>(handle);
+    if (!thread) {
         return ERR_INVALID_HANDLE;
+    }
 
     // Note: The kernel uses the current process's resource limit instead of
     // the one from the thread owner's resource limit.
-    std::shared_ptr<ResourceLimit>& resource_limit = kernel.GetCurrentProcess()->resource_limit;
-    if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority) {
+    const auto& resource_limit = kernel.GetCurrentProcess()->resource_limit;
+    const u32 max_priority = resource_limit->GetLimitValue(ResourceLimitType::Priority);
+    if (max_priority > priority) {
         return ERR_NOT_AUTHORIZED;
     }
 
@@ -1299,8 +1355,9 @@ ResultCode SVC::SetThreadPriority(Handle handle, u32 priority) {
     thread->UpdatePriority();
 
     // Update the mutexes that this thread is waiting for
-    for (auto& mutex : thread->pending_mutexes)
+    for (auto& mutex : thread->pending_mutexes) {
         mutex->UpdatePriority();
+    }
 
     system.PrepareReschedule();
     return RESULT_SUCCESS;
@@ -1308,9 +1365,19 @@ ResultCode SVC::SetThreadPriority(Handle handle, u32 priority) {
 
 /// Create a mutex
 ResultCode SVC::CreateMutex(Handle* out_handle, u32 initial_locked) {
-    std::shared_ptr<Mutex> mutex = kernel.CreateMutex(initial_locked != 0);
+    // Update mutex count in resource limit.
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    if (!resource_limit->Reserve(ResourceLimitType::Mutex, 1)) {
+        return ResultCode(ErrCodes::OutOfMutexes, ErrorModule::OS, ErrorSummary::OutOfResource,
+                          ErrorLevel::Status);
+    }
+
+    // Create mutex.
+    const auto mutex = kernel.CreateMutex(initial_locked != 0);
     mutex->name = fmt::format("mutex-{:08x}", system.GetRunningCore().GetReg(14));
-    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(std::move(mutex)));
+    mutex->resource_limit = resource_limit;
+    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked={} : created handle=0x{:08X}",
               initial_locked ? "true" : "false", *out_handle);
@@ -1373,11 +1440,20 @@ ResultCode SVC::GetThreadId(u32* thread_id, Handle handle) {
 
 /// Creates a semaphore
 ResultCode SVC::CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
+    // Update semaphore count in resource limit.
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    if (!resource_limit->Reserve(ResourceLimitType::Semaphore, 1)) {
+        return ResultCode(ErrCodes::OutOfSemaphores, ErrorModule::OS, ErrorSummary::OutOfResource,
+                          ErrorLevel::Status);
+    }
+
+    // Create semaphore
     CASCADE_RESULT(std::shared_ptr<Semaphore> semaphore,
                    kernel.CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", system.GetRunningCore().GetReg(14));
-    CASCADE_RESULT(*out_handle,
-                   kernel.GetCurrentProcess()->handle_table.Create(std::move(semaphore)));
+    semaphore->resource_limit = resource_limit;
+    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(semaphore)));
 
     LOG_TRACE(Kernel_SVC, "called initial_count={}, max_count={}, created handle=0x{:08X}",
               initial_count, max_count, *out_handle);
@@ -1461,10 +1537,19 @@ ResultCode SVC::QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 ad
 
 /// Create an event
 ResultCode SVC::CreateEvent(Handle* out_handle, u32 reset_type) {
-    std::shared_ptr<Event> evt =
-        kernel.CreateEvent(static_cast<ResetType>(reset_type),
-                           fmt::format("event-{:08x}", system.GetRunningCore().GetReg(14)));
-    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(std::move(evt)));
+    // Update event count in resource limit.
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    if (!resource_limit->Reserve(ResourceLimitType::Event, 1)) {
+        return ResultCode(ErrCodes::OutOfEvents, ErrorModule::OS, ErrorSummary::OutOfResource,
+                          ErrorLevel::Status);
+    }
+
+    // Create event.
+    const auto name = fmt::format("event-{:08x}", system.GetRunningCore().GetReg(14));
+    const auto event = kernel.CreateEvent(static_cast<ResetType>(reset_type), name);
+    event->resource_limit = resource_limit;
+    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(event)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
               *out_handle);
@@ -1505,10 +1590,19 @@ ResultCode SVC::ClearEvent(Handle handle) {
 
 /// Creates a timer
 ResultCode SVC::CreateTimer(Handle* out_handle, u32 reset_type) {
-    std::shared_ptr<Timer> timer =
-        kernel.CreateTimer(static_cast<ResetType>(reset_type),
-                           fmt ::format("timer-{:08x}", system.GetRunningCore().GetReg(14)));
-    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(std::move(timer)));
+    // Update timer count in resource limit.
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    if (!resource_limit->Reserve(ResourceLimitType::Timer, 1)) {
+        return ResultCode(ErrCodes::OutOfTimers, ErrorModule::OS, ErrorSummary::OutOfResource,
+                          ErrorLevel::Status);
+    }
+
+    // Create timer.
+    const auto name = fmt::format("timer-{:08x}", system.GetRunningCore().GetReg(14));
+    const auto timer = kernel.CreateTimer(static_cast<ResetType>(reset_type), name);
+    timer->resource_limit = resource_limit;
+    CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
               *out_handle);
@@ -1655,15 +1749,22 @@ ResultCode SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my
         return ERR_INVALID_ADDRESS;
     }
 
-    std::shared_ptr<Process> current_process = kernel.GetCurrentProcess();
+    // Update shared memory count in resource limit.
+    const auto current_process = kernel.GetCurrentProcess();
+    const auto& resource_limit = current_process->resource_limit;
+    if (!resource_limit->Reserve(ResourceLimitType::SharedMemory, 1)) {
+        return ResultCode(ErrCodes::OutOfSharedMems, ErrorModule::OS, ErrorSummary::OutOfResource,
+                          ErrorLevel::Status);
+    }
 
     // When trying to create a memory block with address = 0,
     // if the process has the Shared Device Memory flag in the exheader,
     // then we have to allocate from the same region as the caller process instead of the BASE
     // region.
     MemoryRegion region = MemoryRegion::BASE;
-    if (addr == 0 && current_process->flags.shared_device_mem)
+    if (addr == 0 && current_process->flags.shared_device_mem) {
         region = current_process->flags.memory_region;
+    }
 
     CASCADE_RESULT(shared_memory,
                    kernel.CreateSharedMemory(
@@ -2224,7 +2325,7 @@ const std::array<SVC::FunctionDef, 180> SVC::SVC_Table{{
     {0x76, &SVC::Wrap<&SVC::TerminateProcess>, "TerminateProcess"},
     {0x77, nullptr, "SetProcessResourceLimits"},
     {0x78, nullptr, "CreateResourceLimit"},
-    {0x79, nullptr, "SetResourceLimitValues"},
+    {0x79, &SVC::Wrap<&SVC::SetResourceLimitLimitValues>, "SetResourceLimitLimitValues"},
     {0x7A, nullptr, "AddCodeSegment"},
     {0x7B, nullptr, "Backdoor"},
     {0x7C, &SVC::Wrap<&SVC::KernelSetState>, "KernelSetState"},

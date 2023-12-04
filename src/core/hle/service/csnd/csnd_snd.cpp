@@ -6,6 +6,7 @@
 #include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/result.h"
 #include "core/hle/service/csnd/csnd_snd.h"
 

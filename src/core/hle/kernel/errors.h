@@ -9,6 +9,12 @@
 namespace Kernel {
 namespace ErrCodes {
 enum {
+    OutOfSharedMems = 11,
+    OutOfThreads = 12,
+    OutOfMutexes = 13,
+    OutOfSemaphores = 14,
+    OutOfEvents = 15,
+    OutOfTimers = 16,
     OutOfHandles = 19,
     SessionClosedByRemote = 26,
     PortNameTooLong = 30,
@@ -16,6 +22,7 @@ enum {
     NoPendingSessions = 35,
     WrongPermission = 46,
     InvalidBufferDescriptor = 48,
+    OutOfAddressArbiters = 51,
     MaxConnectionsReached = 52,
     CommandTooLarge = 54,
 };

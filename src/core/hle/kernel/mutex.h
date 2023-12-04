@@ -12,6 +12,7 @@
 #include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
@@ -36,6 +37,7 @@ public:
         return HANDLE_TYPE;
     }
 
+    std::shared_ptr<ResourceLimit> resource_limit;
     int lock_count;   ///< Number of times the mutex has been acquired
     u32 priority;     ///< The priority of the mutex, used for priority inheritance.
     std::string name; ///< Name of mutex (optional)
@@ -71,6 +73,7 @@ private:
         ar& priority;
         ar& name;
         ar& holding_thread;
+        ar& resource_limit;
     }
 };
 

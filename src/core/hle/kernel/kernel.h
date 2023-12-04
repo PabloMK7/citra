@@ -295,6 +295,8 @@ public:
     SharedPage::Handler& GetSharedPageHandler();
     const SharedPage::Handler& GetSharedPageHandler() const;
 
+    ConfigMem::Handler& GetConfigMemHandler();
+
     IPCDebugger::Recorder& GetIPCRecorder();
     const IPCDebugger::Recorder& GetIPCRecorder() const;
 

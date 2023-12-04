@@ -16,7 +16,7 @@ static const ResultCode ERROR_BUFFER_TOO_SMALL = // 0xE0E12C1F
     ResultCode(static_cast<ErrorDescription>(31), ErrorModule::RO, ErrorSummary::InvalidArgument,
                ErrorLevel::Usage);
 
-static ResultCode CROFormatError(u32 description) {
+static constexpr ResultCode CROFormatError(u32 description) {
     return ResultCode(static_cast<ErrorDescription>(description), ErrorModule::RO,
                       ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 }

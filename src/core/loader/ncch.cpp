@@ -3,12 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <codecvt>
 #include <cstring>
-#include <locale>
 #include <memory>
 #include <vector>
 #include <fmt/format.h>
+#include "common/literals.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "common/string_util.h"
@@ -32,6 +31,7 @@
 
 namespace Loader {
 
+using namespace Common::Literals;
 static const u64 UPDATE_MASK = 0x0000000e00000000;
 
 FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
@@ -148,13 +148,41 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::move(code);
 
-        process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+        auto& system = Core::System::GetInstance();
+        process = system.Kernel().CreateProcess(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
-        process->resource_limit =
-            Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-                static_cast<Kernel::ResourceLimitCategory>(
-                    overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
+        const auto category = static_cast<Kernel::ResourceLimitCategory>(
+            overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category);
+        process->resource_limit = system.Kernel().ResourceLimit().GetForCategory(category);
+
+        // When running N3DS-unaware titles pm will lie about the amount of memory available.
+        // This means RESLIMIT_COMMIT = APPMEMALLOC doesn't correspond to the actual size of
+        // APPLICATION. See:
+        // https://github.com/LumaTeam/Luma3DS/blob/e2778a45/sysmodules/pm/source/launch.c#L237
+        auto& ncch_caps = overlay_ncch->exheader_header.arm11_system_local_caps;
+        const auto o3ds_mode = static_cast<Kernel::MemoryMode>(ncch_caps.system_mode.Value());
+        const auto n3ds_mode = static_cast<Kernel::New3dsMemoryMode>(ncch_caps.n3ds_mode);
+        const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
+        if (is_new_3ds && n3ds_mode == Kernel::New3dsMemoryMode::Legacy &&
+            category == Kernel::ResourceLimitCategory::Application) {
+            u64 new_limit = 0;
+            switch (o3ds_mode) {
+            case Kernel::MemoryMode::Prod:
+                new_limit = 64_MiB;
+                break;
+            case Kernel::MemoryMode::Dev1:
+                new_limit = 96_MiB;
+                break;
+            case Kernel::MemoryMode::Dev2:
+                new_limit = 80_MiB;
+                break;
+            default:
+                break;
+            }
+            process->resource_limit->SetLimitValue(Kernel::ResourceLimitType::Commit,
+                                                   static_cast<s32>(new_limit));
+        }
 
         // Set the default CPU core for this process
         process->ideal_processor =
@@ -171,9 +199,7 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         u32 stack_size = overlay_ncch->exheader_header.codeset_info.stack_size;
 
         // On real HW this is done with FS:Reg, but we can be lazy
-        auto fs_user =
-            Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
-                "fs:USER");
+        auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
         fs_user->RegisterProgramInfo(process->process_id, process->codeset->program_id, filepath);
 
         Service::FS::FS_USER::ProductInfo product_info{};

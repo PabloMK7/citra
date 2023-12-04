@@ -3,9 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "common/archives.h"
-#include "common/assert.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/thread.h"
 
@@ -14,23 +15,27 @@ SERIALIZE_EXPORT_IMPL(Kernel::Semaphore)
 namespace Kernel {
 
 Semaphore::Semaphore(KernelSystem& kernel) : WaitObject(kernel) {}
-Semaphore::~Semaphore() {}
+
+Semaphore::~Semaphore() {
+    if (resource_limit) {
+        resource_limit->Release(ResourceLimitType::Semaphore, 1);
+    }
+}
 
 ResultVal<std::shared_ptr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_count,
                                                                     s32 max_count,
                                                                     std::string name) {
 
-    if (initial_count > max_count)
+    if (initial_count > max_count) {
         return ERR_INVALID_COMBINATION_KERNEL;
-
-    auto semaphore{std::make_shared<Semaphore>(*this)};
+    }
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread
+    auto semaphore = std::make_shared<Semaphore>(*this);
     semaphore->max_count = max_count;
     semaphore->available_count = initial_count;
     semaphore->name = std::move(name);
-
     return semaphore;
 }
 

@@ -16,6 +16,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -59,7 +60,12 @@ void Thread::Acquire(Thread* thread) {
 Thread::Thread(KernelSystem& kernel, u32 core_id)
     : WaitObject(kernel), core_id(core_id), thread_manager(kernel.GetThreadManager(core_id)) {}
 
-Thread::~Thread() = default;
+Thread::~Thread() {
+    auto process = owner_process.lock();
+    if (process) {
+        process->resource_limit->Release(ResourceLimitType::Thread, 1);
+    }
+}
 
 Thread* ThreadManager::GetCurrentThread() const {
     return current_thread.get();
@@ -342,7 +348,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
-    auto thread{std::make_shared<Thread>(*this, processor_id)};
+    auto thread = std::make_shared<Thread>(*this, processor_id);
 
     thread_managers[processor_id]->thread_list.push_back(thread);
     thread_managers[processor_id]->ready_queue.prepare(priority);

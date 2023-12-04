@@ -25,6 +25,7 @@
 namespace Kernel {
 
 class Thread;
+class ResourceLimit;
 
 enum class ArbitrationType : u32 {
     Signal,
@@ -51,6 +52,7 @@ public:
         return HANDLE_TYPE;
     }
 
+    std::shared_ptr<ResourceLimit> resource_limit;
     std::string name; ///< Name of address arbiter object (optional)
 
     ResultCode ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type, VAddr address,
@@ -86,6 +88,7 @@ private:
         ar& name;
         ar& waiting_threads;
         ar& timeout_callback;
+        ar& resource_limit;
     }
 };
 

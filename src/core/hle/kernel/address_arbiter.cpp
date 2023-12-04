@@ -9,6 +9,7 @@
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
 
@@ -68,13 +69,16 @@ bool AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
 
 AddressArbiter::AddressArbiter(KernelSystem& kernel)
     : Object(kernel), kernel(kernel), timeout_callback(std::make_shared<Callback>(*this)) {}
-AddressArbiter::~AddressArbiter() {}
+
+AddressArbiter::~AddressArbiter() {
+    if (resource_limit) {
+        resource_limit->Release(ResourceLimitType::AddressArbiter, 1);
+    }
+}
 
 std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
-    auto address_arbiter{std::make_shared<AddressArbiter>(*this)};
-
+    auto address_arbiter = std::make_shared<AddressArbiter>(*this);
     address_arbiter->name = std::move(name);
-
     return address_arbiter;
 }
 

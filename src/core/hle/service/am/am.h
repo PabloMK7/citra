@@ -34,6 +34,10 @@ namespace Service::FS {
 enum class MediaType : u32;
 }
 
+namespace Kernel {
+class Mutex;
+}
+
 namespace Service::AM {
 
 namespace ErrCodes {
