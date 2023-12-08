@@ -198,7 +198,27 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_, Descrip
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
       depth_blit_pipeline{MakeDepthStencilBlitPipeline()},
       linear_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eLinear>)},
-      nearest_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eNearest>)} {}
+      nearest_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eNearest>)} {
+
+    if (instance.HasDebuggingToolAttached()) {
+        SetObjectName(device, compute_pipeline_layout, "BlitHelper: compute_pipeline_layout");
+        SetObjectName(device, compute_buffer_pipeline_layout,
+                      "BlitHelper: compute_buffer_pipeline_layout");
+        SetObjectName(device, two_textures_pipeline_layout,
+                      "BlitHelper: two_textures_pipeline_layout");
+        SetObjectName(device, full_screen_vert, "BlitHelper: full_screen_vert");
+        SetObjectName(device, d24s8_to_rgba8_comp, "BlitHelper: d24s8_to_rgba8_comp");
+        SetObjectName(device, depth_to_buffer_comp, "BlitHelper: depth_to_buffer_comp");
+        SetObjectName(device, blit_depth_stencil_frag, "BlitHelper: blit_depth_stencil_frag");
+        SetObjectName(device, d24s8_to_rgba8_pipeline, "BlitHelper: d24s8_to_rgba8_pipeline");
+        SetObjectName(device, depth_to_buffer_pipeline, "BlitHelper: depth_to_buffer_pipeline");
+        if (depth_blit_pipeline) {
+            SetObjectName(device, depth_blit_pipeline, "BlitHelper: depth_blit_pipeline");
+        }
+        SetObjectName(device, linear_sampler, "BlitHelper: linear_sampler");
+        SetObjectName(device, nearest_sampler, "BlitHelper: nearest_sampler");
+    }
+}
 
 BlitHelper::~BlitHelper() {
     device.destroyPipelineLayout(compute_pipeline_layout);

@@ -173,7 +173,7 @@ void StreamBuffer::CreateBuffers(u64 prefered_size) {
 
     stream_buffer_size = static_cast<u64>(requirements.memoryRequirements.size);
 
-    LOG_INFO(Render_Vulkan, "Creating {} buffer with size {} KB with flags {}",
+    LOG_INFO(Render_Vulkan, "Creating {} buffer with size {} KiB with flags {}",
              BufferTypeName(type), stream_buffer_size / 1024,
              vk::to_string(mem_type.propertyFlags));
 
@@ -198,6 +198,14 @@ void StreamBuffer::CreateBuffers(u64 prefered_size) {
 
     device.bindBufferMemory(buffer, memory, 0);
     mapped = reinterpret_cast<u8*>(device.mapMemory(memory, 0, VK_WHOLE_SIZE));
+
+    if (instance.HasDebuggingToolAttached()) {
+        Vulkan::SetObjectName(device, buffer, "StreamBuffer({}): {} KiB {}", BufferTypeName(type),
+                              stream_buffer_size / 1024, vk::to_string(mem_type.propertyFlags));
+        Vulkan::SetObjectName(device, memory, "StreamBufferMemory({}): {} Kib {}",
+                              BufferTypeName(type), stream_buffer_size / 1024,
+                              vk::to_string(mem_type.propertyFlags));
+    }
 }
 
 void StreamBuffer::ReserveWatches(std::vector<Watch>& watches, std::size_t grow_size) {

@@ -247,12 +247,27 @@ void Swapchain::RefreshSemaphores() {
     for (vk::Semaphore& semaphore : present_ready) {
         semaphore = device.createSemaphore({});
     }
+
+    if (instance.HasDebuggingToolAttached()) {
+        for (u32 i = 0; i < image_count; ++i) {
+            Vulkan::SetObjectName(device, image_acquired[i],
+                                  "Swapchain Semaphore: image_acquired {}", i);
+            Vulkan::SetObjectName(device, present_ready[i], "Swapchain Semaphore: present_ready {}",
+                                  i);
+        }
+    }
 }
 
 void Swapchain::SetupImages() {
     vk::Device device = instance.GetDevice();
     images = device.getSwapchainImagesKHR(swapchain);
     image_count = static_cast<u32>(images.size());
+
+    if (instance.HasDebuggingToolAttached()) {
+        for (u32 i = 0; i < image_count; ++i) {
+            Vulkan::SetObjectName(device, images[i], "Swapchain Image {}", i);
+        }
+    }
 }
 
 } // namespace Vulkan

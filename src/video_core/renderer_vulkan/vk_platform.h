@@ -33,4 +33,24 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
 
 DebugCallback CreateDebugCallback(vk::Instance instance, bool& debug_utils_supported);
 
+template <typename T>
+concept VulkanHandleType = vk::isVulkanHandleType<T>::value;
+
+template <VulkanHandleType HandleType>
+void SetObjectName(vk::Device device, const HandleType& handle, std::string_view debug_name) {
+    const vk::DebugUtilsObjectNameInfoEXT name_info = {
+        .objectType = HandleType::objectType,
+        .objectHandle = reinterpret_cast<u64>(static_cast<typename HandleType::NativeType>(handle)),
+        .pObjectName = debug_name.data(),
+    };
+    device.setDebugUtilsObjectNameEXT(name_info);
+}
+
+template <VulkanHandleType HandleType, typename... Args>
+void SetObjectName(vk::Device device, const HandleType& handle, const char* format,
+                   const Args&... args) {
+    const std::string debug_name = fmt::vformat(format, fmt::make_format_args(args...));
+    SetObjectName(device, handle, debug_name);
+}
+
 } // namespace Vulkan

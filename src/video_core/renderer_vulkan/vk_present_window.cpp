@@ -11,6 +11,7 @@
 #include "video_core/renderer_vulkan/vk_present_window.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_swapchain.h"
+#include "vk_platform.h"
 
 #include <vk_mem_alloc.h>
 
@@ -133,6 +134,16 @@ PresentWindow::PresentWindow(Frontend::EmuWindow& emu_window_, const Instance& i
         frame.render_ready = device.createSemaphore({});
         frame.present_done = device.createFence({.flags = vk::FenceCreateFlagBits::eSignaled});
         free_queue.push(&frame);
+    }
+
+    if (instance.HasDebuggingToolAttached()) {
+        for (u32 i = 0; i < num_images; ++i) {
+            Vulkan::SetObjectName(device, swap_chain[i].cmdbuf, "Swapchain Command Buffer {}", i);
+            Vulkan::SetObjectName(device, swap_chain[i].render_ready,
+                                  "Swapchain Semaphore: render_ready {}", i);
+            Vulkan::SetObjectName(device, swap_chain[i].present_done,
+                                  "Swapchain Fence: present_done {}", i);
+        }
     }
 
     if (use_present_thread) {

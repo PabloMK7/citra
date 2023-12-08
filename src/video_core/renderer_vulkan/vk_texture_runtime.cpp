@@ -189,15 +189,6 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
         UNREACHABLE();
     }
 
-    if (!debug_name.empty() && instance->HasDebuggingToolAttached()) {
-        const vk::DebugUtilsObjectNameInfoEXT name_info = {
-            .objectType = vk::ObjectType::eImage,
-            .objectHandle = reinterpret_cast<u64>(unsafe_image),
-            .pObjectName = debug_name.data(),
-        };
-        instance->GetDevice().setDebugUtilsObjectNameEXT(name_info);
-    }
-
     const vk::Image image{unsafe_image};
     const vk::ImageViewCreateInfo view_info = {
         .image = image,
@@ -213,6 +204,12 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
         },
     };
     vk::UniqueImageView image_view = instance->GetDevice().createImageViewUnique(view_info);
+
+    if (!debug_name.empty() && instance->HasDebuggingToolAttached()) {
+        Vulkan::SetObjectName(instance->GetDevice(), image, debug_name);
+        Vulkan::SetObjectName(instance->GetDevice(), image_view.get(), "{} View({})", debug_name,
+                              vk::to_string(aspect));
+    }
 
     return Handle{
         .alloc = allocation,
