@@ -127,6 +127,7 @@ add_library(citra_common STATIC
     serialization/boost_discrete_interval.hpp
     serialization/boost_flat_set.h
     serialization/boost_small_vector.hpp
+    serialization/boost_std_variant.hpp
     serialization/boost_vector.hpp
     static_lru_cache.h
     string_literal.h

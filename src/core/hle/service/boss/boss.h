@@ -5,10 +5,11 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/export.hpp>
 #include "core/global.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/service/boss/online_service.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -19,10 +20,19 @@ namespace Service::BOSS {
 
 class Module final {
 public:
-    explicit Module(Core::System& system);
+    explicit Module(Core::System& system_);
     ~Module() = default;
 
-    class Interface : public ServiceFramework<Interface> {
+    struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+        std::shared_ptr<OnlineService> online_service{};
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int);
+        friend class boost::serialization::access;
+    };
+
+    class Interface : public ServiceFramework<Interface, SessionData> {
     public:
         Interface(std::shared_ptr<Module> boss, const char* name, u32 max_session);
         ~Interface() = default;
@@ -958,29 +968,20 @@ public:
     protected:
         std::shared_ptr<Module> boss;
 
-    private:
-        u8 new_arrival_flag;
-        u8 ns_data_new_flag;
-        u8 ns_data_new_flag_privileged;
-        u8 output_flag;
-
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& new_arrival_flag;
-            ar& ns_data_new_flag;
-            ar& ns_data_new_flag_privileged;
-            ar& output_flag;
-        }
-        friend class boost::serialization::access;
+        std::shared_ptr<OnlineService> GetSessionService(Kernel::HLERequestContext& ctx);
     };
 
 private:
+    Core::System& system;
     std::shared_ptr<Kernel::Event> task_finish_event;
 
+    u8 new_arrival_flag;
+    u8 ns_data_new_flag;
+    u8 ns_data_new_flag_privileged;
+    u8 output_flag;
+
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& task_finish_event;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -988,9 +989,6 @@ void InstallInterfaces(Core::System& system);
 
 } // namespace Service::BOSS
 
-namespace boost::serialization {
-template <class Archive>
-void load_construct_data(Archive& ar, Service::BOSS::Module* t, const unsigned int) {
-    ::new (t) Service::BOSS::Module(Core::Global<Core::System>());
-}
-} // namespace boost::serialization
+SERVICE_CONSTRUCT(Service::BOSS::Module)
+BOOST_CLASS_EXPORT_KEY(Service::BOSS::Module)
+BOOST_CLASS_EXPORT_KEY(Service::BOSS::Module::SessionData)
