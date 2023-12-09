@@ -245,6 +245,12 @@ private:
 };
 static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has incorrect size");
 
+enum class SleepQueryReply : u32 {
+    Reject = 0,
+    Accept = 1,
+    Later = 2,
+};
+
 class AppletManager : public std::enable_shared_from_this<AppletManager> {
 public:
     explicit AppletManager(Core::System& system);

@@ -756,6 +756,27 @@ public:
         void SendDspWakeUp(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::ReplySleepQuery service function
+         *  Inputs:
+         *      1 : Source App ID
+         *      2 : Reply Value
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void ReplySleepQuery(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::ReplySleepNotificationComplete service function
+         *  Inputs:
+         *      1 : Source App ID
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void ReplySleepNotificationComplete(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::PrepareToJumpToHomeMenu service function
          *  Inputs:
          *      0 : Command header [0x002B0000]

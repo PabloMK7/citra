@@ -935,6 +935,28 @@ void Module::APTInterface::SendDspWakeUp(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->SendDspWakeUp(from_app_id, object));
 }
 
+void Module::APTInterface::ReplySleepQuery(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto from_app_id = rp.PopEnum<AppletId>();
+    const auto reply_value = rp.PopEnum<SleepQueryReply>();
+
+    LOG_WARNING(Service_APT, "(STUBBED) called, from_app_id={:08X}, reply_value={:08X}",
+                from_app_id, reply_value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::APTInterface::ReplySleepNotificationComplete(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto from_app_id = rp.PopEnum<AppletId>();
+
+    LOG_WARNING(Service_APT, "(STUBBED) called, from_app_id={:08X}", from_app_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
 void Module::APTInterface::PrepareToJumpToHomeMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
