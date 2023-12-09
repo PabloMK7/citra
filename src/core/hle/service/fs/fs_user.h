@@ -263,6 +263,22 @@ private:
     void OpenArchive(Kernel::HLERequestContext& ctx);
 
     /**
+     * FS_User::ControlArchive service function
+     *  Inputs:
+     *      1-2 : Archive Handle
+     *      3 : Action
+     *      4 : Input Size
+     *      5 : Output Size
+     *      6 : (Input Size << 4) | 0xA
+     *      7 : Input Pointer
+     *      8 : (Output Size << 4) | 0xC
+     *      9 : Output Pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ControlArchive(Kernel::HLERequestContext& ctx);
+
+    /**
      * FS_User::CloseArchive service function
      *  Inputs:
      *      0 : 0x080E0080
