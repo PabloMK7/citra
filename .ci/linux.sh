@@ -1,13 +1,15 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
+
+if [ "$TARGET" = "appimage" ]; then
+    export COMPILER_FLAGS=(-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_LINKER=/etc/bin/ld.lld)
+fi
 
 mkdir build && cd build
 cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_CXX_COMPILER=clang++ \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_LINKER=/etc/bin/ld.lld \
+    "${COMPILER_FLAGS[@]}" \
     -DENABLE_QT_TRANSLATION=ON \
     -DCITRA_ENABLE_COMPATIBILITY_REPORTING=ON \
     -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON \

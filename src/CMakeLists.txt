@@ -124,6 +124,12 @@ else()
         add_compile_options("-stdlib=libc++")
     endif()
 
+    if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        # GCC may warn when it ignores attributes like maybe_unused,
+        # which is a problem for older versions (e.g. GCC 11).
+        add_compile_options("-Wno-attributes")
+    endif()
+
     if (MINGW)
         add_definitions(-DMINGW_HAS_SECURE_API)
         if (COMPILE_WITH_DWARF)
