@@ -7,3 +7,7 @@ source_file = en.ts
 source_lang = en
 type        = QT
 
+[o:citra:p:citra:r:android]
+file_filter = ../../src/android/app/src/main/res/values-<lang>/strings.xml
+source_file = ../../src/android/app/src/main/res/values/strings.xml
+type = ANDROID
