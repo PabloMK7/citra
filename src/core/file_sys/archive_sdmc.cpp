@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include "common/archives.h"
+#include "common/error.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
@@ -103,7 +104,7 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
 
     FileUtil::IOFile file(full_path, mode.write_flag ? "r+b" : "rb");
     if (!file.IsOpen()) {
-        LOG_CRITICAL(Service_FS, "Error opening {}: {}", full_path, GetLastErrorMsg());
+        LOG_CRITICAL(Service_FS, "Error opening {}: {}", full_path, Common::GetLastErrorMsg());
         return ERROR_NOT_FOUND;
     }
 

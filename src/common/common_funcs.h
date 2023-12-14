@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <string>
 #include "common/common_types.h"
 
 /// Textually concatenates two tokens. The double-expansion is required by the C preprocessor.
@@ -46,14 +45,8 @@ __declspec(dllimport) void __stdcall DebugBreak(void);
 #endif
 
 #ifdef _MSC_VER
-#if (_MSC_VER < 1900)
-// Function Cross-Compatibility
-#define snprintf _snprintf
-#endif
-
 // Locale Cross-Compatibility
 #define locale_t _locale_t
-
 #endif // _MSC_VER
 
 #define DECLARE_ENUM_FLAG_OPERATORS(type)                                                          \
@@ -109,9 +102,3 @@ __declspec(dllimport) void __stdcall DebugBreak(void);
         using T = std::underlying_type_t<type>;                                                    \
         return static_cast<T>(key) == 0;                                                           \
     }
-
-// Generic function to get last error message.
-// Call directly after the command or use the error num.
-// This function might change the error code.
-// Defined in Misc.cpp.
-[[nodiscard]] std::string GetLastErrorMsg();

@@ -14,6 +14,7 @@
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_paths.h"
+#include "common/error.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
@@ -89,6 +90,8 @@
 // The code still needs a ton of cleanup.
 // REMEMBER: strdup considered harmful!
 namespace FileUtil {
+
+using Common::GetLastErrorMsg;
 
 // Remove any ending forward slashes from directory paths
 // Modifies argument.

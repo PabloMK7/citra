@@ -97,10 +97,8 @@ struct FrameBufferUpdate {
 static_assert(sizeof(FrameBufferUpdate) == 0x40, "Struct has incorrect size");
 // TODO: Not sure if this padding is correct.
 // Chances are the second block is stored at offset 0x24 rather than 0x20.
-#ifndef _MSC_VER
 static_assert(offsetof(FrameBufferUpdate, framebuffer_info[1]) == 0x20,
               "FrameBufferInfo element has incorrect alignment");
-#endif
 
 /// GSP command
 struct Command {

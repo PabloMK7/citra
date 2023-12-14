@@ -17,42 +17,13 @@
 
 #pragma once
 
-#include <type_traits>
-
 #if defined(_MSC_VER)
 #include <cstdlib>
 #endif
+#include <bit>
 #include <cstring>
+#include <type_traits>
 #include "common/common_types.h"
-
-// GCC
-#ifdef __GNUC__
-
-#if __BYTE_ORDER__ && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) && !defined(COMMON_LITTLE_ENDIAN)
-#define COMMON_LITTLE_ENDIAN 1
-#elif __BYTE_ORDER__ && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) && !defined(COMMON_BIG_ENDIAN)
-#define COMMON_BIG_ENDIAN 1
-#endif
-
-// LLVM/clang
-#elif defined(__clang__)
-
-#if __LITTLE_ENDIAN__ && !defined(COMMON_LITTLE_ENDIAN)
-#define COMMON_LITTLE_ENDIAN 1
-#elif __BIG_ENDIAN__ && !defined(COMMON_BIG_ENDIAN)
-#define COMMON_BIG_ENDIAN 1
-#endif
-
-// MSVC
-#elif defined(_MSC_VER) && !defined(COMMON_BIG_ENDIAN) && !defined(COMMON_LITTLE_ENDIAN)
-
-#define COMMON_LITTLE_ENDIAN 1
-#endif
-
-// Worst case, default to little endian.
-#if !COMMON_BIG_ENDIAN && !COMMON_LITTLE_ENDIAN
-#define COMMON_LITTLE_ENDIAN 1
-#endif
 
 namespace Common {
 
@@ -675,17 +646,8 @@ struct AddEndian<T, SwapTag> {
 };
 
 // Alias LETag/BETag as KeepTag/SwapTag depending on the system
-#if COMMON_LITTLE_ENDIAN
-
-using LETag = KeepTag;
-using BETag = SwapTag;
-
-#else
-
-using BETag = KeepTag;
-using LETag = SwapTag;
-
-#endif
+using LETag = std::conditional_t<std::endian::native == std::endian::little, KeepTag, SwapTag>;
+using BETag = std::conditional_t<std::endian::native == std::endian::big, KeepTag, SwapTag>;
 
 // Aliases for LE types
 using u16_le = AddEndian<u16, LETag>::type;

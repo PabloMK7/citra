@@ -128,6 +128,7 @@ else()
         # GCC may warn when it ignores attributes like maybe_unused,
         # which is a problem for older versions (e.g. GCC 11).
         add_compile_options("-Wno-attributes")
+        add_compile_options("-Wno-interference-size")
     endif()
 
     if (MINGW)
