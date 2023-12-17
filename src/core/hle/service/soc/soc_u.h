@@ -14,6 +14,10 @@ namespace Core {
 class System;
 }
 
+namespace IPC {
+class RequestParser;
+}
+
 namespace Service::SOC {
 
 /// Holds information about a particular socket
@@ -26,12 +30,18 @@ struct SocketHolder {
 #endif // _WIN32
 
     bool blocking = true; ///< Whether the socket is blocking or not.
+    bool isGlobal = false;
+    bool shutdown_rd = false;
+
+    u32 ownerProcess = 0;
 
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& socket_fd;
         ar& blocking;
+        ar& isGlobal;
+        ar& ownerProcess;
     }
     friend class boost::serialization::access;
 };
@@ -51,9 +61,15 @@ public:
     std::optional<InterfaceInfo> GetDefaultInterfaceInfo();
 
 private:
-    static constexpr ResultCode ERR_INVALID_HANDLE =
-        ResultCode(ErrorDescription::InvalidHandle, ErrorModule::SOC, ErrorSummary::InvalidArgument,
-                   ErrorLevel::Permanent);
+    static constexpr ResultCode ERR_WRONG_PROCESS =
+        ResultCode(4, ErrorModule::SOC, ErrorSummary::InvalidState, ErrorLevel::Status);
+    static constexpr ResultCode ERR_NOT_INITIALIZED =
+        ResultCode(6, ErrorModule::SOC, ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+    static constexpr ResultCode ERR_INVALID_SOCKET_DESCRIPTOR =
+        ResultCode(7, ErrorModule::SOC, ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+    static constexpr ResultCode ERR_ALREADY_INITIALIZED =
+        ResultCode(11, ErrorModule::SOC, ErrorSummary::InvalidState, ErrorLevel::Status);
+
     static constexpr u32 SOC_ERR_INAVLID_ENUM_VALUE = 0xFFFF8025;
 
     static constexpr u32 SOC_SOL_IP = 0x0000;
@@ -69,6 +85,19 @@ private:
                                                int platform_level, int platform_opt);
     bool GetSocketBlocking(const SocketHolder& socket_holder);
     u32 SetSocketBlocking(SocketHolder& socket_holder, bool blocking);
+
+    std::optional<std::reference_wrapper<SocketHolder>> GetSocketHolder(u32 ctr_socket_fd,
+                                                                        u32 process_id,
+                                                                        IPC::RequestParser& rp);
+
+    // Close and delete all sockets, optinally only the ones owned by the
+    // specified process ID.
+    void CloseAndDeleteAllSockets(s32 process_id = -1);
+
+    s32 SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
+                   const std::vector<u8>& input_buff, const u8* dest_addr_buff);
+
+    static void RecvBusyWaitForEvent(SocketHolder& holder);
 
     // From
     // https://github.com/devkitPro/libctru/blob/1de86ea38aec419744149daf692556e187d4678a/libctru/include/3ds/services/soc.h#L15
@@ -86,33 +115,22 @@ private:
         NETOPT_DHCP_LEASE_TIME = 0xC001, ///< The DHCP lease time remaining, in seconds
     };
 
-    struct HostByNameData {
-        static const u32 max_entries = 24;
-
-        u16_le addr_type;
-        u16_le addr_len;
-        u16_le addr_count;
-        u16_le alias_count;
-        std::array<char, 256> h_name;
-        std::array<std::array<char, 256>, max_entries> aliases;
-        std::array<std::array<u8, 16>, max_entries> addresses;
-    };
-    static_assert(sizeof(HostByNameData) == 0x1A88, "Invalid HostByNameData size");
-
     void Socket(Kernel::HLERequestContext& ctx);
     void Bind(Kernel::HLERequestContext& ctx);
     void Fcntl(Kernel::HLERequestContext& ctx);
     void Listen(Kernel::HLERequestContext& ctx);
     void Accept(Kernel::HLERequestContext& ctx);
+    void SockAtMark(Kernel::HLERequestContext& ctx);
     void GetHostId(Kernel::HLERequestContext& ctx);
     void Close(Kernel::HLERequestContext& ctx);
     void SendToOther(Kernel::HLERequestContext& ctx);
-    void SendTo(Kernel::HLERequestContext& ctx);
+    void SendToSingle(Kernel::HLERequestContext& ctx);
     void RecvFromOther(Kernel::HLERequestContext& ctx);
     void RecvFrom(Kernel::HLERequestContext& ctx);
     void Poll(Kernel::HLERequestContext& ctx);
     void GetSockName(Kernel::HLERequestContext& ctx);
     void Shutdown(Kernel::HLERequestContext& ctx);
+    void GetHostByAddr(Kernel::HLERequestContext& ctx);
     void GetHostByName(Kernel::HLERequestContext& ctx);
     void GetPeerName(Kernel::HLERequestContext& ctx);
     void Connect(Kernel::HLERequestContext& ctx);
@@ -121,6 +139,9 @@ private:
     void GetSockOpt(Kernel::HLERequestContext& ctx);
     void SetSockOpt(Kernel::HLERequestContext& ctx);
     void GetNetworkOpt(Kernel::HLERequestContext& ctx);
+    void SendToMultiple(Kernel::HLERequestContext& ctx);
+    void CloseSockets(Kernel::HLERequestContext& ctx);
+    void AddGlobalSocket(Kernel::HLERequestContext& ctx);
 
     // Some platforms seem to have GetAddrInfo and GetNameInfo defined as macros,
     // so we have to use a different name here.
@@ -133,17 +154,10 @@ private:
         return next_socket_id++;
     }
 
-    // System timer adjust
-    std::chrono::time_point<std::chrono::steady_clock> adjust_value_last;
-    void PreTimerAdjust();
-    void PostTimerAdjust(Kernel::HLERequestContext& ctx, const std::string& caller_method);
-
-    /// Close all open sockets
-    void CleanupSockets();
-
     /// Holds info about the currently open sockets
     friend struct CTRPollFD;
-    std::unordered_map<u32, SocketHolder> open_sockets;
+    std::unordered_map<u32, SocketHolder> created_sockets;
+    std::set<u32> initialized_processes;
 
     /// Cache interface info for the current session
     /// These two fields are not saved to savestates on purpose
@@ -155,7 +169,8 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& open_sockets;
+        ar& created_sockets;
+        ar& initialized_processes;
     }
     friend class boost::serialization::access;
 };
