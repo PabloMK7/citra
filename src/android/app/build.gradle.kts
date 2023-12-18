@@ -178,10 +178,6 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.work:work-runtime:2.8.1")
-
-    // For loading huge screenshots from the disk.
-    implementation("com.squareup.picasso:picasso:2.71828")
-
     implementation("org.ini4j:ini4j:0.5.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")

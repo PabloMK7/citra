@@ -5,6 +5,7 @@
 package org.citra.citra_emu.features.settings.model.view
 
 import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 
 class StringSingleChoiceSetting(

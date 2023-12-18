@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cheats_navigation"
+    app:startDestination="@id/cheatsFragment">
+
+    <fragment
+        android:id="@+id/cheatsFragment"
+        android:name="org.citra.citra_emu.features.cheats.ui.CheatsFragment"
+        android:label="fragment_cheats"
+        tools:layout="@layout/fragment_cheats">
+        <argument
+            android:name="titleId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
+
+</navigation>

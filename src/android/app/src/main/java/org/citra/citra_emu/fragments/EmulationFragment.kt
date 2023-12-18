@@ -139,9 +139,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         emulationActivity = requireActivity() as EmulationActivity
     }
 
-    /**
-     * Initialize the UI and start emulation in here.
-     */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

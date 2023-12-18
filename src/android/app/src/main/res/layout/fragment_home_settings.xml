@@ -18,9 +18,9 @@
 
         <ImageView
             android:id="@+id/logo_image"
-            android:layout_width="175dp"
-            android:layout_height="175dp"
-            android:layout_margin="64dp"
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:layout_margin="32dp"
             android:layout_gravity="center_horizontal"
             android:src="@drawable/ic_citra_full" />
 

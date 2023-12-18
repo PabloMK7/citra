@@ -76,6 +76,20 @@
         android:label="SystemFilesFragment" />
 
     <fragment
+        android:id="@+id/cheatsFragment"
+        android:name="org.citra.citra_emu.features.cheats.ui.CheatsFragment"
+        android:label="CheatsFragment" >
+        <argument
+            android:name="titleId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_cheatsFragment"
+        app:destination="@id/cheatsFragment" />
+
+    <fragment
         android:id="@+id/driverManagerFragment"
         android:name="org.citra.citra_emu.fragments.DriverManagerFragment"
         android:label="DriverManagerFragment" />

@@ -38,8 +38,8 @@
 
             <ImageView
                 android:id="@+id/image_logo"
-                android:layout_width="175dp"
-                android:layout_height="175dp"
+                android:layout_width="104dp"
+                android:layout_height="104dp"
                 android:layout_marginTop="20dp"
                 android:layout_gravity="center_horizontal"
                 android:src="@drawable/ic_citra_full" />

@@ -26,10 +26,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.HomeNavigationDirections
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
-import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
-import org.citra.citra_emu.features.cheats.ui.CheatsActivity
+import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -100,7 +99,8 @@ class GameAdapter(private val activity: AppCompatActivity) :
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
         } else {
-            CheatsActivity.launch(view.context, holder.game.titleId)
+            val action = CheatsFragmentDirections.actionGlobalCheatsFragment(holder.game.titleId)
+            view.findNavController().navigate(action)
         }
         return true
     }

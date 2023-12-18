@@ -2,9 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-package org.citra.citra_emu.features.settings.model.view
-
-import org.citra.citra_emu.features.settings.model.AbstractSetting
+package org.citra.citra_emu.features.settings.model
 
 interface AbstractShortSetting : AbstractSetting {
     var short: Short

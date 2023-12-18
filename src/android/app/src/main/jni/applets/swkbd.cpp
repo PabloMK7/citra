@@ -23,14 +23,14 @@ namespace SoftwareKeyboard {
 static jobject ToJavaKeyboardConfig(const Frontend::KeyboardConfig& config) {
     JNIEnv* env = IDCache::GetEnvForThread();
     jobject object = env->AllocObject(s_keyboard_config_class);
-    env->SetIntField(object, env->GetFieldID(s_keyboard_config_class, "button_config", "I"),
+    env->SetIntField(object, env->GetFieldID(s_keyboard_config_class, "buttonConfig", "I"),
                      static_cast<jint>(config.button_config));
-    env->SetIntField(object, env->GetFieldID(s_keyboard_config_class, "max_text_length", "I"),
+    env->SetIntField(object, env->GetFieldID(s_keyboard_config_class, "maxTextLength", "I"),
                      static_cast<jint>(config.max_text_length));
-    env->SetBooleanField(object, env->GetFieldID(s_keyboard_config_class, "multiline_mode", "Z"),
+    env->SetBooleanField(object, env->GetFieldID(s_keyboard_config_class, "multilineMode", "Z"),
                          static_cast<jboolean>(config.multiline_mode));
     env->SetObjectField(object,
-                        env->GetFieldID(s_keyboard_config_class, "hint_text", "Ljava/lang/String;"),
+                        env->GetFieldID(s_keyboard_config_class, "hintText", "Ljava/lang/String;"),
                         ToJString(env, config.hint_text));
 
     const jclass string_class = reinterpret_cast<jclass>(env->FindClass("java/lang/String"));
@@ -42,7 +42,7 @@ static jobject ToJavaKeyboardConfig(const Frontend::KeyboardConfig& config) {
                                    ToJString(env, config.button_text[i]));
     }
     env->SetObjectField(
-        object, env->GetFieldID(s_keyboard_config_class, "button_text", "[Ljava/lang/String;"),
+        object, env->GetFieldID(s_keyboard_config_class, "buttonText", "[Ljava/lang/String;"),
         array);
 
     return object;
