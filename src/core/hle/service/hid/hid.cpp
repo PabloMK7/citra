@@ -47,6 +47,8 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
         LoadInputDevices();
     }
     ar& state.hex;
+    ar& circle_pad_old_x;
+    ar& circle_pad_old_y;
     // Update events are set in the constructor
     // Devices are set from the implementation (and are stateless afaik)
 }
