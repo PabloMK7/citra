@@ -2314,7 +2314,7 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
 }
 
 std::shared_ptr<SOC_U> GetService(Core::System& system) {
-    return system.ServiceManager().GetService<SOC_U>("cfg:u");
+    return system.ServiceManager().GetService<SOC_U>("soc:U");
 }
 
 void InstallInterfaces(Core::System& system) {
