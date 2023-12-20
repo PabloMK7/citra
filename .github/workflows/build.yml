@@ -226,8 +226,7 @@ jobs:
         run: ../../../.ci/pack.sh
         working-directory: src/android/app
         env:
-          PACK_INDIVIDUALLY: 1
-          SKIP_7Z: 1
+          UNPACKED: 1
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
