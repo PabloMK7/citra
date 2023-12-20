@@ -36,6 +36,9 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->emulation_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->screenshot_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->updateBox->setVisible(UISettings::values.updater_found);
+#ifndef __unix__
+    ui->toggle_gamemode->setVisible(false);
+#endif
 
     SetupPerGameUI();
     SetConfiguration();
@@ -76,6 +79,9 @@ void ConfigureGeneral::SetConfiguration() {
         ui->toggle_update_check->setChecked(
             UISettings::values.check_for_update_on_start.GetValue());
         ui->toggle_auto_update->setChecked(UISettings::values.update_on_close.GetValue());
+#ifdef __unix__
+        ui->toggle_gamemode->setChecked(Settings::values.enable_gamemode.GetValue());
+#endif
     }
 
     if (Settings::values.frame_limit.GetValue() == 0) {
@@ -172,6 +178,9 @@ void ConfigureGeneral::ApplyConfiguration() {
 
         UISettings::values.check_for_update_on_start = ui->toggle_update_check->isChecked();
         UISettings::values.update_on_close = ui->toggle_auto_update->isChecked();
+#ifdef __unix__
+        Settings::values.enable_gamemode = ui->toggle_gamemode->isChecked();
+#endif
     }
 }
 
@@ -201,6 +210,7 @@ void ConfigureGeneral::SetupPerGameUI() {
     ui->general_group->setVisible(false);
     ui->updateBox->setVisible(false);
     ui->button_reset_defaults->setVisible(false);
+    ui->toggle_gamemode->setVisible(false);
 
     ConfigurationShared::SetColoredComboBox(
         ui->region_combobox, ui->widget_region,

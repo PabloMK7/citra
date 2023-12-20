@@ -154,6 +154,15 @@ add_library(citra_common STATIC
     zstd_compression.h
 )
 
+if (UNIX AND NOT APPLE)
+  target_sources(citra_common PRIVATE
+    linux/gamemode.cpp
+    linux/gamemode.h
+  )
+
+  target_link_libraries(citra_common PRIVATE gamemode)
+endif()
+
 if (APPLE)
     target_sources(citra_common PUBLIC
         apple_authorization.h

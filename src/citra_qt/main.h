@@ -276,6 +276,9 @@ private:
     void ShowMouseCursor();
     void OpenPerGameConfiguration(u64 title_id, const QString& file_name);
     void UpdateAPIIndicator(bool update = false);
+#ifdef __unix__
+    void SetGamemodeEnabled(bool state);
+#endif
 
     std::unique_ptr<Ui::MainWindow> ui;
     Core::System& system;

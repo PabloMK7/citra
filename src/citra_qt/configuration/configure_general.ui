@@ -43,6 +43,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="toggle_gamemode">
+          <property name="text">
+           <string>Enable Gamemode</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>

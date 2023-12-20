@@ -26,6 +26,7 @@
 #include <QVariant>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QtDBus>
+#include "common/linux/gamemode.h"
 #endif
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/applets/mii_selector.h"
@@ -181,6 +182,10 @@ GMainWindow::GMainWindow(Core::System& system_)
     Common::Log::Start();
 
     Debugger::ToggleConsole();
+
+#ifdef __unix__
+    SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
+#endif
 
     // register types to use in slots and signals
     qRegisterMetaType<std::size_t>("std::size_t");
@@ -1323,6 +1328,10 @@ void GMainWindow::ShutdownGame() {
 
     discord_rpc->Update();
 
+#ifdef __unix__
+    Common::Linux::StopGamemode();
+#endif
+
     // The emulation is stopped, so closing the window or not does not matter anymore
     disconnect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
     disconnect(secondary_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
@@ -1834,6 +1843,10 @@ void GMainWindow::OnStartGame() {
 
     discord_rpc->Update();
 
+#ifdef __unix__
+    Common::Linux::StartGamemode();
+#endif
+
     UpdateSaveStates();
     UpdateAPIIndicator();
 }
@@ -1852,6 +1865,10 @@ void GMainWindow::OnPauseGame() {
 
     UpdateMenuState();
     AllowOSSleep();
+
+#ifdef __unix__
+    Common::Linux::StopGamemode();
+#endif
 }
 
 void GMainWindow::OnPauseContinueGame() {
@@ -2076,15 +2093,25 @@ void GMainWindow::OnConfigure() {
     const auto old_input_profiles = Settings::values.input_profiles;
     const auto old_touch_from_button_maps = Settings::values.touch_from_button_maps;
     const bool old_discord_presence = UISettings::values.enable_discord_presence.GetValue();
+#ifdef __unix__
+    const bool old_gamemode = Settings::values.enable_gamemode.GetValue();
+#endif
     auto result = configureDialog.exec();
     game_list->SetDirectoryWatcherEnabled(true);
     if (result == QDialog::Accepted) {
         configureDialog.ApplyConfiguration();
         InitializeHotkeys();
-        if (UISettings::values.theme != old_theme)
+        if (UISettings::values.theme != old_theme) {
             UpdateUITheme();
-        if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence)
+        }
+        if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence) {
             SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
+        }
+#ifdef __unix__
+        if (Settings::values.enable_gamemode.GetValue() != old_gamemode) {
+            SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
+        }
+#endif
         if (!multiplayer_state->IsHostingPublicRoom())
             multiplayer_state->UpdateCredentials();
         emit UpdateThemedIcons();
@@ -2930,6 +2957,14 @@ void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
 #endif
     discord_rpc->Update();
 }
+
+#ifdef __unix__
+void GMainWindow::SetGamemodeEnabled(bool state) {
+    if (emulation_running) {
+        Common::Linux::SetGamemodeState(state);
+    }
+}
+#endif
 
 #ifdef main
 #undef main

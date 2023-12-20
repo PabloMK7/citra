@@ -319,6 +319,10 @@ if(ANDROID)
     target_link_libraries(httplib INTERFACE ifaddrs)
 endif()
 
+if (UNIX AND NOT APPLE)
+    add_subdirectory(gamemode)
+endif()
+
 # cpp-jwt
 if (ENABLE_WEB_SERVICE)
     if (USE_SYSTEM_CPP_JWT)

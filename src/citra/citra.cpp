@@ -38,6 +38,10 @@
 #include "network/network.h"
 #include "video_core/renderer_base.h"
 
+#ifdef __unix__
+#include "common/linux/gamemode.h"
+#endif
+
 #undef _UNICODE
 #include <getopt.h>
 #ifndef _MSC_VER
@@ -442,6 +446,10 @@ int main(int argc, char** argv) {
         }
     }
 
+#ifdef __unix__
+    Common::Linux::StartGamemode();
+#endif
+
     std::thread main_render_thread([&emu_window] { emu_window->Present(); });
     std::thread secondary_render_thread([&secondary_window] {
         if (secondary_window) {
@@ -492,6 +500,10 @@ int main(int argc, char** argv) {
     InputCommon::Shutdown();
 
     system.Shutdown();
+
+#ifdef __unix__
+    Common::Linux::StopGamemode();
+#endif
 
     detached_tasks.WaitForAllTasks();
     return 0;
