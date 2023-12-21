@@ -874,7 +874,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = 2
+                override val defaultValue = 1
             }
             add(
                 SingleChoiceSetting(

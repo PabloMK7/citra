@@ -224,7 +224,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
             setUsername("CITRA")
             setBirthday(3, 25)
             setSystemLanguage(1)
-            setSoundOutputMode(2)
+            setSoundOutputMode(1)
             setCountryCode(49)
             setPlayCoins(42)
         }

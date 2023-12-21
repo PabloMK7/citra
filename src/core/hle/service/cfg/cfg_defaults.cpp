@@ -33,7 +33,7 @@ constexpr std::array<float, 8> DEFAULT_STEREO_CAMERA_SETTINGS = {
     10.0f, 5.0f,   55.58000183105469f, 21.56999969482422f,
 };
 constexpr New3dsBacklightControls DEFAULT_NEW_3DS_BACKLIGHT_CONTROLS{{0, 0, 0, 0}, 0, {0, 0, 0}};
-constexpr u8 DEFAULT_SOUND_OUTPUT_MODE = SOUND_SURROUND;
+constexpr u8 DEFAULT_SOUND_OUTPUT_MODE = SOUND_STEREO;
 // NOTE: These two are placeholders. They are randomly generated elsewhere, rather than using fixed
 // constants.
 constexpr u64_le DEFAULT_CONSOLE_ID = 0;
