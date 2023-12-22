@@ -21,9 +21,10 @@ ConfigureAudio::ConfigureAudio(bool is_powered_on, QWidget* parent)
     ui->setupUi(this);
 
     ui->output_type_combo_box->clear();
-    for (u32 type = 0; type < static_cast<u32>(AudioCore::SinkType::NumSinkTypes); type++) {
-        ui->output_type_combo_box->addItem(QString::fromUtf8(
-            AudioCore::GetSinkName(static_cast<AudioCore::SinkType>(type)).data()));
+    ui->output_type_combo_box->addItem(tr("Auto"), QVariant::fromValue(AudioCore::SinkType::Auto));
+    for (const auto& sink : AudioCore::ListSinks()) {
+        ui->output_type_combo_box->addItem(QString::fromUtf8(sink.name),
+                                           QVariant::fromValue(sink.type));
     }
 
     ui->emulation_combo_box->setEnabled(!is_powered_on);
@@ -32,9 +33,10 @@ ConfigureAudio::ConfigureAudio(bool is_powered_on, QWidget* parent)
             &ConfigureAudio::SetVolumeIndicatorText);
 
     ui->input_type_combo_box->clear();
-    for (u32 type = 0; type < static_cast<u32>(AudioCore::InputType::NumInputTypes); type++) {
-        ui->input_type_combo_box->addItem(QString::fromUtf8(
-            AudioCore::GetInputName(static_cast<AudioCore::InputType>(type)).data()));
+    ui->input_type_combo_box->addItem(tr("Auto"), QVariant::fromValue(AudioCore::InputType::Auto));
+    for (const auto& input : AudioCore::ListInputs()) {
+        ui->input_type_combo_box->addItem(QString::fromUtf8(input.name),
+                                          QVariant::fromValue(input.type));
     }
 
     ui->volume_label->setVisible(Settings::IsConfiguringGlobal());
@@ -89,8 +91,18 @@ void ConfigureAudio::SetConfiguration() {
 }
 
 void ConfigureAudio::SetOutputTypeFromSinkType() {
-    ui->output_type_combo_box->setCurrentIndex(
-        static_cast<int>(Settings::values.output_type.GetValue()));
+    int new_index = -1;
+
+    for (int index = 0; index < ui->output_type_combo_box->count(); index++) {
+        const auto sink_type =
+            static_cast<AudioCore::SinkType>(ui->output_type_combo_box->itemData(index).toUInt());
+        if (Settings::values.output_type.GetValue() == sink_type) {
+            new_index = index;
+            break;
+        }
+    }
+
+    ui->output_type_combo_box->setCurrentIndex(new_index);
 }
 
 void ConfigureAudio::SetOutputDeviceFromDeviceID() {
@@ -108,8 +120,18 @@ void ConfigureAudio::SetOutputDeviceFromDeviceID() {
 }
 
 void ConfigureAudio::SetInputTypeFromInputType() {
-    ui->input_type_combo_box->setCurrentIndex(
-        static_cast<int>(Settings::values.input_type.GetValue()));
+    int new_index = -1;
+
+    for (int index = 0; index < ui->input_type_combo_box->count(); index++) {
+        const auto input_type =
+            static_cast<AudioCore::InputType>(ui->input_type_combo_box->itemData(index).toUInt());
+        if (Settings::values.input_type.GetValue() == input_type) {
+            new_index = index;
+            break;
+        }
+    }
+
+    ui->input_type_combo_box->setCurrentIndex(new_index);
 }
 
 void ConfigureAudio::SetInputDeviceFromDeviceID() {
@@ -142,30 +164,34 @@ void ConfigureAudio::ApplyConfiguration() {
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.output_type =
-            static_cast<AudioCore::SinkType>(ui->output_type_combo_box->currentIndex());
+            static_cast<AudioCore::SinkType>(ui->output_type_combo_box->currentData().toUInt());
         Settings::values.output_device = ui->output_device_combo_box->currentText().toStdString();
         Settings::values.input_type =
-            static_cast<AudioCore::InputType>(ui->input_type_combo_box->currentIndex());
+            static_cast<AudioCore::InputType>(ui->input_type_combo_box->currentData().toUInt());
         Settings::values.input_device = ui->input_device_combo_box->currentText().toStdString();
     }
 }
 
 void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
-    auto sink_type = static_cast<AudioCore::SinkType>(sink_index);
+    auto sink_type =
+        static_cast<AudioCore::SinkType>(ui->output_type_combo_box->itemData(sink_index).toUInt());
+    auto& sink_details = AudioCore::GetSinkDetails(sink_type);
 
     ui->output_device_combo_box->clear();
     ui->output_device_combo_box->addItem(QString::fromUtf8(AudioCore::auto_device_name));
 
-    for (const auto& device : AudioCore::GetDeviceListForSink(sink_type)) {
+    for (const auto& device : sink_details.list_devices()) {
         ui->output_device_combo_box->addItem(QString::fromStdString(device));
     }
 }
 
 void ConfigureAudio::UpdateAudioInputDevices(int input_index) {
-    auto input_type = static_cast<AudioCore::InputType>(input_index);
+    auto input_type =
+        static_cast<AudioCore::InputType>(ui->input_type_combo_box->itemData(input_index).toUInt());
+    auto& input_details = AudioCore::GetInputDetails(input_type);
 
 #if defined(__APPLE__)
-    if (input_type != AudioCore::InputType::Null && input_type != AudioCore::InputType::Static) {
+    if (input_details.real) {
         AppleAuthorization::CheckAuthorizationForMicrophone();
     }
 #endif
@@ -173,7 +199,7 @@ void ConfigureAudio::UpdateAudioInputDevices(int input_index) {
     ui->input_device_combo_box->clear();
     ui->input_device_combo_box->addItem(QString::fromUtf8(AudioCore::auto_device_name));
 
-    for (const auto& device : AudioCore::GetDeviceListForInput(input_type)) {
+    for (const auto& device : input_details.list_devices()) {
         ui->input_device_combo_box->addItem(QString::fromStdString(device));
     }
 }

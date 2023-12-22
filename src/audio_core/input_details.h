@@ -20,17 +20,28 @@ enum class InputType : u32 {
     Static = 2,
     Cubeb = 3,
     OpenAL = 4,
-
-    NumInputTypes,
 };
 
-/// Gets the name of a input type.
-std::string_view GetInputName(InputType input_type);
+struct InputDetails {
+    using FactoryFn = std::unique_ptr<Input> (*)(std::string_view device_id);
+    using ListDevicesFn = std::vector<std::string> (*)();
 
-/// Gets the list of devices for a particular input identified by the given ID.
-std::vector<std::string> GetDeviceListForInput(InputType input_type);
+    /// Type of this input.
+    InputType type;
+    /// Name for this input.
+    std::string_view name;
+    /// Whether the input is backed by real devices.
+    bool real;
+    /// A method to call to construct an instance of this type of input.
+    FactoryFn create_input;
+    /// A method to call to list available devices.
+    ListDevicesFn list_devices;
+};
 
-/// Creates an audio input identified by the given device ID.
-std::unique_ptr<Input> CreateInputFromID(InputType input_type, std::string_view device_id);
+/// Lists all available input types.
+std::vector<InputDetails> ListInputs();
+
+/// Gets the details of an input type.
+const InputDetails& GetInputDetails(InputType input_type);
 
 } // namespace AudioCore

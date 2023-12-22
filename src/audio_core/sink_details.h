@@ -20,17 +20,26 @@ enum class SinkType : u32 {
     Cubeb = 2,
     OpenAL = 3,
     SDL2 = 4,
-
-    NumSinkTypes,
 };
 
-/// Gets the name of a sink type.
-std::string_view GetSinkName(SinkType sink_type);
+struct SinkDetails {
+    using FactoryFn = std::unique_ptr<Sink> (*)(std::string_view);
+    using ListDevicesFn = std::vector<std::string> (*)();
 
-/// Gets the list of devices for a particular sink identified by the given ID.
-std::vector<std::string> GetDeviceListForSink(SinkType sink_type);
+    /// Type of this sink.
+    SinkType type;
+    /// Name for this sink.
+    std::string_view name;
+    /// A method to call to construct an instance of this type of sink.
+    FactoryFn create_sink;
+    /// A method to call to list available devices.
+    ListDevicesFn list_devices;
+};
 
-/// Creates an audio sink identified by the given device ID.
-std::unique_ptr<Sink> CreateSinkFromID(SinkType sink_type, std::string_view device_id);
+/// Lists all available sink types.
+std::vector<SinkDetails> ListSinks();
+
+/// Gets the details of an sink type.
+const SinkDetails& GetSinkDetails(SinkType input_type);
 
 } // namespace AudioCore

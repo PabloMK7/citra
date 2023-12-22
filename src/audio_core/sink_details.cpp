@@ -21,20 +21,6 @@
 
 namespace AudioCore {
 namespace {
-struct SinkDetails {
-    using FactoryFn = std::unique_ptr<Sink> (*)(std::string_view);
-    using ListDevicesFn = std::vector<std::string> (*)();
-
-    /// Type of this sink.
-    SinkType type;
-    /// Name for this sink.
-    std::string_view name;
-    /// A method to call to construct an instance of this type of sink.
-    FactoryFn factory;
-    /// A method to call to list available devices.
-    ListDevicesFn list_devices;
-};
-
 // sink_details is ordered in terms of desirability, with the best choice at the top.
 constexpr std::array sink_details = {
 #ifdef HAVE_CUBEB
@@ -64,6 +50,11 @@ constexpr std::array sink_details = {
                 },
                 [] { return std::vector<std::string>{"None"}; }},
 };
+} // Anonymous namespace
+
+std::vector<SinkDetails> ListSinks() {
+    return {sink_details.begin(), sink_details.end()};
+}
 
 const SinkDetails& GetSinkDetails(SinkType sink_type) {
     auto iter = std::find_if(
@@ -80,22 +71,6 @@ const SinkDetails& GetSinkDetails(SinkType sink_type) {
     }
 
     return *iter;
-}
-} // Anonymous namespace
-
-std::string_view GetSinkName(SinkType sink_type) {
-    if (sink_type == SinkType::Auto) {
-        return "Auto";
-    }
-    return GetSinkDetails(sink_type).name;
-}
-
-std::vector<std::string> GetDeviceListForSink(SinkType sink_type) {
-    return GetSinkDetails(sink_type).list_devices();
-}
-
-std::unique_ptr<Sink> CreateSinkFromID(SinkType sink_type, std::string_view device_id) {
-    return GetSinkDetails(sink_type).factory(device_id);
 }
 
 } // namespace AudioCore

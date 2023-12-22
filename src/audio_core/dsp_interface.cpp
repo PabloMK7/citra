@@ -21,7 +21,7 @@ void DspInterface::SetSink(AudioCore::SinkType sink_type, std::string_view audio
     // Dispose of the current sink first to avoid contention.
     sink.reset();
 
-    sink = CreateSinkFromID(sink_type, audio_device);
+    sink = AudioCore::GetSinkDetails(sink_type).create_sink(audio_device);
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
     time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());

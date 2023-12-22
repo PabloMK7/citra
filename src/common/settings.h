@@ -441,8 +441,13 @@ struct Values {
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
 
     // Renderer
-    SwitchableSetting<GraphicsAPI, true> graphics_api{GraphicsAPI::OpenGL, GraphicsAPI::Software,
-                                                      GraphicsAPI::Vulkan, "graphics_api"};
+    SwitchableSetting<GraphicsAPI, true> graphics_api{
+#ifdef HAS_OPENGL
+        GraphicsAPI::OpenGL,
+#else
+        GraphicsAPI::Vulkan,
+#endif
+        GraphicsAPI::Software, GraphicsAPI::Vulkan, "graphics_api"};
     SwitchableSetting<u32> physical_device{0, "physical_device"};
     Setting<bool> use_gles{false, "use_gles"};
     Setting<bool> renderer_debug{false, "renderer_debug"};

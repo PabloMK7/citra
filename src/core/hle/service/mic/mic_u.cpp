@@ -375,8 +375,8 @@ struct MIC_U::Impl {
             mic.reset();
         }
 
-        mic = AudioCore::CreateInputFromID(Settings::values.input_type.GetValue(),
-                                           Settings::values.input_device.GetValue());
+        mic = AudioCore::GetInputDetails(Settings::values.input_type.GetValue())
+                  .create_input(Settings::values.input_device.GetValue());
         if (was_sampling) {
             StartSampling();
         }

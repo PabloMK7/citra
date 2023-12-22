@@ -155,6 +155,10 @@ else()
     endif()
 endif()
 
+if (NOT APPLE)
+    add_compile_definitions(HAS_OPENGL)
+endif()
+
 add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(video_core)
