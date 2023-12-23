@@ -6,14 +6,15 @@ package org.citra.citra_emu.features.settings.model.view
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
 import android.view.InputDevice
 import android.view.InputDevice.MotionRange
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.Settings
 
@@ -127,6 +128,11 @@ class InputBindingSetting(
                 Settings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
                 Settings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT
                 Settings.KEY_BUTTON_RIGHT -> NativeLibrary.ButtonType.DPAD_RIGHT
+
+                Settings.HOTKEY_SCREEN_SWAP -> Hotkey.SWAP_SCREEN.button
+                Settings.HOTKEY_CYCLE_LAYOUT -> Hotkey.CYCLE_LAYOUT.button
+                Settings.HOTKEY_CLOSE_GAME -> Hotkey.CLOSE_GAME.button
+                Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 else -> -1
             }
 

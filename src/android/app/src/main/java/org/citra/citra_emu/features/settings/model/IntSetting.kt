@@ -22,6 +22,7 @@ enum class IntSetting(
     CARDBOARD_SCREEN_SIZE("cardboard_screen_size", Settings.SECTION_LAYOUT, 85),
     CARDBOARD_X_SHIFT("cardboard_x_shift", Settings.SECTION_LAYOUT, 0),
     CARDBOARD_Y_SHIFT("cardboard_y_shift", Settings.SECTION_LAYOUT, 0),
+    SCREEN_LAYOUT("layout_option", Settings.SECTION_LAYOUT, 0),
     AUDIO_INPUT_TYPE("output_type", Settings.SECTION_AUDIO, 0),
     NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, 1),
     CPU_CLOCK_SPEED("cpu_clock_percentage", Settings.SECTION_CORE, 100),

@@ -104,6 +104,7 @@
     <!-- Input related strings -->
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
+    <string name="controller_hotkeys">Hotkeys</string>
     <string name="controller_triggers">Triggers</string>
     <string name="controller_trigger">Trigger</string>
     <string name="controller_dpad">D-Pad</string>
@@ -336,10 +337,13 @@
     <string name="emulation_screen_layout_portrait">Portrait</string>
     <string name="emulation_screen_layout_single">Single Screen</string>
     <string name="emulation_screen_layout_sidebyside">Side by Side Screens</string>
+    <string name="emulation_screen_layout_hybrid">Hybrid Screens</string>
+    <string name="emulation_cycle_landscape_layouts">Cycle Landscape Layouts</string>
     <string name="emulation_swap_screens">Swap Screens</string>
     <string name="emulation_touch_overlay_reset">Reset Overlay</string>
     <string name="emulation_show_overlay">Show Overlay</string>
     <string name="emulation_close_game">Close Game</string>
+    <string name="emulation_toggle_pause">Toggle Pause</string>
     <string name="emulation_close_game_message">Are you sure that you would like to close the current game?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Load</string>

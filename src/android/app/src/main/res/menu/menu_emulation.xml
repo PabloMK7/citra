@@ -83,6 +83,10 @@
                 <item
                     android:id="@+id/menu_screen_layout_sidebyside"
                     android:title="@string/emulation_screen_layout_sidebyside" />
+
+                <item
+                    android:id="@+id/menu_screen_layout_hybrid"
+                    android:title="@string/emulation_screen_layout_hybrid" />
             </group>
         </menu>
     </item>

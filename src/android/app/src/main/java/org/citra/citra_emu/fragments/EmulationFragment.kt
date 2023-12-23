@@ -15,7 +15,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.view.Choreographer
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.Surface
 import android.view.SurfaceHolder
@@ -33,6 +32,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -51,6 +51,9 @@ import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.databinding.DialogCheckboxBinding
 import org.citra.citra_emu.databinding.DialogSliderBinding
 import org.citra.citra_emu.databinding.FragmentEmulationBinding
+import org.citra.citra_emu.display.ScreenAdjustmentUtil
+import org.citra.citra_emu.display.ScreenLayout
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.model.Game
@@ -60,10 +63,10 @@ import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.GameIconUtils
+import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.EmulationViewModel
-import java.lang.NullPointerException
 
 class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.FrameCallback {
     private val preferences: SharedPreferences
@@ -80,8 +83,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val args by navArgs<EmulationFragmentArgs>()
 
     private lateinit var game: Game
+    private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
 
     private val emulationViewModel: EmulationViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -137,6 +142,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         retainInstance = true
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
+        screenAdjustmentUtil = ScreenAdjustmentUtil(emulationActivity.windowManager, settingsViewModel.settings)
+        EmulationLifecycleUtil.addShutdownHook(hook = { emulationState.stop() })
+        EmulationLifecycleUtil.addPauseResumeHook(hook = { togglePause() })
     }
 
     override fun onCreateView(
@@ -258,12 +266,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_swap_screens -> {
-                    val isEnabled = !EmulationMenuSettings.swapScreens
-                    EmulationMenuSettings.swapScreens = isEnabled
-                    NativeLibrary.swapScreens(
-                        isEnabled,
-                        requireActivity().windowManager.defaultDisplay.rotation
-                    )
+                    screenAdjustmentUtil.swapScreen()
                     true
                 }
 
@@ -315,8 +318,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         .setTitle(R.string.emulation_close_game)
                         .setMessage(R.string.emulation_close_game_message)
                         .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
-                            emulationState.stop()
-                            requireActivity().finish()
+                            EmulationLifecycleUtil.closeGame()
                         }
                         .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
                             NativeLibrary.unPauseEmulation()
@@ -408,6 +410,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         setInsets()
+    }
+
+    private fun togglePause() {
+        if(emulationState.isPaused) {
+            emulationState.unpause()
+        } else {
+            emulationState.pause()
+        }
     }
 
     override fun onResume() {
@@ -666,14 +676,17 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.menuInflater.inflate(R.menu.menu_landscape_screen_layout, popupMenu.menu)
 
         val layoutOptionMenuItem = when (EmulationMenuSettings.landscapeScreenLayout) {
-            EmulationMenuSettings.LayoutOption_SingleScreen ->
+            ScreenLayout.SINGLE_SCREEN.int ->
                 R.id.menu_screen_layout_single
 
-            EmulationMenuSettings.LayoutOption_SideScreen ->
+            ScreenLayout.SIDE_SCREEN.int ->
                 R.id.menu_screen_layout_sidebyside
 
-            EmulationMenuSettings.LayoutOption_MobilePortrait ->
+            ScreenLayout.MOBILE_PORTRAIT.int ->
                 R.id.menu_screen_layout_portrait
+
+            ScreenLayout.HYBRID_SCREEN.int ->
+                R.id.menu_screen_layout_hybrid
 
             else -> R.id.menu_screen_layout_landscape
         }
@@ -682,22 +695,27 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_screen_layout_landscape -> {
-                    changeScreenOrientation(EmulationMenuSettings.LayoutOption_MobileLandscape, it)
+                    screenAdjustmentUtil.changeScreenOrientation(ScreenLayout.MOBILE_LANDSCAPE)
                     true
                 }
 
                 R.id.menu_screen_layout_portrait -> {
-                    changeScreenOrientation(EmulationMenuSettings.LayoutOption_MobilePortrait, it)
+                    screenAdjustmentUtil.changeScreenOrientation(ScreenLayout.MOBILE_PORTRAIT)
                     true
                 }
 
                 R.id.menu_screen_layout_single -> {
-                    changeScreenOrientation(EmulationMenuSettings.LayoutOption_SingleScreen, it)
+                    screenAdjustmentUtil.changeScreenOrientation(ScreenLayout.SINGLE_SCREEN)
                     true
                 }
 
                 R.id.menu_screen_layout_sidebyside -> {
-                    changeScreenOrientation(EmulationMenuSettings.LayoutOption_SideScreen, it)
+                    screenAdjustmentUtil.changeScreenOrientation(ScreenLayout.SIDE_SCREEN)
+                    true
+                }
+
+                R.id.menu_screen_layout_hybrid -> {
+                    screenAdjustmentUtil.changeScreenOrientation(ScreenLayout.HYBRID_SCREEN)
                     true
                 }
 
@@ -706,15 +724,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         popupMenu.show()
-    }
-
-    private fun changeScreenOrientation(layoutOption: Int, item: MenuItem) {
-        item.setChecked(true)
-        NativeLibrary.notifyOrientationChange(
-            layoutOption,
-            requireActivity().windowManager.defaultDisplay.rotation
-        )
-        EmulationMenuSettings.landscapeScreenLayout = layoutOption
     }
 
     private fun editControlsPlacement() {

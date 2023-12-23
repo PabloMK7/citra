@@ -7,18 +7,11 @@ package org.citra.citra_emu.utils
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.display.ScreenLayout
 
 object EmulationMenuSettings {
     private val preferences =
         PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-
-    // These must match what is defined in src/common/settings.h
-    const val LayoutOption_Default = 0
-    const val LayoutOption_SingleScreen = 1
-    const val LayoutOption_LargeScreen = 2
-    const val LayoutOption_SideScreen = 3
-    const val LayoutOption_MobilePortrait = 5
-    const val LayoutOption_MobileLandscape = 6
 
     var joystickRelCenter: Boolean
         get() = preferences.getBoolean("EmulationMenuSettings_JoystickRelCenter", true)
@@ -37,7 +30,7 @@ object EmulationMenuSettings {
     var landscapeScreenLayout: Int
         get() = preferences.getInt(
             "EmulationMenuSettings_LandscapeScreenLayout",
-            LayoutOption_MobileLandscape
+            ScreenLayout.MOBILE_LANDSCAPE.int
         )
         set(value) {
             preferences.edit()

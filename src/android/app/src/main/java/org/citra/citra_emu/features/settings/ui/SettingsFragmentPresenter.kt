@@ -38,8 +38,8 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.ResetSettingsDialogFragment
 import org.citra.citra_emu.utils.BirthdayMonth
-import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
 
 class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
@@ -619,6 +619,12 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.triggerKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.triggerTitles[i]))
+            }
+
+            add(HeaderSetting(R.string.controller_hotkeys))
+            Settings.hotKeys.forEachIndexed { i: Int, key: String ->
+                val button = getInputObject(key)
+                add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
             }
         }
     }

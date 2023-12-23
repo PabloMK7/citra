@@ -8,7 +8,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
-import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
@@ -23,9 +22,11 @@ import org.citra.citra_emu.utils.BiMap
 import org.citra.citra_emu.utils.DirectoryInitialization.userDirectory
 import org.citra.citra_emu.utils.Log
 import org.ini4j.Wini
-import java.io.*
-import java.lang.NumberFormatException
-import java.util.*
+import java.io.BufferedReader
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.TreeMap
 
 
 /**
@@ -143,6 +144,26 @@ object SettingsFile {
                 CitraApplication.appContext
                     .getString(R.string.error_saving, fileName, e.message), false
             )
+        }
+    }
+
+    fun saveFile(
+        fileName: String,
+        setting: AbstractSetting
+    ) {
+        val ini = getSettingsFile(fileName)
+        try {
+            val context: Context = CitraApplication.appContext
+            val inputStream = context.contentResolver.openInputStream(ini.uri)
+            val writer = Wini(inputStream)
+            writer.put(setting.section, setting.key, setting.valueAsString)
+            inputStream!!.close()
+            val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
+            writer.store(outputStream)
+            outputStream!!.flush()
+            outputStream.close()
+        } catch (e: Exception) {
+            Log.error("[SettingsFile] File not found: $fileName.ini: ${e.message}")
         }
     }
 
