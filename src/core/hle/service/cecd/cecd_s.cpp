@@ -35,7 +35,7 @@ CECD_S::CECD_S(std::shared_ptr<Module> cecd)
         {0x001E, nullptr, "GetEventLog"},
         {0x001F, nullptr, "GetEventLogStart"},
         // cecd:s commands
-        {0x0402, nullptr, "GetCecInfoEventHandleSys"},
+        {0x0402, &CECD_S::GetCecInfoEventHandleSys, "GetCecInfoEventHandleSys"},
         // clang-format on
     };
 

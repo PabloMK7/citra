@@ -37,6 +37,7 @@ template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
     ar& cecd_system_save_data_archive;
     ar& cecinfo_event;
+    ar& cecinfosys_event;
     ar& change_state_event;
 }
 SERIALIZE_IMPL(Module)
@@ -836,6 +837,17 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
               open_mode.create.Value(), open_mode.check.Value());
 }
 
+void Module::Interface::GetCecInfoEventHandleSys(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    rp.PopPID();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(cecd->cecinfosys_event);
+
+    LOG_WARNING(Service_CECD, "(STUBBED) called");
+}
+
 std::string Module::EncodeBase64(std::span<const u8> in) const {
     using namespace CryptoPP;
     using Name::EncodingLookupArray;
@@ -1379,6 +1391,8 @@ Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name, u32
 Module::Module(Core::System& system) : system(system) {
     using namespace Kernel;
     cecinfo_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
+    cecinfosys_event =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::cecinfosys_event");
     change_state_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::change_state_event");
 
