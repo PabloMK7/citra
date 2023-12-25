@@ -7,9 +7,8 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/shared_ptr.hpp>
+#include <boost/optional/optional.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/event.h"
@@ -22,6 +21,8 @@ class System;
 }
 
 namespace Kernel {
+class HLERequestContext;
+class Process;
 class SharedMemory;
 } // namespace Kernel
 
@@ -214,14 +215,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
-            *this);
-        ar& gsp;
-        ar& interrupt_event;
-        ar& thread_id;
-        ar& registered;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -379,9 +373,25 @@ private:
     void UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx);
 
     /**
-     * GSP_GPU::AcquireRight service function
+     * GSP_GPU::TryAcquireRight service function
+     *  Inputs:
+     *      0 : Header code [0x00150002]
+     *      1 : Handle translate header (0x0)
+     *      2 : Process handle
      *  Outputs:
-     *      1: Result code
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void TryAcquireRight(Kernel::HLERequestContext& ctx);
+
+    /**
+     * GSP_GPU::AcquireRight service function
+     *  Inputs:
+     *      0 : Header code [0x00160042]
+     *      1 : Flags
+     *      2 : Handle translate header (0x0)
+     *      3 : Process handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
      */
     void AcquireRight(Kernel::HLERequestContext& ctx);
 
@@ -464,6 +474,17 @@ private:
     /// Force the 3D LED State (0 = On, Non-Zero = Off)
     void SetLedForceOff(Kernel::HLERequestContext& ctx);
 
+    /**
+     * GSP_GPU::SetInternalPriorities service function
+     *  Inputs:
+     *      0 : Header code [0x001E0080]
+     *      1 : Session thread priority
+     *      2 : Session thread priority with rights
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SetInternalPriorities(Kernel::HLERequestContext& ctx);
+
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 
@@ -471,13 +492,17 @@ private:
 
     std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
 
+    ResultCode AcquireGpuRight(const Kernel::HLERequestContext& ctx,
+                               const std::shared_ptr<Kernel::Process>& process, u32 flag,
+                               bool blocking);
+
     Core::System& system;
 
     /// GSP shared memory
     std::shared_ptr<Kernel::SharedMemory> shared_memory;
 
-    /// Thread id that currently has GPU rights or UINT32_MAX if none.
-    u32 active_thread_id = UINT32_MAX;
+    /// Thread id that currently has GPU rights or std::numeric_limits<u32>::max() if none.
+    u32 active_thread_id = std::numeric_limits<u32>::max();
 
     bool first_initialization = true;
 
@@ -493,15 +518,7 @@ private:
     friend class SessionData;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& shared_memory;
-        ar& active_thread_id;
-        ar& first_initialization;
-        ar& used_thread_ids;
-        ar& saved_vram;
-    }
-
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 

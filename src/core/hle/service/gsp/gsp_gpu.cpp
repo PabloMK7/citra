@@ -4,6 +4,9 @@
 
 #include <span>
 #include <vector>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/optional.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include "common/archives.h"
 #include "common/bit_field.h"
 #include "common/microprofile.h"
@@ -478,7 +481,7 @@ void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
     }
 
     // For normal interrupts, don't do anything if no process has acquired the GPU right.
-    if (active_thread_id == UINT32_MAX) {
+    if (active_thread_id == std::numeric_limits<u32>::max()) {
         return;
     }
 
@@ -664,7 +667,7 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
 void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    if (active_thread_id == UINT32_MAX) {
+    if (active_thread_id == std::numeric_limits<u32>::max()) {
         LOG_WARNING(Service_GSP, "Called without an active thread.");
 
         // TODO: Find the right error code.
@@ -792,37 +795,57 @@ void GSP_GPU::RestoreVramSysArea(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
-void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
+ResultCode GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
+                                    const std::shared_ptr<Kernel::Process>& process, u32 flag,
+                                    bool blocking) {
+    const auto session_data = GetSessionData(ctx.Session());
 
-    u32 flag = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
-
-    SessionData* session_data = GetSessionData(ctx.Session());
-
-    LOG_WARNING(Service_GSP, "called flag={:08X} process={} thread_id={}", flag,
-                process->process_id, session_data->thread_id);
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    LOG_DEBUG(Service_GSP, "called flag={:08X} process={} thread_id={}", flag, process->process_id,
+              session_data->thread_id);
 
     if (active_thread_id == session_data->thread_id) {
-        rb.Push(ResultCode(ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
-                           ErrorLevel::Success));
-        return;
+        return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
+                ErrorLevel::Success};
     }
 
-    // TODO(Subv): This case should put the caller thread to sleep until the right is released.
-    ASSERT_MSG(active_thread_id == UINT32_MAX, "GPU right has already been acquired");
+    if (blocking) {
+        // TODO: The thread should be put to sleep until acquired.
+        ASSERT_MSG(active_thread_id == std::numeric_limits<u32>::max(),
+                   "Sleeping for GPU right is not yet supported.");
+    } else if (active_thread_id != std::numeric_limits<u32>::max()) {
+        return {ErrorDescription::Busy, ErrorModule::GX, ErrorSummary::WouldBlock,
+                ErrorLevel::Status};
+    }
 
     active_thread_id = session_data->thread_id;
+    return RESULT_SUCCESS;
+}
 
-    rb.Push(RESULT_SUCCESS);
+void GSP_GPU::TryAcquireRight(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto process = rp.PopObject<Kernel::Process>();
+
+    const auto result = AcquireGpuRight(ctx, process, 0, false);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(result);
+}
+
+void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto flag = rp.Pop<u32>();
+    const auto process = rp.PopObject<Kernel::Process>();
+
+    const auto result = AcquireGpuRight(ctx, process, flag, true);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(result);
 }
 
 void GSP_GPU::ReleaseRight(const SessionData* session_data) {
     ASSERT_MSG(active_thread_id == session_data->thread_id,
                "Wrong thread tried to release GPU right");
-    active_thread_id = UINT32_MAX;
+    active_thread_id = std::numeric_limits<u32>::max();
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
@@ -863,6 +886,18 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_GSP, "(STUBBED) called");
 }
 
+void GSP_GPU::SetInternalPriorities(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto priority = rp.Pop<u32>();
+    const auto priority_with_rights = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_GSP, "(STUBBED) called priority={:#02X}, priority_with_rights={:#02X}",
+              priority, priority_with_rights);
+}
+
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     for (auto& session_info : connected_sessions) {
         SessionData* data = static_cast<SessionData*>(session_info.data.get());
@@ -873,6 +908,17 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     }
     return nullptr;
 }
+
+template <class Archive>
+void GSP_GPU::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& shared_memory;
+    ar& active_thread_id;
+    ar& first_initialization;
+    ar& used_thread_ids;
+    ar& saved_vram;
+}
+SERIALIZE_IMPL(GSP_GPU)
 
 GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system(system) {
     static const FunctionInfo functions[] = {
@@ -897,7 +943,7 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         {0x0012, nullptr, "GetPerfLog"},
         {0x0013, &GSP_GPU::RegisterInterruptRelayQueue, "RegisterInterruptRelayQueue"},
         {0x0014, &GSP_GPU::UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
-        {0x0015, nullptr, "TryAcquireRight"},
+        {0x0015, &GSP_GPU::TryAcquireRight, "TryAcquireRight"},
         {0x0016, &GSP_GPU::AcquireRight, "AcquireRight"},
         {0x0017, &GSP_GPU::ReleaseRight, "ReleaseRight"},
         {0x0018, &GSP_GPU::ImportDisplayCaptureInfo, "ImportDisplayCaptureInfo"},
@@ -906,7 +952,7 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         {0x001B, nullptr, "ResetGpuCore"},
         {0x001C, &GSP_GPU::SetLedForceOff, "SetLedForceOff"},
         {0x001D, nullptr, "SetTestCommand"},
-        {0x001E, nullptr, "SetInternalPriorities"},
+        {0x001E, &GSP_GPU::SetInternalPriorities, "SetInternalPriorities"},
         {0x001F, &GSP_GPU::StoreDataCache, "StoreDataCache"},
         // clang-format on
     };
@@ -925,6 +971,16 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
 std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> GSP_GPU::MakeSessionData() {
     return std::make_unique<SessionData>(this);
 }
+
+template <class Archive>
+void SessionData::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(*this);
+    ar& gsp;
+    ar& interrupt_event;
+    ar& thread_id;
+    ar& registered;
+}
+SERIALIZE_IMPL(SessionData)
 
 SessionData::SessionData(GSP_GPU* gsp) : gsp(gsp) {
     // Assign a new thread id to this session when it connects. Note: In the real GSP service this
