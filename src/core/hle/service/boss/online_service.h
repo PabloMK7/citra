@@ -17,6 +17,7 @@ class MappedBuffer;
 }
 
 namespace FileSys {
+class ArchiveBackend;
 struct Entry;
 class Path;
 } // namespace FileSys
@@ -66,6 +67,27 @@ struct NsDataEntry {
     std::string filename;
     BossHeader header;
 };
+
+enum class NsDataHeaderInfoType : u8 {
+    ProgramId = 0,
+    Unknown = 1,
+    Datatype = 2,
+    PayloadSize = 3,
+    NsDataId = 4,
+    Version = 5,
+    Everything = 6,
+};
+
+struct NsDataHeaderInfo {
+    u64 program_id;
+    INSERT_PADDING_BYTES(4);
+    u32 datatype;
+    u32 payload_size;
+    u32 ns_data_id;
+    u32 version;
+    INSERT_PADDING_BYTES(4);
+};
+static_assert(sizeof(NsDataHeaderInfo) == 0x20, "NsDataHeaderInfo has incorrect size");
 
 enum class PropertyID : u16 {
     Interval = 0x03,
@@ -144,11 +166,17 @@ public:
     ResultCode UnregisterTask(const u32 size, Kernel::MappedBuffer& buffer);
     void GetTaskIdList();
     u16 GetNsDataIdList(const u32 filter, const u32 max_entries, Kernel::MappedBuffer& buffer);
+    std::optional<NsDataEntry> GetNsDataEntryFromId(const u32 ns_data_id);
+    ResultCode GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHeaderInfoType type,
+                                   const u32 size, Kernel::MappedBuffer& buffer);
+    ResultVal<size_t> ReadNsData(const u32 ns_data_id, const u64 offset, const u32 size,
+                                 Kernel::MappedBuffer& buffer);
     ResultCode SendProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
     ResultCode ReceiveProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
 
 private:
-    std::vector<FileSys::Entry> GetBossExtDataFiles();
+    std::unique_ptr<FileSys::ArchiveBackend> OpenBossExtData();
+    std::vector<FileSys::Entry> GetBossExtDataFiles(FileSys::ArchiveBackend* boss_archive);
     FileSys::Path GetBossDataDir();
     std::vector<NsDataEntry> GetNsDataEntries();
 

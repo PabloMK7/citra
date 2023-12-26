@@ -631,34 +631,51 @@ void Module::Interface::DeleteNsData(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetNsDataHeaderInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 ns_data_id = rp.Pop<u32>();
-    const u8 type = rp.Pop<u8>();
-    const u32 size = rp.Pop<u32>();
+    const auto ns_data_id = rp.Pop<u32>();
+    const auto type = rp.PopEnum<NsDataHeaderInfoType>();
+    const auto size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
+    const auto online_service = GetSessionService(ctx);
+    if (online_service == nullptr) {
+        return;
+    }
+    const auto result = online_service->GetNsDataHeaderInfo(ns_data_id, type, size, buffer);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(result);
     rb.PushMappedBuffer(buffer);
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) ns_data_id={:#010x}, type={:#04x}, size={:#010x}",
-                ns_data_id, type, size);
+    LOG_DEBUG(Service_BOSS, "called, ns_data_id={:#010x}, type={:#04x}, size={:#010x}", ns_data_id,
+              type, size);
 }
 
 void Module::Interface::ReadNsData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 ns_data_id = rp.Pop<u32>();
-    const u64 offset = rp.Pop<u64>();
-    const u32 size = rp.Pop<u32>();
+    const auto ns_data_id = rp.Pop<u32>();
+    const auto offset = rp.Pop<u64>();
+    const auto size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(size); /// Should be actual read size
-    rb.Push<u32>(0);    /// unknown
-    rb.PushMappedBuffer(buffer);
+    const auto online_service = GetSessionService(ctx);
+    if (online_service == nullptr) {
+        return;
+    }
+    const auto result = online_service->ReadNsData(ns_data_id, offset, size, buffer);
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) ns_data_id={:#010x}, offset={:#018x}, size={:#010x}",
-                ns_data_id, offset, size);
+    if (result.Succeeded()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
+        rb.Push(result.Code());
+        rb.Push<u32>(static_cast<u32>(result.Unwrap()));
+        rb.Push<u32>(0); /// unknown
+        rb.PushMappedBuffer(buffer);
+    } else {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(result.Code());
+    }
+
+    LOG_DEBUG(Service_BOSS, "called, ns_data_id={:#010x}, offset={:#018x}, size={:#010x}",
+              ns_data_id, offset, size);
 }
 
 void Module::Interface::SetNsDataAdditionalInfo(Kernel::HLERequestContext& ctx) {
@@ -710,14 +727,27 @@ void Module::Interface::GetNsDataNewFlag(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetNsDataLastUpdate(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 unk_param1 = rp.Pop<u32>();
+    const u32 ns_data_id = rp.Pop<u32>();
+
+    const auto online_service = GetSessionService(ctx);
+    if (online_service == nullptr) {
+        return;
+    }
+
+    const auto entry = online_service->GetNsDataEntryFromId(ns_data_id);
+    if (!entry.has_value()) {
+        // TODO: Proper error code.
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_UNKNOWN);
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(0); // stub 0 (32bit value)
-    rb.Push<u32>(0); // stub 0 (32bit value)
+    rb.Push<u32>(0);
+    rb.Push<u32>(entry->header.download_date); // return the download date from the ns data
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1={:#010x}", unk_param1);
+    LOG_DEBUG(Service_BOSS, "called, ns_data_id={:#010X}", ns_data_id);
 }
 
 void Module::Interface::GetErrorCode(Kernel::HLERequestContext& ctx) {

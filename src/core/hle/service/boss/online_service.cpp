@@ -73,12 +73,14 @@ ResultCode OnlineService::InitializeSession(u64 init_program_id) {
         auto create_archive_result = systemsavedata_factory.Open(archive_path, 0);
         if (!create_archive_result.Succeeded()) {
             LOG_ERROR(Service_BOSS, "Could not open BOSS savedata");
-            return ResultCode(1);
+            // TODO: Proper error code.
+            return RESULT_UNKNOWN;
         }
         boss_system_save_data_archive = std::move(create_archive_result).Unwrap();
     } else {
         LOG_ERROR(Service_BOSS, "Could not open BOSS savedata");
-        return ResultCode(1);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
     }
 
     FileSys::Mode open_mode = {};
@@ -151,14 +153,16 @@ void OnlineService::RegisterTask(const u32 size, Kernel::MappedBuffer& buffer) {
 ResultCode OnlineService::UnregisterTask(const u32 size, Kernel::MappedBuffer& buffer) {
     if (size > TASK_ID_SIZE) {
         LOG_WARNING(Service_BOSS, "TaskId cannot be longer than 8");
-        return ResultCode(1);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
     }
 
     std::string task_id(size, 0);
     buffer.Read(task_id.data(), 0, size);
     if (task_id_list.erase(task_id) == 0) {
         LOG_WARNING(Service_BOSS, "TaskId not in list");
-        return ResultCode(1);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
     }
 
     return RESULT_SUCCESS;
@@ -187,20 +191,32 @@ void OnlineService::GetTaskIdList() {
     }
 }
 
-std::vector<FileSys::Entry> OnlineService::GetBossExtDataFiles() {
+FileSys::Path OnlineService::GetBossDataDir() {
+    const u32 high = static_cast<u32>(extdata_id >> 32);
+    const u32 low = static_cast<u32>(extdata_id & 0xFFFFFFFF);
+    return FileSys::ConstructExtDataBinaryPath(1, high, low);
+}
+
+std::unique_ptr<FileSys::ArchiveBackend> OnlineService::OpenBossExtData() {
     FileSys::ArchiveFactory_ExtSaveData boss_extdata_archive_factory(
         FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir), FileSys::ExtSaveDataType::Boss);
     const FileSys::Path boss_path{GetBossDataDir()};
     auto archive_result = boss_extdata_archive_factory.Open(boss_path, 0);
     if (!archive_result.Succeeded()) {
-        LOG_WARNING(Service_BOSS, "Extdata opening failed");
-        return {};
+        LOG_WARNING(Service_BOSS, "Failed to open SpotPass ext data archive with ID '{:#010x}'.",
+                    extdata_id);
+        return nullptr;
     }
+    return std::move(archive_result).Unwrap();
+}
 
-    auto boss_archive = std::move(archive_result).Unwrap();
+std::vector<FileSys::Entry> OnlineService::GetBossExtDataFiles(
+    FileSys::ArchiveBackend* boss_archive) {
     auto dir_result = boss_archive->OpenDirectory("/");
     if (!dir_result.Succeeded()) {
-        LOG_WARNING(Service_BOSS, "Extdata directory opening failed");
+        LOG_WARNING(Service_BOSS,
+                    "Failed to open root directory of SpotPass ext data with ID '{:#010x}'.",
+                    extdata_id);
         return {};
     }
     auto dir = std::move(dir_result).Unwrap();
@@ -219,29 +235,20 @@ std::vector<FileSys::Entry> OnlineService::GetBossExtDataFiles() {
     return boss_files;
 }
 
-FileSys::Path OnlineService::GetBossDataDir() {
-    const u32 high = static_cast<u32>(extdata_id >> 32);
-    const u32 low = static_cast<u32>(extdata_id & 0xFFFFFFFF);
-    return FileSys::ConstructExtDataBinaryPath(1, high, low);
-}
-
 std::vector<NsDataEntry> OnlineService::GetNsDataEntries() {
-    FileSys::ArchiveFactory_ExtSaveData boss_extdata_archive_factory(
-        FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir), FileSys::ExtSaveDataType::Boss);
-    const FileSys::Path boss_path{GetBossDataDir()};
-    auto archive_result = boss_extdata_archive_factory.Open(boss_path, 0);
-    if (!archive_result.Succeeded()) {
-        LOG_WARNING(Service_BOSS, "Extdata opening failed");
+    auto boss_archive = OpenBossExtData();
+    if (!boss_archive) {
         return {};
     }
-    auto boss_archive = std::move(archive_result).Unwrap().get();
 
     std::vector<NsDataEntry> ns_data;
-    std::vector<FileSys::Entry> boss_files = GetBossExtDataFiles();
+    const auto boss_files = GetBossExtDataFiles(boss_archive.get());
     for (const auto& current_file : boss_files) {
         constexpr u32 boss_header_length = 0x34;
         if (current_file.is_directory || current_file.file_size < boss_header_length) {
-            LOG_WARNING(Service_BOSS, "SpotPass extdata contains directory or file is too short");
+            LOG_WARNING(Service_BOSS,
+                        "SpotPass extdata contains directory or file is too short: '{}'",
+                        Common::UTF16ToUTF8(current_file.filename));
             continue;
         }
 
@@ -315,6 +322,129 @@ u16 OnlineService::GetNsDataIdList(const u32 filter, const u32 max_entries,
     return static_cast<u16>(output_entries.size());
 }
 
+std::optional<NsDataEntry> OnlineService::GetNsDataEntryFromId(const u32 ns_data_id) {
+    std::vector<NsDataEntry> ns_data = GetNsDataEntries();
+    const auto entry_iter = std::find_if(ns_data.begin(), ns_data.end(), [ns_data_id](auto entry) {
+        return entry.header.ns_data_id == ns_data_id;
+    });
+    if (entry_iter == ns_data.end()) {
+        LOG_WARNING(Service_BOSS, "Could not find NsData with ID {:#010X}", ns_data_id);
+        return std::nullopt;
+    }
+    return *entry_iter;
+}
+
+ResultCode OnlineService::GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHeaderInfoType type,
+                                              const u32 size, Kernel::MappedBuffer& buffer) {
+    const auto entry = GetNsDataEntryFromId(ns_data_id);
+    if (!entry.has_value()) {
+        LOG_WARNING(Service_BOSS, "Failed to find NsData entry for ID {:#010X}", ns_data_id);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    static constexpr std::array EXPECTED_NS_DATA_HEADER_INFO_SIZES = {
+        sizeof(u64),              // Program ID
+        sizeof(u32),              // Unknown
+        sizeof(u32),              // Data Type
+        sizeof(u32),              // Payload Size
+        sizeof(u32),              // NsData ID
+        sizeof(u32),              // Version
+        sizeof(NsDataHeaderInfo), // Everything
+    };
+    if (size != EXPECTED_NS_DATA_HEADER_INFO_SIZES[static_cast<u8>(type)]) {
+        LOG_WARNING(Service_BOSS, "Invalid size {} for type {}", size, type);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    switch (type) {
+    case NsDataHeaderInfoType::ProgramId:
+        buffer.Write(&entry->header.program_id, 0, size);
+        return RESULT_SUCCESS;
+    case NsDataHeaderInfoType::Unknown: {
+        // TODO: Figure out what this is. Stubbed to zero for now.
+        const u32 zero = 0;
+        buffer.Write(&zero, 0, size);
+        return RESULT_SUCCESS;
+    }
+    case NsDataHeaderInfoType::Datatype:
+        buffer.Write(&entry->header.datatype, 0, size);
+        return RESULT_SUCCESS;
+    case NsDataHeaderInfoType::PayloadSize:
+        buffer.Write(&entry->header.payload_size, 0, size);
+        return RESULT_SUCCESS;
+    case NsDataHeaderInfoType::NsDataId:
+        buffer.Write(&entry->header.ns_data_id, 0, size);
+        return RESULT_SUCCESS;
+    case NsDataHeaderInfoType::Version:
+        buffer.Write(&entry->header.version, 0, size);
+        return RESULT_SUCCESS;
+    case NsDataHeaderInfoType::Everything: {
+        const NsDataHeaderInfo info = {
+            .program_id = entry->header.program_id,
+            .datatype = entry->header.datatype,
+            .payload_size = entry->header.payload_size,
+            .ns_data_id = entry->header.ns_data_id,
+            .version = entry->header.version,
+        };
+        buffer.Write(&info, 0, size);
+        return RESULT_SUCCESS;
+    }
+    default:
+        LOG_WARNING(Service_BOSS, "Unknown header info type {}", type);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+}
+
+ResultVal<size_t> OnlineService::ReadNsData(const u32 ns_data_id, const u64 offset, const u32 size,
+                                            Kernel::MappedBuffer& buffer) {
+    std::optional<NsDataEntry> entry = GetNsDataEntryFromId(ns_data_id);
+    if (!entry.has_value()) {
+        LOG_WARNING(Service_BOSS, "Failed to find NsData entry for ID {:#010X}", ns_data_id);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    if (entry->header.payload_size < size + offset) {
+        LOG_WARNING(Service_BOSS,
+                    "Invalid request to read {:#010X} bytes at offset {:#010X}, payload "
+                    "length is {:#010X}",
+                    size, offset, static_cast<u32>(entry->header.payload_size));
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    auto boss_archive = OpenBossExtData();
+    if (!boss_archive) {
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    FileSys::Path file_path = fmt::format("/{}", entry->filename);
+    FileSys::Mode mode{};
+    mode.read_flag.Assign(1);
+    auto file_result = boss_archive->OpenFile(file_path, mode);
+    if (!file_result.Succeeded()) {
+        LOG_WARNING(Service_BOSS, "Failed to open SpotPass extdata file '{}'.", entry->filename);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    auto file = std::move(file_result).Unwrap();
+    std::vector<u8> ns_data_array(size);
+    auto read_result = file->Read(sizeof(BossHeader) + offset, size, ns_data_array.data());
+    if (!read_result.Succeeded()) {
+        LOG_WARNING(Service_BOSS, "Failed to read SpotPass extdata file '{}'.", entry->filename);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
+    }
+
+    buffer.Write(ns_data_array.data(), 0, size);
+    return read_result;
+}
+
 template <class... Ts>
 struct overload : Ts... {
     using Ts::operator()...;
@@ -325,8 +455,9 @@ overload(Ts...) -> overload<Ts...>;
 ResultCode OnlineService::SendProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer) {
     const auto property_id = static_cast<PropertyID>(id);
     if (!current_props.properties.contains(property_id)) {
-        LOG_ERROR(Service_BOSS, "Unknown property with id {:#06x}", property_id);
-        return ResultCode(1);
+        LOG_ERROR(Service_BOSS, "Unknown property with ID {:#06x} and size {}", property_id, size);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
     }
 
     auto& prop = current_props.properties[property_id];
@@ -365,8 +496,9 @@ ResultCode OnlineService::ReceiveProperty(const u16 id, const u32 size,
                                           Kernel::MappedBuffer& buffer) {
     const auto property_id = static_cast<PropertyID>(id);
     if (!current_props.properties.contains(property_id)) {
-        LOG_ERROR(Service_BOSS, "Unknown property with id {:#06x}", property_id);
-        return ResultCode(1);
+        LOG_ERROR(Service_BOSS, "Unknown property with ID {:#06x} and size {}", property_id, size);
+        // TODO: Proper error code.
+        return RESULT_UNKNOWN;
     }
 
     auto write_pod = [&]<typename T>(T& cur_prop) {
