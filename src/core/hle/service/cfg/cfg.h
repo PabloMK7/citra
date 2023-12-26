@@ -591,6 +591,7 @@ private:
     std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
     std::unique_ptr<FileSys::ArchiveBackend> cfg_system_save_data_archive;
     u32 preferred_region_code = 0;
+    bool preferred_region_chosen = false;
     MCUData mcu_data{};
 
     template <class Archive>

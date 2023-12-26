@@ -40,6 +40,7 @@ void Module::serialize(Archive& ar, const unsigned int) {
     ar& cfg_config_file_buffer;
     ar& cfg_system_save_data_archive;
     ar& preferred_region_code;
+    ar& preferred_region_chosen;
 }
 SERIALIZE_IMPL(Module)
 
@@ -656,9 +657,10 @@ static std::tuple<u32 /*region*/, SystemLanguage> AdjustLanguageInfoBlock(
 }
 
 void Module::UpdatePreferredRegionCode() {
-    if (!system.IsPoweredOn()) {
+    if (preferred_region_chosen || !system.IsPoweredOn()) {
         return;
     }
+    preferred_region_chosen = true;
 
     const auto preferred_regions = system.GetAppLoader().GetPreferredRegions();
     if (preferred_regions.empty()) {
