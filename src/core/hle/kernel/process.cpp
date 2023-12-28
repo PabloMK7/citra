@@ -48,6 +48,8 @@ void Process::serialize(Archive& ar, const unsigned int file_version) {
     ar& vm_manager;
     ar& memory_used;
     ar& memory_region;
+    ar& holding_memory;
+    ar& holding_tls_memory;
     ar& tls_slots;
 }
 
