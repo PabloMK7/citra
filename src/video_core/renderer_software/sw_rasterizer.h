@@ -6,18 +6,14 @@
 
 #include <span>
 #include "common/thread_worker.h"
+#include "video_core/pica/regs_texturing.h"
 #include "video_core/rasterizer_interface.h"
-#include "video_core/regs_texturing.h"
 #include "video_core/renderer_software/sw_clipper.h"
 #include "video_core/renderer_software/sw_framebuffer.h"
 
-namespace Pica::Shader {
-struct OutputVertex;
-}
-
 namespace Pica {
-struct State;
-struct Regs;
+struct RegsInternal;
+class PicaCore;
 } // namespace Pica
 
 namespace SwRenderer {
@@ -26,10 +22,10 @@ struct Vertex;
 
 class RasterizerSoftware : public VideoCore::RasterizerInterface {
 public:
-    explicit RasterizerSoftware(Memory::MemorySystem& memory);
+    explicit RasterizerSoftware(Memory::MemorySystem& memory, Pica::PicaCore& pica);
 
-    void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
-                     const Pica::Shader::OutputVertex& v2) override;
+    void AddTriangle(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+                     const Pica::OutputVertex& v2) override;
     void DrawTriangles() override {}
     void NotifyPicaRegisterChanged(u32 id) override {}
     void FlushAll() override {}
@@ -72,8 +68,8 @@ private:
 
 private:
     Memory::MemorySystem& memory;
-    Pica::State& state;
-    const Pica::Regs& regs;
+    Pica::PicaCore& pica;
+    Pica::RegsInternal& regs;
     size_t num_sw_threads;
     Common::ThreadWorker sw_workers;
     Framebuffer fb;

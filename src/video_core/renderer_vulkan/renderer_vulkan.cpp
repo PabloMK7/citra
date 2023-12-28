@@ -9,9 +9,8 @@
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
-#include "core/hw/gpu.h"
-#include "core/hw/hw.h"
-#include "core/hw/lcd.h"
+#include "video_core/gpu.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/renderer_vulkan/renderer_vulkan.h"
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
@@ -51,15 +50,16 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
     {0, vk::DescriptorType::eCombinedImageSampler, 3, vk::ShaderStageFlagBits::eFragment},
 }};
 
-RendererVulkan::RendererVulkan(Core::System& system, Frontend::EmuWindow& window,
-                               Frontend::EmuWindow* secondary_window)
-    : RendererBase{system, window, secondary_window}, memory{system.Memory()},
+RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
+                               Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window)
+    : RendererBase{system, window, secondary_window}, memory{system.Memory()}, pica{pica_},
       instance{system.TelemetrySession(), window, Settings::values.physical_device.GetValue()},
       scheduler{instance}, renderpass_cache{instance, scheduler}, pool{instance},
       main_window{window, instance, scheduler},
       vertex_buffer{instance, scheduler, vk::BufferUsageFlagBits::eVertexBuffer,
                     VERTEX_BUFFER_SIZE},
       rasterizer{memory,
+                 pica,
                  system.CustomTexManager(),
                  *this,
                  render_window,
@@ -103,37 +103,25 @@ void RendererVulkan::Sync() {
 }
 
 void RendererVulkan::PrepareRendertarget() {
+    const auto& framebuffer_config = pica.regs.framebuffer_config;
+    const auto& regs_lcd = pica.regs_lcd;
     for (u32 i = 0; i < 3; i++) {
         const u32 fb_id = i == 2 ? 1 : 0;
-        const auto& framebuffer = GPU::g_regs.framebuffer_config[fb_id];
+        const auto& framebuffer = framebuffer_config[fb_id];
+        auto& texture = screen_infos[i].texture;
 
-        // Main LCD (0): 0x1ED02204, Sub LCD (1): 0x1ED02A04
-        u32 lcd_color_addr =
-            (fb_id == 0) ? LCD_REG_INDEX(color_fill_top) : LCD_REG_INDEX(color_fill_bottom);
-        lcd_color_addr = HW::VADDR_LCD + 4 * lcd_color_addr;
-        LCD::Regs::ColorFill color_fill{0};
-        LCD::Read(color_fill.raw, lcd_color_addr);
-
+        const auto color_fill = fb_id == 0 ? regs_lcd.color_fill_top : regs_lcd.color_fill_bottom;
         if (color_fill.is_enabled) {
-            LoadColorToActiveVkTexture(color_fill.color_r, color_fill.color_g, color_fill.color_b,
-                                       screen_infos[i].texture);
-        } else {
-            TextureInfo& texture = screen_infos[i].texture;
-            if (texture.width != framebuffer.width || texture.height != framebuffer.height ||
-                texture.format != framebuffer.color_format) {
-
-                // Reallocate texture if the framebuffer size has changed.
-                // This is expected to not happen very often and hence should not be a
-                // performance problem.
-                ConfigureFramebufferTexture(texture, framebuffer);
-            }
-
-            LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1);
-
-            // Resize the texture in case the framebuffer size has changed
-            texture.width = framebuffer.width;
-            texture.height = framebuffer.height;
+            FillScreen(color_fill.AsVector(), texture);
+            continue;
         }
+
+        if (texture.width != framebuffer.width || texture.height != framebuffer.height ||
+            texture.format != framebuffer.color_format) {
+            ConfigureFramebufferTexture(texture, framebuffer);
+        }
+
+        LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1);
     }
 }
 
@@ -203,7 +191,7 @@ void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::Framebu
     window.Present(frame);
 }
 
-void RendererVulkan::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
+void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer,
                                         ScreenInfo& screen_info, bool right_eye) {
 
     if (framebuffer.address_right1 == 0 || framebuffer.address_right2 == 0) {
@@ -219,7 +207,7 @@ void RendererVulkan::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& fram
               framebuffer.stride * framebuffer.height, framebuffer_addr, framebuffer.width.Value(),
               framebuffer.height.Value(), framebuffer.format);
 
-    const int bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
+    const u32 bpp = Pica::BytesPerPixel(framebuffer.color_format);
     const std::size_t pixel_stride = framebuffer.stride / bpp;
 
     ASSERT(pixel_stride * bpp == framebuffer.stride);
@@ -405,7 +393,7 @@ void RendererVulkan::BuildPipelines() {
 }
 
 void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
-                                                 const GPU::Regs::FramebufferConfig& framebuffer) {
+                                                 const Pica::FramebufferConfig& framebuffer) {
     vk::Device device = instance.GetDevice();
     if (texture.image_view) {
         device.destroyImageView(texture.image_view);
@@ -466,14 +454,14 @@ void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
     texture.format = framebuffer.color_format;
 }
 
-void RendererVulkan::LoadColorToActiveVkTexture(u8 color_r, u8 color_g, u8 color_b,
-                                                const TextureInfo& texture) {
+void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& texture) {
+    return;
     const vk::ClearColorValue clear_color = {
         .float32 =
             std::array{
-                color_r / 255.0f,
-                color_g / 255.0f,
-                color_b / 255.0f,
+                color.r() / 255.0f,
+                color.g() / 255.0f,
+                color.b() / 255.0f,
                 1.0f,
             },
     };

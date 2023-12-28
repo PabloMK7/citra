@@ -4,23 +4,16 @@
 
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <bitset>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <unordered_map>
-#include <utility>
 #include <vector>
-
 #include <glad/glad.h>
 
-#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
-#include "video_core/regs.h"
-#include "video_core/shader/generator/glsl_shader_gen.h"
+#include "video_core/pica/regs_internal.h"
+#include "video_core/shader/generator/shader_gen.h"
 
 namespace Core {
 class System;
@@ -35,7 +28,7 @@ namespace OpenGL {
 struct ShaderDiskCacheDecompiled;
 struct ShaderDiskCacheDump;
 
-using RawShaderConfig = Pica::Regs;
+using RawShaderConfig = Pica::RegsInternal;
 using ProgramCode = std::vector<u32>;
 using ProgramType = Pica::Shader::Generator::ProgramType;
 using ShaderDecompiledMap = std::unordered_map<u64, ShaderDiskCacheDecompiled>;

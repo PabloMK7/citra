@@ -15,7 +15,6 @@
 #include "jni/input_manager.h"
 #include "network/network.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 static bool IsPortraitMode() {
     return JNI_FALSE != IDCache::GetEnvForThread()->CallStaticBooleanMethod(

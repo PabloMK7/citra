@@ -5,9 +5,6 @@
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64)
 
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
 #include <nihstro/shader_bytecode.h>
 #include <smmintrin.h>
 #include <xbyak/xbyak_util.h>
@@ -18,9 +15,8 @@
 #include "common/x64/cpu_detect.h"
 #include "common/x64/xbyak_abi.h"
 #include "common/x64/xbyak_util.h"
-#include "video_core/pica_state.h"
+#include "video_core/pica/shader_unit.h"
 #include "video_core/pica_types.h"
-#include "video_core/shader/shader.h"
 #include "video_core/shader/shader_jit_x64_compiler.h"
 
 using namespace Common::X64;
@@ -125,7 +121,7 @@ constexpr Reg32 LOOPINC = edi;
 constexpr Reg64 COND0 = r13;
 /// Result of the previous CMP instruction for the Y-component comparison
 constexpr Reg64 COND1 = r14;
-/// Pointer to the UnitState instance for the current VS unit
+/// Pointer to the ShaderUnit instance for the current VS unit
 constexpr Reg64 STATE = r15;
 /// SIMD scratch register
 constexpr Xmm SCRATCH = xmm0;
@@ -198,11 +194,11 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, u32 src_num, SourceRegiste
         break;
     case RegisterType::Input:
         src_ptr = STATE;
-        src_offset = UnitState::InputOffset(src_reg.GetIndex());
+        src_offset = ShaderUnit::InputOffset(src_reg.GetIndex());
         break;
     case RegisterType::Temporary:
         src_ptr = STATE;
-        src_offset = UnitState::TemporaryOffset(src_reg.GetIndex());
+        src_offset = ShaderUnit::TemporaryOffset(src_reg.GetIndex());
         break;
     default:
         UNREACHABLE_MSG("Encountered unknown source register type: {}", src_reg.GetRegisterType());
@@ -312,10 +308,10 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
     std::size_t dest_offset_disp;
     switch (dest.GetRegisterType()) {
     case RegisterType::Output:
-        dest_offset_disp = UnitState::OutputOffset(dest.GetIndex());
+        dest_offset_disp = ShaderUnit::OutputOffset(dest.GetIndex());
         break;
     case RegisterType::Temporary:
-        dest_offset_disp = UnitState::TemporaryOffset(dest.GetIndex());
+        dest_offset_disp = ShaderUnit::TemporaryOffset(dest.GetIndex());
         break;
     default:
         UNREACHABLE_MSG("Encountered unknown destination register type: {}",
@@ -669,13 +665,13 @@ void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
     // Save conditional code
-    mov(byte[STATE + offsetof(UnitState, conditional_code[0])], COND0.cvt8());
-    mov(byte[STATE + offsetof(UnitState, conditional_code[1])], COND1.cvt8());
+    mov(byte[STATE + offsetof(ShaderUnit, conditional_code[0])], COND0.cvt8());
+    mov(byte[STATE + offsetof(ShaderUnit, conditional_code[1])], COND1.cvt8());
 
     // Save address/loop registers
-    mov(dword[STATE + offsetof(UnitState, address_registers[0])], ADDROFFS_REG_0.cvt32());
-    mov(dword[STATE + offsetof(UnitState, address_registers[1])], ADDROFFS_REG_1.cvt32());
-    mov(dword[STATE + offsetof(UnitState, address_registers[2])], LOOPCOUNT_REG);
+    mov(dword[STATE + offsetof(ShaderUnit, address_registers[0])], ADDROFFS_REG_0.cvt32());
+    mov(dword[STATE + offsetof(ShaderUnit, address_registers[1])], ADDROFFS_REG_1.cvt32());
+    mov(dword[STATE + offsetof(ShaderUnit, address_registers[2])], LOOPCOUNT_REG);
 
     ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     ret();
@@ -870,13 +866,13 @@ void JitShader::Compile_JMP(Instruction instr) {
     }
 }
 
-static void Emit(GSEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
+static void Emit(GeometryEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
     emitter->Emit(*output);
 }
 
 void JitShader::Compile_EMIT(Instruction instr) {
     Label have_emitter, end;
-    mov(rax, qword[STATE + offsetof(UnitState, emitter_ptr)]);
+    mov(rax, qword[STATE + offsetof(ShaderUnit, emitter_ptr)]);
     test(rax, rax);
     jnz(have_emitter);
 
@@ -890,7 +886,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
     ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     mov(ABI_PARAM1, rax);
     mov(ABI_PARAM2, STATE);
-    add(ABI_PARAM2, static_cast<Xbyak::uint32>(offsetof(UnitState, registers.output)));
+    add(ABI_PARAM2, static_cast<Xbyak::uint32>(offsetof(ShaderUnit, output)));
     CallFarFunction(*this, Emit);
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     L(end);
@@ -898,7 +894,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
 
 void JitShader::Compile_SETE(Instruction instr) {
     Label have_emitter, end;
-    mov(rax, qword[STATE + offsetof(UnitState, emitter_ptr)]);
+    mov(rax, qword[STATE + offsetof(ShaderUnit, emitter_ptr)]);
     test(rax, rax);
     jnz(have_emitter);
 
@@ -909,9 +905,9 @@ void JitShader::Compile_SETE(Instruction instr) {
     jmp(end);
 
     L(have_emitter);
-    mov(byte[rax + offsetof(GSEmitter, vertex_id)], instr.setemit.vertex_id);
-    mov(byte[rax + offsetof(GSEmitter, prim_emit)], instr.setemit.prim_emit);
-    mov(byte[rax + offsetof(GSEmitter, winding)], instr.setemit.winding);
+    mov(byte[rax + offsetof(GeometryEmitter, vertex_id)], instr.setemit.vertex_id);
+    mov(byte[rax + offsetof(GeometryEmitter, prim_emit)], instr.setemit.prim_emit);
+    mov(byte[rax + offsetof(GeometryEmitter, winding)], instr.setemit.winding);
     L(end);
 }
 
@@ -1001,13 +997,13 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     mov(STATE, ABI_PARAM2);
 
     // Load address/loop registers
-    movsxd(ADDROFFS_REG_0, dword[STATE + offsetof(UnitState, address_registers[0])]);
-    movsxd(ADDROFFS_REG_1, dword[STATE + offsetof(UnitState, address_registers[1])]);
-    mov(LOOPCOUNT_REG, dword[STATE + offsetof(UnitState, address_registers[2])]);
+    movsxd(ADDROFFS_REG_0, dword[STATE + offsetof(ShaderUnit, address_registers[0])]);
+    movsxd(ADDROFFS_REG_1, dword[STATE + offsetof(ShaderUnit, address_registers[1])]);
+    mov(LOOPCOUNT_REG, dword[STATE + offsetof(ShaderUnit, address_registers[2])]);
 
     // Load conditional code
-    mov(COND0, byte[STATE + offsetof(UnitState, conditional_code[0])]);
-    mov(COND1, byte[STATE + offsetof(UnitState, conditional_code[1])]);
+    mov(COND0, byte[STATE + offsetof(ShaderUnit, conditional_code[0])]);
+    mov(COND1, byte[STATE + offsetof(ShaderUnit, conditional_code[1])]);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};

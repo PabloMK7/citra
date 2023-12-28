@@ -4,10 +4,8 @@
 
 #pragma once
 
-#include "core/hw/gpu.h"
 #include "video_core/rasterizer_accelerated.h"
 #include "video_core/rasterizer_interface.h"
-#include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
@@ -21,6 +19,12 @@ namespace VideoCore {
 class CustomTexManager;
 }
 
+namespace Pica {
+struct DisplayTransferConfig;
+struct MemoryFillConfig;
+struct FramebufferConfig;
+} // namespace Pica
+
 namespace OpenGL {
 
 struct ScreenInfo;
@@ -30,7 +34,7 @@ class ShaderProgramManager;
 
 class RasterizerOpenGL : public VideoCore::RasterizerAccelerated {
 public:
-    explicit RasterizerOpenGL(Memory::MemorySystem& memory,
+    explicit RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore& pica,
                               VideoCore::CustomTexManager& custom_tex_manager,
                               VideoCore::RendererBase& renderer, Driver& driver);
     ~RasterizerOpenGL() override;
@@ -45,10 +49,10 @@ public:
     void InvalidateRegion(PAddr addr, u32 size) override;
     void FlushAndInvalidateRegion(PAddr addr, u32 size) override;
     void ClearAll(bool flush) override;
-    bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) override;
-    bool AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) override;
-    bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) override;
-    bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr,
+    bool AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config) override;
+    bool AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) override;
+    bool AccelerateFill(const Pica::MemoryFillConfig& config) override;
+    bool AccelerateDisplay(const Pica::FramebufferConfig& config, PAddr framebuffer_addr,
                            u32 pixel_stride, ScreenInfo& screen_info);
     bool AccelerateDrawBatch(bool is_indexed) override;
 

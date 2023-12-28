@@ -3,18 +3,19 @@
 // Refer to the license.txt file included.
 
 #pragma once
-#include "video_core/regs_framebuffer.h"
-#include "video_core/regs_lighting.h"
-#include "video_core/regs_pipeline.h"
-#include "video_core/regs_rasterizer.h"
-#include "video_core/regs_shader.h"
-#include "video_core/regs_texturing.h"
+
+#include "video_core/pica/regs_framebuffer.h"
+#include "video_core/pica/regs_lighting.h"
+#include "video_core/pica/regs_pipeline.h"
+#include "video_core/pica/regs_rasterizer.h"
+#include "video_core/pica/regs_shader.h"
+#include "video_core/pica/regs_texturing.h"
 
 namespace Pica {
 
-#define PICA_REG_INDEX(field_name) (offsetof(Pica::Regs, field_name) / sizeof(u32))
+#define PICA_REG_INDEX(field_name) (offsetof(Pica::RegsInternal, field_name) / sizeof(u32))
 
-struct Regs {
+struct RegsInternal {
     static constexpr std::size_t NUM_REGS = 0x300;
 
     union {
@@ -38,10 +39,11 @@ struct Regs {
     static const char* GetRegisterName(u16 index);
 };
 
-static_assert(sizeof(Regs) == Regs::NUM_REGS * sizeof(u32), "Regs struct has wrong size");
+static_assert(sizeof(RegsInternal) == RegsInternal::NUM_REGS * sizeof(u32),
+              "Regs struct has wrong size");
 
 #define ASSERT_REG_POSITION(field_name, position)                                                  \
-    static_assert(offsetof(Regs, field_name) == position * 4,                                      \
+    static_assert(offsetof(RegsInternal, field_name) == position * 4,                              \
                   "Field " #field_name " has invalid position")
 
 ASSERT_REG_POSITION(trigger_irq, 0x10);
@@ -110,4 +112,5 @@ ASSERT_REG_POSITION(gs, 0x280);
 ASSERT_REG_POSITION(vs, 0x2b0);
 
 #undef ASSERT_REG_POSITION
+
 } // namespace Pica

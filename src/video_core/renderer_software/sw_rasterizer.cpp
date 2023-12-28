@@ -8,14 +8,13 @@
 #include "common/quaternion.h"
 #include "common/vector_math.h"
 #include "core/memory.h"
-#include "video_core/pica_state.h"
-#include "video_core/pica_types.h"
+#include "video_core/pica/output_vertex.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/renderer_software/sw_framebuffer.h"
 #include "video_core/renderer_software/sw_lighting.h"
 #include "video_core/renderer_software/sw_proctex.h"
 #include "video_core/renderer_software/sw_rasterizer.h"
 #include "video_core/renderer_software/sw_texturing.h"
-#include "video_core/shader/shader.h"
 #include "video_core/texture/texture_decode.h"
 
 namespace SwRenderer {
@@ -33,7 +32,7 @@ using Pica::Texture::TextureInfo;
 // we can use a very small epsilon value for clip plane comparison.
 constexpr f32 EPSILON_Z = 0.00000001f;
 
-struct Vertex : Pica::Shader::OutputVertex {
+struct Vertex : Pica::OutputVertex {
     Vertex(const OutputVertex& v) : OutputVertex(v) {}
 
     /// Attributes used to store intermediate results position after perspective divide.
@@ -101,14 +100,13 @@ private:
 
 } // Anonymous namespace
 
-RasterizerSoftware::RasterizerSoftware(Memory::MemorySystem& memory_)
-    : memory{memory_}, state{Pica::g_state}, regs{state.regs},
+RasterizerSoftware::RasterizerSoftware(Memory::MemorySystem& memory_, Pica::PicaCore& pica_)
+    : memory{memory_}, pica{pica_}, regs{pica.regs.internal},
       num_sw_threads{std::max(std::thread::hardware_concurrency(), 2U)},
       sw_workers{num_sw_threads, "SwRenderer workers"}, fb{memory, regs.framebuffer} {}
 
-void RasterizerSoftware::AddTriangle(const Pica::Shader::OutputVertex& v0,
-                                     const Pica::Shader::OutputVertex& v1,
-                                     const Pica::Shader::OutputVertex& v2) {
+void RasterizerSoftware::AddTriangle(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+                                     const Pica::OutputVertex& v2) {
     /**
      * Clipping a planar n-gon against a plane will remove at least 1 vertex and introduces 2 at
      * the new edge (or less in degenerate cases). As such, we can say that each clipping plane
@@ -170,8 +168,8 @@ void RasterizerSoftware::AddTriangle(const Pica::Shader::OutputVertex& v0,
         }
     }
 
-    if (state.regs.rasterizer.clip_enable) {
-        const ClippingEdge custom_edge{state.regs.rasterizer.GetClipCoef()};
+    if (regs.rasterizer.clip_enable) {
+        const ClippingEdge custom_edge{regs.rasterizer.GetClipCoef()};
         clip(custom_edge);
         if (output_list->size() < 3) {
             return;
@@ -434,7 +432,7 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
                         get_interpolated_attribute(v0.view.z, v1.view.z, v2.view.z).ToFloat32(),
                     };
                     std::tie(primary_fragment_color, secondary_fragment_color) =
-                        ComputeFragmentsColors(regs.lighting, state.lighting, normquat, view,
+                        ComputeFragmentsColors(regs.lighting, pica.lighting, normquat, view,
                                                texture_color);
                 }
 
@@ -587,7 +585,7 @@ std::array<Common::Vec4<u8>, 4> RasterizerSoftware::TextureColor(
     if (regs.texturing.main_config.texture3_enable) {
         const auto& proctex_uv = uv[regs.texturing.main_config.texture3_coordinates];
         texture_color[3] = ProcTex(proctex_uv.u().ToFloat32(), proctex_uv.v().ToFloat32(),
-                                   regs.texturing, state.proctex);
+                                   regs.texturing, pica.proctex);
     }
 
     return texture_color;
@@ -813,7 +811,7 @@ void RasterizerSoftware::WriteFog(float depth, Common::Vec4<u8>& combiner_output
         // Generate clamped fog factor from LUT for given fog index
         const f32 fog_i = std::clamp(floorf(fog_index), 0.0f, 127.0f);
         const f32 fog_f = fog_index - fog_i;
-        const auto& fog_lut_entry = state.fog.lut[static_cast<u32>(fog_i)];
+        const auto& fog_lut_entry = pica.fog.lut[static_cast<u32>(fog_i)];
         f32 fog_factor = fog_lut_entry.ToFloat() + fog_lut_entry.DiffToFloat() * fog_f;
         fog_factor = std::clamp(fog_factor, 0.0f, 1.0f);
         for (u32 i = 0; i < 3; i++) {

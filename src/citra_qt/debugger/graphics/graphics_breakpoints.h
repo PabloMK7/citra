@@ -23,16 +23,16 @@ public:
     explicit GraphicsBreakPointsWidget(std::shared_ptr<Pica::DebugContext> debug_context,
                                        QWidget* parent = nullptr);
 
-    void OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) override;
+    void OnPicaBreakPointHit(Pica::DebugContext::Event event, const void* data) override;
     void OnPicaResume() override;
 
 signals:
     void Resumed();
-    void BreakPointHit(Pica::DebugContext::Event event, void* data);
+    void BreakPointHit(Pica::DebugContext::Event event, const void* data);
     void BreakPointsChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight);
 
 private:
-    void OnBreakPointHit(Pica::DebugContext::Event event, void* data);
+    void OnBreakPointHit(Pica::DebugContext::Event event, const void* data);
     void OnItemDoubleClicked(const QModelIndex&);
     void OnResumeRequested();
     void OnResumed();

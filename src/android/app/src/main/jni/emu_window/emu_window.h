@@ -7,6 +7,10 @@
 #include <vector>
 #include "core/frontend/emu_window.h"
 
+namespace Core {
+class System;
+}
+
 class EmuWindow_Android : public Frontend::EmuWindow {
 public:
     EmuWindow_Android(ANativeWindow* surface);

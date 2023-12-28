@@ -14,9 +14,10 @@
 #include "common/settings.h"
 #include "core/memory.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
+#include "video_core/pica/regs_external.h"
+#include "video_core/pica/regs_internal.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
 #include "video_core/rasterizer_cache/surface_base.h"
-#include "video_core/regs.h"
 #include "video_core/renderer_base.h"
 #include "video_core/texture/texture_decode.h"
 
@@ -34,7 +35,7 @@ constexpr auto RangeFromInterval(const auto& map, const auto& interval) {
 template <class T>
 RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
                                     CustomTexManager& custom_tex_manager_, Runtime& runtime_,
-                                    Pica::Regs& regs_, RendererBase& renderer_)
+                                    Pica::RegsInternal& regs_, RendererBase& renderer_)
     : memory{memory_}, custom_tex_manager{custom_tex_manager_}, runtime{runtime_}, regs{regs_},
       renderer{renderer_}, resolution_scale_factor{renderer.GetResolutionScaleFactor()},
       filter{Settings::values.texture_filter.GetValue()},
@@ -151,7 +152,7 @@ void RasterizerCache<T>::RemoveTextureCubeFace(SurfaceId surface_id) {
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
     const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateTextureCopy ({})", config.DebugName()};
 
@@ -249,7 +250,7 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const GPU::Regs::DisplayTransferC
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerCache<T>::AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config) {
     const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateDisplayTransfer ({})", config.DebugName()};
 
@@ -274,10 +275,9 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTrans
 
     // Using flip_vertically alongside crop_input_lines produces skewed output on hardware.
     // We have to emulate this because some games rely on this behaviour to render correctly.
-    if (config.flip_vertically && config.crop_input_lines &&
-        config.input_width > config.output_width) {
+    if (config.flip_vertically && config.crop_input_lines) {
         dst_params.addr += (config.input_width - config.output_width) * (config.output_height - 1) *
-                           GPU::Regs::BytesPerPixel(config.output_format);
+                           Pica::BytesPerPixel(config.output_format);
     }
 
     auto [src_surface_id, src_rect] = GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
@@ -320,7 +320,7 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const GPU::Regs::DisplayTrans
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+bool RasterizerCache<T>::AccelerateFill(const Pica::MemoryFillConfig& config) {
     const DebugScope scope{runtime, Common::Vec4f{1.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateFill ({})", config.DebugName()};
 

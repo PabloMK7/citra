@@ -22,7 +22,7 @@ public:
     ~JitEngine() override;
 
     void SetupBatch(ShaderSetup& setup, u32 entry_point) override;
-    void Run(const ShaderSetup& setup, UnitState& state) const override;
+    void Run(const ShaderSetup& setup, ShaderUnit& state) const override;
 
 private:
     std::unordered_map<u64, std::unique_ptr<JitShader>> cache;

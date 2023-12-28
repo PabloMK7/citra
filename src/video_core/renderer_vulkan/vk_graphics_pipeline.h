@@ -3,9 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "common/thread_worker.h"
+#include "video_core/pica/regs_pipeline.h"
+#include "video_core/pica/regs_rasterizer.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
-#include "video_core/regs_pipeline.h"
-#include "video_core/regs_rasterizer.h"
 #include "video_core/renderer_vulkan/vk_common.h"
 
 namespace Common {

@@ -13,6 +13,7 @@
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_software/renderer_software.h"
 
 class DummyContext : public Frontend::GraphicsContext {};
@@ -94,7 +95,7 @@ void EmuWindow_SDL2_SW::Present() {
 }
 
 SDL_Surface* EmuWindow_SDL2_SW::LoadFramebuffer(VideoCore::ScreenId screen_id) {
-    const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.Renderer());
+    const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.GPU().Renderer());
     const auto& info = renderer.Screen(screen_id);
     const int width = static_cast<int>(info.width);
     const int height = static_cast<int>(info.height);

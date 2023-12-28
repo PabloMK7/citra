@@ -6,11 +6,14 @@
 
 #include <memory>
 #include <boost/serialization/export.hpp>
-#include "video_core/shader/shader.h"
+#include "video_core/pica/shader_unit.h"
 
 namespace Pica {
 
-struct State;
+struct RegsInternal;
+struct GeometryShaderUnit;
+struct ShaderSetup;
+class ShaderEngine;
 
 class GeometryPipelineBackend;
 class GeometryPipeline_Point;
@@ -20,17 +23,14 @@ class GeometryPipeline_FixedPrimitive;
 /// A pipeline receiving from vertex shader and sending to geometry shader and primitive assembler
 class GeometryPipeline {
 public:
-    explicit GeometryPipeline(State& state);
+    explicit GeometryPipeline(RegsInternal& regs, GeometryShaderUnit& gs_unit, ShaderSetup& gs);
     ~GeometryPipeline();
 
     /// Sets the handler for receiving vertex outputs from vertex shader
-    void SetVertexHandler(Shader::VertexHandler vertex_handler);
+    void SetVertexHandler(VertexHandler vertex_handler);
 
-    /**
-     * Setup the geometry shader unit if it is in use
-     * @param shader_engine the shader engine for the geometry shader to run
-     */
-    void Setup(Shader::ShaderEngine* shader_engine);
+    /// Setup the geometry shader unit if it is in use
+    void Setup(ShaderEngine* shader_engine);
 
     /// Reconfigures the pipeline according to current register settings
     void Reconfigure();
@@ -42,13 +42,15 @@ public:
     void SubmitIndex(unsigned int val);
 
     /// Submits vertex attributes output from vertex shader
-    void SubmitVertex(const Shader::AttributeBuffer& input);
+    void SubmitVertex(const AttributeBuffer& input);
 
 private:
-    Shader::VertexHandler vertex_handler;
-    Shader::ShaderEngine* shader_engine;
+    VertexHandler vertex_handler;
+    ShaderEngine* shader_engine;
     std::unique_ptr<GeometryPipelineBackend> backend;
-    State& state;
+    RegsInternal& regs;
+    GeometryShaderUnit& gs_unit;
+    ShaderSetup& gs;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version);

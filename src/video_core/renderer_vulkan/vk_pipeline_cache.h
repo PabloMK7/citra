@@ -14,12 +14,9 @@
 #include "video_core/shader/generator/shader_gen.h"
 
 namespace Pica {
-struct Regs;
-}
-
-namespace Pica::Shader {
+struct RegsInternal;
 struct ShaderSetup;
-}
+} // namespace Pica
 
 namespace Vulkan {
 
@@ -54,20 +51,20 @@ public:
     bool BindPipeline(const PipelineInfo& info, bool wait_built = false);
 
     /// Binds a PICA decompiled vertex shader
-    bool UseProgrammableVertexShader(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,
+    bool UseProgrammableVertexShader(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
                                      const VertexLayout& layout);
 
     /// Binds a passthrough vertex shader
     void UseTrivialVertexShader();
 
     /// Binds a PICA decompiled geometry shader
-    bool UseFixedGeometryShader(const Pica::Regs& regs);
+    bool UseFixedGeometryShader(const Pica::RegsInternal& regs);
 
     /// Binds a passthrough geometry shader
     void UseTrivialGeometryShader();
 
     /// Binds a fragment shader generated from PICA state
-    void UseFragmentShader(const Pica::Regs& regs, const Pica::Shader::UserConfig& user);
+    void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
     /// Binds a texture to the specified binding
     void BindTexture(u32 binding, vk::ImageView image_view, vk::Sampler sampler);

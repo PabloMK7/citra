@@ -7,11 +7,11 @@
 #include <utility>
 
 #include "common/common_types.h"
-#include "video_core/regs.h"
+#include "video_core/pica/regs_internal.h"
 
 namespace Pica {
 
-static const std::pair<u16, const char*> register_names[] = {
+static constexpr std::pair<u16, const char*> register_names[] = {
     {0x010, "GPUREG_FINALIZE"},
 
     {0x040, "GPUREG_FACECULLING_CONFIG"},
@@ -474,15 +474,15 @@ static const std::pair<u16, const char*> register_names[] = {
     {0x2DD, "GPUREG_VSH_OPDESCS_DATA7"},
 };
 
-const char* Regs::GetRegisterName(u16 index) {
-    auto found = std::lower_bound(std::begin(register_names), std::end(register_names), index,
-                                  [](auto p, auto i) { return p.first < i; });
-    if (found->first == index) {
-        return found->second;
-    } else {
-        // Return empty string if no match is found
-        return "";
+const char* RegsInternal::GetRegisterName(u16 index) {
+    const auto it = std::lower_bound(std::begin(register_names), std::end(register_names), index,
+                                     [](auto p, auto i) { return p.first < i; });
+    if (it->first == index) {
+        return it->second;
     }
+
+    // Return empty string if no match is found
+    return "";
 }
 
 } // namespace Pica

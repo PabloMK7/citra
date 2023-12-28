@@ -914,7 +914,7 @@ void FragmentModule::WriteLogicOp() {
 }
 
 void FragmentModule::WriteBlending() {
-    if (!config.EmulateBlend()) [[likely]] {
+    if (!config.EmulateBlend() || profile.is_vulkan) [[likely]] {
         return;
     }
 
@@ -1258,7 +1258,7 @@ void FragmentModule::DefineExtensions() {
             use_fragment_shader_barycentric = false;
         }
     }
-    if (config.EmulateBlend()) {
+    if (config.EmulateBlend() && !profile.is_vulkan) {
         if (profile.has_gl_ext_framebuffer_fetch) {
             out += "#extension GL_EXT_shader_framebuffer_fetch : enable\n";
             out += "#define destFactor color\n";

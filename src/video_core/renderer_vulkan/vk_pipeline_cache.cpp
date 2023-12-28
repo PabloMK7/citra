@@ -377,8 +377,8 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
     return true;
 }
 
-bool PipelineCache::UseProgrammableVertexShader(const Pica::Regs& regs,
-                                                Pica::Shader::ShaderSetup& setup,
+bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
+                                                Pica::ShaderSetup& setup,
                                                 const VertexLayout& layout) {
     // Enable the geometry-shader only if we are actually doing per-fragment lighting
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders.
@@ -443,7 +443,7 @@ void PipelineCache::UseTrivialVertexShader() {
     shader_hashes[ProgramType::VS] = 0;
 }
 
-bool PipelineCache::UseFixedGeometryShader(const Pica::Regs& regs) {
+bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
     if (!instance.UseGeometryShaders()) {
         UseTrivialGeometryShader();
         return true;
@@ -472,7 +472,7 @@ void PipelineCache::UseTrivialGeometryShader() {
     shader_hashes[ProgramType::GS] = 0;
 }
 
-void PipelineCache::UseFragmentShader(const Pica::Regs& regs,
+void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
                                       const Pica::Shader::UserConfig& user) {
     const FSConfig fs_config{regs, user, profile};
     const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config, instance);

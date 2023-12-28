@@ -7,18 +7,22 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include "core/hle/service/gsp/gsp.h"
+#include "core/hle/service/gsp/gsp_command.h"
+
+namespace VideoCore {
 
 class GraphicsDebugger {
 public:
     // Base class for all objects which need to be notified about GPU events
     class DebuggerObserver {
-    public:
-        DebuggerObserver() : observed(nullptr) {}
+        friend class GraphicsDebugger;
 
+    public:
+        DebuggerObserver() = default;
         virtual ~DebuggerObserver() {
-            if (observed)
+            if (observed) {
                 observed->UnregisterObserver(this);
+            }
         }
 
         /**
@@ -39,20 +43,15 @@ public:
         }
 
     private:
-        GraphicsDebugger* observed;
-
-        friend class GraphicsDebugger;
+        GraphicsDebugger* observed{};
     };
 
-    void GXCommandProcessed(u8* command_data) {
-        if (observers.empty())
+    void GXCommandProcessed(Service::GSP::Command& command_data) {
+        if (observers.empty()) {
             return;
+        }
 
-        gx_command_history.emplace_back();
-        Service::GSP::Command& cmd = gx_command_history.back();
-
-        std::memcpy(&cmd, command_data, sizeof(Service::GSP::Command));
-
+        gx_command_history.emplace_back(command_data);
         ForEachObserver([this](DebuggerObserver* observer) {
             observer->GXCommandProcessed(static_cast<int>(this->gx_command_history.size()));
         });
@@ -80,6 +79,7 @@ private:
     }
 
     std::vector<DebuggerObserver*> observers;
-
     std::vector<Service::GSP::Command> gx_command_history;
 };
+
+} // namespace VideoCore

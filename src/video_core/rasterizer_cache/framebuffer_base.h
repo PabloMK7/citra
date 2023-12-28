@@ -6,9 +6,9 @@
 
 #include "common/hash.h"
 #include "common/math_util.h"
+#include "video_core/pica/regs_rasterizer.h"
 #include "video_core/rasterizer_cache/slot_id.h"
 #include "video_core/rasterizer_cache/surface_params.h"
-#include "video_core/regs_rasterizer.h"
 
 namespace VideoCore {
 

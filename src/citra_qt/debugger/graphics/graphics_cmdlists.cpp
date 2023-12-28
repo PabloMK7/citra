@@ -19,8 +19,8 @@
 #include "core/core.h"
 #include "core/memory.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/pica_state.h"
-#include "video_core/regs.h"
+#include "video_core/gpu.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/texture/texture_decode.h"
 
 namespace {
@@ -73,7 +73,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:
-            return QString::fromLatin1(Pica::Regs::GetRegisterName(write.cmd_id));
+            return QString::fromLatin1(Pica::RegsInternal::GetRegisterName(write.cmd_id));
         case 1:
             return QStringLiteral("%1").arg(write.cmd_id, 3, 16, QLatin1Char('0'));
         case 2:
@@ -119,8 +119,7 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
 }
 
 #define COMMAND_IN_RANGE(cmd_id, reg_name)                                                         \
-    (cmd_id >= PICA_REG_INDEX(reg_name) &&                                                         \
-     cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::g_state.regs.reg_name)) / 4)
+    (cmd_id >= PICA_REG_INDEX(reg_name) && cmd_id <= PICA_REG_INDEX(reg_name))
 
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     const unsigned int command_id =
@@ -147,13 +146,13 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
 void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     QWidget* new_info_widget = nullptr;
 
-    const unsigned int command_id =
+    const u32 command_id =
         list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
     if (COMMAND_IN_RANGE(command_id, texturing.texture0) ||
         COMMAND_IN_RANGE(command_id, texturing.texture1) ||
         COMMAND_IN_RANGE(command_id, texturing.texture2)) {
 
-        unsigned texture_index;
+        u32 texture_index;
         if (COMMAND_IN_RANGE(command_id, texturing.texture0)) {
             texture_index = 0;
         } else if (COMMAND_IN_RANGE(command_id, texturing.texture1)) {
@@ -162,7 +161,8 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
             texture_index = 2;
         }
 
-        const auto texture = Pica::g_state.regs.texturing.GetTextures()[texture_index];
+        auto& pica = system.GPU().PicaCore();
+        const auto texture = pica.regs.internal.texturing.GetTextures()[texture_index];
         const auto config = texture.config;
         const auto format = texture.format;
 

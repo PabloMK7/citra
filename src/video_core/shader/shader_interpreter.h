@@ -4,15 +4,20 @@
 
 #pragma once
 
+#include "video_core/pica/output_vertex.h"
 #include "video_core/shader/debug_data.h"
 #include "video_core/shader/shader.h"
+
+namespace Pica {
+struct ShaderRegs;
+}
 
 namespace Pica::Shader {
 
 class InterpreterEngine final : public ShaderEngine {
 public:
-    void SetupBatch(ShaderSetup& setup, unsigned int entry_point) override;
-    void Run(const ShaderSetup& setup, UnitState& state) const override;
+    void SetupBatch(ShaderSetup& setup, u32 entry_point) override;
+    void Run(const ShaderSetup& setup, ShaderUnit& state) const override;
 
     /**
      * Produce debug information based on the given shader and input vertex

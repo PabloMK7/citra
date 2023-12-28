@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "video_core/pica/regs_external.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 
 namespace VideoCore {
@@ -134,17 +135,17 @@ PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat format
     }
 }
 
-PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelFormat format) {
+PixelFormat PixelFormatFromGPUPixelFormat(Pica::PixelFormat format) {
     switch (format) {
-    case GPU::Regs::PixelFormat::RGBA8:
+    case Pica::PixelFormat::RGBA8:
         return PixelFormat::RGBA8;
-    case GPU::Regs::PixelFormat::RGB8:
+    case Pica::PixelFormat::RGB8:
         return PixelFormat::RGB8;
-    case GPU::Regs::PixelFormat::RGB565:
+    case Pica::PixelFormat::RGB565:
         return PixelFormat::RGB565;
-    case GPU::Regs::PixelFormat::RGB5A1:
+    case Pica::PixelFormat::RGB5A1:
         return PixelFormat::RGB5A1;
-    case GPU::Regs::PixelFormat::RGBA4:
+    case Pica::PixelFormat::RGBA4:
         return PixelFormat::RGBA4;
     default:
         return PixelFormat::Invalid;

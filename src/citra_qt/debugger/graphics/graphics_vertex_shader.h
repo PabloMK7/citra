@@ -8,8 +8,12 @@
 #include <QTreeView>
 #include <nihstro/parser_shbin.h>
 #include "citra_qt/debugger/graphics/graphics_breakpoint_observer.h"
+#include "video_core/pica/output_vertex.h"
 #include "video_core/shader/debug_data.h"
-#include "video_core/shader/shader.h"
+
+namespace Core {
+class System;
+}
 
 class QLabel;
 class QSpinBox;
@@ -40,11 +44,12 @@ class GraphicsVertexShaderWidget : public BreakPointObserverDock {
     using Event = Pica::DebugContext::Event;
 
 public:
-    GraphicsVertexShaderWidget(std::shared_ptr<Pica::DebugContext> debug_context,
+    GraphicsVertexShaderWidget(Core::System& system,
+                               std::shared_ptr<Pica::DebugContext> debug_context,
                                QWidget* parent = nullptr);
 
 private slots:
-    void OnBreakPointHit(Pica::DebugContext::Event event, void* data) override;
+    void OnBreakPointHit(Pica::DebugContext::Event event, const void* data) override;
     void OnResumed() override;
 
     void OnInputAttributeChanged(int index);
@@ -60,9 +65,10 @@ private slots:
      * specify that no valid vertex data can be retrieved currently. Only used if
      * replace_vertex_data is true.
      */
-    void Reload(bool replace_vertex_data = false, void* vertex_data = nullptr);
+    void Reload(bool replace_vertex_data = false, const void* vertex_data = nullptr);
 
 private:
+    Core::System& system;
     QLabel* instruction_description;
     QTreeView* binary_list;
     GraphicsVertexShaderModel* model;
@@ -83,7 +89,7 @@ private:
 
     nihstro::ShaderInfo info;
     Pica::Shader::DebugData<true> debug_data;
-    Pica::Shader::AttributeBuffer input_vertex;
+    Pica::AttributeBuffer input_vertex;
 
     friend class GraphicsVertexShaderModel;
 };

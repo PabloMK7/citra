@@ -4,10 +4,8 @@
 
 #pragma once
 
-#include "common/logging/log.h"
-#include "core/core.h"
-#include "core/telemetry_session.h"
-#include "video_core/regs.h"
+#include "common/assert.h"
+#include "video_core/pica/regs_internal.h"
 #include "video_core/renderer_vulkan/vk_common.h"
 
 namespace PicaToVK {
@@ -56,14 +54,6 @@ inline vk::SamplerAddressMode WrapMode(Pica::TexturingRegs::TextureConfig::WrapM
 
     const auto index = static_cast<std::size_t>(mode);
     ASSERT_MSG(index < wrap_mode_table.size(), "Unknown texture wrap mode {}", index);
-
-    if (index > 3) {
-        Core::System::GetInstance().TelemetrySession().AddField(
-            Common::Telemetry::FieldType::Session, "VideoCore_Pica_UnsupportedTextureWrapMode",
-            static_cast<u32>(index));
-        LOG_WARNING(Render_Vulkan, "Using texture wrap mode {}", index);
-    }
-
     return wrap_mode_table[index];
 }
 

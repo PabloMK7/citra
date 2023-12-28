@@ -20,7 +20,6 @@ ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, 
         ui->physical_device_combo->addItem(name);
     }
 
-    ui->toggle_vsync_new->setEnabled(!is_powered_on);
     ui->graphics_api_combo->setEnabled(!is_powered_on);
     ui->physical_device_combo->setEnabled(!is_powered_on);
     ui->toggle_async_shaders->setEnabled(!is_powered_on);

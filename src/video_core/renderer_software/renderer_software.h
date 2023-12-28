@@ -21,7 +21,8 @@ struct ScreenInfo {
 
 class RendererSoftware : public VideoCore::RendererBase {
 public:
-    explicit RendererSoftware(Core::System& system, Frontend::EmuWindow& window);
+    explicit RendererSoftware(Core::System& system, Pica::PicaCore& pica,
+                              Frontend::EmuWindow& window);
     ~RendererSoftware() override;
 
     [[nodiscard]] VideoCore::RasterizerInterface* Rasterizer() override {
@@ -42,6 +43,7 @@ private:
 
 private:
     Memory::MemorySystem& memory;
+    Pica::PicaCore& pica;
     RasterizerSoftware rasterizer;
     std::array<ScreenInfo, 3> screen_infos{};
 };

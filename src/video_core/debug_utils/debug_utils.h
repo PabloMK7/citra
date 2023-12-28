@@ -4,22 +4,16 @@
 
 #pragma once
 
-#include <algorithm>
-#include <array>
 #include <condition_variable>
 #include <iterator>
 #include <list>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
 #include "common/common_types.h"
-#include "common/vector_math.h"
-#include "video_core/regs_rasterizer.h"
-#include "video_core/regs_shader.h"
-#include "video_core/regs_texturing.h"
+#include "video_core/pica/regs_rasterizer.h"
 
 namespace CiTrace {
 class Recorder;
@@ -27,9 +21,8 @@ class Recorder;
 
 namespace Pica {
 
-namespace Shader {
+struct ShaderRegs;
 struct ShaderSetup;
-}
 
 class DebugContext {
 public:
@@ -87,7 +80,7 @@ public:
          * @param data Optional data pointer (if unused, this is a nullptr)
          * @note This function will perform nothing unless it is overridden in the child class.
          */
-        virtual void OnPicaBreakPointHit(Event event, void* data) {}
+        virtual void OnPicaBreakPointHit(Event event, const void* data) {}
 
         /**
          * Action to perform when emulation is resumed from a breakpoint.
@@ -126,7 +119,7 @@ public:
      * @param data Optional data pointer (pass nullptr if unused). Needs to remain valid until
      * Resume() is called.
      */
-    void OnEvent(Event event, void* data) {
+    void OnEvent(Event event, const void* data) {
         // This check is left in the header to allow the compiler to inline it.
         if (!breakpoints[(int)event].enabled)
             return;
@@ -134,7 +127,7 @@ public:
         DoOnEvent(event, data);
     }
 
-    void DoOnEvent(Event event, void* data);
+    void DoOnEvent(Event event, const void* data);
 
     /**
      * Resume from the current breakpoint.
@@ -181,10 +174,7 @@ extern std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this g
 
 namespace DebugUtils {
 
-#define PICA_LOG_TEV 0
-
-void DumpShader(const std::string& filename, const ShaderRegs& config,
-                const Shader::ShaderSetup& setup,
+void DumpShader(const std::string& filename, const ShaderRegs& config, const ShaderSetup& setup,
                 const RasterizerRegs::VSOutputAttributes* output_attributes);
 
 // Utility class to log Pica commands.
@@ -203,45 +193,8 @@ void StartPicaTracing();
 inline bool IsPicaTracing() {
     return g_is_pica_tracing;
 }
-void OnPicaRegWrite(PicaTrace::Write write);
+void OnPicaRegWrite(u16 cmd_id, u16 mask, u32 value);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
-
-std::string GetTevStageConfigColorCombinerString(const TexturingRegs::TevStageConfig& tev_stage);
-std::string GetTevStageConfigAlphaCombinerString(const TexturingRegs::TevStageConfig& tev_stage);
-
-/// Dumps the Tev stage config to log at trace level
-void DumpTevStageConfig(const std::array<TexturingRegs::TevStageConfig, 6>& stages);
-
-/**
- * Used in the vertex loader to merge access records. TODO: Investigate if actually useful.
- */
-class MemoryAccessTracker {
-    /// Combine overlapping and close ranges
-    void SimplifyRanges() {
-        for (auto it = ranges.begin(); it != ranges.end(); ++it) {
-            // NOTE: We add 32 to the range end address to make sure "close" ranges are combined,
-            // too
-            auto it2 = std::next(it);
-            while (it2 != ranges.end() && it->first + it->second + 32 >= it2->first) {
-                it->second = std::max(it->second, it2->first + it2->second - it->first);
-                it2 = ranges.erase(it2);
-            }
-        }
-    }
-
-public:
-    /// Record a particular memory access in the list
-    void AddAccess(u32 paddr, u32 size) {
-        // Create new range or extend existing one
-        ranges[paddr] = std::max(ranges[paddr], size);
-
-        // Simplify ranges...
-        SimplifyRanges();
-    }
-
-    /// Map of accessed ranges (mapping start address to range size)
-    std::map<u32, u32> ranges;
-};
 
 } // namespace DebugUtils
 

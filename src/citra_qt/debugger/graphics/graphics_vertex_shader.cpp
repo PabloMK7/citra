@@ -16,9 +16,9 @@
 #include <QTreeView>
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/util/util.h"
-#include "video_core/pica_state.h"
-#include "video_core/shader/debug_data.h"
-#include "video_core/shader/shader.h"
+#include "core/core.h"
+#include "video_core/gpu.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/shader/shader_interpreter.h"
 
 using nihstro::Instruction;
@@ -352,16 +352,14 @@ void GraphicsVertexShaderWidget::DumpShader() {
         return;
     }
 
-    auto& setup = Pica::g_state.vs;
-    auto& config = Pica::g_state.regs.vs;
-
-    Pica::DebugUtils::DumpShader(filename.toStdString(), config, setup,
-                                 Pica::g_state.regs.rasterizer.vs_output_attributes);
+    auto& pica = system.GPU().PicaCore();
+    Pica::DebugUtils::DumpShader(filename.toStdString(), pica.regs.internal.vs, pica.vs_setup,
+                                 pica.regs.internal.rasterizer.vs_output_attributes);
 }
 
 GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
-    std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent)
-    : BreakPointObserverDock(debug_context, tr("Pica Vertex Shader"), parent) {
+    Core::System& system_, std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent)
+    : BreakPointObserverDock(debug_context, tr("Pica Vertex Shader"), parent), system{system_} {
     setObjectName(QStringLiteral("PicaVertexShader"));
 
     // Clear input vertex data so that it contains valid float values in case a debug shader
@@ -472,7 +470,8 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
     widget()->setEnabled(false);
 }
 
-void GraphicsVertexShaderWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
+void GraphicsVertexShaderWidget::OnBreakPointHit(Pica::DebugContext::Event event,
+                                                 const void* data) {
     if (event == Pica::DebugContext::Event::VertexShaderInvocation) {
         Reload(true, data);
     } else {
@@ -482,7 +481,7 @@ void GraphicsVertexShaderWidget::OnBreakPointHit(Pica::DebugContext::Event event
     widget()->setEnabled(true);
 }
 
-void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_data) {
+void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, const void* vertex_data) {
     model->beginResetModel();
 
     if (replace_vertex_data) {
@@ -491,7 +490,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
             for (unsigned attr = 0; attr < 16; ++attr) {
                 for (unsigned comp = 0; comp < 4; ++comp) {
                     input_data[4 * attr + comp]->setText(
-                        QStringLiteral("%1").arg(input_vertex.attr[attr][comp].ToFloat32()));
+                        QStringLiteral("%1").arg(input_vertex[attr][comp].ToFloat32()));
                 }
             }
             breakpoint_warning->hide();
@@ -508,28 +507,27 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     // Reload shader code
     info.Clear();
 
-    auto& shader_setup = Pica::g_state.vs;
-    auto& shader_config = Pica::g_state.regs.vs;
-    for (auto instr : shader_setup.program_code)
+    auto& pica = system.GPU().PicaCore();
+    for (auto instr : pica.vs_setup.program_code)
         info.code.push_back({instr});
-    int num_attributes = shader_config.max_input_attribute_index + 1;
+    int num_attributes = pica.regs.internal.vs.max_input_attribute_index + 1;
 
-    for (auto pattern : shader_setup.swizzle_data) {
+    for (auto pattern : pica.vs_setup.swizzle_data) {
         const nihstro::SwizzleInfo swizzle_info = {.pattern = nihstro::SwizzlePattern{pattern}};
         info.swizzle_info.push_back(swizzle_info);
     }
 
-    u32 entry_point = Pica::g_state.regs.vs.main_offset;
+    u32 entry_point = pica.regs.internal.vs.main_offset;
     info.labels.insert({entry_point, "main"});
 
     // Generate debug information
     Pica::Shader::InterpreterEngine shader_engine;
-    shader_engine.SetupBatch(shader_setup, entry_point);
-    debug_data = shader_engine.ProduceDebugInfo(shader_setup, input_vertex, shader_config);
+    shader_engine.SetupBatch(pica.vs_setup, entry_point);
+    debug_data = shader_engine.ProduceDebugInfo(pica.vs_setup, input_vertex, pica.regs.internal.vs);
 
     // Reload widget state
     for (int attr = 0; attr < num_attributes; ++attr) {
-        unsigned source_attr = shader_config.GetRegisterForAttribute(attr);
+        unsigned source_attr = pica.regs.internal.vs.GetRegisterForAttribute(attr);
         input_data_mapping[attr]->setText(QStringLiteral("-> v%1").arg(source_attr));
         input_data_container[attr]->setVisible(true);
     }
@@ -551,7 +549,7 @@ void GraphicsVertexShaderWidget::OnResumed() {
 
 void GraphicsVertexShaderWidget::OnInputAttributeChanged(int index) {
     const f32 value = input_data[index]->text().toFloat();
-    input_vertex.attr[index / 4][index % 4] = Pica::f24::FromFloat32(value);
+    input_vertex[index / 4][index % 4] = Pica::f24::FromFloat32(value);
     // Re-execute shader with updated value
     Reload();
 }

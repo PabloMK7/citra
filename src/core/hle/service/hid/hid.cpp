@@ -22,7 +22,6 @@
 #include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/service.h"
 #include "core/movie.h"
-#include "video_core/video_core.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
 SERIALIZE_EXPORT_IMPL(Service::HID::Module)

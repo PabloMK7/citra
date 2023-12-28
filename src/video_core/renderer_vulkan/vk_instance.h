@@ -6,8 +6,8 @@
 
 #include <span>
 
+#include "video_core/pica/regs_pipeline.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
-#include "video_core/regs_pipeline.h"
 #include "video_core/renderer_vulkan/vk_platform.h"
 
 namespace Core {

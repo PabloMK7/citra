@@ -104,6 +104,17 @@ struct RasterizerRegs {
         u32 raw;
     } vs_output_attributes[7];
 
+    void ValidateSemantics() {
+        for (std::size_t attrib = 0; attrib < vs_output_total; ++attrib) {
+            const u32 output_register_map = vs_output_attributes[attrib].raw;
+            for (std::size_t comp = 0; comp < 4; ++comp) {
+                const u32 semantic = (output_register_map >> (8 * comp)) & 0x1F;
+                ASSERT_MSG(semantic < 24 || semantic == VSOutputAttributes::INVALID,
+                           "Invalid/unknown semantic id: {}", semantic);
+            }
+        }
+    }
+
     INSERT_PADDING_WORDS(0xe);
 
     enum class ScissorMode : u32 {

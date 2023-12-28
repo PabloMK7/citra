@@ -15,10 +15,10 @@
 #include "citra_qt/debugger/graphics/graphics_surface.h"
 #include "citra_qt/util/spinbox.h"
 #include "common/color.h"
+#include "core/core.h"
 #include "core/memory.h"
-#include "video_core/pica_state.h"
-#include "video_core/regs_framebuffer.h"
-#include "video_core/regs_texturing.h"
+#include "video_core/gpu.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
@@ -49,10 +49,10 @@ void SurfacePicture::mouseMoveEvent(QMouseEvent* event) {
     mousePressEvent(event);
 }
 
-GraphicsSurfaceWidget::GraphicsSurfaceWidget(Memory::MemorySystem& memory_,
+GraphicsSurfaceWidget::GraphicsSurfaceWidget(Core::System& system_,
                                              std::shared_ptr<Pica::DebugContext> debug_context,
                                              QWidget* parent)
-    : BreakPointObserverDock(debug_context, tr("Pica Surface Viewer"), parent), memory{memory_},
+    : BreakPointObserverDock(debug_context, tr("Pica Surface Viewer"), parent), system{system_},
       surface_source(Source::ColorBuffer) {
     setObjectName(QStringLiteral("PicaSurface"));
 
@@ -214,7 +214,7 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(Memory::MemorySystem& memory_,
     }
 }
 
-void GraphicsSurfaceWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
+void GraphicsSurfaceWidget::OnBreakPointHit(Pica::DebugContext::Event event, const void* data) {
     emit Update();
     widget()->setEnabled(true);
 }
@@ -289,7 +289,7 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         return;
     }
 
-    const u8* buffer = memory.GetPhysicalPointer(surface_address);
+    const u8* buffer = system.Memory().GetPhysicalPointer(surface_address);
     if (!buffer) {
         surface_info_label->setText(tr("(unable to access pixel data)"));
         surface_info_label->setAlignment(Qt::AlignCenter);
@@ -410,13 +410,13 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
 void GraphicsSurfaceWidget::OnUpdate() {
     QPixmap pixmap;
 
+    const auto& regs = system.GPU().PicaCore().regs.internal;
     switch (surface_source) {
     case Source::ColorBuffer: {
         // TODO: Store a reference to the registers in the debug context instead of accessing them
         // directly...
 
-        const auto& framebuffer = Pica::g_state.regs.framebuffer.framebuffer;
-
+        const auto& framebuffer = regs.framebuffer.framebuffer;
         surface_address = framebuffer.GetColorBufferPhysicalAddress();
         surface_width = framebuffer.GetWidth();
         surface_height = framebuffer.GetHeight();
@@ -451,8 +451,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
     }
 
     case Source::DepthBuffer: {
-        const auto& framebuffer = Pica::g_state.regs.framebuffer.framebuffer;
-
+        const auto& framebuffer = regs.framebuffer.framebuffer;
         surface_address = framebuffer.GetDepthBufferPhysicalAddress();
         surface_width = framebuffer.GetWidth();
         surface_height = framebuffer.GetHeight();
@@ -479,8 +478,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
     }
 
     case Source::StencilBuffer: {
-        const auto& framebuffer = Pica::g_state.regs.framebuffer.framebuffer;
-
+        const auto& framebuffer = regs.framebuffer.framebuffer;
         surface_address = framebuffer.GetDepthBufferPhysicalAddress();
         surface_width = framebuffer.GetWidth();
         surface_height = framebuffer.GetHeight();
@@ -513,7 +511,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
             break;
         }
 
-        const auto texture = Pica::g_state.regs.texturing.GetTextures()[texture_index];
+        const auto texture = regs.texturing.GetTextures()[texture_index];
         auto info = Pica::Texture::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
         surface_address = info.physical_address;
@@ -545,7 +543,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
     // TODO: Implement a good way to visualize alpha components!
 
     QImage decoded_image(surface_width, surface_height, QImage::Format_ARGB32);
-    const u8* buffer = memory.GetPhysicalPointer(surface_address);
+    const u8* buffer = system.Memory().GetPhysicalPointer(surface_address);
 
     if (!buffer) {
         surface_picture_label->hide();
@@ -681,7 +679,7 @@ void GraphicsSurfaceWidget::SaveSurface() {
                                  tr("Failed to save surface data to file '%1'").arg(filename));
         }
     } else if (selected_filter == bin_filter) {
-        const u8* const buffer = memory.GetPhysicalPointer(surface_address);
+        const u8* const buffer = system.Memory().GetPhysicalPointer(surface_address);
         ASSERT_MSG(buffer, "Memory not accessible");
 
         QFile file{filename};

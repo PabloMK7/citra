@@ -36,6 +36,7 @@
 #include "core/telemetry_session.h"
 #include "input_common/main.h"
 #include "network/network.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 
 #ifdef __unix__
@@ -438,9 +439,10 @@ int main(int argc, char** argv) {
         movie.StartRecording(movie_record, movie_record_author);
     }
     if (!dump_video.empty() && DynamicLibrary::FFmpeg::LoadFFmpeg()) {
+        auto& renderer = system.GPU().Renderer();
         const auto layout{
-            Layout::FrameLayoutFromResolutionScale(system.Renderer().GetResolutionScaleFactor())};
-        auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
+            Layout::FrameLayoutFromResolutionScale(renderer.GetResolutionScaleFactor())};
+        auto dumper = std::make_shared<VideoDumper::FFmpegBackend>(renderer);
         if (dumper->StartDumping(dump_video, layout)) {
             system.RegisterVideoDumper(dumper);
         }
@@ -458,7 +460,7 @@ int main(int argc, char** argv) {
     });
 
     std::atomic_bool stop_run;
-    system.Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
         stop_run, [](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             LOG_DEBUG(Frontend, "Loading stage {} progress {} {}", static_cast<u32>(stage), value,
                       total);

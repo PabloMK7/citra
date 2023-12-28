@@ -3,13 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include "video_core/pica/regs_shader.h"
+#include "video_core/pica/shader_setup.h"
 #include "video_core/shader/generator/shader_uniforms.h"
-#include "video_core/shader/shader.h"
 
 namespace Pica::Shader::Generator {
 
-void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs,
-                                   const Pica::Shader::ShaderSetup& setup) {
+void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs, const Pica::ShaderSetup& setup) {
     std::transform(std::begin(setup.uniforms.b), std::end(setup.uniforms.b), std::begin(bools),
                    [](bool value) -> BoolAligned { return {value ? 1 : 0}; });
     std::transform(std::begin(regs.int_uniforms), std::end(regs.int_uniforms), std::begin(i),

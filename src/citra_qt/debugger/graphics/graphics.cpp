@@ -5,8 +5,8 @@
 #include <QListView>
 #include "citra_qt/debugger/graphics/graphics.h"
 #include "citra_qt/util/util.h"
-
-extern GraphicsDebugger g_debugger;
+#include "core/core.h"
+#include "video_core/gpu.h"
 
 GPUCommandStreamItemModel::GPUCommandStreamItemModel(QObject* parent)
     : QAbstractListModel(parent), command_count(0) {
@@ -19,19 +19,19 @@ int GPUCommandStreamItemModel::rowCount([[maybe_unused]] const QModelIndex& pare
 }
 
 QVariant GPUCommandStreamItemModel::data(const QModelIndex& index, int role) const {
-    if (!index.isValid())
+    if (!index.isValid() || !GetDebugger())
         return QVariant();
 
     int command_index = index.row();
     const Service::GSP::Command& command = GetDebugger()->ReadGXCommandHistory(command_index);
     if (role == Qt::DisplayRole) {
         std::map<Service::GSP::CommandId, const char*> command_names = {
-            {Service::GSP::CommandId::REQUEST_DMA, "REQUEST_DMA"},
-            {Service::GSP::CommandId::SUBMIT_GPU_CMDLIST, "SUBMIT_GPU_CMDLIST"},
-            {Service::GSP::CommandId::SET_MEMORY_FILL, "SET_MEMORY_FILL"},
-            {Service::GSP::CommandId::SET_DISPLAY_TRANSFER, "SET_DISPLAY_TRANSFER"},
-            {Service::GSP::CommandId::SET_TEXTURE_COPY, "SET_TEXTURE_COPY"},
-            {Service::GSP::CommandId::CACHE_FLUSH, "CACHE_FLUSH"},
+            {Service::GSP::CommandId::RequestDma, "REQUEST_DMA"},
+            {Service::GSP::CommandId::SubmitCmdList, "SUBMIT_GPU_CMDLIST"},
+            {Service::GSP::CommandId::MemoryFill, "SET_MEMORY_FILL"},
+            {Service::GSP::CommandId::DisplayTransfer, "SET_DISPLAY_TRANSFER"},
+            {Service::GSP::CommandId::TextureCopy, "SET_TEXTURE_COPY"},
+            {Service::GSP::CommandId::CacheFlush, "CACHE_FLUSH"},
         };
         const u32* command_data = reinterpret_cast<const u32*>(&command);
         QString str = QStringLiteral("%1 %2 %3 %4 %5 %6 %7 %8 %9")
@@ -63,8 +63,8 @@ void GPUCommandStreamItemModel::OnGXCommandFinishedInternal(int total_command_co
     emit dataChanged(index(prev_command_count, 0), index(total_command_count - 1, 0));
 }
 
-GPUCommandStreamWidget::GPUCommandStreamWidget(QWidget* parent)
-    : QDockWidget(tr("Graphics Debugger"), parent), model(this) {
+GPUCommandStreamWidget::GPUCommandStreamWidget(Core::System& system_, QWidget* parent)
+    : QDockWidget(tr("Graphics Debugger"), parent), system{system_}, model(this) {
     setObjectName(QStringLiteral("GraphicsDebugger"));
 
     auto* command_list = new QListView;
@@ -74,12 +74,26 @@ GPUCommandStreamWidget::GPUCommandStreamWidget(QWidget* parent)
     setWidget(command_list);
 }
 
+void GPUCommandStreamWidget::Register() {
+    auto& debugger = system.GPU().Debugger();
+    debugger.RegisterObserver(&model);
+}
+
+void GPUCommandStreamWidget::Unregister() {
+    auto& debugger = system.GPU().Debugger();
+    debugger.UnregisterObserver(&model);
+}
+
 void GPUCommandStreamWidget::showEvent(QShowEvent* event) {
-    g_debugger.RegisterObserver(&model);
+    if (system.IsPoweredOn()) {
+        Register();
+    }
     QDockWidget::showEvent(event);
 }
 
 void GPUCommandStreamWidget::hideEvent(QHideEvent* event) {
-    g_debugger.UnregisterObserver(&model);
+    if (system.IsPoweredOn()) {
+        Unregister();
+    }
     QDockWidget::hideEvent(event);
 }

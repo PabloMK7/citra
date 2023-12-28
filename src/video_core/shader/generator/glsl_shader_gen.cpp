@@ -5,9 +5,10 @@
 #include <string_view>
 #include <fmt/format.h>
 
-#include "common/logging/log.h"
+#include "video_core/pica/regs_rasterizer.h"
 #include "video_core/shader/generator/glsl_shader_decompiler.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
+#include "video_core/shader/generator/shader_gen.h"
 
 using VSOutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
 
@@ -141,7 +142,7 @@ std::string_view MakeLoadPrefix(AttribLoadFlags flag) {
     return "";
 }
 
-std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const PicaVSConfig& config,
+std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& config,
                                  bool separable_shader) {
     std::string out;
     if (separable_shader) {

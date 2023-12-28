@@ -35,14 +35,13 @@
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/gsp/gsp.h"
+#include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
-#include "core/hw/gpu.h"
-#include "core/hw/hw.h"
-#include "core/hw/lcd.h"
+#include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #ifdef ENABLE_SCRIPTING
@@ -51,8 +50,8 @@
 #include "core/telemetry_session.h"
 #include "network/network.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 namespace Core {
 
@@ -235,7 +234,6 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         GDBStub::SetCpuStepFlag(false);
     }
 
-    HW::Update();
     Reschedule();
 
     return status;
@@ -433,7 +431,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
-    HW::Init(*memory);
+    HW::AES::InitKeys();
     Service::Init(*this);
     GDBStub::DeferStart();
 
@@ -443,7 +441,10 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     custom_tex_manager = std::make_unique<VideoCore::CustomTexManager>(*this);
 
-    VideoCore::Init(emu_window, secondary_window, *this);
+    auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
+    gpu = std::make_unique<VideoCore::GPU>(*this, emu_window, secondary_window);
+    gpu->SetInterruptHandler(
+        [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
 
     LOG_DEBUG(Core, "Initialized OK");
 
@@ -452,8 +453,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     return ResultStatus::Success;
 }
 
-VideoCore::RendererBase& System::Renderer() {
-    return *VideoCore::g_renderer;
+VideoCore::GPU& System::GPU() {
+    return *gpu;
 }
 
 Service::SM::ServiceManager& System::ServiceManager() {
@@ -555,8 +556,7 @@ void System::Shutdown(bool is_deserializing) {
     // Shutdown emulation session
     is_powered_on = false;
 
-    VideoCore::Shutdown();
-    HW::Shutdown();
+    gpu.reset();
     if (!is_deserializing) {
         GDBStub::Shutdown();
         perf_stats.reset();
@@ -626,18 +626,9 @@ void System::ApplySettings() {
     GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
     GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
 
-    VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit.GetValue();
-    VideoCore::g_hw_shader_enabled = Settings::values.use_hw_shader.GetValue();
-    VideoCore::g_hw_shader_accurate_mul = Settings::values.shaders_accurate_mul.GetValue();
-
-#ifndef ANDROID
-    if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->UpdateCurrentFramebufferLayout();
-    }
-#endif
-
-    if (VideoCore::g_renderer) {
-        auto& settings = VideoCore::g_renderer->Settings();
+    if (gpu) {
+        gpu->Renderer().UpdateCurrentFramebufferLayout();
+        auto& settings = gpu->Renderer().Settings();
         settings.bg_color_update_requested = true;
         settings.shader_update_requested = true;
     }
@@ -699,17 +690,15 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
             *m_emu_window, m_secondary_window, *memory_mode.first, *n3ds_hw_caps.first, num_cores);
     }
 
-    // flush on save, don't flush on load
-    bool should_flush = !Archive::is_loading::value;
-    Memory::RasterizerClearAll(should_flush);
+    // Flush on save, don't flush on load
+    const bool should_flush = !Archive::is_loading::value;
+    gpu->ClearAll(should_flush);
     ar&* timing.get();
     for (u32 i = 0; i < num_cores; i++) {
         ar&* cpu_cores[i].get();
     }
     ar&* service_manager.get();
     ar&* archive_manager.get();
-    ar& GPU::g_regs;
-    ar& LCD::g_regs;
 
     // NOTE: DSP doesn't like being destroyed and recreated. So instead we do an inline
     // serialization; this means that the DSP Settings need to match for loading to work.
@@ -722,16 +711,21 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
 
     ar&* memory.get();
     ar&* kernel.get();
-    VideoCore::serialize(ar, file_version);
+    ar&* gpu.get();
     ar& movie;
 
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {
         timing->UnlockEventQueue();
-        Service::GSP::SetGlobalModule(*this);
         memory->SetDSP(*dsp_core);
         cheat_engine->Connect();
-        VideoCore::g_renderer->Sync();
+        gpu->Sync();
+
+        // Re-register gpu callback, because gsp service changed after service_manager got
+        // serialized
+        auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
+        gpu->SetInterruptHandler(
+            [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
     }
 }
 

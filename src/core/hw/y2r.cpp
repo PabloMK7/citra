@@ -9,7 +9,7 @@
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/common_types.h"
-#include "common/microprofileui.h"
+#include "common/microprofile.h"
 #include "common/vector_math.h"
 #include "core/core.h"
 #include "core/hle/service/cam/y2r_u.h"

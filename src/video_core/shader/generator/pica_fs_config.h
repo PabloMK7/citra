@@ -5,7 +5,7 @@
 #pragma once
 
 #include "common/hash.h"
-#include "video_core/regs.h"
+#include "video_core/pica/regs_internal.h"
 #include "video_core/shader/generator/profile.h"
 
 namespace Pica::Shader {
@@ -17,7 +17,7 @@ struct BlendConfig {
 };
 
 struct FramebufferConfig {
-    explicit FramebufferConfig(const Pica::Regs& regs, const Profile& profile);
+    explicit FramebufferConfig(const Pica::RegsInternal& regs, const Profile& profile);
 
     union {
         u32 raw{};
@@ -158,7 +158,8 @@ union UserConfig {
 static_assert(std::has_unique_object_representations_v<UserConfig>);
 
 struct FSConfig {
-    explicit FSConfig(const Pica::Regs& regs, const UserConfig& user, const Profile& profile);
+    explicit FSConfig(const Pica::RegsInternal& regs, const UserConfig& user,
+                      const Profile& profile);
 
     [[nodiscard]] bool TevStageUpdatesCombinerBufferColor(u32 stage_index) const {
         return (stage_index < 4) && (texture.combiner_buffer_input & (1 << stage_index));

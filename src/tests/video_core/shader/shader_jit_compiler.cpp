@@ -13,6 +13,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
 #include <nihstro/inline_assembly.h>
+#include "video_core/pica/shader_setup.h"
+#include "video_core/pica/shader_unit.h"
 #include "video_core/shader/shader_interpreter.h"
 #if CITRA_ARCH(x86_64)
 #include "video_core/shader/shader_jit_x64_compiler.h"
@@ -54,11 +56,11 @@ struct StringMaker<Common::Vec4f> {
 };
 } // namespace Catch
 
-static std::unique_ptr<Pica::Shader::ShaderSetup> CompileShaderSetup(
+static std::unique_ptr<Pica::ShaderSetup> CompileShaderSetup(
     std::initializer_list<nihstro::InlineAsm> code) {
     const auto shbin = nihstro::InlineAsm::CompileToRawBinary(code);
 
-    auto shader = std::make_unique<Pica::Shader::ShaderSetup>();
+    auto shader = std::make_unique<Pica::ShaderSetup>();
 
     std::transform(shbin.program.begin(), shbin.program.end(), shader->program_code.begin(),
                    [](const auto& x) { return x.hex; });
@@ -75,18 +77,16 @@ public:
         shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
     }
 
-    explicit ShaderTest(std::unique_ptr<Pica::Shader::ShaderSetup> input_shader_setup)
+    explicit ShaderTest(std::unique_ptr<Pica::ShaderSetup> input_shader_setup)
         : shader_setup(std::move(input_shader_setup)) {
         shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
     }
 
     Common::Vec4f Run(std::span<const Common::Vec4f> inputs) {
-        Pica::Shader::UnitState shader_unit;
+        Pica::ShaderUnit shader_unit;
         RunJit(shader_unit, inputs);
-        return {shader_unit.registers.output[0].x.ToFloat32(),
-                shader_unit.registers.output[0].y.ToFloat32(),
-                shader_unit.registers.output[0].z.ToFloat32(),
-                shader_unit.registers.output[0].w.ToFloat32()};
+        return {shader_unit.output[0].x.ToFloat32(), shader_unit.output[0].y.ToFloat32(),
+                shader_unit.output[0].z.ToFloat32(), shader_unit.output[0].w.ToFloat32()};
     }
 
     Common::Vec4f Run(std::initializer_list<float> inputs) {
@@ -105,39 +105,36 @@ public:
         return Run(std::vector<Common::Vec4f>{inputs});
     }
 
-    void RunJit(Pica::Shader::UnitState& shader_unit, std::span<const Common::Vec4f> inputs) {
+    void RunJit(Pica::ShaderUnit& shader_unit, std::span<const Common::Vec4f> inputs) {
         for (std::size_t i = 0; i < inputs.size(); ++i) {
             const Common::Vec4f& input = inputs[i];
-            shader_unit.registers.input[i].x = Pica::f24::FromFloat32(input.x);
-            shader_unit.registers.input[i].y = Pica::f24::FromFloat32(input.y);
-            shader_unit.registers.input[i].z = Pica::f24::FromFloat32(input.z);
-            shader_unit.registers.input[i].w = Pica::f24::FromFloat32(input.w);
+            shader_unit.input[i].x = Pica::f24::FromFloat32(input.x);
+            shader_unit.input[i].y = Pica::f24::FromFloat32(input.y);
+            shader_unit.input[i].z = Pica::f24::FromFloat32(input.z);
+            shader_unit.input[i].w = Pica::f24::FromFloat32(input.w);
         }
-        shader_unit.registers.temporary.fill(
-            Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
+        shader_unit.temporary.fill(Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
         shader_jit.Run(*shader_setup, shader_unit, 0);
     }
 
-    void RunJit(Pica::Shader::UnitState& shader_unit, float input) {
+    void RunJit(Pica::ShaderUnit& shader_unit, float input) {
         const Common::Vec4f input_vec(input, 0, 0, 0);
         RunJit(shader_unit, {&input_vec, 1});
     }
 
-    void RunInterpreter(Pica::Shader::UnitState& shader_unit,
-                        std::span<const Common::Vec4f> inputs) {
+    void RunInterpreter(Pica::ShaderUnit& shader_unit, std::span<const Common::Vec4f> inputs) {
         for (std::size_t i = 0; i < inputs.size(); ++i) {
             const Common::Vec4f& input = inputs[i];
-            shader_unit.registers.input[i].x = Pica::f24::FromFloat32(input.x);
-            shader_unit.registers.input[i].y = Pica::f24::FromFloat32(input.y);
-            shader_unit.registers.input[i].z = Pica::f24::FromFloat32(input.z);
-            shader_unit.registers.input[i].w = Pica::f24::FromFloat32(input.w);
+            shader_unit.input[i].x = Pica::f24::FromFloat32(input.x);
+            shader_unit.input[i].y = Pica::f24::FromFloat32(input.y);
+            shader_unit.input[i].z = Pica::f24::FromFloat32(input.z);
+            shader_unit.input[i].w = Pica::f24::FromFloat32(input.w);
         }
-        shader_unit.registers.temporary.fill(
-            Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
+        shader_unit.temporary.fill(Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
         shader_interpreter.Run(*shader_setup, shader_unit);
     }
 
-    void RunInterpreter(Pica::Shader::UnitState& shader_unit, float input) {
+    void RunInterpreter(Pica::ShaderUnit& shader_unit, float input) {
         const Common::Vec4f input_vec(input, 0, 0, 0);
         RunInterpreter(shader_unit, {&input_vec, 1});
     }
@@ -145,7 +142,7 @@ public:
 public:
     JitShader shader_jit;
     ShaderInterpreter shader_interpreter;
-    std::unique_ptr<Pica::Shader::ShaderSetup> shader_setup;
+    std::unique_ptr<Pica::ShaderSetup> shader_setup;
 };
 
 TEST_CASE("ADD", "[video_core][shader][shader_jit]") {
@@ -642,11 +639,11 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
                                     input) +
                                    input;
 
-        Pica::Shader::UnitState shader_unit_jit;
+        Pica::ShaderUnit shader_unit_jit;
         shader_test.RunJit(shader_unit_jit, input);
 
         REQUIRE(shader_unit_jit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Catch::Approx(expected_out));
+        REQUIRE(shader_unit_jit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
     {
         shader_test.shader_setup->uniforms.i[0] = {9, 0, 2, 0};
@@ -659,11 +656,11 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
                                      (shader_test.shader_setup->uniforms.i[1][0] + 1)) *
                                     input) +
                                    input;
-        Pica::Shader::UnitState shader_unit_jit;
+        Pica::ShaderUnit shader_unit_jit;
         shader_test.RunJit(shader_unit_jit, input);
 
         REQUIRE(shader_unit_jit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit_jit.registers.output[0].x.ToFloat32() == Catch::Approx(expected_out));
+        REQUIRE(shader_unit_jit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
 }
 

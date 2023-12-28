@@ -22,9 +22,8 @@ void Recorder::Finish(const std::string& filename) {
     // Calculate file offsets
     auto& initial = header.initial_state_offsets;
 
-    initial.gpu_registers_size = static_cast<u32>(initial_state.gpu_registers.size());
-    initial.lcd_registers_size = static_cast<u32>(initial_state.lcd_registers.size());
     initial.pica_registers_size = static_cast<u32>(initial_state.pica_registers.size());
+    initial.lcd_registers_size = static_cast<u32>(initial_state.lcd_registers.size());
     initial.default_attributes_size = static_cast<u32>(initial_state.default_attributes.size());
     initial.vs_program_binary_size = static_cast<u32>(initial_state.vs_program_binary.size());
     initial.vs_swizzle_data_size = static_cast<u32>(initial_state.vs_swizzle_data.size());
@@ -81,21 +80,16 @@ void Recorder::Finish(const std::string& filename) {
             throw "Failed to write header";
 
         // Write initial state
-        written =
-            file.WriteArray(initial_state.gpu_registers.data(), initial_state.gpu_registers.size());
-        if (written != initial_state.gpu_registers.size() || file.Tell() != initial.lcd_registers)
-            throw "Failed to write GPU registers";
-
-        written =
-            file.WriteArray(initial_state.lcd_registers.data(), initial_state.lcd_registers.size());
-        if (written != initial_state.lcd_registers.size() || file.Tell() != initial.pica_registers)
-            throw "Failed to write LCD registers";
-
         written = file.WriteArray(initial_state.pica_registers.data(),
                                   initial_state.pica_registers.size());
         if (written != initial_state.pica_registers.size() ||
             file.Tell() != initial.default_attributes)
             throw "Failed to write Pica registers";
+
+        written =
+            file.WriteArray(initial_state.lcd_registers.data(), initial_state.lcd_registers.size());
+        if (written != initial_state.lcd_registers.size() || file.Tell() != initial.pica_registers)
+            throw "Failed to write LCD registers";
 
         written = file.WriteArray(initial_state.default_attributes.data(),
                                   initial_state.default_attributes.size());
@@ -187,21 +181,12 @@ void Recorder::MemoryAccessed(const u8* data, u32 size, u32 physical_address) {
     stream.push_back(element);
 }
 
-template <typename T>
-void Recorder::RegisterWritten(u32 physical_address, T value) {
+void Recorder::RegisterWritten(u32 physical_address, u32 value) {
     StreamElement element = {{RegisterWrite}};
-    element.data.register_write.size = (sizeof(T) == 1)   ? CTRegisterWrite::SIZE_8
-                                       : (sizeof(T) == 2) ? CTRegisterWrite::SIZE_16
-                                       : (sizeof(T) == 4) ? CTRegisterWrite::SIZE_32
-                                                          : CTRegisterWrite::SIZE_64;
     element.data.register_write.physical_address = physical_address;
     element.data.register_write.value = value;
 
     stream.push_back(element);
 }
 
-template void Recorder::RegisterWritten(u32, u8);
-template void Recorder::RegisterWritten(u32, u16);
-template void Recorder::RegisterWritten(u32, u32);
-template void Recorder::RegisterWritten(u32, u64);
 } // namespace CiTrace

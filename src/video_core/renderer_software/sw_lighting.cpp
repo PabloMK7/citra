@@ -10,7 +10,7 @@ namespace SwRenderer {
 using Pica::f16;
 using Pica::LightingRegs;
 
-static float LookupLightingLut(const Pica::State::Lighting& lighting, std::size_t lut_index,
+static float LookupLightingLut(const Pica::PicaCore::Lighting& lighting, std::size_t lut_index,
                                u8 index, float delta) {
     ASSERT_MSG(lut_index < lighting.luts.size(), "Out of range lut");
     ASSERT_MSG(index < lighting.luts[lut_index].size(), "Out of range index");
@@ -24,7 +24,7 @@ static float LookupLightingLut(const Pica::State::Lighting& lighting, std::size_
 }
 
 std::pair<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
-    const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
+    const Pica::LightingRegs& lighting, const Pica::PicaCore::Lighting& lighting_state,
     const Common::Quaternion<f32>& normquat, const Common::Vec3f& view,
     std::span<const Common::Vec4<u8>, 4> texture_color) {
 

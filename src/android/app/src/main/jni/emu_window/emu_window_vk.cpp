@@ -7,7 +7,6 @@
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "jni/emu_window/emu_window_vk.h"
-#include "video_core/video_core.h"
 
 class GraphicsContext_Android final : public Frontend::GraphicsContext {
 public:

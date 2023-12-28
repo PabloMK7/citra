@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include "video_core/shader/generator/shader_gen.h"
-#include "video_core/shader/shader.h"
-
 // High precision may or may not be supported in GLES3. If it isn't, use medium precision instead.
 static constexpr char fragment_shader_precision_OES[] = R"(
 #if GL_ES
@@ -24,6 +21,15 @@ precision mediump uimage2D;
 #endif
 )";
 
+namespace Pica {
+struct ShaderSetup;
+}
+
+namespace Pica::Shader::Generator {
+struct PicaVSConfig;
+struct PicaFixedGSConfig;
+} // namespace Pica::Shader::Generator
+
 namespace Pica::Shader::Generator::GLSL {
 
 /**
@@ -37,7 +43,7 @@ std::string GenerateTrivialVertexShader(bool use_clip_planes, bool separable_sha
  * Generates the GLSL vertex shader program source code for the given VS program
  * @returns String of the shader source code; empty on failure
  */
-std::string GenerateVertexShader(const Pica::Shader::ShaderSetup& setup, const PicaVSConfig& config,
+std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSConfig& config,
                                  bool separable_shader);
 
 /**

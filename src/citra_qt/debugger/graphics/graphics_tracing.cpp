@@ -14,14 +14,15 @@
 #include <nihstro/float24.h>
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "common/common_types.h"
-#include "core/hw/gpu.h"
-#include "core/hw/lcd.h"
+#include "core/core.h"
 #include "core/tracer/recorder.h"
-#include "video_core/pica_state.h"
+#include "video_core/gpu.h"
+#include "video_core/pica/pica_core.h"
 
-GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context,
+GraphicsTracingWidget::GraphicsTracingWidget(Core::System& system_,
+                                             std::shared_ptr<Pica::DebugContext> debug_context,
                                              QWidget* parent)
-    : BreakPointObserverDock(debug_context, tr("CiTrace Recorder"), parent) {
+    : BreakPointObserverDock(debug_context, tr("CiTrace Recorder"), parent), system{system_} {
 
     setObjectName(QStringLiteral("CiTracing"));
 
@@ -61,45 +62,46 @@ void GraphicsTracingWidget::StartRecording() {
     if (!context)
         return;
 
-    auto shader_binary = Pica::g_state.vs.program_code;
-    auto swizzle_data = Pica::g_state.vs.swizzle_data;
+    auto& pica = system.GPU().PicaCore();
+    auto shader_binary = pica.vs_setup.program_code;
+    auto swizzle_data = pica.vs_setup.swizzle_data;
 
     // Encode floating point numbers to 24-bit values
     // TODO: Drop this explicit conversion once we store float24 values bit-correctly internally.
     std::array<u32, 4 * 16> default_attributes;
-    for (unsigned i = 0; i < 16; ++i) {
-        for (unsigned comp = 0; comp < 3; ++comp) {
-            default_attributes[4 * i + comp] = nihstro::to_float24(
-                Pica::g_state.input_default_attributes.attr[i][comp].ToFloat32());
+    for (u32 i = 0; i < 16; ++i) {
+        for (u32 comp = 0; comp < 3; ++comp) {
+            default_attributes[4 * i + comp] =
+                nihstro::to_float24(pica.input_default_attributes[i][comp].ToFloat32());
         }
     }
 
     std::array<u32, 4 * 96> vs_float_uniforms;
-    for (unsigned i = 0; i < 96; ++i)
-        for (unsigned comp = 0; comp < 3; ++comp)
+    for (u32 i = 0; i < 96; ++i) {
+        for (u32 comp = 0; comp < 3; ++comp) {
             vs_float_uniforms[4 * i + comp] =
-                nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
+                nihstro::to_float24(pica.vs_setup.uniforms.f[i][comp].ToFloat32());
+        }
+    }
 
     CiTrace::Recorder::InitialState state;
-    std::copy_n((u32*)&GPU::g_regs, sizeof(GPU::g_regs) / sizeof(u32),
-                std::back_inserter(state.gpu_registers));
-    std::copy_n((u32*)&LCD::g_regs, sizeof(LCD::g_regs) / sizeof(u32),
-                std::back_inserter(state.lcd_registers));
-    std::copy_n((u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32),
-                std::back_inserter(state.pica_registers));
-    std::copy(default_attributes.begin(), default_attributes.end(),
-              std::back_inserter(state.default_attributes));
-    std::copy(shader_binary.begin(), shader_binary.end(),
-              std::back_inserter(state.vs_program_binary));
-    std::copy(swizzle_data.begin(), swizzle_data.end(), std::back_inserter(state.vs_swizzle_data));
-    std::copy(vs_float_uniforms.begin(), vs_float_uniforms.end(),
-              std::back_inserter(state.vs_float_uniforms));
-    // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_program_binary));
-    // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_swizzle_data));
-    // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_float_uniforms));
 
-    auto recorder = new CiTrace::Recorder(state);
-    context->recorder = std::shared_ptr<CiTrace::Recorder>(recorder);
+    const auto copy = [&](std::vector<u32>& dest, auto& data) {
+        dest.resize(sizeof(data));
+        std::memcpy(dest.data(), std::addressof(data), sizeof(data));
+    };
+
+    copy(state.pica_registers, pica.regs);
+    copy(state.lcd_registers, pica.regs_lcd);
+    copy(state.default_attributes, default_attributes);
+    copy(state.vs_program_binary, shader_binary);
+    copy(state.vs_swizzle_data, swizzle_data);
+    copy(state.vs_float_uniforms, vs_float_uniforms);
+    // copy(TODO: Not implemented, std::back_inserter(state.gs_program_binary));
+    // copy(TODO: Not implemented, std::back_inserter(state.gs_swizzle_data));
+    // copy(TODO: Not implemented, std::back_inserter(state.gs_float_uniforms));
+
+    context->recorder = std::make_shared<CiTrace::Recorder>(state);
 
     emit SetStartTracingButtonEnabled(false);
     emit SetStopTracingButtonEnabled(true);
@@ -139,7 +141,7 @@ void GraphicsTracingWidget::AbortRecording() {
     emit SetStartTracingButtonEnabled(true);
 }
 
-void GraphicsTracingWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
+void GraphicsTracingWidget::OnBreakPointHit(Pica::DebugContext::Event event, const void* data) {
     widget()->setEnabled(true);
 }
 

@@ -18,6 +18,10 @@
 #include "common/threadsafe_queue.h"
 #include "core/dumping/backend.h"
 
+namespace VideoCore {
+class RendererBase;
+}
+
 namespace VideoDumper {
 
 using VariableAudioFrame = std::vector<s16>;
@@ -181,7 +185,7 @@ private:
  */
 class FFmpegBackend : public Backend {
 public:
-    FFmpegBackend();
+    FFmpegBackend(VideoCore::RendererBase& renderer);
     ~FFmpegBackend() override;
     bool StartDumping(const std::string& path, const Layout::FramebufferLayout& layout) override;
     void AddVideoFrame(VideoFrame frame) override;
@@ -194,6 +198,7 @@ public:
 private:
     void EndDumping();
 
+    VideoCore::RendererBase& renderer;
     std::atomic_bool is_dumping = false; ///< Whether the backend is currently dumping
 
     FFmpegMuxer ffmpeg{};

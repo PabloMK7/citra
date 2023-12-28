@@ -18,7 +18,8 @@ BreakPointObserverDock::BreakPointObserverDock(std::shared_ptr<Pica::DebugContex
             &BreakPointObserverDock::OnBreakPointHit, Qt::BlockingQueuedConnection);
 }
 
-void BreakPointObserverDock::OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) {
+void BreakPointObserverDock::OnPicaBreakPointHit(Pica::DebugContext::Event event,
+                                                 const void* data) {
     emit BreakPointHit(event, data);
 }
 

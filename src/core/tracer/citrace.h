@@ -75,16 +75,7 @@ struct CTMemoryLoad {
 
 struct CTRegisterWrite {
     u32 physical_address;
-
-    enum : u32 {
-        SIZE_8 = 0xD1,
-        SIZE_16 = 0xD2,
-        SIZE_32 = 0xD3,
-        SIZE_64 = 0xD4,
-    } size;
-
-    // TODO: Make it clearer which bits of this member are used for sizes other than 32 bits
-    u64 value;
+    u32 value;
 };
 
 struct CTStreamElement {

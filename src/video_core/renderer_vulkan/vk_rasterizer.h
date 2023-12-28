@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "core/hw/gpu.h"
 #include "video_core/rasterizer_accelerated.h"
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
 #include "video_core/renderer_vulkan/vk_renderpass_cache.h"
@@ -20,6 +19,12 @@ class CustomTexManager;
 class RendererBase;
 } // namespace VideoCore
 
+namespace Pica {
+struct DisplayTransferConfig;
+struct MemoryFillConfig;
+struct FramebufferConfig;
+} // namespace Pica
+
 namespace Vulkan {
 
 struct ScreenInfo;
@@ -31,7 +36,7 @@ class DescriptorPool;
 
 class RasterizerVulkan : public VideoCore::RasterizerAccelerated {
 public:
-    explicit RasterizerVulkan(Memory::MemorySystem& memory,
+    explicit RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore& pica,
                               VideoCore::CustomTexManager& custom_tex_manager,
                               VideoCore::RendererBase& renderer, Frontend::EmuWindow& emu_window,
                               const Instance& instance, Scheduler& scheduler, DescriptorPool& pool,
@@ -48,10 +53,10 @@ public:
     void InvalidateRegion(PAddr addr, u32 size) override;
     void FlushAndInvalidateRegion(PAddr addr, u32 size) override;
     void ClearAll(bool flush) override;
-    bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) override;
-    bool AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) override;
-    bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) override;
-    bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr,
+    bool AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config) override;
+    bool AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) override;
+    bool AccelerateFill(const Pica::MemoryFillConfig& config) override;
+    bool AccelerateDisplay(const Pica::FramebufferConfig& config, PAddr framebuffer_addr,
                            u32 pixel_stride, ScreenInfo& screen_info);
     bool AccelerateDrawBatch(bool is_indexed) override;
 

@@ -9,12 +9,12 @@
 
 #include "common/quaternion.h"
 #include "common/vector_math.h"
-#include "video_core/pica_state.h"
+#include "video_core/pica/pica_core.h"
 
 namespace SwRenderer {
 
 std::pair<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
-    const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
+    const Pica::LightingRegs& lighting, const Pica::PicaCore::Lighting& lighting_state,
     const Common::Quaternion<f32>& normquat, const Common::Vec3f& view,
     std::span<const Common::Vec4<u8>, 4> texture_color);
 

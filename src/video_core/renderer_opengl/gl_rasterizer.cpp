@@ -8,15 +8,12 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
-#include "video_core/pica_state.h"
-#include "video_core/regs_framebuffer.h"
-#include "video_core/regs_rasterizer.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/shader/generator/shader_gen.h"
 #include "video_core/texture/texture_decode.h"
-#include "video_core/video_core.h"
 
 namespace OpenGL {
 
@@ -76,10 +73,10 @@ GLenum MakeAttributeType(Pica::PipelineRegs::VertexAttributeFormat format) {
 
 } // Anonymous namespace
 
-RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory,
+RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore& pica,
                                    VideoCore::CustomTexManager& custom_tex_manager,
                                    VideoCore::RendererBase& renderer, Driver& driver_)
-    : VideoCore::RasterizerAccelerated{memory}, driver{driver_},
+    : VideoCore::RasterizerAccelerated{memory, pica}, driver{driver_},
       shader_manager{renderer.GetRenderWindow(), driver, !driver.IsOpenGLES()},
       runtime{driver, renderer}, res_cache{memory, custom_tex_manager, runtime, regs, renderer},
       texture_buffer_size{TextureBufferSize()}, vertex_buffer{driver, GL_ARRAY_BUFFER,
@@ -259,7 +256,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
         if (vertex_attributes.IsDefaultAttribute(i)) {
             const u32 reg = regs.vs.GetRegisterForAttribute(i);
             if (!enable_attributes[reg]) {
-                const auto& attr = Pica::g_state.input_default_attributes.attr[i];
+                const auto& attr = pica.input_default_attributes[i];
                 glVertexAttrib4f(reg, attr.x.ToFloat32(), attr.y.ToFloat32(), attr.z.ToFloat32(),
                                  attr.w.ToFloat32());
             }
@@ -269,7 +266,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
 
 bool RasterizerOpenGL::SetupVertexShader() {
     MICROPROFILE_SCOPE(OpenGL_VS);
-    return shader_manager.UseProgrammableVertexShader(regs, Pica::g_state.vs);
+    return shader_manager.UseProgrammableVertexShader(regs, pica.vs_setup);
 }
 
 bool RasterizerOpenGL::SetupGeometryShader() {
@@ -710,19 +707,19 @@ void RasterizerOpenGL::ClearAll(bool flush) {
     res_cache.ClearAll(flush);
 }
 
-bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerOpenGL::AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config) {
     return res_cache.AccelerateDisplayTransfer(config);
 }
 
-bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerOpenGL::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
     return res_cache.AccelerateTextureCopy(config);
 }
 
-bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+bool RasterizerOpenGL::AccelerateFill(const Pica::MemoryFillConfig& config) {
     return res_cache.AccelerateFill(config);
 }
 
-bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
+bool RasterizerOpenGL::AccelerateDisplay(const Pica::FramebufferConfig& config,
                                          PAddr framebuffer_addr, u32 pixel_stride,
                                          ScreenInfo& screen_info) {
     if (framebuffer_addr == 0) {
@@ -943,7 +940,7 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
         for (unsigned index = 0; index < fs_uniform_block_data.lighting_lut_dirty.size(); index++) {
             if (fs_uniform_block_data.lighting_lut_dirty[index] || invalidate) {
                 std::array<Common::Vec2f, 256> new_data;
-                const auto& source_lut = Pica::g_state.lighting.luts[index];
+                const auto& source_lut = pica.lighting.luts[index];
                 std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
                                [](const auto& entry) {
                                    return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
@@ -968,7 +965,7 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
     if (fs_uniform_block_data.fog_lut_dirty || invalidate) {
         std::array<Common::Vec2f, 128> new_data;
 
-        std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
+        std::transform(pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
                        [](const auto& entry) {
                            return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
                        });
@@ -1007,9 +1004,8 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
 
     // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
     const auto sync_proc_tex_value_lut =
-        [this, buffer = buffer, offset = offset, invalidate = invalidate,
-         &bytes_used](const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
-                      std::array<Common::Vec2f, 128>& lut_data, GLint& lut_offset) {
+        [this, buffer = buffer, offset = offset, invalidate = invalidate, &bytes_used](
+            const auto& lut, std::array<Common::Vec2f, 128>& lut_data, GLint& lut_offset) {
             std::array<Common::Vec2f, 128> new_data;
             std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
                 return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
@@ -1027,21 +1023,21 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
 
     // Sync the proctex noise lut
     if (fs_uniform_block_data.proctex_noise_lut_dirty || invalidate) {
-        sync_proc_tex_value_lut(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,
+        sync_proc_tex_value_lut(pica.proctex.noise_table, proctex_noise_lut_data,
                                 fs_uniform_block_data.data.proctex_noise_lut_offset);
         fs_uniform_block_data.proctex_noise_lut_dirty = false;
     }
 
     // Sync the proctex color map
     if (fs_uniform_block_data.proctex_color_map_dirty || invalidate) {
-        sync_proc_tex_value_lut(Pica::g_state.proctex.color_map_table, proctex_color_map_data,
+        sync_proc_tex_value_lut(pica.proctex.color_map_table, proctex_color_map_data,
                                 fs_uniform_block_data.data.proctex_color_map_offset);
         fs_uniform_block_data.proctex_color_map_dirty = false;
     }
 
     // Sync the proctex alpha map
     if (fs_uniform_block_data.proctex_alpha_map_dirty || invalidate) {
-        sync_proc_tex_value_lut(Pica::g_state.proctex.alpha_map_table, proctex_alpha_map_data,
+        sync_proc_tex_value_lut(pica.proctex.alpha_map_table, proctex_alpha_map_data,
                                 fs_uniform_block_data.data.proctex_alpha_map_offset);
         fs_uniform_block_data.proctex_alpha_map_dirty = false;
     }
@@ -1050,9 +1046,8 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     if (fs_uniform_block_data.proctex_lut_dirty || invalidate) {
         std::array<Common::Vec4f, 256> new_data;
 
-        std::transform(Pica::g_state.proctex.color_table.begin(),
-                       Pica::g_state.proctex.color_table.end(), new_data.begin(),
-                       [](const auto& entry) {
+        std::transform(pica.proctex.color_table.begin(), pica.proctex.color_table.end(),
+                       new_data.begin(), [](const auto& entry) {
                            auto rgba = entry.ToVector() / 255.0f;
                            return Common::Vec4f{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
                        });
@@ -1073,9 +1068,8 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     if (fs_uniform_block_data.proctex_diff_lut_dirty || invalidate) {
         std::array<Common::Vec4f, 256> new_data;
 
-        std::transform(Pica::g_state.proctex.color_diff_table.begin(),
-                       Pica::g_state.proctex.color_diff_table.end(), new_data.begin(),
-                       [](const auto& entry) {
+        std::transform(pica.proctex.color_diff_table.begin(), pica.proctex.color_diff_table.end(),
+                       new_data.begin(), [](const auto& entry) {
                            auto rgba = entry.ToVector() / 255.0f;
                            return Common::Vec4f{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
                        });
@@ -1134,7 +1128,7 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
 
     if (sync_vs_pica) {
         VSPicaUniformData vs_uniforms;
-        vs_uniforms.uniforms.SetFromRegs(regs.vs, Pica::g_state.vs);
+        vs_uniforms.uniforms.SetFromRegs(regs.vs, pica.vs_setup);
         std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
         glBindBufferRange(GL_UNIFORM_BUFFER, UniformBindings::VSPicaData,
                           uniform_buffer.GetHandle(), offset + used_bytes, sizeof(vs_uniforms));

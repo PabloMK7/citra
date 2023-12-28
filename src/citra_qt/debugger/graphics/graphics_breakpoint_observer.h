@@ -20,14 +20,14 @@ public:
     BreakPointObserverDock(std::shared_ptr<Pica::DebugContext> debug_context, const QString& title,
                            QWidget* parent = nullptr);
 
-    void OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) override;
+    void OnPicaBreakPointHit(Pica::DebugContext::Event event, const void* data) override;
     void OnPicaResume() override;
 
 signals:
     void Resumed();
-    void BreakPointHit(Pica::DebugContext::Event event, void* data);
+    void BreakPointHit(Pica::DebugContext::Event event, const void* data);
 
 private:
-    virtual void OnBreakPointHit(Pica::DebugContext::Event event, void* data) = 0;
+    virtual void OnBreakPointHit(Pica::DebugContext::Event event, const void* data) = 0;
     virtual void OnResumed() = 0;
 };

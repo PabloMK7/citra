@@ -26,16 +26,16 @@ struct LightingRegs {
         DistanceAttenuation = 16,
     };
 
-    static constexpr unsigned NumLightingSampler = 24;
+    static constexpr u32 NumLightingSampler = 24;
 
-    static LightingSampler SpotlightAttenuationSampler(unsigned index) {
+    static LightingSampler SpotlightAttenuationSampler(u32 index) {
         return static_cast<LightingSampler>(
-            static_cast<unsigned>(LightingSampler::SpotlightAttenuation) + index);
+            static_cast<u32>(LightingSampler::SpotlightAttenuation) + index);
     }
 
-    static LightingSampler DistanceAttenuationSampler(unsigned index) {
-        return static_cast<LightingSampler>(
-            static_cast<unsigned>(LightingSampler::DistanceAttenuation) + index);
+    static LightingSampler DistanceAttenuationSampler(u32 index) {
+        return static_cast<LightingSampler>(static_cast<u32>(LightingSampler::DistanceAttenuation) +
+                                            index);
     }
 
     /**

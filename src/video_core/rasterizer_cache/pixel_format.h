@@ -6,9 +6,12 @@
 
 #include <limits>
 #include <string_view>
-#include "core/hw/gpu.h"
-#include "video_core/regs_framebuffer.h"
-#include "video_core/regs_texturing.h"
+#include "video_core/pica/regs_framebuffer.h"
+#include "video_core/pica/regs_texturing.h"
+
+namespace Pica {
+enum class PixelFormat : u32;
+}
 
 namespace VideoCore {
 
@@ -109,6 +112,6 @@ PixelFormat PixelFormatFromColorFormat(Pica::FramebufferRegs::ColorFormat format
 
 PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat format);
 
-PixelFormat PixelFormatFromGPUPixelFormat(GPU::Regs::PixelFormat format);
+PixelFormat PixelFormatFromGPUPixelFormat(Pica::PixelFormat format);
 
 } // namespace VideoCore

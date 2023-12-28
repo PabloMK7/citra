@@ -11,10 +11,10 @@
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "core/core_timing.h"
 #include "core/dumping/ffmpeg_backend.h"
-#include "core/hw/gpu.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 using namespace DynamicLibrary;
 
@@ -381,7 +381,7 @@ bool FFmpegVideoStream::InitFilters() {
     }
 
     // Configure buffer source
-    static constexpr AVRational src_time_base{static_cast<int>(GPU::frame_ticks),
+    static constexpr AVRational src_time_base{static_cast<int>(VideoCore::FRAME_TICKS),
                                               static_cast<int>(BASE_CLOCK_RATE_ARM11)};
     const std::string in_args =
         fmt::format("video_size={}x{}:pix_fmt={}:time_base={}/{}:pixel_aspect=1", layout.width,
@@ -732,7 +732,7 @@ void FFmpegMuxer::WriteTrailer() {
     FFmpeg::av_write_trailer(format_context.get());
 }
 
-FFmpegBackend::FFmpegBackend() = default;
+FFmpegBackend::FFmpegBackend(VideoCore::RendererBase& renderer_) : renderer{renderer_} {}
 
 FFmpegBackend::~FFmpegBackend() {
     ASSERT_MSG(!IsDumping(), "Dumping must be stopped first");
@@ -796,7 +796,7 @@ bool FFmpegBackend::StartDumping(const std::string& path, const Layout::Framebuf
         }
     });
 
-    VideoCore::g_renderer->PrepareVideoDumping();
+    renderer.PrepareVideoDumping();
     is_dumping = true;
 
     return true;
@@ -829,7 +829,7 @@ void FFmpegBackend::AddAudioSample(const std::array<s16, 2>& sample) {
 
 void FFmpegBackend::StopDumping() {
     is_dumping = false;
-    VideoCore::g_renderer->CleanupVideoDumping();
+    renderer.CleanupVideoDumping();
 
     // Flush the video processing queue
     AddVideoFrame(VideoFrame());

@@ -58,8 +58,12 @@ class Backend;
 
 namespace VideoCore {
 class CustomTexManager;
-class RendererBase;
+class GPU;
 } // namespace VideoCore
+
+namespace Pica {
+class DebugContext;
+}
 
 namespace Loader {
 class AppLoader;
@@ -217,7 +221,7 @@ public:
         return *dsp_core;
     }
 
-    [[nodiscard]] VideoCore::RendererBase& Renderer();
+    [[nodiscard]] VideoCore::GPU& GPU();
 
     /**
      * Gets a reference to the service manager.
@@ -383,6 +387,8 @@ private:
 
     /// Telemetry session for this emulation session
     std::unique_ptr<Core::TelemetrySession> telemetry_session;
+
+    std::unique_ptr<VideoCore::GPU> gpu;
 
     /// Service manager
     std::unique_ptr<Service::SM::ServiceManager> service_manager;

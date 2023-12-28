@@ -2,10 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <limits>
 #include "common/alignment.h"
 #include "core/memory.h"
-#include "video_core/pica_state.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/rasterizer_accelerated.h"
 
 namespace VideoCore {
@@ -22,7 +21,7 @@ static Common::Vec3f LightColor(const Pica::LightingRegs::LightColor& color) {
     return Common::Vec3u{color.r, color.g, color.b} / 255.0f;
 }
 
-RasterizerAccelerated::HardwareVertex::HardwareVertex(const Pica::Shader::OutputVertex& v,
+RasterizerAccelerated::HardwareVertex::HardwareVertex(const Pica::OutputVertex& v,
                                                       bool flip_quaternion) {
     position[0] = v.pos.x.ToFloat32();
     position[1] = v.pos.y.ToFloat32();
@@ -52,8 +51,8 @@ RasterizerAccelerated::HardwareVertex::HardwareVertex(const Pica::Shader::Output
     }
 }
 
-RasterizerAccelerated::RasterizerAccelerated(Memory::MemorySystem& memory_)
-    : memory{memory_}, regs{Pica::g_state.regs} {
+RasterizerAccelerated::RasterizerAccelerated(Memory::MemorySystem& memory_, Pica::PicaCore& pica_)
+    : memory{memory_}, pica{pica_}, regs{pica.regs.internal} {
     fs_uniform_block_data.lighting_lut_dirty.fill(true);
 }
 
@@ -82,9 +81,8 @@ static bool AreQuaternionsOpposite(Common::Vec4<f24> qa, Common::Vec4<f24> qb) {
     return (Common::Dot(a, b) < 0.f);
 }
 
-void RasterizerAccelerated::AddTriangle(const Pica::Shader::OutputVertex& v0,
-                                        const Pica::Shader::OutputVertex& v1,
-                                        const Pica::Shader::OutputVertex& v2) {
+void RasterizerAccelerated::AddTriangle(const Pica::OutputVertex& v0, const Pica::OutputVertex& v1,
+                                        const Pica::OutputVertex& v2) {
     vertex_batch.emplace_back(v0, false);
     vertex_batch.emplace_back(v1, AreQuaternionsOpposite(v0.quat, v1.quat));
     vertex_batch.emplace_back(v2, AreQuaternionsOpposite(v0.quat, v2.quat));
@@ -146,7 +144,7 @@ void RasterizerAccelerated::SyncEntireState() {
     }
 
     SyncGlobalAmbient();
-    for (unsigned light_index = 0; light_index < 8; light_index++) {
+    for (u32 light_index = 0; light_index < 8; light_index++) {
         SyncLightSpecular0(light_index);
         SyncLightSpecular1(light_index);
         SyncLightDiffuse(light_index);
@@ -162,7 +160,7 @@ void RasterizerAccelerated::SyncEntireState() {
     SyncShadowBias();
     SyncShadowTextureBias();
 
-    for (unsigned tex_index = 0; tex_index < 3; tex_index++) {
+    for (u32 tex_index = 0; tex_index < 3; tex_index++) {
         SyncTextureLodBias(tex_index);
     }
 }

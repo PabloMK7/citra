@@ -5,10 +5,10 @@
 #include <algorithm>
 #include "common/color.h"
 #include "common/logging/log.h"
-#include "core/hw/gpu.h"
 #include "core/memory.h"
+#include "video_core/pica/regs_external.h"
+#include "video_core/pica/regs_framebuffer.h"
 #include "video_core/pica_types.h"
-#include "video_core/regs_framebuffer.h"
 #include "video_core/renderer_software/sw_framebuffer.h"
 #include "video_core/utils.h"
 
@@ -63,7 +63,7 @@ void Framebuffer::DrawPixel(u32 x, u32 y, const Common::Vec4<u8>& color) const {
 
     const u32 coarse_y = y & ~7;
     const u32 bytes_per_pixel =
-        GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
+        Pica::BytesPerPixel(Pica::PixelFormat(framebuffer.color_format.Value()));
     const u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
                            coarse_y * framebuffer.width * bytes_per_pixel;
     u8* dst_pixel = color_buffer + dst_offset;
@@ -97,7 +97,7 @@ const Common::Vec4<u8> Framebuffer::GetPixel(u32 x, u32 y) const {
 
     const u32 coarse_y = y & ~7;
     const u32 bytes_per_pixel =
-        GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
+        Pica::BytesPerPixel(Pica::PixelFormat(framebuffer.color_format.Value()));
     const u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
                            coarse_y * framebuffer.width * bytes_per_pixel;
     const u8* src_pixel = color_buffer + src_offset;

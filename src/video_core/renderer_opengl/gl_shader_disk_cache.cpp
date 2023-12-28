@@ -83,7 +83,7 @@ bool ShaderDiskCacheRaw::Save(FileUtil::IOFile& file) const {
     }
 
     // Just for future proofing, save the sizes of the array to the file
-    const std::size_t reg_array_len = Pica::Regs::NUM_REGS;
+    const std::size_t reg_array_len = Pica::RegsInternal::NUM_REGS;
     if (file.WriteObject(static_cast<u64>(reg_array_len)) != 1) {
         return false;
     }

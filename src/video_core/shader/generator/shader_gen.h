@@ -5,8 +5,11 @@
 #pragma once
 
 #include "common/hash.h"
-#include "video_core/regs.h"
-#include "video_core/shader/shader.h"
+
+namespace Pica {
+struct RegsInternal;
+struct ShaderSetup;
+} // namespace Pica
 
 namespace Pica::Shader::Generator {
 
@@ -41,7 +44,7 @@ DECLARE_ENUM_FLAG_OPERATORS(AttribLoadFlags)
  * PICA geometry shader.
  */
 struct PicaGSConfigState {
-    void Init(const Pica::Regs& regs, bool use_clip_planes_);
+    void Init(const Pica::RegsInternal& regs, bool use_clip_planes_);
 
     bool use_clip_planes;
 
@@ -62,7 +65,7 @@ struct PicaGSConfigState {
  * PICA vertex shader.
  */
 struct PicaVSConfigState {
-    void Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup, bool use_clip_planes_,
+    void Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup, bool use_clip_planes_,
               bool use_geometry_shader_);
 
     bool use_clip_planes;
@@ -88,7 +91,7 @@ struct PicaVSConfigState {
  * shader.
  */
 struct PicaVSConfig : Common::HashableStruct<PicaVSConfigState> {
-    explicit PicaVSConfig(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,
+    explicit PicaVSConfig(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
                           bool use_clip_planes_, bool use_geometry_shader_);
 };
 
@@ -97,7 +100,7 @@ struct PicaVSConfig : Common::HashableStruct<PicaVSConfigState> {
  * shader pipeline
  */
 struct PicaFixedGSConfig : Common::HashableStruct<PicaGSConfigState> {
-    explicit PicaFixedGSConfig(const Pica::Regs& regs, bool use_clip_planes_);
+    explicit PicaFixedGSConfig(const Pica::RegsInternal& regs, bool use_clip_planes_);
 };
 
 } // namespace Pica::Shader::Generator

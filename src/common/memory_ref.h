@@ -110,8 +110,10 @@ public:
         return std::span{cptr, std::min(size, csize)};
     }
 
-    std::span<const u8> GetReadBytes(std::size_t size) const {
-        return std::span{cptr, std::min(size, csize)};
+    template <typename T>
+    std::span<const T> GetReadBytes(std::size_t size) const {
+        const auto* cptr_t = reinterpret_cast<T*>(cptr);
+        return std::span{cptr_t, std::min(size, csize) / sizeof(T)};
     }
 
     std::size_t GetSize() const {

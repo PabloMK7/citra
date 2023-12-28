@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <boost/container/small_vector.hpp>
+#include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/spv_fs_shader_gen.h"
 
 namespace Pica::Shader::Generator::SPIRV {

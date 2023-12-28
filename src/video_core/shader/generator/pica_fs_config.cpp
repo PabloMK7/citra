@@ -6,7 +6,7 @@
 
 namespace Pica::Shader {
 
-FramebufferConfig::FramebufferConfig(const Pica::Regs& regs, const Profile& profile) {
+FramebufferConfig::FramebufferConfig(const Pica::RegsInternal& regs, const Profile& profile) {
     const auto& output_merger = regs.framebuffer.output_merger;
     scissor_test_mode.Assign(regs.rasterizer.scissor_test.mode);
     depthmap_enable.Assign(regs.rasterizer.depthmap_enable);
@@ -186,7 +186,7 @@ ProcTexConfig::ProcTexConfig(const Pica::TexturingRegs& regs) {
     lut_filter.Assign(regs.proctex_lut.filter);
 }
 
-FSConfig::FSConfig(const Pica::Regs& regs, const UserConfig& user_, const Profile& profile)
+FSConfig::FSConfig(const Pica::RegsInternal& regs, const UserConfig& user_, const Profile& profile)
     : framebuffer{regs, profile}, texture{regs.texturing, profile}, lighting{regs.lighting},
       proctex{regs.texturing}, user{user_} {}
 

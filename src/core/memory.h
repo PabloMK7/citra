@@ -226,21 +226,6 @@ enum : VAddr {
     PLUGIN_3GX_FB_VADDR_END = PLUGIN_3GX_FB_VADDR + PLUGIN_3GX_FB_SIZE
 };
 
-/**
- * Flushes any externally cached rasterizer resources touching the given region.
- */
-void RasterizerFlushRegion(PAddr start, u32 size);
-
-/**
- * Invalidates any externally cached rasterizer resources touching the given region.
- */
-void RasterizerInvalidateRegion(PAddr start, u32 size);
-
-/**
- * Flushes and invalidates any externally cached rasterizer resources touching the given region.
- */
-void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size);
-
 enum class FlushMode {
     /// Write back modified surfaces to RAM
     Flush,
@@ -250,16 +235,6 @@ enum class FlushMode {
     FlushAndInvalidate,
 };
 
-/**
- * Flushes and invalidates all memory in the rasterizer cache and removes any leftover state
- * If flush is true, the rasterizer should flush any cached resources to RAM before clearing
- */
-void RasterizerClearAll(bool flush);
-
-/**
- * Flushes and invalidates any externally cached rasterizer resources touching the given virtual
- * address region.
- */
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
 class MemorySystem {

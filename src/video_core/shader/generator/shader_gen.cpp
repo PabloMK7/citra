@@ -4,12 +4,14 @@
 
 #include "common/bit_set.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
+#include "video_core/pica/regs_internal.h"
+#include "video_core/pica/shader_setup.h"
 #include "video_core/shader/generator/shader_gen.h"
-#include "video_core/video_core.h"
 
 namespace Pica::Shader::Generator {
 
-void PicaGSConfigState::Init(const Pica::Regs& regs, bool use_clip_planes_) {
+void PicaGSConfigState::Init(const Pica::RegsInternal& regs, bool use_clip_planes_) {
     use_clip_planes = use_clip_planes_;
 
     vs_output_attributes = Common::BitSet<u32>(regs.vs.output_mask).Count();
@@ -34,7 +36,7 @@ void PicaGSConfigState::Init(const Pica::Regs& regs, bool use_clip_planes_) {
     }
 }
 
-void PicaVSConfigState::Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,
+void PicaVSConfigState::Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
                              bool use_clip_planes_, bool use_geometry_shader_) {
     use_clip_planes = use_clip_planes_;
     use_geometry_shader = use_geometry_shader_;
@@ -42,13 +44,13 @@ void PicaVSConfigState::Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& 
     program_hash = setup.GetProgramCodeHash();
     swizzle_hash = setup.GetSwizzleDataHash();
     main_offset = regs.vs.main_offset;
-    sanitize_mul = VideoCore::g_hw_shader_accurate_mul;
+    sanitize_mul = Settings::values.shaders_accurate_mul.GetValue();
 
     num_outputs = 0;
     load_flags.fill(AttribLoadFlags::Float);
     output_map.fill(16);
 
-    for (int reg : Common::BitSet<u32>(regs.vs.output_mask)) {
+    for (u32 reg : Common::BitSet<u32>(regs.vs.output_mask)) {
         output_map[reg] = num_outputs++;
     }
 
@@ -57,12 +59,12 @@ void PicaVSConfigState::Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& 
     }
 }
 
-PicaVSConfig::PicaVSConfig(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup,
+PicaVSConfig::PicaVSConfig(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
                            bool use_clip_planes_, bool use_geometry_shader_) {
     state.Init(regs, setup, use_clip_planes_, use_geometry_shader_);
 }
 
-PicaFixedGSConfig::PicaFixedGSConfig(const Pica::Regs& regs, bool use_clip_planes_) {
+PicaFixedGSConfig::PicaFixedGSConfig(const Pica::RegsInternal& regs, bool use_clip_planes_) {
     state.Init(regs, use_clip_planes_);
 }
 

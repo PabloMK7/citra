@@ -299,8 +299,10 @@ add_library(citra_core STATIC
     hle/service/fs/fs_user.h
     hle/service/gsp/gsp.cpp
     hle/service/gsp/gsp.h
+    hle/service/gsp/gsp_command.h
     hle/service/gsp/gsp_gpu.cpp
     hle/service/gsp/gsp_gpu.h
+    hle/service/gsp/gsp_interrupt.h
     hle/service/gsp/gsp_lcd.cpp
     hle/service/gsp/gsp_lcd.h
     hle/service/hid/hid.cpp
@@ -433,12 +435,6 @@ add_library(citra_core STATIC
     hw/aes/ccm.h
     hw/aes/key.cpp
     hw/aes/key.h
-    hw/gpu.cpp
-    hw/gpu.h
-    hw/hw.cpp
-    hw/hw.h
-    hw/lcd.cpp
-    hw/lcd.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
     hw/y2r.cpp

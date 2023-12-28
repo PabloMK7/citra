@@ -5,7 +5,6 @@
 #pragma once
 
 #include <array>
-#include "core/hw/gpu.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/gl_driver.h"
@@ -26,9 +25,9 @@ namespace OpenGL {
 /// Structure used for storing information about the textures for each 3DS screen
 struct TextureInfo {
     OGLTexture resource;
-    GLsizei width;
-    GLsizei height;
-    GPU::Regs::PixelFormat format;
+    u32 width;
+    u32 height;
+    Pica::PixelFormat format;
     GLenum gl_format;
     GLenum gl_type;
 };
@@ -42,7 +41,7 @@ struct ScreenInfo {
 
 class RendererOpenGL : public VideoCore::RendererBase {
 public:
-    explicit RendererOpenGL(Core::System& system, Frontend::EmuWindow& window,
+    explicit RendererOpenGL(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
     ~RendererOpenGL() override;
 
@@ -64,7 +63,7 @@ private:
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
                          std::unique_ptr<Frontend::TextureMailbox>& mailbox, bool flipped);
     void ConfigureFramebufferTexture(TextureInfo& texture,
-                                     const GPU::Regs::FramebufferConfig& framebuffer);
+                                     const Pica::FramebufferConfig& framebuffer);
     void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
     void ApplySecondLayerOpacity();
     void ResetSecondLayerOpacity();
@@ -79,12 +78,12 @@ private:
                                 Layout::DisplayOrientation orientation);
 
     // Loads framebuffer from emulated memory into the display information structure
-    void LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
-                            ScreenInfo& screen_info, bool right_eye);
-    // Fills active OpenGL texture with the given RGB color.
-    void LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b, const TextureInfo& texture);
+    void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
+                            bool right_eye);
+    void FillScreen(Common::Vec3<u8> color, TextureInfo& texture);
 
 private:
+    Pica::PicaCore& pica;
     Driver driver;
     RasterizerOpenGL rasterizer;
     OpenGLState state;

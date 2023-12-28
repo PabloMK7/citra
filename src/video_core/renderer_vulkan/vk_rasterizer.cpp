@@ -8,10 +8,8 @@
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
-#include "video_core/pica_state.h"
-#include "video_core/regs_framebuffer.h"
-#include "video_core/regs_pipeline.h"
-#include "video_core/regs_rasterizer.h"
+#include "core/memory.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/renderer_vulkan/renderer_vulkan.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
@@ -56,13 +54,13 @@ struct DrawParams {
 
 } // Anonymous namespace
 
-RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory,
+RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore& pica,
                                    VideoCore::CustomTexManager& custom_tex_manager,
                                    VideoCore::RendererBase& renderer,
                                    Frontend::EmuWindow& emu_window, const Instance& instance,
                                    Scheduler& scheduler, DescriptorPool& pool,
                                    RenderpassCache& renderpass_cache, u32 image_count)
-    : RasterizerAccelerated{memory}, instance{instance}, scheduler{scheduler},
+    : RasterizerAccelerated{memory, pica}, instance{instance}, scheduler{scheduler},
       renderpass_cache{renderpass_cache}, pipeline_cache{instance, scheduler, renderpass_cache,
                                                          pool},
       runtime{instance,   scheduler, renderpass_cache, pool, pipeline_cache.TextureProvider(),
@@ -278,7 +276,7 @@ void RasterizerVulkan::SetupFixedAttribs() {
         if (vertex_attributes.IsDefaultAttribute(i)) {
             const u32 reg = regs.vs.GetRegisterForAttribute(i);
             if (!enable_attributes[reg]) {
-                const auto& attr = Pica::g_state.input_default_attributes.attr[i];
+                const auto& attr = pica.input_default_attributes[i];
                 const std::array data = {attr.x.ToFloat32(), attr.y.ToFloat32(), attr.z.ToFloat32(),
                                          attr.w.ToFloat32()};
 
@@ -323,7 +321,7 @@ void RasterizerVulkan::SetupFixedAttribs() {
 
 bool RasterizerVulkan::SetupVertexShader() {
     MICROPROFILE_SCOPE(Vulkan_VS);
-    return pipeline_cache.UseProgrammableVertexShader(regs, Pica::g_state.vs,
+    return pipeline_cache.UseProgrammableVertexShader(regs, pica.vs_setup,
                                                       pipeline_info.vertex_layout);
 }
 
@@ -741,19 +739,19 @@ void RasterizerVulkan::ClearAll(bool flush) {
     res_cache.ClearAll(flush);
 }
 
-bool RasterizerVulkan::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerVulkan::AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config) {
     return res_cache.AccelerateDisplayTransfer(config);
 }
 
-bool RasterizerVulkan::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
+bool RasterizerVulkan::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
     return res_cache.AccelerateTextureCopy(config);
 }
 
-bool RasterizerVulkan::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+bool RasterizerVulkan::AccelerateFill(const Pica::MemoryFillConfig& config) {
     return res_cache.AccelerateFill(config);
 }
 
-bool RasterizerVulkan::AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
+bool RasterizerVulkan::AccelerateDisplay(const Pica::FramebufferConfig& config,
                                          PAddr framebuffer_addr, u32 pixel_stride,
                                          ScreenInfo& screen_info) {
     if (framebuffer_addr == 0) [[unlikely]] {
@@ -935,7 +933,7 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
         for (unsigned index = 0; index < fs_uniform_block_data.lighting_lut_dirty.size(); index++) {
             if (fs_uniform_block_data.lighting_lut_dirty[index] || invalidate) {
                 std::array<Common::Vec2f, 256> new_data;
-                const auto& source_lut = Pica::g_state.lighting.luts[index];
+                const auto& source_lut = pica.lighting.luts[index];
                 std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
                                [](const auto& entry) {
                                    return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
@@ -960,7 +958,7 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
     if (fs_uniform_block_data.fog_lut_dirty || invalidate) {
         std::array<Common::Vec2f, 128> new_data;
 
-        std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
+        std::transform(pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
                        [](const auto& entry) {
                            return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
                        });
@@ -981,7 +979,7 @@ void RasterizerVulkan::SyncAndUploadLUTsLF() {
 }
 
 void RasterizerVulkan::SyncAndUploadLUTs() {
-    const auto& proctex = Pica::g_state.proctex;
+    const auto& proctex = pica.proctex;
     constexpr std::size_t max_size =
         sizeof(Common::Vec2f) * 128 * 3 + // proctex: noise + color + alpha
         sizeof(Common::Vec4f) * 256 +     // proctex
@@ -1000,7 +998,7 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
     // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
     auto sync_proctex_value_lut =
         [this, buffer = buffer, offset = offset, invalidate = invalidate,
-         &bytes_used](const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
+         &bytes_used](const std::array<Pica::PicaCore::ProcTex::ValueEntry, 128>& lut,
                       std::array<Common::Vec2f, 128>& lut_data, int& lut_offset) {
             std::array<Common::Vec2f, 128> new_data;
             std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
@@ -1120,7 +1118,7 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
 
     if (sync_vs_pica) {
         VSPicaUniformData vs_uniforms;
-        vs_uniforms.uniforms.SetFromRegs(regs.vs, Pica::g_state.vs);
+        vs_uniforms.uniforms.SetFromRegs(regs.vs, pica.vs_setup);
         std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
 
         pipeline_cache.SetBufferOffset(0, offset + used_bytes);

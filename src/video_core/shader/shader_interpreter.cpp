@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <numeric>
 #include <boost/circular_buffer.hpp>
@@ -14,9 +13,9 @@
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
-#include "video_core/pica_state.h"
+#include "video_core/pica/shader_setup.h"
+#include "video_core/pica/shader_unit.h"
 #include "video_core/pica_types.h"
-#include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 
 using nihstro::Instruction;
@@ -46,8 +45,8 @@ struct LoopStackElement {
 };
 
 template <bool Debug>
-static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
-                           unsigned entry_point) {
+static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
+                           DebugData<Debug>& debug_data, unsigned entry_point) {
     boost::circular_buffer<IfStackElement> if_stack(8);
     boost::circular_buffer<CallStackElement> call_stack(4);
     boost::circular_buffer<LoopStackElement> loop_stack(4);
@@ -136,10 +135,10 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             int index = source_reg.GetIndex();
             switch (source_reg.GetRegisterType()) {
             case RegisterType::Input:
-                return &state.registers.input[index].x;
+                return &state.input[index].x;
 
             case RegisterType::Temporary:
-                return &state.registers.temporary[index].x;
+                return &state.temporary[index].x;
 
             case RegisterType::FloatUniform:
                 if (address_register_index != 0) {
@@ -202,9 +201,9 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             }
 
             f24* dest = (instr.common.dest.Value() < 0x10)
-                            ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
+                            ? &state.output[instr.common.dest.Value().GetIndex()][0]
                         : (instr.common.dest.Value() < 0x20)
-                            ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
+                            ? &state.temporary[instr.common.dest.Value().GetIndex()][0]
                             : dummy_vec4_float24_zeros;
 
             debug_data.max_opdesc_id =
@@ -537,9 +536,9 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 }
 
                 f24* dest = (instr.mad.dest.Value() < 0x10)
-                                ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
+                                ? &state.output[instr.mad.dest.Value().GetIndex()][0]
                             : (instr.mad.dest.Value() < 0x20)
-                                ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
+                                ? &state.temporary[instr.mad.dest.Value().GetIndex()][0]
                                 : dummy_vec4_float24_zeros;
 
                 Record<DebugDataRecord::SRC1>(debug_data, iteration, src1);
@@ -652,14 +651,14 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             }
 
             case OpCode::Id::EMIT: {
-                GSEmitter* emitter = state.emitter_ptr;
+                auto* emitter = state.emitter_ptr;
                 ASSERT_MSG(emitter, "Execute EMIT on VS");
-                emitter->Emit(state.registers.output);
+                emitter->Emit(state.output);
                 break;
             }
 
             case OpCode::Id::SETEMIT: {
-                GSEmitter* emitter = state.emitter_ptr;
+                auto* emitter = state.emitter_ptr;
                 ASSERT_MSG(emitter, "Execute SETEMIT on VS");
                 emitter->vertex_id = instr.setemit.vertex_id;
                 emitter->prim_emit = instr.setemit.prim_emit != 0;
@@ -726,29 +725,29 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 
 void InterpreterEngine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
-    setup.engine_data.entry_point = entry_point;
+    setup.entry_point = entry_point;
 }
 
-MICROPROFILE_DECLARE(GPU_Shader);
+MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void InterpreterEngine::Run(const ShaderSetup& setup, UnitState& state) const {
+void InterpreterEngine::Run(const ShaderSetup& setup, ShaderUnit& state) const {
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
     DebugData<false> dummy_debug_data;
-    RunInterpreter(setup, state, dummy_debug_data, setup.engine_data.entry_point);
+    RunInterpreter(setup, state, dummy_debug_data, setup.entry_point);
 }
 
 DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
                                                     const AttributeBuffer& input,
                                                     const ShaderRegs& config) const {
-    UnitState state;
+    ShaderUnit state;
     DebugData<true> debug_data;
 
     // Setup input register table
-    state.registers.input.fill(Common::Vec4<f24>::AssignToAll(f24::Zero()));
+    state.input.fill(Common::Vec4<f24>::AssignToAll(f24::Zero()));
     state.LoadInput(config, input);
-    RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
+    RunInterpreter(setup, state, debug_data, setup.entry_point);
     return debug_data;
 }
 

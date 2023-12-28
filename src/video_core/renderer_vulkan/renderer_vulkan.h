@@ -4,12 +4,8 @@
 
 #pragma once
 
-#include <array>
-#include <condition_variable>
-#include <mutex>
 #include "common/common_types.h"
 #include "common/math_util.h"
-#include "core/hw/gpu.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_vulkan/vk_descriptor_pool.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -17,7 +13,6 @@
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
 #include "video_core/renderer_vulkan/vk_renderpass_cache.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
-#include "video_core/renderer_vulkan/vk_swapchain.h"
 
 namespace Core {
 class System;
@@ -27,8 +22,16 @@ namespace Memory {
 class MemorySystem;
 }
 
+namespace Pica {
+class PicaCore;
+}
+
 namespace Layout {
 struct FramebufferLayout;
+}
+
+namespace VideoCore {
+class GPU;
 }
 
 namespace Vulkan {
@@ -36,7 +39,7 @@ namespace Vulkan {
 struct TextureInfo {
     u32 width;
     u32 height;
-    GPU::Regs::PixelFormat format;
+    Pica::PixelFormat format;
     vk::Image image;
     vk::ImageView image_view;
     VmaAllocation allocation;
@@ -64,7 +67,7 @@ class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
 
 public:
-    explicit RendererVulkan(Core::System& system, Frontend::EmuWindow& window,
+    explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
     ~RendererVulkan() override;
 
@@ -86,7 +89,7 @@ private:
     void BuildLayouts();
     void BuildPipelines();
     void ConfigureFramebufferTexture(TextureInfo& texture,
-                                     const GPU::Regs::FramebufferConfig& framebuffer);
+                                     const Pica::FramebufferConfig& framebuffer);
     void ConfigureRenderPipeline();
     void PrepareRendertarget();
     void RenderScreenshot();
@@ -105,12 +108,13 @@ private:
                           Layout::DisplayOrientation orientation);
     void DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y, float w,
                                 float h, Layout::DisplayOrientation orientation);
-    void LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
-                            ScreenInfo& screen_info, bool right_eye);
-    void LoadColorToActiveVkTexture(u8 color_r, u8 color_g, u8 color_b, const TextureInfo& texture);
+    void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
+                            bool right_eye);
+    void FillScreen(Common::Vec3<u8> color, const TextureInfo& texture);
 
 private:
     Memory::MemorySystem& memory;
+    Pica::PicaCore& pica;
 
     Instance instance;
     Scheduler scheduler;

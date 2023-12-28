@@ -15,9 +15,8 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
-#include "video_core/pica_state.h"
+#include "video_core/pica/shader_unit.h"
 #include "video_core/pica_types.h"
-#include "video_core/shader/shader.h"
 #include "video_core/shader/shader_jit_a64_compiler.h"
 
 using namespace Common::A64;
@@ -174,11 +173,11 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, u32 src_num, SourceRegiste
         break;
     case RegisterType::Input:
         src_ptr = STATE;
-        src_offset = UnitState::InputOffset(src_reg.GetIndex());
+        src_offset = ShaderUnit::InputOffset(src_reg.GetIndex());
         break;
     case RegisterType::Temporary:
         src_ptr = STATE;
-        src_offset = UnitState::TemporaryOffset(src_reg.GetIndex());
+        src_offset = ShaderUnit::TemporaryOffset(src_reg.GetIndex());
         break;
     default:
         UNREACHABLE_MSG("Encountered unknown source register type: {}", src_reg.GetRegisterType());
@@ -317,10 +316,10 @@ void JitShader::Compile_DestEnable(Instruction instr, QReg src) {
     std::size_t dest_offset_disp;
     switch (dest.GetRegisterType()) {
     case RegisterType::Output:
-        dest_offset_disp = UnitState::OutputOffset(dest.GetIndex());
+        dest_offset_disp = ShaderUnit::OutputOffset(dest.GetIndex());
         break;
     case RegisterType::Temporary:
-        dest_offset_disp = UnitState::TemporaryOffset(dest.GetIndex());
+        dest_offset_disp = ShaderUnit::TemporaryOffset(dest.GetIndex());
         break;
     default:
         UNREACHABLE_MSG("Encountered unknown destination register type: {}",
@@ -628,13 +627,13 @@ void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
     // Save conditional code
-    STRB(COND0.toW(), STATE, u32(offsetof(UnitState, conditional_code[0])));
-    STRB(COND1.toW(), STATE, u32(offsetof(UnitState, conditional_code[1])));
+    STRB(COND0.toW(), STATE, u32(offsetof(ShaderUnit, conditional_code[0])));
+    STRB(COND1.toW(), STATE, u32(offsetof(ShaderUnit, conditional_code[1])));
 
     // Save address/loop registers
     STP(ADDROFFS_REG_0.toW(), ADDROFFS_REG_1.toW(), STATE,
-        u32(offsetof(UnitState, address_registers)));
-    STR(LOOPCOUNT_REG.toW(), STATE, u32(offsetof(UnitState, address_registers[2])));
+        u32(offsetof(ShaderUnit, address_registers)));
+    STR(LOOPCOUNT_REG.toW(), STATE, u32(offsetof(ShaderUnit, address_registers[2])));
 
     ABI_PopRegisters(*this, ABI_ALL_CALLEE_SAVED, 16);
     RET();
@@ -804,14 +803,14 @@ void JitShader::Compile_JMP(Instruction instr) {
     }
 }
 
-static void Emit(GSEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
+static void Emit(GeometryEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
     emitter->Emit(*output);
 }
 
 void JitShader::Compile_EMIT(Instruction instr) {
     Label have_emitter, end;
 
-    LDR(XSCRATCH0, STATE, u32(offsetof(UnitState, emitter_ptr)));
+    LDR(XSCRATCH0, STATE, u32(offsetof(ShaderUnit, emitter_ptr)));
     CBNZ(XSCRATCH0, have_emitter);
 
     ABI_PushRegisters(*this, PersistentCallerSavedRegs());
@@ -824,7 +823,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
     ABI_PushRegisters(*this, PersistentCallerSavedRegs());
     MOV(ABI_PARAM1, XSCRATCH0);
     MOV(ABI_PARAM2, STATE);
-    ADD(ABI_PARAM2, ABI_PARAM2, u32(offsetof(UnitState, registers.output)));
+    ADD(ABI_PARAM2, ABI_PARAM2, u32(offsetof(ShaderUnit, output)));
     CallFarFunction(*this, Emit);
     ABI_PopRegisters(*this, PersistentCallerSavedRegs());
     l(end);
@@ -833,7 +832,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
 void JitShader::Compile_SETE(Instruction instr) {
     Label have_emitter, end;
 
-    LDR(XSCRATCH0, STATE, u32(offsetof(UnitState, emitter_ptr)));
+    LDR(XSCRATCH0, STATE, u32(offsetof(ShaderUnit, emitter_ptr)));
 
     CBNZ(XSCRATCH0, have_emitter);
 
@@ -846,11 +845,11 @@ void JitShader::Compile_SETE(Instruction instr) {
     l(have_emitter);
 
     MOV(XSCRATCH1.toW(), instr.setemit.vertex_id);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GSEmitter, vertex_id)));
+    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, vertex_id)));
     MOV(XSCRATCH1.toW(), instr.setemit.prim_emit);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GSEmitter, prim_emit)));
+    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, prim_emit)));
     MOV(XSCRATCH1.toW(), instr.setemit.winding);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GSEmitter, winding)));
+    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, winding)));
 
     l(end);
 }
@@ -943,12 +942,12 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
 
     // Load address/loop registers
     LDP(ADDROFFS_REG_0.toW(), ADDROFFS_REG_1.toW(), STATE,
-        u32(offsetof(UnitState, address_registers)));
-    LDR(LOOPCOUNT_REG.toW(), STATE, u32(offsetof(UnitState, address_registers[2])));
+        u32(offsetof(ShaderUnit, address_registers)));
+    LDR(LOOPCOUNT_REG.toW(), STATE, u32(offsetof(ShaderUnit, address_registers[2])));
 
     //// Load conditional code
-    LDRB(COND0.toW(), STATE, u32(offsetof(UnitState, conditional_code[0])));
-    LDRB(COND1.toW(), STATE, u32(offsetof(UnitState, conditional_code[1])));
+    LDRB(COND0.toW(), STATE, u32(offsetof(ShaderUnit, conditional_code[0])));
+    LDRB(COND1.toW(), STATE, u32(offsetof(ShaderUnit, conditional_code[1])));
 
     // Used to set a register to one
     FMOV(ONE.S4(), FImm8(false, 7, 0));

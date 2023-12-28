@@ -6,6 +6,7 @@
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
 #include "common/assert.h"
+#include "common/hash.h"
 #include "common/microprofile.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_jit.h"
@@ -23,7 +24,7 @@ JitEngine::~JitEngine() = default;
 
 void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
-    setup.engine_data.entry_point = entry_point;
+    setup.entry_point = entry_point;
 
     const u64 code_hash = setup.GetProgramCodeHash();
     const u64 swizzle_hash = setup.GetSwizzleDataHash();
@@ -31,24 +32,24 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     const u64 cache_key = Common::HashCombine(code_hash, swizzle_hash);
     auto iter = cache.find(cache_key);
     if (iter != cache.end()) {
-        setup.engine_data.cached_shader = iter->second.get();
+        setup.cached_shader = iter->second.get();
     } else {
         auto shader = std::make_unique<JitShader>();
         shader->Compile(&setup.program_code, &setup.swizzle_data);
-        setup.engine_data.cached_shader = shader.get();
+        setup.cached_shader = shader.get();
         cache.emplace_hint(iter, cache_key, std::move(shader));
     }
 }
 
 MICROPROFILE_DECLARE(GPU_Shader);
 
-void JitEngine::Run(const ShaderSetup& setup, UnitState& state) const {
-    ASSERT(setup.engine_data.cached_shader != nullptr);
+void JitEngine::Run(const ShaderSetup& setup, ShaderUnit& state) const {
+    ASSERT(setup.cached_shader != nullptr);
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
-    const JitShader* shader = static_cast<const JitShader*>(setup.engine_data.cached_shader);
-    shader->Run(setup, state, setup.engine_data.entry_point);
+    const JitShader* shader = static_cast<const JitShader*>(setup.cached_shader);
+    shader->Run(setup, state, setup.entry_point);
 }
 
 } // namespace Pica::Shader

@@ -12,6 +12,7 @@
 #include <vector>
 #include <boost/icl/interval_map.hpp>
 #include <tsl/robin_map.h>
+
 #include "video_core/rasterizer_cache/framebuffer_base.h"
 #include "video_core/rasterizer_cache/sampler_params.h"
 #include "video_core/rasterizer_cache/surface_params.h"
@@ -22,8 +23,10 @@ class MemorySystem;
 }
 
 namespace Pica {
-struct Regs;
-}
+struct RegsInternal;
+struct DisplayTransferConfig;
+struct MemoryFillConfig;
+} // namespace Pica
 
 namespace Pica::Texture {
 struct TextureInfo;
@@ -74,20 +77,20 @@ class RasterizerCache {
 
 public:
     explicit RasterizerCache(Memory::MemorySystem& memory, CustomTexManager& custom_tex_manager,
-                             Runtime& runtime, Pica::Regs& regs, RendererBase& renderer);
+                             Runtime& runtime, Pica::RegsInternal& regs, RendererBase& renderer);
     ~RasterizerCache();
 
     /// Notify the cache that a new frame has been queued
     void TickFrame();
 
     /// Perform hardware accelerated texture copy according to the provided configuration
-    bool AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config);
+    bool AccelerateTextureCopy(const Pica::DisplayTransferConfig& config);
 
     /// Perform hardware accelerated display transfer according to the provided configuration
-    bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config);
+    bool AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config);
 
     /// Perform hardware accelerated memory fill according to the provided configuration
-    bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config);
+    bool AccelerateFill(const Pica::MemoryFillConfig& config);
 
     /// Returns a reference to the surface object assigned to surface_id
     Surface& GetSurface(SurfaceId surface_id);
@@ -212,7 +215,7 @@ private:
     Memory::MemorySystem& memory;
     CustomTexManager& custom_tex_manager;
     Runtime& runtime;
-    Pica::Regs& regs;
+    Pica::RegsInternal& regs;
     RendererBase& renderer;
     std::unordered_map<TextureCubeConfig, TextureCube> texture_cube_cache;
     tsl::robin_pg_map<u64, std::vector<SurfaceId>, Common::IdentityHash<u64>> page_table;

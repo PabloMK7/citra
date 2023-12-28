@@ -23,7 +23,7 @@ using nihstro::RegisterType;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
-constexpr u32 PROGRAM_END = Pica::Shader::MAX_PROGRAM_CODE_LENGTH;
+constexpr u32 PROGRAM_END = MAX_PROGRAM_CODE_LENGTH;
 
 class DecompileFail : public std::runtime_error {
 public:
@@ -58,7 +58,7 @@ struct Subroutine {
 /// Analyzes shader code and produces a set of subroutines.
 class ControlFlowAnalyzer {
 public:
-    ControlFlowAnalyzer(const Pica::Shader::ProgramCode& program_code, u32 main_offset)
+    ControlFlowAnalyzer(const ProgramCode& program_code, u32 main_offset)
         : program_code(program_code) {
 
         // Recursively finds all subroutines.
@@ -72,7 +72,7 @@ public:
     }
 
 private:
-    const Pica::Shader::ProgramCode& program_code;
+    const ProgramCode& program_code;
     std::set<Subroutine> subroutines;
     std::map<std::pair<u32, u32>, ExitMethod> exit_method_map;
 
@@ -265,9 +265,8 @@ constexpr auto GetSelectorSrc3 = GetSelectorSrc<&SwizzlePattern::GetSelectorSrc3
 
 class GLSLGenerator {
 public:
-    GLSLGenerator(const std::set<Subroutine>& subroutines,
-                  const Pica::Shader::ProgramCode& program_code,
-                  const Pica::Shader::SwizzleData& swizzle_data, u32 main_offset,
+    GLSLGenerator(const std::set<Subroutine>& subroutines, const ProgramCode& program_code,
+                  const SwizzleData& swizzle_data, u32 main_offset,
                   const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
                   bool sanitize_mul)
         : subroutines(subroutines), program_code(program_code), swizzle_data(swizzle_data),
@@ -921,8 +920,8 @@ private:
 
 private:
     const std::set<Subroutine>& subroutines;
-    const Pica::Shader::ProgramCode& program_code;
-    const Pica::Shader::SwizzleData& swizzle_data;
+    const ProgramCode& program_code;
+    const SwizzleData& swizzle_data;
     const u32 main_offset;
     const RegGetter& inputreg_getter;
     const RegGetter& outputreg_getter;
@@ -931,10 +930,9 @@ private:
     ShaderWriter shader;
 };
 
-std::string DecompileProgram(const Pica::Shader::ProgramCode& program_code,
-                             const Pica::Shader::SwizzleData& swizzle_data, u32 main_offset,
-                             const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
-                             bool sanitize_mul) {
+std::string DecompileProgram(const ProgramCode& program_code, const SwizzleData& swizzle_data,
+                             u32 main_offset, const RegGetter& inputreg_getter,
+                             const RegGetter& outputreg_getter, bool sanitize_mul) {
 
     try {
         auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();

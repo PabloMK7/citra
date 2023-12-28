@@ -5,15 +5,12 @@
 #pragma once
 
 #include "common/vector_math.h"
-#include "video_core/regs_lighting.h"
+#include "video_core/pica/regs_lighting.h"
 
 namespace Pica {
 struct ShaderRegs;
-}
-
-namespace Pica::Shader {
 struct ShaderSetup;
-}
+} // namespace Pica
 
 namespace Pica::Shader::Generator {
 
@@ -24,8 +21,8 @@ struct LightSrc {
     alignas(16) Common::Vec3f ambient;
     alignas(16) Common::Vec3f position;
     alignas(16) Common::Vec3f spot_direction; // negated
-    float dist_atten_bias;
-    float dist_atten_scale;
+    f32 dist_atten_bias;
+    f32 dist_atten_scale;
 };
 
 /**

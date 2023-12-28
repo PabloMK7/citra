@@ -6,12 +6,12 @@
 
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/pica_state.h"
+#include "video_core/pica/pica_core.h"
 
 namespace SwRenderer {
 
 /// Generates procedural texture color for the given coordinates
 Common::Vec4<u8> ProcTex(float u, float v, const Pica::TexturingRegs& regs,
-                         const Pica::State::ProcTex& state);
+                         const Pica::PicaCore::ProcTex& state);
 
 } // namespace SwRenderer

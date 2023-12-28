@@ -5,8 +5,8 @@
 #pragma once
 
 #include "common/hash.h"
+#include "video_core/pica/regs_texturing.h"
 #include "video_core/rasterizer_cache/slot_id.h"
-#include "video_core/regs_texturing.h"
 
 namespace VideoCore {
 

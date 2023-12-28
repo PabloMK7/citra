@@ -74,7 +74,6 @@
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/memory_detect.h"
-#include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #if CITRA_ARCH(x86_64)
@@ -96,8 +95,8 @@
 #include "input_common/main.h"
 #include "network/network_settings.h"
 #include "ui_main.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 #ifdef __APPLE__
 #include "common/apple_authorization.h"
@@ -458,7 +457,7 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
 
-    graphicsWidget = new GPUCommandStreamWidget(this);
+    graphicsWidget = new GPUCommandStreamWidget(system, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
     graphicsWidget->hide();
     debug_menu->addAction(graphicsWidget->toggleViewAction());
@@ -473,12 +472,13 @@ void GMainWindow::InitializeDebugWidgets() {
     graphicsBreakpointsWidget->hide();
     debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
-    graphicsVertexShaderWidget = new GraphicsVertexShaderWidget(Pica::g_debug_context, this);
+    graphicsVertexShaderWidget =
+        new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
     graphicsVertexShaderWidget->hide();
     debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
 
-    graphicsTracingWidget = new GraphicsTracingWidget(Pica::g_debug_context, this);
+    graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
     graphicsTracingWidget->hide();
     debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
@@ -1237,6 +1237,11 @@ void GMainWindow::BootGame(const QString& filename) {
         video_dumping_path.clear();
     }
 
+    // Register debug widgets
+    if (graphicsWidget->isVisible()) {
+        graphicsWidget->Register();
+    }
+
     // Create and start the emulation thread
     emu_thread = std::make_unique<EmuThread>(system, *render_window);
     emit EmulationStarting(emu_thread.get());
@@ -1314,6 +1319,11 @@ void GMainWindow::ShutdownGame() {
     // to continue out to the main loop and terminate. Thus wait() would hang forever.
     // TODO(bunnei): This function is not thread safe, but it's being used as if it were
     Pica::g_debug_context->ClearBreakpoints();
+
+    // Unregister debug widgets
+    if (graphicsWidget->isVisible()) {
+        graphicsWidget->Unregister();
+    }
 
     // Frame advancing must be cancelled in order to release the emu thread from waiting
     system.frame_limiter.SetFrameAdvancing(false);
@@ -2214,7 +2224,7 @@ void GMainWindow::OnToggleFilterBar() {
 
 void GMainWindow::OnCreateGraphicsSurfaceViewer() {
     auto graphicsSurfaceViewerWidget =
-        new GraphicsSurfaceWidget(system.Memory(), Pica::g_debug_context, this);
+        new GraphicsSurfaceWidget(system, Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
     // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
     graphicsSurfaceViewerWidget->show();
@@ -2434,10 +2444,10 @@ void GMainWindow::OnStartVideoDumping() {
 }
 
 void GMainWindow::StartVideoDumping(const QString& path) {
-    Layout::FramebufferLayout layout{
-        Layout::FrameLayoutFromResolutionScale(VideoCore::g_renderer->GetResolutionScaleFactor())};
+    auto& renderer = system.GPU().Renderer();
+    const auto layout{Layout::FrameLayoutFromResolutionScale(renderer.GetResolutionScaleFactor())};
 
-    auto dumper = std::make_shared<VideoDumper::FFmpegBackend>();
+    auto dumper = std::make_shared<VideoDumper::FFmpegBackend>(renderer);
     if (dumper->StartDumping(path.toStdString(), layout)) {
         system.RegisterVideoDumper(dumper);
     } else {

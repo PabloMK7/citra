@@ -8,8 +8,12 @@
 #include <QDockWidget>
 #include "video_core/gpu_debugger.h"
 
+namespace Core {
+class System;
+}
+
 class GPUCommandStreamItemModel : public QAbstractListModel,
-                                  public GraphicsDebugger::DebuggerObserver {
+                                  public VideoCore::GraphicsDebugger::DebuggerObserver {
     Q_OBJECT
 
 public:
@@ -35,12 +39,16 @@ class GPUCommandStreamWidget : public QDockWidget {
     Q_OBJECT
 
 public:
-    GPUCommandStreamWidget(QWidget* parent = nullptr);
+    GPUCommandStreamWidget(Core::System& system, QWidget* parent = nullptr);
+
+    void Register();
+    void Unregister();
 
 protected:
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent* event) override;
 
 private:
+    Core::System& system;
     GPUCommandStreamItemModel model;
 };

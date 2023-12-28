@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include <array>
-
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/vector_math.h"
 
 namespace Pica {
 
@@ -21,6 +20,11 @@ struct ShaderRegs {
         BitField<16, 8, u32> z;
         BitField<24, 8, u32> w;
     } int_uniforms[4];
+
+    Common::Vec4<u8> GetIntUniform(u32 index) const {
+        const auto& values = int_uniforms[index];
+        return Common::MakeVec<u8>(values.x, values.y, values.z, values.w);
+    }
 
     INSERT_PADDING_WORDS(0x4);
 
@@ -55,13 +59,13 @@ struct ShaderRegs {
     INSERT_PADDING_WORDS(0x2);
 
     struct {
-        enum Format : u32 {
-            FLOAT24 = 0,
-            FLOAT32 = 1,
+        enum class Format : u32 {
+            Float24 = 0,
+            Float32 = 1,
         };
 
         bool IsFloat32() const {
-            return format == FLOAT32;
+            return format == Format::Float32;
         }
 
         union {
@@ -70,7 +74,6 @@ struct ShaderRegs {
             // indices
             // TODO: Maybe the uppermost index is for the geometry shader? Investigate!
             BitField<0, 7, u32> index;
-
             BitField<31, 1, Format> format;
         };
 

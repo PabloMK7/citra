@@ -20,6 +20,20 @@ struct PipelineRegs {
         FLOAT = 3,
     };
 
+    static u32 GetFormatBytes(VertexAttributeFormat format) {
+        switch (format) {
+        case VertexAttributeFormat::FLOAT:
+            return 4;
+        case VertexAttributeFormat::SHORT:
+            return 2;
+        case VertexAttributeFormat::BYTE:
+        case VertexAttributeFormat::UBYTE:
+            return 1;
+        default:
+            UNREACHABLE();
+        }
+    }
+
     struct {
         BitField<1, 28, u32> base_address;
 
@@ -194,14 +208,14 @@ struct PipelineRegs {
         BitField<0, 28, u32> addr[2]; ///< Physical address / 8 of each channel's command buffer
         u32 trigger[2]; ///< Triggers execution of the channel's command buffer when written to
 
-        unsigned GetSize(unsigned index) const {
+        u32 GetSize(u32 index) const {
             ASSERT(index < 2);
             return 8 * size[index];
         }
 
-        PAddr GetPhysicalAddress(unsigned index) const {
+        PAddr GetPhysicalAddress(u32 index) const {
             ASSERT(index < 2);
-            return (PAddr)(8 * addr[index]);
+            return 8 * addr[index];
         }
     } command_buffer;
 

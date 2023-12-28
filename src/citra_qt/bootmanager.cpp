@@ -22,9 +22,9 @@
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_software/renderer_software.h"
-#include "video_core/video_core.h"
 
 #ifdef HAS_OPENGL
 #include <glad/glad.h>
@@ -73,7 +73,7 @@ void EmuThread::run() {
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
-    system.Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             emit LoadProgress(stage, value, total);
         });
@@ -284,9 +284,7 @@ public:
         }
         context->MakeCurrent();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        if (VideoCore::g_renderer) {
-            VideoCore::g_renderer->TryPresent(100, is_secondary);
-        }
+        system.GPU().Renderer().TryPresent(100, is_secondary);
         context->SwapBuffers();
         glFinish();
     }
@@ -367,7 +365,7 @@ struct SoftwareRenderWidget : public RenderWidget {
     }
 
     QImage LoadFramebuffer(VideoCore::ScreenId screen_id) {
-        const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.Renderer());
+        const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.GPU().Renderer());
         const auto& info = renderer.Screen(screen_id);
         const int width = static_cast<int>(info.width);
         const int height = static_cast<int>(info.height);
@@ -678,13 +676,14 @@ void GRenderWindow::ReleaseRenderTarget() {
 }
 
 void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_path) {
+    auto& renderer = system.GPU().Renderer();
     if (res_scale == 0) {
-        res_scale = system.Renderer().GetResolutionScaleFactor();
+        res_scale = renderer.GetResolutionScaleFactor();
     }
 
     const auto layout{Layout::FrameLayoutFromResolutionScale(res_scale, is_secondary)};
     screenshot_image = QImage(QSize(layout.width, layout.height), QImage::Format_RGB32);
-    system.Renderer().RequestScreenshot(
+    renderer.RequestScreenshot(
         screenshot_image.bits(),
         [this, screenshot_path](bool invert_y) {
             const std::string std_screenshot_path = screenshot_path.toStdString();

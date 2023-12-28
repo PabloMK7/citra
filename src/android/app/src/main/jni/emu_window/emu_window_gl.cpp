@@ -12,10 +12,11 @@
 
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "input_common/main.h"
 #include "jni/emu_window/emu_window_gl.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 static constexpr std::array<EGLint, 15> egl_attribs{EGL_SURFACE_TYPE,
                                                     EGL_WINDOW_BIT,
@@ -71,8 +72,8 @@ private:
     EGLContext egl_context{};
 };
 
-EmuWindow_Android_OpenGL::EmuWindow_Android_OpenGL(ANativeWindow* surface)
-    : EmuWindow_Android{surface} {
+EmuWindow_Android_OpenGL::EmuWindow_Android_OpenGL(Core::System& system_, ANativeWindow* surface)
+    : EmuWindow_Android{surface}, system{system_} {
     if (egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY); egl_display == EGL_NO_DISPLAY) {
         LOG_CRITICAL(Frontend, "eglGetDisplay() failed");
         return;
@@ -199,6 +200,9 @@ void EmuWindow_Android_OpenGL::StopPresenting() {
 }
 
 void EmuWindow_Android_OpenGL::TryPresenting() {
+    if (!system.IsPoweredOn()) {
+        return;
+    }
     if (presenting_state == PresentingState::Initial) [[unlikely]] {
         eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -208,8 +212,6 @@ void EmuWindow_Android_OpenGL::TryPresenting() {
         return;
     }
     eglSwapInterval(egl_display, Settings::values.use_vsync_new ? 1 : 0);
-    if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->TryPresent(0);
-        eglSwapBuffers(egl_display, egl_surface);
-    }
+    system.GPU().Renderer().TryPresent(0);
+    eglSwapBuffers(egl_display, egl_surface);
 }

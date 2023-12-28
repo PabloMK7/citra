@@ -10,18 +10,20 @@
 #include <array>
 #include <bitset>
 #include <cstddef>
-#include <optional>
-#include <utility>
 #include <vector>
 #include <nihstro/shader_bytecode.h>
 #include <xbyak/xbyak.h>
 #include "common/common_types.h"
-#include "video_core/shader/shader.h"
+#include "video_core/pica/shader_setup.h"
 
 using nihstro::Instruction;
 using nihstro::OpCode;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
+
+namespace Pica {
+struct ShaderUnit;
+}
 
 namespace Pica::Shader {
 
@@ -36,7 +38,7 @@ class JitShader : public Xbyak::CodeGenerator {
 public:
     JitShader();
 
-    void Run(const ShaderSetup& setup, UnitState& state, u32 offset) const {
+    void Run(const ShaderSetup& setup, ShaderUnit& state, u32 offset) const {
         program(&setup.uniforms, &state, instruction_labels[offset].getAddress());
     }
 

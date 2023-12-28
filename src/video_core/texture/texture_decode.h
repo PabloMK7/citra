@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/regs_texturing.h"
+#include "video_core/pica/regs_texturing.h"
 
 namespace Pica::Texture {
 
@@ -15,8 +15,8 @@ size_t CalculateTileSize(TexturingRegs::TextureFormat format);
 
 struct TextureInfo {
     PAddr physical_address;
-    unsigned int width;
-    unsigned int height;
+    u32 width;
+    u32 height;
     ptrdiff_t stride;
     TexturingRegs::TextureFormat format;
 

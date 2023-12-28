@@ -51,8 +51,9 @@
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
+#include "video_core/debug_utils/debug_utils.h"
+#include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 #if CITRA_ARCH(arm64)
 #include <adrenotools/driver.h>
@@ -126,7 +127,7 @@ static bool CheckMicPermission() {
 
 static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Citra core only supports a single running instance
-    std::lock_guard<std::mutex> lock(running_mutex);
+    std::scoped_lock lock(running_mutex);
 
     LOG_INFO(Frontend, "Citra starting...");
 
@@ -137,10 +138,12 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         return Core::System::ResultStatus::ErrorLoader;
     }
 
+    Core::System& system{Core::System::GetInstance()};
+
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     switch (graphics_api) {
     case Settings::GraphicsAPI::OpenGL:
-        window = std::make_unique<EmuWindow_Android_OpenGL>(s_surf);
+        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
         break;
     case Settings::GraphicsAPI::Vulkan:
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
@@ -149,8 +152,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         LOG_CRITICAL(Frontend, "Unknown graphics API {}, using Vulkan", graphics_api);
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
     }
-
-    Core::System& system{Core::System::GetInstance()};
 
     // Forces a config reload on game boot, if the user changed settings in the UI
     Config{};
@@ -179,6 +180,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Register microphone permission check
     system.RegisterMicPermissionCheck(&CheckMicPermission);
 
+    Pica::g_debug_context = Pica::DebugContext::Construct();
     InputManager::Init();
 
     window->MakeCurrent();
@@ -196,7 +198,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
     std::unique_ptr<Frontend::GraphicsContext> cpu_context;
-    system.Renderer().Rasterizer()->LoadDiskResources(stop_run, &LoadDiskCacheProgress);
+    system.GPU().Renderer().Rasterizer()->LoadDiskResources(stop_run, &LoadDiskCacheProgress);
 
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
 
@@ -275,8 +277,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
     if (window) {
         window->OnSurfaceChanged(s_surf);
     }
-    if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->NotifySurfaceChanged();
+
+    auto& system = Core::System::GetInstance();
+    if (system.IsPoweredOn()) {
+        system.GPU().Renderer().NotifySurfaceChanged();
     }
 
     LOG_INFO(Frontend, "Surface changed");
@@ -311,8 +315,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_notifyOrientationChange([[maybe_unu
                                                                      jint layout_option,
                                                                      jint rotation) {
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layout_option);
-    if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->UpdateCurrentFramebufferLayout(!(rotation % 2));
+    auto& system = Core::System::GetInstance();
+    if (system.IsPoweredOn()) {
+        system.GPU().Renderer().UpdateCurrentFramebufferLayout(!(rotation % 2));
     }
     InputManager::screen_rotation = rotation;
     Camera::NDK::g_rotation = rotation;
@@ -322,8 +327,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_swapScreens([[maybe_unused]] JNIEnv
                                                          [[maybe_unused]] jobject obj,
                                                          jboolean swap_screens, jint rotation) {
     Settings::values.swap_screen = swap_screens;
-    if (VideoCore::g_renderer) {
-        VideoCore::g_renderer->UpdateCurrentFramebufferLayout(!(rotation % 2));
+    auto& system = Core::System::GetInstance();
+    if (system.IsPoweredOn()) {
+        system.GPU().Renderer().UpdateCurrentFramebufferLayout(!(rotation % 2));
     }
     InputManager::screen_rotation = rotation;
     Camera::NDK::g_rotation = rotation;

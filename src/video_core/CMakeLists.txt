@@ -1,8 +1,6 @@
 add_subdirectory(host_shaders)
 
 add_library(video_core STATIC
-    command_processor.cpp
-    command_processor.h
     custom_textures/custom_format.cpp
     custom_textures/custom_format.h
     custom_textures/custom_tex_manager.cpp
@@ -11,29 +9,41 @@ add_library(video_core STATIC
     custom_textures/material.h
     debug_utils/debug_utils.cpp
     debug_utils/debug_utils.h
-    geometry_pipeline.cpp
-    geometry_pipeline.h
+    gpu.cpp
+    gpu.h
     gpu_debugger.h
-    pica.cpp
-    pica.h
-    pica_state.h
     pica_types.h
     precompiled_headers.h
-    primitive_assembly.cpp
-    primitive_assembly.h
     rasterizer_accelerated.cpp
     rasterizer_accelerated.h
     rasterizer_interface.h
-    regs.cpp
-    regs.h
-    regs_framebuffer.h
-    regs_lighting.h
-    regs_pipeline.h
-    regs_rasterizer.h
-    regs_shader.h
-    regs_texturing.h
     renderer_base.cpp
     renderer_base.h
+    pica/geometry_pipeline.cpp
+    pica/geometry_pipeline.h
+    pica/pica_core.cpp
+    pica/pica_core.h
+    pica/output_vertex.cpp
+    pica/output_vertex.h
+    pica/primitive_assembly.cpp
+    pica/primitive_assembly.h
+    pica/regs_external.h
+    pica/regs_framebuffer.h
+    pica/regs_internal.cpp
+    pica/regs_internal.h
+    pica/regs_lcd.h
+    pica/regs_lighting.h
+    pica/regs_pipeline.h
+    pica/regs_rasterizer.h
+    pica/regs_shader.h
+    pica/regs_texturing.h
+    pica/shader_setup.cpp
+    pica/shader_setup.h
+    pica/shader_unit.cpp
+    pica/shader_unit.h
+    pica/packed_attribute.h
+    pica/vertex_loader.cpp
+    pica/vertex_loader.h
     rasterizer_cache/framebuffer_base.h
     rasterizer_cache/pixel_format.cpp
     rasterizer_cache/pixel_format.h
@@ -84,6 +94,8 @@ add_library(video_core STATIC
     renderer_opengl/renderer_opengl.h
     renderer_software/renderer_software.cpp
     renderer_software/renderer_software.h
+    renderer_software/sw_blitter.cpp
+    renderer_software/sw_blitter.h
     renderer_software/sw_clipper.cpp
     renderer_software/sw_clipper.h
     renderer_software/sw_framebuffer.cpp
@@ -167,8 +179,6 @@ add_library(video_core STATIC
     texture/texture_decode.cpp
     texture/texture_decode.h
     utils.h
-    vertex_loader.cpp
-    vertex_loader.h
     video_core.cpp
     video_core.h
 )

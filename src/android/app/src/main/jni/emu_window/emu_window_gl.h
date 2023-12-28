@@ -11,11 +11,15 @@
 
 #include "jni/emu_window/emu_window.h"
 
+namespace Core {
+class System;
+}
+
 struct ANativeWindow;
 
 class EmuWindow_Android_OpenGL : public EmuWindow_Android {
 public:
-    EmuWindow_Android_OpenGL(ANativeWindow* surface);
+    EmuWindow_Android_OpenGL(Core::System& system, ANativeWindow* surface);
     ~EmuWindow_Android_OpenGL() override = default;
 
     void TryPresenting() override;
@@ -30,6 +34,7 @@ private:
     void DestroyContext() override;
 
 private:
+    Core::System& system;
     EGLConfig egl_config;
     EGLSurface egl_surface{};
     EGLContext egl_context{};
