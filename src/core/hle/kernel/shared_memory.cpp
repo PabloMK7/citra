@@ -18,8 +18,7 @@ SharedMemory::SharedMemory(KernelSystem& kernel) : Object(kernel), kernel(kernel
 
 SharedMemory::~SharedMemory() {
     for (const auto& interval : holding_memory) {
-        kernel.GetMemoryRegion(MemoryRegion::SYSTEM)
-            ->Free(interval.lower(), interval.upper() - interval.lower());
+        memory_region->Free(interval.lower(), interval.upper() - interval.lower());
     }
 
     auto process = owner_process.lock();
@@ -39,17 +38,18 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
     std::shared_ptr<Process> owner_process, u32 size, MemoryPermission permissions,
     MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
 
+    auto memory_region = GetMemoryRegion(region);
     auto shared_memory = std::make_shared<SharedMemory>(*this);
     shared_memory->owner_process = owner_process;
     shared_memory->name = std::move(name);
     shared_memory->size = size;
+    shared_memory->memory_region = memory_region;
     shared_memory->permissions = permissions;
     shared_memory->other_permissions = other_permissions;
 
     if (address == 0) {
         // We need to allocate a block from the Linear Heap ourselves.
         // We'll manually allocate some memory from the linear heap in the specified region.
-        auto memory_region = GetMemoryRegion(region);
         auto offset = memory_region->LinearAllocate(size);
 
         ASSERT_MSG(offset, "Not enough space in region to allocate shared memory!");
@@ -93,6 +93,7 @@ std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     shared_memory->owner_process = std::weak_ptr<Process>();
     shared_memory->name = std::move(name);
     shared_memory->size = size;
+    shared_memory->memory_region = memory_region;
     shared_memory->permissions = permissions;
     shared_memory->other_permissions = other_permissions;
     for (const auto& interval : backing_blocks) {

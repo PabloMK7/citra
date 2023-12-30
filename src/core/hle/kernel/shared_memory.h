@@ -94,6 +94,8 @@ private:
     std::vector<std::pair<MemoryRef, u32>> backing_blocks;
     /// Size of the memory block. Page-aligned.
     u32 size = 0;
+    /// Region of memory this block exists in.
+    std::shared_ptr<MemoryRegionInfo> memory_region = nullptr;
     /// Permission restrictions applied to the process which created the block.
     MemoryPermission permissions{};
     /// Permission restrictions applied to other processes mapping the block.
@@ -116,6 +118,7 @@ private:
         ar& linear_heap_phys_offset;
         ar& backing_blocks;
         ar& size;
+        ar& memory_region;
         ar& permissions;
         ar& other_permissions;
         ar& owner_process;
