@@ -20,10 +20,10 @@ public:
      * @param id Id of the applet to create.
      * @param parent Id of the applet's parent.
      * @param preload Whether the applet is being preloaded.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    static ResultCode Create(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                             const std::shared_ptr<Service::APT::AppletManager>& manager);
+    static Result Create(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
+                         const std::shared_ptr<Service::APT::AppletManager>& manager);
 
     /**
      * Retrieves the Applet instance identified by the specified id.
@@ -35,9 +35,9 @@ public:
     /**
      * Handles a parameter from the application.
      * @param parameter Parameter data to handle.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter);
+    Result ReceiveParameter(const Service::APT::MessageParameter& parameter);
 
     /**
      * Whether the applet is currently running.
@@ -62,22 +62,22 @@ protected:
     /**
      * Handles a parameter from the application.
      * @param parameter Parameter data to handle.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    virtual ResultCode ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) = 0;
+    virtual Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) = 0;
 
     /**
      * Handles the Applet start event, triggered from the application.
      * @param parameter Parameter data to handle.
-     * @returns ResultCode Whether the operation was successful or not.
+     * @returns Result Whether the operation was successful or not.
      */
-    virtual ResultCode Start(const Service::APT::MessageParameter& parameter) = 0;
+    virtual Result Start(const Service::APT::MessageParameter& parameter) = 0;
 
     /**
      * Sends the LibAppletClosing signal to the application,
      * along with the relevant data buffers.
      */
-    virtual ResultCode Finalize() = 0;
+    virtual Result Finalize() = 0;
 
     Service::APT::AppletId id;                    ///< Id of this Applet
     Service::APT::AppletId parent;                ///< Id of this Applet's parent

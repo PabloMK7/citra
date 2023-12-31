@@ -449,8 +449,7 @@ private:
         u32 sharedmem_size, const NodeInfo& node, u16 version,
         std::shared_ptr<Kernel::SharedMemory> sharedmem);
 
-    ResultCode BeginHostingNetwork(std::span<const u8> network_info_buffer,
-                                   std::vector<u8> passphrase);
+    Result BeginHostingNetwork(std::span<const u8> network_info_buffer, std::vector<u8> passphrase);
 
     void ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
                           std::span<const u8> network_info_buffer, u8 connection_type,

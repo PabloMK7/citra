@@ -61,8 +61,8 @@ public:
      * @param permissions Memory block map permissions (specified by SVC field)
      * @param other_permissions Memory block map other permissions (specified by SVC field)
      */
-    ResultCode Map(Process& target_process, VAddr address, MemoryPermission permissions,
-                   MemoryPermission other_permissions);
+    Result Map(Process& target_process, VAddr address, MemoryPermission permissions,
+               MemoryPermission other_permissions);
 
     /**
      * Unmaps a shared memory block from the specified address in system memory
@@ -70,7 +70,7 @@ public:
      * @param address Address in system memory where the shared memory block is mapped
      * @return Result code of the unmap operation
      */
-    ResultCode Unmap(Process& target_process, VAddr address);
+    Result Unmap(Process& target_process, VAddr address);
 
     /**
      * Gets a pointer to the shared memory block

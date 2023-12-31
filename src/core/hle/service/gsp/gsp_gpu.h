@@ -366,9 +366,9 @@ private:
 
     std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
 
-    ResultCode AcquireGpuRight(const Kernel::HLERequestContext& ctx,
-                               const std::shared_ptr<Kernel::Process>& process, u32 flag,
-                               bool blocking);
+    Result AcquireGpuRight(const Kernel::HLERequestContext& ctx,
+                           const std::shared_ptr<Kernel::Process>& process, u32 flag,
+                           bool blocking);
 
     Core::System& system;
 

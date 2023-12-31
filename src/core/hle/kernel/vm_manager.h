@@ -165,18 +165,18 @@ public:
      * @param new_state New MemoryState for the range.
      * @param new_perms New VMAPermission for the range.
      */
-    ResultCode ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
-                                 VMAPermission expected_perms, MemoryState new_state,
-                                 VMAPermission new_perms);
+    Result ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
+                             VMAPermission expected_perms, MemoryState new_state,
+                             VMAPermission new_perms);
 
     /// Unmaps a range of addresses, splitting VMAs as necessary.
-    ResultCode UnmapRange(VAddr target, u32 size);
+    Result UnmapRange(VAddr target, u32 size);
 
     /// Changes the permissions of the given VMA.
     VMAHandle Reprotect(VMAHandle vma, VMAPermission new_perms);
 
     /// Changes the permissions of a range of addresses, splitting VMAs as necessary.
-    ResultCode ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
+    Result ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
 
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Common::Log::Level log_level) const;

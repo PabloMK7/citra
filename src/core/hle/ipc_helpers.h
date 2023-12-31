@@ -161,7 +161,7 @@ inline void RequestBuilder::Push(bool value) {
 }
 
 template <>
-inline void RequestBuilder::Push(ResultCode value) {
+inline void RequestBuilder::Push(Result value) {
     Push(value.raw);
 }
 
@@ -371,8 +371,8 @@ inline bool RequestParser::Pop() {
 }
 
 template <>
-inline ResultCode RequestParser::Pop() {
-    return ResultCode{Pop<u32>()};
+inline Result RequestParser::Pop() {
+    return Result{Pop<u32>()};
 }
 
 template <typename T>

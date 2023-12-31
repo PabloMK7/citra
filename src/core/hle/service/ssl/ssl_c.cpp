@@ -19,7 +19,7 @@ void SSL_C::Initialize(Kernel::HLERequestContext& ctx) {
 
     // Stub, return success
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void SSL_C::GenerateRandomData(Kernel::HLERequestContext& ctx) {
@@ -32,7 +32,7 @@ void SSL_C::GenerateRandomData(Kernel::HLERequestContext& ctx) {
     buffer.Write(out_data.data(), 0, size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(buffer);
 }
 

@@ -66,9 +66,9 @@ public:
     /**
      * Handle a sync request from the emulated application.
      * @param thread Thread that initiated the request.
-     * @returns ResultCode from the operation.
+     * @returns Result from the operation.
      */
-    ResultCode HandleSyncRequest(std::shared_ptr<Thread> thread);
+    Result HandleSyncRequest(std::shared_ptr<Thread> thread);
 
     bool ShouldWait(const Thread* thread) const override;
 

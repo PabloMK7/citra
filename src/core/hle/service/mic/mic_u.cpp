@@ -157,7 +157,7 @@ struct MIC_U::Impl {
         }
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
 
         LOG_TRACE(Service_MIC, "called, size=0x{:X}", size);
     }
@@ -166,7 +166,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         shared_memory = nullptr;
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_TRACE(Service_MIC, "called");
     }
 
@@ -230,7 +230,7 @@ struct MIC_U::Impl {
         timing.ScheduleEvent(GetBufferUpdatePeriod(state.sample_rate), buffer_write_event);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_TRACE(Service_MIC,
                   "called, encoding={}, sample_rate={}, "
                   "audio_buffer_offset={}, audio_buffer_size={}, audio_buffer_loop={}",
@@ -246,7 +246,7 @@ struct MIC_U::Impl {
         }
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_TRACE(Service_MIC, "sample_rate={}", sample_rate);
     }
 
@@ -254,7 +254,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         timing.RemoveEvent(buffer_write_event);
         if (mic) {
             mic->StopSampling();
@@ -267,7 +267,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         bool is_sampling = mic && mic->IsSampling();
         rb.Push<bool>(is_sampling);
         LOG_TRACE(Service_MIC, "IsSampling: {}", is_sampling);
@@ -277,7 +277,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushCopyObjects(buffer_full_event);
         LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
@@ -288,7 +288,7 @@ struct MIC_U::Impl {
         state.gain = gain;
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_TRACE(Service_MIC, "gain={}", gain);
     }
 
@@ -296,7 +296,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push<u8>(state.gain);
         LOG_TRACE(Service_MIC, "gain={}", state.gain);
     }
@@ -307,7 +307,7 @@ struct MIC_U::Impl {
         state.power = power;
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_TRACE(Service_MIC, "mic_power={}", power);
     }
 
@@ -315,7 +315,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push<u8>(state.power);
         LOG_TRACE(Service_MIC, "called");
     }
@@ -326,7 +326,7 @@ struct MIC_U::Impl {
         const Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushMappedBuffer(buffer);
         LOG_WARNING(Service_MIC, "(STUBBED) called, size=0x{:X}, buffer=0x{:08X}", size,
                     buffer.GetId());
@@ -337,7 +337,7 @@ struct MIC_U::Impl {
         clamp = rp.Pop<bool>();
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_WARNING(Service_MIC, "(STUBBED) called, clamp={}", clamp);
     }
 
@@ -345,7 +345,7 @@ struct MIC_U::Impl {
         IPC::RequestParser rp(ctx);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push<bool>(clamp);
         LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
@@ -355,7 +355,7 @@ struct MIC_U::Impl {
         allow_shell_closed = rp.Pop<bool>();
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         LOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed={}", allow_shell_closed);
     }
 
@@ -365,7 +365,7 @@ struct MIC_U::Impl {
         LOG_WARNING(Service_MIC, "(STUBBED) called, version: 0x{:08X}", version);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
     }
 
     void CreateMic() {

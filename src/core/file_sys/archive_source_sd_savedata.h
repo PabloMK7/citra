@@ -19,7 +19,7 @@ public:
     explicit ArchiveSource_SDSaveData(const std::string& mount_point);
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(u64 program_id);
-    ResultCode Format(u64 program_id, const FileSys::ArchiveFormatInfo& format_info);
+    Result Format(u64 program_id, const FileSys::ArchiveFormatInfo& format_info);
     ResultVal<ArchiveFormatInfo> GetFormatInfo(u64 program_id) const;
 
     static std::string GetSaveDataPathFor(const std::string& mount_point, u64 program_id);

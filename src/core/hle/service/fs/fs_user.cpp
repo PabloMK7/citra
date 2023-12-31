@@ -43,7 +43,7 @@ void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
     slot->program_id = system.Kernel().GetProcessById(pid)->codeset->program_id;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
@@ -349,7 +349,7 @@ void FS_USER::ControlArchive(Kernel::HLERequestContext& ctx) {
                 archive_handle, action, input_size, output_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
@@ -363,14 +363,14 @@ void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
 void FS_USER::IsSdmcDetected(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(Settings::values.use_virtual_sd.GetValue());
 }
 
 void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     // If the SD isn't enabled, it can't be writeable...else, stubbed true
     rb.Push(Settings::values.use_virtual_sd.GetValue());
     LOG_DEBUG(Service_FS, " (STUBBED)");
@@ -398,7 +398,7 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (archive_id != FS::ArchiveIdCode::SaveData) {
         LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, {}", archive_id);
-        rb.Push(FileSys::ERROR_INVALID_PATH);
+        rb.Push(FileSys::ResultInvalidPath);
         return;
     }
 
@@ -471,7 +471,7 @@ void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
 }
 
@@ -488,7 +488,7 @@ void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
 }
 
@@ -544,7 +544,7 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
     LOG_WARNING(Service_FS, "(STUBBED) called");
 }
@@ -614,7 +614,7 @@ void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x{:08X}", version);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
@@ -623,7 +623,7 @@ void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
     priority = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_FS, "called priority=0x{:X}", priority);
 }
@@ -636,7 +636,7 @@ void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(priority);
 
     LOG_DEBUG(Service_FS, "called priority=0x{:X}", priority);
@@ -656,7 +656,7 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(*resource);
 }
 
@@ -699,12 +699,12 @@ void FS_USER::GetProductInfo(Kernel::HLERequestContext& ctx) {
 
     const auto product_info = GetProductInfo(process_id);
     if (!product_info.has_value()) {
-        rb.Push(ResultCode(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
-                           ErrorSummary::NotFound, ErrorLevel::Status));
+        rb.Push(Result(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
+                       ErrorSummary::NotFound, ErrorLevel::Status));
         return;
     }
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<ProductInfo>(product_info.value());
 }
 
@@ -737,7 +737,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
         program_info.media_type = MediaType::SDMC;
     }
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<ProgramInfo>(program_info);
 }
 
@@ -801,7 +801,7 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 
     if (index.Succeeded()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(index.Unwrap());
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -812,7 +812,7 @@ void FS_USER::GetSpecialContentIndex(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u32>(FileSys::GetSeedCount());
 }
 
@@ -822,7 +822,7 @@ void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
     FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
     FileSys::AddSeed({title_id, seed, {}});
     IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::ObsoletedSetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -841,7 +841,7 @@ void FS_USER::ObsoletedSetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::ObsoletedGetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -857,7 +857,7 @@ void FS_USER::ObsoletedGetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     // TODO: Implement Secure Value Lookup & Generation
 
@@ -877,7 +877,7 @@ void FS_USER::SetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -888,7 +888,7 @@ void FS_USER::GetThisSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     // TODO: Implement Secure Value Lookup & Generation
 
@@ -913,7 +913,7 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -926,7 +926,7 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     // TODO: Implement Secure Value Lookup & Generation
 
@@ -966,7 +966,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromGameCard(u64 title_id, Special
     if (type > SpecialContentType::DLPChild) {
         // Maybe type 4 is New 3DS update/partition 6 but this needs more research
         // TODO(B3N30): Find correct result code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     switch (type) {
@@ -985,7 +985,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
                                                       SpecialContentType type) {
     if (type > SpecialContentType::DLPChild) {
         // TODO(B3N30): Find correct result code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     std::string tmd_path = AM::GetTitleMetadataPath(media_type, title_id);
@@ -993,7 +993,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) != Loader::ResultStatus::Success || type == SpecialContentType::Update) {
         // TODO(B3N30): Find correct result code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     // TODO(B3N30): Does real 3DS check if content exists in TMD?
@@ -1007,7 +1007,7 @@ ResultVal<u16> FS_USER::GetSpecialContentIndexFromTMD(MediaType media_type, u64 
         ASSERT(false);
     }
 
-    return ResultCode(-1);
+    return ResultUnknown;
 }
 
 FS_USER::FS_USER(Core::System& system)

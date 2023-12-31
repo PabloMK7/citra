@@ -43,29 +43,29 @@ enum {
 };
 } // namespace ErrCodes
 
-constexpr ResultCode ResultInvalidArgumentValue(ErrCodes::InvalidArgumentValue, ErrorModule::NFC,
-                                                ErrorSummary::InvalidArgument, ErrorLevel::Status);
-constexpr ResultCode ResultInvalidArgument(ErrCodes::InvalidArgument, ErrorModule::NFC,
-                                           ErrorSummary::InvalidArgument, ErrorLevel::Status);
-constexpr ResultCode ResultInvalidOperation(ErrCodes::InvalidOperation, ErrorModule::NFC,
-                                            ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultNotSupported(ErrCodes::NotSupported, ErrorModule::NFC,
+constexpr Result ResultInvalidArgumentValue(ErrCodes::InvalidArgumentValue, ErrorModule::NFC,
+                                            ErrorSummary::InvalidArgument, ErrorLevel::Status);
+constexpr Result ResultInvalidArgument(ErrCodes::InvalidArgument, ErrorModule::NFC,
+                                       ErrorSummary::InvalidArgument, ErrorLevel::Status);
+constexpr Result ResultInvalidOperation(ErrCodes::InvalidOperation, ErrorModule::NFC,
                                         ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultNeedFormat(ErrCodes::NeedFormat, ErrorModule::NFC,
+constexpr Result ResultNotSupported(ErrCodes::NotSupported, ErrorModule::NFC,
+                                    ErrorSummary::InvalidState, ErrorLevel::Status);
+constexpr Result ResultNeedFormat(ErrCodes::NeedFormat, ErrorModule::NFC,
+                                  ErrorSummary::InvalidState, ErrorLevel::Status);
+constexpr Result ResultOperationFailed(ErrCodes::OperationFailed, ErrorModule::NFC,
+                                       ErrorSummary::InvalidState, ErrorLevel::Status);
+constexpr Result ResultNeedCreate(ErrCodes::NeedCreate, ErrorModule::NFC,
+                                  ErrorSummary::InvalidState, ErrorLevel::Status);
+constexpr Result ResultNeedRegister(ErrCodes::NeedRegister, ErrorModule::NFC,
+                                    ErrorSummary::InvalidState, ErrorLevel::Status);
+constexpr Result ResultAlreadyCreated(ErrCodes::AlreadyCreated, ErrorModule::NFC,
                                       ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultOperationFailed(ErrCodes::OperationFailed, ErrorModule::NFC,
-                                           ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultNeedCreate(ErrCodes::NeedCreate, ErrorModule::NFC,
-                                      ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultNeedRegister(ErrCodes::NeedRegister, ErrorModule::NFC,
+constexpr Result ResultAccessIdMisMatch(ErrCodes::AccessIdMisMatch, ErrorModule::NFC,
                                         ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultAlreadyCreated(ErrCodes::AlreadyCreated, ErrorModule::NFC,
-                                          ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultAccessIdMisMatch(ErrCodes::AccessIdMisMatch, ErrorModule::NFC,
-                                            ErrorSummary::InvalidState, ErrorLevel::Status);
-constexpr ResultCode ResultSleep(ErrCodes::Sleep, ErrorModule::NFC, ErrorSummary::InvalidState,
-                                 ErrorLevel::Status);
-constexpr ResultCode ResultWifiOff(ErrCodes::WifiOff, ErrorModule::NFC, ErrorSummary::InvalidState,
-                                   ErrorLevel::Status);
+constexpr Result ResultSleep(ErrCodes::Sleep, ErrorModule::NFC, ErrorSummary::InvalidState,
+                             ErrorLevel::Status);
+constexpr Result ResultWifiOff(ErrCodes::WifiOff, ErrorModule::NFC, ErrorSummary::InvalidState,
+                               ErrorLevel::Status);
 
 } // namespace Service::NFC

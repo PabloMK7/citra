@@ -49,7 +49,7 @@ QString IPCRecorderWidget::GetStatusStr(const IPCDebugger::RequestRecord& record
     case IPCDebugger::RequestStatus::Handling:
         return tr("Handling");
     case IPCDebugger::RequestStatus::Handled:
-        if (record.translated_reply_cmdbuf[1] == RESULT_SUCCESS.raw) {
+        if (record.translated_reply_cmdbuf[1] == ResultSuccess.raw) {
             return tr("Success");
         }
         return tr("Error");
@@ -88,7 +88,7 @@ void IPCRecorderWidget::OnEntryUpdated(IPCDebugger::RequestRecord record) {
 
     if (record.status == IPCDebugger::RequestStatus::HLEUnimplemented ||
         (record.status == IPCDebugger::RequestStatus::Handled &&
-         record.translated_reply_cmdbuf[1] != RESULT_SUCCESS.raw)) { // Unimplemented / Error
+         record.translated_reply_cmdbuf[1] != ResultSuccess.raw)) { // Unimplemented / Error
 
         auto item = ui->main->invisibleRootItem()->child(row_id);
         for (int column = 0; column < item->columnCount(); ++column) {

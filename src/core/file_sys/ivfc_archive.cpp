@@ -34,50 +34,50 @@ ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
     return std::make_unique<IVFCFile>(romfs_file, std::move(delay_generator));
 }
 
-ResultCode IVFCArchive::DeleteFile(const Path& path) const {
+Result IVFCArchive::DeleteFile(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a file from an IVFC archive ({}).", GetName());
     // TODO(Subv): Verify error code
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
-                      ErrorLevel::Status);
+    return Result(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
+                  ErrorLevel::Status);
 }
 
-ResultCode IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
+Result IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode IVFCArchive::DeleteDirectory(const Path& path) const {
+Result IVFCArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
+Result IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
+Result IVFCArchive::CreateFile(const Path& path, u64 size) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a file in an IVFC archive ({}).", GetName());
     // TODO: Verify error code
-    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
-                      ErrorLevel::Permanent);
+    return Result(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
+                  ErrorLevel::Permanent);
 }
 
-ResultCode IVFCArchive::CreateDirectory(const Path& path) const {
+Result IVFCArchive::CreateDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
+Result IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> IVFCArchive::OpenDirectory(const Path& path) const {

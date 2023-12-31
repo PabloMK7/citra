@@ -84,8 +84,8 @@ public:
     ~CIAFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
-    ResultCode WriteTicket();
-    ResultCode WriteTitleMetadata();
+    Result WriteTicket();
+    Result WriteTitleMetadata();
     ResultVal<std::size_t> WriteContentData(u64 offset, std::size_t length, const u8* buffer);
     ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
                                  const u8* buffer) override;
@@ -203,7 +203,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type);
  * @param title_id the title ID to uninstall
  * @return result of the uninstall operation
  */
-ResultCode UninstallProgram(const FS::MediaType media_type, const u64 title_id);
+Result UninstallProgram(const FS::MediaType media_type, const u64 title_id);
 
 class Module final {
 public:

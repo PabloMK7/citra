@@ -18,12 +18,11 @@
 
 namespace Kernel {
 
-ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySystem& memory,
-                                  std::shared_ptr<Thread> src_thread,
-                                  std::shared_ptr<Thread> dst_thread, VAddr src_address,
-                                  VAddr dst_address,
-                                  std::vector<MappedBufferContext>& mapped_buffer_context,
-                                  bool reply) {
+Result TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySystem& memory,
+                              std::shared_ptr<Thread> src_thread,
+                              std::shared_ptr<Thread> dst_thread, VAddr src_address,
+                              VAddr dst_address,
+                              std::vector<MappedBufferContext>& mapped_buffer_context, bool reply) {
     auto src_process = src_thread->owner_process.lock();
     auto dst_process = dst_thread->owner_process.lock();
     ASSERT(src_process && dst_process);
@@ -60,8 +59,8 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
             // Note: The real kernel does not check that the number of handles fits into the command
             // buffer before writing them, only after finishing.
             if (i + num_handles > command_size) {
-                return ResultCode(ErrCodes::CommandTooLarge, ErrorModule::OS,
-                                  ErrorSummary::InvalidState, ErrorLevel::Status);
+                return Result(ErrCodes::CommandTooLarge, ErrorModule::OS,
+                              ErrorSummary::InvalidState, ErrorLevel::Status);
             }
 
             for (u32 j = 0; j < num_handles; ++j) {
@@ -88,8 +87,8 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
                     continue;
                 }
 
-                auto result = dst_process->handle_table.Create(std::move(object));
-                cmd_buf[i++] = result.ValueOr(0);
+                R_ASSERT(dst_process->handle_table.Create(std::addressof(cmd_buf[i++]),
+                                                          std::move(object)));
             }
             break;
         }
@@ -180,10 +179,10 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
                        next_vma.meminfo_state == MemoryState::Reserved);
 
                 // Unmap the buffer and guard pages from the source process
-                ResultCode result =
+                Result result =
                     src_process->vm_manager.UnmapRange(page_start - Memory::CITRA_PAGE_SIZE,
                                                        (num_pages + 2) * Memory::CITRA_PAGE_SIZE);
-                ASSERT(result == RESULT_SUCCESS);
+                ASSERT(result == ResultSuccess);
 
                 mapped_buffer_context.erase(found);
 
@@ -216,11 +215,11 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
             ASSERT(dst_process->vm_manager.ChangeMemoryState(
                        low_guard_address, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Shared,
                        Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Reserved,
-                       Kernel::VMAPermission::None) == RESULT_SUCCESS);
+                       Kernel::VMAPermission::None) == ResultSuccess);
             ASSERT(dst_process->vm_manager.ChangeMemoryState(
                        high_guard_address, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Shared,
                        Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Reserved,
-                       Kernel::VMAPermission::None) == RESULT_SUCCESS);
+                       Kernel::VMAPermission::None) == ResultSuccess);
 
             // Get proper mapped buffer address and store it in the cmd buffer.
             target_address += Memory::CITRA_PAGE_SIZE;
@@ -249,6 +248,6 @@ ResultCode TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySy
 
     memory.WriteBlock(*dst_process, dst_address, cmd_buf.data(), command_size * sizeof(u32));
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 } // namespace Kernel

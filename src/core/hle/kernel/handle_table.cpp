@@ -28,56 +28,48 @@ HandleTable::HandleTable(KernelSystem& kernel) : kernel(kernel) {
 
 HandleTable::~HandleTable() = default;
 
-ResultVal<Handle> HandleTable::Create(std::shared_ptr<Object> obj) {
+Result HandleTable::Create(Handle* out_handle, std::shared_ptr<Object> obj) {
     DEBUG_ASSERT(obj != nullptr);
 
     u16 slot = next_free_slot;
-    if (slot >= generations.size()) {
-        LOG_ERROR(Kernel, "Unable to allocate Handle, too many slots in use.");
-        return ERR_OUT_OF_HANDLES;
-    }
+    R_UNLESS(slot < generations.size(), ResultOutOfHandles);
     next_free_slot = generations[slot];
 
     u16 generation = next_generation++;
 
     // Overflow count so it fits in the 15 bits dedicated to the generation in the handle.
     // CTR-OS doesn't use generation 0, so skip straight to 1.
-    if (next_generation >= (1 << 15))
+    if (next_generation >= (1 << 15)) {
         next_generation = 1;
+    }
 
     generations[slot] = generation;
     objects[slot] = std::move(obj);
 
-    Handle handle = generation | (slot << 15);
-    return handle;
+    *out_handle = generation | (slot << 15);
+    return ResultSuccess;
 }
 
-ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
+Result HandleTable::Duplicate(Handle* out_handle, Handle handle) {
     std::shared_ptr<Object> object = GetGeneric(handle);
-    if (object == nullptr) {
-        LOG_ERROR(Kernel, "Tried to duplicate invalid handle: {:08X}", handle);
-        return ERR_INVALID_HANDLE;
-    }
-    return Create(std::move(object));
+    R_UNLESS(object, ResultInvalidHandle);
+    return Create(out_handle, std::move(object));
 }
 
-ResultCode HandleTable::Close(Handle handle) {
-    if (!IsValid(handle))
-        return ERR_INVALID_HANDLE;
+Result HandleTable::Close(Handle handle) {
+    R_UNLESS(IsValid(handle), ResultInvalidHandle);
 
-    u16 slot = GetSlot(handle);
-
+    const u16 slot = GetSlot(handle);
     objects[slot] = nullptr;
 
     generations[slot] = next_free_slot;
     next_free_slot = slot;
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 bool HandleTable::IsValid(Handle handle) const {
-    std::size_t slot = GetSlot(handle);
-    u16 generation = GetGeneration(handle);
-
+    const u16 slot = GetSlot(handle);
+    const u16 generation = GetGeneration(handle);
     return slot < MAX_COUNT && objects[slot] != nullptr && generations[slot] == generation;
 }
 

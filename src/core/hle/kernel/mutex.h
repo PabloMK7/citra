@@ -60,7 +60,7 @@ public:
      * @param thread Thread that wants to release the mutex.
      * @returns The result code of the operation.
      */
-    ResultCode Release(Thread* thread);
+    Result Release(Thread* thread);
 
 private:
     KernelSystem& kernel;

@@ -28,7 +28,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
               sdk_version, shared_memory_size, caller_pid);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
@@ -42,7 +42,7 @@ void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
               size, block_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void InstallInterfaces(Core::System& system) {

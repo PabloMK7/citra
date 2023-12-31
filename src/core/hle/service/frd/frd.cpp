@@ -35,7 +35,7 @@ void Module::Interface::GetMyPresence(Kernel::HLERequestContext& ctx) {
     std::memcpy(buffer.data(), &frd->my_presence, buffer.size());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -49,7 +49,7 @@ void Module::Interface::GetFriendKeyList(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer(sizeof(FriendKey) * frd_count, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u32>(0); // 0 friends
     rb.PushStaticBuffer(std::move(buffer), 0);
 
@@ -65,7 +65,7 @@ void Module::Interface::GetFriendProfile(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer(sizeof(Profile) * count, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called, count={}", count);
@@ -80,7 +80,7 @@ void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) 
     // TODO:(mailwl) figure out AttributeFlag size and zero all buffer. Assume 1 byte
     std::vector<u8> buffer(1 * count, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called, count={}", count);
@@ -89,7 +89,7 @@ void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) 
 void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(frd->my_friend_key);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -105,7 +105,7 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     ScreenName screen_name{};
     std::memcpy(screen_name.name.data(), username.data(), username.length() * sizeof(char16_t));
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(screen_name);
     rb.Push(0);
 
@@ -118,7 +118,7 @@ void Module::Interface::GetMyComment(Kernel::HLERequestContext& ctx) {
 
     constexpr Comment comment{.name = {u'H', u'e', u'y', '!'}};
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<Comment>(comment);
     rb.Push(0);
 
@@ -133,7 +133,7 @@ void Module::Interface::GetMyMii(Kernel::HLERequestContext& ctx) {
     Mii::ChecksummedMiiData mii{};
     mii.SetMiiData(mii_data);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<Mii::ChecksummedMiiData>(mii);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -145,7 +145,7 @@ void Module::Interface::GetMyProfile(Kernel::HLERequestContext& ctx) {
 
     constexpr Profile profile{.region = 1, .country = 1, .area = 1, .language = 1, .platform = 1};
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<Profile>(profile);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -157,7 +157,7 @@ void Module::Interface::GetMyFavoriteGame(Kernel::HLERequestContext& ctx) {
 
     constexpr Game game{.title_id = 0x0004000E00030700, .version = 1};
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<Game>(game);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -169,7 +169,7 @@ void Module::Interface::GetMyPlayingGame(Kernel::HLERequestContext& ctx) {
 
     constexpr Game game{.title_id = 0x0004000E00030700, .version = 1};
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<Game>(game);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -183,7 +183,7 @@ void Module::Interface::GetMyPreference(Kernel::HLERequestContext& ctx) {
     constexpr u32 show_game = 1;
     constexpr u32 show_history = 0;
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u32>(is_public);
     rb.Push<u32>(show_game);
     rb.Push<u32>(show_history);
@@ -218,7 +218,7 @@ void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(unscrambled_friend_codes), 0);
 }
 
@@ -228,7 +228,7 @@ void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
     rp.PopPID();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
 }
@@ -237,7 +237,7 @@ void Module::Interface::IsOnline(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(frd->logged_in);
 
     LOG_WARNING(Service_FRD, "(STUBBED) called");
@@ -248,7 +248,7 @@ void Module::Interface::HasLoggedIn(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(frd->logged_in);
 }
 
@@ -270,7 +270,7 @@ void Module::Interface::Login(Kernel::HLERequestContext& ctx) {
     frd->system.CoreTiming().ScheduleEvent(msToCycles(login_delay_ms), frd->login_delay_event);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::Interface::GetLastResponseResult(Kernel::HLERequestContext& ctx) {
@@ -278,7 +278,7 @@ void Module::Interface::GetLastResponseResult(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 Module::Module(Core::System& system) : system(system){};

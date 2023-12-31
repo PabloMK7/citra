@@ -500,7 +500,7 @@ public:
          *  Inputs:
          *      0: Header Code[0x000E0000]
          *  Outputs:
-         *      1: ResultCode
+         *      1: Result
          *      2: CecdState
          */
         void GetCecdState(Kernel::HLERequestContext& ctx);
@@ -510,7 +510,7 @@ public:
          *  Inputs:
          *      0: Header Code[0x000F0000]
          *  Outputs:
-         *      1: ResultCode
+         *      1: Result
          *      3: Event Handle
          */
         void GetCecInfoEventHandle(Kernel::HLERequestContext& ctx);
@@ -520,7 +520,7 @@ public:
          *  Inputs:
          *      0: Header Code[0x00100000]
          *  Outputs:
-         *      1: ResultCode
+         *      1: Result
          *      3: Event Handle
          */
         void GetChangeStateEventHandle(Kernel::HLERequestContext& ctx);
@@ -593,7 +593,7 @@ public:
          *  Inputs:
          *      0: Header Code[0x40020002]
          *  Outputs:
-         *      1: ResultCode
+         *      1: Result
          *      3: Event Handle
          */
         void GetCecInfoEventHandleSys(Kernel::HLERequestContext& ctx);

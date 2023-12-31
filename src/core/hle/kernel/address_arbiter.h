@@ -55,8 +55,8 @@ public:
     std::shared_ptr<ResourceLimit> resource_limit;
     std::string name; ///< Name of address arbiter object (optional)
 
-    ResultCode ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type, VAddr address,
-                                s32 value, u64 nanoseconds);
+    Result ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type, VAddr address,
+                            s32 value, u64 nanoseconds);
 
     class Callback;
 

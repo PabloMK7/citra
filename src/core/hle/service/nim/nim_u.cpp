@@ -190,7 +190,7 @@ void NIM_U::StartNetworkUpdate(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -202,7 +202,7 @@ void NIM_U::GetProgress(Kernel::HLERequestContext& ctx) {
     std::memset(&progress, 0, sizeof(progress));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(13, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(progress);
     rb.Push(0);
     rb.Push(0);
@@ -214,7 +214,7 @@ void NIM_U::Cancel(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -223,7 +223,7 @@ void NIM_U::CommitSystemTitles(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -232,7 +232,7 @@ void NIM_U::GetBackgroundEventForMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(nim_system_update_event_for_menu);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -242,7 +242,7 @@ void NIM_U::GetBackgroundEventForNews(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(nim_system_update_event_for_news);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -252,7 +252,7 @@ void NIM_U::FormatSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -261,7 +261,7 @@ void NIM_U::GetCustomerSupportCode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0); // Customer support code
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -271,7 +271,7 @@ void NIM_U::IsCommittableAllSystemTitles(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -284,7 +284,7 @@ void NIM_U::GetBackgroundProgress(Kernel::HLERequestContext& ctx) {
     std::memset(&progress, 0, sizeof(progress));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(13, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(progress);
     rb.Push(0);
     rb.Push(0);
@@ -299,7 +299,7 @@ void NIM_U::GetSavedHash(Kernel::HLERequestContext& ctx) {
     std::memset(&hash, 0, sizeof(hash));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(10, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(hash);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -312,8 +312,8 @@ void NIM_U::UnregisterTask(Kernel::HLERequestContext& ctx) {
     const u32 process_id = rp.PopPID();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::NIM, ErrorSummary::NotFound,
-                       ErrorLevel::Status));
+    rb.Push(Result(ErrorDescription::NotFound, ErrorModule::NIM, ErrorSummary::NotFound,
+                   ErrorLevel::Status));
 
     LOG_WARNING(Service_NIM, "(STUBBED) called title_id={:016X}, process_id={:08X}", title_id,
                 process_id);
@@ -325,7 +325,7 @@ void NIM_U::IsRegistered(Kernel::HLERequestContext& ctx) {
     const u64 title_id = rp.Pop<u64>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called title_id={:016X}", title_id);
@@ -339,8 +339,8 @@ void NIM_U::FindTaskInfo(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer(0x120, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::NIM, ErrorSummary::NotFound,
-                       ErrorLevel::Status));
+    rb.Push(Result(ErrorDescription::NotFound, ErrorModule::NIM, ErrorSummary::NotFound,
+                   ErrorLevel::Status));
     rb.PushStaticBuffer(std::move(buffer), 0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called title_id={:016X}", title_id);
@@ -353,7 +353,7 @@ void NIM_U::GetTaskInfos(Kernel::HLERequestContext& ctx) {
     auto& task_infos_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0);
     rb.PushMappedBuffer(task_infos_buffer);
 
@@ -365,7 +365,7 @@ void NIM_U::DeleteUnmanagedContexts(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -377,7 +377,7 @@ void NIM_U::UpdateAutoTitleDownloadTasksAsync(Kernel::HLERequestContext& ctx) {
     nim_async_completion_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(nim_async_completion_event);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -390,7 +390,7 @@ void NIM_U::StartPendingAutoTitleDownloadTasksAsync(Kernel::HLERequestContext& c
     nim_async_completion_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(nim_async_completion_event);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -400,8 +400,8 @@ void NIM_U::GetAsyncResult(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
+    rb.Push(ResultSuccess);
     rb.Push(0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -411,7 +411,7 @@ void NIM_U::CancelAsyncCall(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -420,7 +420,7 @@ void NIM_U::IsPendingAutoTitleDownloadTasks(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -430,7 +430,7 @@ void NIM_U::GetNumAutoTitleDownloadTasks(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -443,7 +443,7 @@ void NIM_U::GetAutoTitleDownloadTaskInfos(Kernel::HLERequestContext& ctx) {
     auto& task_infos_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0);
     rb.PushMappedBuffer(task_infos_buffer);
 
@@ -457,7 +457,7 @@ void NIM_U::CancelAutoTitleDownloadTask(Kernel::HLERequestContext& ctx) {
     const u64 task_id = rp.Pop<u64>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called task_id={:016X}", task_id);
 }
@@ -468,7 +468,7 @@ void NIM_U::SetAutoDbgDat(Kernel::HLERequestContext& ctx) {
     auto& auto_dbg_dat_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(auto_dbg_dat_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called auto_dbg_dat_buffer=0x{:08X}",
@@ -481,7 +481,7 @@ void NIM_U::GetAutoDbgDat(Kernel::HLERequestContext& ctx) {
     auto& auto_dbg_dat_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(auto_dbg_dat_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called auto_dbg_dat_buffer=0x{:08X}",
@@ -495,7 +495,7 @@ void NIM_U::SetDbgTasks(Kernel::HLERequestContext& ctx) {
     auto& task_infos_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(task_infos_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called max_task_infos={:08X}, task_infos_buffer=0x{:08X}",
@@ -509,7 +509,7 @@ void NIM_U::GetDbgTasks(Kernel::HLERequestContext& ctx) {
     auto& task_infos_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0);
     rb.PushMappedBuffer(task_infos_buffer);
 
@@ -521,7 +521,7 @@ void NIM_U::DeleteDbgData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -533,7 +533,7 @@ void NIM_U::SetTslXml(Kernel::HLERequestContext& ctx) {
     auto& xml_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(xml_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called buffer_size={:08X}, xml_buffer=0x{:08X}",
@@ -544,7 +544,7 @@ void NIM_U::GetTslXmlSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u64>(0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -557,7 +557,7 @@ void NIM_U::GetTslXml(Kernel::HLERequestContext& ctx) {
     auto& xml_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(xml_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called buffer_capacity={:08X}, xml_buffer=0x{:08X}",
@@ -568,7 +568,7 @@ void NIM_U::DeleteTslXml(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -580,7 +580,7 @@ void NIM_U::SetDtlXml(Kernel::HLERequestContext& ctx) {
     auto& xml_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(xml_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called buffer_size={:08X}, xml_buffer=0x{:08X}",
@@ -591,7 +591,7 @@ void NIM_U::GetDtlXmlSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u64>(0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -604,7 +604,7 @@ void NIM_U::GetDtlXml(Kernel::HLERequestContext& ctx) {
     auto& xml_buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(xml_buffer);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called buffer_capacity={:08X}, xml_buffer=0x{:08X}",
@@ -615,8 +615,8 @@ void NIM_U::UpdateAccountStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
+    rb.Push(ResultSuccess);
     rb.Push(0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -628,7 +628,7 @@ void NIM_U::StartTitleDownload(Kernel::HLERequestContext& ctx) {
     const auto& download_config = rp.PopRaw<TitleDownloadConfig>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called title_id={:016X}", download_config.title_id);
 }
@@ -637,7 +637,7 @@ void NIM_U::StopTitleDownload(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -649,7 +649,7 @@ void NIM_U::GetTitleDownloadProgress(Kernel::HLERequestContext& ctx) {
     std::memset(&progress, 0, sizeof(progress));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(9, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(progress);
     rb.Push(0);
     rb.Push(0);
@@ -669,7 +669,7 @@ void NIM_U::RegisterTask(Kernel::HLERequestContext& ctx) {
     const auto& developer_name = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     const auto title_name_end = std::find(title_name.begin(), title_name.end(), u'\0');
     const auto title_name_utf8 =
@@ -690,8 +690,8 @@ void NIM_U::IsSystemUpdateAvailable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
+    rb.Push(ResultSuccess);
     rb.Push(0);
     rb.Push(false);
 
@@ -702,7 +702,7 @@ void NIM_U::Unknown2B(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
@@ -711,8 +711,8 @@ void NIM_U::UpdateTickets(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
+    rb.Push(ResultSuccess);
     rb.Push(0);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");
@@ -728,7 +728,7 @@ void NIM_U::DownloadTitleSeedAsync(Kernel::HLERequestContext& ctx) {
     nim_async_completion_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(nim_async_completion_event);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called title_id={:016X}, country_code={:04X}", title_id,
@@ -742,7 +742,7 @@ void NIM_U::DownloadMissingTitleSeedsAsync(Kernel::HLERequestContext& ctx) {
     nim_async_completion_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(nim_async_completion_event);
 
     LOG_WARNING(Service_NIM, "(STUBBED) called");

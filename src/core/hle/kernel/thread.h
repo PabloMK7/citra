@@ -243,7 +243,7 @@ public:
      * Sets the result after the thread awakens (from either WaitSynchronization SVC)
      * @param result Value to set to the returned result
      */
-    void SetWaitSynchronizationResult(ResultCode result);
+    void SetWaitSynchronizationResult(Result result);
 
     /**
      * Sets the output parameter value after the thread awakens (from WaitSynchronizationN SVC only)

@@ -153,13 +153,13 @@ void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
         LOG_ERROR(Service_CFG, "requested country code id={} is invalid", country_code_id);
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument,
+                       ErrorLevel::Permanent));
         rb.Skip(1, false);
         return;
     }
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     // the real CFG service copies only three bytes (including the null-terminator) here
     rb.Push<u32>(country_codes[country_code_id]);
 }
@@ -187,13 +187,13 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
     if (0 == country_code_id) {
         LOG_ERROR(Service_CFG, "requested country code name={}{} is invalid",
                   static_cast<char>(country_code & 0xff), static_cast<char>(country_code >> 8));
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument,
+                       ErrorLevel::Permanent));
         rb.Push<u16>(0x00FF);
         return;
     }
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u16>(country_code_id);
 }
 
@@ -210,7 +210,7 @@ void Module::Interface::GetRegion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(static_cast<u8>(cfg->GetRegionValue()));
 }
 
@@ -220,7 +220,7 @@ void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CFG, "(STUBBED) called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     // According to 3dbrew this is normally 0.
     rb.Push<u8>(0);
 }
@@ -232,14 +232,14 @@ void Module::Interface::SetUUIDClockSequence(Kernel::HLERequestContext& ctx) {
     cfg->SaveMCUConfig();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::Interface::GetUUIDClockSequence(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u16>(static_cast<u16>(cfg->mcu_data.clock_sequence));
 }
 
@@ -250,7 +250,7 @@ void Module::Interface::GetTransferableId(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
 
     std::array<u8, 12> buffer;
-    const ResultCode result =
+    const Result result =
         cfg->GetConfigBlock(ConsoleUniqueID2BlockID, 8, AccessFlag::SystemRead, buffer.data());
     rb.Push(result);
     if (result.IsSuccess()) {
@@ -274,7 +274,7 @@ void Module::Interface::IsCoppacsSupported(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     u8 canada_or_usa = 1;
     if (canada_or_usa == cfg->GetRegionValue()) {
@@ -407,23 +407,23 @@ ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFla
                       "Config block 0x{:X} with flags {} and size {} was not found, and no default "
                       "exists.",
                       block_id, accesss_flag, size);
-            return ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                              ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+            return Result(ErrorDescription::NotFound, ErrorModule::Config,
+                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
         }
     }
 
     if (False(itr->access_flags & accesss_flag)) {
         LOG_ERROR(Service_CFG, "Invalid access flag {:X} for config block 0x{:X} with size {}",
                   accesss_flag, block_id, size);
-        return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::Config,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        return Result(ErrorDescription::NotAuthorized, ErrorModule::Config,
+                      ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     if (itr->size != size) {
         LOG_ERROR(Service_CFG, "Invalid size {} for config block 0x{:X} with flags {}", size,
                   block_id, accesss_flag);
-        return ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        return Result(ErrorDescription::InvalidSize, ErrorModule::Config,
+                      ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     void* pointer;
@@ -437,27 +437,26 @@ ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFla
     return pointer;
 }
 
-ResultCode Module::GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output) {
+Result Module::GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output) {
     void* pointer = nullptr;
     CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
     std::memcpy(output, pointer, size);
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode Module::SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag,
-                                  const void* input) {
+Result Module::SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input) {
     void* pointer = nullptr;
     CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
     std::memcpy(pointer, input, size);
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode Module::CreateConfigBlock(u32 block_id, u16 size, AccessFlag access_flags,
-                                     const void* data) {
+Result Module::CreateConfigBlock(u32 block_id, u16 size, AccessFlag access_flags,
+                                 const void* data) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultUnknown; // TODO(Subv): Find the right error code
 
     // Insert the block header with offset 0 for now
     config->block_entries[config->total_entries] = {block_id, 0, size, access_flags};
@@ -483,15 +482,15 @@ ResultCode Module::CreateConfigBlock(u32 block_id, u16 size, AccessFlag access_f
     }
 
     ++config->total_entries;
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode Module::DeleteConfigNANDSaveFile() {
+Result Module::DeleteConfigNANDSaveFile() {
     FileSys::Path path("/config");
     return cfg_system_save_data_archive->DeleteFile(path);
 }
 
-ResultCode Module::UpdateConfigNANDSavegame() {
+Result Module::UpdateConfigNANDSavegame() {
     FileSys::Mode mode = {};
     mode.write_flag.Assign(1);
     mode.create_flag.Assign(1);
@@ -504,13 +503,13 @@ ResultCode Module::UpdateConfigNANDSavegame() {
     auto config = std::move(config_result).Unwrap();
     config->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode Module::FormatConfig() {
-    ResultCode res = DeleteConfigNANDSaveFile();
+Result Module::FormatConfig() {
+    Result res = DeleteConfigNANDSaveFile();
     // The delete command fails if the file doesn't exist, so we have to check that too
-    if (!res.IsSuccess() && res != FileSys::ERROR_FILE_NOT_FOUND) {
+    if (!res.IsSuccess() && res != FileSys::ResultFileNotFound) {
         return res;
     }
     // Delete the old data
@@ -540,10 +539,10 @@ ResultCode Module::FormatConfig() {
         return res;
     }
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode Module::LoadConfigNANDSaveFile() {
+Result Module::LoadConfigNANDSaveFile() {
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory(nand_directory);
 
@@ -552,7 +551,7 @@ ResultCode Module::LoadConfigNANDSaveFile() {
     auto archive_result = systemsavedata_factory.Open(archive_path, 0);
 
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code() == FileSys::ERROR_NOT_FOUND) {
+    if (archive_result.Code() == FileSys::ResultNotFound) {
         // Format the archive to create the directories
         systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
 
@@ -574,7 +573,7 @@ ResultCode Module::LoadConfigNANDSaveFile() {
     if (config_result.Succeeded()) {
         auto config = std::move(config_result).Unwrap();
         config->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     return FormatConfig();
@@ -777,10 +776,10 @@ std::pair<u32, u64> Module::GenerateConsoleUniqueId() const {
     return std::make_pair(random_number, console_id);
 }
 
-ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
+Result Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
     u64_le console_id_le = console_id;
-    ResultCode res = SetConfigBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le),
-                                    AccessFlag::Global, &console_id_le);
+    Result res = SetConfigBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le), AccessFlag::Global,
+                                &console_id_le);
     if (!res.IsSuccess())
         return res;
 
@@ -795,7 +794,7 @@ ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
     if (!res.IsSuccess())
         return res;
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 u64 Module::GetConsoleUniqueId() {

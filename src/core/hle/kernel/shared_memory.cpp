@@ -67,9 +67,9 @@ ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
         auto& vm_manager = owner_process->vm_manager;
         // The memory is already available and mapped in the owner process.
 
-        CASCADE_CODE(vm_manager.ChangeMemoryState(address, size, MemoryState::Private,
-                                                  VMAPermission::ReadWrite, MemoryState::Locked,
-                                                  SharedMemory::ConvertPermissions(permissions)));
+        R_TRY(vm_manager.ChangeMemoryState(address, size, MemoryState::Private,
+                                           VMAPermission::ReadWrite, MemoryState::Locked,
+                                           SharedMemory::ConvertPermissions(permissions)));
 
         auto backing_blocks = vm_manager.GetBackingBlocksForRange(address, size);
         ASSERT(backing_blocks.Succeeded()); // should success after verifying memory state above
@@ -107,29 +107,29 @@ std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     return shared_memory;
 }
 
-ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermission permissions,
-                             MemoryPermission other_permissions) {
+Result SharedMemory::Map(Process& target_process, VAddr address, MemoryPermission permissions,
+                         MemoryPermission other_permissions) {
 
     MemoryPermission own_other_permissions =
         &target_process == owner_process.lock().get() ? this->permissions : this->other_permissions;
 
     // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
     if (base_address == 0 && other_permissions != MemoryPermission::DontCare) {
-        return ERR_INVALID_COMBINATION;
+        return ResultInvalidCombination;
     }
 
     // Error out if the requested permissions don't match what the creator process allows.
     if (static_cast<u32>(permissions) & ~static_cast<u32>(own_other_permissions)) {
         LOG_ERROR(Kernel, "cannot map id={}, address=0x{:08X} name={}, permissions don't match",
                   GetObjectId(), address, name);
-        return ERR_INVALID_COMBINATION;
+        return ResultInvalidCombination;
     }
 
     // Heap-backed memory blocks can not be mapped with other_permissions = DontCare
     if (base_address != 0 && other_permissions == MemoryPermission::DontCare) {
         LOG_ERROR(Kernel, "cannot map id={}, address=0x{08X} name={}, permissions don't match",
                   GetObjectId(), address, name);
-        return ERR_INVALID_COMBINATION;
+        return ResultInvalidCombination;
     }
 
     // Error out if the provided permissions are not compatible with what the creator process needs.
@@ -137,12 +137,12 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
         static_cast<u32>(this->permissions) & ~static_cast<u32>(other_permissions)) {
         LOG_ERROR(Kernel, "cannot map id={}, address=0x{:08X} name={}, permissions don't match",
                   GetObjectId(), address, name);
-        return ERR_WRONG_PERMISSION;
+        return ResultWrongPermission;
     }
 
     // TODO(Subv): Check for the Shared Device Mem flag in the creator process.
     /*if (was_created_with_shared_device_mem && address != 0) {
-        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
+        return Result(ErrorDescription::InvalidCombination, ErrorModule::OS,
     ErrorSummary::InvalidArgument, ErrorLevel::Usage);
     }*/
 
@@ -153,7 +153,7 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
         if (address < Memory::HEAP_VADDR || address + size >= Memory::SHARED_MEMORY_VADDR_END) {
             LOG_ERROR(Kernel, "cannot map id={}, address=0x{:08X} name={}, invalid address",
                       GetObjectId(), address, name);
-            return ERR_INVALID_ADDRESS;
+            return ResultInvalidAddress;
         }
     }
 
@@ -174,7 +174,7 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
                 Kernel,
                 "cannot map id={}, address=0x{:08X} name={}, mapping to already allocated memory",
                 GetObjectId(), address, name);
-            return ERR_INVALID_ADDRESS_STATE;
+            return ResultInvalidAddressState;
         }
     }
 
@@ -188,10 +188,10 @@ ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermi
         interval_target += interval.second;
     }
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode SharedMemory::Unmap(Process& target_process, VAddr address) {
+Result SharedMemory::Unmap(Process& target_process, VAddr address) {
     // TODO(Subv): Verify what happens if the application tries to unmap an address that is not
     // mapped to a SharedMemory.
     return target_process.vm_manager.UnmapRange(address, size);

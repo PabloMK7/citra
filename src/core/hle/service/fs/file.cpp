@@ -86,7 +86,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
             rb.Push<u32>(0);
         } else {
             buffer.Write(*data, 0, *read);
-            rb.Push(RESULT_SUCCESS);
+            rb.Push(ResultSuccess);
             rb.Push<u32>(static_cast<u32>(*read));
         }
         rb.PushMappedBuffer(buffer);
@@ -104,7 +104,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         bool cache_ready;
 
         // Output
-        ResultCode ret{0};
+        Result ret{0};
         Kernel::MappedBuffer* buffer;
         std::unique_ptr<u8*> data;
         size_t read_size;
@@ -130,7 +130,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
                 async_data->ret = read.Code();
                 async_data->read_size = 0;
             } else {
-                async_data->ret = RESULT_SUCCESS;
+                async_data->ret = ResultSuccess;
                 async_data->read_size = *read;
             }
 
@@ -157,7 +157,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
                 rb.Push<u32>(0);
             } else {
                 async_data->buffer->Write(*async_data->data, 0, async_data->read_size);
-                rb.Push(RESULT_SUCCESS);
+                rb.Push(ResultSuccess);
                 rb.Push<u32>(static_cast<u32>(async_data->read_size));
             }
             rb.PushMappedBuffer(*async_data->buffer);
@@ -180,7 +180,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
     // Subfiles can not be written to
     if (file->subfile) {
-        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        rb.Push(FileSys::ResultUnsupportedOpenFlags);
         rb.Push<u32>(0);
         rb.PushMappedBuffer(buffer);
         return;
@@ -197,7 +197,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
         rb.Push(written.Code());
         rb.Push<u32>(0);
     } else {
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push<u32>(static_cast<u32>(*written));
     }
     rb.PushMappedBuffer(buffer);
@@ -209,7 +209,7 @@ void File::GetSize(Kernel::HLERequestContext& ctx) {
     const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u64>(file->size);
 }
 
@@ -223,13 +223,13 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
 
     // SetSize can not be called on subfiles.
     if (file->subfile) {
-        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        rb.Push(FileSys::ResultUnsupportedOpenFlags);
         return;
     }
 
     file->size = size;
     backend->SetSize(size);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void File::Close(Kernel::HLERequestContext& ctx) {
@@ -242,7 +242,7 @@ void File::Close(Kernel::HLERequestContext& ctx) {
 
     backend->Close();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void File::Flush(Kernel::HLERequestContext& ctx) {
@@ -254,12 +254,12 @@ void File::Flush(Kernel::HLERequestContext& ctx) {
 
     // Subfiles can not be flushed.
     if (file->subfile) {
-        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        rb.Push(FileSys::ResultUnsupportedOpenFlags);
         return;
     }
 
     backend->Flush();
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void File::SetPriority(Kernel::HLERequestContext& ctx) {
@@ -269,7 +269,7 @@ void File::SetPriority(Kernel::HLERequestContext& ctx) {
     file->priority = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void File::GetPriority(Kernel::HLERequestContext& ctx) {
@@ -277,7 +277,7 @@ void File::GetPriority(Kernel::HLERequestContext& ctx) {
     const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(file->priority);
 }
 
@@ -298,7 +298,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     slot->size = backend->GetSize();
     slot->subfile = false;
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMoveObjects(client);
 }
 
@@ -313,21 +313,21 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     if (original_file->subfile) {
         // OpenSubFile can not be called on a file which is already as subfile
-        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        rb.Push(FileSys::ResultUnsupportedOpenFlags);
         return;
     }
 
     if (offset < 0 || size < 0) {
-        rb.Push(FileSys::ERR_WRITE_BEYOND_END);
+        rb.Push(FileSys::ResultWriteBeyondEnd);
         return;
     }
 
     std::size_t end = offset + size;
 
-    // TODO(Subv): Check for overflow and return ERR_WRITE_BEYOND_END
+    // TODO(Subv): Check for overflow and return ResultWriteBeyondEnd
 
     if (end > original_file->size) {
-        rb.Push(FileSys::ERR_WRITE_BEYOND_END);
+        rb.Push(FileSys::ResultWriteBeyondEnd);
         return;
     }
 
@@ -342,7 +342,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
     slot->size = size;
     slot->subfile = true;
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMoveObjects(client);
 }
 

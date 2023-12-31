@@ -30,7 +30,7 @@ void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -40,7 +40,7 @@ void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->shell_open);
 }
 
@@ -48,7 +48,7 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(static_cast<u32>(ChargeLevels::CompletelyFull)); // Set to a completely full battery
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -58,7 +58,7 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -68,7 +68,7 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ptm->pedometer_is_counting);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -90,7 +90,7 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(buffer);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x{:x}, for {} hours", start_time,
@@ -101,7 +101,7 @@ void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u32>(0);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -111,7 +111,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(false);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
@@ -120,7 +120,7 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
 void CheckNew3DS(IPC::RequestBuilder& rb) {
     const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(is_new_3ds);
 
     LOG_DEBUG(Service_PTM, "called isNew3DS = 0x{:08x}", static_cast<u32>(is_new_3ds));
@@ -140,7 +140,7 @@ void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {
     const u64 console_time = share_page.GetSystemTimeSince2000();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(console_time);
 }
 
@@ -155,7 +155,7 @@ static void WriteGameCoinData(GameCoin gamecoin_data) {
 
     FileSys::Path gamecoin_path("/gamecoin.dat");
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
+    if (archive_result.Code() == FileSys::ResultNotFormatted) {
         // Format the archive to create the directories
         extdata_archive_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
         // Open it again to get a valid archive now that the folder exists
@@ -216,7 +216,7 @@ Module::Module() {
     const FileSys::Path archive_path(ptm_shared_extdata_id);
     const auto archive_result = extdata_archive_factory.Open(archive_path, 0);
     // If the archive didn't exist, write the default game coin file
-    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
+    if (archive_result.Code() == FileSys::ResultNotFormatted) {
         WriteGameCoinData(default_game_coin);
     }
 }

@@ -26,8 +26,8 @@ static Core::TimingEventType* applet_update_event = nullptr;
 /// The interval at which the Applet update callback will be called, 16.6ms
 static const u64 applet_update_interval_us = 16666;
 
-ResultCode Applet::Create(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                          const std::shared_ptr<Service::APT::AppletManager>& manager) {
+Result Applet::Create(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
+                      const std::shared_ptr<Service::APT::AppletManager>& manager) {
     switch (id) {
     case Service::APT::AppletId::SoftwareKeyboard1:
     case Service::APT::AppletId::SoftwareKeyboard2:
@@ -48,8 +48,8 @@ ResultCode Applet::Create(Service::APT::AppletId id, Service::APT::AppletId pare
     default:
         LOG_ERROR(Service_APT, "Could not create applet {}", id);
         // TODO(Subv): Find the right error code
-        return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
-                          ErrorSummary::NotSupported, ErrorLevel::Permanent);
+        return Result(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotSupported,
+                      ErrorLevel::Permanent);
     }
 
     Service::APT::AppletAttributes attributes;
@@ -66,7 +66,7 @@ ResultCode Applet::Create(Service::APT::AppletId id, Service::APT::AppletId pare
     // Schedule the update event
     Core::System::GetInstance().CoreTiming().ScheduleEvent(
         usToCycles(applet_update_interval_us), applet_update_event, static_cast<u64>(id));
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 std::shared_ptr<Applet> Applet::Get(Service::APT::AppletId id) {
@@ -104,10 +104,10 @@ bool Applet::IsActive() const {
     return is_active;
 }
 
-ResultCode Applet::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
+Result Applet::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
     switch (parameter.signal) {
     case Service::APT::SignalType::Wakeup: {
-        ResultCode result = Start(parameter);
+        Result result = Start(parameter);
         if (!result.IsError()) {
             is_active = true;
         }

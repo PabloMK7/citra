@@ -179,9 +179,9 @@ public:
                      std::weak_ptr<Service::APT::AppletManager> manager)
         : Applet(id, parent, preload, std::move(manager)) {}
 
-    ResultCode ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
-    ResultCode Start(const Service::APT::MessageParameter& parameter) override;
-    ResultCode Finalize() override;
+    Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
+    Result Start(const Service::APT::MessageParameter& parameter) override;
+    Result Finalize() override;
     void Update() override;
 
     /**

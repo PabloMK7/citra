@@ -16,7 +16,7 @@ void QTM_S::GetHeadtrackingInfo(Kernel::HLERequestContext& ctx) {
 
     std::array<u8, 0x40> data{};
     IPC::RequestBuilder rb = rp.MakeBuilder(17, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw<std::array<u8, 0x40>>(data);
 
     LOG_DEBUG(Service, "(STUBBED) called");

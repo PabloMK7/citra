@@ -428,21 +428,21 @@ std::optional<std::reference_wrapper<SocketHolder>> SOC_U::GetSocketHolder(u32 c
     if (initialized_processes.find(process_id) == initialized_processes.end()) {
         LOG_DEBUG(Service_SOC, "Process not initialized: pid={}", process_id);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_NOT_INITIALIZED);
+        rb.Push(ResultNotInitialized);
         return std::nullopt;
     }
     auto fd_info = created_sockets.find(ctr_socket_fd);
     if (fd_info == created_sockets.end()) {
         LOG_DEBUG(Service_SOC, "Invalid socket: pid={}, fd={}", process_id, ctr_socket_fd);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_INVALID_SOCKET_DESCRIPTOR);
+        rb.Push(ResultInvalidSocketDescriptor);
         return std::nullopt;
     }
     if (fd_info->second.ownerProcess != process_id && !fd_info->second.isGlobal) {
         LOG_DEBUG(Service_SOC, "Invalid process owner: pid={}, fd={}, owner_pid={}", process_id,
                   ctr_socket_fd, fd_info->second.ownerProcess);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_WRONG_PROCESS);
+        rb.Push(ResultWrongProcess);
         return std::nullopt;
     }
     return std::ref(fd_info->second);
@@ -820,7 +820,7 @@ void SOC_U::Socket(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_SOC, "called, pid={}, ret={}", pid, static_cast<s32>(ret));
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(static_cast<s32>(ret));
 }
 
@@ -851,7 +851,7 @@ void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -874,7 +874,7 @@ void SOC_U::Fcntl(Kernel::HLERequestContext& ctx) {
                   static_cast<s32>(posix_ret));
 
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.Push(posix_ret);
     });
 
@@ -911,7 +911,7 @@ void SOC_U::Listen(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -985,7 +985,7 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
                       static_cast<s32>(async_data->ret));
 
             IPC::RequestBuilder rb(ctx, 0x04, 2, 2);
-            rb.Push(RESULT_SUCCESS);
+            rb.Push(ResultSuccess);
             rb.Push(async_data->ret);
             rb.PushStaticBuffer(std::move(ctr_addr_buf), 0);
         });
@@ -1029,7 +1029,7 @@ void SOC_U::SockAtMark(Kernel::HLERequestContext& ctx) {
              static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -1043,7 +1043,7 @@ void SOC_U::GetHostId(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(host_id);
 }
 
@@ -1068,7 +1068,7 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_SOC, "pid={}, fd={}, ret={}", pid, socket_handle, static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -1133,7 +1133,7 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
     LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", socket_handle, static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -1202,7 +1202,7 @@ void SOC_U::SendToSingle(Kernel::HLERequestContext& ctx) {
     LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", socket_handle, static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -1335,7 +1335,7 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
                           static_cast<s32>(async_data->ret));
 
             IPC::RequestBuilder rb(ctx, 0x07, 2, 4);
-            rb.Push(RESULT_SUCCESS);
+            rb.Push(ResultSuccess);
             rb.Push(async_data->ret);
             rb.PushStaticBuffer(std::move(async_data->addr_buff), 0);
             rb.PushMappedBuffer(*async_data->buffer);
@@ -1456,7 +1456,7 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
                           static_cast<s32>(async_data->ret));
 
             IPC::RequestBuilder rb(ctx, 0x08, 3, 4);
-            rb.Push(RESULT_SUCCESS);
+            rb.Push(ResultSuccess);
             rb.Push(async_data->ret);
             rb.Push(total_received);
             rb.PushStaticBuffer(std::move(async_data->output_buff), 0);
@@ -1532,7 +1532,7 @@ void SOC_U::Poll(Kernel::HLERequestContext& ctx) {
 
             IPC::RequestBuilder rb(ctx, static_cast<u16>(ctx.CommandHeader().command_id.Value()), 2,
                                    2);
-            rb.Push(RESULT_SUCCESS);
+            rb.Push(ResultSuccess);
             rb.Push(async_data->ret);
             rb.PushStaticBuffer(std::move(output_fds), 0);
 
@@ -1574,7 +1574,7 @@ void SOC_U::GetSockName(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
     rb.PushStaticBuffer(std::move(dest_addr_buff), 0);
 }
@@ -1604,7 +1604,7 @@ void SOC_U::Shutdown(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -1649,7 +1649,7 @@ void SOC_U::GetHostByAddr(Kernel::HLERequestContext& ctx) {
         ::gethostbyaddr(reinterpret_cast<char*>(&platform_addr), sizeof(platform_addr), type);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     s32 ret;
     if (!result) {
         rb.Push(ret = TranslateError(GET_ERRNO));
@@ -1670,7 +1670,7 @@ void SOC_U::GetHostByName(Kernel::HLERequestContext& ctx) {
     struct hostent* result = ::gethostbyname(reinterpret_cast<char*>(host_name.data()));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     s32 ret;
     if (!result) {
         rb.Push(ret = TranslateError(GET_ERRNO));
@@ -1716,7 +1716,7 @@ void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(result));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(result);
     rb.PushStaticBuffer(std::move(dest_addr_buff), 0);
 }
@@ -1772,7 +1772,7 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
                       async_data->socket_handle, static_cast<s32>(async_data->ret));
 
             IPC::RequestBuilder rb(ctx, 0x06, 2, 0);
-            rb.Push(RESULT_SUCCESS);
+            rb.Push(ResultSuccess);
             rb.Push(async_data->ret);
         });
 }
@@ -1783,11 +1783,11 @@ void SOC_U::InitializeSockets(Kernel::HLERequestContext& ctx) {
     const u32 pid = rp.PopPID();
     [[maybe_unused]] auto shared_memory = rp.PopObject<Kernel::SharedMemory>();
 
-    ResultCode res = RESULT_SUCCESS;
+    Result res = ResultSuccess;
     if (initialized_processes.find(pid) == initialized_processes.end()) {
         initialized_processes.insert(pid);
     } else {
-        res = ERR_ALREADY_INITIALIZED;
+        res = ResultAlreadyInitialized;
     }
 
     LOG_DEBUG(Service_SOC, "called, pid={}, res={:#08X}", pid, res.raw);
@@ -1806,7 +1806,7 @@ void SOC_U::ShutdownSockets(Kernel::HLERequestContext& ctx) {
     if (initialized_processes.find(pid) == initialized_processes.end()) {
         LOG_DEBUG(Service_SOC, "Process not initialized: pid={}", pid);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_NOT_INITIALIZED);
+        rb.Push(ResultNotInitialized);
         return;
     }
 
@@ -1816,7 +1816,7 @@ void SOC_U::ShutdownSockets(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_SOC, "called, pid={}", pid);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
@@ -1863,7 +1863,7 @@ void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(err));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(err);
     rb.Push(static_cast<u32>(optval.size()));
     rb.PushStaticBuffer(std::move(optval), 0);
@@ -1910,7 +1910,7 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(err));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(err);
 }
 
@@ -1963,7 +1963,7 @@ void SOC_U::GetNetworkOpt(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(err);
     rb.Push(static_cast<u32>(opt_len));
     rb.PushStaticBuffer(std::move(opt_data), 0);
@@ -2026,7 +2026,7 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
     rb.Push(count);
     rb.PushStaticBuffer(std::move(out_buff), 0);
@@ -2055,7 +2055,7 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
     rb.PushStaticBuffer(std::move(host), 0);
     rb.PushStaticBuffer(std::move(serv), 1);
@@ -2091,7 +2091,7 @@ void SOC_U::SendToMultiple(Kernel::HLERequestContext& ctx) {
               static_cast<s32>(ret));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(ret);
 }
 
@@ -2102,7 +2102,7 @@ void SOC_U::CloseSockets(Kernel::HLERequestContext& ctx) {
     if (initialized_processes.find(pid) == initialized_processes.end()) {
         LOG_DEBUG(Service_SOC, "Process not initialized: pid={}", pid);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERR_NOT_INITIALIZED);
+        rb.Push(ResultNotInitialized);
         return;
     }
 
@@ -2111,7 +2111,7 @@ void SOC_U::CloseSockets(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_SOC, "called, pid={}", pid);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void SOC_U::AddGlobalSocket(Kernel::HLERequestContext& ctx) {
@@ -2133,7 +2133,7 @@ void SOC_U::AddGlobalSocket(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_SOC, "called, pid={}, fd={}", pid, socket_handle);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 SOC_U::SOC_U() : ServiceFramework("soc:U", 18) {

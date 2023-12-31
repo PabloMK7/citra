@@ -17,12 +17,12 @@
 
 namespace HLE::Applets {
 
-ResultCode MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) {
+Result MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Service_APT, "unsupported signal {}", parameter.signal);
         UNIMPLEMENTED();
         // TODO(Subv): Find the right error code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
 
     // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
@@ -47,10 +47,10 @@ ResultCode MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParamete
         .object = framebuffer_memory,
     });
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
+Result MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (MiiConfig) is wrong");
 
@@ -63,7 +63,7 @@ ResultCode MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
     MiiSelectorConfig frontend_config = ToFrontendConfig(config);
     frontend_applet->Setup(frontend_config);
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 void MiiSelector::Update() {
@@ -78,11 +78,11 @@ void MiiSelector::Update() {
     Finalize();
 }
 
-ResultCode MiiSelector::Finalize() {
+Result MiiSelector::Finalize() {
     std::vector<u8> buffer(sizeof(MiiResult));
     std::memcpy(buffer.data(), &result, buffer.size());
     CloseApplet(nullptr, buffer);
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 MiiResult MiiSelector::GetStandardMiiResult() {

@@ -39,12 +39,12 @@ public:
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override {
         if (offset != 0) {
             LOG_ERROR(Service_FS, "offset must be zero!");
-            return ERROR_UNSUPPORTED_OPEN_FLAGS;
+            return ResultUnsupportedOpenFlags;
         }
 
         if (length != data->size()) {
             LOG_ERROR(Service_FS, "size must match the file size!");
-            return ERROR_INCORRECT_EXEFS_READ_SIZE;
+            return ResultIncorrectExefsReadSize;
         }
 
         std::memcpy(buffer, data->data(), data->size());
@@ -54,7 +54,7 @@ public:
     ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
                                  const u8* buffer) override {
         LOG_ERROR(Service_FS, "The file is read-only!");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
     u64 GetSize() const override {
@@ -99,13 +99,13 @@ public:
 
         if (path.GetType() != LowPathType::Binary) {
             LOG_ERROR(Service_FS, "Path need to be Binary");
-            return ERROR_INVALID_PATH;
+            return ResultInvalidPath;
         }
 
         std::vector<u8> binary = path.AsBinary();
         if (binary.size() != sizeof(SelfNCCHFilePath)) {
             LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
-            return ERROR_INVALID_PATH;
+            return ResultInvalidPath;
         }
 
         SelfNCCHFilePath file_path;
@@ -120,7 +120,7 @@ public:
 
         case SelfNCCHFilePathType::Code:
             LOG_ERROR(Service_FS, "Reading the code section is not supported!");
-            return ERROR_COMMAND_NOT_ALLOWED;
+            return ResultCommandNotAllowed;
 
         case SelfNCCHFilePathType::ExeFS: {
             const auto& raw = file_path.exefs_filename;
@@ -130,48 +130,48 @@ public:
         }
         default:
             LOG_ERROR(Service_FS, "Unknown file type {}!", file_path.type);
-            return ERROR_INVALID_PATH;
+            return ResultInvalidPath;
         }
     }
 
-    ResultCode DeleteFile(const Path& path) const override {
+    Result DeleteFile(const Path& path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
-    ResultCode RenameFile(const Path& src_path, const Path& dest_path) const override {
+    Result RenameFile(const Path& src_path, const Path& dest_path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
-    ResultCode DeleteDirectory(const Path& path) const override {
+    Result DeleteDirectory(const Path& path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
-    ResultCode DeleteDirectoryRecursively(const Path& path) const override {
+    Result DeleteDirectoryRecursively(const Path& path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
-    ResultCode CreateFile(const Path& path, u64 size) const override {
+    Result CreateFile(const Path& path, u64 size) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
-    ResultCode CreateDirectory(const Path& path) const override {
+    Result CreateDirectory(const Path& path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
-    ResultCode RenameDirectory(const Path& src_path, const Path& dest_path) const override {
+    Result RenameDirectory(const Path& src_path, const Path& dest_path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
     ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override {
         LOG_ERROR(Service_FS, "Unsupported");
-        return ERROR_UNSUPPORTED_OPEN_FLAGS;
+        return ResultUnsupportedOpenFlags;
     }
 
     u64 GetFreeBytes() const override {
@@ -186,7 +186,7 @@ private:
             return std::make_unique<IVFCFile>(ncch_data.romfs_file, std::move(delay_generator));
         } else {
             LOG_INFO(Service_FS, "Unable to read RomFS");
-            return ERROR_ROMFS_NOT_FOUND;
+            return ResultRomfsNotFound;
         }
     }
 
@@ -198,7 +198,7 @@ private:
                                               std::move(delay_generator));
         } else {
             LOG_INFO(Service_FS, "Unable to read update RomFS");
-            return ERROR_ROMFS_NOT_FOUND;
+            return ResultRomfsNotFound;
         }
     }
 
@@ -209,7 +209,7 @@ private:
             }
 
             LOG_WARNING(Service_FS, "Unable to read icon");
-            return ERROR_EXEFS_SECTION_NOT_FOUND;
+            return ResultExefsSectionNotFound;
         }
 
         if (filename == "logo") {
@@ -218,7 +218,7 @@ private:
             }
 
             LOG_WARNING(Service_FS, "Unable to read logo");
-            return ERROR_EXEFS_SECTION_NOT_FOUND;
+            return ResultExefsSectionNotFound;
         }
 
         if (filename == "banner") {
@@ -227,11 +227,11 @@ private:
             }
 
             LOG_WARNING(Service_FS, "Unable to read banner");
-            return ERROR_EXEFS_SECTION_NOT_FOUND;
+            return ResultExefsSectionNotFound;
         }
 
         LOG_ERROR(Service_FS, "Unknown ExeFS section {}!", filename);
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     NCCHData ncch_data;
@@ -296,16 +296,16 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const P
     return std::make_unique<SelfNCCHArchive>(ncch_data[program_id]);
 }
 
-ResultCode ArchiveFactory_SelfNCCH::Format(const Path&, const FileSys::ArchiveFormatInfo&,
-                                           u64 program_id) {
+Result ArchiveFactory_SelfNCCH::Format(const Path&, const FileSys::ArchiveFormatInfo&,
+                                       u64 program_id) {
     LOG_ERROR(Service_FS, "Attempted to format a SelfNCCH archive.");
-    return ERROR_INVALID_PATH;
+    return ResultInvalidPath;
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SelfNCCH::GetFormatInfo(const Path&,
                                                                     u64 program_id) const {
     LOG_ERROR(Service_FS, "Attempted to get format info of a SelfNCCH archive");
-    return ERROR_INVALID_PATH;
+    return ResultInvalidPath;
 }
 
 } // namespace FileSys

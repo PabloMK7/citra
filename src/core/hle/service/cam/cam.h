@@ -166,7 +166,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00010040
-         *      1: ResultCode
+         *      1: Result
          */
         void StartCapture(Kernel::HLERequestContext& ctx);
 
@@ -177,7 +177,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00020040
-         *      1: ResultCode
+         *      1: Result
          */
         void StopCapture(Kernel::HLERequestContext& ctx);
 
@@ -188,7 +188,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00030080
-         *      1: ResultCode
+         *      1: Result
          *      2: 0 if not capturing, 1 if capturing
          */
         void IsBusy(Kernel::HLERequestContext& ctx);
@@ -200,7 +200,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00040040
-         *      2: ResultCode
+         *      2: Result
          */
         void ClearBuffer(Kernel::HLERequestContext& ctx);
 
@@ -211,7 +211,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00050042
-         *      1: ResultCode
+         *      1: Result
          *      2: Descriptor: Handle
          *      3: Event handle
          */
@@ -224,7 +224,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00060042
-         *      1: ResultCode
+         *      1: Result
          *      2: Descriptor: Handle
          *      3: Event handle
          */
@@ -244,7 +244,7 @@ public:
          *      6: Handle to destination process
          *  Outputs:
          *      0: 0x00070042
-         *      1: ResultCode
+         *      1: Result
          *      2: Descriptor: Handle
          *      3: Handle to event signalled when transfer finishes
          */
@@ -257,7 +257,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x00080080
-         *      1: ResultCode
+         *      1: Result
          *      2: 0 if not finished, 1 if finished
          */
         void IsFinishedReceiving(Kernel::HLERequestContext& ctx);
@@ -272,7 +272,7 @@ public:
          *      4: u16 Height
          *  Outputs:
          *      0: 0x00090040
-         *      1: ResultCode
+         *      1: Result
          * @todo figure out how the "buffer" actually works.
          */
         void SetTransferLines(Kernel::HLERequestContext& ctx);
@@ -285,7 +285,7 @@ public:
          *      2: u16 Height
          *  Outputs:
          *      0: 0x000A0080
-         *      1: ResultCode
+         *      1: Result
          *      2: Maximum number of lines that fit in the buffer
          * @todo figure out how the "buffer" actually works.
          */
@@ -301,7 +301,7 @@ public:
          *      4: u16 Height
          *  Outputs:
          *      0: 0x000B0040
-         *      1: ResultCode
+         *      1: Result
          * @todo figure out how the "buffer" actually works.
          */
         void SetTransferBytes(Kernel::HLERequestContext& ctx);
@@ -313,7 +313,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x000C0080
-         *      1: ResultCode
+         *      1: Result
          *      2: The number of bytes the buffer contains
          * @todo figure out how the "buffer" actually works.
          */
@@ -327,7 +327,7 @@ public:
          *      2: u16 Height
          *  Outputs:
          *      0: 0x000D0080
-         *      1: ResultCode
+         *      1: Result
          *      2: Maximum number of bytes that fit in the buffer
          * @todo figure out how the "buffer" actually works.
          */
@@ -341,7 +341,7 @@ public:
          *      2: u8 bool Enable trimming if true
          *  Outputs:
          *      0: 0x000E0040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetTrimming(Kernel::HLERequestContext& ctx);
 
@@ -352,7 +352,7 @@ public:
          *      1: u8 selected port
          *  Outputs:
          *      0: 0x000F0080
-         *      1: ResultCode
+         *      1: Result
          *      2: u8 bool Enable trimming if true
          */
         void IsTrimming(Kernel::HLERequestContext& ctx);
@@ -368,7 +368,7 @@ public:
          *      5: y end (exclusive)
          *  Outputs:
          *      0: 0x00100040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetTrimmingParams(Kernel::HLERequestContext& ctx);
 
@@ -380,7 +380,7 @@ public:
          *
          *  Outputs:
          *      0: 0x00110140
-         *      1: ResultCode
+         *      1: Result
          *      2: x start
          *      3: y start
          *      4: x end (exclusive)
@@ -400,7 +400,7 @@ public:
          *      5: s16 Camera height
          *  Outputs:
          *      0: 0x00120040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx);
 
@@ -411,7 +411,7 @@ public:
          *      1: u8 selected camera
          *  Outputs:
          *      0: 0x00130040
-         *      1: ResultCode
+         *      1: Result
          */
         void Activate(Kernel::HLERequestContext& ctx);
 
@@ -423,7 +423,7 @@ public:
          *      2: u8 selected context
          *  Outputs:
          *      0: 0x00140040
-         *      1: ResultCode
+         *      1: Result
          */
         void SwitchContext(Kernel::HLERequestContext& ctx);
 
@@ -436,7 +436,7 @@ public:
          *      3: u8 selected context
          *  Outputs:
          *      0: 0x001D0040
-         *      1: ResultCode
+         *      1: Result
          */
         void FlipImage(Kernel::HLERequestContext& ctx);
 
@@ -455,7 +455,7 @@ public:
          *      8: u8 selected context
          *  Outputs:
          *      0: 0x001E0040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetDetailSize(Kernel::HLERequestContext& ctx);
 
@@ -468,7 +468,7 @@ public:
          *      3: u8 selected context
          *  Outputs:
          *      0: 0x001F0040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetSize(Kernel::HLERequestContext& ctx);
 
@@ -480,7 +480,7 @@ public:
          *      2: u8 Camera framerate (`FrameRate` enum)
          *  Outputs:
          *      0: 0x00200040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetFrameRate(Kernel::HLERequestContext& ctx);
 
@@ -493,7 +493,7 @@ public:
          *      3: u8 selected context
          *  Outputs:
          *      0: 0x00220040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetEffect(Kernel::HLERequestContext& ctx);
 
@@ -506,7 +506,7 @@ public:
          *      3: u8 selected context
          *  Outputs:
          *      0: 0x00250040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetOutputFormat(Kernel::HLERequestContext& ctx);
 
@@ -518,7 +518,7 @@ public:
          *      2: u8 selected camera 2
          *  Outputs:
          *      0: 0x00280040
-         *      1: ResultCode
+         *      1: Result
          */
         void SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx);
 
@@ -532,7 +532,7 @@ public:
          *      65: s64* TimingsOutput
          *  Outputs:
          *      0: 0x002A0042
-         *      1: ResultCode
+         *      1: Result
          *      2-3: Output static buffer
          */
         void GetLatestVsyncTiming(Kernel::HLERequestContext& ctx);
@@ -545,7 +545,7 @@ public:
          *      0: 0x002B0000
          *  Outputs:
          *      0: 0x002B0440
-         *      1: ResultCode
+         *      1: Result
          *      2-17: `StereoCameraCalibrationData` structure with calibration values
          */
         void GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx);
@@ -559,7 +559,7 @@ public:
          *      8-11: unused
          *  Outputs:
          *      0: 0x00330040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetPackageParameterWithoutContext(Kernel::HLERequestContext& ctx);
 
@@ -572,7 +572,7 @@ public:
          *      3-5: unused
          *  Outputs:
          *      0: 0x00340040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetPackageParameterWithContext(Kernel::HLERequestContext& ctx);
 
@@ -585,7 +585,7 @@ public:
          *      5-7: unused
          *  Outputs:
          *      0: 0x00350040
-         *      1: ResultCode
+         *      1: Result
          */
         void SetPackageParameterWithContextDetail(Kernel::HLERequestContext& ctx);
 
@@ -595,7 +595,7 @@ public:
          *      0: 0x00360000
          *  Outputs:
          *      0: 0x00360080
-         *      1: ResultCode
+         *      1: Result
          *      2: ?
          */
         void GetSuitableY2rStandardCoefficient(Kernel::HLERequestContext& ctx);
@@ -607,7 +607,7 @@ public:
          *      1: u8 Sound ID
          *  Outputs:
          *      0: 0x00380040
-         *      1: ResultCode
+         *      1: Result
          */
         void PlayShutterSound(Kernel::HLERequestContext& ctx);
 
@@ -617,7 +617,7 @@ public:
          *      0: 0x00390000
          *  Outputs:
          *      0: 0x00390040
-         *      1: ResultCode
+         *      1: Result
          */
         void DriverInitialize(Kernel::HLERequestContext& ctx);
 
@@ -627,7 +627,7 @@ public:
          *      0: 0x003A0000
          *  Outputs:
          *      0: 0x003A0040
-         *      1: ResultCode
+         *      1: Result
          */
         void DriverFinalize(Kernel::HLERequestContext& ctx);
 
@@ -653,7 +653,7 @@ private:
     void ActivatePort(int port_id, int camera_id);
 
     template <typename PackageParameterType>
-    ResultCode SetPackageParameter(const PackageParameterType& package);
+    Result SetPackageParameter(const PackageParameterType& package);
 
     struct ContextConfig {
         Flip flip{Flip::None};

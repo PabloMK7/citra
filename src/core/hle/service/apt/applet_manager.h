@@ -264,7 +264,7 @@ public:
      */
     void CancelAndSendParameter(const MessageParameter& parameter);
 
-    ResultCode SendParameter(const MessageParameter& parameter);
+    Result SendParameter(const MessageParameter& parameter);
     ResultVal<MessageParameter> GlanceParameter(AppletId app_id);
     ResultVal<MessageParameter> ReceiveParameter(AppletId app_id);
     bool CancelParameter(bool check_sender, AppletId sender_appid, bool check_receiver,
@@ -283,51 +283,48 @@ public:
     };
     ResultVal<InitializeResult> Initialize(AppletId app_id, AppletAttributes attributes);
 
-    ResultCode Enable(AppletAttributes attributes);
-    ResultCode Finalize(AppletId app_id);
+    Result Enable(AppletAttributes attributes);
+    Result Finalize(AppletId app_id);
     u32 CountRegisteredApplet();
     bool IsRegistered(AppletId app_id);
     ResultVal<AppletAttributes> GetAttribute(AppletId app_id);
 
     ResultVal<Notification> InquireNotification(AppletId app_id);
-    ResultCode SendNotification(Notification notification);
+    Result SendNotification(Notification notification);
     void SendNotificationToAll(Notification notification);
 
-    ResultCode PrepareToStartLibraryApplet(AppletId applet_id);
-    ResultCode PreloadLibraryApplet(AppletId applet_id);
-    ResultCode FinishPreloadingLibraryApplet(AppletId applet_id);
-    ResultCode StartLibraryApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
-                                  const std::vector<u8>& buffer);
-    ResultCode PrepareToCloseLibraryApplet(bool not_pause, bool exiting, bool jump_home);
-    ResultCode CloseLibraryApplet(std::shared_ptr<Kernel::Object> object,
-                                  const std::vector<u8>& buffer);
-    ResultCode CancelLibraryApplet(bool app_exiting);
-
-    ResultCode SendDspSleep(AppletId from_applet_id, std::shared_ptr<Kernel::Object> object);
-    ResultCode SendDspWakeUp(AppletId from_applet_id, std::shared_ptr<Kernel::Object> object);
-
-    ResultCode PrepareToStartSystemApplet(AppletId applet_id);
-    ResultCode StartSystemApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
-                                 const std::vector<u8>& buffer);
-    ResultCode PrepareToCloseSystemApplet();
-    ResultCode CloseSystemApplet(std::shared_ptr<Kernel::Object> object,
-                                 const std::vector<u8>& buffer);
-    ResultCode OrderToCloseSystemApplet();
-
-    ResultCode PrepareToJumpToHomeMenu();
-    ResultCode JumpToHomeMenu(std::shared_ptr<Kernel::Object> object,
+    Result PrepareToStartLibraryApplet(AppletId applet_id);
+    Result PreloadLibraryApplet(AppletId applet_id);
+    Result FinishPreloadingLibraryApplet(AppletId applet_id);
+    Result StartLibraryApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
                               const std::vector<u8>& buffer);
-    ResultCode PrepareToLeaveHomeMenu();
-    ResultCode LeaveHomeMenu(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
+    Result PrepareToCloseLibraryApplet(bool not_pause, bool exiting, bool jump_home);
+    Result CloseLibraryApplet(std::shared_ptr<Kernel::Object> object,
+                              const std::vector<u8>& buffer);
+    Result CancelLibraryApplet(bool app_exiting);
 
-    ResultCode OrderToCloseApplication();
-    ResultCode PrepareToCloseApplication(bool return_to_sys);
-    ResultCode CloseApplication(std::shared_ptr<Kernel::Object> object,
-                                const std::vector<u8>& buffer);
+    Result SendDspSleep(AppletId from_applet_id, std::shared_ptr<Kernel::Object> object);
+    Result SendDspWakeUp(AppletId from_applet_id, std::shared_ptr<Kernel::Object> object);
 
-    ResultCode PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,
-                                          ApplicationJumpFlags flags);
-    ResultCode DoApplicationJump(const DeliverArg& arg);
+    Result PrepareToStartSystemApplet(AppletId applet_id);
+    Result StartSystemApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
+                             const std::vector<u8>& buffer);
+    Result PrepareToCloseSystemApplet();
+    Result CloseSystemApplet(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
+    Result OrderToCloseSystemApplet();
+
+    Result PrepareToJumpToHomeMenu();
+    Result JumpToHomeMenu(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
+    Result PrepareToLeaveHomeMenu();
+    Result LeaveHomeMenu(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
+
+    Result OrderToCloseApplication();
+    Result PrepareToCloseApplication(bool return_to_sys);
+    Result CloseApplication(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
+
+    Result PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,
+                                      ApplicationJumpFlags flags);
+    Result DoApplicationJump(const DeliverArg& arg);
 
     boost::optional<DeliverArg> ReceiveDeliverArg() {
         auto arg = deliver_arg;
@@ -369,12 +366,11 @@ public:
         std::memcpy(&capture_buffer_info.get(), buffer.data(), sizeof(CaptureBufferInfo));
     }
 
-    ResultCode PrepareToStartApplication(u64 title_id, FS::MediaType media_type);
-    ResultCode StartApplication(const std::vector<u8>& parameter, const std::vector<u8>& hmac,
-                                bool paused);
-    ResultCode WakeupApplication(std::shared_ptr<Kernel::Object> object,
-                                 const std::vector<u8>& buffer);
-    ResultCode CancelApplication();
+    Result PrepareToStartApplication(u64 title_id, FS::MediaType media_type);
+    Result StartApplication(const std::vector<u8>& parameter, const std::vector<u8>& hmac,
+                            bool paused);
+    Result WakeupApplication(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
+    Result CancelApplication();
 
     struct AppletManInfo {
         AppletPos active_applet_pos;

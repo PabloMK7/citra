@@ -19,7 +19,7 @@ namespace FileSys {
 ResultVal<std::size_t> DiskFile::Read(const u64 offset, const std::size_t length,
                                       u8* buffer) const {
     if (!mode.read_flag)
-        return ERROR_INVALID_OPEN_FLAGS;
+        return ResultInvalidOpenFlags;
 
     file->Seek(offset, SEEK_SET);
     return file->ReadBytes(buffer, length);
@@ -28,7 +28,7 @@ ResultVal<std::size_t> DiskFile::Read(const u64 offset, const std::size_t length
 ResultVal<std::size_t> DiskFile::Write(const u64 offset, const std::size_t length, const bool flush,
                                        const u8* buffer) {
     if (!mode.write_flag)
-        return ERROR_INVALID_OPEN_FLAGS;
+        return ResultInvalidOpenFlags;
 
     file->Seek(offset, SEEK_SET);
     std::size_t written = file->WriteBytes(buffer, length);

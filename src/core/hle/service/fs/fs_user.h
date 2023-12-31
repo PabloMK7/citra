@@ -72,8 +72,8 @@ public:
         if (info != program_info_map.end()) {
             return info->second;
         } else {
-            return ResultCode(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
-                              ErrorSummary::NotFound, ErrorLevel::Status);
+            return Result(FileSys::ErrCodes::ArchiveNotMounted, ErrorModule::FS,
+                          ErrorSummary::NotFound, ErrorLevel::Status);
         }
     }
 

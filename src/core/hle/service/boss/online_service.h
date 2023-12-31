@@ -161,18 +161,18 @@ class OnlineService final {
 public:
     explicit OnlineService(u64 program_id_, u64 extdata_id_);
 
-    ResultCode InitializeSession(u64 init_program_id);
+    Result InitializeSession(u64 init_program_id);
     void RegisterTask(const u32 size, Kernel::MappedBuffer& buffer);
-    ResultCode UnregisterTask(const u32 size, Kernel::MappedBuffer& buffer);
+    Result UnregisterTask(const u32 size, Kernel::MappedBuffer& buffer);
     void GetTaskIdList();
     u16 GetNsDataIdList(const u32 filter, const u32 max_entries, Kernel::MappedBuffer& buffer);
     std::optional<NsDataEntry> GetNsDataEntryFromId(const u32 ns_data_id);
-    ResultCode GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHeaderInfoType type,
-                                   const u32 size, Kernel::MappedBuffer& buffer);
+    Result GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHeaderInfoType type,
+                               const u32 size, Kernel::MappedBuffer& buffer);
     ResultVal<size_t> ReadNsData(const u32 ns_data_id, const u64 offset, const u32 size,
                                  Kernel::MappedBuffer& buffer);
-    ResultCode SendProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
-    ResultCode ReceiveProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
+    Result SendProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
+    Result ReceiveProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
 
 private:
     std::unique_ptr<FileSys::ArchiveBackend> OpenBossExtData();

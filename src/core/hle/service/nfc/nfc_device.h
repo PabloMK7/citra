@@ -31,42 +31,42 @@ public:
     void Initialize();
     void Finalize();
 
-    ResultCode StartCommunication();
-    ResultCode StopCommunication();
-    ResultCode StartDetection(TagProtocol allowed_protocol);
-    ResultCode StopDetection();
-    ResultCode Mount();
-    ResultCode MountAmiibo();
-    ResultCode PartiallyMount();
-    ResultCode PartiallyMountAmiibo();
-    ResultCode ResetTagScanState();
-    ResultCode Flush();
+    Result StartCommunication();
+    Result StopCommunication();
+    Result StartDetection(TagProtocol allowed_protocol);
+    Result StopDetection();
+    Result Mount();
+    Result MountAmiibo();
+    Result PartiallyMount();
+    Result PartiallyMountAmiibo();
+    Result ResetTagScanState();
+    Result Flush();
 
-    ResultCode GetTagInfo2(TagInfo2& tag_info) const;
-    ResultCode GetTagInfo(TagInfo& tag_info) const;
-    ResultCode GetCommonInfo(CommonInfo& common_info) const;
-    ResultCode GetModelInfo(ModelInfo& model_info) const;
-    ResultCode GetRegisterInfo(RegisterInfo& register_info) const;
-    ResultCode GetAdminInfo(AdminInfo& admin_info) const;
+    Result GetTagInfo2(TagInfo2& tag_info) const;
+    Result GetTagInfo(TagInfo& tag_info) const;
+    Result GetCommonInfo(CommonInfo& common_info) const;
+    Result GetModelInfo(ModelInfo& model_info) const;
+    Result GetRegisterInfo(RegisterInfo& register_info) const;
+    Result GetAdminInfo(AdminInfo& admin_info) const;
 
-    ResultCode DeleteRegisterInfo();
-    ResultCode SetRegisterInfoPrivate(const RegisterInfoPrivate& register_info);
-    ResultCode RestoreAmiibo();
-    ResultCode Format();
+    Result DeleteRegisterInfo();
+    Result SetRegisterInfoPrivate(const RegisterInfoPrivate& register_info);
+    Result RestoreAmiibo();
+    Result Format();
 
-    ResultCode OpenApplicationArea(u32 access_id);
-    ResultCode GetApplicationAreaId(u32& application_area_id) const;
-    ResultCode GetApplicationArea(std::vector<u8>& data) const;
-    ResultCode SetApplicationArea(std::span<const u8> data);
-    ResultCode CreateApplicationArea(u32 access_id, std::span<const u8> data);
-    ResultCode RecreateApplicationArea(u32 access_id, std::span<const u8> data);
-    ResultCode DeleteApplicationArea();
-    ResultCode ApplicationAreaExist(bool& has_application_area);
+    Result OpenApplicationArea(u32 access_id);
+    Result GetApplicationAreaId(u32& application_area_id) const;
+    Result GetApplicationArea(std::vector<u8>& data) const;
+    Result SetApplicationArea(std::span<const u8> data);
+    Result CreateApplicationArea(u32 access_id, std::span<const u8> data);
+    Result RecreateApplicationArea(u32 access_id, std::span<const u8> data);
+    Result DeleteApplicationArea();
+    Result ApplicationAreaExist(bool& has_application_area);
 
     constexpr u32 GetApplicationAreaSize() const;
     DeviceState GetCurrentState() const;
-    ResultCode GetCommunicationStatus(CommunicationState& status) const;
-    ResultCode CheckConnectionState() const;
+    Result GetCommunicationStatus(CommunicationState& status) const;
+    Result CheckConnectionState() const;
 
     std::shared_ptr<Kernel::Event> GetActivateEvent() const;
     std::shared_ptr<Kernel::Event> GetDeactivateEvent() const;

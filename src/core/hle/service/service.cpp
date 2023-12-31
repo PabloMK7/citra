@@ -130,7 +130,8 @@ ServiceFrameworkBase::ServiceFrameworkBase(const char* service_name, u32 max_ses
 ServiceFrameworkBase::~ServiceFrameworkBase() = default;
 
 void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager) {
-    auto port = service_manager.RegisterService(service_name, max_sessions).Unwrap();
+    std::shared_ptr<Kernel::ServerPort> port;
+    R_ASSERT(service_manager.RegisterService(std::addressof(port), service_name, max_sessions));
     port->SetHleHandler(shared_from_this());
 }
 

@@ -51,11 +51,11 @@ public:
      * @param bss_segment_address the buffer address for .bss segment
      * @param bss_segment_size the buffer size for .bss segment
      * @param is_crs true if the module itself is the static module
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment_address,
-                      u32 data_segment_size, VAddr bss_segment_address, u32 bss_segment_size,
-                      bool is_crs);
+    Result Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment_address,
+                  u32 data_segment_size, VAddr bss_segment_address, u32 bss_segment_size,
+                  bool is_crs);
 
     /**
      * Unrebases the module.
@@ -67,30 +67,30 @@ public:
      * Verifies module hash by CRR.
      * @param cro_size the size of the CRO
      * @param crr the virtual address of the CRR
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode VerifyHash(u32 cro_size, VAddr crr) const;
+    Result VerifyHash(u32 cro_size, VAddr crr) const;
 
     /**
      * Links this module with all registered auto-link module.
      * @param crs_address the virtual address of the static module
      * @param link_on_load_bug_fix true if links when loading and fixes the bug
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode Link(VAddr crs_address, bool link_on_load_bug_fix);
+    Result Link(VAddr crs_address, bool link_on_load_bug_fix);
 
     /**
      * Unlinks this module with other modules.
      * @param crs_address the virtual address of the static module
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode Unlink(VAddr crs_address);
+    Result Unlink(VAddr crs_address);
 
     /**
      * Clears all relocations to zero.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ClearRelocations();
+    Result ClearRelocations();
 
     /// Initialize this module as the static module (CRS)
     void InitCRS();
@@ -465,13 +465,13 @@ private:
      *        CROHelper and returns ResultVal<bool>. It should return true to continue the
      * iteration,
      *        false to stop the iteration, or an error code (which will also stop the iteration).
-     * @returns ResultCode indicating the result of the operation, RESULT_SUCCESS if all iteration
+     * @returns Result indicating the result of the operation, ResultSuccess if all iteration
      * success,
      *         otherwise error code of the last iteration.
      */
     template <typename FunctionObject>
-    static ResultCode ForEachAutoLinkCRO(Kernel::Process& process, Core::System& system,
-                                         VAddr crs_address, FunctionObject func) {
+    static Result ForEachAutoLinkCRO(Kernel::Process& process, Core::System& system,
+                                     VAddr crs_address, FunctionObject func) {
         VAddr current = crs_address;
         while (current != 0) {
             CROHelper cro(current, process, system);
@@ -480,7 +480,7 @@ private:
                 break;
             current = cro.NextModule();
         }
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     /**
@@ -491,18 +491,18 @@ private:
      * @param symbol_address the symbol address to be relocated with
      * @param target_future_address the future address of the target.
      *        Usually equals to target_address, but will be different for a target in .data segment
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyRelocation(VAddr target_address, RelocationType relocation_type, u32 addend,
-                               u32 symbol_address, u32 target_future_address);
+    Result ApplyRelocation(VAddr target_address, RelocationType relocation_type, u32 addend,
+                           u32 symbol_address, u32 target_future_address);
 
     /**
      * Clears a relocation to zero
      * @param target_address where to apply the relocation
      * @param relocation_type the type of the relocation
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ClearRelocation(VAddr target_address, RelocationType relocation_type);
+    Result ClearRelocation(VAddr target_address, RelocationType relocation_type);
 
     /**
      * Applies or resets a batch of relocations
@@ -510,9 +510,9 @@ private:
      * @param symbol_address the symbol address to be relocated with
      * @param reset false to set the batch to resolved state, true to reset the batch to unresolved
      * state
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyRelocationBatch(VAddr batch, u32 symbol_address, bool reset = false);
+    Result ApplyRelocationBatch(VAddr batch, u32 symbol_address, bool reset = false);
 
     /**
      * Finds an exported named symbol in this module.
@@ -524,10 +524,10 @@ private:
     /**
      * Rebases offsets in module header according to module address.
      * @param cro_size the size of the CRO file
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all offsets are verified as valid, otherwise error
      * code.
      */
-    ResultCode RebaseHeader(u32 cro_size);
+    Result RebaseHeader(u32 cro_size);
 
     /**
      * Rebases offsets in segment table according to module address.
@@ -544,45 +544,45 @@ private:
 
     /**
      * Rebases offsets in exported named symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all offsets are verified as valid, otherwise error
      * code.
      */
-    ResultCode RebaseExportNamedSymbolTable();
+    Result RebaseExportNamedSymbolTable();
 
     /**
      * Verifies indices in export tree table.
-     * @returns ResultCode RESULT_SUCCESS if all indices are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all indices are verified as valid, otherwise error
      * code.
      */
-    ResultCode VerifyExportTreeTable() const;
+    Result VerifyExportTreeTable() const;
 
     /**
      * Rebases offsets in exported module table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all offsets are verified as valid, otherwise error
      * code.
      */
-    ResultCode RebaseImportModuleTable();
+    Result RebaseImportModuleTable();
 
     /**
      * Rebases offsets in imported named symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all offsets are verified as valid, otherwise error
      * code.
      */
-    ResultCode RebaseImportNamedSymbolTable();
+    Result RebaseImportNamedSymbolTable();
 
     /**
      * Rebases offsets in imported indexed symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all offsets are verified as valid, otherwise error
      * code.
      */
-    ResultCode RebaseImportIndexedSymbolTable();
+    Result RebaseImportIndexedSymbolTable();
 
     /**
      * Rebases offsets in imported anonymous symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * @returns Result ResultSuccess if all offsets are verified as valid, otherwise error
      * code.
      */
-    ResultCode RebaseImportAnonymousSymbolTable();
+    Result RebaseImportAnonymousSymbolTable();
 
     /**
      * Gets the address of OnUnresolved function in this module.
@@ -593,35 +593,35 @@ private:
 
     /**
      * Resets all external relocations to unresolved state.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ResetExternalRelocations();
+    Result ResetExternalRelocations();
 
     /**
      * Clears all external relocations to zero.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ClearExternalRelocations();
+    Result ClearExternalRelocations();
 
     /**
      * Applies all static anonymous symbol to the static module.
      * @param crs_address the virtual address of the static module
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyStaticAnonymousSymbolToCRS(VAddr crs_address);
+    Result ApplyStaticAnonymousSymbolToCRS(VAddr crs_address);
 
     /**
      * Applies all internal relocations to the module itself.
      * @param old_data_segment_address the virtual address of data segment in CRO buffer
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyInternalRelocations(u32 old_data_segment_address);
+    Result ApplyInternalRelocations(u32 old_data_segment_address);
 
     /**
      * Clears all internal relocations to zero.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ClearInternalRelocations();
+    Result ClearInternalRelocations();
 
     /// Unrebases offsets in imported anonymous symbol table
     void UnrebaseImportAnonymousSymbolTable();
@@ -648,71 +648,71 @@ private:
      * Looks up all imported named symbols of this module in all registered auto-link modules, and
      * resolves them if found.
      * @param crs_address the virtual address of the static module
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyImportNamedSymbol(VAddr crs_address);
+    Result ApplyImportNamedSymbol(VAddr crs_address);
 
     /**
      * Resets all imported named symbols of this module to unresolved state.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ResetImportNamedSymbol();
+    Result ResetImportNamedSymbol();
 
     /**
      * Resets all imported indexed symbols of this module to unresolved state.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ResetImportIndexedSymbol();
+    Result ResetImportIndexedSymbol();
 
     /**
      * Resets all imported anonymous symbols of this module to unresolved state.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ResetImportAnonymousSymbol();
+    Result ResetImportAnonymousSymbol();
 
     /**
      * Finds registered auto-link modules that this module imports, and resolves indexed and
      * anonymous symbols exported by them.
      * @param crs_address the virtual address of the static module
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyModuleImport(VAddr crs_address);
+    Result ApplyModuleImport(VAddr crs_address);
 
     /**
      * Resolves target module's imported named symbols that exported by this module.
      * @param target the module to resolve.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyExportNamedSymbol(CROHelper target);
+    Result ApplyExportNamedSymbol(CROHelper target);
 
     /**
      * Resets target's named symbols imported from this module to unresolved state.
      * @param target the module to reset.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ResetExportNamedSymbol(CROHelper target);
+    Result ResetExportNamedSymbol(CROHelper target);
 
     /**
      * Resolves imported indexed and anonymous symbols in the target module which imports this
      * module.
      * @param target the module to resolve.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyModuleExport(CROHelper target);
+    Result ApplyModuleExport(CROHelper target);
 
     /**
      * Resets target's indexed and anonymous symbol imported from this module to unresolved state.
      * @param target the module to reset.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ResetModuleExport(CROHelper target);
+    Result ResetModuleExport(CROHelper target);
 
     /**
      * Resolves the exit function in this module
      * @param crs_address the virtual address of the static module.
-     * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
+     * @returns Result ResultSuccess on success, otherwise error code.
      */
-    ResultCode ApplyExitRelocations(VAddr crs_address);
+    Result ApplyExitRelocations(VAddr crs_address);
 };
 
 } // namespace Service::LDR

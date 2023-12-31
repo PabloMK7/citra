@@ -62,17 +62,17 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
 
     if (!path_parser.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     if (mode.hex == 0) {
         LOG_ERROR(Service_FS, "Empty open mode");
-        return ERROR_INVALID_OPEN_FLAGS;
+        return ResultInvalidOpenFlags;
     }
 
     if (mode.create_flag && !mode.write_flag) {
         LOG_ERROR(Service_FS, "Create flag set but write flag not set");
-        return ERROR_INVALID_OPEN_FLAGS;
+        return ResultInvalidOpenFlags;
     }
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
@@ -80,19 +80,19 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
         LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::DirectoryFound:
         LOG_ERROR(Service_FS, "{} is not a file", full_path);
-        return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+        return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::NotFound:
         if (!mode.create_flag) {
             LOG_ERROR(Service_FS, "Non-existing file {} can't be open without mode create.",
                       full_path);
-            return ERROR_NOT_FOUND;
+            return ResultNotFound;
         } else {
             // Create the file
             FileUtil::CreateEmptyFile(full_path);
@@ -105,19 +105,19 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
     FileUtil::IOFile file(full_path, mode.write_flag ? "r+b" : "rb");
     if (!file.IsOpen()) {
         LOG_CRITICAL(Service_FS, "Error opening {}: {}", full_path, Common::GetLastErrorMsg());
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     }
 
     std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<SDMCDelayGenerator>();
     return std::make_unique<DiskFile>(std::move(file), mode, std::move(delay_generator));
 }
 
-ResultCode SDMCArchive::DeleteFile(const Path& path) const {
+Result SDMCArchive::DeleteFile(const Path& path) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
@@ -125,110 +125,109 @@ ResultCode SDMCArchive::DeleteFile(const Path& path) const {
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
         LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
     case PathParser::NotFound:
         LOG_DEBUG(Service_FS, "{} not found", full_path);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::DirectoryFound:
         LOG_ERROR(Service_FS, "{} is not a file", full_path);
-        return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+        return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::FileFound:
         break; // Expected 'success' case
     }
 
     if (FileUtil::Delete(full_path)) {
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     LOG_CRITICAL(Service_FS, "(unreachable) Unknown error deleting {}", full_path);
-    return ERROR_NOT_FOUND;
+    return ResultNotFound;
 }
 
-ResultCode SDMCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
+Result SDMCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     const PathParser path_parser_src(src_path);
 
     // TODO: Verify these return codes with HW
     if (!path_parser_src.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid src path {}", src_path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const PathParser path_parser_dest(dest_path);
 
     if (!path_parser_dest.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid dest path {}", dest_path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const auto src_path_full = path_parser_src.BuildHostPath(mount_point);
     const auto dest_path_full = path_parser_dest.BuildHostPath(mount_point);
 
     if (FileUtil::Rename(src_path_full, dest_path_full)) {
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::NothingHappened, ErrorLevel::Status);
+    return Result(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                  ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
 template <typename T>
-static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mount_point,
-                                        T deleter) {
+static Result DeleteDirectoryHelper(const Path& path, const std::string& mount_point, T deleter) {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     if (path_parser.IsRootDirectory())
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
         LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::NotFound:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::FileInPath:
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
-        return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+        return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::DirectoryFound:
         break; // Expected 'success' case
     }
 
     if (deleter(full_path)) {
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     LOG_ERROR(Service_FS, "Directory not empty {}", full_path);
-    return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+    return ResultUnexpectedFileOrDirectorySdmc;
 }
 
-ResultCode SDMCArchive::DeleteDirectory(const Path& path) const {
+Result SDMCArchive::DeleteDirectory(const Path& path) const {
     return DeleteDirectoryHelper(path, mount_point, FileUtil::DeleteDir);
 }
 
-ResultCode SDMCArchive::DeleteDirectoryRecursively(const Path& path) const {
+Result SDMCArchive::DeleteDirectoryRecursively(const Path& path) const {
     return DeleteDirectoryHelper(
         path, mount_point, [](const std::string& p) { return FileUtil::DeleteDirRecursively(p); });
 }
 
-ResultCode SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
+Result SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
@@ -236,44 +235,44 @@ ResultCode SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
         LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::DirectoryFound:
         LOG_ERROR(Service_FS, "{} already exists", full_path);
-        return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+        return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "{} already exists", full_path);
-        return ERROR_ALREADY_EXISTS;
+        return ResultAlreadyExists;
     case PathParser::NotFound:
         break; // Expected 'success' case
     }
 
     if (size == 0) {
         FileUtil::CreateEmptyFile(full_path);
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     FileUtil::IOFile file(full_path, "wb");
     // Creates a sparse file (or a normal file on filesystems without the concept of sparse files)
     // We do this by seeking to the right size, then writing a single null byte.
     if (file.Seek(size - 1, SEEK_SET) && file.WriteBytes("", 1) == 1) {
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     LOG_ERROR(Service_FS, "Too large file");
-    return ResultCode(ErrorDescription::TooLarge, ErrorModule::FS, ErrorSummary::OutOfResource,
-                      ErrorLevel::Info);
+    return Result(ErrorDescription::TooLarge, ErrorModule::FS, ErrorSummary::OutOfResource,
+                  ErrorLevel::Info);
 }
 
-ResultCode SDMCArchive::CreateDirectory(const Path& path) const {
+Result SDMCArchive::CreateDirectory(const Path& path) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
@@ -281,55 +280,55 @@ ResultCode SDMCArchive::CreateDirectory(const Path& path) const {
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
         LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
         LOG_ERROR(Service_FS, "Path not found {}", full_path);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::DirectoryFound:
     case PathParser::FileFound:
         LOG_DEBUG(Service_FS, "{} already exists", full_path);
-        return ERROR_ALREADY_EXISTS;
+        return ResultAlreadyExists;
     case PathParser::NotFound:
         break; // Expected 'success' case
     }
 
     if (FileUtil::CreateDir(mount_point + path.AsString())) {
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     LOG_CRITICAL(Service_FS, "(unreachable) Unknown error creating {}", mount_point);
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
-                      ErrorLevel::Status);
+    return Result(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
+                  ErrorLevel::Status);
 }
 
-ResultCode SDMCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
+Result SDMCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     const PathParser path_parser_src(src_path);
 
     // TODO: Verify these return codes with HW
     if (!path_parser_src.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid src path {}", src_path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const PathParser path_parser_dest(dest_path);
 
     if (!path_parser_dest.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid dest path {}", dest_path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const auto src_path_full = path_parser_src.BuildHostPath(mount_point);
     const auto dest_path_full = path_parser_dest.BuildHostPath(mount_point);
 
     if (FileUtil::Rename(src_path_full, dest_path_full)) {
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::NothingHappened, ErrorLevel::Status);
+    return Result(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                  ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Path& path) const {
@@ -337,7 +336,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
 
     if (!path_parser.IsValid()) {
         LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
@@ -345,15 +344,15 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
         LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::NotFound:
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "{} not found", full_path);
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     case PathParser::FileInPath:
         LOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
-        return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+        return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::DirectoryFound:
         break; // Expected 'success' case
     }
@@ -392,18 +391,17 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path&
     return std::make_unique<SDMCArchive>(sdmc_directory, std::move(delay_generator));
 }
 
-ResultCode ArchiveFactory_SDMC::Format(const Path& path,
-                                       const FileSys::ArchiveFormatInfo& format_info,
-                                       u64 program_id) {
+Result ArchiveFactory_SDMC::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
+                                   u64 program_id) {
     // This is kind of an undesirable operation, so let's just ignore it. :)
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path,
                                                                 u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 } // namespace FileSys
 

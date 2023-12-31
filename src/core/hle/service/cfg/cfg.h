@@ -389,9 +389,9 @@ private:
      * @param size The size of the block we want to read
      * @param accesss_flag The requested block must have this access flag set
      * @param output A pointer where we will write the read data
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output);
+    Result GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output);
 
     /**
      * Reads data from input and writes to a block with the specified id and flag
@@ -402,9 +402,9 @@ private:
      * @param size The size of the block we want to write
      * @param accesss_flag The target block must have this access flag set
      * @param input A pointer where we will read data and write to Config savegame buffer
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input);
+    Result SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input);
 
     /**
      * Creates a block with the specified id and writes the input data to the cfg savegame buffer in
@@ -414,28 +414,27 @@ private:
      * @param size The size of the block we want to create
      * @param accesss_flags The access flags of the new block
      * @param data A pointer containing the data we will write to the new block
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode CreateConfigBlock(u32 block_id, u16 size, AccessFlag accesss_flags,
-                                 const void* data);
+    Result CreateConfigBlock(u32 block_id, u16 size, AccessFlag accesss_flags, const void* data);
 
     /**
      * Deletes the config savegame file from the filesystem, the buffer in memory is not affected
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode DeleteConfigNANDSaveFile();
+    Result DeleteConfigNANDSaveFile();
 
     /**
      * Re-creates the config savegame file in memory and the filesystem with the default blocks
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode FormatConfig();
+    Result FormatConfig();
 
     /**
      * Open the config savegame file and load it to the memory buffer
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode LoadConfigNANDSaveFile();
+    Result LoadConfigNANDSaveFile();
 
     /**
      * Loads MCU specific data
@@ -538,7 +537,7 @@ public:
      * @param random_number the random_number to set
      * @param console_id the console id to set
      */
-    ResultCode SetConsoleUniqueId(u32 random_number, u64 console_id);
+    Result SetConsoleUniqueId(u32 random_number, u64 console_id);
 
     /**
      * Gets the console unique id from config savegame.
@@ -572,9 +571,9 @@ public:
 
     /**
      * Writes the config savegame memory buffer to the config savegame file in the filesystem
-     * @returns ResultCode indicating the result of the operation, 0 on success
+     * @returns Result indicating the result of the operation, 0 on success
      */
-    ResultCode UpdateConfigNANDSavegame();
+    Result UpdateConfigNANDSavegame();
 
     /**
      * Saves MCU specific data

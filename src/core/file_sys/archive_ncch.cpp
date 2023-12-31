@@ -73,13 +73,13 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
     if (path.GetType() != LowPathType::Binary) {
         LOG_ERROR(Service_FS, "Path need to be Binary");
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     std::vector<u8> binary = path.AsBinary();
     if (binary.size() != sizeof(NCCHFilePath)) {
         LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     NCCHFilePath openfile_path;
@@ -174,63 +174,63 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
             return std::make_unique<IVFCFileInMemory>(std::move(archive_data), romfs_offset,
                                                       romfs_size, std::move(delay_generator));
         }
-        return ERROR_NOT_FOUND;
+        return ResultNotFound;
     }
 
     return file;
 }
 
-ResultCode NCCHArchive::DeleteFile(const Path& path) const {
+Result NCCHArchive::DeleteFile(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a file from an NCCH archive ({}).", GetName());
     // TODO(Subv): Verify error code
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
-                      ErrorLevel::Status);
+    return Result(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
+                  ErrorLevel::Status);
 }
 
-ResultCode NCCHArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
+Result NCCHArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode NCCHArchive::DeleteDirectory(const Path& path) const {
+Result NCCHArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode NCCHArchive::DeleteDirectoryRecursively(const Path& path) const {
+Result NCCHArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                  GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode NCCHArchive::CreateFile(const Path& path, u64 size) const {
+Result NCCHArchive::CreateFile(const Path& path, u64 size) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a file in an NCCH archive ({}).", GetName());
     // TODO: Verify error code
-    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
-                      ErrorLevel::Permanent);
+    return Result(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
+                  ErrorLevel::Permanent);
 }
 
-ResultCode NCCHArchive::CreateDirectory(const Path& path) const {
+Result NCCHArchive::CreateDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
-ResultCode NCCHArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
+Result NCCHArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> NCCHArchive::OpenDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to open a directory within an NCCH archive ({}).",
                  GetName().c_str());
     // TODO(shinyquagsire23): Use correct error code
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
 u64 NCCHArchive::GetFreeBytes() const {
@@ -276,13 +276,13 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
                                                                      u64 program_id) {
     if (path.GetType() != LowPathType::Binary) {
         LOG_ERROR(Service_FS, "Path need to be Binary");
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     std::vector<u8> binary = path.AsBinary();
     if (binary.size() != sizeof(NCCHArchivePath)) {
         LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
-        return ERROR_INVALID_PATH;
+        return ResultInvalidPath;
     }
 
     NCCHArchivePath open_path;
@@ -292,20 +292,19 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
         open_path.tid, static_cast<Service::FS::MediaType>(open_path.media_type & 0xFF));
 }
 
-ResultCode ArchiveFactory_NCCH::Format(const Path& path,
-                                       const FileSys::ArchiveFormatInfo& format_info,
-                                       u64 program_id) {
+Result ArchiveFactory_NCCH::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
+                                   u64 program_id) {
     LOG_ERROR(Service_FS, "Attempted to format a NCCH archive.");
     // TODO: Verify error code
-    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
-                      ErrorLevel::Permanent);
+    return Result(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
+                  ErrorLevel::Permanent);
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_NCCH::GetFormatInfo(const Path& path,
                                                                 u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
-    return RESULT_UNKNOWN;
+    return ResultUnknown;
 }
 
 } // namespace FileSys

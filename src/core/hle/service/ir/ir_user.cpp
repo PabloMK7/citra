@@ -293,7 +293,7 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
     shared_memory_init.initialized = 1;
     std::memcpy(shared_memory->GetPointer(), &shared_memory_init, sizeof(SharedMemoryHeader));
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_INFO(Service_IR,
              "called, shared_buff_size={}, recv_buff_size={}, "
@@ -325,7 +325,7 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_INFO(Service_IR, "called, device_id = {}", device_id);
 }
@@ -333,7 +333,7 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
 void IR_USER::GetReceiveEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb(ctx, 0x0A, 1, 2);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(receive_event);
 
     LOG_INFO(Service_IR, "called");
@@ -342,7 +342,7 @@ void IR_USER::GetReceiveEvent(Kernel::HLERequestContext& ctx) {
 void IR_USER::GetSendEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb(ctx, 0x0B, 1, 2);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(send_event);
 
     LOG_INFO(Service_IR, "called");
@@ -360,7 +360,7 @@ void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
     shared_memory_ptr[offsetof(SharedMemoryHeader, connected)] = 0;
 
     IPC::RequestBuilder rb(ctx, 0x09, 1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_INFO(Service_IR, "called");
 }
@@ -368,7 +368,7 @@ void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
 void IR_USER::GetConnectionStatusEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb(ctx, 0x0C, 1, 2);
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(conn_status_event);
 
     LOG_INFO(Service_IR, "called");
@@ -384,7 +384,7 @@ void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
     receive_buffer = nullptr;
 
     IPC::RequestBuilder rb(ctx, 0x02, 1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_INFO(Service_IR, "called");
 }
@@ -399,11 +399,11 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
     if (connected_device) {
         extra_hid->OnReceive(buffer);
         send_event->Signal();
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
     } else {
         LOG_ERROR(Service_IR, "not connected");
-        rb.Push(ResultCode(static_cast<ErrorDescription>(13), ErrorModule::IR,
-                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        rb.Push(Result(static_cast<ErrorDescription>(13), ErrorModule::IR,
+                       ErrorSummary::InvalidState, ErrorLevel::Status));
     }
 
     LOG_TRACE(Service_IR, "called, data={}", fmt::format("{:02x}", fmt::join(buffer, " ")));
@@ -416,11 +416,11 @@ void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (receive_buffer->Release(count)) {
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
     } else {
         LOG_ERROR(Service_IR, "failed to release {} packets", count);
-        rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::IR, ErrorSummary::NotFound,
-                           ErrorLevel::Status));
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::IR, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
     }
 
     LOG_TRACE(Service_IR, "called, count={}", count);

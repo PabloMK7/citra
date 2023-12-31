@@ -26,9 +26,7 @@ ResultVal<std::shared_ptr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_
                                                                     s32 max_count,
                                                                     std::string name) {
 
-    if (initial_count > max_count) {
-        return ERR_INVALID_COMBINATION_KERNEL;
-    }
+    R_UNLESS(initial_count <= max_count, ResultInvalidCombinationKernel);
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread
@@ -44,21 +42,20 @@ bool Semaphore::ShouldWait(const Thread* thread) const {
 }
 
 void Semaphore::Acquire(Thread* thread) {
-    if (available_count <= 0)
+    if (available_count <= 0) {
         return;
+    }
     --available_count;
 }
 
-ResultVal<s32> Semaphore::Release(s32 release_count) {
-    if (max_count - available_count < release_count)
-        return ERR_OUT_OF_RANGE_KERNEL;
+Result Semaphore::Release(s32* out_count, s32 release_count) {
+    R_UNLESS(max_count >= release_count + available_count, ResultOutOfRangeKernel);
 
-    s32 previous_count = available_count;
+    *out_count = available_count;
     available_count += release_count;
-
     WakeupAllWaitingThreads();
 
-    return previous_count;
+    return ResultSuccess;
 }
 
 } // namespace Kernel

@@ -36,8 +36,9 @@ bool Event::ShouldWait(const Thread* thread) const {
 void Event::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 
-    if (reset_type == ResetType::OneShot)
+    if (reset_type == ResetType::OneShot) {
         signaled = false;
+    }
 }
 
 void Event::Signal() {
@@ -52,8 +53,9 @@ void Event::Clear() {
 void Event::WakeupAllWaitingThreads() {
     WaitObject::WakeupAllWaitingThreads();
 
-    if (reset_type == ResetType::Pulse)
+    if (reset_type == ResetType::Pulse) {
         signaled = false;
+    }
 }
 
 } // namespace Kernel

@@ -51,7 +51,7 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
     buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(read);
     rb.PushMappedBuffer(buffer);
 }
@@ -62,7 +62,7 @@ void Directory::Close(Kernel::HLERequestContext& ctx) {
     backend->Close();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 } // namespace Service::FS

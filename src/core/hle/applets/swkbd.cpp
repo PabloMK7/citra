@@ -19,7 +19,7 @@
 
 namespace HLE::Applets {
 
-ResultCode SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter const& parameter) {
+Result SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter const& parameter) {
     switch (parameter.signal) {
     case Service::APT::SignalType::Request: {
         // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
@@ -44,7 +44,7 @@ ResultCode SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter
             .object = framebuffer_memory,
         });
 
-        return RESULT_SUCCESS;
+        return ResultSuccess;
     }
 
     case Service::APT::SignalType::Message: {
@@ -58,7 +58,7 @@ ResultCode SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter
         case SoftwareKeyboardCallbackResult::OK:
             // Finish execution
             Finalize();
-            return RESULT_SUCCESS;
+            return ResultSuccess;
 
         case SoftwareKeyboardCallbackResult::Close:
             // Let the frontend display error and quit
@@ -66,14 +66,14 @@ ResultCode SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter
             config.return_code = SoftwareKeyboardResult::BannedInput;
             config.text_offset = config.text_length = 0;
             Finalize();
-            return RESULT_SUCCESS;
+            return ResultSuccess;
 
         case SoftwareKeyboardCallbackResult::Continue:
             // Let the frontend display error and get input again
             // The input will be sent for validation again on next Update().
             frontend_applet->ShowError(Common::UTF16BufferToUTF8(config.callback_msg));
             frontend_applet->Execute(ToFrontendConfig(config));
-            return RESULT_SUCCESS;
+            return ResultSuccess;
 
         default:
             UNREACHABLE();
@@ -84,12 +84,12 @@ ResultCode SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter
         LOG_ERROR(Service_APT, "unsupported signal {}", parameter.signal);
         UNIMPLEMENTED();
         // TODO(Subv): Find the right error code
-        return ResultCode(-1);
+        return ResultUnknown;
     }
     }
 }
 
-ResultCode SoftwareKeyboard::Start(Service::APT::MessageParameter const& parameter) {
+Result SoftwareKeyboard::Start(Service::APT::MessageParameter const& parameter) {
     ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                "The size of the parameter (SoftwareKeyboardConfig) is wrong");
 
@@ -104,7 +104,7 @@ ResultCode SoftwareKeyboard::Start(Service::APT::MessageParameter const& paramet
 
     frontend_applet->Execute(ToFrontendConfig(config));
 
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 void SoftwareKeyboard::Update() {
@@ -166,12 +166,12 @@ void SoftwareKeyboard::DrawScreenKeyboard() {
     // TODO(Subv): Draw the HLE keyboard, for now just do nothing
 }
 
-ResultCode SoftwareKeyboard::Finalize() {
+Result SoftwareKeyboard::Finalize() {
     std::vector<u8> buffer(sizeof(SoftwareKeyboardConfig));
     std::memcpy(buffer.data(), &config, buffer.size());
     CloseApplet(nullptr, buffer);
     text_memory = nullptr;
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(

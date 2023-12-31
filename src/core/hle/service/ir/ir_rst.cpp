@@ -130,7 +130,7 @@ void IR_RST::UpdateCallback(std::uintptr_t user_data, s64 cycles_late) {
 void IR_RST::GetHandles(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMoveObjects(shared_memory, update_event);
 }
 
@@ -147,7 +147,7 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     system.CoreTiming().ScheduleEvent(msToCycles(update_period), update_callback_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_IR, "called. update_period={}, raw_c_stick={}", update_period, raw_c_stick);
 }
@@ -159,7 +159,7 @@ void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
     UnloadInputDevices();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     LOG_DEBUG(Service_IR, "called");
 }
 

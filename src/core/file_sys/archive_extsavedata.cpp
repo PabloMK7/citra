@@ -40,7 +40,7 @@ public:
     ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
                                  const u8* buffer) override {
         if (offset > size) {
-            return ERR_WRITE_BEYOND_END;
+            return ResultWriteBeyondEnd;
         } else if (offset == size) {
             return 0ULL;
         }
@@ -108,17 +108,17 @@ public:
 
         if (!path_parser.IsValid()) {
             LOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
-            return ERROR_INVALID_PATH;
+            return ResultInvalidPath;
         }
 
         if (mode.hex == 0) {
             LOG_ERROR(Service_FS, "Empty open mode");
-            return ERROR_UNSUPPORTED_OPEN_FLAGS;
+            return ResultUnsupportedOpenFlags;
         }
 
         if (mode.create_flag) {
             LOG_ERROR(Service_FS, "Create flag is not supported");
-            return ERROR_UNSUPPORTED_OPEN_FLAGS;
+            return ResultUnsupportedOpenFlags;
         }
 
         const auto full_path = path_parser.BuildHostPath(mount_point);
@@ -126,17 +126,17 @@ public:
         switch (path_parser.GetHostStatus(mount_point)) {
         case PathParser::InvalidMountPoint:
             LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
-            return ERROR_FILE_NOT_FOUND;
+            return ResultFileNotFound;
         case PathParser::PathNotFound:
             LOG_ERROR(Service_FS, "Path not found {}", full_path);
-            return ERROR_PATH_NOT_FOUND;
+            return ResultPathNotFound;
         case PathParser::FileInPath:
         case PathParser::DirectoryFound:
             LOG_ERROR(Service_FS, "Unexpected file or directory in {}", full_path);
-            return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
+            return ResultUnexpectedFileOrDirectory;
         case PathParser::NotFound:
             LOG_ERROR(Service_FS, "{} not found", full_path);
-            return ERROR_FILE_NOT_FOUND;
+            return ResultFileNotFound;
         case PathParser::FileFound:
             break; // Expected 'success' case
         }
@@ -144,7 +144,7 @@ public:
         FileUtil::IOFile file(full_path, "r+b");
         if (!file.IsOpen()) {
             LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
-            return ERROR_FILE_NOT_FOUND;
+            return ResultFileNotFound;
         }
 
         Mode rwmode;
@@ -155,10 +155,10 @@ public:
                                                  std::move(delay_generator));
     }
 
-    ResultCode CreateFile(const Path& path, u64 size) const override {
+    Result CreateFile(const Path& path, u64 size) const override {
         if (size == 0) {
             LOG_ERROR(Service_FS, "Zero-size file is not supported");
-            return ERROR_UNSUPPORTED_OPEN_FLAGS;
+            return ResultUnsupportedOpenFlags;
         }
         return SaveDataArchive::CreateFile(path, size);
     }
@@ -250,18 +250,18 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
         // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
         if (type != ExtSaveDataType::Shared) {
-            return ERR_NOT_FOUND_INVALID_STATE;
+            return ResultNotFoundInvalidState;
         } else {
-            return ERR_NOT_FORMATTED;
+            return ResultNotFormatted;
         }
     }
     std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExtSaveDataDelayGenerator>();
     return std::make_unique<ExtSaveDataArchive>(fullpath, std::move(delay_generator));
 }
 
-ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
-                                              const FileSys::ArchiveFormatInfo& format_info,
-                                              u64 program_id) {
+Result ArchiveFactory_ExtSaveData::Format(const Path& path,
+                                          const FileSys::ArchiveFormatInfo& format_info,
+                                          u64 program_id) {
     auto corrected_path = GetCorrectedPath(path);
 
     // These folders are always created with the ExtSaveData
@@ -276,11 +276,11 @@ ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
 
     if (!file.IsOpen()) {
         // TODO(Subv): Find the correct error code
-        return RESULT_UNKNOWN;
+        return ResultUnknown;
     }
 
     file.WriteBytes(&format_info, sizeof(format_info));
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Path& path,
@@ -291,7 +291,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     if (!file.IsOpen()) {
         LOG_ERROR(Service_FS, "Could not open metadata information for archive");
         // TODO(Subv): Verify error code
-        return ERR_NOT_FORMATTED;
+        return ResultNotFormatted;
     }
 
     ArchiveFormatInfo info = {};

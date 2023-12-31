@@ -332,20 +332,20 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
-        return ERR_OUT_OF_RANGE;
+        return ResultOutOfRange;
     }
 
     if (processor_id > ThreadProcessorIdMax) {
         LOG_ERROR(Kernel_SVC, "Invalid processor id: {}", processor_id);
-        return ERR_OUT_OF_RANGE_KERNEL;
+        return ResultOutOfRangeKernel;
     }
 
     // TODO(yuriks): Other checks, returning 0xD9001BEA
     if (!memory.IsValidVirtualAddress(*owner_process, entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name={}): invalid entry {:08x}", name, entry_point);
         // TODO: Verify error
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        return Result(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
+                      ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
     auto thread = std::make_shared<Thread>(*this, processor_id);
@@ -445,7 +445,7 @@ void ThreadManager::Reschedule() {
     SwitchContext(next);
 }
 
-void Thread::SetWaitSynchronizationResult(ResultCode result) {
+void Thread::SetWaitSynchronizationResult(Result result) {
     context.cpu_registers[0] = result.raw;
 }
 

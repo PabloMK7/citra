@@ -77,8 +77,8 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     if (algorithm == AlgorithmType::CCM_Encrypt || algorithm == AlgorithmType::CCM_Decrypt) {
         // AES-CCM is not supported with this function
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
-        rb.Push(ResultCode(ErrorDescription::InvalidSection, ErrorModule::PS,
-                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+        rb.Push(Result(ErrorDescription::InvalidSection, ErrorModule::PS,
+                       ErrorSummary::WrongArgument, ErrorLevel::Status));
         rb.PushMappedBuffer(source);
         rb.PushMappedBuffer(destination);
         return;
@@ -141,7 +141,7 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 4);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(new_iv);
     rb.PushMappedBuffer(source);
     rb.PushMappedBuffer(destination);
@@ -157,7 +157,7 @@ void PS_PS::GenerateRandomBytes(Kernel::HLERequestContext& ctx) {
     buffer.Write(out_data.data(), 0, size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(buffer);
 }
 

@@ -20,8 +20,8 @@ constexpr std::size_t MAX_STATIC_BUFFERS = 16;
 // These errors are commonly returned by invalid IPC translations, so alias them here for
 // convenience.
 // TODO(yuriks): These will probably go away once translation is implemented inside the kernel.
-using Kernel::ERR_INVALID_BUFFER_DESCRIPTOR;
-constexpr auto ERR_INVALID_HANDLE = Kernel::ERR_INVALID_HANDLE_OS;
+using Kernel::ResultInvalidBufferDescriptor;
+constexpr auto ResultInvalidHandle = Kernel::ResultInvalidHandleOs;
 
 enum DescriptorType : u32 {
     // Buffer related descriptors types (mask : 0x0F)

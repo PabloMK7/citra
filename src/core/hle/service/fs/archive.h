@@ -88,7 +88,7 @@ public:
      * Closes an archive
      * @param handle Handle to the archive to close
      */
-    ResultCode CloseArchive(ArchiveHandle handle);
+    Result CloseArchive(ArchiveHandle handle);
 
     /**
      * Open a File from an Archive
@@ -106,7 +106,7 @@ public:
      * @param path Path to the File inside of the Archive
      * @return Whether deletion succeeded
      */
-    ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
+    Result DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
     /**
      * Rename a File between two Archives
@@ -116,10 +116,10 @@ public:
      * @param dest_path Path to the File inside of the destination Archive
      * @return Whether rename succeeded
      */
-    ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle,
-                                         const FileSys::Path& src_path,
-                                         ArchiveHandle dest_archive_handle,
-                                         const FileSys::Path& dest_path);
+    Result RenameFileBetweenArchives(ArchiveHandle src_archive_handle,
+                                     const FileSys::Path& src_path,
+                                     ArchiveHandle dest_archive_handle,
+                                     const FileSys::Path& dest_path);
 
     /**
      * Delete a Directory from an Archive
@@ -127,7 +127,7 @@ public:
      * @param path Path to the Directory inside of the Archive
      * @return Whether deletion succeeded
      */
-    ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
+    Result DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
     /**
      * Delete a Directory and anything under it from an Archive
@@ -135,8 +135,8 @@ public:
      * @param path Path to the Directory inside of the Archive
      * @return Whether deletion succeeded
      */
-    ResultCode DeleteDirectoryRecursivelyFromArchive(ArchiveHandle archive_handle,
-                                                     const FileSys::Path& path);
+    Result DeleteDirectoryRecursivelyFromArchive(ArchiveHandle archive_handle,
+                                                 const FileSys::Path& path);
 
     /**
      * Create a File in an Archive
@@ -145,8 +145,8 @@ public:
      * @param file_size The size of the new file, filled with zeroes
      * @return File creation result code
      */
-    ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
-                                   u64 file_size);
+    Result CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
+                               u64 file_size);
 
     /**
      * Create a Directory from an Archive
@@ -154,7 +154,7 @@ public:
      * @param path Path to the Directory inside of the Archive
      * @return Whether creation of directory succeeded
      */
-    ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
+    Result CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
     /**
      * Rename a Directory between two Archives
@@ -164,10 +164,10 @@ public:
      * @param dest_path Path to the Directory inside of the destination Archive
      * @return Whether rename succeeded
      */
-    ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
-                                              const FileSys::Path& src_path,
-                                              ArchiveHandle dest_archive_handle,
-                                              const FileSys::Path& dest_path);
+    Result RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
+                                          const FileSys::Path& src_path,
+                                          ArchiveHandle dest_archive_handle,
+                                          const FileSys::Path& dest_path);
 
     /**
      * Open a Directory from an Archive
@@ -192,10 +192,10 @@ public:
      * @param format_info Format information about the new archive
      * @param path The path to the archive, if relevant.
      * @param program_id the program ID of the client that requests the operation
-     * @return ResultCode 0 on success or the corresponding code on error
+     * @return Result 0 on success or the corresponding code on error
      */
-    ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info,
-                             const FileSys::Path& path, u64 program_id);
+    Result FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info,
+                         const FileSys::Path& path, u64 program_id);
 
     /**
      * Retrieves the format info about the archive of the specified type and path.
@@ -217,36 +217,35 @@ public:
      * @param smdh_icon the SMDH icon for this ExtSaveData
      * @param format_info Format information about the new archive
      * @param program_id the program ID of the client that requests the operation
-     * @return ResultCode 0 on success or the corresponding code on error
+     * @return Result 0 on success or the corresponding code on error
      */
-    ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
-                                 std::span<const u8> smdh_icon,
-                                 const FileSys::ArchiveFormatInfo& format_info, u64 program_id);
+    Result CreateExtSaveData(MediaType media_type, u32 high, u32 low, std::span<const u8> smdh_icon,
+                             const FileSys::ArchiveFormatInfo& format_info, u64 program_id);
 
     /**
      * Deletes the SharedExtSaveData archive for the specified extdata ID
      * @param media_type The media type of the archive to delete (NAND / SDMC)
      * @param high The high word of the extdata id to delete
      * @param low The low word of the extdata id to delete
-     * @return ResultCode 0 on success or the corresponding code on error
+     * @return Result 0 on success or the corresponding code on error
      */
-    ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low);
+    Result DeleteExtSaveData(MediaType media_type, u32 high, u32 low);
 
     /**
      * Deletes the SystemSaveData archive folder for the specified save data id
      * @param high The high word of the SystemSaveData archive to delete
      * @param low The low word of the SystemSaveData archive to delete
-     * @return ResultCode 0 on success or the corresponding code on error
+     * @return Result 0 on success or the corresponding code on error
      */
-    ResultCode DeleteSystemSaveData(u32 high, u32 low);
+    Result DeleteSystemSaveData(u32 high, u32 low);
 
     /**
      * Creates the SystemSaveData archive folder for the specified save data id
      * @param high The high word of the SystemSaveData archive to create
      * @param low The low word of the SystemSaveData archive to create
-     * @return ResultCode 0 on success or the corresponding code on error
+     * @return Result 0 on success or the corresponding code on error
      */
-    ResultCode CreateSystemSaveData(u32 high, u32 low);
+    Result CreateSystemSaveData(u32 high, u32 low);
 
     /**
      * Returns capacity and free space information about the given media type.
@@ -266,8 +265,8 @@ private:
      * @param factory File system backend interface to the archive
      * @param id_code Id code used to access this type of archive
      */
-    ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory,
-                                   ArchiveIdCode id_code);
+    Result RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory,
+                               ArchiveIdCode id_code);
 
     /// Register all archive types
     void RegisterArchiveTypes();

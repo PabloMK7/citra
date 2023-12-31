@@ -120,9 +120,9 @@ struct ConversionConfiguration {
     /// Output parameters for the conversion results
     ConversionBuffer dst;
 
-    ResultCode SetInputLineWidth(u16 width);
-    ResultCode SetInputLines(u16 lines);
-    ResultCode SetStandardCoefficient(StandardCoefficient standard_coefficient);
+    Result SetInputLineWidth(u16 width);
+    Result SetInputLines(u16 lines);
+    Result SetStandardCoefficient(StandardCoefficient standard_coefficient);
 
 private:
     template <class Archive>

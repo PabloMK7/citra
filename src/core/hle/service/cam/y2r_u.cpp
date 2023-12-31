@@ -37,23 +37,23 @@ constexpr std::array<CoefficientSet, 4> standard_coefficients{{
     {{0x12A, 0x1CA, 0x88, 0x36, 0x21C, -0x1F04, 0x99C, -0x2421}},  // ITU_Rec709_Scaling
 }};
 
-ResultCode ConversionConfiguration::SetInputLineWidth(u16 width) {
+Result ConversionConfiguration::SetInputLineWidth(u16 width) {
     if (width == 0 || width > 1024 || width % 8 != 0) {
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::CAM,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
+        return Result(ErrorDescription::OutOfRange, ErrorModule::CAM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Usage); // 0xE0E053FD
     }
 
     // Note: The hardware uses the register value 0 to represent a width of 1024, so for a width of
     // 1024 the `camera` module would set the value 0 here, but we don't need to emulate this
     // internal detail.
     this->input_line_width = width;
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
+Result ConversionConfiguration::SetInputLines(u16 lines) {
     if (lines == 0 || lines > 1024) {
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::CAM,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
+        return Result(ErrorDescription::OutOfRange, ErrorModule::CAM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Usage); // 0xE0E053FD
     }
 
     // Note: In what appears to be a bug, the `camera` module does not set the hardware register at
@@ -62,19 +62,18 @@ ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
     if (lines != 1024) {
         this->input_lines = lines;
     }
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
-ResultCode ConversionConfiguration::SetStandardCoefficient(
-    StandardCoefficient standard_coefficient) {
+Result ConversionConfiguration::SetStandardCoefficient(StandardCoefficient standard_coefficient) {
     const auto index = static_cast<std::size_t>(standard_coefficient);
     if (index >= standard_coefficients.size()) {
-        return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053ED
+        return Result(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
+                      ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053ED
     }
 
     std::memcpy(coefficients.data(), standard_coefficients[index].data(), sizeof(coefficients));
-    return RESULT_SUCCESS;
+    return ResultSuccess;
 }
 
 void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
@@ -83,7 +82,7 @@ void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
     conversion.input_format = rp.PopEnum<InputFormat>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called input_format={}", conversion.input_format);
 }
@@ -92,7 +91,7 @@ void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushEnum(conversion.input_format);
 
     LOG_DEBUG(Service_Y2R, "called input_format={}", conversion.input_format);
@@ -104,7 +103,7 @@ void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
     conversion.output_format = rp.PopEnum<OutputFormat>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called output_format={}", conversion.output_format);
 }
@@ -113,7 +112,7 @@ void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushEnum(conversion.output_format);
 
     LOG_DEBUG(Service_Y2R, "called output_format={}", conversion.output_format);
@@ -125,7 +124,7 @@ void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
     conversion.rotation = rp.PopEnum<Rotation>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called rotation={}", conversion.rotation);
 }
@@ -134,7 +133,7 @@ void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushEnum(conversion.rotation);
 
     LOG_DEBUG(Service_Y2R, "called rotation={}", conversion.rotation);
@@ -146,7 +145,7 @@ void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
     conversion.block_alignment = rp.PopEnum<BlockAlignment>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called block_alignment={}", conversion.block_alignment);
 }
@@ -155,7 +154,7 @@ void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushEnum(conversion.block_alignment);
 
     LOG_DEBUG(Service_Y2R, "called block_alignment={}", conversion.block_alignment);
@@ -167,7 +166,7 @@ void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
     spacial_dithering_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
@@ -176,7 +175,7 @@ void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(spacial_dithering_enabled);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -187,7 +186,7 @@ void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
     temporal_dithering_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
@@ -196,7 +195,7 @@ void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(temporal_dithering_enabled);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -207,7 +206,7 @@ void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
     transfer_end_interrupt_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
@@ -216,7 +215,7 @@ void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(transfer_end_interrupt_enabled);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -226,7 +225,7 @@ void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushCopyObjects(completion_event);
 
     LOG_DEBUG(Service_Y2R, "called");
@@ -242,7 +241,7 @@ void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
     // TODO (wwylele): pass process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R,
               "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
@@ -261,7 +260,7 @@ void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
     // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R,
               "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
@@ -281,7 +280,7 @@ void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
     // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R,
               "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
@@ -301,7 +300,7 @@ void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
     // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R,
               "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
@@ -314,7 +313,7 @@ void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(1);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -324,7 +323,7 @@ void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(1);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -334,7 +333,7 @@ void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(1);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -344,7 +343,7 @@ void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(1);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -361,7 +360,7 @@ void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
     // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R,
               "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
@@ -374,7 +373,7 @@ void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(1);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -394,7 +393,7 @@ void Y2R_U::GetInputLineWidth(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(conversion.input_line_width);
 
     LOG_DEBUG(Service_Y2R, "called input_line_width={}", conversion.input_line_width);
@@ -414,7 +413,7 @@ void Y2R_U::GetInputLines(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(static_cast<u32>(conversion.input_lines));
 
     LOG_DEBUG(Service_Y2R, "called input_lines={}", conversion.input_lines);
@@ -426,7 +425,7 @@ void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
     rp.PopRaw<CoefficientSet>(conversion.coefficients);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called coefficients=[{:X}, {:X}, {:X}, {:X}, {:X}, {:X}, {:X}, {:X}]",
               conversion.coefficients[0], conversion.coefficients[1], conversion.coefficients[2],
@@ -438,7 +437,7 @@ void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(conversion.coefficients);
 
     LOG_DEBUG(Service_Y2R, "called");
@@ -460,14 +459,14 @@ void Y2R_U::GetStandardCoefficient(Kernel::HLERequestContext& ctx) {
 
     if (index < standard_coefficients.size()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultSuccess);
         rb.PushRaw(standard_coefficients[index]);
 
         LOG_DEBUG(Service_Y2R, "called standard_coefficient={} ", index);
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
-                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        rb.Push(Result(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
+                       ErrorSummary::InvalidArgument, ErrorLevel::Usage));
 
         LOG_ERROR(Service_Y2R, "called standard_coefficient={}  The argument is invalid!", index);
     }
@@ -478,7 +477,7 @@ void Y2R_U::SetAlpha(Kernel::HLERequestContext& ctx) {
     conversion.alpha = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called alpha={}", conversion.alpha);
 }
@@ -487,7 +486,7 @@ void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(conversion.alpha);
 
     LOG_DEBUG(Service_Y2R, "called alpha={}", conversion.alpha);
@@ -497,7 +496,7 @@ void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     rp.PopRaw(dithering_weight_params);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -506,7 +505,7 @@ void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(9, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(dithering_weight_params);
 
     LOG_DEBUG(Service_Y2R, "called");
@@ -526,7 +525,7 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
     completion_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -535,7 +534,7 @@ void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -544,7 +543,7 @@ void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(0); // StartConversion always finishes immediately
 
     LOG_DEBUG(Service_Y2R, "called");
@@ -559,7 +558,7 @@ void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
     conversion.rotation = params.rotation;
     conversion.block_alignment = params.block_alignment;
 
-    ResultCode result = conversion.SetInputLineWidth(params.input_line_width);
+    Result result = conversion.SetInputLineWidth(params.input_line_width);
 
     if (result.IsError())
         goto cleanup;
@@ -593,7 +592,7 @@ void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(0);
 
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
@@ -621,7 +620,7 @@ void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
 
     completion_event->Clear();
 
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -630,7 +629,7 @@ void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -639,7 +638,7 @@ void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushRaw(conversion);
 
     LOG_DEBUG(Service_Y2R, "called");

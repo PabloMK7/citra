@@ -42,9 +42,9 @@ public:
     /**
      * Sends an SyncRequest from the current emulated thread.
      * @param thread Thread that initiated the request.
-     * @return ResultCode of the operation.
+     * @return Result of the operation.
      */
-    ResultCode SendSyncRequest(std::shared_ptr<Thread> thread);
+    Result SendSyncRequest(std::shared_ptr<Thread> thread);
 
     std::string name; ///< Name of client port (optional)
 
