@@ -35,8 +35,6 @@ jclass GetCheatClass();
 jfieldID GetCheatPointer();
 jmethodID GetCheatConstructor();
 
-jfieldID GetCheatEnginePointer();
-
 jfieldID GetGameInfoPointer();
 
 jclass GetDiskCacheProgressClass();

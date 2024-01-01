@@ -47,18 +47,19 @@ class CheatsViewModel : ViewModel() {
     val detailsViewFocusChange get() = _detailsViewFocusChange.asStateFlow()
     private val _detailsViewFocusChange = MutableStateFlow(false)
 
-    private var cheatEngine: CheatEngine? = null
+    private var titleId: Long = 0
     lateinit var cheats: Array<Cheat>
     private var cheatsNeedSaving = false
     private var selectedCheatPosition = -1
 
-    fun initialize(titleId: Long) {
-        cheatEngine = CheatEngine(titleId)
+    fun initialize(titleId_: Long) {
+        titleId = titleId_;
         load()
     }
 
     private fun load() {
-        cheats = cheatEngine!!.getCheats()
+        CheatEngine.loadCheatFile(titleId)
+        cheats = CheatEngine.getCheats()
         for (i in cheats.indices) {
             cheats[i].setEnabledChangedCallback {
                 cheatsNeedSaving = true
@@ -69,7 +70,7 @@ class CheatsViewModel : ViewModel() {
 
     fun saveIfNeeded() {
         if (cheatsNeedSaving) {
-            cheatEngine!!.saveCheatFile()
+            CheatEngine.saveCheatFile(titleId)
             cheatsNeedSaving = false
         }
     }
@@ -107,7 +108,7 @@ class CheatsViewModel : ViewModel() {
         _isAdding.value = false
         _isEditing.value = false
         val position = cheats.size
-        cheatEngine!!.addCheat(cheat)
+        CheatEngine.addCheat(cheat)
         cheatsNeedSaving = true
         load()
         notifyCheatAdded(position)
@@ -123,7 +124,7 @@ class CheatsViewModel : ViewModel() {
     }
 
     fun updateSelectedCheat(newCheat: Cheat?) {
-        cheatEngine!!.updateCheat(selectedCheatPosition, newCheat)
+        CheatEngine.updateCheat(selectedCheatPosition, newCheat)
         cheatsNeedSaving = true
         load()
         notifyCheatUpdated(selectedCheatPosition)
@@ -141,7 +142,7 @@ class CheatsViewModel : ViewModel() {
     fun deleteSelectedCheat() {
         val position = selectedCheatPosition
         setSelectedCheat(null, -1)
-        cheatEngine!!.removeCheat(position)
+        CheatEngine.removeCheat(position)
         cheatsNeedSaving = true
         load()
         notifyCheatDeleted(position)

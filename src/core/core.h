@@ -11,6 +11,7 @@
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
+#include "core/cheats/cheats.h"
 #include "core/movie.h"
 #include "core/perf_stats.h"
 
@@ -47,10 +48,6 @@ class KernelSystem;
 struct New3dsHwCapabilities;
 enum class MemoryMode : u8;
 } // namespace Kernel
-
-namespace Cheats {
-class CheatEngine;
-}
 
 namespace VideoDumper {
 class Backend;
@@ -401,7 +398,7 @@ private:
     Core::Movie movie;
 
     /// Cheats manager
-    std::unique_ptr<Cheats::CheatEngine> cheat_engine;
+    Cheats::CheatEngine cheat_engine;
 
     /// Video dumper backend
     std::shared_ptr<VideoDumper::Backend> video_dumper;

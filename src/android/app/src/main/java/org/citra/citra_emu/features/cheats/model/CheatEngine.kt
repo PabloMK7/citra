@@ -7,25 +7,13 @@ package org.citra.citra_emu.features.cheats.model
 import androidx.annotation.Keep
 
 @Keep
-class CheatEngine(titleId: Long) {
-    @Keep
-    private val mPointer: Long
-
-    init {
-        mPointer = initialize(titleId)
-    }
-
-    protected external fun finalize()
+object CheatEngine {
+    external fun loadCheatFile(titleId: Long)
+    external fun saveCheatFile(titleId: Long)
 
     external fun getCheats(): Array<Cheat>
 
     external fun addCheat(cheat: Cheat?)
     external fun removeCheat(index: Int)
     external fun updateCheat(index: Int, newCheat: Cheat?)
-    external fun saveCheatFile()
-
-    companion object {
-        @JvmStatic
-        private external fun initialize(titleId: Long): Long
-    }
 }

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <span>
 #include <QWidget>
 #include "common/common_types.h"
 
@@ -25,7 +26,8 @@ class ConfigureCheats : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureCheats(Core::System& system, u64 title_id, QWidget* parent = nullptr);
+    explicit ConfigureCheats(Cheats::CheatEngine& cheat_engine, u64 title_id_,
+                             QWidget* parent = nullptr);
     ~ConfigureCheats();
     bool ApplyConfiguration();
 
@@ -58,9 +60,9 @@ private slots:
 
 private:
     std::unique_ptr<Ui::ConfigureCheats> ui;
-    std::vector<std::shared_ptr<Cheats::CheatBase>> cheats;
+    Cheats::CheatEngine& cheat_engine;
+    std::span<const std::shared_ptr<Cheats::CheatBase>> cheats;
     bool edited = false, newly_created = false;
     int last_row = -1, last_col = -1;
     u64 title_id;
-    std::unique_ptr<Cheats::CheatEngine> cheat_engine;
 };

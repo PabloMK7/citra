@@ -38,7 +38,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
     graphics_tab = std::make_unique<ConfigureGraphics>(physical_devices, is_powered_on, this);
     system_tab = std::make_unique<ConfigureSystem>(system, this);
     debug_tab = std::make_unique<ConfigureDebug>(is_powered_on, this);
-    cheat_tab = std::make_unique<ConfigureCheats>(system, title_id, this);
+    cheat_tab = std::make_unique<ConfigureCheats>(system.CheatEngine(), title_id, this);
 
     ui->setupUi(this);
 

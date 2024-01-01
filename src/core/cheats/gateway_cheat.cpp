@@ -472,8 +472,8 @@ std::string GatewayCheat::ToString() const {
     return result;
 }
 
-std::vector<std::unique_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string& filepath) {
-    std::vector<std::unique_ptr<CheatBase>> cheats;
+std::vector<std::shared_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string& filepath) {
+    std::vector<std::shared_ptr<CheatBase>> cheats;
 
     boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
     FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
@@ -493,7 +493,7 @@ std::vector<std::unique_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string
         line = Common::StripSpaces(line); // remove spaces at front and end
         if (line.length() >= 2 && line.front() == '[') {
             if (!cheat_lines.empty()) {
-                cheats.push_back(std::make_unique<GatewayCheat>(name, cheat_lines, comments));
+                cheats.push_back(std::make_shared<GatewayCheat>(name, cheat_lines, comments));
                 cheats.back()->SetEnabled(enabled);
                 enabled = false;
             }
@@ -511,7 +511,7 @@ std::vector<std::unique_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string
         }
     }
     if (!cheat_lines.empty()) {
-        cheats.push_back(std::make_unique<GatewayCheat>(name, cheat_lines, comments));
+        cheats.push_back(std::make_shared<GatewayCheat>(name, cheat_lines, comments));
         cheats.back()->SetEnabled(enabled);
     }
     return cheats;

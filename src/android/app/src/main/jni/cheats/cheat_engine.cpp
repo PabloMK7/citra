@@ -15,24 +15,24 @@
 
 extern "C" {
 
-static Cheats::CheatEngine* GetPointer(JNIEnv* env, jobject obj) {
-    return reinterpret_cast<Cheats::CheatEngine*>(
-        env->GetLongField(obj, IDCache::GetCheatEnginePointer()));
+static Cheats::CheatEngine& GetEngine() {
+    Core::System& system{Core::System::GetInstance()};
+    return system.CheatEngine();
 }
 
-JNIEXPORT jlong JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_initialize(
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_loadCheatFile(
     JNIEnv* env, jclass, jlong title_id) {
-    return reinterpret_cast<jlong>(new Cheats::CheatEngine(title_id, Core::System::GetInstance()));
+    GetEngine().LoadCheatFile(title_id);
 }
 
-JNIEXPORT void JNICALL
-Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_finalize(JNIEnv* env, jobject obj) {
-    delete GetPointer(env, obj);
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_saveCheatFile(
+    JNIEnv* env, jclass, jlong title_id) {
+    GetEngine().SaveCheatFile(title_id);
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_getCheats(JNIEnv* env, jobject obj) {
-    auto cheats = GetPointer(env, obj)->GetCheats();
+Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_getCheats(JNIEnv* env, jclass) {
+    auto cheats = GetEngine().GetCheats();
 
     const jobjectArray array =
         env->NewObjectArray(static_cast<jsize>(cheats.size()), IDCache::GetCheatClass(), nullptr);
@@ -45,22 +45,19 @@ Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_getCheats(JNIEnv* en
 }
 
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_addCheat(
-    JNIEnv* env, jobject obj, jobject j_cheat) {
-    GetPointer(env, obj)->AddCheat(*CheatFromJava(env, j_cheat));
+    JNIEnv* env, jclass, jobject j_cheat) {
+    auto cheat = *CheatFromJava(env, j_cheat);
+    GetEngine().AddCheat(std::move(cheat));
 }
 
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_removeCheat(
-    JNIEnv* env, jobject obj, jint index) {
-    GetPointer(env, obj)->RemoveCheat(index);
+    JNIEnv* env, jclass, jint index) {
+    GetEngine().RemoveCheat(index);
 }
 
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_updateCheat(
-    JNIEnv* env, jobject obj, jint index, jobject j_new_cheat) {
-    GetPointer(env, obj)->UpdateCheat(index, *CheatFromJava(env, j_new_cheat));
-}
-
-JNIEXPORT void JNICALL Java_org_citra_citra_1emu_features_cheats_model_CheatEngine_saveCheatFile(
-    JNIEnv* env, jobject obj) {
-    GetPointer(env, obj)->SaveCheatFile();
+    JNIEnv* env, jclass, jint index, jobject j_new_cheat) {
+    auto cheat = *CheatFromJava(env, j_new_cheat);
+    GetEngine().UpdateCheat(index, std::move(cheat));
 }
 }
