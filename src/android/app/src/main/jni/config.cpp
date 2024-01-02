@@ -146,6 +146,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync_new);
     ReadSetting("Renderer", Settings::values.texture_filter);
+    ReadSetting("Renderer", Settings::values.texture_sampling);
 
     // Work around to map Android setting for enabling the frame limiter to the format Citra expects
     if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {

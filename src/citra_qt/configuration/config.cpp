@@ -645,6 +645,7 @@ void Config::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.bg_blue);
 
     ReadGlobalSetting(Settings::values.texture_filter);
+    ReadGlobalSetting(Settings::values.texture_sampling);
 
     if (global) {
         ReadBasicSetting(Settings::values.use_shader_jit);
@@ -1130,6 +1131,7 @@ void Config::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.bg_blue);
 
     WriteGlobalSetting(Settings::values.texture_filter);
+    WriteGlobalSetting(Settings::values.texture_sampling);
 
     if (global) {
         WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit.GetValue(),
