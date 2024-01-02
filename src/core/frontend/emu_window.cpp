@@ -173,8 +173,7 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
     TouchPressed(framebuffer_x, framebuffer_y);
 }
 
-void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
-                                               bool is_portrait_mode) {
+void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_portrait_mode) {
     Layout::FramebufferLayout layout;
 
     // If in portrait mode, only the MobilePortrait option really makes sense
@@ -200,7 +199,8 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
             layout =
                 Layout::LargeFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
                                          Settings::values.upright_screen.GetValue(),
-                                         Settings::values.large_screen_proportion.GetValue());
+                                         Settings::values.large_screen_proportion.GetValue(),
+                                         Layout::VerticalAlignment::Bottom);
             break;
         case Settings::LayoutOption::HybridScreen:
             layout =
@@ -208,8 +208,10 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
                                            Settings::values.upright_screen.GetValue());
             break;
         case Settings::LayoutOption::SideScreen:
-            layout = Layout::SideFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
-                                             Settings::values.upright_screen.GetValue());
+            layout =
+                Layout::LargeFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
+                                         Settings::values.upright_screen.GetValue(), 1.0f,
+                                         Layout::VerticalAlignment::Bottom);
             break;
 #ifndef ANDROID
         case Settings::LayoutOption::SeparateWindows:
@@ -222,8 +224,9 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height,
                                                        Settings::values.swap_screen.GetValue());
             break;
         case Settings::LayoutOption::MobileLandscape:
-            layout = Layout::MobileLandscapeFrameLayout(
-                width, height, Settings::values.swap_screen.GetValue(), 2.25f, false);
+            layout =
+                Layout::LargeFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
+                                         false, 2.25f, Layout::VerticalAlignment::Top);
             break;
         case Settings::LayoutOption::Default:
         default:
