@@ -26,6 +26,38 @@
     <!-- Fixed -->
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.games</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>3ds</string>
+                <string>3dsx</string>
+                <string>cci</string>
+                <string>cxi</string>
+                <string>cia</string>
+            </array>
+            <key>CFBundleTypeName</key>
+            <string>Nintendo 3DS File</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Default</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>elf</string>
+                <string>axf</string>
+            </array>
+            <key>CFBundleTypeName</key>
+            <string>Unix Executable and Linkable Format</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+    </array>
     <key>NSCameraUsageDescription</key>
     <string>This app requires camera access to emulate the 3DS&apos;s cameras.</string>
     <key>NSMicrophoneUsageDescription</key>

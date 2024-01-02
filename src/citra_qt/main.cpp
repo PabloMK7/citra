@@ -229,6 +229,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     SetDefaultUIGeometry();
     RestoreUIState();
 
+    ConnectAppEvents();
     ConnectMenuEvents();
     ConnectWidgetEvents();
 
@@ -759,6 +760,21 @@ void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
         auto_paused = false;
         OnStartGame();
     }
+}
+
+bool GApplicationEventFilter::eventFilter(QObject* object, QEvent* event) {
+    if (event->type() == QEvent::FileOpen) {
+        emit FileOpen(static_cast<QFileOpenEvent*>(event));
+        return true;
+    }
+    return false;
+}
+
+void GMainWindow::ConnectAppEvents() {
+    const auto filter = new GApplicationEventFilter();
+    QGuiApplication::instance()->installEventFilter(filter);
+
+    connect(filter, &GApplicationEventFilter::FileOpen, this, &GMainWindow::OnFileOpen);
 }
 
 void GMainWindow::ConnectWidgetEvents() {
@@ -2750,6 +2766,10 @@ bool GMainWindow::DropAction(QDropEvent* event) {
         }
     }
     return true;
+}
+
+void GMainWindow::OnFileOpen(const QFileOpenEvent* event) {
+    BootGame(event->file());
 }
 
 void GMainWindow::dropEvent(QDropEvent* event) {

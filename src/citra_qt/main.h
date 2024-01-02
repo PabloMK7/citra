@@ -41,6 +41,7 @@ class LoadingScreen;
 class MicroProfileDialog;
 class MultiplayerState;
 class ProfilerWidget;
+class QFileOpenEvent;
 template <typename>
 class QFutureWatcher;
 class QLabel;
@@ -96,6 +97,8 @@ public:
     bool DropAction(QDropEvent* event);
     void AcceptDropEvent(QDropEvent* event);
 
+    void OnFileOpen(const QFileOpenEvent* event);
+
     void UninstallTitles(
         const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles);
 
@@ -137,6 +140,7 @@ private:
     void SyncMenuUISettings();
     void RestoreUIState();
 
+    void ConnectAppEvents();
     void ConnectWidgetEvents();
     void ConnectMenuEvents();
     void UpdateMenuState();
@@ -380,6 +384,16 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+};
+
+class GApplicationEventFilter : public QObject {
+    Q_OBJECT
+
+signals:
+    void FileOpen(const QFileOpenEvent* event);
+
+protected:
+    bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 Q_DECLARE_METATYPE(std::size_t);
