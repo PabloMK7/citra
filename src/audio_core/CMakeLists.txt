@@ -4,11 +4,11 @@ add_library(audio_core STATIC
     codec.h
     dsp_interface.cpp
     dsp_interface.h
+    hle/aac_decoder.cpp
+    hle/aac_decoder.h
     hle/common.h
     hle/decoder.cpp
     hle/decoder.h
-    hle/faad2_decoder.cpp
-    hle/faad2_decoder.h
     hle/filter.cpp
     hle/filter.h
     hle/hle.cpp

@@ -8,9 +8,9 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 #include "audio_core/audio_types.h"
+#include "audio_core/hle/aac_decoder.h"
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/decoder.h"
-#include "audio_core/hle/faad2_decoder.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/hle/mixers.h"
 #include "audio_core/hle/shared_memory.h"
@@ -98,7 +98,7 @@ private:
     Core::Timing& core_timing;
     Core::TimingEventType* tick_event{};
 
-    std::unique_ptr<HLE::DecoderBase> decoder{};
+    std::unique_ptr<HLE::DecoderBase> aac_decoder{};
 
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> interrupt_handler{};
 
@@ -114,13 +114,6 @@ private:
     friend class boost::serialization::access;
 };
 
-static std::vector<std::function<std::unique_ptr<HLE::DecoderBase>(Memory::MemorySystem&)>>
-    decoder_backends = {
-        [](Memory::MemorySystem& memory) -> std::unique_ptr<HLE::DecoderBase> {
-            return std::make_unique<HLE::FAAD2Decoder>(memory);
-        },
-};
-
 DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& timing)
     : parent(parent_), core_timing(timing) {
     dsp_memory.raw_memory.fill(0);
@@ -129,19 +122,7 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& 
         source.SetMemory(memory);
     }
 
-    for (auto& factory : decoder_backends) {
-        decoder = factory(memory);
-        if (decoder && decoder->IsValid()) {
-            break;
-        }
-    }
-
-    if (!decoder || !decoder->IsValid()) {
-        LOG_WARNING(Audio_DSP,
-                    "Unable to load any decoders, this could cause missing audio in some games");
-        decoder = std::make_unique<HLE::NullDecoder>();
-    }
-
+    aac_decoder = std::make_unique<HLE::AACDecoder>(memory);
     tick_event =
         core_timing.RegisterEvent("AudioCore::DspHle::tick_event", [this](u64, s64 cycles_late) {
             this->AudioTickCallback(cycles_late);
@@ -291,12 +272,9 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
             UNIMPLEMENTED();
             return;
         }
-        std::optional<HLE::BinaryMessage> response = decoder->ProcessRequest(request);
-        if (response) {
-            const HLE::BinaryMessage& value = *response;
-            pipe_data[static_cast<u32>(pipe_number)].resize(sizeof(value));
-            std::memcpy(pipe_data[static_cast<u32>(pipe_number)].data(), &value, sizeof(value));
-        }
+        const HLE::BinaryMessage response = aac_decoder->ProcessRequest(request);
+        pipe_data[static_cast<u32>(pipe_number)].resize(sizeof(response));
+        std::memcpy(pipe_data[static_cast<u32>(pipe_number)].data(), &response, sizeof(response));
 
         interrupt_handler(InterruptType::Pipe, DspPipe::Binary);
         break;

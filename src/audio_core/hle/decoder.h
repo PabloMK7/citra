@@ -135,21 +135,8 @@ enum_le<DecoderSampleRate> GetSampleRateEnum(u32 sample_rate);
 
 class DecoderBase {
 public:
-    virtual ~DecoderBase();
-    virtual std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request) = 0;
-    /// Return true if this Decoder can be loaded. Return false if the system cannot create the
-    /// decoder
-    virtual bool IsValid() const = 0;
-};
-
-class NullDecoder final : public DecoderBase {
-public:
-    NullDecoder();
-    ~NullDecoder() override;
-    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request) override;
-    bool IsValid() const override {
-        return true;
-    }
+    virtual ~DecoderBase() = default;
+    virtual BinaryMessage ProcessRequest(const BinaryMessage& request) = 0;
 };
 
 } // namespace AudioCore::HLE

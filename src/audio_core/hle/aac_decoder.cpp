@@ -3,30 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <neaacdec.h>
-#include "audio_core/hle/faad2_decoder.h"
+#include "audio_core/hle/aac_decoder.h"
 
 namespace AudioCore::HLE {
 
-class FAAD2Decoder::Impl {
-public:
-    explicit Impl(Memory::MemorySystem& memory);
-    ~Impl();
-    std::optional<BinaryMessage> ProcessRequest(const BinaryMessage& request);
-    bool IsValid() const {
-        return decoder != nullptr;
-    }
-
-private:
-    std::optional<BinaryMessage> Initalize(const BinaryMessage& request);
-
-    std::optional<BinaryMessage> Decode(const BinaryMessage& request);
-
-    Memory::MemorySystem& memory;
-
-    NeAACDecHandle decoder = nullptr;
-};
-
-FAAD2Decoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
+AACDecoder::AACDecoder(Memory::MemorySystem& memory) : memory(memory) {
     decoder = NeAACDecOpen();
     if (decoder == nullptr) {
         LOG_CRITICAL(Audio_DSP, "Could not open FAAD2 decoder.");
@@ -46,7 +27,7 @@ FAAD2Decoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     LOG_INFO(Audio_DSP, "Created FAAD2 AAC decoder.");
 }
 
-FAAD2Decoder::Impl::~Impl() {
+AACDecoder::~AACDecoder() {
     if (decoder) {
         NeAACDecClose(decoder);
         decoder = nullptr;
@@ -55,16 +36,23 @@ FAAD2Decoder::Impl::~Impl() {
     }
 }
 
-std::optional<BinaryMessage> FAAD2Decoder::Impl::ProcessRequest(const BinaryMessage& request) {
+BinaryMessage AACDecoder::ProcessRequest(const BinaryMessage& request) {
     if (request.header.codec != DecoderCodec::DecodeAAC) {
-        LOG_ERROR(Audio_DSP, "FAAD2 AAC Decoder cannot handle such codec: {}",
+        LOG_ERROR(Audio_DSP, "AAC decoder received unsupported codec: {}",
                   static_cast<u16>(request.header.codec));
-        return {};
+        return {
+            .header =
+                {
+                    .result = ResultStatus::Error,
+                },
+        };
     }
 
     switch (request.header.cmd) {
     case DecoderCommand::Init: {
-        return Initalize(request);
+        BinaryMessage response = request;
+        response.header.result = ResultStatus::Success;
+        return response;
     }
     case DecoderCommand::EncodeDecode: {
         return Decode(request);
@@ -72,26 +60,25 @@ std::optional<BinaryMessage> FAAD2Decoder::Impl::ProcessRequest(const BinaryMess
     case DecoderCommand::Shutdown:
     case DecoderCommand::SaveState:
     case DecoderCommand::LoadState: {
-        LOG_WARNING(Audio_DSP, "Got unimplemented binary request: {}",
+        LOG_WARNING(Audio_DSP, "Got unimplemented AAC binary request: {}",
                     static_cast<u16>(request.header.cmd));
         BinaryMessage response = request;
         response.header.result = ResultStatus::Success;
         return response;
     }
     default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
+        LOG_ERROR(Audio_DSP, "Got unknown AAC binary request: {}",
                   static_cast<u16>(request.header.cmd));
-        return {};
+        return {
+            .header =
+                {
+                    .result = ResultStatus::Error,
+                },
+        };
     }
 }
 
-std::optional<BinaryMessage> FAAD2Decoder::Impl::Initalize(const BinaryMessage& request) {
-    BinaryMessage response = request;
-    response.header.result = ResultStatus::Success;
-    return response;
-}
-
-std::optional<BinaryMessage> FAAD2Decoder::Impl::Decode(const BinaryMessage& request) {
+BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
     BinaryMessage response{};
     response.header.codec = request.header.codec;
     response.header.cmd = request.header.cmd;
@@ -100,6 +87,10 @@ std::optional<BinaryMessage> FAAD2Decoder::Impl::Decode(const BinaryMessage& req
     response.decode_aac_response.sample_rate = DecoderSampleRate::Rate48000;
     response.decode_aac_response.num_channels = 2;
     response.decode_aac_response.num_samples = 1024;
+
+    if (decoder == nullptr) {
+        return response;
+    }
 
     if (request.decode_aac_request.src_addr < Memory::FCRAM_PADDR ||
         request.decode_aac_request.src_addr + request.decode_aac_request.size >
@@ -169,18 +160,6 @@ std::optional<BinaryMessage> FAAD2Decoder::Impl::Decode(const BinaryMessage& req
     response.decode_aac_response.num_samples = static_cast<u32_le>(out_streams[0].size());
 
     return response;
-}
-
-FAAD2Decoder::FAAD2Decoder(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(memory)) {}
-
-FAAD2Decoder::~FAAD2Decoder() = default;
-
-std::optional<BinaryMessage> FAAD2Decoder::ProcessRequest(const BinaryMessage& request) {
-    return impl->ProcessRequest(request);
-}
-
-bool FAAD2Decoder::IsValid() const {
-    return impl->IsValid();
 }
 
 } // namespace AudioCore::HLE

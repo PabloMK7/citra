@@ -32,34 +32,4 @@ DecoderSampleRate GetSampleRateEnum(u32 sample_rate) {
     }
 }
 
-DecoderBase::~DecoderBase(){};
-
-NullDecoder::NullDecoder() = default;
-
-NullDecoder::~NullDecoder() = default;
-
-std::optional<BinaryMessage> NullDecoder::ProcessRequest(const BinaryMessage& request) {
-    BinaryMessage response{};
-    switch (request.header.cmd) {
-    case DecoderCommand::Init:
-    case DecoderCommand::Shutdown:
-    case DecoderCommand::SaveState:
-    case DecoderCommand::LoadState:
-        response = request;
-        response.header.result = ResultStatus::Success;
-        return response;
-    case DecoderCommand::EncodeDecode:
-        response.header.codec = request.header.codec;
-        response.header.cmd = request.header.cmd;
-        response.header.result = ResultStatus::Success;
-        response.decode_aac_response.num_channels = 2; // Just assume stereo here
-        response.decode_aac_response.size = request.decode_aac_request.size;
-        response.decode_aac_response.num_samples = 1024; // Just assume 1024 here
-        return response;
-    default:
-        LOG_ERROR(Audio_DSP, "Got unknown binary request: {}",
-                  static_cast<u16>(request.header.cmd));
-        return std::nullopt;
-    }
-};
 } // namespace AudioCore::HLE
