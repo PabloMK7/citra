@@ -163,7 +163,7 @@ void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_IR, "called");
 }
 
-IR_RST::IR_RST(Core::System& system) : ServiceFramework("ir:rst", 1), system(system) {
+IR_RST::IR_RST(Core::System& system) : ServiceFramework("ir:rst", 2), system(system) {
     using namespace Kernel;
     // Note: these two kernel objects are even available before Initialize service function is
     // called.
