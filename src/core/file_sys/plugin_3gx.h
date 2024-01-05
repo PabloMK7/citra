@@ -43,7 +43,8 @@ class FileBackend;
 class Plugin3GXLoader {
 public:
     Loader::ResultStatus Load(Service::PLGLDR::PLG_LDR::PluginLoaderContext& plg_context,
-                              Kernel::Process& process, Kernel::KernelSystem& kernel);
+                              Kernel::Process& process, Kernel::KernelSystem& kernel,
+                              Service::PLGLDR::PLG_LDR& plg_ldr);
 
     struct PluginHeader {
         u32_le magic;
@@ -68,7 +69,8 @@ public:
 
 private:
     Loader::ResultStatus Map(Service::PLGLDR::PLG_LDR::PluginLoaderContext& plg_context,
-                             Kernel::Process& process, Kernel::KernelSystem& kernel);
+                             Kernel::Process& process, Kernel::KernelSystem& kernel,
+                             Service::PLGLDR::PLG_LDR& plg_ldr);
 
     static constexpr size_t bootloader_memory_size = 0x1000;
     static void MapBootloader(Kernel::Process& process, Kernel::KernelSystem& kernel,

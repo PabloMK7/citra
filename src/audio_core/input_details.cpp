@@ -24,8 +24,8 @@ namespace {
 constexpr std::array input_details = {
 #ifdef HAVE_CUBEB
     InputDetails{InputType::Cubeb, "Real Device (Cubeb)", true,
-                 [](std::string_view device_id) -> std::unique_ptr<Input> {
-                     if (!Core::System::GetInstance().HasMicPermission()) {
+                 [](Core::System& system, std::string_view device_id) -> std::unique_ptr<Input> {
+                     if (!system.HasMicPermission()) {
                          LOG_WARNING(Audio,
                                      "Microphone permission denied, falling back to null input.");
                          return std::make_unique<NullInput>();
@@ -36,8 +36,8 @@ constexpr std::array input_details = {
 #endif
 #ifdef HAVE_OPENAL
     InputDetails{InputType::OpenAL, "Real Device (OpenAL)", true,
-                 [](std::string_view device_id) -> std::unique_ptr<Input> {
-                     if (!Core::System::GetInstance().HasMicPermission()) {
+                 [](Core::System& system, std::string_view device_id) -> std::unique_ptr<Input> {
+                     if (!system.HasMicPermission()) {
                          LOG_WARNING(Audio,
                                      "Microphone permission denied, falling back to null input.");
                          return std::make_unique<NullInput>();
@@ -47,12 +47,12 @@ constexpr std::array input_details = {
                  &ListOpenALInputDevices},
 #endif
     InputDetails{InputType::Static, "Static Noise", false,
-                 [](std::string_view device_id) -> std::unique_ptr<Input> {
+                 [](Core::System& system, std::string_view device_id) -> std::unique_ptr<Input> {
                      return std::make_unique<StaticInput>();
                  },
                  [] { return std::vector<std::string>{"Static Noise"}; }},
     InputDetails{InputType::Null, "None", false,
-                 [](std::string_view device_id) -> std::unique_ptr<Input> {
+                 [](Core::System& system, std::string_view device_id) -> std::unique_ptr<Input> {
                      return std::make_unique<NullInput>();
                  },
                  [] { return std::vector<std::string>{"None"}; }},

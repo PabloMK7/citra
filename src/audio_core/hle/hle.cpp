@@ -24,15 +24,9 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 
-SERIALIZE_EXPORT_IMPL(AudioCore::DspHle)
-
 using InterruptType = Service::DSP::InterruptType;
 
 namespace AudioCore {
-
-DspHle::DspHle()
-    : DspHle(Core::System::GetInstance(), Core::System::GetInstance().Memory(),
-             Core::System::GetInstance().CoreTiming()) {}
 
 DspHle::DspHle(Core::System& system) : DspHle(system, system.Memory(), system.CoreTiming()) {}
 

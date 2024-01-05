@@ -20,6 +20,7 @@
 #include "core/hle/service/ptm/ptm_u.h"
 
 SERIALIZE_EXPORT_IMPL(Service::PTM::Module)
+SERVICE_CONSTRUCT_IMPL(Service::PTM::Module)
 
 namespace Service::PTM {
 
@@ -136,7 +137,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    auto& share_page = Core::System::GetInstance().Kernel().GetSharedPageHandler();
+    auto& share_page = ptm->system.Kernel().GetSharedPageHandler();
     const u64 console_time = share_page.GetSystemTimeSince2000();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
@@ -207,7 +208,7 @@ static GameCoin ReadGameCoinData() {
     return gamecoin_data;
 }
 
-Module::Module() {
+Module::Module(Core::System& system_) : system(system_) {
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
     // exist
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
@@ -220,6 +221,14 @@ Module::Module() {
         WriteGameCoinData(default_game_coin);
     }
 }
+
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& shell_open;
+    ar& battery_is_charging;
+    ar& pedometer_is_counting;
+}
+SERIALIZE_IMPL(Module)
 
 u16 Module::GetPlayCoins() {
     return ReadGameCoinData().total_coins;
@@ -238,7 +247,7 @@ Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto ptm = std::make_shared<Module>();
+    auto ptm = std::make_shared<Module>(system);
     std::make_shared<PTM_Gets>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Play>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Sets>(ptm)->InstallAsService(service_manager);

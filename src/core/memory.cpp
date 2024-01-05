@@ -264,12 +264,53 @@ public:
             return {vram_mem, addr - VRAM_VADDR};
         }
         if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END) {
-            return {fcram_mem, addr - PLUGIN_3GX_FB_VADDR +
-                                   Service::PLGLDR::PLG_LDR::GetPluginFBAddr() - FCRAM_PADDR};
+            auto plg_ldr = Service::PLGLDR::GetService(system);
+            if (plg_ldr) {
+                return {fcram_mem,
+                        addr - PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr() - FCRAM_PADDR};
+            }
         }
 
         UNREACHABLE();
         return MemoryRef{};
+    }
+
+    void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
+        const VAddr end = start + size;
+
+        auto CheckRegion = [&](VAddr region_start, VAddr region_end, PAddr paddr_region_start) {
+            if (start >= region_end || end <= region_start) {
+                // No overlap with region
+                return;
+            }
+
+            auto& renderer = system.GPU().Renderer();
+            VAddr overlap_start = std::max(start, region_start);
+            VAddr overlap_end = std::min(end, region_end);
+            PAddr physical_start = paddr_region_start + (overlap_start - region_start);
+            u32 overlap_size = overlap_end - overlap_start;
+
+            auto* rasterizer = renderer.Rasterizer();
+            switch (mode) {
+            case FlushMode::Flush:
+                rasterizer->FlushRegion(physical_start, overlap_size);
+                break;
+            case FlushMode::Invalidate:
+                rasterizer->InvalidateRegion(physical_start, overlap_size);
+                break;
+            case FlushMode::FlushAndInvalidate:
+                rasterizer->FlushAndInvalidateRegion(physical_start, overlap_size);
+                break;
+            }
+        };
+
+        CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
+        CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
+        CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
+        auto plg_ldr = Service::PLGLDR::GetService(system);
+        if (plg_ldr && plg_ldr->GetPluginFBAddr()) {
+            CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END, plg_ldr->GetPluginFBAddr());
+        }
     }
 
 private:
@@ -345,41 +386,8 @@ std::shared_ptr<PageTable> MemorySystem::GetCurrentPageTable() const {
     return impl->current_page_table;
 }
 
-void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
-    const VAddr end = start + size;
-
-    auto CheckRegion = [&](VAddr region_start, VAddr region_end, PAddr paddr_region_start) {
-        if (start >= region_end || end <= region_start) {
-            // No overlap with region
-            return;
-        }
-
-        auto& renderer = Core::System::GetInstance().GPU().Renderer();
-        VAddr overlap_start = std::max(start, region_start);
-        VAddr overlap_end = std::min(end, region_end);
-        PAddr physical_start = paddr_region_start + (overlap_start - region_start);
-        u32 overlap_size = overlap_end - overlap_start;
-
-        auto* rasterizer = renderer.Rasterizer();
-        switch (mode) {
-        case FlushMode::Flush:
-            rasterizer->FlushRegion(physical_start, overlap_size);
-            break;
-        case FlushMode::Invalidate:
-            rasterizer->InvalidateRegion(physical_start, overlap_size);
-            break;
-        case FlushMode::FlushAndInvalidate:
-            rasterizer->FlushAndInvalidateRegion(physical_start, overlap_size);
-            break;
-        }
-    };
-
-    CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
-    CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
-    CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
-    if (Service::PLGLDR::PLG_LDR::GetPluginFBAddr())
-        CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END,
-                    Service::PLGLDR::PLG_LDR::GetPluginFBAddr());
+void MemorySystem::RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
+    impl->RasterizerFlushVirtualRegion(start, size, mode);
 }
 
 void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory,
@@ -683,15 +691,18 @@ std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr add
     if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return {addr - VRAM_PADDR + VRAM_VADDR};
     }
-    if (addr >= Service::PLGLDR::PLG_LDR::GetPluginFBAddr() &&
-        addr < Service::PLGLDR::PLG_LDR::GetPluginFBAddr() + PLUGIN_3GX_FB_SIZE) {
-        return {addr - Service::PLGLDR::PLG_LDR::GetPluginFBAddr() + PLUGIN_3GX_FB_VADDR};
-    }
     if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
         return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
     }
     if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END) {
         return {addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
+    }
+    auto plg_ldr = Service::PLGLDR::GetService(impl->system);
+    if (plg_ldr) {
+        auto fb_addr = plg_ldr->GetPluginFBAddr();
+        if (addr >= fb_addr && addr < fb_addr + PLUGIN_3GX_FB_SIZE) {
+            return {addr - fb_addr + PLUGIN_3GX_FB_VADDR};
+        }
     }
     // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
     // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond

@@ -144,10 +144,12 @@ const KeyboardData& SoftwareKeyboard::ReceiveData() {
     return data;
 }
 
+DefaultKeyboard::DefaultKeyboard(Core::System& system_) : system(system_) {}
+
 void DefaultKeyboard::Execute(const Frontend::KeyboardConfig& config_) {
     SoftwareKeyboard::Execute(config_);
 
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    auto cfg = Service::CFG::GetModule(system);
     std::string username = Common::UTF16ToUTF8(cfg->GetUsername());
     switch (this->config.button_config) {
     case ButtonConfig::None:

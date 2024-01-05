@@ -65,7 +65,7 @@ static bool ReadSection(std::vector<u8>& data_out, FileUtil::IOFile& file, std::
 
 Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
     Service::PLGLDR::PLG_LDR::PluginLoaderContext& plg_context, Kernel::Process& process,
-    Kernel::KernelSystem& kernel) {
+    Kernel::KernelSystem& kernel, Service::PLGLDR::PLG_LDR& plg_ldr) {
     FileUtil::IOFile file(plg_context.plugin_path, "rb");
     if (!file.IsOpen()) {
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Not found: {}",
@@ -158,12 +158,12 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
         return Loader::ResultStatus::Error;
     }
 
-    return Map(plg_context, process, kernel);
+    return Map(plg_context, process, kernel, plg_ldr);
 }
 
 Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     Service::PLGLDR::PLG_LDR::PluginLoaderContext& plg_context, Kernel::Process& process,
-    Kernel::KernelSystem& kernel) {
+    Kernel::KernelSystem& kernel, Service::PLGLDR::PLG_LDR& plg_ldr) {
 
     // Verify exe load checksum function is available
     if (exe_load_func.empty() && plg_context.load_exe_func.empty()) {
@@ -195,7 +195,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
         return Loader::ResultStatus::ErrorMemoryAllocationFailed;
     }
     auto backing_memory_fb = kernel.memory.GetFCRAMRef(*offset_fb);
-    Service::PLGLDR::PLG_LDR::SetPluginFBAddr(Memory::FCRAM_PADDR + *offset_fb);
+    plg_ldr.SetPluginFBAddr(Memory::FCRAM_PADDR + *offset_fb);
     std::fill(backing_memory_fb.GetPtr(), backing_memory_fb.GetPtr() + _3GX_fb_size, 0);
 
     auto vma_heap_fb = process.vm_manager.MapBackingMemory(

@@ -20,6 +20,9 @@
 #include "core/hle/service/soc/soc_u.h"
 #include "core/memory.h"
 
+SERIALIZE_EXPORT_IMPL(Service::AC::Module)
+SERVICE_CONSTRUCT_IMPL(Service::AC::Module)
+
 namespace Service::AC {
 void Module::Interface::CreateDefaultConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
@@ -96,7 +99,7 @@ void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     bool can_reach_internet = false;
 
-    std::shared_ptr<SOC::SOC_U> socu_module = SOC::GetService(Core::System::GetInstance());
+    std::shared_ptr<SOC::SOC_U> socu_module = SOC::GetService(ac->system);
     if (socu_module) {
         can_reach_internet = socu_module->GetDefaultInterfaceInfo().has_value();
     }
@@ -194,10 +197,12 @@ Module::Interface::Interface(std::shared_ptr<Module> ac, const char* name, u32 m
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto ac = std::make_shared<Module>();
+    auto ac = std::make_shared<Module>(system);
     std::make_shared<AC_I>(ac)->InstallAsService(service_manager);
     std::make_shared<AC_U>(ac)->InstallAsService(service_manager);
 }
+
+Module::Module(Core::System& system_) : system(system_) {}
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
@@ -207,7 +212,6 @@ void Module::serialize(Archive& ar, const unsigned int) {
     ar& disconnect_event;
     // default_config is never written to
 }
+SERIALIZE_IMPL(Module)
 
 } // namespace Service::AC
-
-SERIALIZE_IMPL(Service::AC::Module)

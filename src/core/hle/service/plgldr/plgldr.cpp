@@ -36,15 +36,13 @@
 #include "core/loader/loader.h"
 
 SERIALIZE_EXPORT_IMPL(Service::PLGLDR::PLG_LDR)
+SERVICE_CONSTRUCT_IMPL(Service::PLGLDR::PLG_LDR)
 
 namespace Service::PLGLDR {
 
-const Kernel::CoreVersion PLG_LDR::plgldr_version = Kernel::CoreVersion(1, 0, 0);
-PLG_LDR::PluginLoaderContext PLG_LDR::plgldr_context;
-bool PLG_LDR::allow_game_change = true;
-PAddr PLG_LDR::plugin_fb_addr = 0;
+static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 0);
 
-PLG_LDR::PLG_LDR() : ServiceFramework{"plg:ldr", 1} {
+PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, nullptr, "LoadPlugin"},
@@ -66,6 +64,33 @@ PLG_LDR::PLG_LDR() : ServiceFramework{"plg:ldr", 1} {
     plgldr_context.memory_changed_handle = 0;
     plgldr_context.plugin_loaded = false;
 }
+
+template <class Archive>
+void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
+    ar& is_enabled;
+    ar& plugin_loaded;
+    ar& is_default_path;
+    ar& plugin_path;
+    ar& use_user_load_parameters;
+    ar& user_load_parameters;
+    ar& plg_event;
+    ar& plg_reply;
+    ar& memory_changed_handle;
+    ar& is_exe_load_function_set;
+    ar& exe_load_checksum;
+    ar& load_exe_func;
+    ar& load_exe_args;
+}
+SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
+
+template <class Archive>
+void PLG_LDR::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
+    ar& plgldr_context;
+    ar& plugin_fb_addr;
+    ar& allow_game_change;
+}
+SERIALIZE_IMPL(PLG_LDR)
 
 void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel) {
     if (!plgldr_context.is_enabled || plgldr_context.plugin_loaded) {
@@ -91,7 +116,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
                                   std::string(plgldr_context.user_load_parameters.path + 1);
         plgldr_context.is_default_path = false;
         plgldr_context.plugin_path = plugin_file;
-        plugin_loader.Load(plgldr_context, process, kernel);
+        plugin_loader.Load(plgldr_context, process, kernel, *this);
     } else {
         const std::string plugin_root =
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) + "luma/plugins/";
@@ -103,7 +128,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
             if (!child.isDirectory && child.physicalName.ends_with(".3gx")) {
                 plgldr_context.is_default_path = false;
                 plgldr_context.plugin_path = child.physicalName;
-                if (plugin_loader.Load(plgldr_context, process, kernel) ==
+                if (plugin_loader.Load(plgldr_context, process, kernel, *this) ==
                     Loader::ResultStatus::Success) {
                     return;
                 }
@@ -114,7 +139,7 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
         if (FileUtil::Exists(default_path)) {
             plgldr_context.is_default_path = true;
             plgldr_context.plugin_path = default_path;
-            plugin_loader.Load(plgldr_context, process, kernel);
+            plugin_loader.Load(plgldr_context, process, kernel, *this);
         }
     }
 }
@@ -134,9 +159,9 @@ ResultVal<Kernel::Handle> PLG_LDR::GetMemoryChangedHandle(Kernel::KernelSystem& 
         return plgldr_context.memory_changed_handle;
     }
 
-    std::shared_ptr<Kernel::Event> evt = kernel.CreateEvent(
-        Kernel::ResetType::OneShot,
-        fmt::format("event-{:08x}", Core::System::GetInstance().GetRunningCore().GetReg(14)));
+    std::shared_ptr<Kernel::Event> evt =
+        kernel.CreateEvent(Kernel::ResetType::OneShot,
+                           fmt::format("event-{:08x}", system.GetRunningCore().GetReg(14)));
     R_TRY(kernel.GetCurrentProcess()->handle_table.Create(
         std::addressof(plgldr_context.memory_changed_handle), std::move(evt)));
     return plgldr_context.memory_changed_handle;
@@ -274,7 +299,7 @@ std::shared_ptr<PLG_LDR> GetService(Core::System& system) {
 }
 
 void InstallInterfaces(Core::System& system) {
-    std::make_shared<PLG_LDR>()->InstallAsNamedPort(system.Kernel());
+    std::make_shared<PLG_LDR>(system)->InstallAsNamedPort(system.Kernel());
 }
 
 } // namespace Service::PLGLDR

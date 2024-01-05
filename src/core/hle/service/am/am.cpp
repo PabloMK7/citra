@@ -9,6 +9,7 @@
 #include <cryptopp/modes.h>
 #include <fmt/format.h>
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -32,6 +33,9 @@
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
 #include "core/nus_download.h"
+
+SERIALIZE_EXPORT_IMPL(Service::AM::Module)
+SERVICE_CONSTRUCT_IMPL(Service::AM::Module)
 
 namespace Service::AM {
 
@@ -81,8 +85,9 @@ public:
     std::vector<CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption> content;
 };
 
-CIAFile::CIAFile(Service::FS::MediaType media_type)
-    : media_type(media_type), decryption_state(std::make_unique<DecryptionState>()) {}
+CIAFile::CIAFile(Core::System& system_, Service::FS::MediaType media_type)
+    : system(system_), media_type(media_type),
+      decryption_state(std::make_unique<DecryptionState>()) {}
 
 CIAFile::~CIAFile() {
     Close();
@@ -361,8 +366,7 @@ bool CIAFile::Close() const {
             // are closed.
             std::string to_delete =
                 GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index);
-            if (!(Core::System::GetInstance().IsPoweredOn() &&
-                  Core::System::GetInstance().SetSelfDelete(to_delete))) {
+            if (!system.IsPoweredOn() || !system.SetSelfDelete(to_delete)) {
                 FileUtil::Delete(to_delete);
             }
         }
@@ -425,6 +429,7 @@ InstallStatus InstallCIA(const std::string& path,
     FileSys::CIAContainer container;
     if (container.Load(path) == Loader::ResultStatus::Success) {
         Service::AM::CIAFile installFile(
+            Core::System::GetInstance(),
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
         bool title_key_available = container.GetTicket().GetTitleKey().has_value();
@@ -502,7 +507,7 @@ InstallStatus InstallCIA(const std::string& path,
 InstallStatus InstallFromNus(u64 title_id, int version) {
     LOG_DEBUG(Service_AM, "Downloading {:X}", title_id);
 
-    CIAFile install_file{GetTitleMediaType(title_id)};
+    CIAFile install_file{Core::System::GetInstance(), GetTitleMediaType(title_id)};
 
     std::string path = fmt::format("/ccs/download/{:016X}/tmd", title_id);
     if (version != -1) {
@@ -1327,7 +1332,7 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     // Citra will store contents out to sdmc/nand
     const FileSys::Path cia_path = {};
     auto file = std::make_shared<Service::FS::File>(
-        am->kernel, std::make_unique<CIAFile>(media_type), cia_path);
+        am->system.Kernel(), std::make_unique<CIAFile>(am->system, media_type), cia_path);
 
     am->cia_installing = true;
 
@@ -1354,7 +1359,7 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
     // contents out to sdmc/nand
     const FileSys::Path cia_path = {};
     auto file = std::make_shared<Service::FS::File>(
-        am->kernel, std::make_unique<CIAFile>(FS::MediaType::NAND), cia_path);
+        am->system.Kernel(), std::make_unique<CIAFile>(am->system, FS::MediaType::NAND), cia_path);
 
     am->cia_installing = true;
 
@@ -1769,8 +1774,8 @@ void Module::Interface::BeginImportTicket(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     // Create our TicketFile handle for the app to write to
-    auto file = std::make_shared<Service::FS::File>(am->kernel, std::make_unique<TicketFile>(),
-                                                    FileSys::Path{});
+    auto file = std::make_shared<Service::FS::File>(
+        am->system.Kernel(), std::make_unique<TicketFile>(), FileSys::Path{});
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess); // No error
@@ -1789,12 +1794,18 @@ void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_AM, "(STUBBED) called");
 }
 
-Module::Module(Core::System& system) : kernel(system.Kernel()) {
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    ar& cia_installing;
+    ar& am_title_list;
+    ar& system_updater_mutex;
+}
+SERIALIZE_IMPL(Module)
+
+Module::Module(Core::System& system) : system(system) {
     ScanForAllTitles();
     system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }
-
-Module::Module(Kernel::KernelSystem& kernel) : kernel(kernel) {}
 
 Module::~Module() = default;
 

@@ -10,6 +10,10 @@
 #include <vector>
 #include "common/common_types.h"
 
+namespace Core {
+class System;
+}
+
 namespace AudioCore {
 
 class Input;
@@ -23,7 +27,7 @@ enum class InputType : u32 {
 };
 
 struct InputDetails {
-    using FactoryFn = std::unique_ptr<Input> (*)(std::string_view device_id);
+    using FactoryFn = std::unique_ptr<Input> (*)(Core::System& system, std::string_view device_id);
     using ListDevicesFn = std::vector<std::string> (*)();
 
     /// Type of this input.

@@ -22,28 +22,6 @@ namespace VideoCore {
 constexpr VAddr VADDR_LCD = 0x1ED02000;
 constexpr VAddr VADDR_GPU = 0x1EF00000;
 
-static PAddr VirtualToPhysicalAddress(VAddr addr) {
-    if (addr == 0) {
-        return 0;
-    }
-
-    if (addr >= Memory::VRAM_VADDR && addr <= Memory::VRAM_VADDR_END) {
-        return addr - Memory::VRAM_VADDR + Memory::VRAM_PADDR;
-    }
-    if (addr >= Memory::LINEAR_HEAP_VADDR && addr <= Memory::LINEAR_HEAP_VADDR_END) {
-        return addr - Memory::LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
-    }
-    if (addr >= Memory::NEW_LINEAR_HEAP_VADDR && addr <= Memory::NEW_LINEAR_HEAP_VADDR_END) {
-        return addr - Memory::NEW_LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
-    }
-    if (addr >= Memory::PLUGIN_3GX_FB_VADDR && addr <= Memory::PLUGIN_3GX_FB_VADDR_END) {
-        return addr - Memory::PLUGIN_3GX_FB_VADDR + Service::PLGLDR::PLG_LDR::GetPluginFBAddr();
-    }
-
-    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x{:08X}", addr);
-    return addr;
-}
-
 MICROPROFILE_DEFINE(GPU_DisplayTransfer, "GPU", "DisplayTransfer", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(GPU_CmdlistProcessing, "GPU", "Cmdlist Processing", MP_RGB(100, 255, 100));
 
@@ -84,6 +62,31 @@ GPU::GPU(Core::System& system, Frontend::EmuWindow& emu_window,
 
 GPU::~GPU() = default;
 
+PAddr GPU::VirtualToPhysicalAddress(VAddr addr) {
+    if (addr == 0) {
+        return 0;
+    }
+
+    if (addr >= Memory::VRAM_VADDR && addr <= Memory::VRAM_VADDR_END) {
+        return addr - Memory::VRAM_VADDR + Memory::VRAM_PADDR;
+    }
+    if (addr >= Memory::LINEAR_HEAP_VADDR && addr <= Memory::LINEAR_HEAP_VADDR_END) {
+        return addr - Memory::LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
+    }
+    if (addr >= Memory::NEW_LINEAR_HEAP_VADDR && addr <= Memory::NEW_LINEAR_HEAP_VADDR_END) {
+        return addr - Memory::NEW_LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
+    }
+    if (addr >= Memory::PLUGIN_3GX_FB_VADDR && addr <= Memory::PLUGIN_3GX_FB_VADDR_END) {
+        auto plg_ldr = Service::PLGLDR::GetService(impl->system);
+        if (plg_ldr) {
+            return addr - Memory::PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr();
+        }
+    }
+
+    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x{:08X}", addr);
+    return addr;
+}
+
 void GPU::SetInterruptHandler(Service::GSP::InterruptHandler handler) {
     impl->signal_interrupt = handler;
     impl->pica.SetInterruptHandler(handler);
@@ -107,11 +110,11 @@ void GPU::Execute(const Service::GSP::Command& command) {
 
     switch (command.id) {
     case CommandId::RequestDma: {
-        Memory::RasterizerFlushVirtualRegion(command.dma_request.source_address,
-                                             command.dma_request.size, Memory::FlushMode::Flush);
-        Memory::RasterizerFlushVirtualRegion(command.dma_request.dest_address,
-                                             command.dma_request.size,
-                                             Memory::FlushMode::Invalidate);
+        impl->system.Memory().RasterizerFlushVirtualRegion(
+            command.dma_request.source_address, command.dma_request.size, Memory::FlushMode::Flush);
+        impl->system.Memory().RasterizerFlushVirtualRegion(command.dma_request.dest_address,
+                                                           command.dma_request.size,
+                                                           Memory::FlushMode::Invalidate);
 
         // TODO(Subv): These memory accesses should not go through the application's memory mapping.
         // They should go through the GSP module's memory mapping.

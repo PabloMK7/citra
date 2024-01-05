@@ -15,24 +15,6 @@ public:
     virtual ~Applet() = default;
 
     /**
-     * Creates an instance of the Applet subclass identified by the parameter.
-     * and stores it in a global map.
-     * @param id Id of the applet to create.
-     * @param parent Id of the applet's parent.
-     * @param preload Whether the applet is being preloaded.
-     * @returns Result Whether the operation was successful or not.
-     */
-    static Result Create(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                         const std::shared_ptr<Service::APT::AppletManager>& manager);
-
-    /**
-     * Retrieves the Applet instance identified by the specified id.
-     * @param id Id of the Applet to retrieve.
-     * @returns Requested Applet or nullptr if not found.
-     */
-    static std::shared_ptr<Applet> Get(Service::APT::AppletId id);
-
-    /**
      * Handles a parameter from the application.
      * @param parameter Parameter data to handle.
      * @returns Result Whether the operation was successful or not.
@@ -55,9 +37,9 @@ public:
     virtual void Update() = 0;
 
 protected:
-    Applet(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-           std::weak_ptr<Service::APT::AppletManager> manager)
-        : id(id), parent(parent), preload(preload), manager(std::move(manager)) {}
+    Applet(Core::System& system, Service::APT::AppletId id, Service::APT::AppletId parent,
+           bool preload, std::weak_ptr<Service::APT::AppletManager> manager)
+        : system(system), id(id), parent(parent), preload(preload), manager(std::move(manager)) {}
 
     /**
      * Handles a parameter from the application.
@@ -79,6 +61,8 @@ protected:
      */
     virtual Result Finalize() = 0;
 
+    Core::System& system;
+
     Service::APT::AppletId id;                    ///< Id of this Applet
     Service::APT::AppletId parent;                ///< Id of this Applet's parent
     bool preload;                                 ///< Whether the Applet is being preloaded.
@@ -97,9 +81,4 @@ private:
     std::weak_ptr<Service::APT::AppletManager> manager;
 };
 
-/// Initializes the HLE applets
-void Init();
-
-/// Shuts down the HLE applets
-void Shutdown();
 } // namespace HLE::Applets

@@ -199,7 +199,7 @@ public:
     u32 GetFlags() const {
         return (u32)(header->e_flags);
     }
-    std::shared_ptr<CodeSet> LoadInto(u32 vaddr);
+    std::shared_ptr<CodeSet> LoadInto(Core::System& system, u32 vaddr);
 
     int GetNumSegments() const {
         return (int)(header->e_phnum);
@@ -262,7 +262,7 @@ const char* ElfReader::GetSectionName(int section) const {
     return nullptr;
 }
 
-std::shared_ptr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
+std::shared_ptr<CodeSet> ElfReader::LoadInto(Core::System& system, u32 vaddr) {
     LOG_DEBUG(Loader, "String section: {}", header->e_shstrndx);
 
     // Should we relocate?
@@ -290,7 +290,7 @@ std::shared_ptr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     std::vector<u8> program_image(total_image_size);
     std::size_t current_image_position = 0;
 
-    std::shared_ptr<CodeSet> codeset = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
+    std::shared_ptr<CodeSet> codeset = system.Kernel().CreateCodeSet("", 0);
 
     for (unsigned int i = 0; i < header->e_phnum; ++i) {
         Elf32_Phdr* p = &segments[i];
@@ -380,15 +380,15 @@ ResultStatus AppLoader_ELF::Load(std::shared_ptr<Kernel::Process>& process) {
         return ResultStatus::Error;
 
     ElfReader elf_reader(&buffer[0]);
-    std::shared_ptr<CodeSet> codeset = elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);
+    std::shared_ptr<CodeSet> codeset = elf_reader.LoadInto(system, Memory::PROCESS_IMAGE_VADDR);
     codeset->name = filename;
 
-    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+    process = system.Kernel().CreateProcess(std::move(codeset));
     process->Set3dsxKernelCaps();
 
     // Attach the default resource limit (APPLICATION) to the process
-    process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-        Kernel::ResourceLimitCategory::Application);
+    process->resource_limit =
+        system.Kernel().ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 

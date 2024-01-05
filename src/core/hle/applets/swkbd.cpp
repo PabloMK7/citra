@@ -32,7 +32,7 @@ Result SoftwareKeyboard::ReceiveParameterImpl(Service::APT::MessageParameter con
 
         using Kernel::MemoryPermission;
         // Create a SharedMemory that directly points to this heap block.
-        framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
+        framebuffer_memory = system.Kernel().CreateSharedMemoryForApplet(
             0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
             "SoftwareKeyboard Memory");
 
@@ -99,7 +99,7 @@ Result SoftwareKeyboard::Start(Service::APT::MessageParameter const& parameter) 
     DrawScreenKeyboard();
 
     using namespace Frontend;
-    frontend_applet = Core::System::GetInstance().GetSoftwareKeyboard();
+    frontend_applet = system.GetSoftwareKeyboard();
     ASSERT(frontend_applet);
 
     frontend_applet->Execute(ToFrontendConfig(config));

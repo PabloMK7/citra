@@ -108,6 +108,8 @@ private:
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;
+
+    PAddr VirtualToPhysicalAddress(VAddr addr);
 };
 
 } // namespace VideoCore

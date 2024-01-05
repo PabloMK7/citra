@@ -8,6 +8,10 @@
 #include <vector>
 #include "common/assert.h"
 
+namespace Core {
+class System;
+}
+
 namespace Frontend {
 
 enum class AcceptedInput {
@@ -137,8 +141,12 @@ protected:
 
 class DefaultKeyboard final : public SoftwareKeyboard {
 public:
+    explicit DefaultKeyboard(Core::System& system_);
     void Execute(const KeyboardConfig& config) override;
     void ShowError(const std::string& error) override;
+
+private:
+    Core::System& system;
 };
 
 } // namespace Frontend

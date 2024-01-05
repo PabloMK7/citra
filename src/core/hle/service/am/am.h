@@ -11,7 +11,6 @@
 #include <vector>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/construct.h"
 #include "common/swap.h"
@@ -80,7 +79,7 @@ using ProgressCallback = void(std::size_t, std::size_t);
 // A file handled returned for CIAs to be written into and subsequently installed.
 class CIAFile final : public FileSys::FileBackend {
 public:
-    explicit CIAFile(Service::FS::MediaType media_type);
+    explicit CIAFile(Core::System& system_, Service::FS::MediaType media_type);
     ~CIAFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
@@ -95,6 +94,8 @@ public:
     void Flush() const override;
 
 private:
+    Core::System& system;
+
     // Whether it's installing an update, and what step of installation it is at
     bool is_update = false;
     CIAInstallState install_state = CIAInstallState::InstallStarted;
@@ -706,8 +707,6 @@ public:
     };
 
 private:
-    explicit Module(Kernel::KernelSystem& kernel);
-
     /**
      * Scans the for titles in a storage medium for listing.
      * @param media_type the storage medium to scan
@@ -719,27 +718,13 @@ private:
      */
     void ScanForAllTitles();
 
-    Kernel::KernelSystem& kernel;
+    Core::System& system;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& cia_installing;
-        ar& am_title_list;
-        ar& system_updater_mutex;
-    }
-
-    template <class Archive>
-    static void load_construct(Archive& ar, Module* t, const unsigned int file_version) {
-        ::new (t) Module(Core::Global<Kernel::KernelSystem>());
-    }
-
-    template <class Archive>
-    void save_construct(Archive& ar, const unsigned int file_version) const {}
-
-    friend class ::construct_access;
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -747,4 +732,5 @@ void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM
 
-BOOST_SERIALIZATION_CONSTRUCT(Service::AM::Module);
+BOOST_CLASS_EXPORT_KEY(Service::AM::Module)
+SERVICE_CONSTRUCT(Service::AM::Module)

@@ -477,9 +477,10 @@ static void CopyFrameBuffer(Core::System& system, VAddr dst, VAddr src, u32 stri
         return;
     }
 
-    Memory::RasterizerFlushVirtualRegion(src, stride * lines, Memory::FlushMode::Flush);
+    system.Memory().RasterizerFlushVirtualRegion(src, stride * lines, Memory::FlushMode::Flush);
     std::memcpy(dst_ptr, src_ptr, stride * lines);
-    Memory::RasterizerFlushVirtualRegion(dst, stride * lines, Memory::FlushMode::Invalidate);
+    system.Memory().RasterizerFlushVirtualRegion(dst, stride * lines,
+                                                 Memory::FlushMode::Invalidate);
 }
 
 void GSP_GPU::SaveVramSysArea(Kernel::HLERequestContext& ctx) {
@@ -497,8 +498,8 @@ void GSP_GPU::SaveVramSysArea(Kernel::HLERequestContext& ctx) {
     LOG_INFO(Service_GSP, "called");
 
     // TODO: This should also save LCD register state.
-    Memory::RasterizerFlushVirtualRegion(Memory::VRAM_VADDR, Memory::VRAM_SIZE,
-                                         Memory::FlushMode::Flush);
+    system.Memory().RasterizerFlushVirtualRegion(Memory::VRAM_VADDR, Memory::VRAM_SIZE,
+                                                 Memory::FlushMode::Flush);
     const auto vram = system.Memory().GetPointer(Memory::VRAM_VADDR);
     saved_vram.emplace(std::vector<u8>(Memory::VRAM_SIZE));
     std::memcpy(saved_vram.get().data(), vram, Memory::VRAM_SIZE);
@@ -548,8 +549,8 @@ void GSP_GPU::RestoreVramSysArea(Kernel::HLERequestContext& ctx) {
         // TODO: This should also restore LCD register state.
         auto vram = system.Memory().GetPointer(Memory::VRAM_VADDR);
         std::memcpy(vram, saved_vram.get().data(), Memory::VRAM_SIZE);
-        Memory::RasterizerFlushVirtualRegion(Memory::VRAM_VADDR, Memory::VRAM_SIZE,
-                                             Memory::FlushMode::Invalidate);
+        system.Memory().RasterizerFlushVirtualRegion(Memory::VRAM_VADDR, Memory::VRAM_SIZE,
+                                                     Memory::FlushMode::Invalidate);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

@@ -666,9 +666,11 @@ void System::ApplySettings() {
         Service::MIC::ReloadMic(*this);
     }
 
-    Service::PLGLDR::PLG_LDR::SetEnabled(Settings::values.plugin_loader_enabled.GetValue());
-    Service::PLGLDR::PLG_LDR::SetAllowGameChangeState(
-        Settings::values.allow_plugin_loader.GetValue());
+    auto plg_ldr = Service::PLGLDR::GetService(*this);
+    if (plg_ldr) {
+        plg_ldr->SetEnabled(Settings::values.plugin_loader_enabled.GetValue());
+        plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
+    }
 }
 
 template <class Archive>

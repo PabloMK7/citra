@@ -62,9 +62,9 @@ ASSERT_REG_POSITION(guest_mii_name, 0x6C);
 
 class MiiSelector final : public Applet {
 public:
-    MiiSelector(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                std::weak_ptr<Service::APT::AppletManager> manager)
-        : Applet(id, parent, preload, std::move(manager)) {}
+    MiiSelector(Core::System& system, Service::APT::AppletId id, Service::APT::AppletId parent,
+                bool preload, std::weak_ptr<Service::APT::AppletManager> manager)
+        : Applet(system, id, parent, preload, std::move(manager)) {}
 
     Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
     Result Start(const Service::APT::MessageParameter& parameter) override;

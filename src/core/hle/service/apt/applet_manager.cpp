@@ -8,6 +8,10 @@
 #include "core/core.h"
 #include "core/frontend/input.h"
 #include "core/hle/applets/applet.h"
+#include "core/hle/applets/erreula.h"
+#include "core/hle/applets/mii_selector.h"
+#include "core/hle/applets/mint.h"
+#include "core/hle/applets/swkbd.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/errors.h"
@@ -22,6 +26,8 @@ namespace Service::APT {
 
 /// The interval at which the home button update callback will be called, 16.6ms
 static constexpr u64 button_update_interval_us = 16666;
+/// The interval at which the HLE Applet update callback will be called, 16.6ms.
+static constexpr u64 hle_applet_update_interval_us = 16666;
 
 struct AppletTitleData {
     // There are two possible applet ids for each applet.
@@ -222,8 +228,8 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
         parameter.sender_id, parameter.destination_id, parameter.signal, parameter.buffer.size());
 
     // If the applet is being HLEd, send directly to the applet.
-    if (auto dest_applet = HLE::Applets::Applet::Get(parameter.destination_id)) {
-        dest_applet->ReceiveParameter(parameter);
+    if (hle_applets.contains(parameter.destination_id)) {
+        hle_applets[parameter.destination_id]->ReceiveParameter(parameter);
     } else {
         // Otherwise, send the parameter the LLE way.
         next_parameter = parameter;
@@ -497,6 +503,52 @@ void AppletManager::SendNotificationToAll(Notification notification) {
     }
 }
 
+Result AppletManager::CreateHLEApplet(AppletId id, AppletId parent, bool preload) {
+    switch (id) {
+    case AppletId::SoftwareKeyboard1:
+    case AppletId::SoftwareKeyboard2:
+        hle_applets[id] = std::make_shared<HLE::Applets::SoftwareKeyboard>(
+            system, id, parent, preload, shared_from_this());
+        break;
+    case AppletId::Ed1:
+    case AppletId::Ed2:
+        hle_applets[id] = std::make_shared<HLE::Applets::MiiSelector>(system, id, parent, preload,
+                                                                      shared_from_this());
+        break;
+    case AppletId::Error:
+    case AppletId::Error2:
+        hle_applets[id] = std::make_shared<HLE::Applets::ErrEula>(system, id, parent, preload,
+                                                                  shared_from_this());
+        break;
+    case AppletId::Mint:
+    case AppletId::Mint2:
+        hle_applets[id] =
+            std::make_shared<HLE::Applets::Mint>(system, id, parent, preload, shared_from_this());
+        break;
+    default:
+        LOG_ERROR(Service_APT, "Could not create applet {}", id);
+        // TODO(Subv): Find the right error code
+        return Result(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotSupported,
+                      ErrorLevel::Permanent);
+    }
+
+    AppletAttributes attributes;
+    attributes.applet_pos.Assign(AppletPos::AutoLibrary);
+    attributes.is_home_menu.Assign(false);
+    const auto lock_handle_data = GetLockHandle(attributes);
+
+    Initialize(id, lock_handle_data->corrected_attributes);
+    Enable(lock_handle_data->corrected_attributes);
+    if (preload) {
+        FinishPreloadingLibraryApplet(id);
+    }
+
+    // Schedule the update event
+    system.CoreTiming().ScheduleEvent(usToCycles(hle_applet_update_interval_us),
+                                      hle_applet_update_event, static_cast<u64>(id));
+    return ResultSuccess;
+}
+
 Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     // The real APT service returns an error if there's a pending APT parameter when this function
     // is called.
@@ -523,14 +575,13 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
-    auto applet = HLE::Applets::Applet::Get(applet_id);
-    if (applet) {
-        LOG_WARNING(Service_APT, "applet has already been started id={:03X}", applet_id);
+    if (hle_applets.contains(applet_id)) {
+        LOG_WARNING(Service_APT, "Applet has already been started id={:03X}", applet_id);
         return ResultSuccess;
     } else {
         auto parent = GetAppletSlotId(last_library_launcher_slot);
         LOG_DEBUG(Service_APT, "Creating HLE applet {:03X} with parent {:03X}", applet_id, parent);
-        return HLE::Applets::Applet::Create(applet_id, parent, false, shared_from_this());
+        return CreateHLEApplet(applet_id, parent, false);
     }
 }
 
@@ -551,14 +602,13 @@ Result AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
-    auto applet = HLE::Applets::Applet::Get(applet_id);
-    if (applet) {
-        LOG_WARNING(Service_APT, "applet has already been started id={:08X}", applet_id);
+    if (hle_applets.contains(applet_id)) {
+        LOG_WARNING(Service_APT, "Applet has already been started id={:08X}", applet_id);
         return ResultSuccess;
     } else {
         auto parent = GetAppletSlotId(last_library_launcher_slot);
         LOG_DEBUG(Service_APT, "Creating HLE applet {:03X} with parent {:03X}", applet_id, parent);
-        return HLE::Applets::Applet::Create(applet_id, parent, true, shared_from_this());
+        return CreateHLEApplet(applet_id, parent, true);
     }
 }
 
@@ -1387,8 +1437,8 @@ static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr s
         return;
     }
 
-    Memory::RasterizerFlushVirtualRegion(src, GSP::FRAMEBUFFER_WIDTH * height * bpp,
-                                         Memory::FlushMode::Flush);
+    system.Memory().RasterizerFlushVirtualRegion(src, GSP::FRAMEBUFFER_WIDTH * height * bpp,
+                                                 Memory::FlushMode::Flush);
 
     // Address in VRAM that APT copies framebuffer captures to.
     constexpr VAddr screen_capture_base_vaddr = Memory::VRAM_VADDR + 0x500000;
@@ -1416,8 +1466,8 @@ static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr s
         }
     }
 
-    Memory::RasterizerFlushVirtualRegion(dst_vaddr, GSP::FRAMEBUFFER_WIDTH_POW2 * height * bpp,
-                                         Memory::FlushMode::Invalidate);
+    system.Memory().RasterizerFlushVirtualRegion(
+        dst_vaddr, GSP::FRAMEBUFFER_WIDTH_POW2 * height * bpp, Memory::FlushMode::Invalidate);
 }
 
 void AppletManager::CaptureFrameBuffers() {
@@ -1439,6 +1489,30 @@ void AppletManager::LoadInputDevices() {
         Settings::values.current_input_profile.buttons[Settings::NativeButton::Home]);
     power_button = Input::CreateDevice<Input::ButtonDevice>(
         Settings::values.current_input_profile.buttons[Settings::NativeButton::Power]);
+}
+
+/// Handles updating the current Applet every time it's called.
+void AppletManager::HLEAppletUpdateEvent(std::uintptr_t user_data, s64 cycles_late) {
+    const auto id = static_cast<AppletId>(user_data);
+    if (!hle_applets.contains(id)) {
+        // Dead applet, exit event loop.
+        LOG_WARNING(Service_APT, "Attempted to update dead applet id={:03X}", id);
+        return;
+    }
+
+    const auto applet = hle_applets[id];
+    if (applet->IsActive()) {
+        applet->Update();
+    }
+
+    // If the applet is still running after the last update, reschedule the event
+    if (applet->IsRunning()) {
+        system.CoreTiming().ScheduleEvent(usToCycles(hle_applet_update_interval_us) - cycles_late,
+                                          hle_applet_update_event, user_data);
+    } else {
+        // Otherwise the applet has terminated, in which case we should clean it up
+        hle_applets[id] = nullptr;
+    }
 }
 
 void AppletManager::ButtonUpdateEvent(std::uintptr_t user_data, s64 cycles_late) {
@@ -1485,7 +1559,10 @@ AppletManager::AppletManager(Core::System& system) : system(system) {
         slot_data.parameter_event =
             system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "APT:Parameter");
     }
-    HLE::Applets::Init();
+    hle_applet_update_event = system.CoreTiming().RegisterEvent(
+        "HLE Applet Update Event", [this](std::uintptr_t user_data, s64 cycles_late) {
+            HLEAppletUpdateEvent(user_data, cycles_late);
+        });
     button_update_event = system.CoreTiming().RegisterEvent(
         "APT Button Update Event", [this](std::uintptr_t user_data, s64 cycles_late) {
             ButtonUpdateEvent(user_data, cycles_late);
@@ -1494,7 +1571,8 @@ AppletManager::AppletManager(Core::System& system) : system(system) {
 }
 
 AppletManager::~AppletManager() {
-    HLE::Applets::Shutdown();
+    system.CoreTiming().RemoveEvent(hle_applet_update_event);
+    system.CoreTiming().RemoveEvent(button_update_event);
 }
 
 void AppletManager::ReloadInputDevices() {

@@ -1133,8 +1133,7 @@ void Module::APTInterface::GetProgramId(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(ResultSuccess);
 
-    auto fs_user =
-        Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+    auto fs_user = apt->system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
     ASSERT_MSG(fs_user != nullptr, "fs:USER service is missing.");
 
     auto program_info_result = fs_user->GetProgramLaunchInfo(process_id);

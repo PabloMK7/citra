@@ -11,9 +11,9 @@ namespace HLE::Applets {
 
 class ErrEula final : public Applet {
 public:
-    explicit ErrEula(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                     std::weak_ptr<Service::APT::AppletManager> manager)
-        : Applet(id, parent, preload, std::move(manager)) {}
+    explicit ErrEula(Core::System& system, Service::APT::AppletId id, Service::APT::AppletId parent,
+                     bool preload, std::weak_ptr<Service::APT::AppletManager> manager)
+        : Applet(system, id, parent, preload, std::move(manager)) {}
 
     Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
     Result Start(const Service::APT::MessageParameter& parameter) override;

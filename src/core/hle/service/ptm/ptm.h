@@ -47,7 +47,9 @@ void CheckNew3DS(IPC::RequestBuilder& rb);
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system_);
+    ~Module() = default;
+
     static u16 GetPlayCoins();
     static void SetPlayCoins(u16 play_coins);
 
@@ -150,16 +152,14 @@ public:
     };
 
 private:
+    Core::System& system;
+
     bool shell_open = true;
     bool battery_is_charging = true;
     bool pedometer_is_counting = false;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& shell_open;
-        ar& battery_is_charging;
-        ar& pedometer_is_counting;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -168,3 +168,4 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::PTM
 
 BOOST_CLASS_EXPORT_KEY(Service::PTM::Module)
+SERVICE_CONSTRUCT(Service::PTM::Module)

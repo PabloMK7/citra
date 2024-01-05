@@ -6,6 +6,7 @@
 #include <string>
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/hle/kernel/process.h"
 #include "core/loader/3dsx.h"
 #include "core/loader/elf.h"
@@ -89,23 +90,23 @@ const char* GetFileTypeString(FileType type) {
  * @param filepath the file full path (with name)
  * @return std::unique_ptr<AppLoader> a pointer to a loader object;  nullptr for unsupported type
  */
-static std::unique_ptr<AppLoader> GetFileLoader(FileUtil::IOFile&& file, FileType type,
-                                                const std::string& filename,
+static std::unique_ptr<AppLoader> GetFileLoader(Core::System& system, FileUtil::IOFile&& file,
+                                                FileType type, const std::string& filename,
                                                 const std::string& filepath) {
     switch (type) {
 
     // 3DSX file format.
     case FileType::THREEDSX:
-        return std::make_unique<AppLoader_THREEDSX>(std::move(file), filename, filepath);
+        return std::make_unique<AppLoader_THREEDSX>(system, std::move(file), filename, filepath);
 
     // Standard ELF file format.
     case FileType::ELF:
-        return std::make_unique<AppLoader_ELF>(std::move(file), filename);
+        return std::make_unique<AppLoader_ELF>(system, std::move(file), filename);
 
     // NCCH/NCSD container formats.
     case FileType::CXI:
     case FileType::CCI:
-        return std::make_unique<AppLoader_NCCH>(std::move(file), filepath);
+        return std::make_unique<AppLoader_NCCH>(system, std::move(file), filepath);
 
     default:
         return nullptr;
@@ -133,7 +134,8 @@ std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
 
     LOG_DEBUG(Loader, "Loading file {} as {}...", filename, GetFileTypeString(type));
 
-    return GetFileLoader(std::move(file), type, filename_filename, filename);
+    auto& system = Core::System::GetInstance();
+    return GetFileLoader(system, std::move(file), type, filename_filename, filename);
 }
 
 } // namespace Loader

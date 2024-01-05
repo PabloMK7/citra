@@ -94,7 +94,7 @@ static u32 TranslateAddr(u32 addr, const THREEloadinfo* loadinfo, u32* offsets) 
 
 using Kernel::CodeSet;
 
-static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
+static THREEDSX_Error Load3DSXFile(Core::System& system, FileUtil::IOFile& file, u32 base_addr,
                                    std::shared_ptr<CodeSet>* out_codeset) {
     if (!file.IsOpen())
         return ERROR_FILE;
@@ -222,7 +222,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     }
 
     // Create the CodeSet
-    std::shared_ptr<CodeSet> code_set = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
+    std::shared_ptr<CodeSet> code_set = system.Kernel().CreateCodeSet("", 0);
 
     code_set->CodeSegment().offset = loadinfo.seg_ptrs[0] - program_image.data();
     code_set->CodeSegment().addr = loadinfo.seg_addrs[0];
@@ -268,25 +268,24 @@ ResultStatus AppLoader_THREEDSX::Load(std::shared_ptr<Kernel::Process>& process)
         return ResultStatus::Error;
 
     std::shared_ptr<CodeSet> codeset;
-    if (Load3DSXFile(file, Memory::PROCESS_IMAGE_VADDR, &codeset) != ERROR_NONE)
+    if (Load3DSXFile(system, file, Memory::PROCESS_IMAGE_VADDR, &codeset) != ERROR_NONE)
         return ResultStatus::Error;
     codeset->name = filename;
 
-    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
+    process = system.Kernel().CreateProcess(std::move(codeset));
     process->Set3dsxKernelCaps();
 
     // Attach the default resource limit (APPLICATION) to the process
-    process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
-        Kernel::ResourceLimitCategory::Application);
+    process->resource_limit =
+        system.Kernel().ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
 
     // On real HW this is done with FS:Reg, but we can be lazy
-    auto fs_user =
-        Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+    auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
     fs_user->RegisterProgramInfo(process->GetObjectId(), process->codeset->program_id, filepath);
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
-    Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
+    system.ArchiveManager().RegisterSelfNCCH(*this);
 
     is_loaded = true;
     return ResultStatus::Success;

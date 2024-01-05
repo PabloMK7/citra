@@ -35,7 +35,7 @@ Result MiiSelector::ReceiveParameterImpl(const Service::APT::MessageParameter& p
 
     using Kernel::MemoryPermission;
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
+    framebuffer_memory = system.Kernel().CreateSharedMemoryForApplet(
         0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "MiiSelector Memory");
 
@@ -57,7 +57,7 @@ Result MiiSelector::Start(const Service::APT::MessageParameter& parameter) {
     std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     using namespace Frontend;
-    frontend_applet = Core::System::GetInstance().GetMiiSelector();
+    frontend_applet = system.GetMiiSelector();
     ASSERT(frontend_applet);
 
     MiiSelectorConfig frontend_config = ToFrontendConfig(config);

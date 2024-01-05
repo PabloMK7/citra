@@ -9,7 +9,7 @@
 
 namespace Frontend {
 void RegisterDefaultApplets(Core::System& system) {
-    system.RegisterSoftwareKeyboard(std::make_shared<DefaultKeyboard>());
+    system.RegisterSoftwareKeyboard(std::make_shared<DefaultKeyboard>(system));
     system.RegisterMiiSelector(std::make_shared<DefaultMiiSelector>());
 }
 } // namespace Frontend

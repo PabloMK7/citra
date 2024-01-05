@@ -249,7 +249,7 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
     // console. Normally, this is handled by NS. If notification handling is properly implemented,
     // this piece of code should be removed, and handled by subscribing from NS instead.
     if (notification_id == 0x203) {
-        Core::System::GetInstance().RequestShutdown();
+        system.RequestShutdown();
     } else {
         LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}",
                     notification_id, flags);

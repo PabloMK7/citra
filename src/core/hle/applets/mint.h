@@ -11,9 +11,9 @@ namespace HLE::Applets {
 
 class Mint final : public Applet {
 public:
-    explicit Mint(Service::APT::AppletId id, Service::APT::AppletId parent, bool preload,
-                  std::weak_ptr<Service::APT::AppletManager> manager)
-        : Applet(id, parent, preload, std::move(manager)) {}
+    explicit Mint(Core::System& system, Service::APT::AppletId id, Service::APT::AppletId parent,
+                  bool preload, std::weak_ptr<Service::APT::AppletManager> manager)
+        : Applet(system, id, parent, preload, std::move(manager)) {}
 
     Result ReceiveParameterImpl(const Service::APT::MessageParameter& parameter) override;
     Result Start(const Service::APT::MessageParameter& parameter) override;

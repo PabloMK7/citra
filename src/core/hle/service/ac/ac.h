@@ -19,6 +19,9 @@ class Event;
 namespace Service::AC {
 class Module final {
 public:
+    explicit Module(Core::System& system_);
+    ~Module() = default;
+
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> ac, const char* name, u32 max_session);
@@ -169,11 +172,16 @@ protected:
     std::shared_ptr<Kernel::Event> disconnect_event;
 
 private:
+    Core::System& system;
+
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AC
+
+BOOST_CLASS_EXPORT_KEY(Service::AC::Module)
+SERVICE_CONSTRUCT(Service::AC::Module)

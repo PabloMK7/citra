@@ -23,6 +23,10 @@ namespace Core {
 class System;
 }
 
+namespace HLE::Applets {
+class Applet;
+}
+
 namespace Service::APT {
 
 /// Signals used by APT functions
@@ -291,7 +295,6 @@ public:
 
     ResultVal<Notification> InquireNotification(AppletId app_id);
     Result SendNotification(Notification notification);
-    void SendNotificationToAll(Notification notification);
 
     Result PrepareToStartLibraryApplet(AppletId applet_id);
     Result PreloadLibraryApplet(AppletId applet_id);
@@ -481,6 +484,9 @@ private:
     // It also affects the results of APT:GetTargetPlatform and APT:GetApplicationRunningMode.
     bool new_3ds_mode_blocked = false;
 
+    std::unordered_map<AppletId, std::shared_ptr<HLE::Applets::Applet>> hle_applets;
+    Core::TimingEventType* hle_applet_update_event;
+
     Core::TimingEventType* button_update_event;
     std::atomic<bool> is_device_reload_pending{true};
     std::unique_ptr<Input::ButtonDevice> home_button;
@@ -506,9 +512,14 @@ private:
     /// otherwise it queues for sending when the application registers itself with APT::Enable.
     void SendApplicationParameterAfterRegistration(const MessageParameter& parameter);
 
+    void SendNotificationToAll(Notification notification);
+
     void EnsureHomeMenuLoaded();
 
     void CaptureFrameBuffers();
+
+    Result CreateHLEApplet(AppletId id, AppletId parent, bool preload);
+    void HLEAppletUpdateEvent(std::uintptr_t user_data, s64 cycles_late);
 
     void LoadInputDevices();
     void ButtonUpdateEvent(std::uintptr_t user_data, s64 cycles_late);

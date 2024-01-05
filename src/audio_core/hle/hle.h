@@ -50,13 +50,9 @@ private:
     friend struct Impl;
     std::unique_ptr<Impl> impl;
 
-    DspHle();
-
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
 } // namespace AudioCore
-
-BOOST_CLASS_EXPORT_KEY(AudioCore::DspHle)

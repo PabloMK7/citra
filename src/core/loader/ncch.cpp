@@ -113,8 +113,7 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8);
 
-        std::shared_ptr<CodeSet> codeset =
-            Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id);
+        std::shared_ptr<CodeSet> codeset = system.Kernel().CreateCodeSet(process_name, program_id);
 
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
@@ -148,7 +147,6 @@ ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process)
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::move(code);
 
-        auto& system = Core::System::GetInstance();
         process = system.Kernel().CreateProcess(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
@@ -276,7 +274,6 @@ ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
         overlay_ncch = &update_ncch;
     }
 
-    auto& system = Core::System::GetInstance();
     system.TelemetrySession().AddField(Common::Telemetry::FieldType::Session, "ProgramId",
                                        program_id);
 
