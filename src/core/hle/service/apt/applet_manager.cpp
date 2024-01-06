@@ -228,8 +228,9 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
         parameter.sender_id, parameter.destination_id, parameter.signal, parameter.buffer.size());
 
     // If the applet is being HLEd, send directly to the applet.
-    if (hle_applets.contains(parameter.destination_id)) {
-        hle_applets[parameter.destination_id]->ReceiveParameter(parameter);
+    const auto applet = hle_applets[parameter.destination_id];
+    if (applet != nullptr) {
+        applet->ReceiveParameter(parameter);
     } else {
         // Otherwise, send the parameter the LLE way.
         next_parameter = parameter;
@@ -575,7 +576,7 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
-    if (hle_applets.contains(applet_id)) {
+    if (hle_applets[applet_id] != nullptr) {
         LOG_WARNING(Service_APT, "Applet has already been started id={:03X}", applet_id);
         return ResultSuccess;
     } else {
@@ -602,7 +603,7 @@ Result AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
-    if (hle_applets.contains(applet_id)) {
+    if (hle_applets[applet_id] != nullptr) {
         LOG_WARNING(Service_APT, "Applet has already been started id={:08X}", applet_id);
         return ResultSuccess;
     } else {
@@ -1494,13 +1495,13 @@ void AppletManager::LoadInputDevices() {
 /// Handles updating the current Applet every time it's called.
 void AppletManager::HLEAppletUpdateEvent(std::uintptr_t user_data, s64 cycles_late) {
     const auto id = static_cast<AppletId>(user_data);
-    if (!hle_applets.contains(id)) {
+    const auto applet = hle_applets[id];
+    if (applet == nullptr) {
         // Dead applet, exit event loop.
-        LOG_WARNING(Service_APT, "Attempted to update dead applet id={:03X}", id);
+        LOG_WARNING(Service_APT, "Attempted to update missing applet id={:03X}", id);
         return;
     }
 
-    const auto applet = hle_applets[id];
     if (applet->IsActive()) {
         applet->Update();
     }
