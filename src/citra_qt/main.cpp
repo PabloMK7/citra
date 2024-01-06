@@ -420,6 +420,38 @@ void GMainWindow::InitializeWidgets() {
 
     statusBar()->insertPermanentWidget(0, graphics_api_button);
 
+    volume_popup = new QWidget(this);
+    volume_popup->setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::Popup);
+    volume_popup->setLayout(new QVBoxLayout());
+    volume_popup->setMinimumWidth(200);
+
+    volume_slider = new QSlider(Qt::Horizontal);
+    volume_slider->setObjectName(QStringLiteral("volume_slider"));
+    volume_slider->setMaximum(100);
+    volume_slider->setPageStep(5);
+    connect(volume_slider, &QSlider::valueChanged, this, [this](int percentage) {
+        Settings::values.audio_muted = false;
+        const auto value = static_cast<float>(percentage) / volume_slider->maximum();
+        Settings::values.volume.SetValue(value);
+        UpdateVolumeUI();
+    });
+    volume_popup->layout()->addWidget(volume_slider);
+
+    volume_button = new QPushButton();
+    volume_button->setObjectName(QStringLiteral("TogglableStatusBarButton"));
+    volume_button->setFocusPolicy(Qt::NoFocus);
+    volume_button->setCheckable(true);
+    UpdateVolumeUI();
+    connect(volume_button, &QPushButton::clicked, this, [&] {
+        UpdateVolumeUI();
+        volume_popup->setVisible(!volume_popup->isVisible());
+        QRect rect = volume_button->geometry();
+        QPoint bottomLeft = statusBar()->mapToGlobal(rect.topLeft());
+        bottomLeft.setY(bottomLeft.y() - volume_popup->geometry().height());
+        volume_popup->setGeometry(QRect(bottomLeft, QSize(rect.width(), rect.height())));
+    });
+    statusBar()->insertPermanentWidget(1, volume_button);
+
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
 
@@ -672,8 +704,10 @@ void GMainWindow::InitializeHotkeys() {
         }
         UpdateStatusBar();
     });
-    connect_shortcut(QStringLiteral("Mute Audio"),
-                     [] { Settings::values.audio_muted = !Settings::values.audio_muted; });
+
+    connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
+    connect_shortcut(QStringLiteral("Audio Volume Down"), &GMainWindow::OnDecreaseVolume);
+    connect_shortcut(QStringLiteral("Audio Volume Up"), &GMainWindow::OnIncreaseVolume);
 
     // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
     // variable hold a garbage value after this function exits
@@ -1874,7 +1908,7 @@ void GMainWindow::OnStartGame() {
 #endif
 
     UpdateSaveStates();
-    UpdateAPIIndicator();
+    UpdateStatusButtons();
 }
 
 void GMainWindow::OnRestartGame() {
@@ -1911,7 +1945,7 @@ void GMainWindow::OnStopGame() {
     ShutdownGame();
     graphics_api_button->setEnabled(true);
     Settings::RestoreGlobalState(false);
-    UpdateAPIIndicator();
+    UpdateStatusButtons();
 }
 
 void GMainWindow::OnLoadComplete() {
@@ -2152,7 +2186,7 @@ void GMainWindow::OnConfigure() {
         }
         UpdateSecondaryWindowVisibility();
         UpdateBootHomeMenuState();
-        UpdateAPIIndicator();
+        UpdateStatusButtons();
     } else {
         Settings::values.input_profiles = old_input_profiles;
         Settings::values.touch_from_button_maps = old_touch_from_button_maps;
@@ -2582,6 +2616,57 @@ void GMainWindow::ShowMouseCursor() {
     }
 }
 
+void GMainWindow::OnMute() {
+    Settings::values.audio_muted = !Settings::values.audio_muted;
+    UpdateVolumeUI();
+}
+
+void GMainWindow::OnDecreaseVolume() {
+    Settings::values.audio_muted = false;
+    const auto current_volume =
+        static_cast<s32>(Settings::values.volume.GetValue() * volume_slider->maximum());
+    int step = 5;
+    if (current_volume <= 30) {
+        step = 2;
+    }
+    if (current_volume <= 6) {
+        step = 1;
+    }
+    const auto value =
+        static_cast<float>(std::max(current_volume - step, 0)) / volume_slider->maximum();
+    Settings::values.volume.SetValue(value);
+    UpdateVolumeUI();
+}
+
+void GMainWindow::OnIncreaseVolume() {
+    Settings::values.audio_muted = false;
+    const auto current_volume =
+        static_cast<s32>(Settings::values.volume.GetValue() * volume_slider->maximum());
+    int step = 5;
+    if (current_volume < 30) {
+        step = 2;
+    }
+    if (current_volume < 6) {
+        step = 1;
+    }
+    const auto value = static_cast<float>(current_volume + step) / volume_slider->maximum();
+    Settings::values.volume.SetValue(value);
+    UpdateVolumeUI();
+}
+
+void GMainWindow::UpdateVolumeUI() {
+    const auto volume_value =
+        static_cast<int>(Settings::values.volume.GetValue() * volume_slider->maximum());
+    volume_slider->setValue(volume_value);
+    if (Settings::values.audio_muted) {
+        volume_button->setChecked(false);
+        volume_button->setText(tr("VOLUME: MUTE"));
+    } else {
+        volume_button->setChecked(true);
+        volume_button->setText(tr("VOLUME: %1%", "Volume percentage (e.g. 50%)").arg(volume_value));
+    }
+}
+
 void GMainWindow::UpdateAPIIndicator(bool update) {
     static std::array graphics_apis = {QStringLiteral("SOFTWARE"), QStringLiteral("OPENGL"),
                                        QStringLiteral("VULKAN")};
@@ -2600,6 +2685,11 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
 
     graphics_api_button->setText(graphics_apis[api_index]);
     graphics_api_button->setStyleSheet(style_sheet);
+}
+
+void GMainWindow::UpdateStatusButtons() {
+    UpdateAPIIndicator();
+    UpdateVolumeUI();
 }
 
 void GMainWindow::OnMouseActivity() {
@@ -2903,6 +2993,8 @@ void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_nam
     if (!is_powered_on) {
         config->Save();
     }
+
+    UpdateStatusButtons();
 }
 
 void GMainWindow::OnMoviePlaybackCompleted() {

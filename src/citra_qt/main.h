@@ -267,6 +267,10 @@ private slots:
     void OnLanguageChanged(const QString& locale);
     void OnMouseActivity();
 
+    void OnDecreaseVolume();
+    void OnIncreaseVolume();
+    void OnMute();
+
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
@@ -279,7 +283,9 @@ private:
     void HideMouseCursor();
     void ShowMouseCursor();
     void OpenPerGameConfiguration(u64 title_id, const QString& file_name);
+    void UpdateVolumeUI();
     void UpdateAPIIndicator(bool update = false);
+    void UpdateStatusButtons();
 #ifdef __unix__
     void SetGamemodeEnabled(bool state);
 #endif
@@ -301,6 +307,9 @@ private:
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
     QPushButton* graphics_api_button = nullptr;
+    QPushButton* volume_button = nullptr;
+    QWidget* volume_popup = nullptr;
+    QSlider* volume_slider = nullptr;
     QTimer status_bar_update_timer;
     bool message_label_used_for_movie = false;
 
