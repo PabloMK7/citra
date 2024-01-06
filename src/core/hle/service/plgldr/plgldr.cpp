@@ -40,6 +40,10 @@ namespace Service::PLGLDR {
 
 static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 0);
 
+PLG_LDR::PluginLoaderContext PLG_LDR::plgldr_context;
+bool PLG_LDR::allow_game_change = true;
+PAddr PLG_LDR::plugin_fb_addr = 0;
+
 PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
         // clang-format off

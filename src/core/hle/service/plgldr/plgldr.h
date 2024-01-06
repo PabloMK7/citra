@@ -104,9 +104,9 @@ public:
 private:
     Core::System& system;
 
-    PluginLoaderContext plgldr_context;
-    PAddr plugin_fb_addr = 0;
-    bool allow_game_change = true;
+    static PluginLoaderContext plgldr_context;
+    static PAddr plugin_fb_addr;
+    static bool allow_game_change;
 
     void IsEnabled(Kernel::HLERequestContext& ctx);
     void SetEnabled(Kernel::HLERequestContext& ctx);
