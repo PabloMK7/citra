@@ -449,6 +449,12 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     gpu->SetInterruptHandler(
         [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
 
+    auto plg_ldr = Service::PLGLDR::GetService(*this);
+    if (plg_ldr) {
+        plg_ldr->SetEnabled(Settings::values.plugin_loader_enabled.GetValue());
+        plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
+    }
+
     LOG_DEBUG(Core, "Initialized OK");
 
     is_powered_on = true;
