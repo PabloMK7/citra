@@ -173,9 +173,9 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
 
 void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 size = rp.Pop<u32>();
-    const u32 prog_mask = rp.Pop<u32>();
-    const u32 data_mask = rp.Pop<u32>();
+    const auto size = rp.Pop<u32>();
+    const auto prog_mask = rp.Pop<u16>();
+    const auto data_mask = rp.Pop<u16>();
     auto& buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
@@ -188,7 +188,7 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 
     system.DSP().LoadComponent(component_data);
 
-    LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
+    LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:04X}, data_mask=0x{:04X}", size,
              prog_mask, data_mask);
 }
 
