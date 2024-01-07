@@ -288,6 +288,14 @@ init_clock =
 # Note: 3DS can only handle times later then Jan 1 2000
 init_time =
 
+# The system ticks count to use when citra starts
+# 0: Random (default), 1: Fixed
+init_ticks_type =
+
+# Tick count to use when init_ticks_type is set to Fixed.
+# Defaults to 0.
+init_ticks_override =
+
 # Plugin loader state, if enabled plugins will be loaded from the SD card.
 # You can also set if homebrew apps are allowed to enable the plugin loader
 plugin_loader =

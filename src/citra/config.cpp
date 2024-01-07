@@ -225,6 +225,8 @@ void Config::ReadValues() {
                 std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
                 .count();
     }
+    ReadSetting("System", Settings::values.init_ticks_type);
+    ReadSetting("System", Settings::values.init_ticks_override);
     ReadSetting("System", Settings::values.plugin_loader_enabled);
     ReadSetting("System", Settings::values.allow_plugin_loader);
 

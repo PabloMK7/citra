@@ -28,6 +28,11 @@ enum class InitClock : u32 {
     FixedTime = 1,
 };
 
+enum class InitTicks : u32 {
+    Random = 0,
+    Fixed = 1,
+};
+
 enum class LayoutOption : u32 {
     Default,
     SingleScreen,
@@ -437,6 +442,8 @@ struct Values {
     Setting<InitClock> init_clock{InitClock::SystemTime, "init_clock"};
     Setting<u64> init_time{946681277ULL, "init_time"};
     Setting<s64> init_time_offset{0, "init_time_offset"};
+    Setting<InitTicks> init_ticks_type{InitTicks::Random, "init_ticks_type"};
+    Setting<s64> init_ticks_override{0, "init_ticks_override"};
     Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
 

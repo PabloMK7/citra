@@ -304,34 +304,75 @@
          </layout>
         </item>
         <item row="9" column="0">
+         <widget class="QLabel" name="label_init_ticks_type">
+          <property name="text">
+           <string>Initial System Ticks</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="1">
+         <widget class="QComboBox" name="combo_init_ticks_type">
+          <item>
+           <property name="text">
+            <string>Random</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Fixed</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="label_init_ticks_value">
+          <property name="text">
+           <string>Initial System Ticks Override</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="1">
+         <widget class="QLineEdit" name="edit_init_ticks_value">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maxLength">
+           <number>20</number>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="0">
          <widget class="QLabel" name="label_play_coins">
           <property name="text">
            <string>Play Coins:</string>
           </property>
          </widget>
         </item>
-        <item row="9" column="1">
+        <item row="11" column="1">
          <widget class="QSpinBox" name="spinBox_play_coins">
           <property name="maximum">
            <number>300</number>
           </property>
          </widget>
         </item>
-        <item row="10" column="1">
+        <item row="12" column="1">
          <widget class="QCheckBox" name="toggle_system_setup">
           <property name="text">
            <string>Run System Setup when Home Menu is launched</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="0">
+        <item row="13" column="0">
          <widget class="QLabel" name="label_console_id">
           <property name="text">
            <string>Console ID:</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="1">
+        <item row="13" column="1">
          <widget class="QPushButton" name="button_regenerate_console_id">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -347,35 +388,35 @@
           </property>
          </widget>
         </item>
-        <item row="12" column="0">
+        <item row="14" column="0">
          <widget class="QLabel" name="label_plugin_loader">
           <property name="text">
            <string>3GX Plugin Loader:</string>
           </property>
          </widget>
         </item>
-        <item row="12" column="1">
+        <item row="14" column="1">
          <widget class="QCheckBox" name="plugin_loader">
           <property name="text">
            <string>Enable 3GX plugin loader</string>
           </property>
          </widget>
         </item>
-        <item row="13" column="1">
+        <item row="15" column="1">
          <widget class="QCheckBox" name="allow_plugin_loader">
           <property name="text">
            <string>Allow games to change plugin loader state</string>
           </property>
          </widget>
         </item>
-        <item row="14" column="0">
+        <item row="16" column="0">
          <widget class="QLabel" name="label_nus_download">
           <property name="text">
            <string>Download System Files from Nitendo servers</string>
           </property>
          </widget>
         </item>
-        <item row="14" column="1">
+        <item row="16" column="1">
          <widget class="QWidget" name="body_nus_download">
           <layout class="QHBoxLayout" name="horizontalLayout_nus_download">
            <item>

@@ -43,6 +43,7 @@ private:
 
     void UpdateBirthdayComboBox(int birthmonth_index);
     void UpdateInitTime(int init_clock);
+    void UpdateInitTicks(int init_ticks_type);
     void RefreshConsoleID();
 
     void SetupPerGameUI();

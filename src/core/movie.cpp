@@ -120,8 +120,9 @@ struct CTMHeader {
     std::array<char, 32> author; /// Author of the movie
     u32_le rerecord_count;       /// Number of rerecords when making the movie
     u64_le input_count;          /// Number of inputs (button and pad states) when making the movie
+    s64_le timing_base_ticks;    /// The base system tick count to initialize core timing with.
 
-    std::array<u8, 164> reserved; /// Make heading 256 bytes so it has consistent size
+    std::array<u8, 156> reserved; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
@@ -158,6 +159,7 @@ void Movie::serialize(Archive& ar, const unsigned int file_version) {
     ar& recorded_input_;
 
     ar& init_time;
+    ar& base_ticks;
 
     if (Archive::is_loading::value) {
         u64 savestate_movie_id;
@@ -453,6 +455,10 @@ u64 Movie::GetOverrideInitTime() const {
     return init_time;
 }
 
+s64 Movie::GetOverrideBaseTicks() const {
+    return base_ticks;
+}
+
 Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
     if (header_magic_bytes != header.filetype) {
         LOG_ERROR(Movie, "Playback file does not have valid header");
@@ -487,6 +493,7 @@ void Movie::SaveMovie() {
     header.filetype = header_magic_bytes;
     header.program_id = program_id;
     header.clock_init_time = init_time;
+    header.timing_base_ticks = base_ticks;
     header.id = id;
 
     std::memcpy(header.author.data(), record_movie_author.data(),
@@ -591,6 +598,7 @@ void Movie::PrepareForPlayback(const std::string& movie_file) {
         return;
 
     init_time = header.value().clock_init_time;
+    base_ticks = header.value().timing_base_ticks;
 }
 
 void Movie::PrepareForRecording() {
@@ -605,6 +613,8 @@ void Movie::PrepareForRecording() {
     } else {
         init_time = Settings::values.init_time.GetValue();
     }
+
+    base_ticks = Timing::GenerateBaseTicks();
 }
 
 Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file) const {
@@ -661,6 +671,7 @@ void Movie::Shutdown() {
     current_byte = 0;
     current_input = 0;
     init_time = 0;
+    base_ticks = -1;
     id = 0;
 }
 

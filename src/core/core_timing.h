@@ -185,7 +185,7 @@ public:
 
     class Timer {
     public:
-        Timer();
+        Timer(s64 base_ticks = 0);
         ~Timer();
 
         s64 GetMaxSliceLength() const;
@@ -249,7 +249,7 @@ public:
         friend class boost::serialization::access;
     };
 
-    explicit Timing(std::size_t num_cores, u32 cpu_clock_percentage);
+    explicit Timing(std::size_t num_cores, u32 cpu_clock_percentage, s64 override_base_ticks = -1);
 
     ~Timing(){};
 
@@ -289,6 +289,9 @@ public:
     void UnlockEventQueue() {
         event_queue_locked = false;
     }
+
+    /// Generates a random tick count to seed the system tick timer with.
+    static s64 GenerateBaseTicks();
 
 private:
     // unordered_map stores each element separately as a linked list node so pointers to

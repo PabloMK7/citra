@@ -687,6 +687,8 @@ void Config::ReadSystemValues() {
         ReadBasicSetting(Settings::values.init_clock);
         ReadBasicSetting(Settings::values.init_time);
         ReadBasicSetting(Settings::values.init_time_offset);
+        ReadBasicSetting(Settings::values.init_ticks_type);
+        ReadBasicSetting(Settings::values.init_ticks_override);
         ReadBasicSetting(Settings::values.plugin_loader_enabled);
         ReadBasicSetting(Settings::values.allow_plugin_loader);
     }
@@ -1173,6 +1175,8 @@ void Config::SaveSystemValues() {
         WriteBasicSetting(Settings::values.init_clock);
         WriteBasicSetting(Settings::values.init_time);
         WriteBasicSetting(Settings::values.init_time_offset);
+        WriteBasicSetting(Settings::values.init_ticks_type);
+        WriteBasicSetting(Settings::values.init_ticks_override);
         WriteBasicSetting(Settings::values.plugin_loader_enabled);
         WriteBasicSetting(Settings::values.allow_plugin_loader);
     }
