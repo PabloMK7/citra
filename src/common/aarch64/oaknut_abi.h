@@ -63,15 +63,15 @@ struct ABIFrameInfo {
 };
 
 inline ABIFrameInfo ABI_CalculateFrameSize(std::bitset<64> regs, std::size_t frame_size) {
-    const size_t gprs_count = (regs & ABI_ALL_GPRS).count();
-    const size_t fprs_count = (regs & ABI_ALL_FPRS).count();
+    const std::size_t gprs_count = (regs & ABI_ALL_GPRS).count();
+    const std::size_t fprs_count = (regs & ABI_ALL_FPRS).count();
 
-    const size_t gprs_size = (gprs_count + 1) / 2 * 16;
-    const size_t fprs_size = fprs_count * 16;
+    const std::size_t gprs_size = (gprs_count + 1) / 2 * 16;
+    const std::size_t fprs_size = fprs_count * 16;
 
-    size_t total_size = 0;
+    std::size_t total_size = 0;
     total_size += gprs_size;
-    const size_t fprs_base_subtraction = total_size;
+    const std::size_t fprs_base_subtraction = total_size;
     total_size += fprs_size;
     total_size += frame_size;
 
@@ -100,11 +100,11 @@ inline void ABI_PushRegisters(oaknut::CodeGenerator& code, std::bitset<64> regs,
         }
 
         if (!gprs.empty()) {
-            for (size_t i = 0; i < gprs.size() - 1; i += 2) {
+            for (std::size_t i = 0; i < gprs.size() - 1; i += 2) {
                 code.STP(gprs[i], gprs[i + 1], SP, i * sizeof(u64));
             }
             if (gprs.size() % 2 == 1) {
-                const size_t i = gprs.size() - 1;
+                const std::size_t i = gprs.size() - 1;
                 code.STR(gprs[i], SP, i * sizeof(u64));
             }
         }
@@ -121,11 +121,11 @@ inline void ABI_PushRegisters(oaknut::CodeGenerator& code, std::bitset<64> regs,
         }
 
         if (!fprs.empty()) {
-            for (size_t i = 0; i < fprs.size() - 1; i += 2) {
+            for (std::size_t i = 0; i < fprs.size() - 1; i += 2) {
                 code.STP(fprs[i], fprs[i + 1], SP, frame_info.fprs_offset + i * (sizeof(u64) * 2));
             }
             if (fprs.size() % 2 == 1) {
-                const size_t i = fprs.size() - 1;
+                const std::size_t i = fprs.size() - 1;
                 code.STR(fprs[i], SP, frame_info.fprs_offset + i * (sizeof(u64) * 2));
             }
         }
@@ -159,11 +159,11 @@ inline void ABI_PopRegisters(oaknut::CodeGenerator& code, std::bitset<64> regs,
         }
 
         if (!gprs.empty()) {
-            for (size_t i = 0; i < gprs.size() - 1; i += 2) {
+            for (std::size_t i = 0; i < gprs.size() - 1; i += 2) {
                 code.LDP(gprs[i], gprs[i + 1], SP, i * sizeof(u64));
             }
             if (gprs.size() % 2 == 1) {
-                const size_t i = gprs.size() - 1;
+                const std::size_t i = gprs.size() - 1;
                 code.LDR(gprs[i], SP, i * sizeof(u64));
             }
         }
@@ -180,11 +180,11 @@ inline void ABI_PopRegisters(oaknut::CodeGenerator& code, std::bitset<64> regs,
         }
 
         if (!fprs.empty()) {
-            for (size_t i = 0; i < fprs.size() - 1; i += 2) {
+            for (std::size_t i = 0; i < fprs.size() - 1; i += 2) {
                 code.LDP(fprs[i], fprs[i + 1], SP, frame_info.fprs_offset + i * (sizeof(u64) * 2));
             }
             if (fprs.size() % 2 == 1) {
-                const size_t i = fprs.size() - 1;
+                const std::size_t i = fprs.size() - 1;
                 code.LDR(fprs[i], SP, frame_info.fprs_offset + i * (sizeof(u64) * 2));
             }
         }

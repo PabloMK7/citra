@@ -235,7 +235,7 @@ void RasterizerVulkan::SetupVertexArray() {
         if (aligned_stride == loader.byte_count) {
             std::memcpy(dst_ptr, src_ptr, data_size);
         } else {
-            for (size_t vertex = 0; vertex < vertex_num; vertex++) {
+            for (std::size_t vertex = 0; vertex < vertex_num; vertex++) {
                 std::memcpy(dst_ptr + vertex * aligned_stride, src_ptr + vertex * loader.byte_count,
                             loader.byte_count);
             }

@@ -12,7 +12,7 @@ using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
 using ProcTexFilter = TexturingRegs::ProcTexFilter;
 using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
 
-constexpr static size_t RESERVE_SIZE = 8 * 1024 * 1024;
+constexpr static std::size_t RESERVE_SIZE = 8 * 1024 * 1024;
 
 enum class Semantic : u32 {
     Position,

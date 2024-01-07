@@ -30,7 +30,7 @@ namespace Common {
 #ifdef __APPLE__
 static std::string GetCPUString() {
     char buf[128];
-    size_t buf_len = sizeof(buf);
+    std::size_t buf_len = sizeof(buf);
     if (sysctlbyname("machdep.cpu.brand_string", &buf, &buf_len, NULL, 0) == -1) {
         return "Unknown";
     }

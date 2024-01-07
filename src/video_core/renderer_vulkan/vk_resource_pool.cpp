@@ -10,7 +10,7 @@
 
 namespace Vulkan {
 
-ResourcePool::ResourcePool(MasterSemaphore* master_semaphore_, size_t grow_step_)
+ResourcePool::ResourcePool(MasterSemaphore* master_semaphore_, std::size_t grow_step_)
     : master_semaphore{master_semaphore_}, grow_step{grow_step_} {}
 
 std::size_t ResourcePool::CommitResource() {
@@ -57,12 +57,12 @@ std::size_t ResourcePool::ManageOverflow() {
 }
 
 void ResourcePool::Grow() {
-    const size_t old_capacity = ticks.size();
+    const std::size_t old_capacity = ticks.size();
     ticks.resize(old_capacity + grow_step);
     Allocate(old_capacity, old_capacity + grow_step);
 }
 
-constexpr size_t COMMAND_BUFFER_POOL_SIZE = 4;
+constexpr std::size_t COMMAND_BUFFER_POOL_SIZE = 4;
 
 struct CommandPool::Pool {
     vk::CommandPool handle;

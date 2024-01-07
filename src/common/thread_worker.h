@@ -25,7 +25,7 @@ class StatefulThreadWorker {
     static constexpr bool with_state = !std::is_same_v<StateType, void>;
 
     struct DummyCallable {
-        int operator()(size_t) const noexcept {
+        int operator()(std::size_t) const noexcept {
             return 0;
         }
     };
@@ -33,12 +33,13 @@ class StatefulThreadWorker {
     using Task =
         std::conditional_t<with_state, UniqueFunction<void, StateType*>, UniqueFunction<void>>;
     using StateMaker =
-        std::conditional_t<with_state, std::function<StateType(size_t)>, DummyCallable>;
+        std::conditional_t<with_state, std::function<StateType(std::size_t)>, DummyCallable>;
 
 public:
-    explicit StatefulThreadWorker(size_t num_workers, std::string_view name, StateMaker func = {})
+    explicit StatefulThreadWorker(std::size_t num_workers, std::string_view name,
+                                  StateMaker func = {})
         : workers_queued{num_workers}, thread_name{name} {
-        const auto lambda = [this, func](std::stop_token stop_token, size_t index) {
+        const auto lambda = [this, func](std::stop_token stop_token, std::size_t index) {
             Common::SetCurrentThreadName(thread_name.data());
             {
                 [[maybe_unused]] std::conditional_t<with_state, StateType, int> state{func(index)};
@@ -69,7 +70,7 @@ public:
             wait_condition.notify_all();
         };
         threads.reserve(num_workers);
-        for (size_t i = 0; i < num_workers; ++i) {
+        for (std::size_t i = 0; i < num_workers; ++i) {
             threads.emplace_back(lambda, i);
         }
     }
@@ -110,10 +111,10 @@ private:
     std::mutex queue_mutex;
     std::condition_variable_any condition;
     std::condition_variable wait_condition;
-    std::atomic<size_t> work_scheduled{};
-    std::atomic<size_t> work_done{};
-    std::atomic<size_t> workers_stopped{};
-    std::atomic<size_t> workers_queued{};
+    std::atomic<std::size_t> work_scheduled{};
+    std::atomic<std::size_t> work_done{};
+    std::atomic<std::size_t> workers_stopped{};
+    std::atomic<std::size_t> workers_queued{};
     std::string_view thread_name;
     std::vector<std::jthread> threads;
 };

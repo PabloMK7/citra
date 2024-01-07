@@ -148,7 +148,7 @@ ALsizei OpenALSink::Impl::Callback(void* impl_, void* buffer, ALsizei buffer_siz
         return 0;
     }
 
-    const size_t num_frames = buffer_size_in_bytes / (2 * sizeof(s16));
+    const std::size_t num_frames = buffer_size_in_bytes / (2 * sizeof(s16));
     impl->cb(reinterpret_cast<s16*>(buffer), num_frames);
 
     return buffer_size_in_bytes;

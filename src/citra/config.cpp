@@ -236,7 +236,7 @@ void Config::ReadValues() {
         std::string offset_string =
             sdl2_config->GetString("System", "init_time_offset", default_init_time_offset);
 
-        size_t sep_index = offset_string.find(' ');
+        std::size_t sep_index = offset_string.find(' ');
 
         if (sep_index == std::string::npos) {
             LOG_ERROR(Config, "Failed to parse init_time_offset. Using 0 00:00:00");

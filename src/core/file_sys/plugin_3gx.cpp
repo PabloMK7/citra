@@ -357,7 +357,7 @@ void FileSys::Plugin3GXLoader::MapBootloader(Kernel::Process& process, Kernel::K
     // Write bootloader
     kernel.memory.WriteBlock(
         process, _3GX_exe_load_addr - bootloader_memory_size, bootloader.data(),
-        std::min<size_t>(bootloader.size() * sizeof(u32), bootloader_memory_size));
+        std::min<std::size_t>(bootloader.size() * sizeof(u32), bootloader_memory_size));
 
     game_instructions[0] = 0xE51FF004; // ldr pc, [pc, #-4]
     game_instructions[1] = _3GX_exe_load_addr - bootloader_memory_size;

@@ -81,8 +81,8 @@ jstring Java_org_citra_citra_1emu_model_GameInfo_getTitle(JNIEnv* env, jobject o
     Loader::SMDH::TitleLanguage language = Loader::SMDH::TitleLanguage::English;
 
     // Get the title from SMDH in UTF-16 format
-    std::u16string title{
-        reinterpret_cast<char16_t*>(smdh->titles[static_cast<size_t>(language)].long_title.data())};
+    std::u16string title{reinterpret_cast<char16_t*>(
+        smdh->titles[static_cast<std::size_t>(language)].long_title.data())};
 
     return ToJString(env, Common::UTF16ToUTF8(title).data());
 }
@@ -93,8 +93,8 @@ jstring Java_org_citra_citra_1emu_model_GameInfo_getCompany(JNIEnv* env, jobject
 
     // Get the Publisher's name from SMDH in UTF-16 format
     char16_t* publisher;
-    publisher =
-        reinterpret_cast<char16_t*>(smdh->titles[static_cast<size_t>(language)].publisher.data());
+    publisher = reinterpret_cast<char16_t*>(
+        smdh->titles[static_cast<std::size_t>(language)].publisher.data());
 
     return ToJString(env, Common::UTF16ToUTF8(publisher).data());
 }

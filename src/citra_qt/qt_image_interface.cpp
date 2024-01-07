@@ -25,7 +25,7 @@ bool QtImageInterface::DecodePNG(std::vector<u8>& dst, u32& width, u32& height,
     image = image.convertToFormat(QImage::Format_RGBA8888);
 
     // Write RGBA8 to vector
-    const size_t image_size = width * height * 4;
+    const std::size_t image_size = width * height * 4;
     dst.resize(image_size);
     std::memcpy(dst.data(), image.constBits(), image_size);
 

@@ -48,8 +48,8 @@ static std::string GetSaveStatePath(u64 program_id, u64 movie_id, u32 slot) {
 }
 
 static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 program_id,
-                              u64 movie_id, u32 slot) {
-    const auto path = GetSaveStatePath(program_id, movie_id, slot);
+                              u64 movie_id) {
+    const auto path = GetSaveStatePath(program_id, movie_id, info.slot);
     if (header.filetype != header_magic_bytes) {
         LOG_WARNING(Core, "Invalid save state file {}", path);
         return false;
@@ -112,7 +112,7 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id, u64 movie_id) {
             LOG_ERROR(Core, "Could not read from file {}", path);
             continue;
         }
-        if (!ValidateSaveState(header, info, program_id, movie_id, slot)) {
+        if (!ValidateSaveState(header, info, program_id, movie_id)) {
             continue;
         }
 
@@ -185,7 +185,8 @@ void System::LoadState(u32 slot) {
 
         // validate header
         SaveStateInfo info;
-        if (!ValidateSaveState(header, info, title_id, movie_id, slot)) {
+        info.slot = slot;
+        if (!ValidateSaveState(header, info, title_id, movie_id)) {
             throw std::runtime_error("Invalid savestate");
         }
 

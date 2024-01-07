@@ -139,7 +139,7 @@ public:
 private:
     /// Iterate over all page indices in a range
     template <typename Func>
-    void ForEachPage(PAddr addr, size_t size, Func&& func) {
+    void ForEachPage(PAddr addr, std::size_t size, Func&& func) {
         static constexpr bool RETURNS_BOOL = std::is_same_v<std::invoke_result<Func, u64>, bool>;
         const u64 page_end = (addr + size - 1) >> CITRA_PAGEBITS;
         for (u64 page = addr >> CITRA_PAGEBITS; page <= page_end; ++page) {
@@ -155,7 +155,7 @@ private:
 
     /// Iterates over all the surfaces in a region calling func
     template <typename Func>
-    void ForEachSurfaceInRegion(PAddr addr, size_t size, Func&& func);
+    void ForEachSurfaceInRegion(PAddr addr, std::size_t size, Func&& func);
 
     /// Get the best surface match (and its match type) for the given flags
     template <MatchFlags find_flags>

@@ -57,9 +57,9 @@ static bool LZSS_Decompress(std::span<const u8> compressed, std::span<u8> decomp
     u32 buffer_top_and_bottom;
     std::memcpy(&buffer_top_and_bottom, footer, sizeof(u32));
 
-    size_t out = decompressed.size();
-    size_t index = compressed.size() - ((buffer_top_and_bottom >> 24) & 0xFF);
-    size_t stop_index = compressed.size() - (buffer_top_and_bottom & 0xFFFFFF);
+    std::size_t out = decompressed.size();
+    std::size_t index = compressed.size() - ((buffer_top_and_bottom >> 24) & 0xFF);
+    std::size_t stop_index = compressed.size() - (buffer_top_and_bottom & 0xFFFFFF);
 
     std::memset(decompressed.data(), 0, decompressed.size());
     std::memcpy(decompressed.data(), compressed.data(), compressed.size());

@@ -35,8 +35,8 @@ struct RenderPass {
 };
 
 class RenderpassCache {
-    static constexpr size_t MAX_COLOR_FORMATS = 13;
-    static constexpr size_t MAX_DEPTH_FORMATS = 4;
+    static constexpr std::size_t MAX_COLOR_FORMATS = 13;
+    static constexpr std::size_t MAX_DEPTH_FORMATS = 4;
 
 public:
     explicit RenderpassCache(const Instance& instance, Scheduler& scheduler);

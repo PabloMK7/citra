@@ -1686,8 +1686,8 @@ Result SVC::AcceptSession(Handle* out_server_session, Handle server_port_handle)
     return current_process->handle_table.Create(out_server_session, std::move(session));
 }
 
-static void CopyStringPart(char* out, const char* in, size_t offset, size_t max_length) {
-    size_t str_size = strlen(in);
+static void CopyStringPart(char* out, const char* in, std::size_t offset, std::size_t max_length) {
+    std::size_t str_size = strlen(in);
     if (offset < str_size) {
         strncpy(out, in + offset, max_length - 1);
         out[max_length - 1] = '\0';

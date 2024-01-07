@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include "common/logging/log.h"
 #include "core/hle/service/gsp/gsp_command.h"
 
 namespace VideoCore {

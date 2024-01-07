@@ -119,9 +119,9 @@ u32 UnpackDepthStencil(const VideoCore::StagingData& data, vk::Format dest) {
 }
 
 boost::container::small_vector<vk::ImageMemoryBarrier, 3> MakeInitBarriers(
-    vk::ImageAspectFlags aspect, std::span<const vk::Image> images, size_t num_images) {
+    vk::ImageAspectFlags aspect, std::span<const vk::Image> images, std::size_t num_images) {
     boost::container::small_vector<vk::ImageMemoryBarrier, 3> barriers;
-    for (size_t i = 0; i < num_images; i++) {
+    for (std::size_t i = 0; i < num_images; i++) {
         barriers.push_back(vk::ImageMemoryBarrier{
             .srcAccessMask = vk::AccessFlagBits::eNone,
             .dstAccessMask = vk::AccessFlagBits::eNone,

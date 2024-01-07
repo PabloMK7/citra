@@ -777,7 +777,7 @@ typename RasterizerCache<T>::SurfaceRect_Tuple RasterizerCache<T>::GetTexCopySur
 
 template <class T>
 template <typename Func>
-void RasterizerCache<T>::ForEachSurfaceInRegion(PAddr addr, size_t size, Func&& func) {
+void RasterizerCache<T>::ForEachSurfaceInRegion(PAddr addr, std::size_t size, Func&& func) {
     using FuncReturn = typename std::invoke_result<Func, SurfaceId, Surface&>::type;
     static constexpr bool BOOL_BREAK = std::is_same_v<FuncReturn, bool>;
     boost::container::small_vector<SurfaceId, 8> surfaces;

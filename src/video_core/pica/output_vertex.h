@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "common/common_funcs.h"
 #include "common/vector_math.h"
 #include "video_core/pica_types.h"
 

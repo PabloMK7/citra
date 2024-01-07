@@ -70,7 +70,7 @@ private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;
     Pica::RegsInternal& regs;
-    size_t num_sw_threads;
+    std::size_t num_sw_threads;
     Common::ThreadWorker sw_workers;
     Framebuffer fb;
 };

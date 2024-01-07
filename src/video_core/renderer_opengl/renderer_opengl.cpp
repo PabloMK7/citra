@@ -310,7 +310,7 @@ void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
                  Settings::values.bg_blue.GetValue(), 0.0f);
 
-    for (size_t i = 0; i < samplers.size(); i++) {
+    for (std::size_t i = 0; i < samplers.size(); i++) {
         samplers[i].Create();
         glSamplerParameteri(samplers[i].handle, GL_TEXTURE_MIN_FILTER,
                             i == 0 ? GL_NEAREST : GL_LINEAR);

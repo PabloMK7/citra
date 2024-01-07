@@ -16,7 +16,7 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
         return 0; // Crypto++ does not like zero size buffer
 
     const auto segments = BreakupRead(offset, length);
-    size_t read_progress = 0;
+    std::size_t read_progress = 0;
 
     // Skip cache if the read is too big
     if (segments.size() == 1 && segments[0].second > cache_line_size) {
@@ -33,8 +33,8 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
     // TODO(PabloMK7): Make cache thread safe, read the comment in CacheReady function.
     // std::unique_lock<std::shared_mutex> read_guard(cache_mutex);
     for (const auto& seg : segments) {
-        size_t read_size = cache_line_size;
-        size_t page = OffsetToPage(seg.first);
+        std::size_t read_size = cache_line_size;
+        std::size_t page = OffsetToPage(seg.first);
         // Check if segment is in cache
         auto cache_entry = cache.request(page);
         if (!cache_entry.first) {
@@ -51,7 +51,7 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
             LOG_TRACE(Service_FS, "RomFS Cache HIT: page={}, length={}, into={}", page, seg.second,
                       (seg.first - page));
         }
-        size_t copy_amount =
+        std::size_t copy_amount =
             (read_size > (seg.first - page))
                 ? std::min((seg.first - page) + seg.second, read_size) - (seg.first - page)
                 : 0;
@@ -98,10 +98,10 @@ std::vector<std::pair<std::size_t, std::size_t>> DirectRomFSReader::BreakupRead(
         return ret;
     }
 
-    size_t curr_offset = offset;
+    std::size_t curr_offset = offset;
     while (length) {
-        size_t next_page = OffsetToPage(curr_offset + cache_line_size);
-        size_t curr_page_len = std::min(length, next_page - curr_offset);
+        std::size_t next_page = OffsetToPage(curr_offset + cache_line_size);
+        std::size_t curr_page_len = std::min(length, next_page - curr_offset);
         ret.push_back(std::make_pair(curr_offset, curr_page_len));
         curr_offset = next_page;
         length -= curr_page_len;

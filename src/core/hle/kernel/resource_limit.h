@@ -68,7 +68,7 @@ public:
     bool Release(ResourceLimitType type, s32 amount);
 
 private:
-    using ResourceArray = std::array<s32, static_cast<size_t>(ResourceLimitType::Max)>;
+    using ResourceArray = std::array<s32, static_cast<std::size_t>(ResourceLimitType::Max)>;
     ResourceArray m_limit_values{};
     ResourceArray m_current_values{};
     std::string m_name;

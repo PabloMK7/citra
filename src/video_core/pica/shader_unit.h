@@ -33,15 +33,15 @@ struct ShaderUnit {
 
     void WriteOutput(const ShaderRegs& config, AttributeBuffer& output);
 
-    static constexpr size_t InputOffset(s32 register_index) {
+    static constexpr std::size_t InputOffset(s32 register_index) {
         return offsetof(ShaderUnit, input) + register_index * sizeof(Common::Vec4<f24>);
     }
 
-    static constexpr size_t OutputOffset(s32 register_index) {
+    static constexpr std::size_t OutputOffset(s32 register_index) {
         return offsetof(ShaderUnit, output) + register_index * sizeof(Common::Vec4<f24>);
     }
 
-    static constexpr size_t TemporaryOffset(s32 register_index) {
+    static constexpr std::size_t TemporaryOffset(s32 register_index) {
         return offsetof(ShaderUnit, temporary) + register_index * sizeof(Common::Vec4<f24>);
     }
 

@@ -53,7 +53,7 @@ private:
 
 public:
     union Regs {
-        static constexpr size_t NUM_REGS = 0x732;
+        static constexpr std::size_t NUM_REGS = 0x732;
 
         struct {
             u32 hardware_id;

@@ -2,8 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/assert.h"
 #include "common/bit_set.h"
 #include "common/hash.h"
+#include "common/logging/log.h"
 #include "video_core/pica/regs_shader.h"
 #include "video_core/pica/shader_setup.h"
 

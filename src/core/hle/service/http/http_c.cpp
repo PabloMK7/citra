@@ -112,9 +112,9 @@ static URLInfo SplitUrl(const std::string& url) {
     };
 }
 
-static size_t WriteHeaders(httplib::Stream& stream,
-                           std::span<const Context::RequestHeader> headers) {
-    size_t write_len = 0;
+static std::size_t WriteHeaders(httplib::Stream& stream,
+                                std::span<const Context::RequestHeader> headers) {
+    std::size_t write_len = 0;
     for (const auto& header : headers) {
         auto len = stream.write_format("%s: %s\r\n", header.name.c_str(), header.value.c_str());
         if (len < 0) {
@@ -130,8 +130,8 @@ static size_t WriteHeaders(httplib::Stream& stream,
     return write_len;
 }
 
-static size_t HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
-                                httplib::Stream& strm, httplib::Headers& httplib_headers) {
+static std::size_t HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
+                                     httplib::Stream& strm, httplib::Headers& httplib_headers) {
     std::vector<Context::RequestHeader> final_headers;
     std::vector<Context::RequestHeader>::iterator it_pending_headers;
     httplib::Headers::iterator it_httplib_headers;
@@ -508,7 +508,7 @@ void HTTP_C::ReceiveDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
             }
             Context& http_context = GetContext(async_data->context_handle);
 
-            const size_t remaining_data =
+            const std::size_t remaining_data =
                 http_context.response.body.size() - http_context.current_copied_data;
 
             if (async_data->buffer_size >= remaining_data) {

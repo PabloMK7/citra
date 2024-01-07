@@ -131,7 +131,7 @@ public:
         return m_offset;
     }
 
-    bool Seek(size_t offset) {
+    bool Seek(std::size_t offset) {
         if (offset > m_size)
             return false;
         m_offset = offset;
@@ -242,7 +242,7 @@ private:
         if (m_target_relative_offset + length > m_target.size())
             return false;
         // Byte by byte copy.
-        for (size_t i = 0; i < length; ++i)
+        for (std::size_t i = 0; i < length; ++i)
             m_target.data()[m_target.Tell() + i] = m_target.data()[m_target_relative_offset++];
         m_target.Seek(m_target.Tell() + length);
         return true;

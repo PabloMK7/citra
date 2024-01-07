@@ -21,15 +21,15 @@ struct Uniforms {
     std::array<bool, 16> b;
     std::array<Common::Vec4<u8>, 4> i;
 
-    static size_t GetFloatUniformOffset(u32 index) {
+    static std::size_t GetFloatUniformOffset(u32 index) {
         return offsetof(Uniforms, f) + index * sizeof(Common::Vec4<f24>);
     }
 
-    static size_t GetBoolUniformOffset(u32 index) {
+    static std::size_t GetBoolUniformOffset(u32 index) {
         return offsetof(Uniforms, b) + index * sizeof(bool);
     }
 
-    static size_t GetIntUniformOffset(u32 index) {
+    static std::size_t GetIntUniformOffset(u32 index) {
         return offsetof(Uniforms, i) + index * sizeof(Common::Vec4<u8>);
     }
 

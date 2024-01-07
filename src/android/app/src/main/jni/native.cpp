@@ -661,8 +661,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_removeAmiibo([[maybe_unused]] JNIEn
 JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_installCIA(
     JNIEnv* env, jobject jobj, jstring jpath) {
     std::string path = GetJString(env, jpath);
-    Service::AM::InstallStatus res =
-        Service::AM::InstallCIA(path, [env, jobj](size_t total_bytes_read, size_t file_size) {
+    Service::AM::InstallStatus res = Service::AM::InstallCIA(
+        path, [env, jobj](std::size_t total_bytes_read, std::size_t file_size) {
             env->CallVoidMethod(jobj, IDCache::GetCiaInstallHelperSetProgress(),
                                 static_cast<jint>(file_size), static_cast<jint>(total_bytes_read));
         });

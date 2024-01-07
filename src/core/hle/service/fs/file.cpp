@@ -107,7 +107,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         Result ret{0};
         Kernel::MappedBuffer* buffer;
         std::unique_ptr<u8*> data;
-        size_t read_size;
+        std::size_t read_size;
     };
 
     auto async_data = std::make_shared<AsyncData>();

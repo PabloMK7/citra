@@ -36,11 +36,11 @@ constexpr u32 BOSS_EXTDATA_HEADER_LENGTH = 0x18;
 constexpr u32 BOSS_S_ENTRY_SIZE = 0xC00;
 constexpr u32 BOSS_SAVE_HEADER_SIZE = 4;
 
-constexpr size_t TASK_ID_SIZE = 8;
-constexpr size_t URL_SIZE = 0x200;
-constexpr size_t HEADERS_SIZE = 0x360;
-constexpr size_t CERTIDLIST_SIZE = 3;
-constexpr size_t TASKIDLIST_SIZE = 0x400;
+constexpr std::size_t TASK_ID_SIZE = 8;
+constexpr std::size_t URL_SIZE = 0x200;
+constexpr std::size_t HEADERS_SIZE = 0x360;
+constexpr std::size_t CERTIDLIST_SIZE = 3;
+constexpr std::size_t TASKIDLIST_SIZE = 0x400;
 
 constexpr std::array<u8, 8> boss_system_savedata_id{
     0x00, 0x00, 0x00, 0x00, 0x34, 0x00, 0x01, 0x00,
@@ -188,8 +188,8 @@ public:
     std::optional<NsDataEntry> GetNsDataEntryFromId(const u32 ns_data_id);
     Result GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHeaderInfoType type,
                                const u32 size, Kernel::MappedBuffer& buffer);
-    ResultVal<size_t> ReadNsData(const u32 ns_data_id, const u64 offset, const u32 size,
-                                 Kernel::MappedBuffer& buffer);
+    ResultVal<std::size_t> ReadNsData(const u32 ns_data_id, const u64 offset, const u32 size,
+                                      Kernel::MappedBuffer& buffer);
     Result SendProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
     Result ReceiveProperty(const u16 id, const u32 size, Kernel::MappedBuffer& buffer);
 

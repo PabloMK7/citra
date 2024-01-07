@@ -79,7 +79,7 @@ public:
     void BindTexelBuffer(u32 binding, vk::BufferView buffer_view);
 
     /// Sets the dynamic offset for the uniform buffer at binding
-    void SetBufferOffset(u32 binding, size_t offset);
+    void SetBufferOffset(u32 binding, std::size_t offset);
 
 private:
     /// Builds the rasterizer pipeline layout

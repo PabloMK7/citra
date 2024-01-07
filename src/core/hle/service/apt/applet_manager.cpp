@@ -713,6 +713,7 @@ Result AppletManager::SendDspSleep(AppletId from_applet_id,
             .signal = SignalType::DspSleep,
             .object = std::move(object),
         });
+        return ResultSuccess;
     }
 
     auto sys_lib_slot = GetAppletSlotFromPos(AppletPos::SysLibrary);
@@ -728,6 +729,7 @@ Result AppletManager::SendDspSleep(AppletId from_applet_id,
             .signal = SignalType::DspSleep,
             .object = std::move(object),
         });
+        return ResultSuccess;
     }
 
     return ResultSuccess;

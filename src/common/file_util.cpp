@@ -1159,7 +1159,7 @@ std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t data_si
 }
 
 #ifdef _WIN32
-static std::size_t pread(int fd, void* buf, size_t count, uint64_t offset) {
+static std::size_t pread(int fd, void* buf, std::size_t count, uint64_t offset) {
     long unsigned int read_bytes = 0;
     OVERLAPPED overlapped = {0};
     HANDLE file = reinterpret_cast<HANDLE>(_get_osfhandle(fd));

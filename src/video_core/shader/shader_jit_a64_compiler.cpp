@@ -968,7 +968,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     protect();
     invalidate_all();
 
-    const size_t code_size =
+    const std::size_t code_size =
         current_address() - reinterpret_cast<uintptr_t>(oaknut::CodeBlock::ptr());
 
     ASSERT_MSG(code_size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");

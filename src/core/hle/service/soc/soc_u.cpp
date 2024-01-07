@@ -1102,7 +1102,7 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
 #endif // _WIN32
     std::vector<u8> input_buff(len);
     input_mapped_buff.Read(input_buff.data(), 0,
-                           std::min(input_mapped_buff.GetSize(), static_cast<size_t>(len)));
+                           std::min(input_mapped_buff.GetSize(), static_cast<std::size_t>(len)));
 
     s32 ret = -1;
     if (addr_len > 0) {
@@ -1853,7 +1853,7 @@ void SOC_U::GetSockOpt(Kernel::HLERequestContext& ctx) {
         if (err == SOCKET_ERROR_VALUE) {
             err = TranslateError(GET_ERRNO);
         } else {
-            platform_data.resize(static_cast<size_t>(platform_data_size));
+            platform_data.resize(static_cast<std::size_t>(platform_data_size));
             TranslateSockOptDataFromPlatform(optval, platform_data, level_opt.first,
                                              level_opt.second);
         }

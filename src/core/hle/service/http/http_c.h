@@ -217,7 +217,7 @@ public:
     std::future<void> request_future;
     std::atomic<u64> current_download_size_bytes;
     std::atomic<u64> total_download_size_bytes;
-    size_t current_copied_data;
+    std::size_t current_copied_data;
     bool uses_default_client_cert{};
     httplib::Response response;
 

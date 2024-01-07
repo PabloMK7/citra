@@ -39,7 +39,7 @@ void CondvarWait(Condvar& cv, Lock& lock, std::stop_token token, Pred&& pred) {
 namespace std {
 namespace polyfill {
 
-using stop_state_callback = size_t;
+using stop_state_callback = std::size_t;
 
 class stop_state {
 public:

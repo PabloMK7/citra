@@ -1073,7 +1073,7 @@ std::vector<FormatInfo> ListFormats() {
             continue;
         }
 
-        out.push_back({current->name, ToStdString(current->long_name), std::move(extensions),
+        out.push_back({current->name, ToStdString(current->long_name), extensions,
                        std::move(supported_video_codecs), std::move(supported_audio_codecs),
                        GetOptionList(current->priv_class, true)});
     }

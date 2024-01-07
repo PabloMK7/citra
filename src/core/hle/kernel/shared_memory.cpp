@@ -127,7 +127,7 @@ Result SharedMemory::Map(Process& target_process, VAddr address, MemoryPermissio
 
     // Heap-backed memory blocks can not be mapped with other_permissions = DontCare
     if (base_address != 0 && other_permissions == MemoryPermission::DontCare) {
-        LOG_ERROR(Kernel, "cannot map id={}, address=0x{08X} name={}, permissions don't match",
+        LOG_ERROR(Kernel, "cannot map id={}, address=0x{:08X} name={}, permissions don't match",
                   GetObjectId(), address, name);
         return ResultInvalidCombination;
     }

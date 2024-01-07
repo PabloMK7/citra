@@ -13,8 +13,8 @@ namespace {
 template <Common::StringLiteral haystack, Common::StringLiteral needle>
 constexpr u32 GetMatchingBitsFromStringLiteral() {
     u32 result = 0;
-    for (size_t i = 0; i < haystack.strlen; i++) {
-        for (size_t a = 0; a < needle.strlen; a++) {
+    for (std::size_t i = 0; i < haystack.strlen; i++) {
+        for (std::size_t a = 0; a < needle.strlen; a++) {
             if (haystack.value[i] == needle.value[a]) {
                 result |= 1 << (haystack.strlen - 1 - i);
             }

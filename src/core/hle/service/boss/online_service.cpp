@@ -399,8 +399,8 @@ Result OnlineService::GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHead
     }
 }
 
-ResultVal<size_t> OnlineService::ReadNsData(const u32 ns_data_id, const u64 offset, const u32 size,
-                                            Kernel::MappedBuffer& buffer) {
+ResultVal<std::size_t> OnlineService::ReadNsData(const u32 ns_data_id, const u64 offset,
+                                                 const u32 size, Kernel::MappedBuffer& buffer) {
     std::optional<NsDataEntry> entry = GetNsDataEntryFromId(ns_data_id);
     if (!entry.has_value()) {
         LOG_WARNING(Service_BOSS, "Failed to find NsData entry for ID {:#010X}", ns_data_id);

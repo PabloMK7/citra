@@ -67,8 +67,8 @@ private:
     u64 data_size;
 
     // Total cache size: 128KB
-    static constexpr size_t cache_line_size = (1 << 13); // About 8KB
-    static constexpr size_t cache_line_count = 16;
+    static constexpr std::size_t cache_line_size = (1 << 13); // About 8KB
+    static constexpr std::size_t cache_line_count = 16;
 
     Common::StaticLRUCache<std::size_t, std::array<u8, cache_line_size>, cache_line_count> cache;
     // TODO(PabloMK7): Make cache thread safe, read the comment in CacheReady function.

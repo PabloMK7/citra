@@ -691,7 +691,7 @@ void Instance::CollectToolingInfo() {
 
 bool Instance::SetMoltenVkConfig() {
 #ifdef __APPLE__
-    size_t mvk_config_size = sizeof(MVKConfiguration);
+    std::size_t mvk_config_size = sizeof(MVKConfiguration);
     MVKConfiguration mvk_config{};
 
     const auto _vkGetMoltenVKConfigurationMVK =

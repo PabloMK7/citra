@@ -649,7 +649,7 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
         buffer = {};
     }
     dest_buffer.Write(buffer.data(), 0,
-                      std::min(static_cast<size_t>(dest_buffer_size), buffer.size()));
+                      std::min(static_cast<std::size_t>(dest_buffer_size), buffer.size()));
 
     rb.Push(ResultSuccess);
     rb.PushMappedBuffer(param_buffer);

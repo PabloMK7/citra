@@ -16,10 +16,10 @@
 namespace Common {
 
 namespace detail {
-constexpr size_t DefaultCapacity = 0x1000;
+constexpr std::size_t DefaultCapacity = 0x1000;
 } // namespace detail
 
-template <typename T, size_t Capacity = detail::DefaultCapacity>
+template <typename T, std::size_t Capacity = detail::DefaultCapacity>
 class SPSCQueue {
     static_assert((Capacity & (Capacity - 1)) == 0, "Capacity must be a power of two.");
 
@@ -74,7 +74,7 @@ private:
 
     template <PushMode Mode, typename... Args>
     bool Emplace(Args&&... args) {
-        const size_t write_index = m_write_index.load(std::memory_order::relaxed);
+        const std::size_t write_index = m_write_index.load(std::memory_order::relaxed);
 
         if constexpr (Mode == PushMode::Try) {
             // Check if we have free slots to write to.
@@ -92,7 +92,7 @@ private:
         }
 
         // Determine the position to write to.
-        const size_t pos = write_index % Capacity;
+        const std::size_t pos = write_index % Capacity;
 
         // Emplace into the queue.
         new (std::addressof(m_data[pos])) T(std::forward<Args>(args)...);
@@ -109,7 +109,7 @@ private:
 
     template <PopMode Mode>
     bool Pop(T& t, [[maybe_unused]] std::stop_token stop_token = {}) {
-        const size_t read_index = m_read_index.load(std::memory_order::relaxed);
+        const std::size_t read_index = m_read_index.load(std::memory_order::relaxed);
 
         if constexpr (Mode == PopMode::Try) {
             // Check if the queue is empty.
@@ -136,7 +136,7 @@ private:
         }
 
         // Determine the position to read from.
-        const size_t pos = read_index % Capacity;
+        const std::size_t pos = read_index % Capacity;
 
         // Pop the data off the queue, moving it.
         t = std::move(m_data[pos]);
@@ -162,7 +162,7 @@ private:
     std::mutex consumer_cv_mutex;
 };
 
-template <typename T, size_t Capacity = detail::DefaultCapacity>
+template <typename T, std::size_t Capacity = detail::DefaultCapacity>
 class MPSCQueue {
 public:
     template <typename... Args>
@@ -202,7 +202,7 @@ private:
     std::mutex write_mutex;
 };
 
-template <typename T, size_t Capacity = detail::DefaultCapacity>
+template <typename T, std::size_t Capacity = detail::DefaultCapacity>
 class MPMCQueue {
 public:
     template <typename... Args>

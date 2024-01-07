@@ -63,7 +63,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags,
                                                           VkDebugReportObjectTypeEXT objectType,
-                                                          uint64_t object, size_t location,
+                                                          uint64_t object, std::size_t location,
                                                           int32_t messageCode,
                                                           const char* pLayerPrefix,
                                                           const char* pMessage, void* pUserData) {

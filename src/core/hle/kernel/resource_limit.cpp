@@ -22,22 +22,22 @@ std::shared_ptr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::
 }
 
 s32 ResourceLimit::GetCurrentValue(ResourceLimitType type) const {
-    const auto index = static_cast<size_t>(type);
+    const auto index = static_cast<std::size_t>(type);
     return m_current_values[index];
 }
 
 s32 ResourceLimit::GetLimitValue(ResourceLimitType type) const {
-    const auto index = static_cast<size_t>(type);
+    const auto index = static_cast<std::size_t>(type);
     return m_limit_values[index];
 }
 
 void ResourceLimit::SetLimitValue(ResourceLimitType type, s32 value) {
-    const auto index = static_cast<size_t>(type);
+    const auto index = static_cast<std::size_t>(type);
     m_limit_values[index] = value;
 }
 
 bool ResourceLimit::Reserve(ResourceLimitType type, s32 amount) {
-    const auto index = static_cast<size_t>(type);
+    const auto index = static_cast<std::size_t>(type);
     const s32 limit = m_limit_values[index];
     const s32 new_value = m_current_values[index] + amount;
     if (new_value > limit) {
@@ -50,7 +50,7 @@ bool ResourceLimit::Reserve(ResourceLimitType type, s32 amount) {
 }
 
 bool ResourceLimit::Release(ResourceLimitType type, s32 amount) {
-    const auto index = static_cast<size_t>(type);
+    const auto index = static_cast<std::size_t>(type);
     const s32 value = m_current_values[index];
     if (amount > value) {
         LOG_ERROR(Kernel, "Amount {} exceeds current value {} for resource type {}", amount, value,

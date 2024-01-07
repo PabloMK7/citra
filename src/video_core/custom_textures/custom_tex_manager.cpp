@@ -207,7 +207,7 @@ void CustomTexManager::PrepareDumping(u64 title_id) {
 void CustomTexManager::PreloadTextures(const std::atomic_bool& stop_run,
                                        const VideoCore::DiskResourceLoadCallback& callback) {
     u64 size_sum = 0;
-    size_t preloaded = 0;
+    std::size_t preloaded = 0;
     const u64 sys_mem = Common::GetMemInfo().total_physical_memory;
     const u64 recommended_min_mem = 2_GiB;
 
@@ -343,7 +343,7 @@ bool CustomTexManager::ReadConfig(u64 title_id, bool options_only) {
 
     const auto& textures = json["textures"];
     for (const auto& material : textures.items()) {
-        size_t idx{};
+        std::size_t idx{};
         const u64 hash = std::stoull(material.key(), &idx, 16);
         if (!idx) {
             LOG_ERROR(Render, "Key {} is invalid, skipping", material.key());

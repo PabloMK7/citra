@@ -384,7 +384,7 @@ ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFla
                         "Config block 0x{:X} with flags {} and size {} was not found, creating "
                         "from defaults.",
                         block_id, accesss_flag, size);
-            auto default_block = GetDefaultConfigBlock(static_cast<ConfigBlockID>(block_id));
+            const auto& default_block = GetDefaultConfigBlock(static_cast<ConfigBlockID>(block_id));
             auto result = CreateConfigBlock(block_id, static_cast<u16>(default_block.data.size()),
                                             default_block.access_flags, default_block.data.data());
             if (!result.IsSuccess()) {

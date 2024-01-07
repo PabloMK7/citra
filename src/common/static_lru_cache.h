@@ -23,23 +23,23 @@ namespace Common {
 
 // a cache which evicts the least recently used item when it is full
 // the cache elements are statically allocated.
-template <class Key, class Value, size_t Size>
+template <class Key, class Value, std::size_t Size>
 class StaticLRUCache {
 public:
     using key_type = Key;
     using value_type = Value;
-    using list_type = std::list<std::pair<Key, size_t>>;
+    using list_type = std::list<std::pair<Key, std::size_t>>;
     using array_type = std::array<Value, Size>;
 
     StaticLRUCache() = default;
 
     ~StaticLRUCache() = default;
 
-    size_t size() const {
+    std::size_t size() const {
         return m_list.size();
     }
 
-    constexpr size_t capacity() const {
+    constexpr std::size_t capacity() const {
         return m_array.size();
     }
 
@@ -59,7 +59,7 @@ public:
         // lookup value in the cache
         auto i = find(key);
         if (i == m_list.cend()) {
-            size_t next_index = size();
+            std::size_t next_index = size();
             // insert item into the cache, but first check if it is full
             if (next_index >= capacity()) {
                 // cache is full, evict the least recently used item
@@ -97,10 +97,10 @@ private:
                             [&key](const auto& el) { return el.first == key; });
     }
 
-    size_t evict() {
+    std::size_t evict() {
         // evict item from the end of most recently used list
         typename list_type::iterator i = --m_list.end();
-        size_t evicted_index = i->second;
+        std::size_t evicted_index = i->second;
         m_list.erase(i);
         return evicted_index;
     }

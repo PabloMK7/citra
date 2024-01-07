@@ -31,9 +31,9 @@ template <class T>
 class SlotVector {
 public:
     ~SlotVector() noexcept {
-        size_t index = 0;
+        std::size_t index = 0;
         for (u64 bits : stored_bitset) {
-            for (size_t bit = 0; bits; ++bit, bits >>= 1) {
+            for (std::size_t bit = 0; bits; ++bit, bits >>= 1) {
                 if ((bits & 1) != 0) {
                     values[index + bit].object.~T();
                 }
@@ -81,7 +81,7 @@ public:
         ResetStorageBit(id.index);
     }
 
-    size_t size() const noexcept {
+    std::size_t size() const noexcept {
         return values_capacity - free_list.size();
     }
 
@@ -126,12 +126,12 @@ private:
         return free_index;
     }
 
-    void Reserve(size_t new_capacity) noexcept {
+    void Reserve(std::size_t new_capacity) noexcept {
         Entry* const new_values = new Entry[new_capacity];
-        size_t index = 0;
+        std::size_t index = 0;
         for (u64 bits : stored_bitset) {
-            for (size_t bit = 0; bits; ++bit, bits >>= 1) {
-                const size_t i = index + bit;
+            for (std::size_t bit = 0; bits; ++bit, bits >>= 1) {
+                const std::size_t i = index + bit;
                 if ((bits & 1) == 0) {
                     continue;
                 }
@@ -144,7 +144,7 @@ private:
 
         stored_bitset.resize((new_capacity + 63) / 64);
 
-        const size_t old_free_size = free_list.size();
+        const std::size_t old_free_size = free_list.size();
         free_list.resize(old_free_size + (new_capacity - values_capacity));
         std::iota(free_list.begin() + old_free_size, free_list.end(),
                   static_cast<u32>(values_capacity));
@@ -155,7 +155,7 @@ private:
     }
 
     Entry* values = nullptr;
-    size_t values_capacity = 0;
+    std::size_t values_capacity = 0;
 
     std::vector<u64> stored_bitset;
     std::vector<u32> free_list;
@@ -165,7 +165,7 @@ private:
 
 template <>
 struct std::hash<Common::SlotId> {
-    size_t operator()(const Common::SlotId& id) const noexcept {
+    std::size_t operator()(const Common::SlotId& id) const noexcept {
         return std::hash<u32>{}(id.index);
     }
 };

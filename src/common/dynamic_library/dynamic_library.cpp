@@ -38,7 +38,7 @@ bool DynamicLibrary::Load(std::string_view filename) {
     if (!handle) {
         DWORD error_message_id = GetLastError();
         LPSTR message_buffer = nullptr;
-        size_t size =
+        std::size_t size =
             FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                                FORMAT_MESSAGE_IGNORE_INSERTS,
                            nullptr, error_message_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),

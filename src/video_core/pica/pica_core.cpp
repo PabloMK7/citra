@@ -398,7 +398,7 @@ void PicaCore::SubmitImmediate(u32 value) {
         return;
     }
 
-    constexpr size_t IMMEDIATE_MODE_INDEX = 0xF;
+    constexpr std::size_t IMMEDIATE_MODE_INDEX = 0xF;
 
     auto& setup = regs.internal.pipeline.vs_default_attributes_setup;
     if (setup.index > IMMEDIATE_MODE_INDEX) {

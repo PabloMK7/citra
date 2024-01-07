@@ -710,7 +710,7 @@ void RasterizerAccelerated::SyncCombinerColor() {
 }
 
 void RasterizerAccelerated::SyncTevConstColor(
-    const size_t stage_index, const Pica::TexturingRegs::TevStageConfig& tev_stage) {
+    const std::size_t stage_index, const Pica::TexturingRegs::TevStageConfig& tev_stage) {
     const auto const_color = ColorRGBA8(tev_stage.const_color);
 
     if (const_color == fs_uniform_block_data.data.const_color[stage_index]) {

@@ -47,7 +47,7 @@ public:
     /// Returns true if the surface contains a custom material with a normal map.
     bool HasNormalMap() const noexcept;
 
-    bool Overlaps(PAddr overlap_addr, size_t overlap_size) const noexcept {
+    bool Overlaps(PAddr overlap_addr, std::size_t overlap_size) const noexcept {
         const PAddr overlap_end = overlap_addr + static_cast<PAddr>(overlap_size);
         return addr < overlap_end && overlap_addr < end;
     }

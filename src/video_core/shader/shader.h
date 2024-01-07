@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "common/common_types.h"
 
 namespace Pica {
