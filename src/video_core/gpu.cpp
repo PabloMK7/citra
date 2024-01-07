@@ -29,7 +29,7 @@ struct GPU::Impl {
     Core::Timing& timing;
     Core::System& system;
     Memory::MemorySystem& memory;
-    Pica::DebugContext& debug_context;
+    std::shared_ptr<Pica::DebugContext> debug_context;
     Pica::PicaCore pica;
     GraphicsDebugger gpu_debugger;
     std::unique_ptr<RendererBase> renderer;
@@ -41,7 +41,7 @@ struct GPU::Impl {
     explicit Impl(Core::System& system, Frontend::EmuWindow& emu_window,
                   Frontend::EmuWindow* secondary_window)
         : timing{system.CoreTiming()}, system{system}, memory{system.Memory()},
-          debug_context{*Pica::g_debug_context}, pica{memory, debug_context},
+          debug_context{Pica::g_debug_context}, pica{memory, debug_context},
           renderer{VideoCore::CreateRenderer(emu_window, secondary_window, pica, system)},
           rasterizer{renderer->Rasterizer()}, sw_blitter{std::make_unique<SwRenderer::SwBlitter>(
                                                   memory, rasterizer)} {}
@@ -201,7 +201,9 @@ void GPU::Execute(const Service::GSP::Command& command) {
     }
 
     // Notify debugger that a GSP command was processed.
-    impl->debug_context.OnEvent(Pica::DebugContext::Event::GSPCommandProcessed, &command);
+    if (impl->debug_context) {
+        impl->debug_context->OnEvent(Pica::DebugContext::Event::GSPCommandProcessed, &command);
+    }
 }
 
 void GPU::SetBufferSwap(u32 screen_id, const Service::GSP::FrameBufferInfo& info) {
@@ -223,7 +225,9 @@ void GPU::SetBufferSwap(u32 screen_id, const Service::GSP::FrameBufferInfo& info
     framebuffer.active_fb = info.shown_fb;
 
     // Notify debugger about the buffer swap.
-    impl->debug_context.OnEvent(Pica::DebugContext::Event::BufferSwapped, nullptr);
+    if (impl->debug_context) {
+        impl->debug_context->OnEvent(Pica::DebugContext::Event::BufferSwapped, nullptr);
+    }
 
     if (screen_id == 0) {
         MicroProfileFlip();
@@ -382,7 +386,9 @@ void GPU::MemoryTransfer() {
     MICROPROFILE_SCOPE(GPU_DisplayTransfer);
 
     // Notify debugger about the display transfer.
-    impl->debug_context.OnEvent(Pica::DebugContext::Event::IncomingDisplayTransfer, nullptr);
+    if (impl->debug_context) {
+        impl->debug_context->OnEvent(Pica::DebugContext::Event::IncomingDisplayTransfer, nullptr);
+    }
 
     // Perform memory transfer
     if (config.is_texture_copy) {

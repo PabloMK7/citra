@@ -29,7 +29,7 @@ class ShaderEngine;
 
 class PicaCore {
 public:
-    explicit PicaCore(Memory::MemorySystem& memory, DebugContext& debug_context_);
+    explicit PicaCore(Memory::MemorySystem& memory, std::shared_ptr<DebugContext> debug_context_);
     ~PicaCore();
 
     void BindRasterizer(VideoCore::RasterizerInterface* rasterizer);
@@ -274,7 +274,7 @@ private:
 private:
     Memory::MemorySystem& memory;
     VideoCore::RasterizerInterface* rasterizer;
-    DebugContext& debug_context;
+    std::shared_ptr<DebugContext> debug_context;
     Service::GSP::InterruptHandler signal_interrupt;
     GeometryPipeline geometry_pipeline;
     PrimitiveAssembler primitive_assembler;

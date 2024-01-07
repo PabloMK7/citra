@@ -30,9 +30,10 @@ union CommandHeader {
 };
 static_assert(sizeof(CommandHeader) == sizeof(u32), "CommandHeader has incorrect size!");
 
-PicaCore::PicaCore(Memory::MemorySystem& memory_, DebugContext& debug_context_)
-    : memory{memory_}, debug_context{debug_context_}, geometry_pipeline{regs.internal, gs_unit,
-                                                                        gs_setup},
+PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> debug_context_)
+    : memory{memory_}, debug_context{std::move(debug_context_)}, geometry_pipeline{regs.internal,
+                                                                                   gs_unit,
+                                                                                   gs_setup},
       shader_engine{CreateEngine(Settings::values.use_shader_jit.GetValue())} {
     SetFramebufferDefaults();
 
@@ -138,8 +139,10 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
     DebugUtils::OnPicaRegWrite(id, mask, regs.internal.reg_array[id]);
 
     // Track events.
-    debug_context.OnEvent(DebugContext::Event::PicaCommandLoaded, &id);
-    SCOPE_EXIT({ debug_context.OnEvent(DebugContext::Event::PicaCommandProcessed, &id); });
+    if (debug_context) {
+        debug_context->OnEvent(DebugContext::Event::PicaCommandLoaded, &id);
+        SCOPE_EXIT({ debug_context->OnEvent(DebugContext::Event::PicaCommandProcessed, &id); });
+    }
 
     switch (id) {
     // Trigger IRQ
@@ -427,9 +430,12 @@ void PicaCore::DrawImmediate() {
     shader_engine->SetupBatch(vs_setup, regs.internal.vs.main_offset);
 
     // Track vertex in the debug recorder.
-    debug_context.OnEvent(DebugContext::Event::VertexShaderInvocation,
-                          std::addressof(immediate.input_vertex));
-    SCOPE_EXIT({ debug_context.OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr); });
+    if (debug_context) {
+        debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
+                               std::addressof(immediate.input_vertex));
+        SCOPE_EXIT(
+            { debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr); });
+    }
 
     ShaderUnit shader_unit;
     AttributeBuffer output{};
@@ -459,8 +465,11 @@ void PicaCore::DrawArrays(bool is_indexed) {
     MICROPROFILE_SCOPE(GPU_Drawing);
 
     // Track vertex in the debug recorder.
-    debug_context.OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
-    SCOPE_EXIT({ debug_context.OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr); });
+    if (debug_context) {
+        debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
+        SCOPE_EXIT(
+            { debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr); });
+    }
 
     const bool accelerate_draw = [this] {
         // Geometry shaders cannot be accelerated due to register preservation.
@@ -554,8 +563,10 @@ void PicaCore::LoadVertices(bool is_indexed) {
             loader.LoadVertex(base_address, index, vertex, input, input_default_attributes);
 
             // Record vertex processing to the debugger.
-            debug_context.OnEvent(DebugContext::Event::VertexShaderInvocation,
-                                  std::addressof(input));
+            if (debug_context) {
+                debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
+                                       std::addressof(input));
+            }
 
             // Invoke the vertex shader for this vertex.
             shader_unit.LoadInput(regs.internal.vs, input);
