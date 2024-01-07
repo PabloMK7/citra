@@ -229,9 +229,10 @@ std::vector<FileSys::Entry> OnlineService::GetBossExtDataFiles(
     do {
         boss_files.resize(boss_files.size() + files_to_read);
         entry_count = dir->Read(files_to_read, boss_files.data() + (i++ * files_to_read));
-    } while (files_to_read <= entry_count);
+    } while (entry_count > files_to_read);
 
-    boss_files.resize(i * files_to_read + entry_count);
+    // Resize to trim off unused entries from the final read.
+    boss_files.resize((i - 1) * files_to_read + entry_count);
     return boss_files;
 }
 
@@ -485,6 +486,7 @@ Result OnlineService::SendProperty(const u16 id, const u32 size, Kernel::MappedB
     std::visit(overload{[&](u8& cur_prop) { read_pod(cur_prop); },
                         [&](u16& cur_prop) { read_pod(cur_prop); },
                         [&](u32& cur_prop) { read_pod(cur_prop); },
+                        [&](u64& cur_prop) { read_pod(cur_prop); },
                         [&](std::vector<u8>& cur_prop) { read_vector(cur_prop); },
                         [&](std::vector<u32>& cur_prop) { read_vector(cur_prop); }},
                prop);
@@ -521,6 +523,7 @@ Result OnlineService::ReceiveProperty(const u16 id, const u32 size, Kernel::Mapp
     std::visit(overload{[&](u8& cur_prop) { write_pod(cur_prop); },
                         [&](u16& cur_prop) { write_pod(cur_prop); },
                         [&](u32& cur_prop) { write_pod(cur_prop); },
+                        [&](u64& cur_prop) { write_pod(cur_prop); },
                         [&](std::vector<u8>& cur_prop) { write_vector(cur_prop); },
                         [&](std::vector<u32>& cur_prop) { write_vector(cur_prop); }},
                prop);

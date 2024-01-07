@@ -113,7 +113,7 @@ struct BossSSData {
     std::array<u8, URL_SIZE> url;
 };
 
-using BossTaskProperty = std::variant<u8, u16, u32, std::vector<u8>, std::vector<u32>>;
+using BossTaskProperty = std::variant<u8, u16, u32, u64, std::vector<u8>, std::vector<u32>>;
 struct BossTaskProperties {
     bool task_result;
     std::map<PropertyID, BossTaskProperty> properties{
@@ -145,6 +145,25 @@ struct BossTaskProperties {
         {static_cast<PropertyID>(0x1A), u8()},
         {static_cast<PropertyID>(0x1B), u32()},
         {static_cast<PropertyID>(0x1C), u32()},
+        {static_cast<PropertyID>(0x1D), u8()},
+        {static_cast<PropertyID>(0x1E), u8()},
+        {static_cast<PropertyID>(0x1F), u8()},
+        {static_cast<PropertyID>(0x20), u8()},
+        {static_cast<PropertyID>(0x21), u8()},
+        {static_cast<PropertyID>(0x22), u8()},
+        {static_cast<PropertyID>(0x23), u32()},
+        {static_cast<PropertyID>(0x24), u8()},
+        {static_cast<PropertyID>(0x25), u32()},
+        {static_cast<PropertyID>(0x26), u32()},
+        {static_cast<PropertyID>(0x27), u32()},
+        {static_cast<PropertyID>(0x28), u64()},
+        {static_cast<PropertyID>(0x29), u64()},
+        {static_cast<PropertyID>(0x2A), u32()},
+        {static_cast<PropertyID>(0x2B), u32()},
+        {static_cast<PropertyID>(0x2C), u8()},
+        {static_cast<PropertyID>(0x2D), u16()},
+        {static_cast<PropertyID>(0x2E), u16()},
+        {static_cast<PropertyID>(0x2F), std::vector<u8>(0x40)},
         {PropertyID::TotalTasks, u16()},
         {PropertyID::TaskIdList, std::vector<u8>(TASKIDLIST_SIZE)},
         {static_cast<PropertyID>(0x3B), u32()},
