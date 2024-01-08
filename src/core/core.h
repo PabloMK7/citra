@@ -8,10 +8,13 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <boost/optional.hpp>
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/cheats/cheats.h"
+#include "core/hle/service/apt/applet_manager.h"
+#include "core/hle/service/plgldr/plgldr.h"
 #include "core/movie.h"
 #include "core/perf_stats.h"
 
@@ -443,6 +446,9 @@ private:
 
     std::function<bool()> mic_permission_func;
     bool mic_permission_granted = false;
+
+    boost::optional<Service::APT::DeliverArg> restore_deliver_arg;
+    boost::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
 
     friend class boost::serialization::access;
     template <typename Archive>

@@ -296,6 +296,20 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         return init_result;
     }
 
+    // Restore any parameters that should be carried through a reset.
+    if (restore_deliver_arg.has_value()) {
+        if (auto apt = Service::APT::GetModule(*this)) {
+            apt->GetAppletManager()->SetDeliverArg(restore_deliver_arg);
+        }
+        restore_deliver_arg.reset();
+    }
+    if (restore_plugin_context.has_value()) {
+        if (auto plg_ldr = Service::PLGLDR::GetService(*this)) {
+            plg_ldr->SetPluginLoaderContext(restore_plugin_context.value());
+        }
+        restore_plugin_context.reset();
+    }
+
     telemetry_session->AddInitialInfo(*app_loader);
     std::shared_ptr<Kernel::Process> process;
     const Loader::ResultStatus load_result{app_loader->Load(process)};
@@ -608,10 +622,13 @@ void System::Reset() {
     // reloading.
     // TODO: Properly implement the reset
 
-    // Since the system is completely reinitialized, we'll have to store the deliver arg manually.
-    boost::optional<Service::APT::DeliverArg> deliver_arg;
+    // Save the APT deliver arg and plugin loader context across resets.
+    // This is needed as we don't currently support proper app jumping.
     if (auto apt = Service::APT::GetModule(*this)) {
-        deliver_arg = apt->GetAppletManager()->ReceiveDeliverArg();
+        restore_deliver_arg = apt->GetAppletManager()->ReceiveDeliverArg();
+    }
+    if (auto plg_ldr = Service::PLGLDR::GetService(*this)) {
+        restore_plugin_context = plg_ldr->GetPluginLoaderContext();
     }
 
     Shutdown();
@@ -624,11 +641,6 @@ void System::Reset() {
     // Reload the system with the same setting
     [[maybe_unused]] const System::ResultStatus result =
         Load(*m_emu_window, m_filepath, m_secondary_window);
-
-    // Restore the deliver arg.
-    if (auto apt = Service::APT::GetModule(*this)) {
-        apt->GetAppletManager()->SetDeliverArg(std::move(deliver_arg));
-    }
 }
 
 void System::ApplySettings() {

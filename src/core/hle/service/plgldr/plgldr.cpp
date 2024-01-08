@@ -40,10 +40,6 @@ namespace Service::PLGLDR {
 
 static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 0);
 
-PLG_LDR::PluginLoaderContext PLG_LDR::plgldr_context;
-bool PLG_LDR::allow_game_change = true;
-PAddr PLG_LDR::plugin_fb_addr = 0;
-
 PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -70,6 +66,7 @@ PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system
 template <class Archive>
 void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
     ar& is_enabled;
+    ar& allow_game_change;
     ar& plugin_loaded;
     ar& is_default_path;
     ar& plugin_path;
@@ -82,6 +79,7 @@ void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
     ar& exe_load_checksum;
     ar& load_exe_func;
     ar& load_exe_args;
+    ar& plugin_fb_addr;
 }
 SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
 
@@ -89,8 +87,6 @@ template <class Archive>
 void PLG_LDR::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar& plgldr_context;
-    ar& plugin_fb_addr;
-    ar& allow_game_change;
 }
 SERIALIZE_IMPL(PLG_LDR)
 
@@ -195,7 +191,7 @@ void PLG_LDR::SetEnabled(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     bool enabled = rp.Pop<u32>() == 1;
 
-    bool can_change = enabled == plgldr_context.is_enabled || allow_game_change;
+    bool can_change = enabled == plgldr_context.is_enabled || plgldr_context.allow_game_change;
     if (can_change) {
         plgldr_context.is_enabled = enabled;
         Settings::values.plugin_loader_enabled.SetValue(enabled);

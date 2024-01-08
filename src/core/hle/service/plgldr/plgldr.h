@@ -52,6 +52,7 @@ public:
             friend class boost::serialization::access;
         };
         bool is_enabled = true;
+        bool allow_game_change = true;
         bool plugin_loaded = false;
         bool is_default_path = false;
         std::string plugin_path = "";
@@ -69,6 +70,8 @@ public:
         std::vector<u32> load_exe_func;
         u32_le load_exe_args[4] = {0};
 
+        PAddr plugin_fb_addr = 0;
+
         template <class Archive>
         void serialize(Archive& ar, const unsigned int);
         friend class boost::serialization::access;
@@ -82,6 +85,12 @@ public:
     ResultVal<Kernel::Handle> GetMemoryChangedHandle(Kernel::KernelSystem& kernel);
     void OnMemoryChanged(Kernel::Process& process, Kernel::KernelSystem& kernel);
 
+    PluginLoaderContext& GetPluginLoaderContext() {
+        return plgldr_context;
+    }
+    void SetPluginLoaderContext(PluginLoaderContext& context) {
+        plgldr_context = context;
+    }
     void SetEnabled(bool enabled) {
         plgldr_context.is_enabled = enabled;
     }
@@ -89,24 +98,22 @@ public:
         return plgldr_context.is_enabled;
     }
     void SetAllowGameChangeState(bool allow) {
-        allow_game_change = allow;
+        plgldr_context.allow_game_change = allow;
     }
     bool GetAllowGameChangeState() {
-        return allow_game_change;
+        return plgldr_context.allow_game_change;
     }
     void SetPluginFBAddr(PAddr addr) {
-        plugin_fb_addr = addr;
+        plgldr_context.plugin_fb_addr = addr;
     }
     PAddr GetPluginFBAddr() {
-        return plugin_fb_addr;
+        return plgldr_context.plugin_fb_addr;
     }
 
 private:
     Core::System& system;
 
-    static PluginLoaderContext plgldr_context;
-    static PAddr plugin_fb_addr;
-    static bool allow_game_change;
+    PluginLoaderContext plgldr_context;
 
     void IsEnabled(Kernel::HLERequestContext& ctx);
     void SetEnabled(Kernel::HLERequestContext& ctx);
