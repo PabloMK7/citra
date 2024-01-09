@@ -395,9 +395,6 @@ if(USE_SYSTEM_VULKAN_HEADERS)
 else()
     target_include_directories(vulkan-headers SYSTEM INTERFACE ./vulkan-headers/include)
 endif()
-if (APPLE)
-    target_include_directories(vulkan-headers SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/MoltenVK)
-endif()
 
 # adrenotools
 if (ANDROID AND "arm64" IN_LIST ARCHITECTURE)

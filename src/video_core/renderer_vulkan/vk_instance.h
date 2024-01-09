@@ -289,9 +289,6 @@ private:
     void CollectTelemetryParameters(Core::TelemetrySession& telemetry);
     void CollectToolingInfo();
 
-    /// Sets MoltenVK configuration to the desired state.
-    bool SetMoltenVkConfig();
-
 private:
     std::shared_ptr<Common::DynamicLibrary> library;
     vk::UniqueInstance instance;

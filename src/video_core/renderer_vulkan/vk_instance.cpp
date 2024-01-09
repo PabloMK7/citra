@@ -15,10 +15,6 @@
 
 #include <vk_mem_alloc.h>
 
-#ifdef __APPLE__
-#include <mvk_config.h>
-#endif
-
 namespace Vulkan {
 
 namespace {
@@ -606,12 +602,6 @@ bool Instance::CreateDevice() {
 #undef PROP_GET
 #undef FEAT_SET
 
-#ifdef __APPLE__
-    if (!SetMoltenVkConfig()) {
-        LOG_WARNING(Render_Vulkan, "Unable to set MoltenVK configuration");
-    }
-#endif
-
     try {
         device = physical_device.createDeviceUnique(device_chain.get());
     } catch (vk::ExtensionNotPresentError& err) {
@@ -687,44 +677,6 @@ void Instance::CollectToolingInfo() {
         has_renderdoc = has_renderdoc || name == "RenderDoc";
         has_nsight_graphics = has_nsight_graphics || name == "NVIDIA Nsight Graphics";
     }
-}
-
-bool Instance::SetMoltenVkConfig() {
-#ifdef __APPLE__
-    std::size_t mvk_config_size = sizeof(MVKConfiguration);
-    MVKConfiguration mvk_config{};
-
-    const auto _vkGetMoltenVKConfigurationMVK =
-        library->GetSymbol<PFN_vkGetMoltenVKConfigurationMVK>("vkGetMoltenVKConfigurationMVK");
-    if (!_vkGetMoltenVKConfigurationMVK) {
-        return false;
-    }
-
-    const auto _vkSetMoltenVKConfigurationMVK =
-        library->GetSymbol<PFN_vkSetMoltenVKConfigurationMVK>("vkSetMoltenVKConfigurationMVK");
-    if (!_vkSetMoltenVKConfigurationMVK) {
-        return false;
-    }
-
-    if (_vkGetMoltenVKConfigurationMVK(VK_NULL_HANDLE, &mvk_config, &mvk_config_size) !=
-        VK_SUCCESS) {
-        return false;
-    }
-
-    // Use synchronous queue submits if async presentation is enabled, to avoid threading
-    // indirection.
-    mvk_config.synchronousQueueSubmits = Settings::values.async_presentation.GetValue();
-    // If the device is lost, make an attempt to resume if possible to avoid crashes.
-    mvk_config.resumeLostDevice = true;
-    // Maximize concurrency to improve shader compilation performance.
-    mvk_config.shouldMaximizeConcurrentCompilation = true;
-
-    if (_vkSetMoltenVKConfigurationMVK(VK_NULL_HANDLE, &mvk_config, &mvk_config_size) !=
-        VK_SUCCESS) {
-        return false;
-    }
-#endif
-    return true;
 }
 
 } // namespace Vulkan
