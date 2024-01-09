@@ -74,6 +74,8 @@ void ConfigureGeneral::SetConfiguration() {
         ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing.GetValue());
         ui->toggle_background_pause->setChecked(
             UISettings::values.pause_when_in_background.GetValue());
+        ui->toggle_background_mute->setChecked(
+            UISettings::values.mute_when_in_background.GetValue());
         ui->toggle_hide_mouse->setChecked(UISettings::values.hide_mouse.GetValue());
 
         ui->toggle_update_check->setChecked(
@@ -174,6 +176,7 @@ void ConfigureGeneral::ApplyConfiguration() {
     if (Settings::IsConfiguringGlobal()) {
         UISettings::values.confirm_before_closing = ui->toggle_check_exit->isChecked();
         UISettings::values.pause_when_in_background = ui->toggle_background_pause->isChecked();
+        UISettings::values.mute_when_in_background = ui->toggle_background_mute->isChecked();
         UISettings::values.hide_mouse = ui->toggle_hide_mouse->isChecked();
 
         UISettings::values.check_for_update_on_start = ui->toggle_update_check->isChecked();

@@ -768,6 +768,7 @@ void Config::ReadUIValues() {
         ReadBasicSetting(UISettings::values.callout_flags);
         ReadBasicSetting(UISettings::values.show_console);
         ReadBasicSetting(UISettings::values.pause_when_in_background);
+        ReadBasicSetting(UISettings::values.mute_when_in_background);
         ReadBasicSetting(UISettings::values.hide_mouse);
     }
 
@@ -1239,6 +1240,7 @@ void Config::SaveUIValues() {
         WriteBasicSetting(UISettings::values.callout_flags);
         WriteBasicSetting(UISettings::values.show_console);
         WriteBasicSetting(UISettings::values.pause_when_in_background);
+        WriteBasicSetting(UISettings::values.mute_when_in_background);
         WriteBasicSetting(UISettings::values.hide_mouse);
     }
 

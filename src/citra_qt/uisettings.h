@@ -80,6 +80,7 @@ struct Values {
     Settings::Setting<bool> save_state_warning{true, "saveStateWarning"};
     Settings::Setting<bool> first_start{true, "firstStart"};
     Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
+    Settings::Setting<bool> mute_when_in_background{false, "muteWhenInBackground"};
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
 
     bool updater_found;

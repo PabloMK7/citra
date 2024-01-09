@@ -325,6 +325,7 @@ private:
     QString game_path;
 
     bool auto_paused = false;
+    bool auto_muted = false;
     QTimer mouse_hide_timer;
 
     // Movie

@@ -778,21 +778,33 @@ void GMainWindow::RestoreUIState() {
 }
 
 void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
-    if (!UISettings::values.pause_when_in_background) {
-        return;
-    }
     if (state != Qt::ApplicationHidden && state != Qt::ApplicationInactive &&
         state != Qt::ApplicationActive) {
         LOG_DEBUG(Frontend, "ApplicationState unusual flag: {} ", state);
     }
-    if (ui->action_Pause->isEnabled() &&
-        (state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
-        auto_paused = true;
-        OnPauseGame();
-    } else if (emulation_running && !emu_thread->IsRunning() && auto_paused &&
-               state == Qt::ApplicationActive) {
-        auto_paused = false;
-        OnStartGame();
+    if (!emulation_running) {
+        return;
+    }
+    if (UISettings::values.pause_when_in_background) {
+        if (emu_thread->IsRunning() &&
+            (state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
+            auto_paused = true;
+            OnPauseGame();
+        } else if (!emu_thread->IsRunning() && auto_paused && state == Qt::ApplicationActive) {
+            auto_paused = false;
+            OnStartGame();
+        }
+    }
+    if (UISettings::values.mute_when_in_background) {
+        if (!Settings::values.audio_muted &&
+            (state & (Qt::ApplicationHidden | Qt::ApplicationInactive))) {
+            Settings::values.audio_muted = true;
+            auto_muted = true;
+        } else if (auto_muted && state == Qt::ApplicationActive) {
+            Settings::values.audio_muted = false;
+            auto_muted = false;
+        }
+        UpdateVolumeUI();
     }
 }
 
