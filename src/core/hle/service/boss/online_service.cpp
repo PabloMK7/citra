@@ -19,6 +19,14 @@
 
 namespace Service::BOSS {
 
+namespace ErrCodes {
+enum {
+    TaskNotFound = 51,
+    NsDataNotFound = 64,
+    UnknownPropertyID = 77,
+};
+}
+
 OnlineService::OnlineService(u64 program_id_, u64 extdata_id_)
     : program_id(program_id_), extdata_id(extdata_id_) {}
 
@@ -160,9 +168,9 @@ Result OnlineService::UnregisterTask(const u32 size, Kernel::MappedBuffer& buffe
     std::string task_id(size, 0);
     buffer.Read(task_id.data(), 0, size);
     if (task_id_list.erase(task_id) == 0) {
-        LOG_WARNING(Service_BOSS, "TaskId not in list");
-        // TODO: Proper error code.
-        return ResultUnknown;
+        LOG_WARNING(Service_BOSS, "TaskId '{}' not in list", task_id);
+        return {ErrCodes::TaskNotFound, ErrorModule::BOSS, ErrorSummary::InvalidState,
+                ErrorLevel::Status};
     }
 
     return ResultSuccess;
@@ -340,8 +348,8 @@ Result OnlineService::GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHead
     const auto entry = GetNsDataEntryFromId(ns_data_id);
     if (!entry.has_value()) {
         LOG_WARNING(Service_BOSS, "Failed to find NsData entry for ID {:#010X}", ns_data_id);
-        // TODO: Proper error code.
-        return ResultUnknown;
+        return {ErrCodes::NsDataNotFound, ErrorModule::BOSS, ErrorSummary::InvalidState,
+                ErrorLevel::Status};
     }
 
     static constexpr std::array EXPECTED_NS_DATA_HEADER_INFO_SIZES = {
@@ -404,8 +412,8 @@ ResultVal<std::size_t> OnlineService::ReadNsData(const u32 ns_data_id, const u64
     std::optional<NsDataEntry> entry = GetNsDataEntryFromId(ns_data_id);
     if (!entry.has_value()) {
         LOG_WARNING(Service_BOSS, "Failed to find NsData entry for ID {:#010X}", ns_data_id);
-        // TODO: Proper error code.
-        return ResultUnknown;
+        return Result(ErrCodes::NsDataNotFound, ErrorModule::BOSS, ErrorSummary::InvalidState,
+                      ErrorLevel::Status);
     }
 
     if (entry->header.payload_size < size + offset) {
@@ -457,8 +465,8 @@ Result OnlineService::SendProperty(const u16 id, const u32 size, Kernel::MappedB
     const auto property_id = static_cast<PropertyID>(id);
     if (!current_props.properties.contains(property_id)) {
         LOG_ERROR(Service_BOSS, "Unknown property with ID {:#06x} and size {}", property_id, size);
-        // TODO: Proper error code.
-        return ResultUnknown;
+        return Result(ErrCodes::UnknownPropertyID, ErrorModule::BOSS, ErrorSummary::Internal,
+                      ErrorLevel::Status);
     }
 
     auto& prop = current_props.properties[property_id];
@@ -498,8 +506,8 @@ Result OnlineService::ReceiveProperty(const u16 id, const u32 size, Kernel::Mapp
     const auto property_id = static_cast<PropertyID>(id);
     if (!current_props.properties.contains(property_id)) {
         LOG_ERROR(Service_BOSS, "Unknown property with ID {:#06x} and size {}", property_id, size);
-        // TODO: Proper error code.
-        return ResultUnknown;
+        return {ErrCodes::UnknownPropertyID, ErrorModule::BOSS, ErrorSummary::Internal,
+                ErrorLevel::Status};
     }
 
     auto write_pod = [&]<typename T>(T& cur_prop) {
