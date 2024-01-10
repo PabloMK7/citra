@@ -16,6 +16,10 @@ namespace Core {
 class System;
 }
 
+namespace IPC {
+class RequestParser;
+}
+
 namespace Service::BOSS {
 
 class Module final {
@@ -968,7 +972,8 @@ public:
     protected:
         std::shared_ptr<Module> boss;
 
-        std::shared_ptr<OnlineService> GetSessionService(Kernel::HLERequestContext& ctx);
+        std::shared_ptr<OnlineService> GetSessionService(Kernel::HLERequestContext& ctx,
+                                                         IPC::RequestParser& rp);
     };
 
 private:

@@ -34,14 +34,13 @@ void Module::SessionData::serialize(Archive& ar, const unsigned int) {
 }
 SERIALIZE_IMPL(Module::SessionData)
 
-std::shared_ptr<OnlineService> Module::Interface::GetSessionService(
-    Kernel::HLERequestContext& ctx) {
+std::shared_ptr<OnlineService> Module::Interface::GetSessionService(Kernel::HLERequestContext& ctx,
+                                                                    IPC::RequestParser& rp) {
     const auto session_data = GetSessionData(ctx.Session());
     if (session_data == nullptr || session_data->online_service == nullptr) {
         LOG_WARNING(Service_BOSS, "Client attempted to use uninitialized BOSS session.");
 
         // TODO: Error code for uninitialized session.
-        IPC::RequestParser rp(ctx);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultUnknown);
         return nullptr;
@@ -181,7 +180,7 @@ void Module::Interface::RegisterTask(Kernel::HLERequestContext& ctx) {
     const u8 unk_param3 = rp.Pop<u8>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -201,7 +200,7 @@ void Module::Interface::UnregisterTask(Kernel::HLERequestContext& ctx) {
     const u8 unk_param2 = rp.Pop<u8>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -230,7 +229,7 @@ void Module::Interface::ReconfigureTask(Kernel::HLERequestContext& ctx) {
 void Module::Interface::GetTaskIdList(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -262,7 +261,7 @@ void Module::Interface::GetNsDataIdList(Kernel::HLERequestContext& ctx) {
     const u32 start_ns_data_id = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -288,7 +287,7 @@ void Module::Interface::GetNsDataIdList1(Kernel::HLERequestContext& ctx) {
     const u32 start_ns_data_id = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -314,7 +313,7 @@ void Module::Interface::GetNsDataIdList2(Kernel::HLERequestContext& ctx) {
     const u32 start_ns_data_id = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -340,7 +339,7 @@ void Module::Interface::GetNsDataIdList3(Kernel::HLERequestContext& ctx) {
     const u32 start_ns_data_id = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -364,7 +363,7 @@ void Module::Interface::SendProperty(Kernel::HLERequestContext& ctx) {
     const u32 size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -394,7 +393,7 @@ void Module::Interface::ReceiveProperty(Kernel::HLERequestContext& ctx) {
     const u32 size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -636,7 +635,7 @@ void Module::Interface::GetNsDataHeaderInfo(Kernel::HLERequestContext& ctx) {
     const auto size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -657,7 +656,7 @@ void Module::Interface::ReadNsData(Kernel::HLERequestContext& ctx) {
     const auto size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
@@ -729,7 +728,7 @@ void Module::Interface::GetNsDataLastUpdate(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 ns_data_id = rp.Pop<u32>();
 
-    const auto online_service = GetSessionService(ctx);
+    const auto online_service = GetSessionService(ctx, rp);
     if (online_service == nullptr) {
         return;
     }
