@@ -1252,7 +1252,7 @@ void Module::Interface::GetDeviceID(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0);
     rb.Push(deviceID);
 }
@@ -1857,7 +1857,7 @@ void Module::Interface::GetDeviceCert(Kernel::HLERequestContext& ctx) {
 
     buffer.Write(&am->ct_cert, 0, std::min(sizeof(CTCert), buffer.GetSize()));
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push(0);
     rb.PushMappedBuffer(buffer);
 }
@@ -1866,12 +1866,8 @@ std::string Module::GetCTCertPath() {
     return FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + "CTCert.bin";
 }
 
-void Module::InvalidateCTCertData() {
-    ct_cert = CTCert();
-}
-
-CTCertLoadStatus Module::LoadCTCertFile() {
-    if (ct_cert.IsValid()) {
+CTCertLoadStatus Module::LoadCTCertFile(CTCert& output) {
+    if (output.IsValid()) {
         return CTCertLoadStatus::Loaded;
     }
     std::string file_path = GetCTCertPath();
@@ -1885,27 +1881,21 @@ CTCertLoadStatus Module::LoadCTCertFile() {
     if (file.GetSize() != sizeof(CTCert)) {
         return CTCertLoadStatus::Invalid;
     }
-    if (file.ReadBytes(&ct_cert, sizeof(CTCert)) != sizeof(CTCert)) {
+    if (file.ReadBytes(&output, sizeof(CTCert)) != sizeof(CTCert)) {
         return CTCertLoadStatus::IOError;
     }
-    if (!ct_cert.IsValid()) {
-        ct_cert = CTCert();
+    if (!output.IsValid()) {
+        output = CTCert();
         return CTCertLoadStatus::Invalid;
     }
     return CTCertLoadStatus::Loaded;
 }
 
-Module::Module() {
-    LoadCTCertFile();
-}
-
-Module::Module(Core::System& system) : kernel(&system.Kernel()) {
+Module::Module(Core::System& _system) : system(_system) {
     ScanForAllTitles();
-    LoadCTCertFile();
+    LoadCTCertFile(ct_cert);
     system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }
-
-Module::Module(Kernel::KernelSystem& kernel) : kernel(&kernel) {}
 
 Module::~Module() = default;
 

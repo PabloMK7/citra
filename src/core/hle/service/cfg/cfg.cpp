@@ -223,7 +223,7 @@ void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u8>(ret);
 }
 
@@ -234,21 +234,21 @@ void Module::Interface::SecureInfoGetSerialNo(Kernel::HLERequestContext& ctx) {
 
     if (out_buffer.GetSize() < sizeof(SecureInfoA::serial_number)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config,
-                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::InvalidSize, ErrorModule::Config,
+                       ErrorSummary::WrongArgument, ErrorLevel::Permanent));
     }
     // Never happens on real hardware, but may happen if user didn't supply a dump.
     // Always make sure to have available both secure data kinds or error otherwise.
     if (!cfg->secure_info_a_loaded || !cfg->local_friend_code_seed_b_loaded) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
     }
 
     out_buffer.Write(&cfg->secure_info_a.serial_number, 0, sizeof(SecureInfoA::serial_number));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.PushMappedBuffer(out_buffer);
 }
 
@@ -399,18 +399,18 @@ void Module::Interface::GetLocalFriendCodeSeedData(Kernel::HLERequestContext& ct
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (out_buffer.GetSize() < sizeof(LocalFriendCodeSeedB)) {
-        rb.Push(ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config,
-                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::InvalidSize, ErrorModule::Config,
+                       ErrorSummary::WrongArgument, ErrorLevel::Permanent));
     }
     // Never happens on real hardware, but may happen if user didn't supply a dump.
     // Always make sure to have available both secure data kinds or error otherwise.
     if (!cfg->secure_info_a_loaded || !cfg->local_friend_code_seed_b_loaded) {
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
     }
 
     out_buffer.Write(&cfg->local_friend_code_seed_b, 0, sizeof(LocalFriendCodeSeedB));
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
 }
 
 void Module::Interface::GetLocalFriendCodeSeed(Kernel::HLERequestContext& ctx) {
@@ -420,12 +420,12 @@ void Module::Interface::GetLocalFriendCodeSeed(Kernel::HLERequestContext& ctx) {
     // Always make sure to have available both secure data kinds or error otherwise.
     if (!cfg->secure_info_a_loaded || !cfg->local_friend_code_seed_b_loaded) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(ResultSuccess);
     rb.Push<u64>(cfg->local_friend_code_seed_b.friend_code_seed);
 }
 
@@ -578,8 +578,8 @@ std::string Module::GetSecureInfoAPath() {
     return FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) + "rw/sys/SecureInfo_A";
 }
 
-ResultCode Module::FormatConfig() {
-    ResultCode res = DeleteConfigNANDSaveFile();
+Result Module::FormatConfig() {
+    Result res = DeleteConfigNANDSaveFile();
     // The delete command fails if the file doesn't exist, so we have to check that too
     if (!res.IsSuccess() && res != FileSys::ResultFileNotFound) {
         return res;

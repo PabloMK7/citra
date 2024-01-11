@@ -233,7 +233,6 @@ Result UninstallProgram(const FS::MediaType media_type, const u64 title_id);
 
 class Module final {
 public:
-    Module();
     explicit Module(Core::System& system);
     ~Module();
 
@@ -760,18 +759,13 @@ public:
      * Gets the CTCert.bin path in the host filesystem
      * @returns std::string CTCert.bin path in the host filesystem
      */
-    std::string GetCTCertPath();
-
-    /**
-     * Invalidates the CTCert data so that it is loaded again.
-     */
-    void InvalidateCTCertData();
+    static std::string GetCTCertPath();
 
     /**
      * Loads the CTCert.bin file from the filesystem.
      * @returns CTCertLoadStatus indicating the file load status.
      */
-    CTCertLoadStatus LoadCTCertFile();
+    static CTCertLoadStatus LoadCTCertFile(CTCert& output);
 
 private:
     /**

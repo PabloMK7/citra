@@ -328,7 +328,6 @@ void ConfigureSystem::SetConfiguration() {
     ui->edit_init_ticks_value->setText(
         QString::number(Settings::values.init_ticks_override.GetValue()));
 
-    am = Service::AM::GetModule(system);
     cfg = Service::CFG::GetModule(system);
     ReadSystemSettings();
 
@@ -571,13 +570,12 @@ void ConfigureSystem::InstallSecureData(const std::string& from_path, const std:
 void ConfigureSystem::InstallCTCert(const std::string& from_path) {
     std::string from =
         FileUtil::SanitizePath(from_path, FileUtil::DirectorySeparator::PlatformDefault);
-    std::string to =
-        FileUtil::SanitizePath(am->GetCTCertPath(), FileUtil::DirectorySeparator::PlatformDefault);
+    std::string to = FileUtil::SanitizePath(Service::AM::Module::GetCTCertPath(),
+                                            FileUtil::DirectorySeparator::PlatformDefault);
     if (from.empty() || from == to) {
         return;
     }
     FileUtil::Copy(from, to);
-    am->InvalidateCTCertData();
     RefreshSecureDataStatus();
 }
 
@@ -597,13 +595,15 @@ void ConfigureSystem::RefreshSecureDataStatus() {
         }
     };
 
+    Service::AM::CTCert ct_cert;
+
     ui->label_secure_info_status->setText(
         tr((std::string("Status: ") + status_to_str(cfg->LoadSecureInfoAFile())).c_str()));
     ui->label_friend_code_seed_status->setText(
         tr((std::string("Status: ") + status_to_str(cfg->LoadLocalFriendCodeSeedBFile())).c_str()));
     ui->label_ct_cert_status->setText(
-        tr((std::string("Status: ") +
-            status_to_str(static_cast<Service::CFG::SecureDataLoadStatus>(am->LoadCTCertFile())))
+        tr((std::string("Status: ") + status_to_str(static_cast<Service::CFG::SecureDataLoadStatus>(
+                                          Service::AM::Module::LoadCTCertFile(ct_cert))))
                .c_str()));
 }
 

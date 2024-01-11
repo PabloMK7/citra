@@ -67,7 +67,6 @@ private:
     ConfigurationShared::CheckState lle_applets;
     bool enabled = false;
 
-    std::shared_ptr<Service::AM::Module> am;
     std::shared_ptr<Service::CFG::Module> cfg;
     std::u16string username;
     int birthmonth = 0;
