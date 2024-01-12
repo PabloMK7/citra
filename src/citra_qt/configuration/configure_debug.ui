@@ -219,6 +219,25 @@
      </layout>
     </widget>
    </item>
+    <item>
+      <widget class="QGroupBox" name="groupBox_5">
+        <property name="title">
+          <string>Miscellaneus</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+          <item row="1" column="0">
+            <widget class="QCheckBox" name="delay_start_for_lle_modules">
+              <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+                <string>Delay app start for LLE module initialization</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </widget>
+    </item>
    <item>
     <widget class="QLabel" name="label_cpu_clock_info">
      <property name="text">

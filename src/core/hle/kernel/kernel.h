@@ -185,12 +185,14 @@ public:
      * @param processor_id The ID(s) of the processors on which the thread is desired to be run
      * @param stack_top The address of the thread's stack top
      * @param owner_process The parent process for the thread
+     * @param make_ready If the thread should be put in the ready queue
      * @return A shared pointer to the newly created thread
      */
     ResultVal<std::shared_ptr<Thread>> CreateThread(std::string name, VAddr entry_point,
                                                     u32 priority, u32 arg, s32 processor_id,
                                                     VAddr stack_top,
-                                                    std::shared_ptr<Process> owner_process);
+                                                    std::shared_ptr<Process> owner_process,
+                                                    bool make_ready = true);
 
     /**
      * Creates a semaphore.
@@ -338,6 +340,15 @@ public:
 
     Core::Timing& timing;
 
+    /// Sleep main thread of the first ever launched non-sysmodule process.
+    void SetAppMainThreadExtendedSleep(bool requires_sleep) {
+        main_thread_extended_sleep = requires_sleep;
+    }
+
+    bool GetAppMainThreadExtendedSleep() const {
+        return main_thread_extended_sleep;
+    }
+
 private:
     void MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode, u64 override_init_time);
 
@@ -385,6 +396,14 @@ private:
      * threads other than the CPU thread.
      */
     std::recursive_mutex hle_lock;
+
+    /*
+     * Flags non system module main threads to wait a bit before running. On real hardware,
+     * system modules have plenty of time to load before the game is loaded, but on citra they
+     * start at the same time as the game. The artificial wait gives system modules some time
+     * to load and setup themselves before the game starts.
+     */
+    bool main_thread_extended_sleep = false;
 
     friend class boost::serialization::access;
     template <class Archive>

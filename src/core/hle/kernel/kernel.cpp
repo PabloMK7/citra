@@ -183,6 +183,7 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
     ar& next_thread_id;
     ar& memory_mode;
     ar& n3ds_hw_caps;
+    ar& main_thread_extended_sleep;
     // Deliberately don't include debugger info to allow debugging through loads
 
     if (Archive::is_loading::value) {
