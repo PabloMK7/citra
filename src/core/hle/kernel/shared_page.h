@@ -53,10 +53,20 @@ using MacAddress = std::array<u8, 6>;
 constexpr MacAddress DefaultMac = {0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
 
 enum class WifiLinkLevel : u8 {
-    OFF = 0,
-    POOR = 1,
-    GOOD = 2,
-    BEST = 3,
+    Off = 0,
+    Poor = 1,
+    Good = 2,
+    Best = 3,
+};
+
+enum class WifiState : u8 {
+    Invalid = 0,
+    Enabled = 1,
+    Internet = 2,
+    Local1 = 3,
+    Local2 = 4,
+    Local3 = 6,
+    Disabled = 7,
 };
 
 struct SharedPageDef {
@@ -70,7 +80,7 @@ struct SharedPageDef {
     DateTime date_time_1;                // 40
     u8 wifi_macaddr[6];                  // 60
     u8 wifi_link_level;                  // 66
-    u8 wifi_unknown2;                    // 67
+    u8 wifi_state;                       // 67
     INSERT_PADDING_BYTES(0x80 - 0x68);   // 68
     float_le sliderstate_3d;             // 80
     u8 ledstate_3d;                      // 84
@@ -90,7 +100,13 @@ public:
 
     void SetMacAddress(const MacAddress&);
 
+    MacAddress GetMacAddress();
+
     void SetWifiLinkLevel(WifiLinkLevel);
+
+    WifiLinkLevel GetWifiLinkLevel();
+
+    void SetWifiState(WifiState);
 
     void Set3DLed(u8);
 
