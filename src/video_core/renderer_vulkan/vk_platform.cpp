@@ -283,21 +283,10 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         throw std::runtime_error("Failed to load Vulkan driver library");
     }
 
-    auto vkGetInstanceProcAddr =
+    const auto vkGetInstanceProcAddr =
         library.GetSymbol<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr) {
-#ifdef __APPLE__
-        // MoltenVK now hides most Vulkan symbols by default to avoid clashes,
-        // so we may need to use the ICD hook instead.
-        vkGetInstanceProcAddr =
-            library.GetSymbol<PFN_vkGetInstanceProcAddr>("vk_icdGetInstanceProcAddr");
-        if (!vkGetInstanceProcAddr) {
-            throw std::runtime_error(
-                "Failed GetSymbol vkGetInstanceProcAddr or vk_icdGetInstanceProcAddr");
-        }
-#else
         throw std::runtime_error("Failed GetSymbol vkGetInstanceProcAddr");
-#endif
     }
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
