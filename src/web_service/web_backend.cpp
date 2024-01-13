@@ -30,7 +30,7 @@ struct Client::Impl {
             jwt = jwt_cache.jwt;
         }
         // normalize host expression
-        if (this->host.back() == '/') {
+        if (!this->host.empty() && this->host.back() == '/') {
             static_cast<void>(this->host.pop_back());
         }
     }
