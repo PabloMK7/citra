@@ -232,8 +232,13 @@ Result SaveDataArchive::CreateFile(const FileSys::Path& path, u64 size) const {
     }
 
     if (size == 0) {
-        FileUtil::CreateEmptyFile(full_path);
-        return ResultSuccess;
+        if (allow_zero_size_create) {
+            FileUtil::CreateEmptyFile(full_path);
+            return ResultSuccess;
+        } else {
+            LOG_DEBUG(Service_FS, "Zero-size file is not supported");
+            return ResultUnsupportedOpenFlags;
+        }
     }
 
     FileUtil::IOFile file(full_path, "wb");

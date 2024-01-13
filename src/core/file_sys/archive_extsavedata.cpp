@@ -92,7 +92,7 @@ class ExtSaveDataArchive : public SaveDataArchive {
 public:
     explicit ExtSaveDataArchive(const std::string& mount_point,
                                 std::unique_ptr<DelayGenerator> delay_generator_)
-        : SaveDataArchive(mount_point) {
+        : SaveDataArchive(mount_point, false) {
         delay_generator = std::move(delay_generator_);
     }
 
@@ -153,14 +153,6 @@ public:
         auto delay_generator = std::make_unique<ExtSaveDataDelayGenerator>();
         return std::make_unique<FixSizeDiskFile>(std::move(file), rwmode,
                                                  std::move(delay_generator));
-    }
-
-    Result CreateFile(const Path& path, u64 size) const override {
-        if (size == 0) {
-            LOG_ERROR(Service_FS, "Zero-size file is not supported");
-            return ResultUnsupportedOpenFlags;
-        }
-        return SaveDataArchive::CreateFile(path, size);
     }
 
 private:

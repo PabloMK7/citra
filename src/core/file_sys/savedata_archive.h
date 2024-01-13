@@ -15,7 +15,8 @@ namespace FileSys {
 /// Archive backend for general save data archive type (SaveData and SystemSaveData)
 class SaveDataArchive : public ArchiveBackend {
 public:
-    explicit SaveDataArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
+    explicit SaveDataArchive(const std::string& mount_point_, bool allow_zero_size_create_ = true)
+        : mount_point(mount_point_), allow_zero_size_create(allow_zero_size_create_) {}
 
     std::string GetName() const override {
         return "SaveDataArchive: " + mount_point;
@@ -35,6 +36,7 @@ public:
 
 protected:
     std::string mount_point;
+    bool allow_zero_size_create;
     SaveDataArchive() = default;
 
 private:
@@ -42,6 +44,7 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<ArchiveBackend>(*this);
         ar& mount_point;
+        ar& allow_zero_size_create;
     }
     friend class boost::serialization::access;
 };
