@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fmt/format.h>
 #include "core/hle/service/nwm/nwm_uds.h"
 #include "core/hle/service/nwm/uds_connection.h"
-#include "fmt/format.h"
 
 namespace Service::NWM {
 
