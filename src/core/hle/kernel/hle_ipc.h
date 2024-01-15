@@ -12,10 +12,7 @@
 #include <string>
 #include <vector>
 #include <boost/container/small_vector.hpp>
-#include <boost/serialization/assume_abstract.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/serialization/boost_small_vector.hpp"
 #include "common/swap.h"
@@ -77,7 +74,20 @@ public:
 
     private:
         template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {}
+        void serialize(Archive& ar, const unsigned int);
+        friend class boost::serialization::access;
+    };
+
+    struct SessionInfo {
+        SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
+
+        std::shared_ptr<ServerSession> session;
+        std::unique_ptr<SessionDataBase> data;
+
+    private:
+        SessionInfo() = default;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int);
         friend class boost::serialization::access;
     };
 
@@ -96,30 +106,13 @@ protected:
         return static_cast<T*>(itr->data.get());
     }
 
-    struct SessionInfo {
-        SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
-
-        std::shared_ptr<ServerSession> session;
-        std::unique_ptr<SessionDataBase> data;
-
-    private:
-        SessionInfo() = default;
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {
-            ar& session;
-            ar& data;
-        }
-        friend class boost::serialization::access;
-    };
     /// List of sessions that are connected to this handler. A ServerSession whose server endpoint
     /// is an HLE implementation is kept alive by this list for the duration of the connection.
     std::vector<SessionInfo> connected_sessions;
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& connected_sessions;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -388,17 +381,14 @@ private:
 
     HLERequestContext();
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& cmd_buf;
-        ar& session;
-        ar& thread;
-        ar& request_handles;
-        ar& static_buffers;
-        ar& request_mapped_buffers;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
 } // namespace Kernel
 
+BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler)
+BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionDataBase)
+BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionInfo)
+BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext)
 BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext::ThreadCallback)

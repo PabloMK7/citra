@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <climits>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/weak_ptr.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -24,8 +27,18 @@
 #include "core/memory.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::Thread)
+SERIALIZE_EXPORT_IMPL(Kernel::WakeupCallback)
 
 namespace Kernel {
+
+template <class Archive>
+void ThreadManager::serialize(Archive& ar, const unsigned int) {
+    ar& current_thread;
+    ar& ready_queue;
+    ar& wakeup_callback_table;
+    ar& thread_list;
+}
+SERIALIZE_IMPL(ThreadManager)
 
 template <class Archive>
 void Thread::serialize(Archive& ar, const unsigned int file_version) {
@@ -48,8 +61,11 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar& name;
     ar& wakeup_callback;
 }
-
 SERIALIZE_IMPL(Thread)
+
+template <class Archive>
+void WakeupCallback::serialize(Archive& ar, const unsigned int) {}
+SERIALIZE_IMPL(WakeupCallback)
 
 bool Thread::ShouldWait(const Thread* thread) const {
     return status != ThreadStatus::Dead;

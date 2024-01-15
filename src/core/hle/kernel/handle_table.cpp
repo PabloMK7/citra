@@ -3,12 +3,17 @@
 // Refer to the license.txt file included.
 
 #include <utility>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::HandleTable)
 
 namespace Kernel {
 namespace {
@@ -93,5 +98,14 @@ void HandleTable::Clear() {
     }
     next_free_slot = 0;
 }
+
+template <class Archive>
+void HandleTable::serialize(Archive& ar, const unsigned int) {
+    ar& objects;
+    ar& generations;
+    ar& next_generation;
+    ar& next_free_slot;
+}
+SERIALIZE_IMPL(HandleTable)
 
 } // namespace Kernel

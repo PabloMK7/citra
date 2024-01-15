@@ -11,9 +11,6 @@
 #include <vector>
 #include <boost/container/flat_set.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/weak_ptr.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"
@@ -72,7 +69,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {}
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -164,12 +161,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& current_thread;
-        ar& ready_queue;
-        ar& wakeup_callback_table;
-        ar& thread_list;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 class Thread final : public WaitObject {
@@ -336,7 +328,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -353,17 +345,17 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::Thread)
+BOOST_CLASS_EXPORT_KEY(Kernel::WakeupCallback)
 
 namespace boost::serialization {
 
 template <class Archive>
-inline void save_construct_data(Archive& ar, const Kernel::Thread* t,
-                                const unsigned int file_version) {
+void save_construct_data(Archive& ar, const Kernel::Thread* t, const unsigned int) {
     ar << t->core_id;
 }
 
 template <class Archive>
-inline void load_construct_data(Archive& ar, Kernel::Thread* t, const unsigned int file_version) {
+void load_construct_data(Archive& ar, Kernel::Thread* t, const unsigned int) {
     u32 core_id;
     ar >> core_id;
     ::new (t) Kernel::Thread(Core::Global<Kernel::KernelSystem>(), core_id);

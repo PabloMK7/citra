@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "core/hle/kernel/client_session.h"
@@ -52,5 +55,13 @@ Result ClientSession::SendSyncRequest(std::shared_ptr<Thread> thread) {
     // Signal the server session that new data is available
     return server->HandleSyncRequest(std::move(thread));
 }
+
+template <class Archive>
+void ClientSession::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& name;
+    ar& parent;
+}
+SERIALIZE_IMPL(ClientSession)
 
 } // namespace Kernel

@@ -6,10 +6,7 @@
 
 #include <memory>
 #include <string>
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/resource_limit.h"
@@ -67,14 +64,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<WaitObject>(*this);
-        ar& lock_count;
-        ar& priority;
-        ar& name;
-        ar& holding_thread;
-        ar& resource_limit;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 /**

@@ -4,9 +4,7 @@
 
 #pragma once
 
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/string.hpp>
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
@@ -57,13 +55,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<WaitObject>(*this);
-        ar& reset_type;
-        ar& signaled;
-        ar& name;
-        ar& resource_limit;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel

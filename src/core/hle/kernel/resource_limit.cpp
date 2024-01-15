@@ -2,12 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/settings.h"
 #include "core/hle/kernel/resource_limit.h"
 
 SERIALIZE_EXPORT_IMPL(Kernel::ResourceLimit)
+SERIALIZE_EXPORT_IMPL(Kernel::ResourceLimitList)
 
 namespace Kernel {
 
@@ -60,6 +65,15 @@ bool ResourceLimit::Release(ResourceLimitType type, s32 amount) {
     m_current_values[index] = value - amount;
     return true;
 }
+
+template <class Archive>
+void ResourceLimit::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& m_name;
+    ar& m_limit_values;
+    ar& m_current_values;
+}
+SERIALIZE_IMPL(ResourceLimit)
 
 ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // PM makes APPMEMALLOC always match app RESLIMIT_COMMIT.
@@ -137,5 +151,11 @@ std::shared_ptr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCa
         UNREACHABLE_MSG("Unknown resource limit category");
     }
 }
+
+template <class Archive>
+void ResourceLimitList::serialize(Archive& ar, const unsigned int) {
+    ar& resource_limits;
+}
+SERIALIZE_IMPL(ResourceLimitList)
 
 } // namespace Kernel

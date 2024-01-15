@@ -6,9 +6,7 @@
 
 #include <map>
 #include <memory>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 #include "core/hle/kernel/memory.h"
@@ -79,14 +77,7 @@ struct VirtualMemoryArea {
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& base;
-        ar& size;
-        ar& type;
-        ar& permissions;
-        ar& meminfo_state;
-        ar& backing_memory;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -238,13 +229,9 @@ private:
     bool is_locked{};
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& vma_map;
-        ar& page_table;
-        if (Archive::is_loading::value) {
-            is_locked = true;
-        }
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::VirtualMemoryArea)

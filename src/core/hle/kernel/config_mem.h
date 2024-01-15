@@ -9,7 +9,6 @@
 // bootrom. Because we're not emulating this, and essentially just "stubbing" the functionality, I'm
 // putting this as a subset of HLE for now.
 
-#include <boost/serialization/binary_object.hpp>
 #include <boost/serialization/export.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -72,10 +71,7 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<BackingMem>(*this);
-        ar& boost::serialization::make_binary_object(&config_mem, sizeof(config_mem));
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace ConfigMem

@@ -6,6 +6,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/object.h"
 
+#include "common/archives.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::Object)
+
 namespace Kernel {
 
 Object::Object(KernelSystem& kernel) : object_id{kernel.GenerateObjectID()} {}
@@ -36,5 +40,11 @@ bool Object::IsWaitable() const {
 
     UNREACHABLE();
 }
+
+template <class Archive>
+void Object::serialize(Archive& ar, const unsigned int) {
+    ar& object_id;
+}
+SERIALIZE_IMPL(Object)
 
 } // namespace Kernel

@@ -6,10 +6,7 @@
 
 #include <array>
 #include <memory>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 
@@ -76,12 +73,7 @@ private:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<Object>(*this);
-        ar& m_name;
-        ar& m_limit_values;
-        ar& m_current_values;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 class ResourceLimitList {
@@ -101,12 +93,12 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& resource_limits;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::ResourceLimit)
+BOOST_CLASS_EXPORT_KEY(Kernel::ResourceLimitList)
 CONSTRUCT_KERNEL_OBJECT(Kernel::ResourceLimit)
+CONSTRUCT_KERNEL_OBJECT(Kernel::ResourceLimitList)

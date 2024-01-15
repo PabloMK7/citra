@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
@@ -124,11 +125,7 @@ struct New3dsHwCapabilities {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& enable_l2_cache;
-        ar& enable_804MHz_cpu;
-        ar& memory_mode;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -407,7 +404,9 @@ private:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::New3dsHwCapabilities)

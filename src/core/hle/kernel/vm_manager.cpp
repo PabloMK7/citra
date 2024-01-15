@@ -4,12 +4,18 @@
 
 #include <algorithm>
 #include <iterator>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/split_member.hpp>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "core/core.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/memory.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::VirtualMemoryArea)
 
 namespace Kernel {
 
@@ -34,6 +40,17 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     }
     return true;
 }
+
+template <class Archive>
+void VirtualMemoryArea::serialize(Archive& ar, const unsigned int) {
+    ar& base;
+    ar& size;
+    ar& type;
+    ar& permissions;
+    ar& meminfo_state;
+    ar& backing_memory;
+}
+SERIALIZE_IMPL(VirtualMemoryArea)
 
 VMManager::VMManager(Memory::MemorySystem& memory, Kernel::Process& proc)
     : page_table(std::make_shared<Memory::PageTable>()), memory(memory), process(proc) {
@@ -379,4 +396,15 @@ ResultVal<std::vector<std::pair<MemoryRef, u32>>> VMManager::GetBackingBlocksFor
     }
     return backing_blocks;
 }
+
+template <class Archive>
+void VMManager::serialize(Archive& ar, const unsigned int) {
+    ar& vma_map;
+    ar& page_table;
+    if (Archive::is_loading::value) {
+        is_locked = true;
+    }
+}
+SERIALIZE_IMPL(VMManager)
+
 } // namespace Kernel

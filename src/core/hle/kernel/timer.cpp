@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/unordered_map.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -97,6 +99,19 @@ void Timer::Signal(s64 cycles_late) {
     }
 }
 
+template <class Archive>
+void Timer::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<WaitObject>(*this);
+    ar& reset_type;
+    ar& initial_delay;
+    ar& interval_delay;
+    ar& signaled;
+    ar& name;
+    ar& callback_id;
+    ar& resource_limit;
+}
+SERIALIZE_IMPL(Timer)
+
 /// The timer callback event, called when a timer is fired
 void TimerManager::TimerCallback(u64 callback_id, s64 cycles_late) {
     std::shared_ptr<Timer> timer = SharedFrom(timer_callback_table.at(callback_id));
@@ -115,5 +130,12 @@ TimerManager::TimerManager(Core::Timing& timing) : timing(timing) {
             TimerCallback(thread_id, cycle_late);
         });
 }
+
+template <class Archive>
+void TimerManager::serialize(Archive& ar, const unsigned int) {
+    ar& next_timer_callback_id;
+    ar& timer_callback_table;
+}
+SERIALIZE_IMPL(TimerManager)
 
 } // namespace Kernel

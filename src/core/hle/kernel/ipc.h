@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <vector>
-#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/thread.h"
@@ -29,13 +29,7 @@ struct MappedBufferContext {
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& permissions;
-        ar& size;
-        ar& source_address;
-        ar& target_address;
-        ar& buffer;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -46,3 +40,5 @@ Result TranslateCommandBuffer(KernelSystem& system, Memory::MemorySystem& memory
                               VAddr dst_address,
                               std::vector<MappedBufferContext>& mapped_buffer_context, bool reply);
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::MappedBufferContext)

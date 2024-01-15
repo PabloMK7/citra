@@ -5,7 +5,7 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
 #include "core/hle/kernel/object.h"
 
 namespace Kernel {
@@ -29,6 +29,8 @@ public:
 private:
     friend class boost::serialization::access;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    void serialize(Archive& ar, const unsigned int);
 };
 } // namespace Kernel
+
+BOOST_CLASS_EXPORT_KEY(Kernel::Session)

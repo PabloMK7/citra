@@ -19,7 +19,7 @@ SERIALIZE_EXPORT_IMPL(Kernel::ServerSession)
 namespace Kernel {
 
 template <class Archive>
-void ServerSession::serialize(Archive& ar, const unsigned int file_version) {
+void ServerSession::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<WaitObject>(*this);
     ar& name;
     ar& parent;

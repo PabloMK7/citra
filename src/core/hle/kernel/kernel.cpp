@@ -19,6 +19,8 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::New3dsHwCapabilities)
+
 namespace Kernel {
 
 /// Initialize the kernel
@@ -162,7 +164,7 @@ void KernelSystem::ResetThreadIDs() {
 }
 
 template <class Archive>
-void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
+void KernelSystem::serialize(Archive& ar, const unsigned int) {
     ar& memory_regions;
     ar& named_ports;
     // current_cpu set externally
@@ -195,7 +197,14 @@ void KernelSystem::serialize(Archive& ar, const unsigned int file_version) {
         }
     }
 }
-
 SERIALIZE_IMPL(KernelSystem)
+
+template <class Archive>
+void New3dsHwCapabilities::serialize(Archive& ar, const unsigned int) {
+    ar& enable_l2_cache;
+    ar& enable_804MHz_cpu;
+    ar& memory_mode;
+}
+SERIALIZE_IMPL(New3dsHwCapabilities)
 
 } // namespace Kernel

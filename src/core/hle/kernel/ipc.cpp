@@ -3,7 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <boost/serialization/shared_ptr.hpp>
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "common/memory_ref.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
@@ -15,6 +17,8 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::MappedBufferContext)
 
 namespace Kernel {
 
@@ -250,4 +254,15 @@ Result TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySystem
 
     return ResultSuccess;
 }
+
+template <class Archive>
+void MappedBufferContext::serialize(Archive& ar, const unsigned int) {
+    ar& permissions;
+    ar& size;
+    ar& source_address;
+    ar& target_address;
+    ar& buffer;
+}
+SERIALIZE_IMPL(MappedBufferContext)
+
 } // namespace Kernel

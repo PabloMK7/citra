@@ -3,6 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -12,6 +16,9 @@
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
+SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter::Callback)
 
 namespace Kernel {
 
@@ -183,6 +190,16 @@ Result AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, Arbitrat
     return ResultSuccess;
 }
 
+template <class Archive>
+void AddressArbiter::serialize(Archive& ar, const unsigned int) {
+    ar& boost::serialization::base_object<Object>(*this);
+    ar& name;
+    ar& waiting_threads;
+    ar& timeout_callback;
+    ar& resource_limit;
+}
+SERIALIZE_IMPL(AddressArbiter)
+
 } // namespace Kernel
 
 namespace boost::serialization {
@@ -201,6 +218,3 @@ void load_construct_data(Archive& ar, Kernel::AddressArbiter::Callback* t, const
 }
 
 } // namespace boost::serialization
-
-SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter)
-SERIALIZE_EXPORT_IMPL(Kernel::AddressArbiter::Callback)

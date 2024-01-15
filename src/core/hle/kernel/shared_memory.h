@@ -6,10 +6,7 @@
 
 #include <string>
 #include <utility>
-#include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/weak_ptr.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 #include "core/hle/kernel/object.h"
@@ -113,19 +110,7 @@ private:
     KernelSystem& kernel;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& boost::serialization::base_object<Object>(*this);
-        ar& linear_heap_phys_offset;
-        ar& backing_blocks;
-        ar& size;
-        ar& memory_region;
-        ar& permissions;
-        ar& other_permissions;
-        ar& owner_process;
-        ar& base_address;
-        ar& name;
-        ar& holding_memory;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 

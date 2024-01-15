@@ -4,6 +4,9 @@
 
 #include <algorithm>
 #include <utility>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -15,10 +18,12 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 
+SERIALIZE_EXPORT_IMPL(Kernel::WaitObject)
+
 namespace Kernel {
 
 template <class Archive>
-void WaitObject::serialize(Archive& ar, const unsigned int file_version) {
+void WaitObject::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Object>(*this);
     ar& waiting_threads;
     // NB: hle_notifier *not* serialized since it's a callback!

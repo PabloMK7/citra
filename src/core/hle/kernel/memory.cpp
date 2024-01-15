@@ -6,6 +6,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <boost/serialization/set.hpp>
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -18,6 +20,8 @@
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
+
+SERIALIZE_EXPORT_IMPL(Kernel::MemoryRegionInfo)
 
 namespace Kernel {
 
@@ -266,5 +270,17 @@ void MemoryRegionInfo::Free(u32 offset, u32 size) {
 void MemoryRegionInfo::Unlock() {
     is_locked = false;
 }
+
+template <class Archive>
+void MemoryRegionInfo::serialize(Archive& ar, const unsigned int) {
+    ar& base;
+    ar& size;
+    ar& used;
+    ar& free_blocks;
+    if (Archive::is_loading::value) {
+        is_locked = true;
+    }
+}
+SERIALIZE_IMPL(MemoryRegionInfo)
 
 } // namespace Kernel

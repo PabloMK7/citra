@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/binary_object.hpp>
+#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 
@@ -178,9 +177,7 @@ struct MiiData {
     Nickname author_name; ///< Name of Mii's author (Encoded using UTF16)
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::make_binary_object(this, sizeof(MiiData));
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -230,9 +227,7 @@ public:
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::make_binary_object(this, sizeof(ChecksummedMiiData));
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 #pragma pack(pop)
@@ -242,3 +237,6 @@ static_assert(std::is_trivial_v<ChecksummedMiiData>, "ChecksummedMiiData must be
 static_assert(std::is_trivially_copyable_v<ChecksummedMiiData>,
               "ChecksummedMiiData must be trivially copyable.");
 } // namespace Mii
+
+BOOST_CLASS_EXPORT_KEY(Mii::MiiData)
+BOOST_CLASS_EXPORT_KEY(Mii::ChecksummedMiiData)
