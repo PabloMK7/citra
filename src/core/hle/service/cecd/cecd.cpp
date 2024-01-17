@@ -682,16 +682,16 @@ void Module::Interface::Stop(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetCecInfoBuffer(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const u32 buffer_size = rp.Pop<u32>();
     const u32 possible_info_type = rp.Pop<u32>();
+    const u32 buffer_size = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
     rb.PushMappedBuffer(buffer);
 
-    LOG_DEBUG(Service_CECD, "called, buffer_size={}, possible_info_type={}", buffer_size,
-              possible_info_type);
+    LOG_DEBUG(Service_CECD, "called, possible_info_type={}, buffer_size={}", possible_info_type,
+              buffer_size);
 }
 
 void Module::Interface::GetCecdState(Kernel::HLERequestContext& ctx) {
