@@ -39,6 +39,19 @@ layout (binding = 1, std140) uniform vs_data {
     bool enable_clip1;
     vec4 clip_coef;
 };
+
+const vec2 EPSILON_Z = vec2(0.00000001f, -1.00001f);
+
+vec4 SanitizeVertex(vec4 vtx_pos) {
+    float ndc_z = vtx_pos.z / vtx_pos.w;
+    if (ndc_z > 0.f && ndc_z < EPSILON_Z[0]) {
+        vtx_pos.z = 0.f;
+    }
+    if (ndc_z < -1.f && ndc_z > EPSILON_Z[1]) {
+        vtx_pos.z = -vtx_pos.w;
+    }
+    return vtx_pos;
+}
 )";
 
 static std::string GetVertexInterfaceDeclaration(bool is_output, bool use_clip_planes,
@@ -94,13 +107,7 @@ std::string GenerateTrivialVertexShader(bool use_clip_planes, bool separable_sha
     out += GetVertexInterfaceDeclaration(true, use_clip_planes, separable_shader);
     out += VSUniformBlockDef;
 
-    // Certain games render 2D elements very close to clip plane 0 resulting in very tiny
-    // negative/positive z values when computing with f32 precision,
-    // causing some vertices to get erroneously clipped. To workaround this problem,
-    // we can use a very small epsilon value for clip plane comparison.
     out += R"(
-const float EPSILON_Z = 0.00000001f;
-
 void main() {
     primary_color = vert_color;
     texcoord0 = vert_texcoord0;
@@ -109,10 +116,7 @@ void main() {
     texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
-    vec4 vtx_pos = vert_position;
-    if (abs(vtx_pos.z) < EPSILON_Z) {
-        vtx_pos.z = 0.f;
-    }
+    vec4 vtx_pos = SanitizeVertex(vert_position);
     gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
     if (use_clip_planes) {
@@ -215,7 +219,6 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
             return "1.0";
         };
 
-        out += "const float EPSILON_Z = 0.00000001f;\n\n";
         out += "vec4 GetVertexQuaternion() {\n";
         out += "    return vec4(" + semantic(VSOutputAttributes::QUATERNION_X) + ", " +
                semantic(VSOutputAttributes::QUATERNION_Y) + ", " +
@@ -228,9 +231,7 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
                semantic(VSOutputAttributes::POSITION_Y) + ", " +
                semantic(VSOutputAttributes::POSITION_Z) + ", " +
                semantic(VSOutputAttributes::POSITION_W) + ");\n";
-        out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
-        out += "        vtx_pos.z = 0.f;\n";
-        out += "    }\n";
+        out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
         out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
         if (config.state.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
@@ -312,7 +313,6 @@ struct Vertex {
         return "1.0";
     };
 
-    out += "const float EPSILON_Z = 0.00000001f;\n\n";
     out += "vec4 GetVertexQuaternion(Vertex vtx) {\n";
     out += "    return vec4(" + semantic(VSOutputAttributes::QUATERNION_X) + ", " +
            semantic(VSOutputAttributes::QUATERNION_Y) + ", " +
@@ -325,9 +325,7 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Y) + ", " +
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
-    out += "    if (abs(vtx_pos.z) < EPSILON_Z) {\n";
-    out += "        vtx_pos.z = 0.f;\n";
-    out += "    }\n";
+    out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
     out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
     if (state.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
