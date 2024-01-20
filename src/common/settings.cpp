@@ -138,6 +138,7 @@ void LogSettings() {
         log_setting("DataStorage_NandDir", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
     }
     log_setting("System_IsNew3ds", values.is_new_3ds.GetValue());
+    log_setting("System_LLEApplets", values.lle_applets.GetValue());
     log_setting("System_RegionValue", values.region_value.GetValue());
     log_setting("System_PluginLoader", values.plugin_loader_enabled.GetValue());
     log_setting("System_PluginLoaderAllowed", values.allow_plugin_loader.GetValue());
@@ -175,6 +176,7 @@ void RestoreGlobalState(bool is_powered_on) {
     // Core
     values.cpu_clock_percentage.SetGlobal(true);
     values.is_new_3ds.SetGlobal(true);
+    values.lle_applets.SetGlobal(true);
 
     // Renderer
     values.graphics_api.SetGlobal(true);

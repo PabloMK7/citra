@@ -155,6 +155,8 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
              static_cast<int>(Settings::values.mono_render_option.GetValue()));
     AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds",
              Settings::values.is_new_3ds.GetValue());
+    AddField(Telemetry::FieldType::UserConfig, "System_LLEApplets",
+             Settings::values.lle_applets.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "System_RegionValue",
              Settings::values.region_value.GetValue());
 }

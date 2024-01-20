@@ -432,6 +432,7 @@ struct Values {
     Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
     SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
+    SwitchableSetting<bool> lle_applets{false, "lle_applets"};
 
     // Data Storage
     Setting<bool> use_virtual_sd{true, "use_virtual_sd"};

@@ -908,6 +908,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    IntSetting.LLE_APPLETS,
+                    R.string.lle_applets,
+                    0,
+                    IntSetting.LLE_APPLETS.key,
+                    IntSetting.LLE_APPLETS.defaultValue
+                )
+            )
+            add(
                 SliderSetting(
                     IntSetting.CPU_CLOCK_SPEED,
                     R.string.cpu_clock_speed,

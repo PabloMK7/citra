@@ -206,6 +206,7 @@ void Config::ReadValues() {
 
     // System
     ReadSetting("System", Settings::values.is_new_3ds);
+    ReadSetting("System", Settings::values.lle_applets);
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {

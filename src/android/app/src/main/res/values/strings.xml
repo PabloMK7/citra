@@ -171,6 +171,7 @@
     <!-- System settings strings -->
     <string name="username">Username</string>
     <string name="new_3ds">New 3DS Mode</string>
+    <string name="lle_applets">Use LLE Applets (if installed)</string>
     <string name="clock">Clock</string>
     <string name="init_time">Offset Time</string>
     <string name="init_time_description">If the clock is set to \"Simulated clock\", this changes the fixed date and time to start at.</string>

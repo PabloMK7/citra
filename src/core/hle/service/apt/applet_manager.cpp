@@ -568,11 +568,13 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
 
     capture_buffer_info.reset();
 
-    auto cfg = Service::CFG::GetModule(system);
-    auto process =
-        NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
-    if (process) {
-        return ResultSuccess;
+    if (Settings::values.lle_applets) {
+        auto cfg = Service::CFG::GetModule(system);
+        auto process = NS::LaunchTitle(FS::MediaType::NAND,
+                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        if (process) {
+            return ResultSuccess;
+        }
     }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
@@ -595,11 +597,13 @@ Result AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     last_library_launcher_slot = active_slot;
     last_prepared_library_applet = applet_id;
 
-    auto cfg = Service::CFG::GetModule(system);
-    auto process =
-        NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
-    if (process) {
-        return ResultSuccess;
+    if (Settings::values.lle_applets) {
+        auto cfg = Service::CFG::GetModule(system);
+        auto process = NS::LaunchTitle(FS::MediaType::NAND,
+                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        if (process) {
+            return ResultSuccess;
+        }
     }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.

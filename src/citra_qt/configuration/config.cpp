@@ -682,6 +682,7 @@ void Config::ReadSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
     ReadGlobalSetting(Settings::values.is_new_3ds);
+    ReadGlobalSetting(Settings::values.lle_applets);
     ReadGlobalSetting(Settings::values.region_value);
 
     if (global) {
@@ -1172,6 +1173,7 @@ void Config::SaveSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
     WriteGlobalSetting(Settings::values.is_new_3ds);
+    WriteGlobalSetting(Settings::values.lle_applets);
     WriteGlobalSetting(Settings::values.region_value);
 
     if (global) {
