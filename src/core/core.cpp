@@ -648,7 +648,9 @@ void System::ApplySettings() {
     GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
 
     if (gpu) {
+#ifndef ANDROID
         gpu->Renderer().UpdateCurrentFramebufferLayout();
+#endif
         auto& settings = gpu->Renderer().Settings();
         settings.bg_color_update_requested = true;
         settings.shader_update_requested = true;
