@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <bit>
 #include <cmath>
 #include <cstring>
 #include <boost/serialization/access.hpp>
@@ -50,7 +51,7 @@ public:
             hex = sign;
         }
 
-        std::memcpy(&res.value, &hex, sizeof(float));
+        res.value = std::bit_cast<float>(hex);
 
         return res;
     }
@@ -95,17 +96,17 @@ public:
     }
 
     constexpr Float<M, E>& operator/=(const Float<M, E>& flt) {
-        value /= flt.ToFloat32();
+        value = operator/(flt).value;
         return *this;
     }
 
     constexpr Float<M, E>& operator+=(const Float<M, E>& flt) {
-        value += flt.ToFloat32();
+        value = operator+(flt).value;
         return *this;
     }
 
     constexpr Float<M, E>& operator-=(const Float<M, E>& flt) {
-        value -= flt.ToFloat32();
+        value = operator-(flt).value;
         return *this;
     }
 
