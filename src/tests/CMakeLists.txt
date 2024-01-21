@@ -13,6 +13,11 @@ add_executable(tests
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
     video_core/shader/shader_jit_compiler.cpp
+    audio_core/merryhime_3ds_audio/merry_audio/merry_audio.cpp
+    audio_core/merryhime_3ds_audio/merry_audio/merry_audio.h
+    audio_core/merryhime_3ds_audio/merry_audio/service_fixture.cpp
+    audio_core/merryhime_3ds_audio/merry_audio/service_fixture.h
+    audio_core/merryhime_3ds_audio/audio_test_biquad_filter.cpp
 )
 
 create_target_directory_groups(tests)

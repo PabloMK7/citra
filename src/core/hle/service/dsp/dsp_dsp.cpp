@@ -200,7 +200,7 @@ void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 
-    LOG_INFO(Service_DSP, "(STUBBED)");
+    LOG_INFO(Service_DSP, "called");
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
