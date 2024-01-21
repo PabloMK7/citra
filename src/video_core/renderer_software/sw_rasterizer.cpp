@@ -125,9 +125,8 @@ void RasterizerSoftware::AddTriangle(const Pica::OutputVertex& v0, const Pica::O
     auto* input_list = &buffer_b;
 
     // NOTE: We clip against a w=epsilon plane to guarantee that the output has a positive w value.
-    // TODO: Not sure if this is a valid approach. Also should probably instead use the smallest
-    //       epsilon possible within f24 accuracy.
-    static constexpr f24 EPSILON = f24::FromFloat32(0.00001f);
+    // TODO: Not sure if this is a valid approach.
+    static constexpr f24 EPSILON = f24::MinNormal();
     static constexpr f24 f0 = f24::Zero();
     static constexpr f24 f1 = f24::One();
     static constexpr std::array<ClippingEdge, 7> clipping_edges = {{
