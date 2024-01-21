@@ -67,6 +67,16 @@ RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
                                            .wrap_s = TextureConfig::WrapMode::ClampToBorder,
                                            .wrap_t = TextureConfig::WrapMode::ClampToBorder,
                                        }));
+
+    auto& null_surface = slot_surfaces[NULL_SURFACE_ID];
+    runtime.ClearTexture(null_surface, {
+                                           .texture_level = 0,
+                                           .texture_rect = null_surface.GetScaledRect(),
+                                           .value =
+                                               {
+                                                   .color = {0.f, 0.f, 0.f, 0.f},
+                                               },
+                                       });
 }
 
 template <class T>
