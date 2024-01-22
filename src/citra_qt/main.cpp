@@ -270,6 +270,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
 
+#ifdef ENABLE_VULKAN
     physical_devices = GetVulkanPhysicalDevices();
     if (physical_devices.empty()) {
         QMessageBox::warning(this, tr("No Suitable Vulkan Devices Detected"),
@@ -277,6 +278,7 @@ GMainWindow::GMainWindow(Core::System& system_)
                                 "Your GPU may not support Vulkan 1.1, or you do not "
                                 "have the latest graphics driver."));
     }
+#endif
 
 #if ENABLE_QT_UPDATER
     if (UISettings::values.check_for_update_on_start) {
@@ -2689,6 +2691,22 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
     u32 api_index = static_cast<u32>(Settings::values.graphics_api.GetValue());
     if (update) {
         api_index = (api_index + 1) % graphics_apis.size();
+        // Skip past any disabled renderers.
+#ifndef ENABLE_SOFTWARE_RENDERER
+        if (api_index == static_cast<u32>(Settings::GraphicsAPI::Software)) {
+            api_index = (api_index + 1) % graphics_apis.size();
+        }
+#endif
+#ifndef ENABLE_OPENGL
+        if (api_index == static_cast<u32>(Settings::GraphicsAPI::OpenGL)) {
+            api_index = (api_index + 1) % graphics_apis.size();
+        }
+#endif
+#ifndef ENABLE_VULKAN
+        if (api_index == static_cast<u32>(Settings::GraphicsAPI::Vulkan)) {
+            api_index = (api_index + 1) % graphics_apis.size();
+        }
+#endif
         Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(api_index);
     }
 
@@ -3164,8 +3182,11 @@ int main(int argc, char* argv[]) {
     chdir(bin_path.c_str());
 #endif
 
+#ifdef ENABLE_OPENGL
     QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+#endif
+
     QApplication app(argc, argv);
 
     // Qt changes the locale and causes issues in float conversion using std::to_string() when

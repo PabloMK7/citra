@@ -186,10 +186,16 @@ private:
 
     void OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) override;
 
+#ifdef ENABLE_OPENGL
     bool InitializeOpenGL();
-    void InitializeVulkan();
-    void InitializeSoftware();
     bool LoadOpenGL();
+#endif
+#ifdef ENABLE_VULKAN
+    void InitializeVulkan();
+#endif
+#ifdef ENABLE_SOFTWARE_RENDERER
+    void InitializeSoftware();
+#endif
 
     QWidget* child_widget = nullptr;
 

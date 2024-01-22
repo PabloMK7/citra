@@ -45,8 +45,12 @@
 #include "jni/camera/ndk_camera.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/config.h"
+#ifdef ENABLE_OPENGL
 #include "jni/emu_window/emu_window_gl.h"
+#endif
+#ifdef ENABLE_VULKAN
 #include "jni/emu_window/emu_window_vk.h"
+#endif
 #include "jni/game_settings.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
@@ -55,7 +59,7 @@
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 
-#if CITRA_ARCH(arm64)
+#if defined(ENABLE_VULKAN) && CITRA_ARCH(arm64)
 #include <adrenotools/driver.h>
 #endif
 
@@ -142,15 +146,29 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     switch (graphics_api) {
+#ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
         break;
+#endif
+#ifdef ENABLE_VULKAN
     case Settings::GraphicsAPI::Vulkan:
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
         break;
+#endif
     default:
-        LOG_CRITICAL(Frontend, "Unknown graphics API {}, using Vulkan", graphics_api);
+        LOG_CRITICAL(Frontend,
+                     "Unknown or unsupported graphics API {}, falling back to available default",
+                     graphics_api);
+#ifdef ENABLE_OPENGL
+        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
+#elif ENABLE_VULKAN
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
+#else
+// TODO: Add a null renderer backend for this, perhaps.
+#error "At least one renderer must be enabled."
+#endif
+        break;
     }
 
     // Forces a config reload on game boot, if the user changed settings in the UI
@@ -239,7 +257,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 void InitializeGpuDriver(const std::string& hook_lib_dir, const std::string& custom_driver_dir,
                          const std::string& custom_driver_name,
                          const std::string& file_redirect_dir) {
-#if CITRA_ARCH(arm64)
+#if defined(ENABLE_VULKAN) && CITRA_ARCH(arm64)
     void* handle{};
     const char* file_redirect_dir_{};
     int featureFlags{};

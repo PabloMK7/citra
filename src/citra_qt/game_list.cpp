@@ -519,6 +519,7 @@ void GameList::UpdateColumnVisibility() {
     tree_view->setColumnHidden(COLUMN_SIZE, !UISettings::values.show_size_column);
 }
 
+#ifdef ENABLE_OPENGL
 void ForEachOpenGLCacheFile(u64 program_id, auto func) {
     for (const std::string_view cache_type : {"separable", "conventional"}) {
         const std::string path = fmt::format("{}opengl/precompiled/{}/{:016X}.bin",
@@ -528,6 +529,7 @@ void ForEachOpenGLCacheFile(u64 program_id, auto func) {
         func(file);
     }
 }
+#endif
 
 void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QString& name,
                             u64 program_id, u64 extdata_id, Service::FS::MediaType media_type) {
@@ -545,8 +547,10 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     QMenu* shader_menu = context_menu.addMenu(tr("Disk Shader Cache"));
     QAction* open_shader_cache_location = shader_menu->addAction(tr("Open Shader Cache Location"));
     shader_menu->addSeparator();
+#ifdef ENABLE_OPENGL
     QAction* delete_opengl_disk_shader_cache =
         shader_menu->addAction(tr("Delete OpenGL Shader Cache"));
+#endif
 
     QMenu* uninstall_menu = context_menu.addMenu(tr("Uninstall"));
     QAction* uninstall_all = uninstall_menu->addAction(tr("Everything"));
@@ -564,9 +568,11 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     const bool is_application = program_id_high == 0x00040000 || program_id_high == 0x00040002 ||
                                 program_id_high == 0x00040010;
 
+#ifdef ENABLE_OPENGL
     bool opengl_cache_exists = false;
     ForEachOpenGLCacheFile(
         program_id, [&opengl_cache_exists](QFile& file) { opengl_cache_exists |= file.exists(); });
+#endif
 
     std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
     open_save_location->setEnabled(
@@ -603,7 +609,9 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     open_mods_location->setEnabled(is_application);
     dump_romfs->setEnabled(is_application);
 
+#ifdef ENABLE_OPENGL
     delete_opengl_disk_shader_cache->setEnabled(opengl_cache_exists);
+#endif
 
     uninstall_all->setEnabled(is_installed || has_update || has_dlc);
     uninstall_game->setEnabled(is_installed);
@@ -669,9 +677,11 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
             emit OpenFolderRequested(program_id, GameListOpenTarget::SHADER_CACHE);
         }
     });
+#ifdef ENABLE_OPENGL
     connect(delete_opengl_disk_shader_cache, &QAction::triggered, this, [program_id] {
         ForEachOpenGLCacheFile(program_id, [](QFile& file) { file.remove(); });
     });
+#endif
     connect(uninstall_all, &QAction::triggered, this, [=, this] {
         QMessageBox::StandardButton answer = QMessageBox::question(
             this, tr("Citra"),

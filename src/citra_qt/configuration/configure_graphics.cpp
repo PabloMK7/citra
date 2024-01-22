@@ -3,11 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <QColorDialog>
+#include <QStandardItemModel>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_graphics.h"
 #include "common/settings.h"
 #include "ui_configure_graphics.h"
+#ifdef ENABLE_VULKAN
 #include "video_core/renderer_vulkan/vk_instance.h"
+#endif
 
 ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, bool is_powered_on,
                                      QWidget* parent)
@@ -27,12 +30,32 @@ ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, 
     // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
     ui->graphics_api_combo->setCurrentIndex(-1);
 
+    auto graphics_api_combo_model =
+        qobject_cast<QStandardItemModel*>(ui->graphics_api_combo->model());
+#ifndef ENABLE_SOFTWARE_RENDERER
+    const auto software_item =
+        graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::Software));
+    software_item->setFlags(software_item->flags() & ~Qt::ItemIsEnabled);
+#endif
+#ifndef ENABLE_OPENGL
+    const auto opengl_item =
+        graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::OpenGL));
+    opengl_item->setFlags(opengl_item->flags() & ~Qt::ItemIsEnabled);
+#endif
+#ifndef ENABLE_VULKAN
+    const auto vulkan_item =
+        graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::Vulkan));
+    vulkan_item->setFlags(vulkan_item->flags() & ~Qt::ItemIsEnabled);
+#else
     if (physical_devices.empty()) {
-        const u32 index = static_cast<u32>(Settings::GraphicsAPI::Vulkan);
-        ui->graphics_api_combo->removeItem(index);
+        const auto vulkan_item =
+            graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::Vulkan));
+        vulkan_item->setFlags(vulkan_item->flags() & ~Qt::ItemIsEnabled);
+
         ui->physical_device_combo->setVisible(false);
         ui->spirv_shader_gen->setVisible(false);
     }
+#endif
 
     connect(ui->graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int index) {

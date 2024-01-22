@@ -80,6 +80,10 @@ option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 
+CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ON "NOT APPLE" OFF)
+option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
+
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
 CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundling target." ON "NOT ANDROID AND NOT IOS" OFF)
@@ -255,20 +259,22 @@ find_package(tsl-robin-map QUIET)
 # ======================================
 
 if (APPLE)
-    if (NOT USE_SYSTEM_MOLTENVK)
-        download_moltenvk()
-    endif()
-    find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
-    message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
-
     if (NOT IOS)
         # Umbrella framework for everything GUI-related
         find_library(COCOA_LIBRARY Cocoa REQUIRED)
     endif()
-
     find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
     set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
+
+    if (ENABLE_VULKAN)
+        if (NOT USE_SYSTEM_MOLTENVK)
+            download_moltenvk()
+        endif()
+        find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+        message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
+        set(PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} ${MOLTENVK_LIBRARY})
+    endif()
 elseif (WIN32)
     set(PLATFORM_LIBRARIES winmm ws2_32)
     if (MINGW)

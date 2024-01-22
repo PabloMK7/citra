@@ -185,9 +185,14 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
-    util/vk_device_info.cpp
-    util/vk_device_info.h
 )
+
+if (ENABLE_VULKAN)
+    target_sources(citra-qt PRIVATE
+        util/vk_device_info.cpp
+        util/vk_device_info.h
+    )
+endif()
 
 file(GLOB COMPAT_LIST
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc
@@ -300,8 +305,16 @@ endif()
 create_target_directory_groups(citra-qt)
 
 target_link_libraries(citra-qt PRIVATE audio_core citra_common citra_core input_common network video_core)
-target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
-target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads vulkan-headers)
+target_link_libraries(citra-qt PRIVATE Boost::boost nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
+target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+
+if (ENABLE_OPENGL)
+    target_link_libraries(citra-qt PRIVATE glad)
+endif()
+
+if (ENABLE_VULKAN)
+    target_link_libraries(citra-qt PRIVATE vulkan-headers)
+endif()
 
 if (NOT WIN32)
     target_include_directories(citra-qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})

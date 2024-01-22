@@ -13,7 +13,9 @@
 #include "common/logging/backend.h"
 #include "common/settings.h"
 #include "ui_configure_debug.h"
+#ifdef ENABLE_VULKAN
 #include "video_core/renderer_vulkan/vk_instance.h"
+#endif
 
 // The QSlider doesn't have an easy way to set a custom step amount,
 // so we can just convert from the sliders range (0 - 79) to the expected
@@ -36,6 +38,7 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
+#ifdef ENABLE_VULKAN
     connect(ui->toggle_renderer_debug, &QCheckBox::clicked, this, [this](bool checked) {
         if (checked && Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Vulkan) {
             try {
@@ -65,6 +68,7 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
             }
         }
     });
+#endif
 
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);

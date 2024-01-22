@@ -8,24 +8,41 @@ add_executable(citra
     default_ini.h
     emu_window/emu_window_sdl2.cpp
     emu_window/emu_window_sdl2.h
-    emu_window/emu_window_sdl2_gl.cpp
-    emu_window/emu_window_sdl2_gl.h
-    emu_window/emu_window_sdl2_sw.cpp
-    emu_window/emu_window_sdl2_sw.h
-    emu_window/emu_window_sdl2_vk.cpp
-    emu_window/emu_window_sdl2_vk.h
     precompiled_headers.h
     resource.h
 )
 
+if (ENABLE_SOFTWARE_RENDERER)
+    target_sources(citra PRIVATE
+        emu_window/emu_window_sdl2_sw.cpp
+        emu_window/emu_window_sdl2_sw.h
+    )
+endif()
+if (ENABLE_OPENGL)
+    target_sources(citra PRIVATE
+        emu_window/emu_window_sdl2_gl.cpp
+        emu_window/emu_window_sdl2_gl.h
+    )
+endif()
+if (ENABLE_VULKAN)
+    target_sources(citra PRIVATE
+        emu_window/emu_window_sdl2_vk.cpp
+        emu_window/emu_window_sdl2_vk.h
+    )
+endif()
+
 create_target_directory_groups(citra)
 
 target_link_libraries(citra PRIVATE citra_common citra_core input_common network)
-target_link_libraries(citra PRIVATE inih glad)
+target_link_libraries(citra PRIVATE inih)
 if (MSVC)
     target_link_libraries(citra PRIVATE getopt)
 endif()
 target_link_libraries(citra PRIVATE ${PLATFORM_LIBRARIES} SDL2::SDL2 Threads::Threads)
+
+if (ENABLE_OPENGL)
+    target_link_libraries(citra PRIVATE glad)
+endif()
 
 if(UNIX AND NOT APPLE)
     install(TARGETS citra RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

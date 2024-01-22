@@ -26,7 +26,7 @@
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_software/renderer_software.h"
 
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
 #include <glad/glad.h>
 
 #include <QOffscreenSurface>
@@ -137,7 +137,7 @@ void EmuThread::run() {
 #endif
 }
 
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
 static std::unique_ptr<QOpenGLContext> CreateQOpenGLContext(bool gles) {
     QSurfaceFormat format;
     if (gles) {
@@ -258,7 +258,7 @@ public:
     virtual ~RenderWidget() = default;
 };
 
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
 class OpenGLRenderWidget : public RenderWidget {
 public:
     explicit OpenGLRenderWidget(GRenderWindow* parent, Core::System& system_, bool is_secondary)
@@ -305,6 +305,7 @@ private:
 };
 #endif
 
+#ifdef ENABLE_VULKAN
 class VulkanRenderWidget : public RenderWidget {
 public:
     explicit VulkanRenderWidget(GRenderWindow* parent) : RenderWidget(parent) {
@@ -324,7 +325,9 @@ public:
         return nullptr;
     }
 };
+#endif
 
+#ifdef ENABLE_SOFTWARE_RENDERER
 struct SoftwareRenderWidget : public RenderWidget {
     explicit SoftwareRenderWidget(GRenderWindow* parent, Core::System& system_)
         : RenderWidget(parent), system(system_) {}
@@ -377,6 +380,7 @@ struct SoftwareRenderWidget : public RenderWidget {
 private:
     Core::System& system;
 };
+#endif
 
 static Frontend::WindowSystemType GetWindowSystemType() {
     // Determine WSI type based on Qt platform.
@@ -636,16 +640,39 @@ bool GRenderWindow::InitRenderTarget() {
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     switch (graphics_api) {
+#ifdef ENABLE_SOFTWARE_RENDERER
     case Settings::GraphicsAPI::Software:
         InitializeSoftware();
         break;
+#endif
+#ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         if (!InitializeOpenGL() || !LoadOpenGL()) {
             return false;
         }
         break;
+#endif
+#ifdef ENABLE_VULKAN
     case Settings::GraphicsAPI::Vulkan:
         InitializeVulkan();
+        break;
+#endif
+    default:
+        LOG_CRITICAL(Frontend,
+                     "Unknown or unsupported graphics API {}, falling back to available default",
+                     graphics_api);
+#ifdef ENABLE_OPENGL
+        if (!InitializeOpenGL() || !LoadOpenGL()) {
+            return false;
+        }
+#elif ENABLE_VULKAN
+        InitializeVulkan();
+#elif ENABLE_SOFTWARE_RENDERER
+        InitializeSoftware();
+#else
+// TODO: Add a null renderer backend for this, perhaps.
+#error "At least one renderer must be enabled."
+#endif
         break;
     }
 
@@ -700,8 +727,8 @@ void GRenderWindow::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal
     setMinimumSize(minimal_size.first, minimal_size.second);
 }
 
+#ifdef ENABLE_OPENGL
 bool GRenderWindow::InitializeOpenGL() {
-#ifdef HAS_OPENGL
     if (!QOpenGLContext::supportsThreadedOpenGL()) {
         QMessageBox::warning(this, tr("OpenGL not available!"),
                              tr("OpenGL shared contexts are not supported."));
@@ -726,33 +753,13 @@ bool GRenderWindow::InitializeOpenGL() {
     child_widget->windowHandle()->setFormat(format);
 
     return true;
-#else
-    QMessageBox::warning(this, tr("OpenGL not available!"),
-                         tr("Citra has not been compiled with OpenGL support."));
-    return false;
-#endif
 }
 
-void GRenderWindow::InitializeVulkan() {
-    auto child = new VulkanRenderWidget(this);
-    child_widget = child;
-    child_widget->windowHandle()->create();
-    main_context = std::make_unique<DummyContext>();
-}
-
-void GRenderWindow::InitializeSoftware() {
-    child_widget = new SoftwareRenderWidget(this, system);
-    main_context = std::make_unique<DummyContext>();
-}
-
-#ifdef HAS_OPENGL
 static void* GetProcAddressGL(const char* name) {
     return reinterpret_cast<void*>(QOpenGLContext::currentContext()->getProcAddress(name));
 }
-#endif
 
 bool GRenderWindow::LoadOpenGL() {
-#ifdef HAS_OPENGL
     auto context = CreateSharedContext();
     auto scope = context->Acquire();
     const auto gles = context->IsGLES();
@@ -785,12 +792,24 @@ bool GRenderWindow::LoadOpenGL() {
     }
 
     return true;
-#else
-    QMessageBox::warning(this, tr("OpenGL not available!"),
-                         tr("Citra has not been compiled with OpenGL support."));
-    return false;
-#endif
 }
+#endif
+
+#ifdef ENABLE_VULKAN
+void GRenderWindow::InitializeVulkan() {
+    auto child = new VulkanRenderWidget(this);
+    child_widget = child;
+    child_widget->windowHandle()->create();
+    main_context = std::make_unique<DummyContext>();
+}
+#endif
+
+#ifdef ENABLE_SOFTWARE_RENDERER
+void GRenderWindow::InitializeSoftware() {
+    child_widget = new SoftwareRenderWidget(this, system);
+    main_context = std::make_unique<DummyContext>();
+}
+#endif
 
 void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
@@ -805,7 +824,7 @@ void GRenderWindow::showEvent(QShowEvent* event) {
 }
 
 std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() const {
-#ifdef HAS_OPENGL
+#ifdef ENABLE_OPENGL
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     if (graphics_api == Settings::GraphicsAPI::OpenGL) {
         auto gl_context = static_cast<OpenGLSharedContext*>(main_context.get());

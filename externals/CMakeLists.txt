@@ -120,29 +120,6 @@ if (MSVC)
     add_subdirectory(getopt)
 endif()
 
-# Glad
-add_subdirectory(glad)
-
-# glslang
-if(USE_SYSTEM_GLSLANG)
-    find_package(glslang REQUIRED)
-    add_library(glslang INTERFACE)
-    add_library(SPIRV INTERFACE)
-    target_link_libraries(glslang INTERFACE glslang::glslang)
-    target_link_libraries(SPIRV INTERFACE glslang::SPIRV)
-    # System include path is different from submodule include path
-    get_target_property(GLSLANG_PREFIX glslang::SPIRV INTERFACE_INCLUDE_DIRECTORIES)
-    target_include_directories(SPIRV SYSTEM INTERFACE "${GLSLANG_PREFIX}/glslang")
-else()
-    set(SKIP_GLSLANG_INSTALL ON CACHE BOOL "")
-    set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "")
-    set(ENABLE_SPVREMAPPER OFF CACHE BOOL "")
-    set(ENABLE_CTEST OFF CACHE BOOL "")
-    set(ENABLE_HLSL OFF CACHE BOOL "")
-    set(BUILD_EXTERNAL OFF CACHE BOOL "")
-    add_subdirectory(glslang)
-endif()
-
 # inih
 if(USE_SYSTEM_INIH)
     find_package(inih REQUIRED COMPONENTS inih inir)
@@ -196,9 +173,6 @@ if(NOT USE_SYSTEM_SOUNDTOUCH)
     add_subdirectory(soundtouch EXCLUDE_FROM_ALL)
     target_compile_definitions(SoundTouch PUBLIC SOUNDTOUCH_INTEGER_SAMPLES)
 endif()
-
-# sirit
-add_subdirectory(sirit EXCLUDE_FROM_ALL)
 
 # Teakra
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
@@ -371,32 +345,64 @@ if (ENABLE_OPENAL)
     endif()
 endif()
 
-# VMA
-if(USE_SYSTEM_VMA)
-    add_library(vma INTERFACE)
-    find_package(VulkanMemoryAllocator REQUIRED)
-    if(TARGET GPUOpen::VulkanMemoryAllocator)
-        message(STATUS "Found VulkanMemoryAllocator")
-        target_link_libraries(vma INTERFACE GPUOpen::VulkanMemoryAllocator)
-    endif()
-else()
-    add_library(vma INTERFACE)
-    target_include_directories(vma SYSTEM INTERFACE ./vma/include)
+# OpenGL dependencies
+if (ENABLE_OPENGL)
+    # Glad
+    add_subdirectory(glad)
 endif()
 
-# vulkan-headers
-add_library(vulkan-headers INTERFACE)
-if(USE_SYSTEM_VULKAN_HEADERS)
-    find_package(Vulkan REQUIRED)
-    if(TARGET Vulkan::Headers)
-        message(STATUS "Found Vulkan headers")
-        target_link_libraries(vulkan-headers INTERFACE Vulkan::Headers)
+# Vulkan dependencies
+if (ENABLE_VULKAN)
+    # glslang
+    if(USE_SYSTEM_GLSLANG)
+        find_package(glslang REQUIRED)
+        add_library(glslang INTERFACE)
+        add_library(SPIRV INTERFACE)
+        target_link_libraries(glslang INTERFACE glslang::glslang)
+        target_link_libraries(SPIRV INTERFACE glslang::SPIRV)
+        # System include path is different from submodule include path
+        get_target_property(GLSLANG_PREFIX glslang::SPIRV INTERFACE_INCLUDE_DIRECTORIES)
+        target_include_directories(SPIRV SYSTEM INTERFACE "${GLSLANG_PREFIX}/glslang")
+    else()
+        set(SKIP_GLSLANG_INSTALL ON CACHE BOOL "")
+        set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "")
+        set(ENABLE_SPVREMAPPER OFF CACHE BOOL "")
+        set(ENABLE_CTEST OFF CACHE BOOL "")
+        set(ENABLE_HLSL OFF CACHE BOOL "")
+        set(BUILD_EXTERNAL OFF CACHE BOOL "")
+        add_subdirectory(glslang)
     endif()
-else()
-    target_include_directories(vulkan-headers SYSTEM INTERFACE ./vulkan-headers/include)
-endif()
 
-# adrenotools
-if (ANDROID AND "arm64" IN_LIST ARCHITECTURE)
-    add_subdirectory(libadrenotools)
+    # sirit
+    add_subdirectory(sirit EXCLUDE_FROM_ALL)
+
+    # VMA
+    if(USE_SYSTEM_VMA)
+        add_library(vma INTERFACE)
+        find_package(VulkanMemoryAllocator REQUIRED)
+        if(TARGET GPUOpen::VulkanMemoryAllocator)
+            message(STATUS "Found VulkanMemoryAllocator")
+            target_link_libraries(vma INTERFACE GPUOpen::VulkanMemoryAllocator)
+        endif()
+    else()
+        add_library(vma INTERFACE)
+        target_include_directories(vma SYSTEM INTERFACE ./vma/include)
+    endif()
+
+    # vulkan-headers
+    add_library(vulkan-headers INTERFACE)
+    if(USE_SYSTEM_VULKAN_HEADERS)
+        find_package(Vulkan REQUIRED)
+        if(TARGET Vulkan::Headers)
+            message(STATUS "Found Vulkan headers")
+            target_link_libraries(vulkan-headers INTERFACE Vulkan::Headers)
+        endif()
+    else()
+        target_include_directories(vulkan-headers SYSTEM INTERFACE ./vulkan-headers/include)
+    endif()
+
+    # adrenotools
+    if (ANDROID AND "arm64" IN_LIST ARCHITECTURE)
+        add_subdirectory(libadrenotools)
+    endif()
 endif()
