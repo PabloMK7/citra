@@ -1,9 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Auf dieser Software laufen Spiele für die Nintendo 3DS Handheld-Spielekonsole. Keine Spiele sind enthalten.\n\nVor dem Ausführen, legen Sie bitte ihre rechtmäßig erworbenen 3DS-Spieldateien auf dem Gerätespeicher ab.</string>
+    <string name="app_disclaimer">Auf dieser Software laufen Spiele für die Nintendo 3DS Handheld-Spielekonsole. Keine Spiele sind enthalten.\n\nBevor Sie mit der Emulation beginnen können, wählen Sie bitte einen Ordner aus, in dem Citra\'s Benutzerdaten gespeichert werden sollen.\n\nWas ist das:\n<a href='https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android user data and storage</a></string>
     <string name="app_notification_channel_description">Citra 3DS Emulator Benachrichtigungen</string>
     <string name="app_notification_running">Citra läuft</string>
+    <string name="app_game_install_description">Als nächstes müssen Sie einen Spielordner auswählen. Citra zeigt alle 3DS-ROMs im ausgewählten Ordner in der App an. \n\nCIA-ROMs, Updates und DLC müssen separat installiert werden, indem Sie auf das Ordnersymbol klicken und CIA installieren auswählen.</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Einstellungen</string>
+    <string name="home_options">Optionen</string>
+    <string name="home_search">Suche</string>
+    <string name="home_games">Spiele</string>
+    <string name="install_game_content">CIA-Datei installieren</string>
+    <string name="share_log">Log teilen</string>
+    <string name="gpu_driver_manager">GPU-Treiber Verwaltung</string>
+    <string name="install_gpu_driver">GPU-Treiber installieren</string>
+    <string name="driver_already_installed">Treiber bereits installiert</string>
+    <string name="share_log_not_found">Keine Log-Datei gefunden</string>
+    <string name="select_games_folder">Spieleordner auswählen</string>
+    <string name="about">Über</string>
+    <string name="citra_description">Ein open-source 3DS-Emulator</string>
+    <string name="theme_and_color_description">Das Aussehen der App verändern</string>
+    <string name="install_cia_title">CIA Installieren</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">GPU-Treiber auswählen</string>
+    <string name="select_gpu_driver_install">Installieren</string>
+    <string name="select_gpu_driver_default">Standard</string>
+    <string name="select_gpu_driver_install_success">%s wurde installiert</string>
+    <string name="system_gpu_driver">System GPU-Treiber</string>
+    <string name="installing_driver">Treiber wird installiert...</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">In die Zwischenablage kopiert</string>
+    <string name="contributors">Mitwirkende</string>
+    <string name="contributors_description">Gemacht mit \u2764 vom Citra-Team</string>
+    <string name="contributors_link">https://github.com/citra-emu/citra/graphs/contributors</string>
+    <string name="licenses_description">Projekte, die Citra für Android ermöglichen</string>
+    <string name="build">Build</string>
+    <string name="licenses">Lizenzen</string>
+    <string name="support_link">https://discord.gg/FAXfZV9</string>
+    <string name="website_link">https://citra-emu.org/</string>
+    <string name="github_link">https://github.com/citra-emu</string>
+
+    <!-- Setup strings -->
+    <string name="welcome">Willkommen!</string>
+    <string name="step_complete">Abgeschlossen!</string>
+    <string name="games">Spiele</string>
+    <string name="done">Fertig</string>
+    <string name="text_continue">Fortsetzen</string>
+    <string name="add_games">Spiele hinzufügen</string>
+    <string name="notifications">Benachrichtigungen</string>
+    <string name="give_permission">Berechtigung erteilen</string>
+    <string name="camera_permission">Kamera</string>
+    <string name="microphone_permission">Mikrofon</string>
+    <string name="add_games_warning_help">https://citra-emu.org/wiki/dumping-game-cartridges/</string>
+    <string name="warning_help">Hilfe</string>
+    <string name="warning_skip">Überspringen</string>
+    <string name="warning_cancel">Abbrechen</string>
+    <string name="select">Auswählen</string>
+    <string name="cannot_skip_directory_help">https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage</string>
+
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">Spiele suchen und filtern</string>
+    <string name="home_search_games">Spiele suchen</string>
+    <string name="search_recently_played">Kürzlich gespielt</string>
+    <string name="search_recently_added">Kürzlich hinzugefügt</string>
+    <string name="search_installed">Installiert</string>
 
     <!-- Input related strings -->
     <string name="controller_circlepad">Schiebepad</string>
@@ -16,90 +79,135 @@
     <string name="input_binding_description">Machen sie eine Eingabe, um sie an %1$s zu binden.</string>
     <string name="input_binding_description_vertical_axis">Bewegen sie den Joystick nach oben oder unten.</string>
     <string name="input_binding_description_horizontal_axis">Bewegen sie den Joystick nach links oder rechts.</string>
+    <string name="button_home">HOME</string>
     <string name="input_message_analog_only">Diese Eingabe muss an einen Gamepad-Analogstick oder das Steuerkreuz gebunden sein!</string>
     <string name="input_message_button_only">Diese Eingabe muss an einen Gamepad-Knopf gebunden sein!</string>
 
+    <!-- System files strings -->
+    <string name="system_files">Systemdateien</string>
+    <string name="download_system_files">Systemdateien herunterladen</string>
+    <string name="system_type">Systemtyp</string>
+    <string name="download">Download</string>
+    <string name="start">Start</string>
+    <string name="system_type_minimal">Minimal</string>
+    <string name="system_type_new_3ds">New 3DS</string>
+    <string name="downloading_files">Dateien werden heruntergeladen...</string>
+    <string name="downloading_files_description">Bitte nicht die App schließen.</string>
+    <string name="download_failed">Download fehlgeschlagen</string>
+    <string name="download_success">Download abgeschlossen!</string>
+    <string name="download_cancelled">Download abgebrochen</string>
+    <string name="cancelling">Abbrechen...</string>
+    <string name="home_menu">HOME-Menü</string>
+    <string name="home_menu_warning">Systemdatei-Warnung</string>
+    <string name="home_menu_warning_description">Aufgrund der langsamen Zugriffsgeschwindigkeit von Android auf Citras Dateien, kann das Herunterladen mehrerer Versionen von Systemdateien das Laden von Spielen, Speicherständen und der Spieleliste erheblich verlangsamen. Laden Sie nur die Dateien herunter, die Sie benötigen, um Probleme mit den Ladezeiten zu vermeiden.</string>
+
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Knöpfe</string>
-
-    <!-- Premium settings strings -->
-    <string name="design">Theme ändern (Hell, Dunkel)</string>
-    <string name="design_updated">Theme wird beim Verlassen der Einstellungen aktualisiert</string>
+    <string name="button">Knopf</string>
 
     <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT aktivieren</string>
+    <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Benutzt den Just-in-Time (JIT) Compiler für die CPU-Emulation. Wenn aktiviert wird die Spieleleistung stark verbessert.</string>
-    <string name="init_clock">Systemuhrtyp</string>
+    <string name="init_clock">Uhr</string>
     <string name="init_clock_description">Stellen Sie die emulierte 3DS-Uhr so ein, dass sie entweder die Ihres Geräts widerspiegelt oder zu einem simulierten Datum und einer simulierten Uhrzeit startet.</string>
-
     <!-- System settings strings -->
-    <string name="init_time">Überschriebene Startzeit der Systemuhr</string>
+    <string name="username">Nutzername</string>
+    <string name="clock">Uhr</string>
+    <string name="init_time">Zeitverschiebung</string>
     <string name="init_time_description">Falls der \"Systemuhrtyp\" auf \"Simulierte Uhr\" gesetzt ist, ändert dies das Startdatum und die Startzeit.</string>
-    <string name="emulated_region">Emulierte Region</string>
-    <string name="emulated_language">Emulierte Sprache</string>
-
+    <string name="emulated_region">Region</string>
+    <string name="emulated_language">Sprache</string>
+    <string name="birthday">Geburtstag</string>
+    <string name="birthday_month">Monat</string>
+    <string name="birthday_day">Tag</string>
+    <string name="country">Land</string>
+    <string name="play_coins">Spielemünzen</string>
+    <string name="console_id">Konsolen-ID</string>
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
     <string name="outer_right_camera">Außenkamera Rechts</string>
-    <string name="image_source">Bildquelle</string>
+    <string name="image_source">Kamera-Bildquelle</string>
     <string name="image_source_description">Legt die Bildquelle der virtuellen Kamera fest. Sie können eine Bilddatei oder, falls unterstützt, die Kamera das Geräts verwenden.</string>
-    <string name="camera_device">Kameragerät</string>
+    <string name="camera_device">Kamera</string>
     <string name="camera_device_description">Wenn die Einstellung \"Bildquelle\" auf \"Gerätekamera\" eingestellt ist, wird hiermit die zu verwendende Kamera eingestellt.</string>
     <string name="camera_facing_front">Vorderseite</string>
     <string name="camera_facing_back">Rückseite</string>
     <string name="camera_facing_external">Extern</string>
-    <string name="image_flip">Bilddrehung</string>
-
     <!-- Graphics settings strings -->
+    <string name="renderer">Renderer</string>
+    <string name="graphics_api">Grafik API</string>
+    <string name="renderer_debug">Debug-Renderer</string>
     <string name="vsync">V-Sync aktivieren</string>
     <string name="vsync_description">Synchronisiert die Bildrate des Spiels mit der Bildwiederholrate des Geräts.</string>
-    <string name="linear_filtering">Lineare Filterung aktivieren</string>
+    <string name="linear_filtering">Lineare Filterung</string>
     <string name="linear_filtering_description">Aktiviert lineare Filterung, welche die Spieletexturen glättet.</string>
     <string name="texture_filter_name">Texturfilter</string>
     <string name="texture_filter_description">Verbessert die Grafik von Spielen durch das Anwendung eines Texturfilters. Die unterstützten Filter sind Anime4K Ultrafast, Bicubic, ScaleForce und xBRZ freescale.</string>
     <string name="hw_shaders">Aktiviere Hardware Shader</string>
     <string name="hw_shaders_description">Benutzt Hardware, um die 3DS-Shader zu emulieren. Wenn aktiviert, wird die Spieleleistung stark verbessert.</string>
-    <string name="shaders_accurate_mul">Aktiviere genaue Shader-Multiplikation</string>
+    <string name="shaders_accurate_mul">Genaue Multiplikation</string>
     <string name="shaders_accurate_mul_description">Benutzt genauere Multiplikation in Hardware-Shadern, welche einige Grafikbugs fixen kann. Wenn aktiviert, ist die Leistung reduziert.</string>
     <string name="asynchronous_gpu">Asynchrone GPU-Emulation aktivieren</string>
     <string name="asynchronous_gpu_description">Verwendet einen separaten Thread, um die GPU asynchron zu emulieren. Wenn aktiviert, wird die Leistung verbessert.</string>
-    <string name="frame_limit_enable">Geschwindigkeitsbeschränkung aktivieren</string>
     <string name="frame_limit_enable_description">Wenn aktiviert, wird die Emulationsgeschwindigkeit auf einen angegebenen Prozentsatz der normalen Geschwindigkeit begrenzt.</string>
-    <string name="frame_limit_slider">Prozentsatz der Geschwindigkeitsbeschränkung</string>
     <string name="frame_limit_slider_description">Gibt den Prozentsatz zur Begrenzung der Emulationsgeschwindigkeit an. Mit der Voreinstellung von 100% wird die Emulation auf normale Geschwindigkeit begrenzt. Höhere oder niedrigere Werte erhöhen oder verringern die Geschwindigkeitsbeschränkung.</string>
     <string name="internal_resolution">Interne Auflösung</string>
     <string name="internal_resolution_description">Legt die Renderauflösung fest. Eine hohe Auflösung wird die Grafikqualität stark verbessern, aber sich negativ auf die Leistung auswirken und möglicherweise Bugs in einigen Spielen verursachen.</string>
     <string name="performance_warning">Das Ausschalten dieser Einstellung wird die Emulationsleistung erheblich verringern! Für die beste Erfahrung wird empfohlen, diese Einstellung aktiviert zu lassen.</string>
     <string name="debug_warning">Warnung: Das Ändern dieser Einstellungen wird die Emulation verlangsamen</string>
-
-    <!-- Premium strings -->
-    <string name="premium_text">Premium</string>
-    <string name="premium_settings_upsell">Upgraden sie auf Premium und unterstützen sie Citra!</string>
-    <string name="premium_settings_upsell_description">Mit Premium helfen sie den Entwicklern, Citra weiter zu verbessen und erhalten Zugriff auf diese exklusiven Funktionen!</string>
-    <string name="premium_settings_welcome">Willkommen zu Premium.</string>
-    <string name="premium_settings_welcome_description">Vielen Dank für die Unterstützung!</string>
-
+    <string name="stereoscopy">Stereoskopie</string>
+    <string name="render3d">Stereoskopischer 3D-Modus</string>
+    <string name="factor3d">Tiefe</string>
+    <string name="factor3d_description">Gibt den Wert des 3D-Schiebereglers an. Dieser Wert sollte auf mehr als 0 % eingestellt werden, wenn Stereoskopisches 3D aktiviert ist.</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="cardboard_screen_size_description">Skaliert den Bildschirm auf einen Prozentsatz seiner Originalgröße.</string>
+    <string name="cardboard_x_shift">Horizontale Verschiebung</string>
+    <string name="cardboard_x_shift_description">Gibt den Prozentsatz des leeren Platz an, um die Bildschirme horizontal zu verschieben. Positive Werte verschieben die beiden Augen näher zur Mitte, negative Werte verschieben sie weg.</string>
+    <string name="cardboard_y_shift">Vertikale Verschiebung</string>
+    <string name="cardboard_y_shift_description">Gibt den Prozentsatz des leeren Platz an, um die Bildschirme vertikal zu verschieben. Positive Werte verschieben die beiden Augen nach unten, während negative Werte sie nach oben verschieben.</string>
+    <string name="use_shader_jit">Shader JIT</string>
+    <string name="use_disk_shader_cache_description">Reduziere ruckeln, indem generierte Shader auf der Festplatte gespeichert und geladen werden. Es kann nicht verwendet werden, ohne den Hardware-Shader zu aktivieren.</string>
+    <string name="dump_textures">Texturen dumpen</string>
     <!-- Audio settings strings -->
-    <string name="audio_stretch">Audiodehnung aktivieren</string>
+    <string name="audio_volume">Lautstärke</string>
+    <string name="audio_stretch">Audiodehnung</string>
     <string name="audio_stretch_description">Dehnt Audio um Stottern zu reduzieren. Wenn aktiviert, wird die Audiolatenz erhöht und die Leistung leicht verschlechtert.</string>
+    <string name="audio_input_type">Audioeingabegerät</string>
+    <string name="sound_output_mode">Tonausgabemodus</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Zurücksetzen</string>
     <string name="slider_default">Standard</string>
     <string name="ini_saved">Einstellungen gespeichert</string>
     <string name="gameid_saved">Einstellungen gespeichert für %1$s</string>
-    <string name="error_saving">Fehler beim Speicher von %1$s.ini: %2$s</string>
-
-    <!-- Game Grid Screen-->
-    <string name="grid_menu_core_settings">Einstellungen</string>
+    <string name="error_saving">Fehler beim Speichern von %1$s.ini: %2$s</string>
+    <string name="loading">Lädt...</string>
+    <string name="next">Weiter</string>
+    <string name="back">Zurück</string>
+    <string name="learn_more">Mehr erfahren</string>
+    <string name="close">Schließen</string>
+    <string name="reset_to_default">Auf Standard zurücksetzen</string>
+    <string name="option_default">Standard</string>
+    <string name="none">Keine</string>
+    <string name="auto">Auto</string>
+    <string name="off">Aus</string>
+    <string name="install">Installieren</string>
+    <string name="delete">Löschen</string>
+    <string name="reset_all_settings">Alle Einstellungen zurücksetzen?</string>
+    <string name="select_rtc_date">RTC-Datum auswählen</string>
+    <string name="select_rtc_time">RTC-Zeit auswählen</string>
+    <string name="auto_select">Automatisch auswählen</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 
+    <!-- Game Properties -->
+    <string name="properties">Eigenschaften</string>
+    <string name="properties_not_loaded">Die Spiel-Eigenschaften konnten nicht geladen werden.</string>
+
     <!-- Preferences Screen -->
     <string name="preferences_settings">Einstellungen</string>
-    <string name="preferences_premium">Premium</string>
     <string name="preferences_general">Allgemein</string>
     <string name="preferences_system">System</string>
     <string name="preferences_camera">Kamera</string>
@@ -107,12 +215,16 @@
     <string name="preferences_graphics">Grafik</string>
     <string name="preferences_audio">Audio</string>
     <string name="preferences_debug">Debug</string>
+    <string name="preferences_theme">Theme und Farbe</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Das ROM ist verschlüsselt</string>
     <string name="loader_error_invalid_format">Ungültiges ROM-Format</string>
-
+    <string name="loader_error_file_not_found">ROM-Datei existiert nicht</string>
     <!-- Emulation Menu -->
+    <string name="emulation_menu_help">Drücken Sie Zurück, um auf das Menü zuzugreifen.</string>
+    <string name="emulation_save_state">Spielstand speichern</string>
+    <string name="emulation_load_state">Spielstand laden</string>
     <string name="emulation_show_fps">FPS anzeigen</string>
     <string name="emulation_configure_controls">Steuerung konfigurieren</string>
     <string name="emulation_edit_layout">Layout editieren</string>
@@ -120,6 +232,7 @@
     <string name="emulation_toggle_controls">Knöpfe ein-/ausschalten</string>
     <string name="emulation_control_scale">Größe anpassen</string>
     <string name="emulation_open_settings">Einstellungen öffnen</string>
+    <string name="emulation_open_cheats">Öffne Cheats</string>
     <string name="emulation_switch_screen_layout">Querformat-Bildschirmlayout</string>
     <string name="emulation_screen_layout_landscape">Standard</string>
     <string name="emulation_screen_layout_portrait">Hochformat</string>
@@ -135,15 +248,22 @@
     <string name="menu_emulation_amiibo_remove">Entfernen</string>
     <string name="select_amiibo">Amiibo-Datei auswählen</string>
     <string name="amiibo_load_error">Fehler beim Laden der Amiibo</string>
-    <string name="amiibo_load_error_message">Beim Laden der Amiibo-Datei ist ein Fehler aufgetreten. Bitte überprüfen sie, ob die Datei korrekt ist.</string>
-
+    <string name="amiibo_load_error_message">Beim Laden der Amiibo-Datei ist ein Fehler aufgetreten. Bitte überprüfen Sie, ob die Datei korrekt ist.</string>
+    <string name="pause_emulation">Emulation pausieren</string>
+    <string name="resume_emulation">Emulation fortsetzen</string>
     <string name="write_permission_needed">Schreibzugriff auf den externen Speicher muss erlaubt sein, damit der Emulator funktioniert</string>
-    <string name="load_settings">Lade Einstellungen...</string>
+    <string name="load_settings">Einstellungen werden geladen...</string>
 
     <string name="external_storage_not_mounted">Der externe Speicher muss verfügbar sein, um Citra nutzen zu können</string>
 
     <string name="select_dir">Diesen Ordner auswählen</string>
     <string name="empty_gamelist">Keine Dateien wurden gefunden oder kein Spieleordner wurde ausgewählt.</string>
+
+    <string name="do_not_show_this_again">Nicht nochmal anzeigen</string>
+    <string name="move_data">Verschiebe Daten</string>
+    <string name="copy_file_name">Kopiere Datei: %s</string>
+    <string name="savestates">Speicherstände</string>
+    <string name="savestate_warning_message">Warnung: Savestates sind KEIN ersatzt für Speicherstände die im Spiel gemacht wurden und sind nicht gedacht zuverlässig zu sein. \n\nBenutzung auf eigene Gefahr!</string>
 
     <!-- Software Keyboard -->
     <string name="software_keyboard">Software-Tastatur</string>
@@ -152,6 +272,7 @@
     <string name="max_length_exceeded">Text ist zu lang (sollte nicht länger als %d Buchstaben sein)</string>
     <string name="blank_input_not_allowed">Leere Eingabe is nicht erlaubt</string>
     <string name="empty_input_not_allowed">Leere Eingabe is nicht erlaubt</string>
+    <string name="invalid_input">Ungültige Eingabe</string>
 
     <!-- Mii Selector -->
     <string name="mii_selector">Mii-Selektor</string>
@@ -161,4 +282,237 @@
     <string name="camera_select_image">Bild auswählen</string>
     <string name="camera">Kamera</string>
     <string name="camera_permission_needed">Citra muss auf Ihre Kamera zugreifen, um die Kameras der 3DS zu emulieren.\n\nAlternativ können Sie auch die \"Bildquelle\" in den Kameraeinstellungen auf \"Standbild\" setzen.</string>
+
+    <!-- Microphone -->
+    <string name="microphone">Mikrofon</string>
+    <string name="microphone_permission_needed">Citra muss auf Ihr Mikrofon zugreifen, um das Mikrofon des 3DS zu emulieren.\an\Alternativ können Sie auch das „Audioeingabegerät“ in den Audio Einstellungen ändern.</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">Abbrechen</string>
+    <string name="continue_button">Fortfahren</string>
+    <string name="cia_file_not_found">Installation fehlgeschlagen. CIA-Datei wurde nicht gefunden.</string>
+    <string name="system_archive_general">Ein Systemarchiv</string>
+    <string name="fatal_error">Schwerwiegender Fehler</string>
+    <string name="fatal_error_message">Es ist ein schwerwiegender Fehler aufgetreten. Weitere Informationen finden Sie in der Log-Datei.\nDie Fortsetzung der Emulation kann zu Abstürzen und Fehlern führen.</string>
+
+    <!-- Cheats -->
+    <string name="cheats">Cheats</string>
+    <string name="cheats_add">Cheat hinzufügen</string>
+    <string name="cheats_name">Name</string>
+    <string name="cheats_notes">Anmerkungen</string>
+    <string name="cheats_code">Code</string>
+    <string name="cheats_edit">Bearbeiten</string>
+    <string name="cheats_delete">Löschen</string>
+    <string name="cheats_delete_confirmation">Sind Sie sich sicher, dass sie \"%1$s\" löschen wollen?</string>
+    <string name="cheats_error_no_name">Name darf nicht leer sein</string>
+    <string name="cheats_error_no_code_lines">Code darf nicht leer sein</string>
+    <string name="cheats_error_on_line">Fehler in Zeile %1$d</string>
+
+    <string name="cia_install_notification_title">CIA wird installiert</string>
+    <!-- Theme Modes -->
+    <string name="change_theme_mode">Design</string>
+    <string name="theme_mode_light">Hell</string>
+    <string name="theme_mode_dark">Dunkel</string>
+    <string name="material_you">Material You</string>
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">Schwarze Hintergründe</string>
+    <string name="use_black_backgrounds_description">Bei Verwendung des dunklen Designs, schwarze Hintergründe verwenden.</string>
+
+    <!-- Clock types -->
+    <string name="device_clock">Systemuhr</string>
+    <string name="simulated_clock">Simulierte Uhr</string>
+
+    <!-- Region names -->
+    <string name="system_region_jpn">JPN</string>
+    <string name="system_region_usa">USA</string>
+    <string name="system_region_eur">EUR</string>
+    <string name="system_region_aus">AUS</string>
+    <string name="system_region_chn">CHN</string>
+    <string name="system_region_kor">KOR</string>
+    <string name="system_region_twn">TWN</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">Japanisch (日本語)</string>
+    <string name="language_english">Englisch</string>
+    <string name="language_french">Französisch (Français)</string>
+    <string name="language_german">Deutsch (German)</string>
+    <string name="language_italian">Italienisch (Italiano)</string>
+    <string name="language_spanish">Spanisch (Español)</string>
+    <string name="language_simplified_chinese">Vereinfachtes Chinesisch (简体中文)</string>
+    <string name="language_korean">Koreanisch (한국어)</string>
+    <string name="language_dutch">Niederländisch (Nederlands)</string>
+    <string name="language_portuguese">Portugiesisch (Português)</string>
+    <string name="language_russian">Russisch (Русский)</string>
+    <string name="language_traditional_chinese">Traditionelles Chinesisch (正體中文)</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">Horizontal</string>
+    <string name="vertical">Vertikal</string>
+    <string name="reverse">Umgekehrt</string>
+
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
+    <string name="bicubic">Bikubisch</string>
+    <string name="scaleforce">ScaleForce</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">Mono</string>
+    <string name="stereo">Stereo</string>
+    <string name="surround">Surround</string>
+
+    <!-- Countries -->
+    <string name="japan">Japan</string>
+    <string name="anguilla">Anguilla</string>
+    <string name="antigua_and_barbuda">Antigua und Barbuda</string>
+    <string name="argentina">Argentinien</string>
+    <string name="aruba">Aruba</string>
+    <string name="bahamas">Bahamas</string>
+    <string name="barbados">Barbados</string>
+    <string name="belize">Belize</string>
+    <string name="bolivia">Bolivien</string>
+    <string name="brazil">Brasilien</string>
+    <string name="british_virgin_islands">Britische Jungferninseln</string>
+    <string name="canada">Kanada</string>
+    <string name="cayman_islands">Kaimaninseln</string>
+    <string name="chile">Chile</string>
+    <string name="colombia">Kolumbien</string>
+    <string name="costa_rica">Costa Rica</string>
+    <string name="dominica">Dominica</string>
+    <string name="dominican_republic">Dominikanische Republik</string>
+    <string name="ecuador">Ecuador</string>
+    <string name="el_salvador">El Salvador</string>
+    <string name="french_guiana">Französisch-Guayana</string>
+    <string name="grenada">Grenada</string>
+    <string name="guadeloupe">Guadeloupe</string>
+    <string name="guatemala">Guatemala</string>
+    <string name="guyana">Guyana</string>
+    <string name="haiti">Haiti</string>
+    <string name="honduras">Honduras</string>
+    <string name="jamaica">Jamaika</string>
+    <string name="matinique">Martinique</string>
+    <string name="mexico">Mexiko</string>
+    <string name="monsterrat">Montserrat</string>
+    <string name="netherlands_antilles">Niederländische Antillen</string>
+    <string name="nicaragua">Nicaragua</string>
+    <string name="panama">Panama</string>
+    <string name="paraguay">Paraguay</string>
+    <string name="peru">Peru</string>
+    <string name="saint_kittis_and_nevis">Sankt Kitts und Nevis</string>
+    <string name="saint_lucia">Sankt Lucia</string>
+    <string name="saint_vincent_and_the_grenadines">Sankt Vincent und die Grenadinen</string>
+    <string name="suriname">Suriname</string>
+    <string name="trinidad_and_tobago">Trinidad und Tobago</string>
+    <string name="turks_and_caicos_islands">Turks- und Caicosinseln</string>
+    <string name="united_states">Vereinigte Staaten</string>
+    <string name="uruguay">Uruguay</string>
+    <string name="us_virgin_islands">Amerikanische Jungferninseln</string>
+    <string name="venezuela">Venezuela</string>
+    <string name="albania">Albanien</string>
+    <string name="australia">Australien</string>
+    <string name="austria">Österreich</string>
+    <string name="belgium">Belgien</string>
+    <string name="bosnia_and_herzegovnia">Bosnien und Herzegowina</string>
+    <string name="botswana">Botswana</string>
+    <string name="bulgaria">Bulgarien</string>
+    <string name="croatia">Kroatien</string>
+    <string name="cyprus">Zypern</string>
+    <string name="czech_republic">Tschechien</string>
+    <string name="denmark">Dänemark</string>
+    <string name="estonia">Estland</string>
+    <string name="finland">Finnland</string>
+    <string name="france">Frankreich</string>
+    <string name="germany">Deutschland</string>
+    <string name="greece">Griechenland</string>
+    <string name="hungary">Ungarn</string>
+    <string name="iceland">Island</string>
+    <string name="ireland">Irland</string>
+    <string name="italy">Italien</string>
+    <string name="latvia">Lettland</string>
+    <string name="lesotho">Lesotho</string>
+    <string name="liechtenstein">Liechtenstein</string>
+    <string name="lithuania">Litauen</string>
+    <string name="luxembourg">Luxemburg</string>
+    <string name="macedonia">Mazedonien</string>
+    <string name="malta">Malta</string>
+    <string name="montenegro">Montenegro</string>
+    <string name="mozambique">Mosambik</string>
+    <string name="namibia">Namibia</string>
+    <string name="netherlands">Niederlande</string>
+    <string name="new_zealand">Neuseeland</string>
+    <string name="norway">Norwegen</string>
+    <string name="poland">Polen</string>
+    <string name="portugal">Portugal</string>
+    <string name="romania">Rumänien</string>
+    <string name="russia">Russland</string>
+    <string name="serbia">Serbien</string>
+    <string name="slovakia">Slowakei</string>
+    <string name="slovenia">Slowenien</string>
+    <string name="south_africa">Südafrika</string>
+    <string name="spain">Spanien</string>
+    <string name="swaziland">Swasiland</string>
+    <string name="sweden">Schweden</string>
+    <string name="switzerland">Schweiz</string>
+    <string name="turkey">Türkei</string>
+    <string name="united_kingdom">Vereinigtes Königreich</string>
+    <string name="zambia">Sambia</string>
+    <string name="zimbabwe">Simbabwe</string>
+    <string name="azerbaijan">Aserbaidschan</string>
+    <string name="mauritania">Mauritanien</string>
+    <string name="mali">Mali</string>
+    <string name="niger">Niger</string>
+    <string name="chad">Chad</string>
+    <string name="sudan">Sudan</string>
+    <string name="eritrea">Eritrea</string>
+    <string name="djibouti">Dschibuti</string>
+    <string name="somalia">Somalia</string>
+    <string name="andorra">Andorra</string>
+    <string name="gibraltar">Gibraltar</string>
+    <string name="guernsey">Guernsey</string>
+    <string name="isle_of_man">Isle of Man</string>
+    <string name="jersey">Jersey</string>
+    <string name="monaco">Monaco</string>
+    <string name="taiwan">Taiwan</string>
+    <string name="south_korea">Südkorea</string>
+    <string name="hong_kong">Hongkong</string>
+    <string name="macau">Macau</string>
+    <string name="indonesia">Indonesien</string>
+    <string name="singapore">Singapur</string>
+    <string name="thailand">Thailand</string>
+    <string name="philippines">Philippinen</string>
+    <string name="malaysia">Malaysia</string>
+    <string name="china">China</string>
+    <string name="united_arab_emirates">Vereinigte Arabische Emirate</string>
+    <string name="india">Indien</string>
+    <string name="egypt">Ägypten</string>
+    <string name="oman">Oman</string>
+    <string name="qatar">Katar</string>
+    <string name="kuwait">Kuwait</string>
+    <string name="saudi_arabia">Saudi-Arabien</string>
+    <string name="syria">Syrien</string>
+    <string name="bahrain">Bahrain</string>
+    <string name="jordan">Jordanien</string>
+    <string name="san_marino">San Marino</string>
+    <string name="vatican_city">Vatikanstadt</string>
+    <string name="bermuda">Bermuda</string>
+
+    <!-- Months -->
+    <string name="january">Januar</string>
+    <string name="february">Februar</string>
+    <string name="march">März</string>
+    <string name="april">April</string>
+    <string name="may">Mai</string>
+    <string name="june">Juni</string>
+    <string name="july">Juli</string>
+    <string name="august">August</string>
+    <string name="september">September</string>
+    <string name="october">Oktober</string>
+    <string name="november">November</string>
+    <string name="december">Dezember</string>
+
 </resources>

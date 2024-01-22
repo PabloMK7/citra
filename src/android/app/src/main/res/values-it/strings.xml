@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Questo software avvierà giochi per la console portatile Nintendo 3DS. Non è incluso alcun gioco.\n\nPrima di avviarlo, si prega di inserire i file dei giochi 3DS legalmente ottenuti nella memoria del tuo dispositivo.</string>
+    <string name="app_disclaimer">Questo software permette di eseguire videogiochi rilasciati per la console portatile Nintendo 3DS. Non è incluso nessun titolo.\n\n Prima di poter iniziare il processo di emulazione bisogna scegliere una cartella nella memoria interna che conterrà i dati utente.\n\n Spiegazione:\n<a href='https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - User Data e Memoria Intena</a></string>
     <string name="app_notification_channel_description">Notifiche dell\'emulatore 3DS Citra</string>
-    <string name="app_notification_running">Citra è in esecuzione</string>
+    <string name="app_notification_running">Citra è in Esecuzione</string>
+    <string name="app_game_install_description">Ora, seleziona una Cartella dei giochi. Citra visualizzerà tutte le ROM per il 3DS nella cartella nell\'app.\n\n Le rom Cia, glki aggiornamenti e i DLC dovranno essere installati separatamente toccando l\'icona cartella e selezionando \"Installa CIA\".</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Impostazioni</string>
+    <string name="install_cia_title">Installa CIA</string>
 
     <!-- Input related strings -->
     <string name="controller_circlepad">Pad Scorrevole</string>
@@ -21,85 +26,106 @@
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Pulsanti</string>
-
-    <!-- Premium settings strings -->
-    <string name="design">Cambia Tema (Chiaro, Scuro)</string>
-    <string name="design_updated">Il tema verrà aggiornato all\'uscita dalle Impostazioni</string>
-
     <!-- Core settings strings -->
-    <string name="cpu_jit">Abilita CPU JIT</string>
+    <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Utilizza il compilatore Just-in-Time (JIT) per l\'emulazione della CPU. Se abilitato, le prestazioni di gioco miglioreranno significativamente.</string>
-    <string name="init_clock">Tipo di orologio di sistema</string>
-    <string name="init_clock_description">Imposta l\'orologio emulato del 3DS o per rispecchiare l\'orario del tuo dispositivo o per configurare una data e ora in particolare.</string>
-
-    <!-- System settings strings -->
-    <string name="init_time">Sovrascrittura dell\'orario iniziale dell\'orologio di sistema</string>
-    <string name="init_time_description">Se \"Tipo di orologio di sistema\" è impostato su \"Orologio simulato\", da qui puoi modificare la data e l\'ora di gioco.</string>
-    <string name="emulated_region">Regione emulata</string>
-    <string name="emulated_language">Lingua emulata</string>
+    <string name="init_clock">Orologio</string>
+    <string name="init_clock_description">Scegli se l\'orologio di sistema del 3DS emulato dovrà rispecchiare l\'orario del tuo dispositivo o se dovrà indicare una data e ora in particolare.</string>
+    <string name="clock">Orologi</string>
+    <string name="init_time">Offset Orario</string>
+    <string name="init_time_description">Se l\'orologio è impostato su \"Orologio Simulato\", verranno cambiati le date e gli orari prefissati.</string>
+    <string name="emulated_region">Regione</string>
+    <string name="emulated_language">Lingua</string>
+    <string name="plugin_loader">Loader Plugin 3GX</string>
+    <string name="plugin_loader_description">Carica i plugins 3GX dalla scheda SD emulata, se disponibile.</string>
+    <string name="allow_plugin_loader">Permetti ai Giochi di cambiare lo stato del Loader.</string>
+    <string name="allow_plugin_loader_description">Permetti alle app homebrew di abilitare il plugin Loader anche quando è disabilitato</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Fotocamera Interna</string>
     <string name="outer_left_camera">Fotocamera Esterna di Sinistra</string>
     <string name="outer_right_camera">Fotocamera Esterna di Destra</string>
-    <string name="image_source">Immagine Sorgente</string>
+    <string name="image_source">Sorgente Fotocamera</string>
     <string name="image_source_description">Imposta l\'immagine sorgente della fotocamera virtuale. Puoi utilizzare un file immagine, oppure la fotocamera del dispositivo quando supportato.</string>
-    <string name="camera_device">Fotocamera del Dispositivo</string>
-    <string name="camera_device_description">Se \"Immagine Sorgente\" è impostato su \"Fotocamera del Dispositivo\", questo utilizzerà la fotocamera del dispositivo.</string>
+    <string name="camera_device">Fotocamera</string>
+    <string name="camera_device_description">Se \"Immagine Sorgente\" è impostato su \"Fotocamera del Dispositivo\", da qui scegli quale fotocamera utilizzare.</string>
     <string name="camera_facing_front">Fronte</string>
     <string name="camera_facing_back">Retro</string>
-    <string name="camera_facing_external">Esterno</string>
-    <string name="image_flip">Ruota Immagine</string>
+    <string name="camera_facing_external">Esterna</string>
+    <string name="image_flip">Capovolgi</string>
 
     <!-- Graphics settings strings -->
+    <string name="renderer">Renderer</string>
+    <string name="graphics_api">API grafiche</string>
+    <string name="spirv_shader_gen">Abilita la generazione di shader SPIR-V</string>
+    <string name="spirv_shader_gen_description">Crea le fragments shader usate per emulare PICA tramite SPIR-V, invece di GLSL</string>
+    <string name="async_shaders">Abilita la compilazione asincrona delle shader</string>
+    <string name="async_shaders_description">Compila le shader in background per ridurre lo stuttering durante il gameplay. Quando abilitato, potrebbero verificarsi dei glitch grafici.</string>
+    <string name="renderer_debug">Renderer di Debug</string>
+    <string name="renderer_debug_description">Logga informazioni di debug riguardante la grafica. Se abilitato, le performance del software emulato diminuiranno drasticamente</string>
     <string name="vsync">Abilita V-Sync</string>
     <string name="vsync_description">Sincronizza il frame rate dei giochi con il refresh rate del tuo dispositivo.</string>
-    <string name="linear_filtering">Abilita filtro lineare</string>
+    <string name="linear_filtering">Filtering Lineare</string>
     <string name="linear_filtering_description">Abilita il filtro lineare, che fa sembrare più smussata la grafica dei giochi.</string>
     <string name="texture_filter_name">Filtro Texture</string>
     <string name="texture_filter_description">Migliora la grafica dei giochi applicando un filtro alle texture. I filtri supportati sono Anime4k Ultrafast, Bicubic, ScaleForce, e xBRZ freescale.</string>
-    <string name="hw_shaders">Abilita shader hardware</string>
+    <string name="hw_shaders">Abilita le Shader Hardware</string>
     <string name="hw_shaders_description">Utilizza l\'hardware per emulare gli shader del 3DS. Se abilitato, le prestazioni dei giochi miglioreranno significativamente.</string>
-    <string name="shaders_accurate_mul">Abilita moltiplicazione shader accurata</string>
+    <string name="shaders_accurate_mul">Moltiplicazione Accurata</string>
     <string name="shaders_accurate_mul_description">Utilizza una moltiplicazione più accurata degli shader hardware, che potrebbe correggere alcuni bug grafici. Se abilitato, le prestazioni saranno ridotte.</string>
     <string name="asynchronous_gpu">Abilita emulazione GPU asincrona</string>
     <string name="asynchronous_gpu_description">Utilizza un thread separato per emulare la GPU in differita. Se abilitato, le prestazioni miglioreranno.</string>
-    <string name="frame_limit_enable">Abilita limite velocità</string>
+    <string name="frame_limit_enable">Limita Velocità</string>
     <string name="frame_limit_enable_description">Se abilitato, la velocità d\'emulazione sarà limitata ad una percentuale specifica di velocità normale.</string>
-    <string name="frame_limit_slider">Percentuale limite velocità</string>
+    <string name="frame_limit_slider">Limita Velocità tramite Percentuale</string>
     <string name="frame_limit_slider_description">Specifica a quale percentuale limitare la velocità d\'emulazione. Utilizzando l\'impostazione predefinita di 100% l\'emulazione sarà limitata alla velocità normale. Valori superiori o inferiori aumenteranno o diminuiranno il limite di velocità.</string>
-    <string name="internal_resolution">Risoluzione interna</string>
+    <string name="internal_resolution">Risoluzione Interna</string>
     <string name="internal_resolution_description">Specifica a quale risoluzione renderizzare. Un\'alta risoluzione migliorerà di molto la qualità visiva ma risulta anche essere piuttosto pesante in termini di prestazioni e potrebbe causare glitch in alcuni giochi.</string>
     <string name="performance_warning">Disabilitare questa impostazione riducerà significativamente le performance dell\'emulazione! Per un\'esperienza migliore, è consigliato lasciare questa impostazione abilitata.</string>
     <string name="debug_warning">Attenzione: Modificare queste impostazioni rallenterà l\'emulazione</string>
+    <string name="stereoscopy">Stereoscopia</string>
+    <string name="render3d">Modalità Stereoscopia 3D</string>
+    <string name="factor3d">Profondità</string>
+    <string name="factor3d_description">Specifica il valore del regolatore di profindità 3D. Dovrebbe avere valore maggiore di 0% quando il 3D stereoscopico è abilitato.</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="cardboard_screen_size">Grandezza Cardboard</string>
+    <string name="cardboard_screen_size_description">Scala lo schermo ad una percentuale fissata della sua grandezza originale</string>
+    <string name="cardboard_x_shift">Spostamento in Orizzontale</string>
+    <string name="cardboard_x_shift_description">Specifica la percentuale dello schermo che contiene uno spazio vuoto per shiftare lo schermo orizzontalmente. Valori positivi muoveranno i due occhi al centro dello schermo, mentre i negativi faranno il contrario</string>
+    <string name="cardboard_y_shift">Spostamento Verticale</string>
+    <string name="cardboard_y_shift_description">Specifica la percentuale dello schermo che contiene uno spazio vuoto per spostare lo schermo in verticale. Valori positivi muoveranno alla parte bassa dello schermo, mentre i negativi faranno il contrario.</string>
+    <string name="use_shader_jit">Shader JIT</string>
+    <string name="use_disk_shader_cache">Shader Cache su Disco</string>
+    <string name="use_disk_shader_cache_description">Riduce lo stuttering salvando e caricando le shader generate sul disco principale. Non può essere usato senza aver prima attivato \"Abilita Shader Hardware\"</string>
+    <string name="utility">Utilità</string>
+    <string name="dump_textures">Estrai Textures</string>
+    <string name="dump_textures_description">Le textures vengono estratte in dump/textures/[ID Gioco]/.</string>
+    <string name="custom_textures">Textures Personalizzate</string>
+    <string name="custom_textures_description">Le texture vengono caricate da load/textures/[ID Gioco]/.</string>
+    <string name="preload_textures">Precaricamento delle Textures Personalizzate</string>
+    <string name="preload_textures_description">Carica tutte le texture personalizzate nella memoria RAM del dispositivo. Potrebbe comportare un uso eccessivamente alto della memoria.</string>
+    <string name="async_custom_loading">Caricamento delle Textures Asincrono</string>
+    <string name="async_custom_loading_description">Carica le texture personalizzate in modo asincrono e in background. Riduce lo stutter.</string>
 
-    <!-- Premium strings -->
-    <string name="premium_text">Premium</string>
-    <string name="premium_settings_upsell">Passa a Premium e supporta Citra!</string>
-    <string name="premium_settings_upsell_description">Con la versione Premium, supporterai gli sviluppatori per continuare a migliorare Citra, e potrai accedere a queste funzionalità esclusive! </string>
-    <string name="premium_settings_welcome">Benvenuto in Premium.</string>
-    <string name="premium_settings_welcome_description">Grazie per il supporto!</string>
-
-    <!-- Audio settings strings -->
-    <string name="audio_stretch">Abilita allungamento dell\'audio</string>
+    <string name="audio_stretch">Allungamento Audio</string>
     <string name="audio_stretch_description">Allunga l\'audio per ridurre lo stuttering. Se abilitato, aumenta la latenza dell\'audio e riduce lievemente le prestazioni.</string>
-
+    <string name="audio_input_type">Microfono</string>
     <!-- Miscellaneous -->
     <string name="clear">Ripristina</string>
     <string name="slider_default">Default</string>
     <string name="ini_saved">Impostazioni salvate</string>
     <string name="gameid_saved">Impostazioni salvate per %1$s</string>
     <string name="error_saving">Errore di salvataggio %1$s.ini: %2$s</string>
-
-    <!-- Game Grid Screen-->
-    <string name="grid_menu_core_settings">Impostazioni</string>
-
+    <string name="loading">Caricamento...</string>
     <!-- Add Directory Screen-->
-    <string name="select_game_folder">Seleziona Cartella di Gioco</string>
+    <string name="select_game_folder">Seleziona cartella dei giochi</string>
+
+    <!-- Game Properties -->
+    <string name="properties">Propietà</string>
+    <string name="properties_not_loaded">Impossibile caricare le proprietà di questo gioco.</string>
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Impostazioni</string>
-    <string name="preferences_premium">Premium</string>
     <string name="preferences_general">Generale</string>
     <string name="preferences_system">Sistema</string>
     <string name="preferences_camera">Fotocamera</string>
@@ -107,43 +133,53 @@
     <string name="preferences_graphics">Grafica</string>
     <string name="preferences_audio">Audio</string>
     <string name="preferences_debug">Debug</string>
-
     <!-- ROM loading errors -->
-    <string name="loader_error_encrypted">La ROM è criptata</string>
+    <string name="loader_error_encrypted">La tua ROM è Criptata!</string>
     <string name="loader_error_invalid_format">Formato ROM non valido</string>
-
     <!-- Emulation Menu -->
+    <string name="emulation_menu_help">Premi Indietro per accedere al menù</string>
+    <string name="emulation_save_state">Salva Stato</string>
+    <string name="emulation_load_state">Carica Stato</string>
+    <string name="emulation_empty_state_slot">Slot %1$d</string>
+    <string name="emulation_occupied_state_slot">Slot %1$d-%2$tF%2$tR</string>
     <string name="emulation_show_fps">Mostra FPS</string>
     <string name="emulation_configure_controls">Configura Controlli</string>
     <string name="emulation_edit_layout">Modifica Disposizione</string>
     <string name="emulation_done">Fatto</string>
     <string name="emulation_toggle_controls">Attiva Controlli</string>
     <string name="emulation_control_scale">Regola la Dimensione</string>
+    <string name="emulation_control_joystick_rel_center">Centro dello Stick Relativo</string>
+    <string name="emulation_control_dpad_slide_enable">Trascinamento del D-Pad</string>
     <string name="emulation_open_settings">Apri Impostazioni</string>
-    <string name="emulation_switch_screen_layout">Disposizione Schermo Panorama</string>
+    <string name="emulation_open_cheats">Apri Trucchi</string>
+    <string name="emulation_switch_screen_layout">Disposizione Schermo Orizzontale</string>
     <string name="emulation_screen_layout_landscape">Default</string>
-    <string name="emulation_screen_layout_portrait">Ritratto</string>
+    <string name="emulation_screen_layout_portrait">Verticale</string>
     <string name="emulation_screen_layout_single">Schermo singolo</string>
     <string name="emulation_screen_layout_sidebyside">Affiancati</string>
     <string name="emulation_swap_screens">Inverti Schermi</string>
     <string name="emulation_touch_overlay_reset">Ripristina Disposizione</string>
-    <string name="emulation_show_overlay">Mostra Disposizione</string>
+    <string name="emulation_show_overlay">Mostra Controlli di gioco</string>
     <string name="emulation_close_game">Chiudi il Gioco</string>
     <string name="emulation_close_game_message">Sei sicuro di voler chiudere il gioco corrente?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Carica</string>
     <string name="menu_emulation_amiibo_remove">Rimuovi</string>
-    <string name="select_amiibo">Seleziona file Amiibo</string>
-    <string name="amiibo_load_error">Errore di caricamento Amiibo</string>
+    <string name="select_amiibo">Seleziona il file contenente il tuo Amiibo.</string>
+    <string name="amiibo_load_error">Impossibile caricare l\'Amiibo</string>
     <string name="amiibo_load_error_message">Durante il caricamento di un file Amiibo, si è verificato un errore. Controlla che il file sia corretto.</string>
-
     <string name="write_permission_needed">L\'emulatore ha bisogno dei permessi per l\'archiviazione dei dati su memoria esterna per funzionare correttamente</string>
-    <string name="load_settings">Caricamento Impostazioni...</string>
+    <string name="load_settings">Caricando le Impostazioni...</string>
 
     <string name="external_storage_not_mounted">C\'è bisogno di una memoria esterna disponibile per poter utilizzare Citra</string>
 
-    <string name="select_dir">Seleziona Questa Cartella</string>
+    <string name="select_dir">Seleziona questa cartella</string>
     <string name="empty_gamelist">Non è stato trovato alcun file o non è ancora stata selezionata una cartella di gioco.</string>
+
+    <string name="do_not_show_this_again">Non mostrare più</string>
+    <string name="move_data">Muovi Dati</string>
+    <string name="copy_file_name">Copia file: %s</string>
+    <string name="savestate_warning_message">ATTENZIONE! Salvare lo stato di un gioco in esecuzione NON È un SOSTITUTO per i salvataggi IN-GAME.\n\nUsa i savestates a tuo RISCHIO e PERICOLO.</string>
 
     <!-- Software Keyboard -->
     <string name="software_keyboard">Tastiera Software</string>
@@ -152,7 +188,6 @@
     <string name="max_length_exceeded">Il testo è troppo lungo (non deve essere più lungo di %d caratteri)</string>
     <string name="blank_input_not_allowed">Non è consentito lasciarlo vuoto</string>
     <string name="empty_input_not_allowed">Non è consentito lasciarlo vuoto</string>
-
     <!-- Mii Selector -->
     <string name="mii_selector">Selettore Mii</string>
     <string name="standard_mii">Mii Standard</string>
@@ -161,4 +196,54 @@
     <string name="camera_select_image">Seleziona Immagine</string>
     <string name="camera">Fotocamera</string>
     <string name="camera_permission_needed">Citra ha bisogno dell\'accesso alla fotocamera per emulare quella del 3DS.\n\nIn alternativa, puoi impostare \"Immagine Sorgente\" su \"Immagine Fissa\" in Impostazioni Fotocamera.</string>
-</resources>
+
+    <!-- Microphone -->
+    <string name="microphone">Microfono</string>
+    <string name="microphone_permission_needed">Citra ha bisogno dell\'accesso al microfono del tuo dispositivo per emulare il microfono del 3DS.\n\nIn alternativa, puoi anche cambiare il \"Microfono\" nelle impostazioni Audio.</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">Annulla</string>
+    <string name="continue_button">Continua</string>
+    <string name="system_archive_not_found">Archivio di Sistema Non Trovato</string>
+    <string name="system_archive_not_found_message">%s è mancante. Fai il dump del tuo archivio di sistema.\nProseguire con l\'emulazione potrebbe causare crash e bugs</string>
+    <string name="cia_file_not_found">Installazione Fallita. Impossibile trovare il file .CIA specificato.</string>
+    <string name="system_archive_general">Archivio di Sistema</string>
+    <string name="save_load_error">Errore nel Salvataggio/Caricamento</string>
+    <string name="fatal_error">Errore Fatale</string>
+    <string name="fatal_error_message">Consulta il log per i dettagli.\nContinuare con l\'emulazione potrebbe causare un crash.</string>
+
+    <!-- Disk shader cache -->
+    <string name="preparing_shaders">Preparando le Shaders</string>
+    <string name="building_shaders">Costruisco le Shaders</string>
+
+    <!-- Cheats -->
+    <string name="cheats">Trucchi</string>
+    <string name="cheats_add">Aggiungi Trucco</string>
+    <string name="cheats_name">Nome</string>
+    <string name="cheats_notes">Note</string>
+    <string name="cheats_code">Codice</string>
+    <string name="cheats_edit">Modifica</string>
+    <string name="cheats_delete">Elimina</string>
+    <string name="cheats_delete_confirmation">Sei sicuro di voler eliminare \"%1$s\"?</string>
+    <string name="cheats_error_no_name">Il nome non può essere vuoto!</string>
+    <string name="cheats_error_no_code_lines">Il codice non può essere vuoto!</string>
+    <string name="cheats_error_on_line">Errore sulla linea %1$d</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="one">Installando %d file. Guarda le notifiche per maggiori dettagli.</item>
+        <item quantity="many">Installando %dfiles. Guarda le notifiche per maggiori dettagli.</item>
+        <item quantity="other">Installando %d files. Guarda le notifiche per maggiori dettagli.</item>
+    </plurals>
+    <string name="cia_install_notification_channel_description">Notifiche di Citra durante l\'installazione di un pacchetto CIA.</string>
+    <string name="cia_install_notification_title">Installando il CIA</string>
+    <string name="cia_install_notification_installing">Installando %s(%d/%d)</string>
+    <string name="cia_install_notification_success_title">CIA installato con successo</string>
+    <string name="cia_install_notification_error_title">Errore nell\'installazione del file CIA.</string>
+    <string name="cia_install_success">\"%s\" è stato installato con successo</string>
+    <string name="cia_install_error_aborted">L\'installazione di \"%s\" è stata annullata.\n Consulta i log per maggiori dettagli</string>
+    <string name="cia_install_error_invalid">\"%s\" non è un CIA valido</string>
+    <string name="cia_install_error_encrypted">\"%s\" deve essere decriptato prima dell\'utilizzo con Citra.\nHai Bisogno di un 3DS.</string>
+    <string name="cia_install_error_unknown">Errore Sconosciuto durante l\'installazione di \"%s\".\n Consulta i log per maggiori dettagli</string>
+
+    </resources>

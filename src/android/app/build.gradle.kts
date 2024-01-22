@@ -40,6 +40,10 @@ android {
         jvmTarget = "17"
     }
 
+    androidResources {
+        generateLocaleConfig = true
+    }
+
     packaging {
         // This is necessary for libadrenotools custom driver loading
         jniLibs.useLegacyPackaging = true
