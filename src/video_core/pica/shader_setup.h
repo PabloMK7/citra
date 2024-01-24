@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <optional>
 #include "common/vector_math.h"
 #include "video_core/pica/packed_attribute.h"
 #include "video_core/pica_types.h"
@@ -58,7 +59,7 @@ public:
 
     void WriteUniformIntReg(u32 index, const Common::Vec4<u8> values);
 
-    void WriteUniformFloatReg(ShaderRegs& config, u32 value);
+    std::optional<u32> WriteUniformFloatReg(ShaderRegs& config, u32 value);
 
     u64 GetProgramCodeHash();
 
