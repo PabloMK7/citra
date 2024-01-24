@@ -35,7 +35,7 @@ PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> 
                                                                                    gs_unit,
                                                                                    gs_setup},
       shader_engine{CreateEngine(Settings::values.use_shader_jit.GetValue())} {
-    SetFramebufferDefaults();
+    InitializeRegs();
 
     const auto submit_vertex = [this](const AttributeBuffer& buffer) {
         const auto add_triangle = [this](const OutputVertex& v0, const OutputVertex& v1,
@@ -54,7 +54,7 @@ PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> 
 
 PicaCore::~PicaCore() = default;
 
-void PicaCore::SetFramebufferDefaults() {
+void PicaCore::InitializeRegs() {
     auto& framebuffer_top = regs.framebuffer_config[0];
     auto& framebuffer_sub = regs.framebuffer_config[1];
 
@@ -77,6 +77,11 @@ void PicaCore::SetFramebufferDefaults() {
     framebuffer_sub.stride = 3 * 240;
     framebuffer_sub.color_format.Assign(PixelFormat::RGB8);
     framebuffer_sub.active_fb = 0;
+
+    // Tales of Abyss expects this register to have the following default values.
+    auto& gs = regs.internal.gs;
+    gs.max_input_attribute_index.Assign(1);
+    gs.shader_mode.Assign(ShaderRegs::ShaderMode::VS);
 }
 
 void PicaCore::BindRasterizer(VideoCore::RasterizerInterface* rasterizer) {
@@ -253,6 +258,13 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
         }
         break;
     }
+
+    case PICA_REG_INDEX(vs.output_mask):
+        if (!regs.internal.pipeline.gs_unit_exclusive_configuration &&
+            regs.internal.pipeline.use_gs == PipelineRegs::UseGS::No) {
+            regs.internal.gs.output_mask.Assign(value);
+        }
+        break;
 
     case PICA_REG_INDEX(vs.bool_uniforms):
         vs_setup.WriteUniformBoolReg(regs.internal.vs.bool_uniforms.Value());

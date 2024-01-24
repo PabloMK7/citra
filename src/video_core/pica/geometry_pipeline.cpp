@@ -337,7 +337,6 @@ void GeometryPipeline::Reconfigure() {
     // The following assumes that when geometry shader is in use, the shader unit 3 is configured as
     // a geometry shader unit.
     // TODO: what happens if this is not true?
-    ASSERT(regs.pipeline.gs_unit_exclusive_configuration == 1);
     ASSERT(regs.gs.shader_mode == ShaderRegs::ShaderMode::GS);
     ASSERT(regs.pipeline.use_gs == PipelineRegs::UseGS::Yes);
 

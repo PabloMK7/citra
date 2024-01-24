@@ -35,6 +35,7 @@ struct ShaderRegs {
 
     union {
         // Number of input attributes to shader unit - 1
+        u32 input_buffer_config;
         BitField<0, 4, u32> max_input_attribute_index;
         BitField<8, 8, u32> input_to_uniform;
         BitField<24, 8, ShaderMode> shader_mode;

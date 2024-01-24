@@ -341,8 +341,8 @@ static constexpr void MortonCopy(u32 width, u32 height, u32 start_offset, u32 en
  */
 template <bool decode, PixelFormat format, bool converted = false>
 static constexpr void LinearCopy(std::span<u8> src_buffer, std::span<u8> dst_buffer) {
-    const std::size_t src_size = src_buffer.size();
-    const std::size_t dst_size = dst_buffer.size();
+    std::size_t src_size = src_buffer.size();
+    std::size_t dst_size = dst_buffer.size();
 
     if constexpr (converted) {
         constexpr u32 encoded_bytes_per_pixel = GetFormatBpp(format) / 8;
@@ -351,6 +351,9 @@ static constexpr void LinearCopy(std::span<u8> src_buffer, std::span<u8> dst_buf
             decode ? encoded_bytes_per_pixel : decoded_bytes_per_pixel;
         constexpr u32 dst_bytes_per_pixel =
             decode ? decoded_bytes_per_pixel : encoded_bytes_per_pixel;
+
+        src_size = Common::AlignDown(src_size, src_bytes_per_pixel);
+        dst_size = Common::AlignDown(dst_size, dst_bytes_per_pixel);
 
         for (std::size_t src_index = 0, dst_index = 0; src_index < src_size && dst_index < dst_size;
              src_index += src_bytes_per_pixel, dst_index += dst_bytes_per_pixel) {

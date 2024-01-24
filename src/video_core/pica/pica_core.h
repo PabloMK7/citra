@@ -39,7 +39,7 @@ public:
     void ProcessCmdList(PAddr list, u32 size);
 
 private:
-    void SetFramebufferDefaults();
+    void InitializeRegs();
 
     void WriteInternalReg(u32 id, u32 value, u32 mask);
 
