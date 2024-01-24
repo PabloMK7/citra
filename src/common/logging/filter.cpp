@@ -115,6 +115,7 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     SUB(Service, Y2R)                                                                              \
     SUB(Service, PS)                                                                               \
     SUB(Service, PLGLDR)                                                                           \
+    SUB(Service, NEWS)                                                                             \
     CLS(HW)                                                                                        \
     SUB(HW, Memory)                                                                                \
     SUB(HW, LCD)                                                                                   \

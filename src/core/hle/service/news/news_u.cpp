@@ -9,10 +9,10 @@ SERIALIZE_EXPORT_IMPL(Service::NEWS::NEWS_U)
 
 namespace Service::NEWS {
 
-NEWS_U::NEWS_U() : ServiceFramework("news:u", 1) {
+NEWS_U::NEWS_U(std::shared_ptr<Module> news) : Module::Interface(std::move(news), "news:u", 1) {
     const FunctionInfo functions[] = {
         // clang-format off
-        {0x0001, nullptr, "AddNotification"},
+        {0x0001, &NEWS_U::AddNotification, "AddNotification"},
         // clang-format on
     };
     RegisterHandlers(functions);

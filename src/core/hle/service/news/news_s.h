@@ -4,44 +4,19 @@
 
 #pragma once
 
-#include <memory>
-#include "core/hle/service/service.h"
+#include "core/hle/service/news/news.h"
 
 namespace Service::NEWS {
 
-class NEWS_S final : public ServiceFramework<NEWS_S> {
+class NEWS_S final : public Module::Interface {
 public:
-    NEWS_S();
+    explicit NEWS_S(std::shared_ptr<Module> news);
 
 private:
-    /**
-     * GetTotalNotifications service function.
-     *  Inputs:
-     *      0 : 0x00050000
-     *  Outputs:
-     *      0 : 0x00050080
-     *      1 : Result of function, 0 on success, otherwise error code
-     *      2 : Number of notifications
-     */
-    void GetTotalNotifications(Kernel::HLERequestContext& ctx);
-
-    /**
-     * GetNewsDBHeader service function.
-     *  Inputs:
-     *      0 : 0x000A0042
-     *      1 : Size
-     *      2 : Output Buffer Mapping Translation Header ((Size << 4) | 0xC)
-     *      3 : Output Buffer Pointer
-     *  Outputs:
-     *      0 : 0x000A0080
-     *      1 : Result of function, 0 on success, otherwise error code
-     *      2 : Actual Size
-     */
-    void GetNewsDBHeader(Kernel::HLERequestContext& ctx);
-
-    SERVICE_SERIALIZATION_SIMPLE
+    SERVICE_SERIALIZATION(NEWS_S, news, Module)
 };
 
 } // namespace Service::NEWS
 
 BOOST_CLASS_EXPORT_KEY(Service::NEWS::NEWS_S)
+BOOST_SERIALIZATION_CONSTRUCT(Service::NEWS::NEWS_S)

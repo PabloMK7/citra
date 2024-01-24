@@ -4,19 +4,19 @@
 
 #pragma once
 
-#include <memory>
-#include "core/hle/service/service.h"
+#include "core/hle/service/news/news.h"
 
 namespace Service::NEWS {
 
-class NEWS_U final : public ServiceFramework<NEWS_U> {
+class NEWS_U final : public Module::Interface {
 public:
-    NEWS_U();
+    explicit NEWS_U(std::shared_ptr<Module> news);
 
 private:
-    SERVICE_SERIALIZATION_SIMPLE
+    SERVICE_SERIALIZATION(NEWS_U, news, Module)
 };
 
 } // namespace Service::NEWS
 
 BOOST_CLASS_EXPORT_KEY(Service::NEWS::NEWS_U)
+BOOST_SERIALIZATION_CONSTRUCT(Service::NEWS::NEWS_U)

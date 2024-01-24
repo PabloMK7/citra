@@ -82,6 +82,7 @@ enum class Class : u8 {
     Service_Y2R,     ///< The Y2R (YUV to RGB conversion) service
     Service_PS,      ///< The PS (Process) service
     Service_PLGLDR,  ///< The PLGLDR (plugin loader) service
+    Service_NEWS,    ///< The NEWS (Notifications) service
     HW,              ///< Low-level hardware emulation
     HW_Memory,       ///< Memory-map and address translation
     HW_LCD,          ///< LCD register emulation
