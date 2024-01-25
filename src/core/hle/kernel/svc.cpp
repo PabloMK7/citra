@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <fmt/format.h>
 #include "common/archives.h"
 #include "common/logging/log.h"
@@ -268,6 +269,7 @@ enum class SystemInfoMemUsageRegion {
  */
 enum class SystemInfoCitraInformation {
     IS_CITRA = 0,          // Always set the output to 1, signaling the app is running on Citra.
+    HOST_TICK = 1,         // Tick reference from the host in ns, unaffected by lag or cpu speed.
     BUILD_NAME = 10,       // (ie: Nightly, Canary).
     BUILD_VERSION = 11,    // Build version.
     BUILD_DATE_PART1 = 20, // Build date first 7 characters.
@@ -1739,6 +1741,11 @@ Result SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
         switch ((SystemInfoCitraInformation)param) {
         case SystemInfoCitraInformation::IS_CITRA:
             *out = 1;
+            break;
+        case SystemInfoCitraInformation::HOST_TICK:
+            *out = (s64)std::chrono::duration_cast<std::chrono::nanoseconds>(
+                       std::chrono::steady_clock::now().time_since_epoch())
+                       .count();
             break;
         case SystemInfoCitraInformation::BUILD_NAME:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_name, 0, sizeof(s64));
