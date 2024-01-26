@@ -838,7 +838,7 @@ void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
     SocketHolder& holder = socket_holder_optional->get();
 
     CTRSockAddr ctr_sock_addr;
-    std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), len);
+    std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), std::min<size_t>(len, sizeof(ctr_sock_addr)));
 
     sockaddr sock_addr = CTRSockAddr::ToPlatform(ctr_sock_addr);
 
@@ -977,7 +977,7 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
             }
 
             if (ctr_addr_buf.size() > async_data->max_addr_len) {
-                LOG_WARNING(Frontend, "CTRSockAddr is too long, truncating data.");
+                LOG_DEBUG(Service_SOC, "CTRSockAddr is too long, truncating data.");
                 ctr_addr_buf.resize(async_data->max_addr_len);
             }
 
@@ -1107,7 +1107,8 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
     s32 ret = -1;
     if (addr_len > 0) {
         CTRSockAddr ctr_dest_addr;
-        std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(), sizeof(ctr_dest_addr));
+        std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(),
+                    std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
         sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
         ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
@@ -1156,7 +1157,8 @@ s32 SOC_U::SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
     s32 ret = -1;
     if (addr_len > 0) {
         CTRSockAddr ctr_dest_addr;
-        std::memcpy(&ctr_dest_addr, dest_addr_buff, sizeof(ctr_dest_addr));
+        std::memcpy(&ctr_dest_addr, dest_addr_buff,
+                    std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
         sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
         ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
@@ -1306,7 +1308,8 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
                                async_data->len, async_data->flags, &src_addr, &src_addr_len));
                 if (async_data->ret >= 0 && src_addr_len > 0) {
                     ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-                    std::memcpy(async_data->addr_buff.data(), &ctr_src_addr, async_data->addr_len);
+                    std::memcpy(async_data->addr_buff.data(), &ctr_src_addr,
+                                std::min<size_t>(async_data->addr_len, sizeof(ctr_src_addr)));
                 }
             } else {
                 async_data->ret = static_cast<s32>(
@@ -1422,7 +1425,8 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
                                async_data->len, async_data->flags, &src_addr, &src_addr_len));
                 if (async_data->ret >= 0 && src_addr_len > 0) {
                     ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-                    std::memcpy(async_data->addr_buff.data(), &ctr_src_addr, async_data->addr_len);
+                    std::memcpy(async_data->addr_buff.data(), &ctr_src_addr,
+                                std::min<size_t>(async_data->addr_len, sizeof(ctr_src_addr)));
                 }
             } else {
                 async_data->ret = static_cast<s32>(
@@ -1566,7 +1570,7 @@ void SOC_U::GetSockName(Kernel::HLERequestContext& ctx) {
         ret = TranslateError(GET_ERRNO);
 
     if (dest_addr_buff.size() > max_addr_len) {
-        LOG_WARNING(Frontend, "CTRSockAddr is too long, truncating data.");
+        LOG_DEBUG(Service_SOC, "CTRSockAddr is too long, truncating data.");
         dest_addr_buff.resize(max_addr_len);
     }
 
@@ -1708,7 +1712,7 @@ void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
     }
 
     if (dest_addr_buff.size() > max_addr_len) {
-        LOG_WARNING(Frontend, "CTRSockAddr is too long, truncating data.");
+        LOG_DEBUG(Service_SOC, "CTRSockAddr is too long, truncating data.");
         dest_addr_buff.resize(max_addr_len);
     }
 
@@ -1724,7 +1728,7 @@ void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
 void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto socket_handle = rp.Pop<u32>();
-    [[maybe_unused]] const auto input_addr_len = rp.Pop<u32>();
+    const auto input_addr_len = rp.Pop<u32>();
     const u32 pid = rp.PopPID();
     auto input_addr_buf = rp.PopStaticBuffer();
 
@@ -1751,7 +1755,8 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     async_data->pid = pid;
 
     CTRSockAddr ctr_input_addr;
-    std::memcpy(&ctr_input_addr, input_addr_buf.data(), sizeof(ctr_input_addr));
+    std::memcpy(&ctr_input_addr, input_addr_buf.data(),
+                std::min<size_t>(input_addr_len, sizeof(ctr_input_addr)));
 
     async_data->input_addr = CTRSockAddr::ToPlatform(ctr_input_addr);
     async_data->socket_handle = socket_handle;
