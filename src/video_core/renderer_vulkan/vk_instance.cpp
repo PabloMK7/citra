@@ -629,7 +629,7 @@ void Instance::CreateAllocator() {
         .device = *device,
         .pVulkanFunctions = &functions,
         .instance = *instance,
-        .vulkanApiVersion = vk::enumerateInstanceVersion(),
+        .vulkanApiVersion = properties.apiVersion,
     };
 
     const VkResult result = vmaCreateAllocator(&allocator_info, &allocator);
