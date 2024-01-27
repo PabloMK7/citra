@@ -687,8 +687,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     1,
                     10,
                     "x",
-                    IntSetting.GRAPHICS_API.key,
-                    IntSetting.GRAPHICS_API.defaultValue.toFloat()
+                    IntSetting.RESOLUTION_FACTOR.key,
+                    IntSetting.RESOLUTION_FACTOR.defaultValue.toFloat()
                 )
             )
             add(
