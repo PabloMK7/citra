@@ -101,7 +101,7 @@ void vfp_put_float(ARMul_State* state, s32 val, unsigned int reg) {
 
 u64 vfp_get_double(ARMul_State* state, unsigned int reg) {
     u64 result = ((u64)state->ExtReg[reg * 2 + 1]) << 32 | state->ExtReg[reg * 2];
-    LOG_TRACE(Core_ARM11, "VFP get double: s[{}-{}]=[{:016llx}]", reg * 2 + 1, reg * 2, result);
+    LOG_TRACE(Core_ARM11, "VFP get double: s[{}-{}]=[{:016x}]", reg * 2 + 1, reg * 2, result);
     return result;
 }
 

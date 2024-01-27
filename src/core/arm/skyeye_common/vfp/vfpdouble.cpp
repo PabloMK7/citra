@@ -64,7 +64,7 @@ static struct vfp_double vfp_double_default_qnan = {
 };
 
 static void vfp_double_dump(const char* str, struct vfp_double* d) {
-    LOG_TRACE(Core_ARM11, "VFP: {}: sign={} exponent={} significand={:016llx}", str, d->sign != 0,
+    LOG_TRACE(Core_ARM11, "VFP: {}: sign={} exponent={} significand={:016x}", str, d->sign != 0,
               d->exponent, d->significand);
 }
 
@@ -166,7 +166,7 @@ u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double* vd,
     } else if ((rmode == FPSCR_ROUND_PLUSINF) ^ (vd->sign != 0))
         incr = (1ULL << (VFP_DOUBLE_LOW_BITS + 1)) - 1;
 
-    LOG_TRACE(Core_ARM11, "VFP: rounding increment = 0x{:08llx}", incr);
+    LOG_TRACE(Core_ARM11, "VFP: rounding increment = 0x{:08x}", incr);
 
     /*
      * Is our rounding going to overflow?
@@ -221,8 +221,7 @@ pack:
     vfp_double_dump("pack: final", vd);
     {
         s64 d = vfp_double_pack(vd);
-        LOG_TRACE(Core_ARM11, "VFP: {}: d(d{})={:016llx} exceptions={:08x}", func, dd, d,
-                  exceptions);
+        LOG_TRACE(Core_ARM11, "VFP: {}: d(d{})={:016x} exceptions={:08x}", func, dd, d, exceptions);
         vfp_put_double(state, d, dd);
     }
     return exceptions;
