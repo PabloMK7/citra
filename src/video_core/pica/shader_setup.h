@@ -76,9 +76,9 @@ public:
 public:
     Uniforms uniforms;
     PackedAttribute uniform_queue;
-    ProgramCode program_code;
-    SwizzleData swizzle_data;
-    u32 entry_point;
+    ProgramCode program_code{};
+    SwizzleData swizzle_data{};
+    u32 entry_point{};
     const void* cached_shader{};
 
 private:
