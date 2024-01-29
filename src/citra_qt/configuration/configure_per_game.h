@@ -38,7 +38,8 @@ class ConfigurePerGame : public QDialog {
 
 public:
     explicit ConfigurePerGame(QWidget* parent, u64 title_id_, const QString& file_name,
-                              std::span<const QString> physical_devices, Core::System& system_);
+                              QString gl_renderer, std::span<const QString> physical_devices,
+                              Core::System& system_);
     ~ConfigurePerGame() override;
 
     /// Loads all button configurations to settings file

@@ -2,9 +2,34 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/util/vk_device_info.h"
-#include "video_core/renderer_vulkan/vk_instance.h"
+#include "citra_qt/util/graphics_device_info.h"
 
+#ifdef ENABLE_OPENGL
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#endif
+
+#ifdef ENABLE_VULKAN
+#include "video_core/renderer_vulkan/vk_instance.h"
+#endif
+
+#ifdef ENABLE_OPENGL
+QString GetOpenGLRenderer() {
+    QOffscreenSurface surface;
+    surface.create();
+
+    QOpenGLContext context;
+    if (context.create()) {
+        context.makeCurrent(&surface);
+        return QString::fromUtf8(context.functions()->glGetString(GL_RENDERER));
+    } else {
+        return QStringLiteral("");
+    }
+}
+#endif
+
+#ifdef ENABLE_VULKAN
 std::vector<QString> GetVulkanPhysicalDevices() {
     std::vector<QString> result;
     try {
@@ -21,3 +46,4 @@ std::vector<QString> GetVulkanPhysicalDevices() {
 
     return result;
 }
+#endif

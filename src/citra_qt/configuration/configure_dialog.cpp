@@ -23,14 +23,16 @@
 #include "ui_configure.h"
 
 ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Core::System& system_,
-                                 std::span<const QString> physical_devices, bool enable_web_config)
+                                 QString gl_renderer, std::span<const QString> physical_devices,
+                                 bool enable_web_config)
     : QDialog(parent), ui{std::make_unique<Ui::ConfigureDialog>()}, registry{registry_},
       system{system_}, is_powered_on{system.IsPoweredOn()},
       general_tab{std::make_unique<ConfigureGeneral>(this)},
       system_tab{std::make_unique<ConfigureSystem>(system, this)},
       input_tab{std::make_unique<ConfigureInput>(this)},
       hotkeys_tab{std::make_unique<ConfigureHotkeys>(this)},
-      graphics_tab{std::make_unique<ConfigureGraphics>(physical_devices, is_powered_on, this)},
+      graphics_tab{
+          std::make_unique<ConfigureGraphics>(gl_renderer, physical_devices, is_powered_on, this)},
       enhancements_tab{std::make_unique<ConfigureEnhancements>(this)},
       audio_tab{std::make_unique<ConfigureAudio>(is_powered_on, this)},
       camera_tab{std::make_unique<ConfigureCamera>(this)},

@@ -179,6 +179,8 @@ add_executable(citra-qt
     qt_image_interface.h
     util/clickable_label.cpp
     util/clickable_label.h
+    util/graphics_device_info.cpp
+    util/graphics_device_info.h
     util/sequence_dialog/sequence_dialog.cpp
     util/sequence_dialog/sequence_dialog.h
     util/spinbox.cpp
@@ -186,13 +188,6 @@ add_executable(citra-qt
     util/util.cpp
     util/util.h
 )
-
-if (ENABLE_VULKAN)
-    target_sources(citra-qt PRIVATE
-        util/vk_device_info.cpp
-        util/vk_device_info.h
-    )
-endif()
 
 file(GLOB COMPAT_LIST
      ${PROJECT_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc

@@ -64,7 +64,7 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
-#include "citra_qt/util/vk_device_info.h"
+#include "citra_qt/util/graphics_device_info.h"
 #include "common/arch.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
@@ -269,6 +269,18 @@ GMainWindow::GMainWindow(Core::System& system_)
     mouse_hide_timer.setInterval(default_mouse_timeout);
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
+
+#ifdef ENABLE_OPENGL
+    gl_renderer = GetOpenGLRenderer();
+#if defined(_WIN32)
+    if (gl_renderer.startsWith(QStringLiteral("D3D12"))) {
+        // OpenGLOn12 supports but does not yet advertise OpenGL 4.0+
+        // We can override the version here to allow Citra to work.
+        // TODO: Remove this when OpenGL 4.0+ is advertised.
+        qputenv("MESA_GL_VERSION_OVERRIDE", "4.6");
+    }
+#endif
+#endif
 
 #ifdef ENABLE_VULKAN
     physical_devices = GetVulkanPhysicalDevices();
@@ -2158,7 +2170,7 @@ void GMainWindow::OnLoadState() {
 void GMainWindow::OnConfigure() {
     game_list->SetDirectoryWatcherEnabled(false);
     Settings::SetConfiguringGlobal(true);
-    ConfigureDialog configureDialog(this, hotkey_registry, system, physical_devices,
+    ConfigureDialog configureDialog(this, hotkey_registry, system, gl_renderer, physical_devices,
                                     !multiplayer_state->IsHostingPublicRoom());
     connect(&configureDialog, &ConfigureDialog::LanguageChanged, this,
             &GMainWindow::OnLanguageChanged);
@@ -3006,7 +3018,7 @@ void GMainWindow::OnConfigurePerGame() {
 
 void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_name) {
     Settings::SetConfiguringGlobal(false);
-    ConfigurePerGame dialog(this, title_id, file_name, physical_devices, system);
+    ConfigurePerGame dialog(this, title_id, file_name, gl_renderer, physical_devices, system);
     const auto result = dialog.exec();
 
     if (result != QDialog::Accepted) {

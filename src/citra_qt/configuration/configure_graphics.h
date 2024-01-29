@@ -21,8 +21,8 @@ class ConfigureGraphics : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureGraphics(std::span<const QString> physical_devices, bool is_powered_on,
-                               QWidget* parent = nullptr);
+    explicit ConfigureGraphics(QString gl_renderer, std::span<const QString> physical_devices,
+                               bool is_powered_on, QWidget* parent = nullptr);
     ~ConfigureGraphics() override;
 
     void ApplyConfiguration();

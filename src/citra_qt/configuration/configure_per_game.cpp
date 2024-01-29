@@ -24,7 +24,8 @@
 #include "ui_configure_per_game.h"
 
 ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString& file_name,
-                                   std::span<const QString> physical_devices, Core::System& system_)
+                                   QString gl_renderer, std::span<const QString> physical_devices,
+                                   Core::System& system_)
     : QDialog(parent), ui(std::make_unique<Ui::ConfigurePerGame>()),
       filename{file_name.toStdString()}, title_id{title_id_}, system{system_} {
     const auto config_file_name = title_id == 0 ? std::string(FileUtil::GetFilename(filename))
@@ -35,7 +36,8 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
     audio_tab = std::make_unique<ConfigureAudio>(is_powered_on, this);
     general_tab = std::make_unique<ConfigureGeneral>(this);
     enhancements_tab = std::make_unique<ConfigureEnhancements>(this);
-    graphics_tab = std::make_unique<ConfigureGraphics>(physical_devices, is_powered_on, this);
+    graphics_tab =
+        std::make_unique<ConfigureGraphics>(gl_renderer, physical_devices, is_powered_on, this);
     system_tab = std::make_unique<ConfigureSystem>(system, this);
     debug_tab = std::make_unique<ConfigureDebug>(is_powered_on, this);
     cheat_tab = std::make_unique<ConfigureCheats>(system.CheatEngine(), title_id, this);

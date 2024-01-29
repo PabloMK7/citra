@@ -12,16 +12,12 @@
 #include "video_core/renderer_vulkan/vk_instance.h"
 #endif
 
-ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, bool is_powered_on,
-                                     QWidget* parent)
+ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QString> physical_devices,
+                                     bool is_powered_on, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureGraphics>()) {
     ui->setupUi(this);
 
     SetupPerGameUI();
-
-    for (const QString& name : physical_devices) {
-        ui->physical_device_combo->addItem(name);
-    }
 
     ui->graphics_api_combo->setEnabled(!is_powered_on);
     ui->physical_device_combo->setEnabled(!is_powered_on);
@@ -37,11 +33,15 @@ ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, 
         graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::Software));
     software_item->setFlags(software_item->flags() & ~Qt::ItemIsEnabled);
 #endif
+
 #ifndef ENABLE_OPENGL
     const auto opengl_item =
         graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::OpenGL));
     opengl_item->setFlags(opengl_item->flags() & ~Qt::ItemIsEnabled);
+#else
+    ui->opengl_renderer_name_label->setText(gl_renderer);
 #endif
+
 #ifndef ENABLE_VULKAN
     const auto vulkan_item =
         graphics_api_combo_model->item(static_cast<u32>(Settings::GraphicsAPI::Vulkan));
@@ -54,6 +54,10 @@ ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, 
 
         ui->physical_device_combo->setVisible(false);
         ui->spirv_shader_gen->setVisible(false);
+    } else {
+        for (const QString& name : physical_devices) {
+            ui->physical_device_combo->addItem(name);
+        }
     }
 #endif
 
@@ -202,24 +206,24 @@ void ConfigureGraphics::SetupPerGameUI() {
 }
 
 void ConfigureGraphics::SetPhysicalDeviceComboVisibility(int index) {
-    bool is_visible{};
+    Settings::GraphicsAPI effective_api{};
 
     // When configuring per-game the physical device combo should be
     // shown either when the global api is used and that is Vulkan or
     // Vulkan is set as the per-game api.
     if (!Settings::IsConfiguringGlobal()) {
-        const auto global_graphics_api = Settings::values.graphics_api.GetValue(true);
         const bool using_global = index == 0;
-        if (!using_global) {
-            index -= ConfigurationShared::USE_GLOBAL_OFFSET;
+        if (using_global) {
+            effective_api = Settings::values.graphics_api.GetValue(true);
+        } else {
+            effective_api =
+                static_cast<Settings::GraphicsAPI>(index - ConfigurationShared::USE_GLOBAL_OFFSET);
         }
-        const auto graphics_api = static_cast<Settings::GraphicsAPI>(index);
-        is_visible = (using_global && global_graphics_api == Settings::GraphicsAPI::Vulkan) ||
-                     graphics_api == Settings::GraphicsAPI::Vulkan;
     } else {
-        const auto graphics_api = static_cast<Settings::GraphicsAPI>(index);
-        is_visible = graphics_api == Settings::GraphicsAPI::Vulkan;
+        effective_api = static_cast<Settings::GraphicsAPI>(index);
     }
-    ui->physical_device_group->setVisible(is_visible);
-    ui->spirv_shader_gen->setVisible(is_visible);
+
+    ui->physical_device_group->setVisible(effective_api == Settings::GraphicsAPI::Vulkan);
+    ui->spirv_shader_gen->setVisible(effective_api == Settings::GraphicsAPI::Vulkan);
+    ui->opengl_renderer_group->setVisible(effective_api == Settings::GraphicsAPI::OpenGL);
 }
