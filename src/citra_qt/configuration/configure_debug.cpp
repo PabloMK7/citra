@@ -97,6 +97,8 @@ void ConfigureDebug::SetConfiguration() {
     ui->toggle_console->setEnabled(!is_powered_on);
     ui->toggle_console->setChecked(UISettings::values.show_console.GetValue());
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
+    ui->log_regex_filter_edit->setText(
+        QString::fromStdString(Settings::values.log_regex_filter.GetValue()));
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
     ui->delay_start_for_lle_modules->setChecked(
         Settings::values.delay_start_for_lle_modules.GetValue());
@@ -126,10 +128,12 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.gdbstub_port = ui->gdbport_spinbox->value();
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
+    Settings::values.log_regex_filter = ui->log_regex_filter_edit->text().toStdString();
     Debugger::ToggleConsole();
     Common::Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Common::Log::SetGlobalFilter(filter);
+    Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::values.delay_start_for_lle_modules = ui->delay_start_for_lle_modules->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();

@@ -542,6 +542,7 @@ struct Values {
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", "log_filter"};
+    Setting<std::string> log_regex_filter{"", "log_regex_filter"};
 
     // Video Dumping
     std::string output_format;
