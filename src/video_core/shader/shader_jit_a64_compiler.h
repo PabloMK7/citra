@@ -37,12 +37,14 @@ constexpr std::size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 256;
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
  * code that can be executed on the host machine directly.
  */
-class JitShader : private oaknut::CodeBlock, public oaknut::CodeGenerator {
+class JitShader : private oaknut::CodeBlock, private oaknut::CodeGenerator {
 public:
     JitShader();
 
     void Run(const ShaderSetup& setup, ShaderUnit& state, u32 offset) const {
-        program(&setup.uniforms, &state, instruction_labels[offset].ptr<const std::byte*>());
+        program(&setup.uniforms, &state,
+                reinterpret_cast<std::byte*>(oaknut::CodeBlock::ptr()) +
+                    instruction_labels[offset].offset());
     }
 
     void Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code,

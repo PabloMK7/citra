@@ -768,7 +768,7 @@ void JitShader::Compile_LOOP(Instruction instr) {
     Label l_loop_start;
     l(l_loop_start);
 
-    loop_break_labels.emplace_back(oaknut::Label());
+    loop_break_labels.emplace_back(Label());
     Compile_Block(instr.flow_control.dest_offset + 1);
     ADD(LOOPCOUNT_REG, LOOPCOUNT_REG, LOOPINC); // Increment LOOPCOUNT_REG by Z-component
     SUBS(LOOPCOUNT, LOOPCOUNT, 1);              // Increment loop count by 1
@@ -922,7 +922,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     swizzle_data = swizzle_data_;
 
     // Reset flow control state
-    program = (CompiledShader*)current_address();
+    program = xptr<CompiledShader*>();
     program_counter = 0;
     loop_depth = 0;
     instruction_labels.fill(Label());
@@ -968,15 +968,13 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     protect();
     invalidate_all();
 
-    const std::size_t code_size =
-        current_address() - reinterpret_cast<uintptr_t>(oaknut::CodeBlock::ptr());
+    const std::size_t code_size = static_cast<std::size_t>(offset());
 
     ASSERT_MSG(code_size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
     LOG_DEBUG(HW_GPU, "Compiled shader size={}", code_size);
 }
 
-JitShader::JitShader()
-    : oaknut::CodeBlock(MAX_SHADER_SIZE), oaknut::CodeGenerator(oaknut::CodeBlock::ptr()) {
+JitShader::JitShader() : CodeBlock(MAX_SHADER_SIZE), CodeGenerator(CodeBlock::ptr()) {
     unprotect();
     CompilePrelude();
 }
@@ -986,8 +984,8 @@ void JitShader::CompilePrelude() {
     exp2_subroutine = CompilePrelude_Exp2();
 }
 
-oaknut::Label JitShader::CompilePrelude_Log2() {
-    oaknut::Label subroutine;
+Label JitShader::CompilePrelude_Log2() {
+    Label subroutine;
 
     // We perform this approximation by first performing a range reduction into the range
     // [1.0, 2.0). A minimax polynomial which was fit for the function log2(x) / (x - 1) is then
@@ -995,44 +993,40 @@ oaknut::Label JitShader::CompilePrelude_Log2() {
     // range. Coefficients for the minimax polynomial.
     // f(x) computes approximately log2(x) / (x - 1).
     // f(x) = c4 + x * (c3 + x * (c2 + x * (c1 + x * c0)).
-    oaknut::Label c0;
     align(16);
-    l(c0);
+    const void* c0 = xptr<const void*>();
     dw(0x3d74552f);
 
     align(16);
-    oaknut::Label c14;
-    l(c14);
+    const void* c14 = xptr<const void*>();
     dw(0xbeee7397);
     dw(0x3fbd96dd);
     dw(0xc02153f6);
     dw(0x4038d96c);
 
     align(16);
-    oaknut::Label negative_infinity_vector;
-    l(negative_infinity_vector);
+    const void* negative_infinity_vector = xptr<const void*>();
     dw(0xff800000);
     dw(0xff800000);
     dw(0xff800000);
     dw(0xff800000);
-    oaknut::Label default_qnan_vector;
-    l(default_qnan_vector);
+    const void* default_qnan_vector = xptr<const void*>();
     dw(0x7fc00000);
     dw(0x7fc00000);
     dw(0x7fc00000);
     dw(0x7fc00000);
 
-    oaknut::Label input_is_nan, input_is_zero, input_out_of_range;
+    Label input_is_nan, input_is_zero, input_out_of_range;
 
     align(16);
     l(input_out_of_range);
     B(Cond::EQ, input_is_zero);
-    MOVP2R(XSCRATCH0, default_qnan_vector.ptr<void*>());
+    MOVP2R(XSCRATCH0, default_qnan_vector);
     LDR(SRC1, XSCRATCH0);
     RET();
 
     l(input_is_zero);
-    MOVP2R(XSCRATCH0, negative_infinity_vector.ptr<void*>());
+    MOVP2R(XSCRATCH0, negative_infinity_vector);
     LDR(SRC1, XSCRATCH0);
     RET();
 
@@ -1064,14 +1058,14 @@ oaknut::Label JitShader::CompilePrelude_Log2() {
     UCVTF(VSCRATCH1.toS(), VSCRATCH1.toS());
     // VSCRATCH1 now contains the exponent of the input.
 
-    MOVP2R(XSCRATCH0, c0.ptr<void*>());
+    MOVP2R(XSCRATCH0, c0);
     LDR(XSCRATCH0.toW(), XSCRATCH0);
     MOV(VSCRATCH0.Selem()[0], XSCRATCH0.toW());
 
     // Complete computation of polynomial
     // Load C1,C2,C3,C4 into a single scratch register
     const QReg C14 = SRC2;
-    MOVP2R(XSCRATCH0, c14.ptr<void*>());
+    MOVP2R(XSCRATCH0, c14);
     LDR(C14, XSCRATCH0);
     FMUL(VSCRATCH0.toS(), VSCRATCH0.toS(), SRC1.toS());
     FMLA(VSCRATCH0.toS(), ONE.toS(), C14.Selem()[0]);
@@ -1097,32 +1091,32 @@ oaknut::Label JitShader::CompilePrelude_Log2() {
     return subroutine;
 }
 
-oaknut::Label JitShader::CompilePrelude_Exp2() {
-    oaknut::Label subroutine;
+Label JitShader::CompilePrelude_Exp2() {
+    Label subroutine;
 
     // This approximation first performs a range reduction into the range [-0.5, 0.5). A minmax
     // polynomial which was fit for the function exp2(x) is then evaluated. We then restore the
     // result into the appropriate range.
 
     align(16);
-    const void* input_max = (const void*)current_address();
+    const void* input_max = xptr<const void*>();
     dw(0x43010000);
-    const void* input_min = (const void*)current_address();
+    const void* input_min = xptr<const void*>();
     dw(0xc2fdffff);
-    const void* c0 = (const void*)current_address();
+    const void* c0 = xptr<const void*>();
     dw(0x3c5dbe69);
-    const void* half = (const void*)current_address();
+    const void* half = xptr<const void*>();
     dw(0x3f000000);
-    const void* c1 = (const void*)current_address();
+    const void* c1 = xptr<const void*>();
     dw(0x3d5509f9);
-    const void* c2 = (const void*)current_address();
+    const void* c2 = xptr<const void*>();
     dw(0x3e773cc5);
-    const void* c3 = (const void*)current_address();
+    const void* c3 = xptr<const void*>();
     dw(0x3f3168b3);
-    const void* c4 = (const void*)current_address();
+    const void* c4 = xptr<const void*>();
     dw(0x3f800016);
 
-    oaknut::Label ret_label;
+    Label ret_label;
 
     align(16);
     l(subroutine);

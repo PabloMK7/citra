@@ -20,7 +20,7 @@ inline bool IsWithin128M(uintptr_t ref, uintptr_t target) {
 }
 
 inline bool IsWithin128M(const oaknut::CodeGenerator& code, uintptr_t target) {
-    return IsWithin128M(code.ptr<uintptr_t>(), target);
+    return IsWithin128M(code.xptr<uintptr_t>(), target);
 }
 
 template <typename T>
