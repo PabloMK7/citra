@@ -810,8 +810,8 @@ void FragmentModule::WriteLighting() {
 
         // Compute primary fragment color (diffuse lighting) function
         out += fmt::format(
-            "diffuse_sum.rgb += (({}.diffuse * dot_product) + {}.ambient) * {} * {}{};\n",
-            light_src, light_src, dist_atten, spot_atten, shadow_primary);
+            "diffuse_sum.rgb += (({}.diffuse * dot_product{}) + {}.ambient) * {} * {};\n",
+            light_src, shadow_primary, light_src, dist_atten, spot_atten);
 
         // Compute secondary fragment color (specular lighting) function
         out += fmt::format("specular_sum.rgb += ({} + {}) * clamp_highlights * {} * {}{};\n",

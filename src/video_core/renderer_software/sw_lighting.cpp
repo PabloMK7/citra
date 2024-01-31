@@ -285,19 +285,20 @@ std::pair<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
             }
         }
 
-        auto diffuse =
-            (light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f()) *
-            dist_atten * spot_atten;
-        auto specular = (specular_0 + specular_1) * clamp_highlights * dist_atten * spot_atten;
+        const bool shadow_primary_enable =
+            lighting.config0.shadow_primary && !lighting.IsShadowDisabled(num);
+        const bool shadow_secondary_enable =
+            lighting.config0.shadow_secondary && !lighting.IsShadowDisabled(num);
+        const auto shadow_primary =
+            shadow_primary_enable ? shadow.xyz() : Common::MakeVec(1.f, 1.f, 1.f);
+        const auto shadow_secondary =
+            shadow_secondary_enable ? shadow.xyz() : Common::MakeVec(1.f, 1.f, 1.f);
 
-        if (!lighting.IsShadowDisabled(num)) {
-            if (lighting.config0.shadow_primary) {
-                diffuse = diffuse * shadow.xyz();
-            }
-            if (lighting.config0.shadow_secondary) {
-                specular = specular * shadow.xyz();
-            }
-        }
+        const auto diffuse = (light_config.diffuse.ToVec3f() * dot_product * shadow_primary +
+                              light_config.ambient.ToVec3f()) *
+                             dist_atten * spot_atten;
+        const auto specular = (specular_0 + specular_1) * clamp_highlights * dist_atten *
+                              spot_atten * shadow_secondary;
 
         diffuse_sum += Common::MakeVec(diffuse, 0.0f);
         specular_sum += Common::MakeVec(specular, 0.0f);
