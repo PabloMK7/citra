@@ -74,8 +74,7 @@ CMAKE_DEPENDENT_OPTION(ENABLE_DEDICATED_ROOM "Enable generating dedicated room e
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
 
-# TODO: cubeb currently causes issues on macOS, see: https://github.com/mozilla/cubeb/issues/771
-CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT APPLE" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
 option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
