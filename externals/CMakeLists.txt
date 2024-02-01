@@ -288,11 +288,6 @@ endif()
 target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
 target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
 
-if(ANDROID)
-    add_subdirectory(android-ifaddrs)
-    target_link_libraries(httplib INTERFACE ifaddrs)
-endif()
-
 if (UNIX AND NOT APPLE)
     add_subdirectory(gamemode)
 endif()

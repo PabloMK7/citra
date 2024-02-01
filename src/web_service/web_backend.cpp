@@ -7,9 +7,6 @@
 #include <mutex>
 #include <string>
 #include <fmt/format.h>
-#if defined(__ANDROID__)
-#include <ifaddrs.h>
-#endif
 #include <httplib.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"

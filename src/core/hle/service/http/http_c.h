@@ -17,9 +17,6 @@
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
-#if defined(__ANDROID__)
-#include <ifaddrs.h>
-#endif
 #include <httplib.h>
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
