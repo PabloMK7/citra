@@ -143,7 +143,8 @@ private:
         // buffer_id state
 
         bool buffer_update = false;
-        u32 current_buffer_id = 0;
+        u16 last_buffer_id = 0;
+        u16 current_buffer_id = 0;
 
         // Decoding state
 

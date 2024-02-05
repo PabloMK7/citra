@@ -324,6 +324,7 @@ void Source::GenerateFrame() {
     if (state.current_buffer.empty() && !DequeueBuffer()) {
         state.enabled = false;
         state.buffer_update = true;
+        state.last_buffer_id = state.current_buffer_id;
         state.current_buffer_id = 0;
         return;
     }
@@ -411,6 +412,7 @@ bool Source::DequeueBuffer() {
     state.next_sample_number = state.current_sample_number;
     state.current_buffer_physical_address = buf.physical_address;
     state.current_buffer_id = buf.buffer_id;
+    state.last_buffer_id = 0;
     state.buffer_update = buf.from_queue && !buf.has_played;
 
     if (buf.is_looping) {
@@ -432,9 +434,10 @@ SourceStatus::Status Source::GetCurrentStatus() {
     ret.is_enabled = state.enabled;
     ret.current_buffer_id_dirty = state.buffer_update ? 1 : 0;
     state.buffer_update = false;
-    ret.current_buffer_id = state.current_buffer_id;
-    ret.buffer_position = state.current_sample_number;
     ret.sync_count = state.sync_count;
+    ret.buffer_position = state.current_sample_number;
+    ret.current_buffer_id = state.current_buffer_id;
+    ret.last_buffer_id = state.last_buffer_id;
 
     return ret;
 }

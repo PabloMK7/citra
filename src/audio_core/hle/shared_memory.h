@@ -316,7 +316,7 @@ struct SourceStatus {
         u16_le sync_count; ///< Is set by the DSP to the value of SourceConfiguration::sync_count
         u32_dsp buffer_position;  ///< Number of samples into the current buffer
         u16_le current_buffer_id; ///< Updated when a buffer finishes playing
-        INSERT_PADDING_DSPWORDS(1);
+        u16_le last_buffer_id;    ///< Updated when all buffers in the queue finish playing
     };
 
     Status status[num_sources];
