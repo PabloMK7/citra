@@ -143,7 +143,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 
     out += "vec4 combiner_buffer = vec4(0.0);\n"
            "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n"
-           "vec4 combiner_output = rounded_primary_color;\n";
+           "vec4 combiner_output = vec4(0.0);\n";
 
     out += "vec3 color_results_1 = vec3(0.0);\n"
            "vec3 color_results_2 = vec3(0.0);\n"
@@ -225,96 +225,75 @@ void FragmentModule::WriteScissor() {
            "gl_FragCoord.y < float(scissor_y2))) discard;\n";
 }
 
-void FragmentModule::AppendSource(Pica::TexturingRegs::TevStageConfig::Source source,
-                                  u32 tev_index) {
+std::string FragmentModule::GetSource(Pica::TexturingRegs::TevStageConfig::Source source,
+                                      u32 tev_index) {
     using Source = Pica::TexturingRegs::TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:
-        out += "rounded_primary_color";
-        break;
+        return "rounded_primary_color";
     case Source::PrimaryFragmentColor:
-        out += "primary_fragment_color";
-        break;
+        return "primary_fragment_color";
     case Source::SecondaryFragmentColor:
-        out += "secondary_fragment_color";
-        break;
+        return "secondary_fragment_color";
     case Source::Texture0:
-        out += "sampleTexUnit0()";
-        break;
+        return "sampleTexUnit0()";
     case Source::Texture1:
-        out += "sampleTexUnit1()";
-        break;
+        return "sampleTexUnit1()";
     case Source::Texture2:
-        out += "sampleTexUnit2()";
-        break;
+        return "sampleTexUnit2()";
     case Source::Texture3:
-        out += "sampleTexUnit3()";
-        break;
+        return "sampleTexUnit3()";
     case Source::PreviousBuffer:
-        out += "combiner_buffer";
-        break;
+        return "combiner_buffer";
     case Source::Constant:
-        out += fmt::format("const_color[{}]", tev_index);
-        break;
+        return fmt::format("const_color[{}]", tev_index);
     case Source::Previous:
-        out += "combiner_output";
-        break;
+        return "combiner_output";
     default:
-        out += "vec4(0.0)";
         LOG_CRITICAL(Render, "Unknown source op {}", source);
-        break;
+        return "vec4(0.0)";
     }
 }
 
 void FragmentModule::AppendColorModifier(
     Pica::TexturingRegs::TevStageConfig::ColorModifier modifier,
     Pica::TexturingRegs::TevStageConfig::Source source, u32 tev_index) {
+    using Source = Pica::TexturingRegs::TevStageConfig::Source;
     using ColorModifier = Pica::TexturingRegs::TevStageConfig::ColorModifier;
+    const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[tev_index];
+    const bool force_source3 = tev_index == 0 && source == Source::Previous;
+    const auto color_source =
+        GetSource(force_source3 ? stage.color_source3.Value() : source, tev_index);
     switch (modifier) {
     case ColorModifier::SourceColor:
-        AppendSource(source, tev_index);
-        out += ".rgb";
+        out += fmt::format("{}.rgb", color_source);
         break;
     case ColorModifier::OneMinusSourceColor:
-        out += "vec3(1.0) - ";
-        AppendSource(source, tev_index);
-        out += ".rgb";
+        out += fmt::format("vec3(1.0) - {}.rgb", color_source);
         break;
     case ColorModifier::SourceAlpha:
-        AppendSource(source, tev_index);
-        out += ".aaa";
+        out += fmt::format("{}.aaa", color_source);
         break;
     case ColorModifier::OneMinusSourceAlpha:
-        out += "vec3(1.0) - ";
-        AppendSource(source, tev_index);
-        out += ".aaa";
+        out += fmt::format("vec3(1.0) - {}.aaa", color_source);
         break;
     case ColorModifier::SourceRed:
-        AppendSource(source, tev_index);
-        out += ".rrr";
+        out += fmt::format("{}.rrr", color_source);
         break;
     case ColorModifier::OneMinusSourceRed:
-        out += "vec3(1.0) - ";
-        AppendSource(source, tev_index);
-        out += ".rrr";
+        out += fmt::format("vec3(1.0) - {}.rrr", color_source);
         break;
     case ColorModifier::SourceGreen:
-        AppendSource(source, tev_index);
-        out += ".ggg";
+        out += fmt::format("{}.ggg", color_source);
         break;
     case ColorModifier::OneMinusSourceGreen:
-        out += "vec3(1.0) - ";
-        AppendSource(source, tev_index);
-        out += ".ggg";
+        out += fmt::format("vec3(1.0) - {}.ggg", color_source);
         break;
     case ColorModifier::SourceBlue:
-        AppendSource(source, tev_index);
-        out += ".bbb";
+        out += fmt::format("{}.bbb", color_source);
         break;
     case ColorModifier::OneMinusSourceBlue:
-        out += "vec3(1.0) - ";
-        AppendSource(source, tev_index);
-        out += ".bbb";
+        out += fmt::format("vec3(1.0) - {}.bbb", color_source);
         break;
     default:
         out += "vec3(0.0)";
@@ -326,43 +305,36 @@ void FragmentModule::AppendColorModifier(
 void FragmentModule::AppendAlphaModifier(
     Pica::TexturingRegs::TevStageConfig::AlphaModifier modifier,
     Pica::TexturingRegs::TevStageConfig::Source source, u32 tev_index) {
+    using Source = Pica::TexturingRegs::TevStageConfig::Source;
     using AlphaModifier = Pica::TexturingRegs::TevStageConfig::AlphaModifier;
+    const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[tev_index];
+    const bool force_source3 = tev_index == 0 && source == Source::Previous;
+    const auto alpha_source =
+        GetSource(force_source3 ? stage.alpha_source3.Value() : source, tev_index);
     switch (modifier) {
     case AlphaModifier::SourceAlpha:
-        AppendSource(source, tev_index);
-        out += ".a";
+        out += fmt::format("{}.a", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceAlpha:
-        out += "1.0 - ";
-        AppendSource(source, tev_index);
-        out += ".a";
+        out += fmt::format("1.0 - {}.a", alpha_source);
         break;
     case AlphaModifier::SourceRed:
-        AppendSource(source, tev_index);
-        out += ".r";
+        out += fmt::format("{}.r", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceRed:
-        out += "1.0 - ";
-        AppendSource(source, tev_index);
-        out += ".r";
+        out += fmt::format("1.0 - {}.r", alpha_source);
         break;
     case AlphaModifier::SourceGreen:
-        AppendSource(source, tev_index);
-        out += ".g";
+        out += fmt::format("{}.g", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceGreen:
-        out += "1.0 - ";
-        AppendSource(source, tev_index);
-        out += ".g";
+        out += fmt::format("1.0 - {}.g", alpha_source);
         break;
     case AlphaModifier::SourceBlue:
-        AppendSource(source, tev_index);
-        out += ".b";
+        out += fmt::format("{}.b", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceBlue:
-        out += "1.0 - ";
-        AppendSource(source, tev_index);
-        out += ".b";
+        out += fmt::format("1.0 - {}.b", alpha_source);
         break;
     default:
         out += "0.0";
@@ -384,12 +356,11 @@ void FragmentModule::AppendColorCombiner(Pica::TexturingRegs::TevStageConfig::Op
         case Operation::AddSigned:
             return "color_results_1 + color_results_2 - vec3(0.5)";
         case Operation::Lerp:
-            return "color_results_1 * color_results_3 + color_results_2 * (vec3(1.0) - "
-                   "color_results_3)";
+            return "mix(color_results_2, color_results_1, color_results_3)";
         case Operation::Subtract:
             return "color_results_1 - color_results_2";
         case Operation::MultiplyThenAdd:
-            return "color_results_1 * color_results_2 + color_results_3";
+            return "fma(color_results_1, color_results_2, color_results_3)";
         case Operation::AddThenMultiply:
             return "min(color_results_1 + color_results_2, vec3(1.0)) * color_results_3";
         case Operation::Dot3_RGB:
@@ -416,11 +387,11 @@ void FragmentModule::AppendAlphaCombiner(Pica::TexturingRegs::TevStageConfig::Op
         case Operation::AddSigned:
             return "alpha_results_1 + alpha_results_2 - 0.5";
         case Operation::Lerp:
-            return "alpha_results_1 * alpha_results_3 + alpha_results_2 * (1.0 - alpha_results_3)";
+            return "mix(alpha_results_2, alpha_results_1, alpha_results_3)";
         case Operation::Subtract:
             return "alpha_results_1 - alpha_results_2";
         case Operation::MultiplyThenAdd:
-            return "alpha_results_1 * alpha_results_2 + alpha_results_3";
+            return "fma(alpha_results_1, alpha_results_2, alpha_results_3)";
         case Operation::AddThenMultiply:
             return "min(alpha_results_1 + alpha_results_2, 1.0) * alpha_results_3";
         default:

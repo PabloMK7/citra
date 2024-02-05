@@ -55,7 +55,7 @@ void FragmentModule::Generate() {
 
     combiner_buffer = ConstF32(0.f, 0.f, 0.f, 0.f);
     next_combiner_buffer = GetShaderDataMember(vec_ids.Get(4), ConstS32(26));
-    last_tex_env_out = rounded_primary_color;
+    combiner_output = ConstF32(0.f, 0.f, 0.f, 0.f);
 
     // Write shader bytecode to emulate PICA TEV stages
     for (u32 index = 0; index < config.texture.tev_stages.size(); ++index) {
@@ -76,7 +76,7 @@ void FragmentModule::Generate() {
         break;
     }
 
-    Id color{Byteround(last_tex_env_out, 4)};
+    Id color{Byteround(combiner_output, 4)};
     switch (config.framebuffer.logic_op) {
     case FramebufferRegs::LogicOp::Clear:
         color = ConstF32(0.f, 0.f, 0.f, 0.f);
@@ -184,12 +184,12 @@ void FragmentModule::WriteFog() {
 
     // Blend the fog
     const Id tex_env_rgb{
-        OpVectorShuffle(vec_ids.Get(3), last_tex_env_out, last_tex_env_out, 0, 1, 2)};
+        OpVectorShuffle(vec_ids.Get(3), combiner_output, combiner_output, 0, 1, 2)};
     const Id fog_color{GetShaderDataMember(vec_ids.Get(3), ConstS32(19))};
     const Id fog_factor_rgb{
         OpCompositeConstruct(vec_ids.Get(3), fog_factor, fog_factor, fog_factor)};
     const Id fog_result{OpFMix(vec_ids.Get(3), fog_color, tex_env_rgb, fog_factor_rgb)};
-    last_tex_env_out = OpVectorShuffle(vec_ids.Get(4), fog_result, last_tex_env_out, 0, 1, 2, 6);
+    combiner_output = OpVectorShuffle(vec_ids.Get(4), fog_result, combiner_output, 0, 1, 2, 6);
 }
 
 void FragmentModule::WriteGas() {
@@ -630,8 +630,7 @@ void FragmentModule::WriteLighting() {
 }
 
 void FragmentModule::WriteTevStage(s32 index) {
-    const TexturingRegs::TevStageConfig stage =
-        static_cast<const TexturingRegs::TevStageConfig>(config.texture.tev_stages[index]);
+    const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
 
     // Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
     const auto is_passthrough_tev_stage = [](const TevStageConfig& stage) {
@@ -674,18 +673,18 @@ void FragmentModule::WriteTevStage(s32 index) {
         alpha_output =
             OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
         alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));
-        last_tex_env_out = OpCompositeConstruct(vec_ids.Get(4), color_output, alpha_output);
+        combiner_output = OpCompositeConstruct(vec_ids.Get(4), color_output, alpha_output);
     }
 
     combiner_buffer = next_combiner_buffer;
     if (config.TevStageUpdatesCombinerBufferColor(index)) {
         next_combiner_buffer =
-            OpVectorShuffle(vec_ids.Get(4), last_tex_env_out, next_combiner_buffer, 0, 1, 2, 7);
+            OpVectorShuffle(vec_ids.Get(4), combiner_output, next_combiner_buffer, 0, 1, 2, 7);
     }
 
     if (config.TevStageUpdatesCombinerBufferAlpha(index)) {
         next_combiner_buffer =
-            OpVectorShuffle(vec_ids.Get(4), next_combiner_buffer, last_tex_env_out, 0, 1, 2, 7);
+            OpVectorShuffle(vec_ids.Get(4), next_combiner_buffer, combiner_output, 0, 1, 2, 7);
     }
 }
 
@@ -728,7 +727,7 @@ void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) 
     case CompareFunc::GreaterThan:
     case CompareFunc::GreaterThanOrEqual: {
         const Id alpha_scaled{
-            OpFMul(f32_id, OpCompositeExtract(f32_id, last_tex_env_out, 3), ConstF32(255.f))};
+            OpFMul(f32_id, OpCompositeExtract(f32_id, combiner_output, 3), ConstF32(255.f))};
         const Id alpha_int{OpConvertFToS(i32_id, alpha_scaled)};
         const Id alphatest_ref{GetShaderDataMember(i32_id, ConstS32(1))};
         const Id alpha_comp_ref{compare(alpha_int, alphatest_ref)};
@@ -1280,7 +1279,7 @@ Id FragmentModule::LookupLightingLUT(Id lut_index, Id index, Id delta) {
     return OpFma(f32_id, entry_g, delta, entry_r);
 }
 
-Id FragmentModule::AppendSource(TevStageConfig::Source source, s32 index) {
+Id FragmentModule::GetSource(TevStageConfig::Source source, s32 index) {
     using Source = TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:
@@ -1302,7 +1301,7 @@ Id FragmentModule::AppendSource(TevStageConfig::Source source, s32 index) {
     case Source::Constant:
         return GetShaderDataMember(vec_ids.Get(4), ConstS32(25), ConstS32(index));
     case Source::Previous:
-        return last_tex_env_out;
+        return combiner_output;
     default:
         LOG_CRITICAL(Render, "Unknown source op {}", source);
         return ConstF32(0.f, 0.f, 0.f, 0.f);
@@ -1311,8 +1310,11 @@ Id FragmentModule::AppendSource(TevStageConfig::Source source, s32 index) {
 
 Id FragmentModule::AppendColorModifier(TevStageConfig::ColorModifier modifier,
                                        TevStageConfig::Source source, s32 index) {
+    using Source = TevStageConfig::Source;
     using ColorModifier = TevStageConfig::ColorModifier;
-    const Id source_color{AppendSource(source, index)};
+    const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
+    const bool force_source3 = index == 0 && source == Source::Previous;
+    const Id source_color{GetSource(force_source3 ? stage.color_source3.Value() : source, index)};
     const Id one_vec{ConstF32(1.f, 1.f, 1.f)};
 
     const auto shuffle = [&](s32 r, s32 g, s32 b) -> Id {
@@ -1348,11 +1350,14 @@ Id FragmentModule::AppendColorModifier(TevStageConfig::ColorModifier modifier,
 
 Id FragmentModule::AppendAlphaModifier(TevStageConfig::AlphaModifier modifier,
                                        TevStageConfig::Source source, s32 index) {
+    using Source = TevStageConfig::Source;
     using AlphaModifier = TevStageConfig::AlphaModifier;
-    const Id source_color{AppendSource(source, index)};
+    const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
+    const bool force_source3 = index == 0 && source == Source::Previous;
+    const Id source_alpha{GetSource(force_source3 ? stage.alpha_source3.Value() : source, index)};
     const Id one_f32{ConstF32(1.f)};
 
-    const auto component = [&](s32 c) -> Id { return OpCompositeExtract(f32_id, source_color, c); };
+    const auto component = [&](s32 c) -> Id { return OpCompositeExtract(f32_id, source_alpha, c); };
 
     switch (modifier) {
     case AlphaModifier::SourceAlpha:

@@ -99,13 +99,13 @@ private:
     /// Lookups the lighting LUT at the provided lut_index
     [[nodiscard]] Id LookupLightingLUT(Id lut_index, Id index, Id delta);
 
-    /// Writes the specified TEV stage source component(s)
-    [[nodiscard]] Id AppendSource(Pica::TexturingRegs::TevStageConfig::Source source, s32 index);
+    /// Returns the specified TEV stage source component(s)
+    [[nodiscard]] Id GetSource(Pica::TexturingRegs::TevStageConfig::Source source, s32 index);
 
     /// Writes the color components to use for the specified TEV stage color modifier
     [[nodiscard]] Id AppendColorModifier(
         Pica::TexturingRegs::TevStageConfig::ColorModifier modifier,
-        Pica::TexturingRegs::TevStageConfig::Source source, s32 index);
+        Pica::TexturingRegs::TevStageConfig::Source source, s32 tev_index);
 
     /// Writes the alpha component to use for the specified TEV stage alpha modifier
     [[nodiscard]] Id AppendAlphaModifier(
@@ -272,7 +272,7 @@ private:
     Id secondary_fragment_color{};
     Id combiner_buffer{};
     Id next_combiner_buffer{};
-    Id last_tex_env_out{};
+    Id combiner_output{};
 
     Id color_results_1{};
     Id color_results_2{};

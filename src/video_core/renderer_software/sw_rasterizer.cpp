@@ -695,7 +695,7 @@ Common::Vec4<u8> RasterizerSoftware::WriteTevConfig(
      * with some basic arithmetic. Alpha combiners can be configured separately but work
      * analogously.
      **/
-    Common::Vec4<u8> combiner_output = primary_color;
+    Common::Vec4<u8> combiner_output = {0, 0, 0, 0};
     Common::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
     Common::Vec4<u8> next_combiner_buffer =
         Common::MakeVec(regs.texturing.tev_combiner_buffer_color.r.Value(),
@@ -746,9 +746,15 @@ Common::Vec4<u8> RasterizerSoftware::WriteTevConfig(
          *       combiner_output.rgb(), but instead store it in a temporary variable until
          *       alpha combining has been done.
          **/
+        const auto source1 = tev_stage_index == 0 && tev_stage.color_source1 == Source::Previous
+                                 ? tev_stage.color_source3.Value()
+                                 : tev_stage.color_source1.Value();
+        const auto source2 = tev_stage_index == 0 && tev_stage.color_source2 == Source::Previous
+                                 ? tev_stage.color_source3.Value()
+                                 : tev_stage.color_source2.Value();
         const std::array<Common::Vec3<u8>, 3> color_result = {
-            GetColorModifier(tev_stage.color_modifier1, get_source(tev_stage.color_source1)),
-            GetColorModifier(tev_stage.color_modifier2, get_source(tev_stage.color_source2)),
+            GetColorModifier(tev_stage.color_modifier1, get_source(source1)),
+            GetColorModifier(tev_stage.color_modifier2, get_source(source2)),
             GetColorModifier(tev_stage.color_modifier3, get_source(tev_stage.color_source3)),
         };
         const Common::Vec3<u8> color_output = ColorCombine(tev_stage.color_op, color_result);
