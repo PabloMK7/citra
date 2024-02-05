@@ -40,7 +40,7 @@ layout (binding = 1, std140) uniform vs_data {
     vec4 clip_coef;
 };
 
-const vec2 EPSILON_Z = vec2(0.00000001f, -1.00001f);
+const vec2 EPSILON_Z = vec2(0.000001f, -1.00001f);
 
 vec4 SanitizeVertex(vec4 vtx_pos) {
     float ndc_z = vtx_pos.z / vtx_pos.w;
