@@ -287,5 +287,13 @@ dumptxt -p $[OUT] "nfcSecret1Seed=$[NFC_SEED_1]"
 dumptxt -p $[OUT] "nfcSecret1HmacKey=$[NFC_HMAC_KEY_1]"
 dumptxt -p $[OUT] "nfcIv=$[NFC_IV]"
 
+# Dump seeddb.bin as well
+
+set SEEDDB_IN "0:/gm9/out/seeddb.bin"
+set SEEDDB_OUT "0:/gm9/seeddb.bin"
+
+sdump -w seeddb.bin
+cp -w $[SEEDDB_IN] $[SEEDDB_OUT]
+
 @Exit
 
