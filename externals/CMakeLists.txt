@@ -57,6 +57,12 @@ if(USE_SYSTEM_CRYPTOPP)
     add_library(cryptopp INTERFACE)
     target_link_libraries(cryptopp INTERFACE cryptopp::cryptopp)
 else()
+    if (WIN32 AND NOT MSVC AND "arm64" IN_LIST ARCHITECTURE)
+        # TODO: CryptoPP ARM64 ASM does not seem to support Windows unless compiled with MSVC.
+        # TODO: See https://github.com/weidai11/cryptopp/issues/1260
+        set(CRYPTOPP_DISABLE_ASM ON CACHE BOOL "")
+    endif()
+
     set(CRYPTOPP_BUILD_DOCUMENTATION OFF CACHE BOOL "")
     set(CRYPTOPP_BUILD_TESTING OFF CACHE BOOL "")
     set(CRYPTOPP_INSTALL OFF CACHE BOOL "")
@@ -235,6 +241,18 @@ endif()
 
 # DiscordRPC
 if (USE_DISCORD_PRESENCE)
+    # rapidjson used by discord-rpc is old and doesn't correctly detect endianness for some platforms.
+    include(TestBigEndian)
+    test_big_endian(RAPIDJSON_BIG_ENDIAN)
+    if(RAPIDJSON_BIG_ENDIAN)
+        add_compile_definitions(RAPIDJSON_ENDIAN=1)
+    else()
+        add_compile_definitions(RAPIDJSON_ENDIAN=0)
+    endif()
+
+    # Apply a dummy CLANG_FORMAT_SUFFIX to disable discord-rpc's unnecessary automatic clang-format.
+    set(CLANG_FORMAT_SUFFIX "dummy")
+
     add_subdirectory(discord-rpc EXCLUDE_FROM_ALL)
     target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
 endif()

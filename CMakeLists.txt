@@ -85,8 +85,6 @@ option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
-CMAKE_DEPENDENT_OPTION(CITRA_ENABLE_BUNDLE_TARGET "Enable the distribution bundling target." ON "NOT ANDROID AND NOT IOS" OFF)
-
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
@@ -249,6 +247,26 @@ if (ENABLE_QT)
     if (ENABLE_QT_TRANSLATION)
         find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
     endif()
+
+    if (NOT DEFINED QT_TARGET_PATH)
+        # Determine the location of the compile target's Qt.
+        get_target_property(qtcore_path Qt6::Core LOCATION_Release)
+        string(FIND "${qtcore_path}" "/bin/" qtcore_path_bin_pos REVERSE)
+        string(FIND "${qtcore_path}" "/lib/" qtcore_path_lib_pos REVERSE)
+        if (qtcore_path_bin_pos GREATER qtcore_path_lib_pos)
+            string(SUBSTRING "${qtcore_path}" 0 ${qtcore_path_bin_pos} QT_TARGET_PATH)
+        else()
+            string(SUBSTRING "${qtcore_path}" 0 ${qtcore_path_lib_pos} QT_TARGET_PATH)
+        endif()
+    endif()
+
+    if (NOT DEFINED QT_HOST_PATH)
+        # Use the same for host Qt if none is defined.
+        set(QT_HOST_PATH "${QT_TARGET_PATH}")
+    endif()
+
+    message(STATUS "Using target Qt at ${QT_TARGET_PATH}")
+    message(STATUS "Using host Qt at ${QT_HOST_PATH}")
 endif()
 
 # Use system tsl::robin_map if available (otherwise we fallback to version bundled with dynarmic)
@@ -424,7 +442,8 @@ else()
 endif()
 
 # Create target for outputting distributable bundles.
-if (CITRA_ENABLE_BUNDLE_TARGET)
+# Not supported for mobile platforms as distributables are built differently.
+if (NOT ANDROID AND NOT IOS)
     include(BundleTarget)
     if (ENABLE_SDL2_FRONTEND)
         bundle_target(citra)
