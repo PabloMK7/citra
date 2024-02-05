@@ -30,7 +30,7 @@ using Pica::Texture::TextureInfo;
 // negative/positive z values when computing with f32 precision,
 // causing some vertices to get erroneously clipped. To workaround this problem,
 // we can use a very small epsilon value for clip plane comparison.
-constexpr f32 EPSILON_Z = 0.00000001f;
+constexpr f32 EPSILON_Z = 0.f;
 
 struct Vertex : Pica::OutputVertex {
     Vertex(const OutputVertex& v) : OutputVertex(v) {}
@@ -286,11 +286,11 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
     max_y = ((max_y + Fix12P4::FracMask()) & Fix12P4::IntMask());
 
     const int bias0 =
-        IsRightSideOrFlatBottomEdge(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) ? -1 : 0;
+        IsRightSideOrFlatBottomEdge(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) ? 1 : 0;
     const int bias1 =
-        IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
+        IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? 1 : 0;
     const int bias2 =
-        IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
+        IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? 1 : 0;
 
     const auto w_inverse = Common::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
@@ -313,13 +313,13 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
                 }
 
                 // Calculate the barycentric coordinates w0, w1 and w2
-                const s32 w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
-                const s32 w1 = bias1 + SignedArea(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
-                const s32 w2 = bias2 + SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});
+                const s32 w0 = SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
+                const s32 w1 = SignedArea(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
+                const s32 w2 = SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});
                 const s32 wsum = w0 + w1 + w2;
 
                 // If current pixel is not covered by the current primitive
-                if (w0 < 0 || w1 < 0 || w2 < 0) {
+                if (w0 < bias0 || w1 < bias1 || w2 < bias2) {
                     continue;
                 }
 
