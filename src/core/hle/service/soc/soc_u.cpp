@@ -624,8 +624,9 @@ union CTRSockAddr {
     static_assert(sizeof(CTRSockAddrIn6) == 28, "Invalid CTRSockAddrIn6 size");
 
     /// Convert a 3DS CTRSockAddr to a platform-specific sockaddr
-    static sockaddr_storage ToPlatform(CTRSockAddr const& ctr_addr) {
+    static std::pair<sockaddr_storage, socklen_t> ToPlatform(CTRSockAddr const& ctr_addr) {
         sockaddr_storage result{};
+        socklen_t result_len = sizeof(result.ss_family);
         ASSERT_MSG(ctr_addr.raw.len == sizeof(CTRSockAddrIn) ||
                        ctr_addr.raw.len == sizeof(CTRSockAddrIn6),
                    "Unhandled address size (len) in CTRSockAddr::ToPlatform");
@@ -637,6 +638,7 @@ union CTRSockAddr {
             sockaddr_in* result_in = reinterpret_cast<sockaddr_in*>(&result);
             result_in->sin_port = ctr_addr.in.sin_port;
             result_in->sin_addr.s_addr = ctr_addr.in.sin_addr;
+            result_len = sizeof(sockaddr_in);
             break;
         }
         case AF_INET6: {
@@ -646,13 +648,14 @@ union CTRSockAddr {
                    sizeof(result_in6->sin6_addr));
             result_in6->sin6_flowinfo = ctr_addr.in6.sin6_flowinfo;
             result_in6->sin6_scope_id = ctr_addr.in6.sin6_scope_id;
+            result_len = sizeof(sockaddr_in6);
             break;
         }
         default:
             ASSERT_MSG(false, "Unhandled address family (sa_family) in CTRSockAddr::ToPlatform");
             break;
         }
-        return result;
+        return std::make_pair(result, result_len);
     }
 
     /// Convert a platform-specific sockaddr to a 3DS CTRSockAddr
@@ -869,9 +872,9 @@ void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
     CTRSockAddr ctr_sock_addr;
     std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), std::min<size_t>(len, sizeof(ctr_sock_addr)));
 
-    sockaddr_storage sock_addr = CTRSockAddr::ToPlatform(ctr_sock_addr);
+    auto [sock_addr, sock_addr_len] = CTRSockAddr::ToPlatform(ctr_sock_addr);
 
-    s32 ret = ::bind(holder.socket_fd, reinterpret_cast<sockaddr*>(&sock_addr), sizeof(sock_addr));
+    s32 ret = ::bind(holder.socket_fd, reinterpret_cast<sockaddr*>(&sock_addr), sock_addr_len);
 
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
@@ -1139,10 +1142,10 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(),
                     std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
-        sockaddr_storage dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
+        auto [dest_addr, dest_addr_len] = CTRSockAddr::ToPlatform(ctr_dest_addr);
         ret = static_cast<s32>(
             ::sendto(holder.socket_fd, reinterpret_cast<const char*>(input_buff.data()), len, flags,
-                     reinterpret_cast<sockaddr*>(&dest_addr), sizeof(dest_addr)));
+                     reinterpret_cast<sockaddr*>(&dest_addr), dest_addr_len));
     } else {
         ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
@@ -1189,10 +1192,10 @@ s32 SOC_U::SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buff,
                     std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
-        sockaddr_storage dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
+        auto [dest_addr, dest_addr_len] = CTRSockAddr::ToPlatform(ctr_dest_addr);
         ret = static_cast<s32>(
             ::sendto(holder.socket_fd, reinterpret_cast<const char*>(input_buff.data()), len, flags,
-                     reinterpret_cast<sockaddr*>(&dest_addr), sizeof(dest_addr)));
+                     reinterpret_cast<sockaddr*>(&dest_addr), dest_addr_len));
     } else {
         ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
@@ -1678,11 +1681,11 @@ void SOC_U::GetHostByAddr(Kernel::HLERequestContext& ctx) {
     [[maybe_unused]] u32 out_buf_len = rp.Pop<u32>();
     auto addr = rp.PopStaticBuffer();
 
-    sockaddr_storage platform_addr =
+    auto [platform_addr, platform_addr_len] =
         CTRSockAddr::ToPlatform(*reinterpret_cast<CTRSockAddr*>(addr.data()));
 
     struct hostent* result =
-        ::gethostbyaddr(reinterpret_cast<char*>(&platform_addr), sizeof(platform_addr), type);
+        ::gethostbyaddr(reinterpret_cast<char*>(&platform_addr), platform_addr_len, type);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(ResultSuccess);
@@ -1774,7 +1777,7 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     struct AsyncData {
         // Input
         SocketHolder* fd_info;
-        sockaddr_storage input_addr;
+        std::pair<sockaddr_storage, socklen_t> input_addr;
         u32 socket_handle;
         u32 pid;
 
@@ -1797,8 +1800,8 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     ctx.RunAsync(
         [async_data](Kernel::HLERequestContext& ctx) {
             async_data->ret = ::connect(async_data->fd_info->socket_fd,
-                                        reinterpret_cast<sockaddr*>(&async_data->input_addr),
-                                        sizeof(async_data->input_addr));
+                                        reinterpret_cast<sockaddr*>(&async_data->input_addr.first),
+                                        async_data->input_addr.second);
             async_data->connect_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
             return 0;
         },
@@ -2081,15 +2084,15 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
 
     CTRSockAddr ctr_sa;
     std::memcpy(&ctr_sa, sa_buff.data(), socklen);
-    sockaddr_storage sa = CTRSockAddr::ToPlatform(ctr_sa);
+    auto [sa, sa_len] = CTRSockAddr::ToPlatform(ctr_sa);
 
     std::vector<u8> host(hostlen);
     std::vector<u8> serv(servlen);
     char* host_data = hostlen > 0 ? reinterpret_cast<char*>(host.data()) : nullptr;
     char* serv_data = servlen > 0 ? reinterpret_cast<char*>(serv.data()) : nullptr;
 
-    s32 ret = getnameinfo(reinterpret_cast<sockaddr*>(&sa), sizeof(sa), host_data, hostlen,
-                          serv_data, servlen, flags);
+    s32 ret = getnameinfo(reinterpret_cast<sockaddr*>(&sa), sa_len, host_data, hostlen, serv_data,
+                          servlen, flags);
     if (ret == SOCKET_ERROR_VALUE) {
         ret = TranslateError(GET_ERRNO);
     }
