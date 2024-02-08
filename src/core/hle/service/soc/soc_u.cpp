@@ -598,9 +598,10 @@ static_assert(std::is_trivially_copyable_v<CTRPollFD>,
 union CTRSockAddr {
     /// Structure to represent a raw sockaddr
     struct {
-        u8 len;           ///< The length of the entire structure, only the set fields count
-        u8 sa_family;     ///< The address family of the sockaddr
-        u8 sa_data[0x1A]; ///< The extra data, this varies, depending on the address family
+        u8 len;       ///< The length of the entire structure, only the set fields count
+        u8 sa_family; ///< The address family of the sockaddr
+        std::array<u8, 0x1A>
+            sa_data; ///< The extra data, this varies, depending on the address family
     } raw;
 
     /// Structure to represent the 3ds' sockaddr_in structure
@@ -612,21 +613,39 @@ union CTRSockAddr {
     } in;
     static_assert(sizeof(CTRSockAddrIn) == 8, "Invalid CTRSockAddrIn size");
 
+    struct CTRSockAddrIn6 {
+        u8 len;                         ///< The length of the entire structure
+        u8 sin6_family;                 ///< The address family of the sockaddr_in6
+        u16 sin6_port;                  ///< The port associated with this sockaddr_in6
+        std::array<u8, 0x10> sin6_addr; ///< The actual address of the sockaddr_in6
+        u32 sin6_flowinfo;              ///< The flow info of the sockaddr_in6
+        u32 sin6_scope_id;              ///< The scope ID of the sockaddr_in6
+    } in6;
+    static_assert(sizeof(CTRSockAddrIn6) == 28, "Invalid CTRSockAddrIn6 size");
+
     /// Convert a 3DS CTRSockAddr to a platform-specific sockaddr
-    static sockaddr ToPlatform(CTRSockAddr const& ctr_addr) {
-        sockaddr result;
-        ASSERT_MSG(ctr_addr.raw.len == sizeof(CTRSockAddrIn),
+    static sockaddr_storage ToPlatform(CTRSockAddr const& ctr_addr) {
+        sockaddr_storage result{};
+        ASSERT_MSG(ctr_addr.raw.len == sizeof(CTRSockAddrIn) ||
+                       ctr_addr.raw.len == sizeof(CTRSockAddrIn6),
                    "Unhandled address size (len) in CTRSockAddr::ToPlatform");
-        result.sa_family = SocketDomainToPlatform(ctr_addr.raw.sa_family);
-        std::memset(result.sa_data, 0, sizeof(result.sa_data));
+        result.ss_family = SocketDomainToPlatform(ctr_addr.raw.sa_family);
 
         // We can not guarantee ABI compatibility between platforms so we copy the fields manually
-        switch (result.sa_family) {
+        switch (result.ss_family) {
         case AF_INET: {
             sockaddr_in* result_in = reinterpret_cast<sockaddr_in*>(&result);
             result_in->sin_port = ctr_addr.in.sin_port;
             result_in->sin_addr.s_addr = ctr_addr.in.sin_addr;
-            std::memset(result_in->sin_zero, 0, sizeof(result_in->sin_zero));
+            break;
+        }
+        case AF_INET6: {
+            sockaddr_in6* result_in6 = reinterpret_cast<sockaddr_in6*>(&result);
+            result_in6->sin6_port = ctr_addr.in6.sin6_port;
+            memcpy(&result_in6->sin6_addr, ctr_addr.in6.sin6_addr.data(),
+                   sizeof(result_in6->sin6_addr));
+            result_in6->sin6_flowinfo = ctr_addr.in6.sin6_flowinfo;
+            result_in6->sin6_scope_id = ctr_addr.in6.sin6_scope_id;
             break;
         }
         default:
@@ -637,16 +656,25 @@ union CTRSockAddr {
     }
 
     /// Convert a platform-specific sockaddr to a 3DS CTRSockAddr
-    static CTRSockAddr FromPlatform(sockaddr const& addr) {
+    static CTRSockAddr FromPlatform(sockaddr_storage const& addr) {
         CTRSockAddr result;
-        result.raw.sa_family = static_cast<u8>(SocketDomainFromPlatform(addr.sa_family));
+        result.raw.sa_family = static_cast<u8>(SocketDomainFromPlatform(addr.ss_family));
         // We can not guarantee ABI compatibility between platforms so we copy the fields manually
-        switch (addr.sa_family) {
+        switch (addr.ss_family) {
         case AF_INET: {
             sockaddr_in const* addr_in = reinterpret_cast<sockaddr_in const*>(&addr);
             result.raw.len = sizeof(CTRSockAddrIn);
             result.in.sin_port = addr_in->sin_port;
             result.in.sin_addr = addr_in->sin_addr.s_addr;
+            break;
+        }
+        case AF_INET6: {
+            sockaddr_in6 const* addr_in6 = reinterpret_cast<sockaddr_in6 const*>(&addr);
+            result.raw.len = sizeof(CTRSockAddrIn6);
+            result.in6.sin6_port = addr_in6->sin6_port;
+            memcpy(result.in6.sin6_addr.data(), &addr_in6->sin6_addr, sizeof(result.in6.sin6_addr));
+            result.in6.sin6_flowinfo = addr_in6->sin6_flowinfo;
+            result.in6.sin6_scope_id = addr_in6->sin6_scope_id;
             break;
         }
         default:
@@ -707,7 +735,8 @@ struct CTRAddrInfo {
             .ai_family = static_cast<s32_le>(SocketDomainFromPlatform(addr.ai_family)),
             .ai_socktype = static_cast<s32_le>(SocketTypeFromPlatform(addr.ai_socktype)),
             .ai_protocol = static_cast<s32_le>(SocketProtocolFromPlatform(addr.ai_protocol)),
-            .ai_addr = CTRSockAddr::FromPlatform(*addr.ai_addr),
+            .ai_addr =
+                CTRSockAddr::FromPlatform(*reinterpret_cast<sockaddr_storage*>(addr.ai_addr)),
         };
         ctr_addr.ai_addrlen = static_cast<s32_le>(ctr_addr.ai_addr.raw.len);
         if (addr.ai_canonname)
@@ -840,9 +869,9 @@ void SOC_U::Bind(Kernel::HLERequestContext& ctx) {
     CTRSockAddr ctr_sock_addr;
     std::memcpy(&ctr_sock_addr, sock_addr_buf.data(), std::min<size_t>(len, sizeof(ctr_sock_addr)));
 
-    sockaddr sock_addr = CTRSockAddr::ToPlatform(ctr_sock_addr);
+    sockaddr_storage sock_addr = CTRSockAddr::ToPlatform(ctr_sock_addr);
 
-    s32 ret = ::bind(holder.socket_fd, &sock_addr, sizeof(sock_addr));
+    s32 ret = ::bind(holder.socket_fd, reinterpret_cast<sockaddr*>(&sock_addr), sizeof(sock_addr));
 
     if (ret != 0)
         ret = TranslateError(GET_ERRNO);
@@ -937,7 +966,7 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
         // Output
         s32 ret{};
         int accept_error;
-        sockaddr addr;
+        sockaddr_storage addr;
     };
 
     auto async_data = std::make_shared<AsyncData>();
@@ -950,7 +979,8 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
         [async_data](Kernel::HLERequestContext& ctx) {
             socklen_t addr_len = sizeof(async_data->addr);
             async_data->ret = static_cast<u32>(
-                ::accept(async_data->fd_info->socket_fd, &async_data->addr, &addr_len));
+                ::accept(async_data->fd_info->socket_fd,
+                         reinterpret_cast<sockaddr*>(&async_data->addr), &addr_len));
             async_data->accept_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
             return 0;
         },
@@ -1109,10 +1139,10 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buffer.data(),
                     std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
-        sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
-        ret = static_cast<s32>(::sendto(holder.socket_fd,
-                                        reinterpret_cast<const char*>(input_buff.data()), len,
-                                        flags, &dest_addr, sizeof(dest_addr)));
+        sockaddr_storage dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
+        ret = static_cast<s32>(
+            ::sendto(holder.socket_fd, reinterpret_cast<const char*>(input_buff.data()), len, flags,
+                     reinterpret_cast<sockaddr*>(&dest_addr), sizeof(dest_addr)));
     } else {
         ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
@@ -1159,10 +1189,10 @@ s32 SOC_U::SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
         CTRSockAddr ctr_dest_addr;
         std::memcpy(&ctr_dest_addr, dest_addr_buff,
                     std::min<size_t>(addr_len, sizeof(ctr_dest_addr)));
-        sockaddr dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
-        ret = static_cast<s32>(::sendto(holder.socket_fd,
-                                        reinterpret_cast<const char*>(input_buff.data()), len,
-                                        flags, &dest_addr, sizeof(dest_addr)));
+        sockaddr_storage dest_addr = CTRSockAddr::ToPlatform(ctr_dest_addr);
+        ret = static_cast<s32>(
+            ::sendto(holder.socket_fd, reinterpret_cast<const char*>(input_buff.data()), len, flags,
+                     reinterpret_cast<sockaddr*>(&dest_addr), sizeof(dest_addr)));
     } else {
         ret = static_cast<s32>(::sendto(holder.socket_fd,
                                         reinterpret_cast<const char*>(input_buff.data()), len,
@@ -1294,7 +1324,7 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
 
     ctx.RunAsync(
         [async_data](Kernel::HLERequestContext& ctx) {
-            sockaddr src_addr;
+            sockaddr_storage src_addr;
             socklen_t src_addr_len = sizeof(src_addr);
             CTRSockAddr ctr_src_addr;
             // Windows, why do you have to be so special...
@@ -1302,10 +1332,10 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
                 RecvBusyWaitForEvent(*async_data->fd_info);
             }
             if (async_data->addr_len > 0) {
-                async_data->ret = static_cast<s32>(
-                    ::recvfrom(async_data->fd_info->socket_fd,
-                               reinterpret_cast<char*>(async_data->output_buff.data()),
-                               async_data->len, async_data->flags, &src_addr, &src_addr_len));
+                async_data->ret = static_cast<s32>(::recvfrom(
+                    async_data->fd_info->socket_fd,
+                    reinterpret_cast<char*>(async_data->output_buff.data()), async_data->len,
+                    async_data->flags, reinterpret_cast<sockaddr*>(&src_addr), &src_addr_len));
                 if (async_data->ret >= 0 && src_addr_len > 0) {
                     ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
                     std::memcpy(async_data->addr_buff.data(), &ctr_src_addr,
@@ -1411,7 +1441,7 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
 
     ctx.RunAsync(
         [async_data](Kernel::HLERequestContext& ctx) {
-            sockaddr src_addr;
+            sockaddr_storage src_addr;
             socklen_t src_addr_len = sizeof(src_addr);
             CTRSockAddr ctr_src_addr;
             if (async_data->is_blocking) {
@@ -1419,10 +1449,10 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
             }
             if (async_data->addr_len > 0) {
                 // Only get src adr if input adr available
-                async_data->ret = static_cast<s32>(
-                    ::recvfrom(async_data->fd_info->socket_fd,
-                               reinterpret_cast<char*>(async_data->output_buff.data()),
-                               async_data->len, async_data->flags, &src_addr, &src_addr_len));
+                async_data->ret = static_cast<s32>(::recvfrom(
+                    async_data->fd_info->socket_fd,
+                    reinterpret_cast<char*>(async_data->output_buff.data()), async_data->len,
+                    async_data->flags, reinterpret_cast<sockaddr*>(&src_addr), &src_addr_len));
                 if (async_data->ret >= 0 && src_addr_len > 0) {
                     ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
                     std::memcpy(async_data->addr_buff.data(), &ctr_src_addr,
@@ -1558,9 +1588,10 @@ void SOC_U::GetSockName(Kernel::HLERequestContext& ctx) {
     }
     SocketHolder& holder = socket_holder_optional->get();
 
-    sockaddr dest_addr;
+    sockaddr_storage dest_addr;
     socklen_t dest_addr_len = sizeof(dest_addr);
-    s32 ret = ::getsockname(holder.socket_fd, &dest_addr, &dest_addr_len);
+    s32 ret =
+        ::getsockname(holder.socket_fd, reinterpret_cast<sockaddr*>(&dest_addr), &dest_addr_len);
 
     CTRSockAddr ctr_dest_addr = CTRSockAddr::FromPlatform(dest_addr);
     std::vector<u8> dest_addr_buff(sizeof(ctr_dest_addr));
@@ -1647,7 +1678,8 @@ void SOC_U::GetHostByAddr(Kernel::HLERequestContext& ctx) {
     [[maybe_unused]] u32 out_buf_len = rp.Pop<u32>();
     auto addr = rp.PopStaticBuffer();
 
-    sockaddr platform_addr = CTRSockAddr::ToPlatform(*reinterpret_cast<CTRSockAddr*>(addr.data()));
+    sockaddr_storage platform_addr =
+        CTRSockAddr::ToPlatform(*reinterpret_cast<CTRSockAddr*>(addr.data()));
 
     struct hostent* result =
         ::gethostbyaddr(reinterpret_cast<char*>(&platform_addr), sizeof(platform_addr), type);
@@ -1698,9 +1730,10 @@ void SOC_U::GetPeerName(Kernel::HLERequestContext& ctx) {
     }
     SocketHolder& holder = socket_holder_optional->get();
 
-    sockaddr dest_addr;
+    sockaddr_storage dest_addr;
     socklen_t dest_addr_len = sizeof(dest_addr);
-    const int ret = ::getpeername(holder.socket_fd, &dest_addr, &dest_addr_len);
+    const int ret =
+        ::getpeername(holder.socket_fd, reinterpret_cast<sockaddr*>(&dest_addr), &dest_addr_len);
 
     CTRSockAddr ctr_dest_addr = CTRSockAddr::FromPlatform(dest_addr);
     std::vector<u8> dest_addr_buff(sizeof(ctr_dest_addr));
@@ -1741,7 +1774,7 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
     struct AsyncData {
         // Input
         SocketHolder* fd_info;
-        sockaddr input_addr;
+        sockaddr_storage input_addr;
         u32 socket_handle;
         u32 pid;
 
@@ -1763,7 +1796,8 @@ void SOC_U::Connect(Kernel::HLERequestContext& ctx) {
 
     ctx.RunAsync(
         [async_data](Kernel::HLERequestContext& ctx) {
-            async_data->ret = ::connect(async_data->fd_info->socket_fd, &async_data->input_addr,
+            async_data->ret = ::connect(async_data->fd_info->socket_fd,
+                                        reinterpret_cast<sockaddr*>(&async_data->input_addr),
                                         sizeof(async_data->input_addr));
             async_data->connect_error = (async_data->ret == SOCKET_ERROR_VALUE) ? GET_ERRNO : 0;
             return 0;
@@ -2047,14 +2081,15 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
 
     CTRSockAddr ctr_sa;
     std::memcpy(&ctr_sa, sa_buff.data(), socklen);
-    sockaddr sa = CTRSockAddr::ToPlatform(ctr_sa);
+    sockaddr_storage sa = CTRSockAddr::ToPlatform(ctr_sa);
 
     std::vector<u8> host(hostlen);
     std::vector<u8> serv(servlen);
     char* host_data = hostlen > 0 ? reinterpret_cast<char*>(host.data()) : nullptr;
     char* serv_data = servlen > 0 ? reinterpret_cast<char*>(serv.data()) : nullptr;
 
-    s32 ret = getnameinfo(&sa, sizeof(sa), host_data, hostlen, serv_data, servlen, flags);
+    s32 ret = getnameinfo(reinterpret_cast<sockaddr*>(&sa), sizeof(sa), host_data, hostlen,
+                          serv_data, servlen, flags);
     if (ret == SOCKET_ERROR_VALUE) {
         ret = TranslateError(GET_ERRNO);
     }
