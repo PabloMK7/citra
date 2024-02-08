@@ -8,6 +8,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include <fmt/format.h>
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/scope_exit.h"
@@ -34,36 +35,78 @@ enum {
     InvalidRequestMethod = 32,
     HeaderNotFound = 40,
     BufferTooSmall = 43,
+
+    /// This error is returned in multiple situations: when trying to add Post data that is
+    /// incompatible with the one that is used in the session, or when trying to use chunked
+    /// requests with Post data already set
+    IncompatibleAddPostData = 50,
+
+    InvalidPostDataEncoding = 53,
+    IncompatibleSendPostData = 54,
+    WrongCertID = 57,
+    CertAlreadySet = 61,
     ContextNotFound = 100,
+    Timeout = 105,
 
     /// This error is returned in multiple situations: when trying to initialize an
     /// already-initialized session, or when using the wrong context handle in a context-bound
     /// session
     SessionStateError = 102,
+
+    WrongCertHandle = 201,
     TooManyClientCerts = 203,
     NotImplemented = 1012,
 };
 }
 
-const Result ERROR_STATE_ERROR = // 0xD8A0A066
+constexpr Result ErrorStateError = // 0xD8A0A066
     Result(ErrCodes::SessionStateError, ErrorModule::HTTP, ErrorSummary::InvalidState,
            ErrorLevel::Permanent);
-const Result ERROR_NOT_IMPLEMENTED = // 0xD960A3F4
+constexpr Result ErrorNotImplemented = // 0xD960A3F4
     Result(ErrCodes::NotImplemented, ErrorModule::HTTP, ErrorSummary::Internal,
            ErrorLevel::Permanent);
-const Result ERROR_TOO_MANY_CLIENT_CERTS = // 0xD8A0A0CB
+constexpr Result ErrorTooManyClientCerts = // 0xD8A0A0CB
     Result(ErrCodes::TooManyClientCerts, ErrorModule::HTTP, ErrorSummary::InvalidState,
            ErrorLevel::Permanent);
-const Result ERROR_HEADER_NOT_FOUND = Result(ErrCodes::HeaderNotFound, ErrorModule::HTTP,
-                                             ErrorSummary::InvalidState, ErrorLevel::Permanent);
-const Result ERROR_BUFFER_SMALL = Result(ErrCodes::BufferTooSmall, ErrorModule::HTTP,
-                                         ErrorSummary::WouldBlock, ErrorLevel::Permanent);
-const Result ERROR_WRONG_CERT_ID = // 0xD8E0B839
-    Result(57, ErrorModule::SSL, ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
-const Result ERROR_WRONG_CERT_HANDLE = // 0xD8A0A0C9
-    Result(201, ErrorModule::HTTP, ErrorSummary::InvalidState, ErrorLevel::Permanent);
-const Result ERROR_CERT_ALREADY_SET = // 0xD8A0A03D
-    Result(61, ErrorModule::HTTP, ErrorSummary::InvalidState, ErrorLevel::Permanent);
+constexpr Result ErrorHeaderNotFound = // 0xD8A0A028
+    Result(ErrCodes::HeaderNotFound, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorBufferSmall = // 0xD840A02B
+    Result(ErrCodes::BufferTooSmall, ErrorModule::HTTP, ErrorSummary::WouldBlock,
+           ErrorLevel::Permanent);
+constexpr Result ErrorWrongCertID = // 0xD8E0B839
+    Result(ErrCodes::WrongCertID, ErrorModule::SSL, ErrorSummary::InvalidArgument,
+           ErrorLevel::Permanent);
+constexpr Result ErrorWrongCertHandle = // 0xD8A0A0C9
+    Result(ErrCodes::WrongCertHandle, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorCertAlreadySet = // 0xD8A0A03D
+    Result(ErrCodes::CertAlreadySet, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorIncompatibleAddPostData = // 0xD8A0A032
+    Result(ErrCodes::IncompatibleAddPostData, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorContextNotFound = // 0xD8A0A064
+    Result(ErrCodes::ContextNotFound, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorTimeout = // 0xD820A069
+    Result(ErrCodes::Timeout, ErrorModule::HTTP, ErrorSummary::NothingHappened,
+           ErrorLevel::Permanent);
+constexpr Result ErrorTooManyContexts = // 0xD8A0A01A
+    Result(ErrCodes::TooManyContexts, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorInvalidRequestMethod = // 0xD8A0A020
+    Result(ErrCodes::InvalidRequestMethod, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorInvalidRequestState = // 0xD8A0A016
+    Result(ErrCodes::InvalidRequestState, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorInvalidPostDataEncoding = // 0xD8A0A035
+    Result(ErrCodes::InvalidPostDataEncoding, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
+constexpr Result ErrorIncompatibleSendPostData = // 0xD8A0A036
+    Result(ErrCodes::IncompatibleSendPostData, ErrorModule::HTTP, ErrorSummary::InvalidState,
+           ErrorLevel::Permanent);
 
 // Splits URL into its components. Example: https://citra-emu.org:443/index.html
 // is_https: true; host: citra-emu.org; port: 443; path: /index.html
@@ -130,8 +173,36 @@ static std::size_t WriteHeaders(httplib::Stream& stream,
     return write_len;
 }
 
-static std::size_t HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
-                                     httplib::Stream& strm, httplib::Headers& httplib_headers) {
+static void SerializeChunkedAsciiPostData(httplib::DataSink& sink, const Context::Params& params) {
+    std::string query;
+
+    for (auto it = params.begin(); it != params.end(); ++it) {
+        if (it != params.begin()) {
+            sink.os << "&";
+        }
+
+        query =
+            fmt::format("{}={}", it->first, httplib::detail::encode_query_param(it->second.value));
+        boost::replace_all(query, "*", "%2A");
+        sink.os << query;
+    }
+}
+
+static void SerializeChunkedMultipartPostData(httplib::DataSink& sink,
+                                              const Context::Params& params,
+                                              const std::string& boundary) {
+    for (const auto& param : params) {
+        const auto item = param.second.ToMultipartForm();
+        std::string body = httplib::detail::serialize_multipart_formdata_item_begin(item, boundary);
+        body += item.content + httplib::detail::serialize_multipart_formdata_item_end();
+        sink.os << body;
+    }
+
+    sink.os << httplib::detail::serialize_multipart_formdata_finish(boundary);
+}
+
+std::size_t Context::HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
+                                       httplib::Stream& strm, httplib::Headers& httplib_headers) {
     std::vector<Context::RequestHeader> final_headers;
     std::vector<Context::RequestHeader>::iterator it_pending_headers;
     httplib::Headers::iterator it_httplib_headers;
@@ -164,23 +235,50 @@ static std::size_t HandleHeaderWrite(std::vector<Context::RequestHeader>& pendin
 
     // Fourth: Content-Length
     it_pending_headers = find_pending_header("Content-Length");
-    if (it_pending_headers != pending_headers.end()) {
-        final_headers.push_back(
-            Context::RequestHeader(it_pending_headers->name, it_pending_headers->value));
-        pending_headers.erase(it_pending_headers);
-    } else {
-        it_httplib_headers = httplib_headers.find("Content-Length");
-        if (it_httplib_headers != httplib_headers.end()) {
-            final_headers.push_back(
-                Context::RequestHeader(it_httplib_headers->first, it_httplib_headers->second));
+    if (it_pending_headers == pending_headers.end()) {
+        if ((method == RequestMethod::Post || method == RequestMethod::Put) && !chunked_request) {
+            it_httplib_headers = httplib_headers.find("Content-Length");
+            if (it_httplib_headers != httplib_headers.end()) {
+                final_headers.push_back(
+                    Context::RequestHeader(it_httplib_headers->first, it_httplib_headers->second));
+            }
         }
+    }
+
+    // Fifth: Transfer-Encoding
+    if (chunked_request) {
+        final_headers.push_back(Context::RequestHeader("Transfer-Encoding", "chunked"));
     }
 
     return WriteHeaders(strm, final_headers);
 };
 
+void Context::ParseAsciiPostData() {
+    httplib::Params ascii_form;
+    for (auto param : post_data) {
+        ascii_form.emplace(param.first, param.second.value);
+    }
+
+    post_data_raw = httplib::detail::params_to_query_str(ascii_form);
+    boost::replace_all(post_data_raw, "*", "%2A");
+}
+
+std::string Context::ParseMultipartFormData() {
+    httplib::MultipartFormDataItems multipart_form;
+    for (auto param : post_data) {
+        multipart_form.push_back(param.second.ToMultipartForm());
+    }
+
+    multipart_boundary = httplib::detail::make_multipart_data_boundary();
+    post_data_raw =
+        httplib::detail::serialize_multipart_formdata(multipart_form, multipart_boundary);
+    return httplib::detail::serialize_multipart_formdata_get_content_type(multipart_boundary);
+}
+
 void Context::MakeRequest() {
     ASSERT(state == RequestState::NotStarted);
+
+    state = RequestState::ConnectingToServer;
 
     static const std::unordered_map<RequestMethod, std::string> request_method_strings{
         {RequestMethod::Get, "GET"},       {RequestMethod::Post, "POST"},
@@ -207,18 +305,61 @@ void Context::MakeRequest() {
         pending_headers.push_back(header);
     }
 
-    if (!post_data.empty()) {
-        pending_headers.push_back(
-            Context::RequestHeader("Content-Type", "application/x-www-form-urlencoded"));
-        request.body = httplib::detail::params_to_query_str(post_data);
-        boost::replace_all(request.body, "*", "%2A");
+    httplib::Params ascii_form;
+    httplib::MultipartFormDataItems multipart_form;
+    if ((method == RequestMethod::Post || method == RequestMethod::Put) && !chunked_request) {
+        switch (post_data_encoding) {
+        case PostDataEncoding::AsciiForm:
+            ParseAsciiPostData();
+            pending_headers.push_back(
+                Context::RequestHeader("Content-Type", "application/x-www-form-urlencoded"));
+            break;
+        case PostDataEncoding::MultipartForm:
+            pending_headers.push_back(
+                Context::RequestHeader("Content-Type", ParseMultipartFormData()));
+            break;
+        case PostDataEncoding::Auto:
+            if (!post_data.empty()) {
+                if (force_multipart) {
+                    pending_headers.push_back(
+                        Context::RequestHeader("Content-Type", ParseMultipartFormData()));
+                } else {
+                    pending_headers.push_back(Context::RequestHeader(
+                        "Content-Type", "application/x-www-form-urlencoded"));
+                    ParseAsciiPostData();
+                }
+            }
+            break;
+        }
     }
 
-    if (!post_data_raw.empty()) {
-        request.body = post_data_raw;
-    }
+    // httplib doesn't expose setting the content provider for the request when not using the usual
+    // send methods like Client::Post or Client::Put, so we have to set the internal fields manually
+    if (!chunked_request) {
+        request.content_length_ = post_data_raw.size();
+        request.content_provider_ = [this](size_t offset, size_t length, httplib::DataSink& sink) {
+            return ContentProvider(offset, length, sink);
+        };
+    } else {
+        if (post_data_type == PostDataType::MultipartForm) {
+            multipart_boundary = httplib::detail::make_multipart_data_boundary();
+            pending_headers.push_back(Context::RequestHeader(
+                "Content-Type", httplib::detail::serialize_multipart_formdata_get_content_type(
+                                    multipart_boundary)));
+        }
 
-    state = RequestState::InProgress;
+        if (post_data_type == PostDataType::Raw && chunked_content_length > 0) {
+            pending_headers.push_back(Context::RequestHeader(
+                "Content-Length", fmt::format("{}", chunked_content_length)));
+        }
+
+        request.content_length_ = 0;
+        request.content_provider_ =
+            httplib::detail::ContentProviderAdapter([this](size_t offset, httplib::DataSink& sink) {
+                return ChunkedContentProvider(offset, sink);
+            });
+        request.is_chunked_content_provider_ = true;
+    }
 
     if (url_info.is_https) {
         MakeRequestSSL(request, url_info, pending_headers);
@@ -234,7 +375,7 @@ void Context::MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_in
         std::make_unique<httplib::Client>(url_info.host, url_info.port);
 
     client->set_header_writer(
-        [&pending_headers](httplib::Stream& strm, httplib::Headers& httplib_headers) {
+        [this, &pending_headers](httplib::Stream& strm, httplib::Headers& httplib_headers) {
             return HandleHeaderWrite(pending_headers, strm, httplib_headers);
         });
 
@@ -243,7 +384,6 @@ void Context::MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_in
         state = RequestState::TimedOut;
     } else {
         LOG_DEBUG(Service_HTTP, "Request successful");
-        // TODO(B3N30): Verify this state on HW
         state = RequestState::ReadyToDownloadContent;
     }
 }
@@ -293,7 +433,7 @@ void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
     client->enable_server_certificate_verification(false);
 
     client->set_header_writer(
-        [&pending_headers](httplib::Stream& strm, httplib::Headers& httplib_headers) {
+        [this, &pending_headers](httplib::Stream& strm, httplib::Headers& httplib_headers) {
             return HandleHeaderWrite(pending_headers, strm, httplib_headers);
         });
 
@@ -302,9 +442,46 @@ void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
         state = RequestState::TimedOut;
     } else {
         LOG_DEBUG(Service_HTTP, "Request successful");
-        // TODO(B3N30): Verify this state on HW
         state = RequestState::ReadyToDownloadContent;
     }
+}
+
+bool Context::ContentProvider(size_t offset, size_t length, httplib::DataSink& sink) {
+    state = RequestState::SendingRequest;
+
+    if (!post_data_raw.empty()) {
+        sink.write(post_data_raw.data() + offset, length);
+    }
+
+    // This state is set after sending the request, even if it hasn't received a response yet
+    state = RequestState::ReceivingResponse;
+    return true;
+}
+
+bool Context::ChunkedContentProvider(size_t offset, httplib::DataSink& sink) {
+    state = RequestState::SendingRequest;
+
+    finish_post_data.Wait();
+
+    switch (post_data_type) {
+    case PostDataType::AsciiForm:
+        SerializeChunkedAsciiPostData(sink, post_data);
+        break;
+    case PostDataType::MultipartForm:
+        SerializeChunkedMultipartPostData(sink, post_data, multipart_boundary);
+        break;
+    // Write the data values
+    case PostDataType::Raw:
+        for (const auto& data : post_data) {
+            sink.os << data.second.value;
+        }
+        break;
+    }
+
+    sink.done();
+    // This state is set after sending the request, even if it hasn't received a response yet
+    state = RequestState::ReceivingResponse;
+    return true;
 }
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
@@ -324,7 +501,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     if (session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+        rb.Push(ErrorStateError);
         return;
     }
 
@@ -350,7 +527,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     if (session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+        rb.Push(ErrorStateError);
         return;
     }
 
@@ -358,8 +535,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     auto itr = contexts.find(context_handle);
     if (itr == contexts.end()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::ContextNotFound, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorContextNotFound);
         return;
     }
 
@@ -388,7 +564,7 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
     if (http_context.uses_default_client_cert && !http_context.clcert_data->init) {
         LOG_ERROR(Service_HTTP, "Failed to begin HTTP request: client cert not found.");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+        rb.Push(ErrorStateError);
         return;
     }
 
@@ -399,9 +575,12 @@ void HTTP_C::BeginRequest(Kernel::HLERequestContext& ctx) {
     // Then there are 3? worker threads that pop the requests from the queue and send them
     // For now make every request async in it's own thread.
 
-    http_context.request_future =
-        std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
-    http_context.current_copied_data = 0;
+    // This always returns success, but the request is only performed when it hasn't started
+    if (http_context.state == RequestState::NotStarted) {
+        http_context.request_future =
+            std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
+        http_context.current_copied_data = 0;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -423,7 +602,7 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
     if (http_context.uses_default_client_cert && !http_context.clcert_data->init) {
         LOG_ERROR(Service_HTTP, "Failed to begin HTTP request: client cert not found.");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+        rb.Push(ErrorStateError);
         return;
     }
 
@@ -434,9 +613,12 @@ void HTTP_C::BeginRequestAsync(Kernel::HLERequestContext& ctx) {
     // Then there are 3? worker threads that pop the requests from the queue and send them
     // For now make every request async in it's own thread.
 
-    http_context.request_future =
-        std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
-    http_context.current_copied_data = 0;
+    // This always returns success, but the request is only performed when it hasn't started
+    if (http_context.state == RequestState::NotStarted) {
+        http_context.request_future =
+            std::async(std::launch::async, &Context::MakeRequest, std::ref(http_context));
+        http_context.current_copied_data = 0;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -489,9 +671,7 @@ void HTTP_C::ReceiveDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
                 const auto wait_res = http_context.request_future.wait_for(
                     std::chrono::nanoseconds(async_data->timeout_nanos));
                 if (wait_res == std::future_status::timeout) {
-                    async_data->async_res =
-                        Result(105, ErrorModule::HTTP, ErrorSummary::NothingHappened,
-                               ErrorLevel::Permanent);
+                    async_data->async_res = ErrorTimeout;
                 }
             } else {
                 http_context.request_future.wait();
@@ -522,7 +702,7 @@ void HTTP_C::ReceiveDataImpl(Kernel::HLERequestContext& ctx, bool timeout) {
                                               http_context.current_copied_data,
                                           0, async_data->buffer_size);
                 http_context.current_copied_data += async_data->buffer_size;
-                rb.Push(ERROR_BUFFER_SMALL);
+                rb.Push(ErrorBufferSmall);
             }
             LOG_DEBUG(Service_HTTP, "Receive: buffer_size= {}, total_copied={}, total_body={}",
                       async_data->buffer_size, http_context.current_copied_data,
@@ -562,8 +742,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(Result(ErrorDescription::NotImplemented, ErrorModule::HTTP, ErrorSummary::Internal,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorNotImplemented);
         rb.PushMappedBuffer(buffer);
         return;
     }
@@ -574,8 +753,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP, "Tried to open too many HTTP contexts");
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(Result(ErrCodes::TooManyContexts, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorTooManyContexts);
         rb.PushMappedBuffer(buffer);
         return;
     }
@@ -584,8 +762,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP, "invalid request method={}", method);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(Result(ErrCodes::InvalidRequestMethod, ErrorModule::HTTP,
-                       ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        rb.Push(ErrorInvalidRequestMethod);
         rb.PushMappedBuffer(buffer);
         return;
     }
@@ -659,6 +836,24 @@ void HTTP_C::CancelConnection(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
+void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+
+    const auto* session_data = EnsureSessionInitialized(ctx, rp);
+    if (!session_data) {
+        return;
+    }
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={}", context_handle);
+
+    Context& http_context = GetContext(context_handle);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.PushEnum<RequestState>(http_context.state);
+}
+
 void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
@@ -687,8 +882,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP,
                   "Tried to add a request header on a context that has already been started.");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(Result(ErrCodes::InvalidRequestState, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorInvalidRequestState);
         rb.PushMappedBuffer(value_buffer);
         return;
     }
@@ -713,7 +907,7 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
 
     // Copy the value_buffer into a string without the \0 at the end
     std::string value(value_size - 1, '\0');
-    value_buffer.Read(&value[0], 0, value_size - 1);
+    value_buffer.Read(value.data(), 0, value_size - 1);
 
     LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
               context_handle);
@@ -726,15 +920,89 @@ void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
 
     if (http_context.state != RequestState::NotStarted) {
         LOG_ERROR(Service_HTTP,
-                  "Tried to add post data on a context that has already been started.");
+                  "Tried to add Post data on a context that has already been started");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(Result(ErrCodes::InvalidRequestState, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorInvalidRequestState);
         rb.PushMappedBuffer(value_buffer);
         return;
     }
 
-    http_context.post_data.emplace(name, value);
+    if (!http_context.post_data_raw.empty()) {
+        LOG_ERROR(Service_HTTP, "Cannot add ASCII Post data to context with raw Post data");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleAddPostData);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (http_context.chunked_request) {
+        LOG_ERROR(Service_HTTP, "Cannot add ASCII Post data to context in chunked request mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleAddPostData);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    Context::Param param_value(name, value);
+    http_context.post_data.emplace(name, param_value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushMappedBuffer(value_buffer);
+}
+
+void HTTP_C::AddPostDataBinary(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
+    const u32 value_size = rp.Pop<u32>();
+    const std::vector<u8> name_buffer = rp.PopStaticBuffer();
+    Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
+
+    // Copy the name_buffer into a string without the \0 at the end
+    const std::string name(name_buffer.begin(), name_buffer.end() - 1);
+
+    // Copy the value_buffer into a vector
+    std::vector<u8> value(value_size);
+    value_buffer.Read(value.data(), 0, value_size);
+
+    LOG_DEBUG(Service_HTTP, "called, name={}, value_size={}, context_handle={}", name, value_size,
+              context_handle);
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to add Post data on a context that has already been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (!http_context.post_data_raw.empty()) {
+        LOG_ERROR(Service_HTTP, "Cannot add Binary Post data to context with raw Post data");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleAddPostData);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (http_context.chunked_request) {
+        LOG_ERROR(Service_HTTP, "Cannot add Binary Post data to context in chunked request mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleAddPostData);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    Context::Param param_value(name, value);
+    http_context.post_data.emplace(name, param_value);
+    http_context.force_multipart = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
@@ -758,10 +1026,26 @@ void HTTP_C::AddPostDataRaw(Kernel::HLERequestContext& ctx) {
 
     if (http_context.state != RequestState::NotStarted) {
         LOG_ERROR(Service_HTTP,
-                  "Tried to add post data on a context that has already been started.");
+                  "Tried to add Post data on a context that has already been started");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(Result(ErrCodes::InvalidRequestState, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
+    if (!http_context.post_data.empty()) {
+        LOG_ERROR(Service_HTTP,
+                  "Cannot add raw Post data to context with ASCII or Binary Post data");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleAddPostData);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
+    if (http_context.chunked_request) {
+        LOG_ERROR(Service_HTTP, "Cannot add raw Post data to context in chunked request mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleAddPostData);
         rb.PushMappedBuffer(buffer);
         return;
     }
@@ -774,21 +1058,353 @@ void HTTP_C::AddPostDataRaw(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(buffer);
 }
 
+void HTTP_C::SetPostDataType(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    const PostDataType type = rp.PopEnum<PostDataType>();
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={}, type={}", context_handle, type);
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to set chunked mode on a context that has already been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidRequestState);
+        return;
+    }
+
+    if (!http_context.post_data.empty() || !http_context.post_data_raw.empty()) {
+        LOG_ERROR(Service_HTTP, "Tried to set chunked mode on a context that has Post data");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorIncompatibleSendPostData);
+        return;
+    }
+
+    switch (type) {
+    case PostDataType::AsciiForm:
+    case PostDataType::MultipartForm:
+    case PostDataType::Raw:
+        http_context.post_data_type = type;
+        break;
+    // Use ASCII form by default
+    default:
+        http_context.post_data_type = PostDataType::AsciiForm;
+        break;
+    }
+
+    http_context.chunked_request = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void HTTP_C::SendPostDataAscii(Kernel::HLERequestContext& ctx) {
+    SendPostDataAsciiImpl(ctx, false);
+}
+
+void HTTP_C::SendPostDataAsciiTimeout(Kernel::HLERequestContext& ctx) {
+    SendPostDataAsciiImpl(ctx, true);
+}
+
+void HTTP_C::SendPostDataAsciiImpl(Kernel::HLERequestContext& ctx, bool timeout) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
+    const u32 value_size = rp.Pop<u32>();
+    // TODO(DaniElectra): The original module waits until a connection with the server is made
+    const u64 timeout_nanos = timeout ? rp.Pop<u64>() : 0;
+    const std::vector<u8> name_buffer = rp.PopStaticBuffer();
+    Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
+
+    // Copy the name_buffer into a string without the \0 at the end
+    const std::string name(name_buffer.begin(), name_buffer.end() - 1);
+
+    // Copy the value_buffer into a string without the \0 at the end
+    std::string value(value_size - 1, '\0');
+    value_buffer.Read(value.data(), 0, value_size - 1);
+
+    if (timeout) {
+        LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}, timeout={}", name,
+                  value, context_handle, timeout_nanos);
+    } else {
+        LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
+                  context_handle);
+    }
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state == RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP, "Tried to send Post data on a context that has not been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (!http_context.chunked_request) {
+        LOG_ERROR(Service_HTTP,
+                  "Cannot send ASCII Post data to context not in chunked request mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    Context::Param param_value(name, value);
+    http_context.post_data.emplace(name, param_value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushMappedBuffer(value_buffer);
+}
+
+void HTTP_C::SendPostDataBinary(Kernel::HLERequestContext& ctx) {
+    SendPostDataBinaryImpl(ctx, false);
+}
+
+void HTTP_C::SendPostDataBinaryTimeout(Kernel::HLERequestContext& ctx) {
+    SendPostDataBinaryImpl(ctx, true);
+}
+
+void HTTP_C::SendPostDataBinaryImpl(Kernel::HLERequestContext& ctx, bool timeout) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    [[maybe_unused]] const u32 name_size = rp.Pop<u32>();
+    const u32 value_size = rp.Pop<u32>();
+    // TODO(DaniElectra): The original module waits until a connection with the server is made
+    const u64 timeout_nanos = timeout ? rp.Pop<u64>() : 0;
+    const std::vector<u8> name_buffer = rp.PopStaticBuffer();
+    Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
+
+    // Copy the name_buffer into a string without the \0 at the end
+    const std::string name(name_buffer.begin(), name_buffer.end() - 1);
+
+    // Copy the value_buffer into a vector
+    std::vector<u8> value(value_size);
+    value_buffer.Read(value.data(), 0, value_size);
+
+    if (timeout) {
+        LOG_DEBUG(Service_HTTP, "called, name={}, value_size={}, context_handle={}, timeout={}",
+                  name, value_size, context_handle, timeout_nanos);
+    } else {
+        LOG_DEBUG(Service_HTTP, "called, name={}, value_size={}, context_handle={}", name,
+                  value_size, context_handle);
+    }
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state == RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP, "Tried to add Post data on a context that has not been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (!http_context.chunked_request) {
+        LOG_ERROR(Service_HTTP,
+                  "Cannot send Binary Post data to context not in chunked request mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    Context::Param param_value(name, value);
+    http_context.post_data.emplace(name, param_value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushMappedBuffer(value_buffer);
+}
+
+void HTTP_C::SendPostDataRaw(Kernel::HLERequestContext& ctx) {
+    SendPostDataRawImpl(ctx, false);
+}
+
+void HTTP_C::SendPostDataRawTimeout(Kernel::HLERequestContext& ctx) {
+    SendPostDataRawImpl(ctx, true);
+}
+
+void HTTP_C::SendPostDataRawImpl(Kernel::HLERequestContext& ctx, bool timeout) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    const u32 post_data_len = rp.Pop<u32>();
+    // TODO(DaniElectra): The original module waits until a connection with the server is made
+    const u64 timeout_nanos = timeout ? rp.Pop<u64>() : 0;
+    auto buffer = rp.PopMappedBuffer();
+
+    if (timeout) {
+        LOG_DEBUG(Service_HTTP, "called, context_handle={}, post_data_len={}, timeout={}",
+                  context_handle, post_data_len, timeout_nanos);
+    } else {
+        LOG_DEBUG(Service_HTTP, "called, context_handle={}, post_data_len={}", context_handle,
+                  post_data_len);
+    }
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to add Post data on a context that has already been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
+    if (!http_context.chunked_request) {
+        LOG_ERROR(Service_HTTP, "Cannot send raw Post data to context not in chunked request mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorInvalidRequestState);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
+    if (http_context.post_data_type != PostDataType::Raw) {
+        LOG_ERROR(Service_HTTP, "Cannot send raw Post data to context not in raw mode");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ErrorIncompatibleSendPostData);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
+    std::vector<u8> value(buffer.GetSize());
+    buffer.Read(value.data(), 0, value.size());
+
+    // Workaround for sending the raw data in combination of other data in chunked requests
+    Context::Param raw_param(value);
+    std::string value_string(value.begin(), value.end());
+    http_context.post_data.emplace(value_string, raw_param);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushMappedBuffer(buffer);
+}
+
+void HTTP_C::SetPostDataEncoding(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    const PostDataEncoding encoding = rp.PopEnum<PostDataEncoding>();
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={}, encoding={}", context_handle, encoding);
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to set Post encoding on a context that has already been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidRequestState);
+        return;
+    }
+
+    switch (encoding) {
+    case PostDataEncoding::Auto:
+        http_context.post_data_encoding = encoding;
+        break;
+    case PostDataEncoding::AsciiForm:
+    case PostDataEncoding::MultipartForm:
+        if (!http_context.post_data_raw.empty()) {
+            LOG_ERROR(Service_HTTP, "Cannot set Post data encoding to context with raw Post data");
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(ErrorIncompatibleAddPostData);
+            return;
+        }
+
+        http_context.post_data_encoding = encoding;
+        break;
+    default:
+        LOG_ERROR(Service_HTTP, "Invalid Post data encoding: {}", encoding);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidPostDataEncoding);
+        return;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void HTTP_C::NotifyFinishSendPostData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={}", context_handle);
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state == RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to notfy finish Post on a context that has not been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidRequestState);
+        return;
+    }
+
+    http_context.finish_post_data.Set();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
 void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
+    GetResponseHeaderImpl(ctx, false);
+}
+
+void HTTP_C::GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx) {
+    GetResponseHeaderImpl(ctx, true);
+}
+
+void HTTP_C::GetResponseHeaderImpl(Kernel::HLERequestContext& ctx, bool timeout) {
     IPC::RequestParser rp(ctx);
 
     struct AsyncData {
+        // Input
         u32 context_handle;
         u32 name_len;
         u32 value_max_len;
+        bool timeout;
+        u64 timeout_nanos;
         std::span<const u8> header_name;
         Kernel::MappedBuffer* value_buffer;
+        // Output
+        Result async_res = ResultSuccess;
     };
     std::shared_ptr<AsyncData> async_data = std::make_shared<AsyncData>();
 
+    async_data->timeout = timeout;
     async_data->context_handle = rp.Pop<u32>();
     async_data->name_len = rp.Pop<u32>();
     async_data->value_max_len = rp.Pop<u32>();
+    if (timeout) {
+        async_data->timeout_nanos = rp.Pop<u64>();
+    }
     async_data->header_name = rp.PopStaticBuffer();
     async_data->value_buffer = &rp.PopMappedBuffer();
 
@@ -799,10 +1415,27 @@ void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
     ctx.RunAsync(
         [this, async_data](Kernel::HLERequestContext& ctx) {
             Context& http_context = GetContext(async_data->context_handle);
-            http_context.request_future.wait();
+
+            if (async_data->timeout) {
+                const auto wait_res = http_context.request_future.wait_for(
+                    std::chrono::nanoseconds(async_data->timeout_nanos));
+                if (wait_res == std::future_status::timeout) {
+                    async_data->async_res = ErrorTimeout;
+                }
+            } else {
+                http_context.request_future.wait();
+            }
+
             return 0;
         },
         [this, async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, static_cast<u16>(ctx.CommandHeader().command_id.Value()), 2,
+                                   2);
+            if (async_data->async_res != ResultSuccess) {
+                rb.Push(async_data->async_res);
+                return;
+            }
+
             std::string header_name_str(
                 reinterpret_cast<const char*>(async_data->header_name.data()),
                 async_data->name_len);
@@ -813,8 +1446,13 @@ void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
             auto& headers = http_context.response.headers;
             u32 copied_size = 0;
 
-            LOG_DEBUG(Service_HTTP, "header={}, max_len={}", header_name_str,
-                      async_data->value_buffer->GetSize());
+            if (async_data->timeout) {
+                LOG_DEBUG(Service_HTTP, "header={}, max_len={}, timeout={}", header_name_str,
+                          async_data->value_buffer->GetSize(), async_data->timeout_nanos);
+            } else {
+                LOG_DEBUG(Service_HTTP, "header={}, max_len={}", header_name_str,
+                          async_data->value_buffer->GetSize());
+            }
 
             auto header = headers.find(header_name_str);
             if (header != headers.end()) {
@@ -827,15 +1465,12 @@ void HTTP_C::GetResponseHeader(Kernel::HLERequestContext& ctx) {
                 async_data->value_buffer->Write(header_value.data(), 0, header_value.size());
             } else {
                 LOG_DEBUG(Service_HTTP, "header={} not found", header_name_str);
-                IPC::RequestBuilder rb(
-                    ctx, static_cast<u16>(ctx.CommandHeader().command_id.Value()), 1, 2);
-                rb.Push(ERROR_HEADER_NOT_FOUND);
+                rb.Push(ErrorHeaderNotFound);
+                rb.Push(0);
                 rb.PushMappedBuffer(*async_data->value_buffer);
                 return;
             }
 
-            IPC::RequestBuilder rb(ctx, static_cast<u16>(ctx.CommandHeader().command_id.Value()), 2,
-                                   2);
             rb.Push(ResultSuccess);
             rb.Push(copied_size);
             rb.PushMappedBuffer(*async_data->value_buffer);
@@ -886,9 +1521,7 @@ void HTTP_C::GetResponseStatusCodeImpl(Kernel::HLERequestContext& ctx, bool time
                     std::chrono::nanoseconds(async_data->timeout_nanos));
                 if (wait_res == std::future_status::timeout) {
                     LOG_DEBUG(Service_HTTP, "Status code: {}", "timeout");
-                    async_data->async_res =
-                        Result(105, ErrorModule::HTTP, ErrorSummary::NothingHappened,
-                               ErrorLevel::Permanent);
+                    async_data->async_res = ErrorTimeout;
                 }
             } else {
                 http_context.request_future.wait();
@@ -955,7 +1588,7 @@ void HTTP_C::SetDefaultClientCert(Kernel::HLERequestContext& ctx) {
 
     if (client_cert_id != ClientCertID::Default) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_WRONG_CERT_ID);
+        rb.Push(ErrorWrongCertID);
         return;
     }
 
@@ -984,7 +1617,7 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
     if (cert_context_itr == client_certs.end()) {
         LOG_ERROR(Service_HTTP, "called with wrong client_cert_handle {}", client_cert_handle);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_WRONG_CERT_HANDLE);
+        rb.Push(ErrorWrongCertHandle);
         return;
     }
 
@@ -992,7 +1625,7 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP,
                   "Tried to set a client cert to a context that already has a client cert");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_CERT_ALREADY_SET);
+        rb.Push(ErrorCertAlreadySet);
         return;
     }
 
@@ -1000,8 +1633,7 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP,
                   "Tried to set a client cert on a context that has already been started.");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::InvalidRequestState, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorInvalidRequestState);
         return;
     }
 
@@ -1053,13 +1685,13 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
 
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Command called without Initialize");
-        result = ERROR_STATE_ERROR;
+        result = ErrorStateError;
     } else if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
-        result = ERROR_NOT_IMPLEMENTED;
+        result = ErrorNotImplemented;
     } else if (session_data->num_client_certs >= 2) {
         LOG_ERROR(Service_HTTP, "tried to load more then 2 client certs");
-        result = ERROR_TOO_MANY_CLIENT_CERTS;
+        result = ErrorTooManyClientCerts;
     } else {
         client_certs[++client_certs_counter] = std::make_shared<ClientCertContext>();
         client_certs[client_certs_counter]->handle = client_certs_counter;
@@ -1092,14 +1724,14 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
     if (session_data->current_http_context) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_NOT_IMPLEMENTED);
+        rb.Push(ErrorNotImplemented);
         return;
     }
 
     if (session_data->num_client_certs >= 2) {
         LOG_ERROR(Service_HTTP, "tried to load more then 2 client certs");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_TOO_MANY_CLIENT_CERTS);
+        rb.Push(ErrorTooManyClientCerts);
         return;
     }
 
@@ -1107,7 +1739,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
     if (cert_id != default_cert_id) {
         LOG_ERROR(Service_HTTP, "called with invalid cert_id {}", cert_id);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_WRONG_CERT_ID);
+        rb.Push(ErrorWrongCertID);
         return;
     }
 
@@ -1188,6 +1820,54 @@ void HTTP_C::SetKeepAlive(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
+void HTTP_C::SetPostDataTypeSize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 context_handle = rp.Pop<u32>();
+    const PostDataType type = rp.PopEnum<PostDataType>();
+    const u32 size = rp.Pop<u32>();
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={}, type={}, size={}", context_handle, type,
+              size);
+
+    if (!PerformStateChecks(ctx, rp, context_handle)) {
+        return;
+    }
+
+    Context& http_context = GetContext(context_handle);
+
+    if (http_context.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to set chunked mode on a context that has already been started");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorInvalidRequestState);
+        return;
+    }
+
+    if (!http_context.post_data.empty() || !http_context.post_data_raw.empty()) {
+        LOG_ERROR(Service_HTTP, "Tried to set chunked mode on a context that has Post data");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ErrorIncompatibleSendPostData);
+        return;
+    }
+
+    switch (type) {
+    case PostDataType::AsciiForm:
+    case PostDataType::MultipartForm:
+    case PostDataType::Raw:
+        http_context.post_data_type = type;
+        break;
+    default:
+        http_context.post_data_type = PostDataType::AsciiForm;
+        break;
+    }
+
+    http_context.chunked_request = true;
+    http_context.chunked_content_length = size;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
 void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -1243,7 +1923,7 @@ SessionData* HTTP_C::EnsureSessionInitialized(Kernel::HLERequestContext& ctx,
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Tried to make a request on an uninitialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+        rb.Push(ErrorStateError);
         return nullptr;
     }
 
@@ -1262,8 +1942,7 @@ bool HTTP_C::PerformStateChecks(Kernel::HLERequestContext& ctx, IPC::RequestPars
         LOG_ERROR(Service_HTTP, "Tried to make a request without a bound context");
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrorDescription::NotImplemented, ErrorModule::HTTP, ErrorSummary::Internal,
-                       ErrorLevel::Permanent));
+        rb.Push(ErrorNotImplemented);
         return false;
     }
 
@@ -1273,7 +1952,7 @@ bool HTTP_C::PerformStateChecks(Kernel::HLERequestContext& ctx, IPC::RequestPars
             "Tried to make a request on a mismatched session input context={} session context={}",
             context_handle, *session_data->current_http_context);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_STATE_ERROR);
+        rb.Push(ErrorStateError);
         return false;
     }
 
@@ -1362,7 +2041,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x0002, &HTTP_C::CreateContext, "CreateContext"},
         {0x0003, &HTTP_C::CloseContext, "CloseContext"},
         {0x0004, &HTTP_C::CancelConnection, "CancelConnection"},
-        {0x0005, nullptr, "GetRequestState"},
+        {0x0005, &HTTP_C::GetRequestState, "GetRequestState"},
         {0x0006, &HTTP_C::GetDownloadSizeState, "GetDownloadSizeState"},
         {0x0007, nullptr, "GetRequestError"},
         {0x0008, &HTTP_C::InitializeConnectionSession, "InitializeConnectionSession"},
@@ -1376,19 +2055,19 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x0010, nullptr, "SetSocketBufferSize"},
         {0x0011, &HTTP_C::AddRequestHeader, "AddRequestHeader"},
         {0x0012, &HTTP_C::AddPostDataAscii, "AddPostDataAscii"},
-        {0x0013, nullptr, "AddPostDataBinary"},
+        {0x0013, &HTTP_C::AddPostDataBinary, "AddPostDataBinary"},
         {0x0014, &HTTP_C::AddPostDataRaw, "AddPostDataRaw"},
-        {0x0015, nullptr, "SetPostDataType"},
-        {0x0016, nullptr, "SendPostDataAscii"},
-        {0x0017, nullptr, "SendPostDataAsciiTimeout"},
-        {0x0018, nullptr, "SendPostDataBinary"},
-        {0x0019, nullptr, "SendPostDataBinaryTimeout"},
-        {0x001A, nullptr, "SendPostDataRaw"},
-        {0x001B, nullptr, "SendPOSTDataRawTimeout"},
-        {0x001C, nullptr, "SetPostDataEncoding"},
-        {0x001D, nullptr, "NotifyFinishSendPostData"},
+        {0x0015, &HTTP_C::SetPostDataType, "SetPostDataType"},
+        {0x0016, &HTTP_C::SendPostDataAscii, "SendPostDataAscii"},
+        {0x0017, &HTTP_C::SendPostDataAsciiTimeout, "SendPostDataAsciiTimeout"},
+        {0x0018, &HTTP_C::SendPostDataBinary, "SendPostDataBinary"},
+        {0x0019, &HTTP_C::SendPostDataBinaryTimeout, "SendPostDataBinaryTimeout"},
+        {0x001A, &HTTP_C::SendPostDataRaw, "SendPostDataRaw"},
+        {0x001B, &HTTP_C::SendPostDataRawTimeout, "SendPostDataRawTimeout"},
+        {0x001C, &HTTP_C::SetPostDataEncoding, "SetPostDataEncoding"},
+        {0x001D, &HTTP_C::NotifyFinishSendPostData, "NotifyFinishSendPostData"},
         {0x001E, &HTTP_C::GetResponseHeader, "GetResponseHeader"},
-        {0x001F, nullptr, "GetResponseHeaderTimeout"},
+        {0x001F, &HTTP_C::GetResponseHeaderTimeout, "GetResponseHeaderTimeout"},
         {0x0020, nullptr, "GetResponseData"},
         {0x0021, nullptr, "GetResponseDataTimeout"},
         {0x0022, &HTTP_C::GetResponseStatusCode, "GetResponseStatusCode"},
@@ -1413,7 +2092,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x0035, nullptr, "SetDefaultProxy"},
         {0x0036, nullptr, "ClearDNSCache"},
         {0x0037, &HTTP_C::SetKeepAlive, "SetKeepAlive"},
-        {0x0038, nullptr, "SetPostDataTypeSize"},
+        {0x0038, &HTTP_C::SetPostDataTypeSize, "SetPostDataTypeSize"},
         {0x0039, &HTTP_C::Finalize, "Finalize"},
         // clang-format on
     };

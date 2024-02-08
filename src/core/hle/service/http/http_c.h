@@ -18,6 +18,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 #include <httplib.h>
+#include "common/thread.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
@@ -48,10 +49,23 @@ constexpr u32 TotalRequestMethods = 8;
 
 enum class RequestState : u8 {
     NotStarted = 0x1,             // Request has not started yet.
-    InProgress = 0x5,             // Request in progress, sending request over the network.
-    ReadyToDownloadContent = 0x7, // Ready to download the content. (needs verification)
-    ReadyToDownload = 0x8,        // Ready to download?
+    ConnectingToServer = 0x5,     // Request in progress, connecting to server.
+    SendingRequest = 0x6,         // Request in progress, sending HTTP request.
+    ReceivingResponse = 0x7,      // Request in progress, receiving HTTP response.
+    ReadyToDownloadContent = 0x8, // Ready to download the content.
     TimedOut = 0xA,               // Request timed out?
+};
+
+enum class PostDataEncoding : u8 {
+    Auto = 0x0,
+    AsciiForm = 0x1,
+    MultipartForm = 0x2,
+};
+
+enum class PostDataType : u8 {
+    AsciiForm = 0x0,
+    MultipartForm = 0x1,
+    Raw = 0x2,
 };
 
 enum class ClientCertID : u32 {
@@ -197,6 +211,41 @@ public:
         friend class boost::serialization::access;
     };
 
+    struct Param {
+        Param(const std::vector<u8>& value)
+            : name(value.begin(), value.end()), value(value.begin(), value.end()){};
+        Param(const std::string& name, const std::string& value) : name(name), value(value){};
+        Param(const std::string& name, const std::vector<u8>& value)
+            : name(name), value(value.begin(), value.end()), is_binary(true){};
+        std::string name;
+        std::string value;
+        bool is_binary = false;
+
+        httplib::MultipartFormData ToMultipartForm() const {
+            httplib::MultipartFormData form;
+            form.name = name;
+            form.content = value;
+            if (is_binary) {
+                form.content_type = "application/octet-stream";
+                // TODO(DaniElectra): httplib doesn't support setting Content-Transfer-Encoding,
+                // while the 3DS sets Content-Transfer-Encoding: binary if a binary value is set
+            }
+
+            return form;
+        }
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& name;
+            ar& value;
+            ar& is_binary;
+        }
+        friend class boost::serialization::access;
+    };
+
+    using Params = std::multimap<std::string, Param>;
+
     Handle handle;
     u32 session_id;
     std::string url;
@@ -208,8 +257,14 @@ public:
     u32 socket_buffer_size;
     std::vector<RequestHeader> headers;
     const ClCertAData* clcert_data;
-    httplib::Params post_data;
+    Params post_data;
     std::string post_data_raw;
+    PostDataEncoding post_data_encoding = PostDataEncoding::Auto;
+    PostDataType post_data_type;
+    std::string multipart_boundary;
+    bool force_multipart = false;
+    bool chunked_request = false;
+    u32 chunked_content_length;
 
     std::future<void> request_future;
     std::atomic<u64> current_download_size_bytes;
@@ -217,12 +272,19 @@ public:
     std::size_t current_copied_data;
     bool uses_default_client_cert{};
     httplib::Response response;
+    Common::Event finish_post_data;
 
+    void ParseAsciiPostData();
+    std::string ParseMultipartFormData();
     void MakeRequest();
     void MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
                            std::vector<Context::RequestHeader>& pending_headers);
     void MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
                         std::vector<Context::RequestHeader>& pending_headers);
+    bool ContentProvider(size_t offset, size_t length, httplib::DataSink& sink);
+    bool ChunkedContentProvider(size_t offset, httplib::DataSink& sink);
+    std::size_t HandleHeaderWrite(std::vector<Context::RequestHeader>& pending_headers,
+                                  httplib::Stream& strm, httplib::Headers& httplib_headers);
 };
 
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
@@ -307,6 +369,16 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void CancelConnection(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::GetRequestState service function
+     *  Inputs:
+     *      1 : Context handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Request state
+     */
+    void GetRequestState(Kernel::HLERequestContext& ctx);
 
     /**
      * HTTP_C::GetDownloadSizeState service function
@@ -419,6 +491,21 @@ private:
     void AddPostDataAscii(Kernel::HLERequestContext& ctx);
 
     /**
+     * HTTP_C::AddPostDataBinary service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Form name buffer size, including null-terminator.
+     * 3 : Form value buffer size
+     * 4 : (FormNameSize<<14) | 0xC02
+     * 5 : Form name data pointer
+     * 6 : (FormValueSize<<4) | 10
+     * 7 : Form value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void AddPostDataBinary(Kernel::HLERequestContext& ctx);
+
+    /**
      * HTTP_C::AddPostDataRaw service function
      *  Inputs:
      *      1 : Context handle
@@ -429,6 +516,140 @@ private:
      *      2-3: (Mapped buffer) Post data
      */
     void AddPostDataRaw(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SetPostDataType service function
+     *  Inputs:
+     *      1 : Context handle
+     *      2 : Post data type
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SetPostDataType(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SendPostDataAscii service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Form name buffer size, including null-terminator.
+     * 3 : Form value buffer size, including null-terminator.
+     * 4 : (FormNameSize<<14) | 0xC02
+     * 5 : Form name data pointer
+     * 6 : (FormValueSize<<4) | 10
+     * 7 : Form value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SendPostDataAscii(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SendPostDataAsciiTimeout service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Form name buffer size, including null-terminator.
+     * 3 : Form value buffer size, including null-terminator.
+     * 4-5 : u64 nanoseconds delay
+     * 6 : (FormNameSize<<14) | 0xC02
+     * 7 : Form name data pointer
+     * 8 : (FormValueSize<<4) | 10
+     * 9 : Form value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SendPostDataAsciiTimeout(Kernel::HLERequestContext& ctx);
+
+    /**
+     * SendPostDataAsciiImpl:
+     *  Implements SendPostDataAscii and SendPostDataAsciiTimeout service functions
+     */
+    void SendPostDataAsciiImpl(Kernel::HLERequestContext& ctx, bool timeout);
+
+    /**
+     * HTTP_C::SendPostDataBinary service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Form name buffer size, including null-terminator.
+     * 3 : Form value buffer size
+     * 4 : (FormNameSize<<14) | 0xC02
+     * 5 : Form name data pointer
+     * 6 : (FormValueSize<<4) | 10
+     * 7 : Form value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SendPostDataBinary(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SendPostDataBinaryTimeout service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Form name buffer size, including null-terminator.
+     * 3 : Form value buffer size
+     * 4-5 : u64 nanoseconds delay
+     * 6 : (FormNameSize<<14) | 0xC02
+     * 7 : Form name data pointer
+     * 8 : (FormValueSize<<4) | 10
+     * 9 : Form value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SendPostDataBinaryTimeout(Kernel::HLERequestContext& ctx);
+
+    /**
+     * SendPostDataBinaryImpl:
+     *  Implements SendPostDataBinary and SendPostDataBinaryTimeout service functions
+     */
+    void SendPostDataBinaryImpl(Kernel::HLERequestContext& ctx, bool timeout);
+
+    /**
+     * HTTP_C::SendPostDataRaw service function
+     *  Inputs:
+     *      1 : Context handle
+     *      2 : Post data length
+     *      3-4: (Mapped buffer) Post data
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2-3: (Mapped buffer) Post data
+     */
+    void SendPostDataRaw(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SendPostDataRawTimeout service function
+     *  Inputs:
+     *      1 : Context handle
+     *      2 : Post data length
+     *      3-4: u64 nanoseconds delay
+     *      5-6: (Mapped buffer) Post data
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2-3: (Mapped buffer) Post data
+     */
+    void SendPostDataRawTimeout(Kernel::HLERequestContext& ctx);
+
+    /**
+     * SendPostDataRawImpl:
+     *  Implements SendPostDataRaw and SendPostDataRawTimeout service functions
+     */
+    void SendPostDataRawImpl(Kernel::HLERequestContext& ctx, bool timeout);
+
+    /**
+     * HTTP_C::NotifyFinishSendPostData service function
+     *  Inputs:
+     *      1 : Context handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void NotifyFinishSendPostData(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SetPostDataEncoding service function
+     *  Inputs:
+     *      1 : Context handle
+     *      2 : Post data encoding
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SetPostDataEncoding(Kernel::HLERequestContext& ctx);
 
     /**
      * HTTP_C::GetResponseHeader service function
@@ -444,6 +665,28 @@ private:
      *      3-4: (Mapped buffer) Header value
      */
     void GetResponseHeader(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::GetResponseHeaderTimeout service function
+     *  Inputs:
+     *      1 : Context handle
+     *      2 : Header name length
+     *      3 : Return value length
+     *      4-5 : u64 nanoseconds delay
+     *      6-7 : (Static buffer) Header name
+     *      8-9 : (Mapped buffer) Header value
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Header value copied size
+     *      3-4: (Mapped buffer) Header value
+     */
+    void GetResponseHeaderTimeout(Kernel::HLERequestContext& ctx);
+
+    /**
+     * GetResponseHeaderImpl:
+     *  Implements GetResponseHeader and GetResponseHeaderTimeout service functions
+     */
+    void GetResponseHeaderImpl(Kernel::HLERequestContext& ctx, bool timeout);
 
     /**
      * HTTP_C::GetResponseStatusCode service function
@@ -577,6 +820,17 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void SetKeepAlive(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SetPostDataTypeSize service function
+     *  Inputs:
+     *      1 : Context handle
+     *      2 : Post data type
+     *      3 : Content length size
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SetPostDataTypeSize(Kernel::HLERequestContext& ctx);
 
     /**
      * HTTP_C::Finalize service function
