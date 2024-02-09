@@ -35,6 +35,7 @@
 #include "core/hle/service/http/http_c.h"
 #include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ldr_ro/ldr_ro.h"
+#include "core/hle/service/mcu/mcu.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/mvd/mvd.h"
 #include "core/hle/service/ndm/ndm_u.h"
@@ -101,7 +102,7 @@ const std::array<ServiceModuleInfo, 41> service_module_map{
      {"CDC", 0x00040130'00001802, nullptr},
      {"GPIO", 0x00040130'00001B02, nullptr},
      {"I2C", 0x00040130'00001E02, nullptr},
-     {"MCU", 0x00040130'00001F02, nullptr},
+     {"MCU", 0x00040130'00001F02, MCU::InstallInterfaces},
      {"MP", 0x00040130'00002A02, nullptr},
      {"PDN", 0x00040130'00002102, nullptr},
      {"SPI", 0x00040130'00002302, nullptr}}};
