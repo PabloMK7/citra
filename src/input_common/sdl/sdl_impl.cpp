@@ -429,18 +429,20 @@ Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
 
 #if SDL_VERSION_ATLEAST(2, 0, 6)
         {
-            const SDL_ExtendedGameControllerBind extended_bind =
-                controller->bindings[mapped_button];
-            if (extended_bind.input.axis.axis_max < extended_bind.input.axis.axis_min) {
-                params.Set("direction", "-");
-            } else {
-                params.Set("direction", "+");
+            if (mapped_button != SDL_CONTROLLER_BUTTON_INVALID) {
+                const SDL_ExtendedGameControllerBind extended_bind =
+                    controller->bindings[mapped_button];
+                if (extended_bind.input.axis.axis_max < extended_bind.input.axis.axis_min) {
+                    params.Set("direction", "-");
+                } else {
+                    params.Set("direction", "+");
+                }
+                params.Set("threshold", (extended_bind.input.axis.axis_min +
+                                         (extended_bind.input.axis.axis_max -
+                                          extended_bind.input.axis.axis_min) /
+                                             2.0f) /
+                                            SDL_JOYSTICK_AXIS_MAX);
             }
-            params.Set(
-                "threshold",
-                (extended_bind.input.axis.axis_min +
-                 (extended_bind.input.axis.axis_max - extended_bind.input.axis.axis_min) / 2.0f) /
-                    SDL_JOYSTICK_AXIS_MAX);
         }
 #else
         params.Set("direction", "+"); // lacks extended_bind, so just a guess
