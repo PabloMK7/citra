@@ -670,7 +670,7 @@ void Instance::CollectToolingInfo() {
     if (!tooling_info) {
         return;
     }
-    const auto tools = physical_device.getToolProperties();
+    const auto tools = physical_device.getToolPropertiesEXT();
     for (const vk::PhysicalDeviceToolProperties& tool : tools) {
         const std::string_view name = tool.name;
         LOG_INFO(Render_Vulkan, "Attached debugging tool: {}", name);
