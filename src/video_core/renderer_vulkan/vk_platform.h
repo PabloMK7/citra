@@ -19,6 +19,8 @@ enum class WindowSystemType : u8;
 
 namespace Vulkan {
 
+constexpr u32 TargetVulkanApiVersion = VK_API_VERSION_1_1;
+
 using DebugCallback =
     std::variant<vk::UniqueDebugUtilsMessengerEXT, vk::UniqueDebugReportCallbackEXT>;
 
