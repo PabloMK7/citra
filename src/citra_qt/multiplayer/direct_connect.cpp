@@ -80,9 +80,8 @@ void DirectConnectWindow::Connect() {
     // Store settings
     UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = ui->ip->text();
-    UISettings::values.port = (ui->port->isModified() && !ui->port->text().isEmpty())
-                                  ? ui->port->text()
-                                  : UISettings::values.port;
+    UISettings::values.port =
+        !ui->port->text().isEmpty() ? ui->port->text() : UISettings::values.port;
 
     // attempt to connect in a different thread
     QFuture<void> f = QtConcurrent::run([&] {

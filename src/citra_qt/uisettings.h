@@ -138,6 +138,11 @@ struct Values {
     QString room_description;
     std::pair<std::vector<std::string>, std::vector<std::string>> ban_list;
 
+    QString multiplayer_filter_text;
+    bool multiplayer_filter_games_owned;
+    bool multiplayer_filter_hide_empty;
+    bool multiplayer_filter_hide_full;
+
     // logging
     Settings::Setting<bool> show_console{false, "showConsole"};
 };

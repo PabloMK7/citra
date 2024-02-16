@@ -54,7 +54,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 30> Config::default_hotkeys {{
+const std::array<UISettings::Shortcut, 35> Config::default_hotkeys {{
      {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
      {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
@@ -71,6 +71,11 @@ const std::array<UISettings::Shortcut, 30> Config::default_hotkeys {{
      {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Load from Newest Slot"),    QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), Qt::WindowShortcut}},
+     {QStringLiteral("Multiplayer Browse Public Game Lobby"), QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), Qt::ApplicationShortcut}},
      {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     Qt::ApplicationShortcut}},
      {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     Qt::WindowShortcut}},
      {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     Qt::WindowShortcut}},
@@ -557,6 +562,15 @@ void Config::ReadMultiplayerValues() {
     UISettings::values.game_id = ReadSetting(QStringLiteral("game_id"), 0).toULongLong();
     UISettings::values.room_description =
         ReadSetting(QStringLiteral("room_description"), QString{}).toString();
+    UISettings::values.multiplayer_filter_text =
+        ReadSetting(QStringLiteral("multiplayer_filter_text"), QString{}).toString();
+    UISettings::values.multiplayer_filter_games_owned =
+        ReadSetting(QStringLiteral("multiplayer_filter_games_owned"), false).toBool();
+    UISettings::values.multiplayer_filter_hide_empty =
+        ReadSetting(QStringLiteral("multiplayer_filter_hide_empty"), false).toBool();
+    UISettings::values.multiplayer_filter_hide_full =
+        ReadSetting(QStringLiteral("multiplayer_filter_hide_full"), false).toBool();
+
     // Read ban list back
     int size = qt_config->beginReadArray(QStringLiteral("username_ban_list"));
     UISettings::values.ban_list.first.resize(size);
@@ -1074,6 +1088,15 @@ void Config::SaveMultiplayerValues() {
     WriteSetting(QStringLiteral("game_id"), UISettings::values.game_id, 0);
     WriteSetting(QStringLiteral("room_description"), UISettings::values.room_description,
                  QString{});
+    WriteSetting(QStringLiteral("multiplayer_filter_text"),
+                 UISettings::values.multiplayer_filter_text, QString{});
+    WriteSetting(QStringLiteral("multiplayer_filter_games_owned"),
+                 UISettings::values.multiplayer_filter_games_owned, false);
+    WriteSetting(QStringLiteral("multiplayer_filter_hide_empty"),
+                 UISettings::values.multiplayer_filter_hide_empty, false);
+    WriteSetting(QStringLiteral("multiplayer_filter_hide_full"),
+                 UISettings::values.multiplayer_filter_hide_full, false);
+
     // Write ban list
     qt_config->beginWriteArray(QStringLiteral("username_ban_list"));
     for (std::size_t i = 0; i < UISettings::values.ban_list.first.size(); ++i) {
