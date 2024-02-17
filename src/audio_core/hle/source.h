@@ -87,8 +87,8 @@ private:
         Format format;
 
         bool from_queue;
-        u32_dsp play_position; // = 0;
-        bool has_played;       // = false;
+        u32 play_position; // = 0;
+        bool has_played;   // = false;
 
     private:
         template <class Archive>
@@ -136,7 +136,6 @@ private:
         // Current buffer
 
         u32 current_sample_number = 0;
-        u32 next_sample_number = 0;
         PAddr current_buffer_physical_address = 0;
         AudioInterp::StereoBuffer16 current_buffer = {};
 
@@ -171,7 +170,6 @@ private:
             ar& mono_or_stereo;
             ar& format;
             ar& current_sample_number;
-            ar& next_sample_number;
             ar& current_buffer_physical_address;
             ar& current_buffer;
             ar& buffer_update;
