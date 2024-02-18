@@ -3197,8 +3197,10 @@ int main(int argc, char* argv[]) {
     QApplication::setHighDpiScaleFactorRoundingPolicy(rounding_policy);
 
 #ifdef __APPLE__
-    std::string bin_path = FileUtil::GetBundleDirectory() + DIR_SEP + "..";
-    chdir(bin_path.c_str());
+    auto bundle_dir = FileUtil::GetBundleDirectory();
+    if (bundle_dir) {
+        FileUtil::SetCurrentDir(bundle_dir.value() + "..");
+    }
 #endif
 
 #ifdef ENABLE_OPENGL
