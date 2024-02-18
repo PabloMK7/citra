@@ -94,14 +94,14 @@ object DirectoryInitialization {
         val dataPath = PermissionsHandler.citraDirectory
         if (dataPath.toString().isNotEmpty()) {
             userPath = dataPath.toString()
-            Log.debug("[DirectoryInitialization] User Dir: $userPath")
+            android.util.Log.d("[Citra Frontend]", "[DirectoryInitialization] User Dir: $userPath")
             return true
         }
         return false
     }
 
     private fun copyAsset(asset: String, output: File, overwrite: Boolean, context: Context) {
-        Log.verbose("[DirectoryInitialization] Copying File $asset to $output")
+        Log.debug("[DirectoryInitialization] Copying File $asset to $output")
         try {
             if (!output.exists() || overwrite) {
                 val inputStream = context.assets.open(asset)
@@ -121,7 +121,7 @@ object DirectoryInitialization {
         overwrite: Boolean,
         context: Context
     ) {
-        Log.verbose("[DirectoryInitialization] Copying Folder $assetFolder to $outputFolder")
+        Log.debug("[DirectoryInitialization] Copying Folder $assetFolder to $outputFolder")
         try {
             var createdFolder = false
             for (file in context.assets.list(assetFolder)!!) {
