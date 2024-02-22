@@ -210,10 +210,10 @@ void Process::Set3dsxKernelCaps() {
     };
 
     // Similar to Rosalina, we set kernel version to a recent one.
-    // This is 11.2.0, to be consistent with core/hle/kernel/config_mem.cpp
+    // This is 11.17.0, to be consistent with core/hle/kernel/config_mem.cpp
     // TODO: refactor kernel version out so it is configurable and consistent
     // among all relevant places.
-    kernel_version = 0x234;
+    kernel_version = 0x23a;
 }
 
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
