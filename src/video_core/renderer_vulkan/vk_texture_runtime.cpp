@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <boost/container/small_vector.hpp>
+#include <boost/container/static_vector.hpp>
 
 #include "common/literals.h"
 #include "common/microprofile.h"
@@ -119,9 +120,9 @@ u32 UnpackDepthStencil(const VideoCore::StagingData& data, vk::Format dest) {
 }
 
 boost::container::small_vector<vk::ImageMemoryBarrier, 3> MakeInitBarriers(
-    vk::ImageAspectFlags aspect, std::span<const vk::Image> images, std::size_t num_images) {
+    vk::ImageAspectFlags aspect, std::span<const vk::Image> images) {
     boost::container::small_vector<vk::ImageMemoryBarrier, 3> barriers;
-    for (std::size_t i = 0; i < num_images; i++) {
+    for (const vk::Image& image : images) {
         barriers.push_back(vk::ImageMemoryBarrier{
             .srcAccessMask = vk::AccessFlagBits::eNone,
             .dstAccessMask = vk::AccessFlagBits::eNone,
@@ -129,7 +130,7 @@ boost::container::small_vector<vk::ImageMemoryBarrier, 3> MakeInitBarriers(
             .newLayout = vk::ImageLayout::eGeneral,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image = images[i],
+            .image = image,
             .subresourceRange{
                 .aspectMask = aspect,
                 .baseMipLevel = 0,
@@ -219,11 +220,10 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
 }
 
 vk::UniqueFramebuffer MakeFramebuffer(vk::Device device, vk::RenderPass render_pass, u32 width,
-                                      u32 height, std::span<const vk::ImageView> attachments,
-                                      u32 num_attachments) {
+                                      u32 height, std::span<const vk::ImageView> attachments) {
     const vk::FramebufferCreateInfo framebuffer_info = {
         .renderPass = render_pass,
-        .attachmentCount = num_attachments,
+        .attachmentCount = static_cast<u32>(attachments.size()),
         .pAttachments = attachments.data(),
         .width = width,
         .height = height,
@@ -715,8 +715,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     ASSERT_MSG(format != vk::Format::eUndefined && levels >= 1,
                "Image allocation parameters are invalid");
 
-    u32 num_images = 0;
-    std::array<vk::Image, 3> raw_images;
+    boost::container::static_vector<vk::Image, 3> raw_images;
 
     vk::ImageCreateFlags flags{};
     if (texture_type == VideoCore::TextureType::CubeMap) {
@@ -729,18 +728,18 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     const bool need_format_list = is_mutable && instance->IsImageFormatListSupported();
     handles[0] = MakeHandle(instance, width, height, levels, texture_type, format, traits.usage,
                             flags, traits.aspect, need_format_list, DebugName(false));
-    raw_images[num_images++] = handles[0].image;
+    raw_images.emplace_back(handles[0].image);
 
     if (res_scale != 1) {
         handles[1] =
             MakeHandle(instance, GetScaledWidth(), GetScaledHeight(), levels, texture_type, format,
                        traits.usage, flags, traits.aspect, need_format_list, DebugName(true));
-        raw_images[num_images++] = handles[1].image;
+        raw_images.emplace_back(handles[1].image);
     }
 
     runtime->renderpass_cache.EndRendering();
-    scheduler->Record([raw_images, num_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
-        const auto barriers = MakeInitBarriers(aspect, raw_images, num_images);
+    scheduler->Record([raw_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
+        const auto barriers = MakeInitBarriers(aspect, raw_images);
         cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
                                vk::PipelineStageFlagBits::eTopOfPipe,
                                vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
@@ -758,8 +757,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
     const bool has_normal = mat && mat->Map(MapType::Normal);
     const vk::Format format = traits.native;
 
-    u32 num_images = 0;
-    std::array<vk::Image, 2> raw_images;
+    boost::container::static_vector<vk::Image, 2> raw_images;
 
     vk::ImageCreateFlags flags{};
     if (texture_type == VideoCore::TextureType::CubeMap) {
@@ -769,23 +767,23 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
     const std::string debug_name = DebugName(false, true);
     handles[0] = MakeHandle(instance, mat->width, mat->height, levels, texture_type, format,
                             traits.usage, flags, traits.aspect, false, debug_name);
-    raw_images[num_images++] = handles[0].image;
+    raw_images.emplace_back(handles[0].image);
 
     if (res_scale != 1) {
         handles[1] = MakeHandle(instance, mat->width, mat->height, levels, texture_type,
                                 vk::Format::eR8G8B8A8Unorm, traits.usage, flags, traits.aspect,
                                 false, debug_name);
-        raw_images[num_images++] = handles[1].image;
+        raw_images.emplace_back(handles[1].image);
     }
     if (has_normal) {
         handles[2] = MakeHandle(instance, mat->width, mat->height, levels, texture_type, format,
                                 traits.usage, flags, traits.aspect, false, debug_name);
-        raw_images[num_images++] = handles[2].image;
+        raw_images.emplace_back(handles[2].image);
     }
 
     runtime->renderpass_cache.EndRendering();
-    scheduler->Record([raw_images, num_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
-        const auto barriers = MakeInitBarriers(aspect, raw_images, num_images);
+    scheduler->Record([raw_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
+        const auto barriers = MakeInitBarriers(aspect, raw_images);
         cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
                                vk::PipelineStageFlagBits::eTopOfPipe,
                                vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
@@ -825,11 +823,10 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
 
     scheduler->Record([buffer = runtime->upload_buffer.Handle(), format = traits.native, params,
                        staging, upload](vk::CommandBuffer cmdbuf) {
-        u32 num_copies = 1;
-        std::array<vk::BufferImageCopy, 2> buffer_image_copies;
+        boost::container::static_vector<vk::BufferImageCopy, 2> buffer_image_copies;
 
         const auto rect = upload.texture_rect;
-        buffer_image_copies[0] = vk::BufferImageCopy{
+        buffer_image_copies.emplace_back(vk::BufferImageCopy{
             .bufferOffset = upload.buffer_offset,
             .bufferRowLength = rect.GetWidth(),
             .bufferImageHeight = rect.GetHeight(),
@@ -841,15 +838,16 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
             },
             .imageOffset = {static_cast<s32>(rect.left), static_cast<s32>(rect.bottom), 0},
             .imageExtent = {rect.GetWidth(), rect.GetHeight(), 1},
-        };
+        });
 
         if (params.aspect & vk::ImageAspectFlagBits::eStencil) {
             buffer_image_copies[0].imageSubresource.aspectMask = vk::ImageAspectFlagBits::eDepth;
-            vk::BufferImageCopy& stencil_copy = buffer_image_copies[1];
+
+            vk::BufferImageCopy& stencil_copy =
+                buffer_image_copies.emplace_back(buffer_image_copies[0]);
             stencil_copy = buffer_image_copies[0];
             stencil_copy.bufferOffset += UnpackDepthStencil(staging, format);
             stencil_copy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eStencil;
-            num_copies++;
         }
 
         const vk::ImageMemoryBarrier read_barrier = {
@@ -877,7 +875,7 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
                                vk::DependencyFlagBits::eByRegion, {}, {}, read_barrier);
 
         cmdbuf.copyBufferToImage(buffer, params.src_image, vk::ImageLayout::eTransferDstOptimal,
-                                 num_copies, buffer_image_copies.data());
+                                 buffer_image_copies);
 
         cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, params.pipeline_flags,
                                vk::DependencyFlagBits::eByRegion, {}, {}, write_barrier);
@@ -1085,7 +1083,7 @@ void Surface::ScaleUp(u32 new_scale) {
     runtime->renderpass_cache.EndRendering();
     scheduler->Record(
         [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
-            const auto barriers = MakeInitBarriers(aspect, raw_images, raw_images.size());
+            const auto barriers = MakeInitBarriers(aspect, raw_images);
             cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
                                    vk::PipelineStageFlagBits::eTopOfPipe,
                                    vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
@@ -1351,7 +1349,7 @@ vk::Framebuffer Surface::Framebuffer() noexcept {
         runtime->renderpass_cache.GetRenderpass(color_format, depth_format, false);
     const auto attachments = std::array{ImageView()};
     framebuffers[index] = MakeFramebuffer(instance->GetDevice(), render_pass, GetScaledWidth(),
-                                          GetScaledHeight(), attachments, 1);
+                                          GetScaledHeight(), attachments);
     return framebuffers[index].get();
 }
 
@@ -1481,17 +1479,16 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         image_views[index] = shadow_rendering ? surface->StorageView() : surface->FramebufferView();
     };
 
-    u32 num_attachments = 0;
-    std::array<vk::ImageView, 2> attachments;
+    boost::container::static_vector<vk::ImageView, 2> attachments;
 
     if (color) {
         prepare(0, color);
-        attachments[num_attachments++] = image_views[0];
+        attachments.emplace_back(image_views[0]);
     }
 
     if (depth) {
         prepare(1, depth);
-        attachments[num_attachments++] = image_views[1];
+        attachments.emplace_back(image_views[1]);
     }
 
     const vk::Device device = runtime.GetInstance().GetDevice();
@@ -1499,11 +1496,10 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         render_pass =
             renderpass_cache.GetRenderpass(PixelFormat::Invalid, PixelFormat::Invalid, false);
         framebuffer = MakeFramebuffer(device, render_pass, color->GetScaledWidth(),
-                                      color->GetScaledHeight(), {}, 0);
+                                      color->GetScaledHeight(), {});
     } else {
         render_pass = renderpass_cache.GetRenderpass(formats[0], formats[1], false);
-        framebuffer =
-            MakeFramebuffer(device, render_pass, width, height, attachments, num_attachments);
+        framebuffer = MakeFramebuffer(device, render_pass, width, height, attachments);
     }
 }
 
