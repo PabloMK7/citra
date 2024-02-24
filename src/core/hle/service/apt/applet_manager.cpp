@@ -373,7 +373,10 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
     if (active_slot == AppletSlot::Error) {
         active_slot = slot;
 
-        // Wake up the application.
+        // APT automatically calls enable on the first registered applet.
+        Enable(attributes);
+
+        // Wake up the applet.
         SendParameter({
             .sender_id = AppletId::None,
             .destination_id = app_id,
@@ -398,7 +401,8 @@ Result AppletManager::Enable(AppletAttributes attributes) {
     auto slot_data = GetAppletSlot(slot);
     slot_data->registered = true;
 
-    if (slot_data->attributes.applet_pos == AppletPos::System &&
+    if (slot_data->applet_id != AppletId::None &&
+        slot_data->attributes.applet_pos == AppletPos::System &&
         slot_data->attributes.is_home_menu) {
         slot_data->attributes.raw |= attributes.raw;
         LOG_DEBUG(Service_APT, "Updated home menu attributes to {:08X}.",
@@ -786,16 +790,23 @@ Result AppletManager::PrepareToStartSystemApplet(AppletId applet_id) {
 
 Result AppletManager::StartSystemApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
                                         const std::vector<u8>& buffer) {
-    auto source_applet_id = AppletId::None;
+    auto source_applet_id = AppletId::Application;
     if (last_system_launcher_slot != AppletSlot::Error) {
-        const auto slot_data = GetAppletSlot(last_system_launcher_slot);
-        source_applet_id = slot_data->applet_id;
+        const auto launcher_slot_data = GetAppletSlot(last_system_launcher_slot);
+        source_applet_id = launcher_slot_data->applet_id;
 
-        // If a system applet is launching another system applet, reset the slot to avoid conflicts.
-        // This is needed because system applets won't necessarily call CloseSystemApplet before
-        // exiting.
-        if (last_system_launcher_slot == AppletSlot::SystemApplet) {
-            slot_data->Reset();
+        // APT generally clears and terminates the caller of StartSystemApplet. This helps in
+        // situations such as a system applet launching another system applet, which would
+        // otherwise deadlock.
+        // TODO: In real APT, the check for AppletSlot::Application does not exist; there is
+        // TODO: something wrong with our implementation somewhere that makes this necessary.
+        // TODO: Otherwise, games that attempt to launch system applets will be cleared and
+        // TODO: emulation will crash.
+        if (!launcher_slot_data->registered ||
+            (last_system_launcher_slot != AppletSlot::Application &&
+             !launcher_slot_data->attributes.no_exit_on_system_applet)) {
+            launcher_slot_data->Reset();
+            // TODO: Implement launcher process termination.
         }
     }
 
