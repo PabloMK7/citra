@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 #include <boost/container/static_vector.hpp>
+#include <fmt/format.h>
 
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -291,13 +292,14 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
     }
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
-    if (!VULKAN_HPP_DEFAULT_DISPATCHER.vkEnumerateInstanceVersion) {
-        throw std::runtime_error("Vulkan 1.0 is not supported, 1.1 is required!");
-    }
-
-    const u32 available_version = vk::enumerateInstanceVersion();
-    if (available_version < VK_API_VERSION_1_1) {
-        throw std::runtime_error("Vulkan 1.0 is not supported, 1.1 is required!");
+    const u32 available_version = VULKAN_HPP_DEFAULT_DISPATCHER.vkEnumerateInstanceVersion
+                                      ? vk::enumerateInstanceVersion()
+                                      : VK_API_VERSION_1_0;
+    if (available_version < TargetVulkanApiVersion) {
+        throw std::runtime_error(fmt::format(
+            "Vulkan {}.{} is required, but only {}.{} is supported by instance!",
+            VK_VERSION_MAJOR(TargetVulkanApiVersion), VK_VERSION_MINOR(TargetVulkanApiVersion),
+            VK_VERSION_MAJOR(available_version), VK_VERSION_MINOR(available_version)));
     }
 
     const auto extensions = GetInstanceExtensions(window_type, enable_validation);
@@ -307,7 +309,7 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "Citra Vulkan",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = VK_API_VERSION_1_3,
+        .apiVersion = TargetVulkanApiVersion,
     };
 
     boost::container::static_vector<const char*, 2> layers;

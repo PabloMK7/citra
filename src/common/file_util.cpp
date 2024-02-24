@@ -634,6 +634,10 @@ std::optional<std::string> GetCurrentDir() {
     std::string strDir = dir;
 #endif
     free(dir);
+
+    if (!strDir.ends_with(DIR_SEP)) {
+        strDir += DIR_SEP;
+    }
     return strDir;
 } // namespace FileUtil
 
@@ -646,17 +650,36 @@ bool SetCurrentDir(const std::string& directory) {
 }
 
 #if defined(__APPLE__)
-std::string GetBundleDirectory() {
-    CFURLRef BundleRef;
-    char AppBundlePath[MAXPATHLEN];
+std::optional<std::string> GetBundleDirectory() {
     // Get the main bundle for the app
-    BundleRef = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    CFStringRef BundlePath = CFURLCopyFileSystemPath(BundleRef, kCFURLPOSIXPathStyle);
-    CFStringGetFileSystemRepresentation(BundlePath, AppBundlePath, sizeof(AppBundlePath));
-    CFRelease(BundleRef);
-    CFRelease(BundlePath);
+    CFBundleRef bundle_ref = CFBundleGetMainBundle();
+    if (!bundle_ref) {
+        return {};
+    }
 
-    return AppBundlePath;
+    CFURLRef bundle_url_ref = CFBundleCopyBundleURL(bundle_ref);
+    if (!bundle_url_ref) {
+        return {};
+    }
+    SCOPE_EXIT({ CFRelease(bundle_url_ref); });
+
+    CFStringRef bundle_path_ref = CFURLCopyFileSystemPath(bundle_url_ref, kCFURLPOSIXPathStyle);
+    if (!bundle_path_ref) {
+        return {};
+    }
+    SCOPE_EXIT({ CFRelease(bundle_path_ref); });
+
+    char app_bundle_path[MAXPATHLEN];
+    if (!CFStringGetFileSystemRepresentation(bundle_path_ref, app_bundle_path,
+                                             sizeof(app_bundle_path))) {
+        return {};
+    }
+
+    std::string path_str(app_bundle_path);
+    if (!path_str.ends_with(DIR_SEP)) {
+        path_str += DIR_SEP;
+    }
+    return path_str;
 }
 #endif
 
@@ -732,22 +755,6 @@ static const std::string& GetHomeDirectory() {
 }
 #endif
 
-std::string GetSysDirectory() {
-    std::string sysDir;
-
-#if defined(__APPLE__)
-    sysDir = GetBundleDirectory();
-    sysDir += DIR_SEP;
-    sysDir += SYSDATA_DIR;
-#else
-    sysDir = SYSDATA_DIR;
-#endif
-    sysDir += DIR_SEP;
-
-    LOG_DEBUG(Common_Filesystem, "Setting to {}:", sysDir);
-    return sysDir;
-}
-
 namespace {
 std::unordered_map<UserPath, std::string> g_paths;
 std::unordered_map<UserPath, std::string> g_default_paths;
@@ -777,8 +784,10 @@ void SetUserPath(const std::string& path) {
         g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
         g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
 #else
-        if (FileUtil::Exists(ROOT_DIR DIR_SEP USERDATA_DIR)) {
-            user_path = ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP;
+        auto current_dir = FileUtil::GetCurrentDir();
+        if (current_dir.has_value() &&
+            FileUtil::Exists(current_dir.value() + USERDATA_DIR DIR_SEP)) {
+            user_path = current_dir.value() + USERDATA_DIR DIR_SEP;
             g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
             g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
         } else {

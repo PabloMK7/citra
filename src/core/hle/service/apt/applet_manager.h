@@ -152,6 +152,7 @@ union AppletAttributes {
     u32 raw;
 
     BitField<0, 3, AppletPos> applet_pos;
+    BitField<28, 1, u32> no_exit_on_system_applet;
     BitField<29, 1, u32> is_home_menu;
 
     AppletAttributes() : raw(0) {}

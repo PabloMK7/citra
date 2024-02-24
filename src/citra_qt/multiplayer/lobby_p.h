@@ -188,12 +188,37 @@ public:
     }
 
     QVariant data(int role) const override {
-        if (role != Qt::DisplayRole) {
+        switch (role) {
+        case Qt::DisplayRole: {
+            auto members = data(MemberListRole).toList();
+            return QStringLiteral("%1 / %2").arg(QString::number(members.size()),
+                                                 data(MaxPlayerRole).toString());
+        }
+        case Qt::ForegroundRole: {
+            auto members = data(MemberListRole).toList();
+            auto max_players = data(MaxPlayerRole).toInt();
+            const QColor room_full_color(255, 48, 32);
+            const QColor room_almost_full_color(255, 140, 32);
+            const QColor room_has_players_color(32, 160, 32);
+            const QColor room_empty_color(128, 128, 128);
+
+            if (members.size() >= max_players) {
+                return QBrush(room_full_color);
+            } else if (members.size() == (max_players - 1)) {
+                return QBrush(room_almost_full_color);
+            } else if (members.size() == 0) {
+                return QBrush(room_empty_color);
+            } else if (members.size() > 0 && members.size() < (max_players - 1)) {
+                return QBrush(room_has_players_color);
+            }
+
+            // FIXME: How to return a value that tells Qt not to modify the
+            // text color from the default (as if Qt::ForegroundRole wasn't overridden)?
+            return QBrush(nullptr);
+        }
+        default:
             return LobbyItem::data(role);
         }
-        auto members = data(MemberListRole).toList();
-        return QStringLiteral("%1 / %2").arg(QString::number(members.size()),
-                                             data(MaxPlayerRole).toString());
     }
 
     bool operator<(const QStandardItem& other) const override {

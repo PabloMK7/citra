@@ -12,13 +12,13 @@ jobs:
     if: ${{ !github.head_ref }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Pack
         run: ./.ci/source.sh
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: source
           path: artifacts/
@@ -37,11 +37,11 @@ jobs:
       OS: linux
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -53,7 +53,7 @@ jobs:
         run: ./.ci/pack.sh
         if: ${{ matrix.target == 'appimage' }}
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ matrix.target == 'appimage' }}
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
@@ -70,11 +70,11 @@ jobs:
       OS: macos
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -87,7 +87,7 @@ jobs:
       - name: Prepare outputs for caching
         run: mv build/bundle $OS-$TARGET
       - name: Cache outputs for universal build
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: ${{ env.OS }}-${{ env.TARGET }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -98,15 +98,15 @@ jobs:
       OS: macos
       TARGET: universal
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download x86_64 build from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.OS }}-x86_64
           key: ${{ runner.os }}-x86_64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           fail-on-cache-miss: true
       - name: Download ARM64 build from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.OS }}-arm64
           key: ${{ runner.os }}-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -118,7 +118,7 @@ jobs:
       - name: Pack
         run: ./.ci/pack.sh
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -137,11 +137,11 @@ jobs:
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -179,7 +179,7 @@ jobs:
       - name: Pack
         run: ./.ci/pack.sh
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -192,11 +192,11 @@ jobs:
       OS: android
       TARGET: universal
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -228,7 +228,7 @@ jobs:
         env:
           UNPACKED: 1
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
@@ -242,11 +242,11 @@ jobs:
       OS: ios
       TARGET: arm64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-ios-${{ github.sha }}
@@ -261,7 +261,7 @@ jobs:
     needs: [windows, linux, macos-universal, android, source]
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
       - name: Create release
         uses: actions/create-release@v1
         env:

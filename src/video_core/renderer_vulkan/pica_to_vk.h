@@ -96,7 +96,10 @@ inline vk::BlendFactor BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
     }};
 
     const auto index = static_cast<std::size_t>(factor);
-    ASSERT_MSG(index < blend_func_table.size(), "Unknown blend factor {}", index);
+    if (index >= blend_func_table.size()) {
+        LOG_CRITICAL(Render_Vulkan, "Unknown blend factor {}", index);
+        return vk::BlendFactor::eOne;
+    }
     return blend_func_table[index];
 }
 

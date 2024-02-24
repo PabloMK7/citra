@@ -442,6 +442,17 @@
     <string name="cia_install_error_encrypted">\"%s\" must be decrypted before being used with Citra.\n A real 3DS is required</string>
     <string name="cia_install_error_unknown">An unknown error occurred while installing \"%s\".\n Please see the log for more details</string>
 
+    <!-- Memory Sizes -->
+    <string name="memory_formatted">%1$s %2$s</string>
+    <string name="memory_byte">Byte</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
     <!-- Theme Modes -->
     <string name="change_theme_mode">Change Theme Mode</string>
     <string name="theme_mode_follow_system">Follow System</string>

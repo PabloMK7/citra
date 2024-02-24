@@ -148,8 +148,6 @@ inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
     // Range check table for input
     if (index >= blend_func_table.size()) {
         LOG_CRITICAL(Render_OpenGL, "Unknown blend factor {}", index);
-        UNREACHABLE();
-
         return GL_ONE;
     }
 

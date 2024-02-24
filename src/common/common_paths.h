@@ -13,7 +13,6 @@
 #endif
 
 // The user data dir
-#define ROOT_DIR "."
 #define USERDATA_DIR "user"
 #ifdef USER_DIR
 #define EMU_DATA_DIR USER_DIR

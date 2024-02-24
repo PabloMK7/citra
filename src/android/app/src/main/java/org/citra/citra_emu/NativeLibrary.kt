@@ -413,12 +413,12 @@ object NativeLibrary {
     }
 
     fun setEmulationActivity(emulationActivity: EmulationActivity?) {
-        Log.verbose("[NativeLibrary] Registering EmulationActivity.")
+        Log.debug("[NativeLibrary] Registering EmulationActivity.")
         sEmulationActivity = WeakReference(emulationActivity)
     }
 
     fun clearEmulationActivity() {
-        Log.verbose("[NativeLibrary] Unregistering EmulationActivity.")
+        Log.debug("[NativeLibrary] Unregistering EmulationActivity.")
         sEmulationActivity.clear()
     }
 

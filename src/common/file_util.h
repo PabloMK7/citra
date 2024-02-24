@@ -193,11 +193,8 @@ void SetCurrentRomPath(const std::string& path);
 // Update the Global Path with the new value
 void UpdateUserPath(UserPath path, const std::string& filename);
 
-// Returns the path to where the sys file are
-[[nodiscard]] std::string GetSysDirectory();
-
 #ifdef __APPLE__
-[[nodiscard]] std::string GetBundleDirectory();
+[[nodiscard]] std::optional<std::string> GetBundleDirectory();
 #endif
 
 #ifdef _WIN32

@@ -4,6 +4,7 @@
 
 #include <span>
 #include <boost/container/static_vector.hpp>
+#include <fmt/format.h>
 
 #include "common/assert.h"
 #include "common/settings.h"
@@ -153,6 +154,12 @@ Instance::Instance(Core::TelemetrySession& telemetry, Frontend::EmuWindow& windo
     physical_device = physical_devices[physical_device_index];
     available_extensions = GetSupportedExtensions(physical_device);
     properties = physical_device.getProperties();
+    if (properties.apiVersion < TargetVulkanApiVersion) {
+        throw std::runtime_error(fmt::format(
+            "Vulkan {}.{} is required, but only {}.{} is supported by device!",
+            VK_VERSION_MAJOR(TargetVulkanApiVersion), VK_VERSION_MINOR(TargetVulkanApiVersion),
+            VK_VERSION_MAJOR(properties.apiVersion), VK_VERSION_MINOR(properties.apiVersion)));
+    }
 
     CollectTelemetryParameters(telemetry);
     CreateDevice();
@@ -629,7 +636,7 @@ void Instance::CreateAllocator() {
         .device = *device,
         .pVulkanFunctions = &functions,
         .instance = *instance,
-        .vulkanApiVersion = properties.apiVersion,
+        .vulkanApiVersion = TargetVulkanApiVersion,
     };
 
     const VkResult result = vmaCreateAllocator(&allocator_info, &allocator);
@@ -670,7 +677,7 @@ void Instance::CollectToolingInfo() {
     if (!tooling_info) {
         return;
     }
-    const auto tools = physical_device.getToolProperties();
+    const auto tools = physical_device.getToolPropertiesEXT();
     for (const vk::PhysicalDeviceToolProperties& tool : tools) {
         const std::string_view name = tool.name;
         LOG_INFO(Render_Vulkan, "Attached debugging tool: {}", name);

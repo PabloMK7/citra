@@ -9,10 +9,13 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DocumentsTree
 import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.PermissionsHandler
+import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.MemoryUtil
 
 class CitraApplication : Application() {
     private fun createNotificationChannel() {
@@ -53,7 +56,18 @@ class CitraApplication : Application() {
         }
 
         NativeLibrary.logDeviceInfo()
+        logDeviceInfo()
         createNotificationChannel()
+    }
+
+    fun logDeviceInfo() {
+        Log.info("Device Manufacturer - ${Build.MANUFACTURER}")
+        Log.info("Device Model - ${Build.MODEL}")
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
+            Log.info("SoC Manufacturer - ${Build.SOC_MANUFACTURER}")
+            Log.info("SoC Model - ${Build.SOC_MODEL}")
+        }
+        Log.info("Total System Memory - ${MemoryUtil.getDeviceRAM()}")
     }
 
     companion object {
