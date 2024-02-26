@@ -1014,8 +1014,8 @@ void SOC_U::Accept(Kernel::HLERequestContext& ctx) {
                 ctr_addr_buf.resize(async_data->max_addr_len);
             }
 
-            LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", async_data->socket_handle,
-                      static_cast<s32>(async_data->ret));
+            LOG_DEBUG(Service_SOC, "called, pid={}, fd={}, ret={}", async_data->pid,
+                      async_data->socket_handle, static_cast<s32>(async_data->ret));
 
             IPC::RequestBuilder rb(ctx, 0x04, 2, 2);
             rb.Push(ResultSuccess);

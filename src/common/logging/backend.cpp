@@ -451,7 +451,7 @@ void SetColorConsoleBackendEnabled(bool enabled) {
 }
 
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
-                       unsigned int line_num, const char* function, const char* format,
+                       unsigned int line_num, const char* function, fmt::string_view format,
                        const fmt::format_args& args) {
     if (!initialization_in_progress_suppress_logging) {
         Impl::Instance().PushEntry(log_class, log_level, filename, line_num, function,
