@@ -81,7 +81,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.target }}-
       - name: Install tools
-        run: brew install ccache glslang ninja
+        run: brew install ccache ninja
       - name: Build
         run: ./.ci/macos.sh
       - name: Prepare outputs for caching
@@ -153,13 +153,6 @@ jobs:
       - name: Install extra tools (MSVC)
         run: choco install ccache ninja wget
         if: ${{ matrix.target == 'msvc' }}
-      - name: Set up Vulkan SDK (MSVC)
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
-        if: ${{ matrix.target == 'msvc' }}
-        with:
-          vulkan-query-version: latest
-          vulkan-components: SPIRV-Tools, Glslang
-          vulkan-use-cache: true
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         if: ${{ matrix.target == 'msys2' }}
@@ -168,10 +161,8 @@ jobs:
           update: true
           install: git make p7zip
           pacboy: >-
-            toolchain:p ccache:p cmake:p ninja:p glslang:p
+            toolchain:p ccache:p cmake:p ninja:p
             qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
-      - name: Test glslang
-        run: glslang --version || glslangValidator --version
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
       - name: Build
@@ -215,7 +206,7 @@ jobs:
         run: |
           sudo add-apt-repository -y ppa:theofficialgman/gpu-tools
           sudo apt-get update -y
-          sudo apt-get install ccache glslang-dev glslang-tools apksigner -y
+          sudo apt-get install ccache apksigner -y
       - name: Build
         run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh
         env:
@@ -253,7 +244,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ios-
       - name: Install tools
-        run: brew install ccache glslang ninja
+        run: brew install ccache ninja
       - name: Build
         run: ./.ci/ios.sh
   release:

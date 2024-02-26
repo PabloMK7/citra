@@ -5,6 +5,10 @@
 //? #version 430 core
 layout(location = 0) out vec2 tex_coord;
 
+#ifdef VULKAN
+#define gl_VertexID gl_VertexIndex
+#endif
+
 const vec2 vertices[4] =
     vec2[4](vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, 1.0));
 

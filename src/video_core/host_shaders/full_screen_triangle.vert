@@ -10,6 +10,7 @@ out gl_PerVertex {
 layout(location = 0) out vec2 texcoord;
 
 #ifdef VULKAN
+#define gl_VertexID gl_VertexIndex
 #define BEGIN_PUSH_CONSTANTS layout(push_constant) uniform PushConstants {
 #define END_PUSH_CONSTANTS };
 #define UNIFORM(n)

@@ -15,10 +15,10 @@
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
-#include "video_core/host_shaders/vulkan_present_anaglyph_frag_spv.h"
-#include "video_core/host_shaders/vulkan_present_frag_spv.h"
-#include "video_core/host_shaders/vulkan_present_interlaced_frag_spv.h"
-#include "video_core/host_shaders/vulkan_present_vert_spv.h"
+#include "video_core/host_shaders/vulkan_present_anaglyph_frag.h"
+#include "video_core/host_shaders/vulkan_present_frag.h"
+#include "video_core/host_shaders/vulkan_present_interlaced_frag.h"
+#include "video_core/host_shaders/vulkan_present_vert.h"
 
 #include <vk_mem_alloc.h>
 
@@ -225,10 +225,14 @@ void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
 
 void RendererVulkan::CompileShaders() {
     vk::Device device = instance.GetDevice();
-    present_vertex_shader = CompileSPV(VULKAN_PRESENT_VERT_SPV, device);
-    present_shaders[0] = CompileSPV(VULKAN_PRESENT_FRAG_SPV, device);
-    present_shaders[1] = CompileSPV(VULKAN_PRESENT_ANAGLYPH_FRAG_SPV, device);
-    present_shaders[2] = CompileSPV(VULKAN_PRESENT_INTERLACED_FRAG_SPV, device);
+    present_vertex_shader =
+        Compile(HostShaders::VULKAN_PRESENT_VERT, vk::ShaderStageFlagBits::eVertex, device);
+    present_shaders[0] =
+        Compile(HostShaders::VULKAN_PRESENT_FRAG, vk::ShaderStageFlagBits::eFragment, device);
+    present_shaders[1] = Compile(HostShaders::VULKAN_PRESENT_ANAGLYPH_FRAG,
+                                 vk::ShaderStageFlagBits::eFragment, device);
+    present_shaders[2] = Compile(HostShaders::VULKAN_PRESENT_INTERLACED_FRAG,
+                                 vk::ShaderStageFlagBits::eFragment, device);
 
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {
