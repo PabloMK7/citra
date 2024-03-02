@@ -522,7 +522,13 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
 
     HW::Y2R::PerformConversion(system.Memory(), conversion);
 
-    completion_event->Signal();
+    if (is_busy_conversion) {
+        system.CoreTiming().RemoveEvent(completion_signal_event);
+    }
+
+    static constexpr s64 MinY2RDelay = 20000;
+    system.CoreTiming().ScheduleEvent(MinY2RDelay, completion_signal_event);
+    is_busy_conversion = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -532,6 +538,10 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
 
 void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+
+    if (is_busy_conversion) {
+        system.CoreTiming().RemoveEvent(completion_signal_event);
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -544,7 +554,7 @@ void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push<u8>(0); // StartConversion always finishes immediately
+    rb.Push(is_busy_conversion);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -697,6 +707,11 @@ Y2R_U::Y2R_U(Core::System& system) : ServiceFramework("y2r:u", 1), system(system
     RegisterHandlers(functions);
 
     completion_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "Y2R:Completed");
+    completion_signal_event =
+        system.CoreTiming().RegisterEvent("Y2R Completion Signal Event", [this](uintptr_t, s64) {
+            completion_event->Signal();
+            is_busy_conversion = false;
+        });
 }
 
 Y2R_U::~Y2R_U() = default;
