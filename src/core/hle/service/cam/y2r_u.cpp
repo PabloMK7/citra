@@ -7,6 +7,7 @@
 #include "common/archives.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
+#include "common/scope_exit.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
@@ -526,7 +527,10 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
         system.CoreTiming().RemoveEvent(completion_signal_event);
     }
 
-    static constexpr s64 MinY2RDelay = 20000;
+    // This value has been estimated as the minimum amount of cycles to resolve a race condition
+    // in the intro cutscene of the FIFA series of games.
+    // TODO: Measure the cycle count more accurately based on hardware.
+    static constexpr s64 MinY2RDelay = 50000;
     system.CoreTiming().ScheduleEvent(MinY2RDelay, completion_signal_event);
     is_busy_conversion = true;
 
@@ -568,34 +572,38 @@ void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
     conversion.rotation = params.rotation;
     conversion.block_alignment = params.block_alignment;
 
-    Result result = conversion.SetInputLineWidth(params.input_line_width);
-
-    if (result.IsError())
-        goto cleanup;
-
-    result = conversion.SetInputLines(params.input_lines);
-
-    if (result.IsError())
-        goto cleanup;
-
-    result = conversion.SetStandardCoefficient(params.standard_coefficient);
-
-    if (result.IsError())
-        goto cleanup;
-
-    conversion.padding = params.padding;
-    conversion.alpha = params.alpha;
-
-cleanup:
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(result);
-
     LOG_DEBUG(Service_Y2R,
               "called input_format={} output_format={} rotation={} block_alignment={} "
               "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
               params.input_format, params.output_format, params.rotation, params.block_alignment,
               params.input_line_width, params.input_lines, params.standard_coefficient,
               params.padding, params.alpha);
+
+    auto result = conversion.SetInputLineWidth(params.input_line_width);
+
+    SCOPE_EXIT({
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(result);
+    });
+
+    if (result.IsError()) {
+        return;
+    }
+
+    result = conversion.SetInputLines(params.input_lines);
+
+    if (result.IsError()) {
+        return;
+    }
+
+    result = conversion.SetStandardCoefficient(params.standard_coefficient);
+
+    if (result.IsError()) {
+        return;
+    }
+
+    conversion.padding = params.padding;
+    conversion.alpha = params.alpha;
 }
 
 void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
