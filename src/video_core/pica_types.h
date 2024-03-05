@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <bit>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <boost/serialization/access.hpp>
 #include "common/common_types.h"
 
@@ -28,6 +30,41 @@ public:
     static constexpr Float<M, E> FromFloat32(float val) {
         Float<M, E> ret;
         ret.value = val;
+        return Trunc(ret);
+    }
+
+    static constexpr Float<M, E> MinNormal() {
+        Float<M, E> ret;
+        // Mininum normal value = 1.0 / (1 << ((1 << (E - 1)) - 2));
+        if constexpr (E == 5) {
+            ret.value = 0x1.p-14;
+        } else {
+            // E == 7
+            ret.value = (0x1.p-62);
+        }
+        return ret;
+    }
+
+    // these values are approximate, rounded up
+    static constexpr Float<M, E> Max() {
+        Float<M, E> ret;
+        if constexpr (E == 5) {
+            ret.value = 0x1.p16;
+        } else {
+            // E == 7
+            ret.value = 0x1.p64;
+        }
+        return ret;
+    }
+
+    // before C++23 std::isnormal and std::abs aren't considered constexpr so this function can't be
+    // used as constexpr until the compilers support that.
+    static constexpr Float<M, E> Trunc(const Float<M, E>& val) {
+        Float<M, E> ret = val.Flushed().InfChecked();
+        if (std::isnormal(val.ToFloat32())) {
+            u32 hex = std::bit_cast<u32>(ret.ToFloat32()) & (0xffffffff ^ ((1 << (23 - M)) - 1));
+            ret.value = std::bit_cast<float>(hex);
+        }
         return ret;
     }
 
@@ -50,22 +87,44 @@ public:
             hex = sign;
         }
 
-        std::memcpy(&res.value, &hex, sizeof(float));
+        res.value = std::bit_cast<float>(hex);
 
         return res;
     }
 
     static constexpr Float<M, E> Zero() {
-        return FromFloat32(0.f);
+        Float<M, E> ret;
+        ret.value = 0.f;
+        return ret;
     }
 
     static constexpr Float<M, E> One() {
-        return FromFloat32(1.f);
+        Float<M, E> ret;
+        ret.value = 1.f;
+        return ret;
     }
 
     // Not recommended for anything but logging
     constexpr float ToFloat32() const {
         return value;
+    }
+
+    constexpr Float<M, E> Flushed() const {
+        Float<M, E> ret;
+        ret.value = value;
+        if (std::abs(value) < MinNormal().ToFloat32()) {
+            ret.value = 0;
+        }
+        return ret;
+    }
+
+    constexpr Float<M, E> InfChecked() const {
+        Float<M, E> ret;
+        ret.value = value;
+        if (std::abs(value) > Max().ToFloat32()) {
+            ret.value = value * std::numeric_limits<float>::infinity();
+        }
+        return ret;
     }
 
     constexpr Float<M, E> operator*(const Float<M, E>& flt) const {
@@ -95,22 +154,24 @@ public:
     }
 
     constexpr Float<M, E>& operator/=(const Float<M, E>& flt) {
-        value /= flt.ToFloat32();
+        value = operator/(flt).value;
         return *this;
     }
 
     constexpr Float<M, E>& operator+=(const Float<M, E>& flt) {
-        value += flt.ToFloat32();
+        value = operator+(flt).value;
         return *this;
     }
 
     constexpr Float<M, E>& operator-=(const Float<M, E>& flt) {
-        value -= flt.ToFloat32();
+        value = operator-(flt).value;
         return *this;
     }
 
     constexpr Float<M, E> operator-() const {
-        return Float<M, E>::FromFloat32(-ToFloat32());
+        Float<M, E> ret;
+        ret.value = -value;
+        return ret;
     }
 
     constexpr bool operator<(const Float<M, E>& flt) const {
