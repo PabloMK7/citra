@@ -32,8 +32,20 @@ layout (push_constant, std140) uniform DrawInfo {
 
 layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
 
+// Not all vulkan drivers support shaderSampledImageArrayDynamicIndexing, so index manually.
+vec4 GetScreen(int screen_id) {
+    switch (screen_id) {
+    case 0:
+        return texture(screen_textures[0], frag_tex_coord);
+    case 1:
+        return texture(screen_textures[1], frag_tex_coord);
+    case 2:
+        return texture(screen_textures[2], frag_tex_coord);
+    }
+}
+
 void main() {
-    vec4 color_tex_l = texture(screen_textures[screen_id_l], frag_tex_coord);
-    vec4 color_tex_r = texture(screen_textures[screen_id_r], frag_tex_coord);
+    vec4 color_tex_l = GetScreen(screen_id_l);
+    vec4 color_tex_r = GetScreen(screen_id_r);
     color = vec4(color_tex_l.rgb*l+color_tex_r.rgb*r, color_tex_l.a);
 }
