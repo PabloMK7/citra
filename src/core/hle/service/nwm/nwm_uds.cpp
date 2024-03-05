@@ -575,10 +575,6 @@ void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
 
     recv_buffer_memory.reset();
 
-    SharedPage::Handler& shared_page = system.Kernel().GetSharedPageHandler();
-    shared_page.SetWifiLinkLevel(SharedPage::WifiLinkLevel::Off);
-    shared_page.SetWifiState(SharedPage::WifiState::Enabled);
-
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
     LOG_DEBUG(Service_NWM, "called");
@@ -670,10 +666,6 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
         node_info.push_back(current_node);
         channel_data.clear();
     }
-
-    SharedPage::Handler& shared_page = system.Kernel().GetSharedPageHandler();
-    shared_page.SetWifiLinkLevel(SharedPage::WifiLinkLevel::Best);
-    shared_page.SetWifiState(SharedPage::WifiState::Local1);
 
     return connection_status_event;
 }
