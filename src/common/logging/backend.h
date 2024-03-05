@@ -26,5 +26,11 @@ void DisableLoggingInTests();
  */
 void SetGlobalFilter(const Filter& filter);
 
+/**
+ * Only allow messages that match the specified regex. The regex is matched against the final log
+ * text.
+ */
+bool SetRegexFilter(const std::string& regex);
+
 void SetColorConsoleBackendEnabled(bool enabled);
 } // namespace Common::Log

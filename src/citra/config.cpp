@@ -306,12 +306,14 @@ void Config::ReadValues() {
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
+    ReadSetting("Miscellaneous", Settings::values.log_regex_filter);
 
     // Apply the log_filter setting as the logger has already been initialized
     // and doesn't pick up the filter on its own.
     Common::Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter.GetValue());
     Common::Log::SetGlobalFilter(filter);
+    Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
 
     // Debugging
     Settings::values.record_frame_times =
