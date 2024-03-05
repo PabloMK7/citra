@@ -54,21 +54,21 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
                                Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window)
     : RendererBase{system, window, secondary_window}, memory{system.Memory()}, pica{pica_},
       instance{system.TelemetrySession(), window, Settings::values.physical_device.GetValue()},
-      scheduler{instance}, renderpass_cache{instance, scheduler}, pool{instance},
-      main_window{window, instance, scheduler},
+      scheduler{instance}, render_manager{instance, scheduler}, main_window{window, instance,
+                                                                            scheduler},
       vertex_buffer{instance, scheduler, vk::BufferUsageFlagBits::eVertexBuffer,
                     VERTEX_BUFFER_SIZE},
-      rasterizer{memory,
-                 pica,
-                 system.CustomTexManager(),
-                 *this,
-                 render_window,
-                 instance,
-                 scheduler,
-                 pool,
-                 renderpass_cache,
-                 main_window.ImageCount()},
-      present_set_provider{instance, pool, PRESENT_BINDINGS} {
+      update_queue{instance}, rasterizer{memory,
+                                         pica,
+                                         system.CustomTexManager(),
+                                         *this,
+                                         render_window,
+                                         instance,
+                                         scheduler,
+                                         render_manager,
+                                         update_queue,
+                                         main_window.ImageCount()},
+      present_heap{instance, scheduler.GetMasterSemaphore(), PRESENT_BINDINGS, 32} {
     CompileShaders();
     BuildLayouts();
     BuildPipelines();
@@ -127,16 +127,14 @@ void RendererVulkan::PrepareRendertarget() {
 
 void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout) {
     const auto sampler = present_samplers[!Settings::values.filter_mode.GetValue()];
-    std::transform(screen_infos.begin(), screen_infos.end(), present_textures.begin(),
-                   [&](auto& info) {
-                       return DescriptorData{vk::DescriptorImageInfo{sampler, info.image_view,
-                                                                     vk::ImageLayout::eGeneral}};
-                   });
+    const auto present_set = present_heap.Commit();
+    for (u32 index = 0; index < screen_infos.size(); index++) {
+        update_queue.AddImageSampler(present_set, 0, index, screen_infos[index].image_view,
+                                     sampler);
+    }
 
-    const auto descriptor_set = present_set_provider.Acquire(present_textures);
-
-    renderpass_cache.EndRendering();
-    scheduler.Record([this, layout, frame, descriptor_set, renderpass = main_window.Renderpass(),
+    render_manager.EndRendering();
+    scheduler.Record([this, layout, frame, present_set, renderpass = main_window.Renderpass(),
                       index = current_pipeline](vk::CommandBuffer cmdbuf) {
         const vk::Viewport viewport = {
             .x = 0.0f,
@@ -171,7 +169,7 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
 
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, present_pipelines[index]);
-        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, descriptor_set, {});
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
     });
 }
 
@@ -262,7 +260,7 @@ void RendererVulkan::BuildLayouts() {
         .size = sizeof(PresentUniformData),
     };
 
-    const auto descriptor_set_layout = present_set_provider.Layout();
+    const auto descriptor_set_layout = present_heap.Layout();
     const vk::PipelineLayoutCreateInfo layout_info = {
         .setLayoutCount = 1,
         .pSetLayouts = &descriptor_set_layout,
@@ -470,7 +468,7 @@ void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& textu
             },
     };
 
-    renderpass_cache.EndRendering();
+    render_manager.EndRendering();
     scheduler.Record([image = texture.image, clear_color](vk::CommandBuffer cmdbuf) {
         const vk::ImageSubresourceRange range = {
             .aspectMask = vk::ImageAspectFlagBits::eColor,
