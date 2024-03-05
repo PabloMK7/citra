@@ -68,6 +68,31 @@ enum class InstallStatus : u32 {
     ErrorEncrypted,
 };
 
+enum class CTCertLoadStatus {
+    Loaded,
+    NotFound,
+    Invalid,
+    IOError,
+};
+
+struct CTCert {
+    u32_be signature_type{};
+    std::array<u8, 0x1E> signature_r{};
+    std::array<u8, 0x1E> signature_s{};
+    INSERT_PADDING_BYTES(0x40){};
+    std::array<char, 0x40> issuer{};
+    u32_be key_type{};
+    std::array<char, 0x40> key_id{};
+    u32_be expiration_time{};
+    std::array<u8, 0x1E> public_key_x{};
+    std::array<u8, 0x1E> public_key_y{};
+    INSERT_PADDING_BYTES(0x3C){};
+
+    bool IsValid() const;
+    u32 GetDeviceID() const;
+};
+static_assert(sizeof(CTCert) == 0x180, "Invalid CTCert size.");
+
 // Title ID valid length
 constexpr std::size_t TITLE_ID_VALID_LENGTH = 16;
 
@@ -215,6 +240,10 @@ public:
     public:
         Interface(std::shared_ptr<Module> am, const char* name, u32 max_session);
         ~Interface();
+
+        std::shared_ptr<Module> GetModule() const {
+            return am;
+        }
 
     protected:
         /**
@@ -414,6 +443,16 @@ public:
          *      2 : Total TicketList
          */
         void GetTicketList(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::GetDeviceID service function
+         *  Inputs:
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Unknown
+         *      3 : DeviceID
+         */
+        void GetDeviceID(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::NeedsCleanup service function
@@ -702,9 +741,31 @@ public:
          */
         void EndImportTicket(Kernel::HLERequestContext& ctx);
 
+        /**
+         * AM::GetDeviceCert service function
+         *  Inputs:
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Unknown
+         *      3-4 : Device cert
+         */
+        void GetDeviceCert(Kernel::HLERequestContext& ctx);
+
     protected:
         std::shared_ptr<Module> am;
     };
+
+    /**
+     * Gets the CTCert.bin path in the host filesystem
+     * @returns std::string CTCert.bin path in the host filesystem
+     */
+    static std::string GetCTCertPath();
+
+    /**
+     * Loads the CTCert.bin file from the filesystem.
+     * @returns CTCertLoadStatus indicating the file load status.
+     */
+    static CTCertLoadStatus LoadCTCertFile(CTCert& output);
 
 private:
     /**
@@ -722,11 +783,14 @@ private:
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
+    CTCert ct_cert{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
+
+std::shared_ptr<Module> GetModule(Core::System& system);
 
 void InstallInterfaces(Core::System& system);
 
