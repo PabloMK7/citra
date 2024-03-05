@@ -1506,7 +1506,6 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
     }
 
     system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
-    system.Kernel().GetSharedPageHandler().SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         wifi_packet_received = room_member->BindOnWifiPacketReceived(
