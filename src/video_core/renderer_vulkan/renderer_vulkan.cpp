@@ -224,15 +224,17 @@ void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
 }
 
 void RendererVulkan::CompileShaders() {
-    vk::Device device = instance.GetDevice();
+    const vk::Device device = instance.GetDevice();
+    const std::string_view preamble =
+        instance.IsImageArrayDynamicIndexSupported() ? "#define ARRAY_DYNAMIC_INDEX" : "";
     present_vertex_shader =
         Compile(HostShaders::VULKAN_PRESENT_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    present_shaders[0] =
-        Compile(HostShaders::VULKAN_PRESENT_FRAG, vk::ShaderStageFlagBits::eFragment, device);
+    present_shaders[0] = Compile(HostShaders::VULKAN_PRESENT_FRAG,
+                                 vk::ShaderStageFlagBits::eFragment, device, preamble);
     present_shaders[1] = Compile(HostShaders::VULKAN_PRESENT_ANAGLYPH_FRAG,
-                                 vk::ShaderStageFlagBits::eFragment, device);
+                                 vk::ShaderStageFlagBits::eFragment, device, preamble);
     present_shaders[2] = Compile(HostShaders::VULKAN_PRESENT_INTERLACED_FRAG,
-                                 vk::ShaderStageFlagBits::eFragment, device);
+                                 vk::ShaderStageFlagBits::eFragment, device, preamble);
 
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {
