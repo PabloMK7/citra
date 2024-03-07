@@ -248,6 +248,11 @@ public:
         return triangle_fan_supported;
     }
 
+    /// Returns true if dynamic indices can be used inside shaders.
+    bool IsImageArrayDynamicIndexSupported() const {
+        return features.shaderSampledImageArrayDynamicIndexing;
+    }
+
     /// Returns the minimum vertex stride alignment
     u32 GetMinVertexStrideAlignment() const {
         return min_vertex_stride_alignment;
