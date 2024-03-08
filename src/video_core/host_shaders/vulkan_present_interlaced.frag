@@ -24,6 +24,7 @@ vec4 GetScreen(int screen_id) {
 #ifdef ARRAY_DYNAMIC_INDEX
     return texture(screen_textures[screen_id], frag_tex_coord);
 #else
+// Not all vulkan drivers support shaderSampledImageArrayDynamicIndexing, so index manually.
     switch (screen_id) {
     case 0:
         return texture(screen_textures[0], frag_tex_coord);
