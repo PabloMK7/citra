@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -11,28 +10,7 @@
 #include "core/hle/service/boss/boss_p.h"
 #include "core/hle/service/boss/boss_u.h"
 
-SERVICE_CONSTRUCT_IMPL(Service::BOSS::Module)
-SERIALIZE_EXPORT_IMPL(Service::BOSS::Module)
-SERIALIZE_EXPORT_IMPL(Service::BOSS::Module::SessionData)
-
 namespace Service::BOSS {
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
-    ar& task_finish_event;
-    ar& new_arrival_flag;
-    ar& ns_data_new_flag;
-    ar& ns_data_new_flag_privileged;
-    ar& output_flag;
-}
-SERIALIZE_IMPL(Module)
-
-template <class Archive>
-void Module::SessionData::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(*this);
-    ar& online_service;
-}
-SERIALIZE_IMPL(Module::SessionData)
 
 std::shared_ptr<OnlineService> Module::Interface::GetSessionService(Kernel::HLERequestContext& ctx,
                                                                     IPC::RequestParser& rp) {

@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <boost/serialization/access.hpp>
-
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -52,16 +50,6 @@ struct RegsLcd {
         u32* content = reinterpret_cast<u32*>(this);
         return content[index];
     }
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& color_fill_top.raw;
-        ar& backlight_top;
-        ar& color_fill_bottom.raw;
-        ar& backlight_bottom;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(std::is_standard_layout_v<RegsLcd>, "Structure does not use standard layout");
 

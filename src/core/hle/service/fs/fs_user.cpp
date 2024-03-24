@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -25,10 +24,6 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
-
-SERVICE_CONSTRUCT_IMPL(Service::FS::FS_USER)
-SERIALIZE_EXPORT_IMPL(Service::FS::FS_USER)
-SERIALIZE_EXPORT_IMPL(Service::FS::ClientSlot)
 
 using Kernel::ClientSession;
 using Kernel::ServerSession;

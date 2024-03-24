@@ -6,8 +6,6 @@
 #include <array>
 #include <cstddef>
 #include <string>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 
@@ -101,17 +99,6 @@ struct PageTable {
     }
 
     void Clear();
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& pointers.refs;
-        ar& attributes;
-        for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
-            pointers.raw[i] = pointers.refs[i].GetPtr();
-        }
-    }
-    friend class boost::serialization::access;
 };
 
 /// Physical memory regions as seen from the ARM11
@@ -577,18 +564,9 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl;
 
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
-
 public:
     template <Region R>
     class BackingMemImpl;
 };
 
 } // namespace Memory
-
-BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::FCRAM>)
-BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::VRAM>)
-BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::DSP>)
-BOOST_CLASS_EXPORT_KEY(Memory::MemorySystem::BackingMemImpl<Memory::Region::N3DS>)

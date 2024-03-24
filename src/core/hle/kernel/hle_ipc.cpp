@@ -4,11 +4,7 @@
 
 #include <algorithm>
 #include <vector>
-#include <boost/serialization/assume_abstract.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <boost/serialization/vector.hpp>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/core.h"
@@ -18,12 +14,6 @@
 #include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler)
-SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler::SessionDataBase)
-SERIALIZE_EXPORT_IMPL(Kernel::SessionRequestHandler::SessionInfo)
-SERIALIZE_EXPORT_IMPL(Kernel::HLERequestContext)
-SERIALIZE_EXPORT_IMPL(Kernel::HLERequestContext::ThreadCallback)
 
 namespace Kernel {
 
@@ -57,17 +47,8 @@ public:
     }
 
 private:
-    ThreadCallback() = default;
     std::shared_ptr<HLERequestContext::WakeupCallback> callback{};
     std::shared_ptr<HLERequestContext> context{};
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
-        ar& callback;
-        ar& context;
-    }
-    friend class boost::serialization::access;
 };
 
 SessionRequestHandler::SessionInfo::SessionInfo(std::shared_ptr<ServerSession> session,
@@ -87,23 +68,6 @@ void SessionRequestHandler::ClientDisconnected(std::shared_ptr<ServerSession> se
         connected_sessions.end());
 }
 
-template <class Archive>
-void SessionRequestHandler::serialize(Archive& ar, const unsigned int) {
-    ar& connected_sessions;
-}
-SERIALIZE_IMPL(SessionRequestHandler)
-
-template <class Archive>
-void SessionRequestHandler::SessionDataBase::serialize(Archive& ar, const unsigned int) {}
-SERIALIZE_IMPL(SessionRequestHandler::SessionDataBase)
-
-template <class Archive>
-void SessionRequestHandler::SessionInfo::serialize(Archive& ar, const unsigned int) {
-    ar& session;
-    ar& data;
-}
-SERIALIZE_IMPL(SessionRequestHandler::SessionInfo)
-
 std::shared_ptr<Event> HLERequestContext::SleepClientThread(
     const std::string& reason, std::chrono::nanoseconds timeout,
     std::shared_ptr<WakeupCallback> callback) {
@@ -120,8 +84,6 @@ std::shared_ptr<Event> HLERequestContext::SleepClientThread(
 
     return event;
 }
-
-HLERequestContext::HLERequestContext() : kernel(Core::Global<KernelSystem>()) {}
 
 HLERequestContext::HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session,
                                      std::shared_ptr<Thread> thread)
@@ -321,19 +283,6 @@ void HLERequestContext::ReportUnimplemented() const {
         kernel.GetIPCRecorder().SetHLEUnimplemented(thread);
     }
 }
-
-template <class Archive>
-void HLERequestContext::serialize(Archive& ar, const unsigned int) {
-    ar& cmd_buf;
-    ar& session;
-    ar& thread;
-    ar& request_handles;
-    ar& static_buffers;
-    ar& request_mapped_buffers;
-}
-SERIALIZE_IMPL(HLERequestContext)
-
-MappedBuffer::MappedBuffer() : memory(&Core::Global<Core::System>().Memory()) {}
 
 MappedBuffer::MappedBuffer(Memory::MemorySystem& memory, std::shared_ptr<Process> process,
                            u32 descriptor, VAddr address, u32 id)

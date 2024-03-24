@@ -12,9 +12,7 @@
 #include <string>
 #include <vector>
 #include <boost/container/small_vector.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
-#include "common/serialization/boost_small_vector.hpp"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/object.h"
@@ -71,11 +69,6 @@ public:
     /// in each service must inherit from this.
     struct SessionDataBase {
         virtual ~SessionDataBase() = default;
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int);
-        friend class boost::serialization::access;
     };
 
     struct SessionInfo {
@@ -83,12 +76,6 @@ public:
 
         std::shared_ptr<ServerSession> session;
         std::unique_ptr<SessionDataBase> data;
-
-    private:
-        SessionInfo() = default;
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int);
-        friend class boost::serialization::access;
     };
 
 protected:
@@ -109,14 +96,7 @@ protected:
     /// List of sessions that are connected to this handler. A ServerSession whose server endpoint
     /// is an HLE implementation is kept alive by this list for the duration of the connection.
     std::vector<SessionInfo> connected_sessions;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
-
-// NOTE: The below classes are ephemeral and don't need serialization
 
 class MappedBuffer {
 public:
@@ -147,18 +127,6 @@ private:
     std::shared_ptr<Process> process;
     u32 size;
     IPC::MappedBufferPermissions perms;
-
-    MappedBuffer();
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& id;
-        ar& address;
-        ar& process;
-        ar& size;
-        ar& perms;
-    }
-    friend class boost::serialization::access;
 };
 
 /**
@@ -226,11 +194,6 @@ public:
         virtual ~WakeupCallback() = default;
         virtual void WakeUp(std::shared_ptr<Thread> thread, HLERequestContext& context,
                             ThreadWakeupReason reason) = 0;
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {}
-        friend class boost::serialization::access;
     };
 
     /**
@@ -265,15 +228,6 @@ private:
     private:
         ResultFunctor functor;
         std::future<void> future;
-
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            if (!Archive::is_loading::value && future.valid()) {
-                future.wait();
-            }
-            ar& functor;
-        }
-        friend class boost::serialization::access;
     };
 
 public:
@@ -378,17 +332,6 @@ private:
     std::array<std::vector<u8>, IPC::MAX_STATIC_BUFFERS> static_buffers;
     // The mapped buffers will be created when the IPC request is translated
     boost::container::small_vector<MappedBuffer, 8> request_mapped_buffers;
-
-    HLERequestContext();
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler)
-BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionDataBase)
-BOOST_CLASS_EXPORT_KEY(Kernel::SessionRequestHandler::SessionInfo)
-BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext)
-BOOST_CLASS_EXPORT_KEY(Kernel::HLERequestContext::ThreadCallback)

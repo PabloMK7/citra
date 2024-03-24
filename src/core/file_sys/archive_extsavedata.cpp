@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 #include <fmt/format.h>
-#include "common/archives.h"
+
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -16,8 +16,6 @@
 #include "core/file_sys/path_parser.h"
 #include "core/file_sys/savedata_archive.h"
 #include "core/hle/service/fs/archive.h"
-
-SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_ExtSaveData)
 
 namespace FileSys {
 
@@ -77,8 +75,6 @@ public:
         static constexpr u64 IPCDelayNanoseconds(3085068);
         return IPCDelayNanoseconds;
     }
-
-    SERIALIZE_DELAY_GENERATOR
 };
 
 /**
@@ -154,14 +150,6 @@ public:
         return std::make_unique<FixSizeDiskFile>(std::move(file), rwmode,
                                                  std::move(delay_generator));
     }
-
-private:
-    ExtSaveDataArchive() = default;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<SaveDataArchive>(*this);
-    }
-    friend class boost::serialization::access;
 };
 
 struct ExtSaveDataArchivePath {
@@ -298,6 +286,3 @@ void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, std::span<const u8>
 }
 
 } // namespace FileSys
-
-SERIALIZE_EXPORT_IMPL(FileSys::ExtSaveDataDelayGenerator)
-SERIALIZE_EXPORT_IMPL(FileSys::ExtSaveDataArchive)

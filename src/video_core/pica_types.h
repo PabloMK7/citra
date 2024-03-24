@@ -6,7 +6,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <boost/serialization/access.hpp>
 #include "common/common_types.h"
 
 namespace Pica {
@@ -145,12 +144,6 @@ private:
     // Stored as a regular float, merely for convenience
     // TODO: Perform proper arithmetic on this!
     float value;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& value;
-    }
 };
 
 using f24 = Pica::Float<16, 7>;

@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <boost/serialization/binary_object.hpp>
-
 #include "common/vector_math.h"
 #include "video_core/pica_types.h"
 
@@ -61,14 +59,6 @@ private:
         }
         return uniform;
     }
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const u32) {
-        ar& buffer;
-        ar& index;
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace Pica

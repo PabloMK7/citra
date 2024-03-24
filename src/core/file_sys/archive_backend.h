@@ -8,8 +8,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -67,32 +65,6 @@ private:
     std::vector<u8> binary;
     std::string string;
     std::u16string u16str;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& type;
-        switch (type) {
-        case LowPathType::Binary:
-            ar& binary;
-            break;
-        case LowPathType::Char:
-            ar& string;
-            break;
-        case LowPathType::Wchar: {
-            std::vector<char16_t> data;
-            if (Archive::is_saving::value) {
-                std::copy(u16str.begin(), u16str.end(), std::back_inserter(data));
-            }
-            ar& data;
-            if (Archive::is_loading::value) {
-                u16str = std::u16string(data.data(), data.size());
-            }
-        } break;
-        default:
-            break;
-        }
-    }
-    friend class boost::serialization::access;
 };
 
 /// Parameters of the archive, as specified in the Create or Format call.
@@ -198,13 +170,6 @@ public:
 
 protected:
     std::unique_ptr<DelayGenerator> delay_generator;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& delay_generator;
-    }
-    friend class boost::serialization::access;
 };
 
 class ArchiveFactory : NonCopyable {
@@ -241,10 +206,6 @@ public:
      * @return Format information about the archive or error code
      */
     virtual ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const = 0;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {}
-    friend class boost::serialization::access;
 };
 
 } // namespace FileSys

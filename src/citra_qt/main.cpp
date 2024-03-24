@@ -4,7 +4,6 @@
 
 #include <clocale>
 #include <memory>
-#include <thread>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QLabel>
@@ -81,7 +80,6 @@
 #endif
 #include "common/settings.h"
 #include "core/core.h"
-#include "core/dumping/backend.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
@@ -90,7 +88,6 @@
 #include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
-#include "core/savestate.h"
 #include "core/system_titles.h"
 #include "input_common/main.h"
 #include "network/network_settings.h"
@@ -581,7 +578,7 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 }
 
 void GMainWindow::InitializeSaveStateMenuActions() {
-    for (u32 i = 0; i < Core::SaveStateSlotCount; ++i) {
+    for (u32 i = 0; i < SaveStateSlotCount; ++i) {
         actions_load_state[i] = new QAction(this);
         actions_load_state[i]->setData(i + 1);
         connect(actions_load_state[i], &QAction::triggered, this, &GMainWindow::OnLoadState);
@@ -1522,47 +1519,6 @@ void GMainWindow::UpdateSaveStates() {
     u64 title_id;
     if (system.GetAppLoader().ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         return;
-    }
-    auto savestates = Core::ListSaveStates(title_id, movie.GetCurrentMovieID());
-    for (u32 i = 0; i < Core::SaveStateSlotCount; ++i) {
-        actions_load_state[i]->setEnabled(false);
-        actions_load_state[i]->setText(tr("Slot %1").arg(i + 1));
-        actions_save_state[i]->setText(tr("Slot %1").arg(i + 1));
-    }
-    for (const auto& savestate : savestates) {
-        const bool display_name =
-            savestate.status == Core::SaveStateInfo::ValidationStatus::RevisionDismatch &&
-            !savestate.build_name.empty();
-        const auto text =
-            tr("Slot %1 - %2 %3")
-                .arg(savestate.slot)
-                .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
-                         .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")))
-                .arg(display_name ? QString::fromStdString(savestate.build_name) : QLatin1String())
-                .trimmed();
-
-        actions_load_state[savestate.slot - 1]->setEnabled(true);
-        actions_load_state[savestate.slot - 1]->setText(text);
-        actions_save_state[savestate.slot - 1]->setText(text);
-
-        ui->action_Load_from_Newest_Slot->setEnabled(true);
-
-        if (savestate.time > newest_slot_time) {
-            newest_slot = savestate.slot;
-            newest_slot_time = savestate.time;
-        }
-        if (savestate.time < oldest_slot_time) {
-            oldest_slot = savestate.slot;
-            oldest_slot_time = savestate.time;
-        }
-    }
-    for (u32 i = 0; i < Core::SaveStateSlotCount; ++i) {
-        if (!actions_load_state[i]->isEnabled()) {
-            // Prefer empty slot
-            oldest_slot = i + 1;
-            oldest_slot_time = 0;
-            break;
-        }
     }
 }
 

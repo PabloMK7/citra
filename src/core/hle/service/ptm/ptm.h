@@ -157,15 +157,8 @@ private:
     bool shell_open = true;
     bool battery_is_charging = true;
     bool pedometer_is_counting = false;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::PTM
-
-BOOST_CLASS_EXPORT_KEY(Service::PTM::Module)
-SERVICE_CONSTRUCT(Service::PTM::Module)

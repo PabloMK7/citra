@@ -9,14 +9,9 @@
 #include <future>
 #include <memory>
 #include <vector>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/deque.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
-#include "core/global.h"
+
 #include "core/hle/result.h"
 #include "core/hle/service/cam/cam_params.h"
 #include "core/hle/service/service.h"
@@ -73,18 +68,6 @@ struct Resolution {
     u16 crop_y0;
     u16 crop_x1;
     u16 crop_y1;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& width;
-        ar& height;
-        ar& crop_x0;
-        ar& crop_y0;
-        ar& crop_x1;
-        ar& crop_y1;
-    }
-    friend class boost::serialization::access;
 };
 
 struct PackageParameterWithoutContext {
@@ -660,16 +643,6 @@ private:
         Effect effect{Effect::None};
         OutputFormat format{OutputFormat::YUV422};
         Resolution resolution = {0, 0, 0, 0, 0, 0};
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& flip;
-            ar& effect;
-            ar& format;
-            ar& resolution;
-        }
-        friend class boost::serialization::access;
     };
 
     struct CameraConfig {
@@ -677,15 +650,6 @@ private:
         std::array<ContextConfig, 2> contexts;
         int current_context{0};
         FrameRate frame_rate{FrameRate::Rate_15};
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {
-            ar& contexts;
-            ar& current_context;
-            ar& frame_rate;
-        }
-        friend class boost::serialization::access;
     };
 
     struct PortConfig {
@@ -722,31 +686,6 @@ private:
         u32 dest_size{0}; // the destination size of the receiving process
 
         void Clear();
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& camera_id;
-            ar& is_active;
-            ar& is_pending_receiving;
-            ar& is_busy;
-            ar& is_receiving;
-            ar& is_trimming;
-            ar& x0;
-            ar& y0;
-            ar& x1;
-            ar& y1;
-            ar& transfer_bytes;
-            ar& completion_event;
-            ar& buffer_error_interrupt_event;
-            ar& vsync_interrupt_event;
-            ar& vsync_timings;
-            // Ignore capture_result. In-progress captures might be affected but this is OK.
-            ar& dest_process;
-            ar& dest;
-            ar& dest_size;
-        }
-        friend class boost::serialization::access;
     };
 
     void LoadCameraImplementation(CameraConfig& camera, int camera_id);
@@ -758,10 +697,6 @@ private:
     Core::TimingEventType* completion_event_callback;
     Core::TimingEventType* vsync_interrupt_event_callback;
     std::atomic<bool> is_camera_reload_pending{false};
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
-    friend class boost::serialization::access;
 };
 
 std::shared_ptr<Module> GetModule(Core::System& system);
@@ -769,7 +704,3 @@ std::shared_ptr<Module> GetModule(Core::System& system);
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CAM
-
-SERVICE_CONSTRUCT(Service::CAM::Module)
-BOOST_CLASS_VERSION(Service::CAM::Module, 1)
-BOOST_CLASS_VERSION(Service::CAM::Module::CameraConfig, 1)

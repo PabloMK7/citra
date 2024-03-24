@@ -2,9 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <stdexcept>
 #include <utility>
-#include <boost/serialization/array.hpp>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
@@ -26,7 +24,7 @@
 #include "core/dumping/backend.h"
 #include "core/frontend/image_interface.h"
 #include "core/gdbstub/gdbstub.h"
-#include "core/global.h"
+
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
@@ -56,21 +54,6 @@
 namespace Core {
 
 /*static*/ System System::s_instance;
-
-template <>
-Core::System& Global() {
-    return System::GetInstance();
-}
-
-template <>
-Kernel::KernelSystem& Global() {
-    return System::GetInstance().Kernel();
-}
-
-template <>
-Core::Timing& Global() {
-    return System::GetInstance().CoreTiming();
-}
 
 System::System() : movie{*this}, cheat_engine{*this} {}
 
@@ -577,7 +560,7 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
     registered_image_interface = std::move(image_interface);
 }
 
-void System::Shutdown(bool is_deserializing) {
+void System::Shutdown() {
     // Log last frame performance stats
     const auto perf_results = GetAndResetPerfStats();
     constexpr auto performance = Common::Telemetry::FieldType::Performance;
@@ -593,11 +576,9 @@ void System::Shutdown(bool is_deserializing) {
     is_powered_on = false;
 
     gpu.reset();
-    if (!is_deserializing) {
-        GDBStub::Shutdown();
-        perf_stats.reset();
-        app_loader.reset();
-    }
+    GDBStub::Shutdown();
+    perf_stats.reset();
+    app_loader.reset();
     custom_tex_manager.reset();
     telemetry_session.reset();
 #ifdef ENABLE_SCRIPTING
@@ -705,67 +686,5 @@ void System::ApplySettings() {
         plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
     }
 }
-
-template <class Archive>
-void System::serialize(Archive& ar, const unsigned int file_version) {
-
-    u32 num_cores;
-    if (Archive::is_saving::value) {
-        num_cores = this->GetNumCores();
-    }
-    ar& num_cores;
-
-    if (Archive::is_loading::value) {
-        // When loading, we want to make sure any lingering state gets cleared out before we begin.
-        // Shutdown, but persist a few things between loads...
-        Shutdown(true);
-
-        // Re-initialize everything like it was before
-        auto memory_mode = this->app_loader->LoadKernelMemoryMode();
-        auto n3ds_hw_caps = this->app_loader->LoadNew3dsHwCapabilities();
-        [[maybe_unused]] const System::ResultStatus result = Init(
-            *m_emu_window, m_secondary_window, *memory_mode.first, *n3ds_hw_caps.first, num_cores);
-    }
-
-    // Flush on save, don't flush on load
-    const bool should_flush = !Archive::is_loading::value;
-    gpu->ClearAll(should_flush);
-    ar&* timing.get();
-    for (u32 i = 0; i < num_cores; i++) {
-        ar&* cpu_cores[i].get();
-    }
-    ar&* service_manager.get();
-    ar&* archive_manager.get();
-
-    // NOTE: DSP doesn't like being destroyed and recreated. So instead we do an inline
-    // serialization; this means that the DSP Settings need to match for loading to work.
-    auto dsp_hle = dynamic_cast<AudioCore::DspHle*>(dsp_core.get());
-    if (dsp_hle) {
-        ar&* dsp_hle;
-    } else {
-        throw std::runtime_error("LLE audio not supported for save states");
-    }
-
-    ar&* memory.get();
-    ar&* kernel.get();
-    ar&* gpu.get();
-    ar& movie;
-
-    // This needs to be set from somewhere - might as well be here!
-    if (Archive::is_loading::value) {
-        timing->UnlockEventQueue();
-        memory->SetDSP(*dsp_core);
-        cheat_engine.Connect();
-        gpu->Sync();
-
-        // Re-register gpu callback, because gsp service changed after service_manager got
-        // serialized
-        auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
-        gpu->SetInterruptHandler(
-            [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
-    }
-}
-
-SERIALIZE_IMPL(System)
 
 } // namespace Core

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <variant>
 #include <vector>
@@ -170,10 +171,6 @@ struct BossTaskProperties {
         {static_cast<PropertyID>(0x3E), std::vector<u8>(0x200)},
         {static_cast<PropertyID>(0x3F), u8()},
     };
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 class OnlineService final {
@@ -204,13 +201,6 @@ private:
 
     u64 program_id;
     u64 extdata_id;
-
-    // For serialization
-    explicit OnlineService() = default;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 } // namespace Service::BOSS

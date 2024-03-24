@@ -6,9 +6,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
@@ -55,18 +52,6 @@ public:
         std::array<u32, 64> fpu_registers{};
         u32 fpscr{};
         u32 fpexc{};
-
-    private:
-        friend class boost::serialization::access;
-
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int file_version) {
-            ar& cpu_registers;
-            ar& fpu_registers;
-            ar& cpsr;
-            ar& fpscr;
-            ar& fpexc;
-        }
     };
 
     /// Runs the CPU until an event happens
@@ -199,109 +184,8 @@ public:
     }
 
 protected:
-    // This us used for serialization. Returning nullptr is valid if page tables are not used.
-    virtual std::shared_ptr<Memory::PageTable> GetPageTable() const = 0;
-
     std::shared_ptr<Core::Timing::Timer> timer;
-
-private:
     u32 id;
-
-    friend class boost::serialization::access;
-
-    template <class Archive>
-    void save(Archive& ar, const unsigned int file_version) const {
-        ar << timer;
-        ar << id;
-        const auto page_table = GetPageTable();
-        ar << page_table;
-        for (int i = 0; i < 15; i++) {
-            const auto r = GetReg(i);
-            ar << r;
-        }
-        const auto pc = GetPC();
-        ar << pc;
-        const auto cpsr = GetCPSR();
-        ar << cpsr;
-        for (int i = 0; i < 64; i++) {
-            const auto r = GetVFPReg(i);
-            ar << r;
-        }
-        for (std::size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
-            const auto reg = static_cast<VFPSystemRegister>(i);
-            u32 r = 0;
-            switch (reg) {
-            case VFP_FPSCR:
-            case VFP_FPEXC:
-                r = GetVFPSystemReg(reg);
-            default:
-                break;
-            }
-            ar << r;
-        }
-        for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
-            const auto reg = static_cast<CP15Register>(i);
-            u32 r = 0;
-            switch (reg) {
-            case CP15_THREAD_UPRW:
-            case CP15_THREAD_URO:
-                r = GetCP15Register(reg);
-            default:
-                break;
-            }
-            ar << r;
-        }
-    }
-
-    template <class Archive>
-    void load(Archive& ar, const unsigned int file_version) {
-        ClearInstructionCache();
-        ar >> timer;
-        ar >> id;
-        std::shared_ptr<Memory::PageTable> page_table{};
-        ar >> page_table;
-        SetPageTable(page_table);
-        u32 r;
-        for (int i = 0; i < 15; i++) {
-            ar >> r;
-            SetReg(i, r);
-        }
-        ar >> r;
-        SetPC(r);
-        ar >> r;
-        SetCPSR(r);
-        for (int i = 0; i < 64; i++) {
-            ar >> r;
-            SetVFPReg(i, r);
-        }
-        for (std::size_t i = 0; i < VFPSystemRegister::VFP_SYSTEM_REGISTER_COUNT; i++) {
-            ar >> r;
-            const auto reg = static_cast<VFPSystemRegister>(i);
-            switch (reg) {
-            case VFP_FPSCR:
-            case VFP_FPEXC:
-                SetVFPSystemReg(reg, r);
-            default:
-                break;
-            }
-        }
-        for (std::size_t i = 0; i < CP15Register::CP15_REGISTER_COUNT; i++) {
-            ar >> r;
-            const auto reg = static_cast<CP15Register>(i);
-            switch (reg) {
-            case CP15_THREAD_UPRW:
-            case CP15_THREAD_URO:
-                SetCP15Register(reg, r);
-            default:
-                break;
-            }
-        }
-    }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 } // namespace Core
-
-BOOST_CLASS_VERSION(Core::ARM_Interface, 1)
-BOOST_CLASS_VERSION(Core::ARM_Interface::ThreadContext, 1)

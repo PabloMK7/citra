@@ -22,26 +22,10 @@ struct FriendKey {
     u32 friend_id;
     u32 unknown;
     u64 friend_code;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& friend_id;
-        ar& unknown;
-        ar& friend_code;
-    }
-    friend class boost::serialization::access;
 };
 
 struct MyPresence {
     u8 unknown[0x12C];
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& unknown;
-    }
-    friend class boost::serialization::access;
 };
 
 struct Profile {
@@ -268,18 +252,8 @@ private:
     std::shared_ptr<Kernel::Event> login_event;
     Core::TimingEventType* login_delay_event;
     Core::System& system;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& my_friend_key;
-        ar& my_presence;
-        ar& logged_in;
-    }
-    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::FRD
-
-SERVICE_CONSTRUCT(Service::FRD::Module)

@@ -9,14 +9,12 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include "common/common_types.h"
-#include "common/construct.h"
+
 #include "common/swap.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
-#include "core/global.h"
+
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
@@ -172,7 +170,7 @@ InstallStatus InstallCIA(const std::string& path,
  * @param title_id the title_id to download
  * @returns  whether the install was successful or error code
  */
-InstallStatus InstallFromNus(u64 title_id, int version = -1);
+InstallStatus InstallFromNus(Core::System& system, u64 title_id, int version = -1);
 
 /**
  * Get the update title ID for a title
@@ -784,10 +782,6 @@ private:
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
     CTCert ct_cert{};
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 std::shared_ptr<Module> GetModule(Core::System& system);
@@ -795,6 +789,3 @@ std::shared_ptr<Module> GetModule(Core::System& system);
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM
-
-BOOST_CLASS_EXPORT_KEY(Service::AM::Module)
-SERVICE_CONSTRUCT(Service::AM::Module)

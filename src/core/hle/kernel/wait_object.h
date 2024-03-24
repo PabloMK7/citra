@@ -62,11 +62,6 @@ private:
 
     /// Function to call when this object becomes available
     std::function<void()> hle_notifier;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 // Specialization of DynamicObjectCast for WaitObjects
@@ -79,5 +74,3 @@ inline std::shared_ptr<WaitObject> DynamicObjectCast<WaitObject>(std::shared_ptr
 }
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::WaitObject)

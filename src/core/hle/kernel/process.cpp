@@ -4,17 +4,10 @@
 
 #include <algorithm>
 #include <memory>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/bitset.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
-#include "common/serialization/boost_vector.hpp"
 #include "core/core.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
@@ -26,47 +19,7 @@
 #include "core/loader/loader.h"
 #include "core/memory.h"
 
-SERIALIZE_EXPORT_IMPL(Kernel::AddressMapping)
-SERIALIZE_EXPORT_IMPL(Kernel::Process)
-SERIALIZE_EXPORT_IMPL(Kernel::CodeSet)
-SERIALIZE_EXPORT_IMPL(Kernel::CodeSet::Segment)
-
 namespace Kernel {
-
-template <class Archive>
-void AddressMapping::serialize(Archive& ar, const unsigned int) {
-    ar& address;
-    ar& size;
-    ar& read_only;
-    ar& unk_flag;
-}
-SERIALIZE_IMPL(AddressMapping)
-
-template <class Archive>
-void Process::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Object>(*this);
-    ar& handle_table;
-    ar& codeset; // TODO: Replace with apploader reference
-    ar& resource_limit;
-    ar& svc_access_mask;
-    ar& handle_table_size;
-    ar&(boost::container::vector<AddressMapping, boost::container::dtl::static_storage_allocator<
-                                                     AddressMapping, 8, 0, true>>&)address_mappings;
-    ar& flags.raw;
-    ar& no_thread_restrictions;
-    ar& kernel_version;
-    ar& ideal_processor;
-    ar& status;
-    ar& process_id;
-    ar& creation_time_ticks;
-    ar& vm_manager;
-    ar& memory_used;
-    ar& memory_region;
-    ar& holding_memory;
-    ar& holding_tls_memory;
-    ar& tls_slots;
-}
-SERIALIZE_IMPL(Process)
 
 std::shared_ptr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
     auto codeset{std::make_shared<CodeSet>(*this)};
@@ -79,25 +32,6 @@ std::shared_ptr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 progr
 
 CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
 CodeSet::~CodeSet() {}
-
-template <class Archive>
-void CodeSet::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Object>(*this);
-    ar& memory;
-    ar& segments;
-    ar& entrypoint;
-    ar& name;
-    ar& program_id;
-}
-SERIALIZE_IMPL(CodeSet)
-
-template <class Archive>
-void CodeSet::Segment::serialize(Archive& ar, const unsigned int) {
-    ar& offset;
-    ar& addr;
-    ar& size;
-}
-SERIALIZE_IMPL(CodeSet::Segment)
 
 std::shared_ptr<Process> KernelSystem::CreateProcess(std::shared_ptr<CodeSet> code_set) {
     auto process{std::make_shared<Process>(*this)};

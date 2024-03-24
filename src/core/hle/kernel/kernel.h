@@ -13,7 +13,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
@@ -122,11 +121,6 @@ struct New3dsHwCapabilities {
     bool enable_l2_cache;         ///< Whether extra L2 cache should be enabled.
     bool enable_804MHz_cpu;       ///< Whether the CPU should run at 804MHz.
     New3dsMemoryMode memory_mode; ///< The New 3DS memory mode.
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 class KernelSystem {
@@ -401,12 +395,6 @@ private:
      * to load and setup themselves before the game starts.
      */
     bool main_thread_extended_sleep = false;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::New3dsHwCapabilities)

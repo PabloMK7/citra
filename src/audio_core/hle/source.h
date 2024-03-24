@@ -6,10 +6,6 @@
 
 #include <array>
 #include <vector>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/deque.hpp>
-#include <boost/serialization/priority_queue.hpp>
-#include <boost/serialization/vector.hpp>
 #include <queue>
 #include "audio_core/audio_types.h"
 #include "audio_core/codec.h"
@@ -89,24 +85,6 @@ private:
         bool from_queue;
         u32 play_position; // = 0;
         bool has_played;   // = false;
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& physical_address;
-            ar& length;
-            ar& adpcm_ps;
-            ar& adpcm_yn;
-            ar& adpcm_dirty;
-            ar& is_looping;
-            ar& buffer_id;
-            ar& mono_or_stereo;
-            ar& format;
-            ar& from_queue;
-            ar& play_position;
-            ar& has_played;
-        }
-        friend class boost::serialization::access;
     };
 
     struct BufferOrder {
@@ -159,27 +137,6 @@ private:
         // Filter state
 
         SourceFilters filters = {};
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& enabled;
-            ar& sync_count;
-            ar& gain;
-            ar& input_queue;
-            ar& mono_or_stereo;
-            ar& format;
-            ar& current_sample_number;
-            ar& current_buffer_physical_address;
-            ar& current_buffer;
-            ar& buffer_update;
-            ar& current_buffer_id;
-            ar& adpcm_coeffs;
-            ar& rate_multiplier;
-            ar& interpolation_mode;
-        }
-        friend class boost::serialization::access;
-
     } state;
 
     // Internal functions
@@ -193,12 +150,6 @@ private:
     bool DequeueBuffer();
     /// INTERNAL: Generates a SourceStatus::Status based on our internal state.
     SourceStatus::Status GetCurrentStatus();
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& state;
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace AudioCore::HLE

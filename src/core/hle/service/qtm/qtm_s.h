@@ -14,11 +14,7 @@ public:
     ~QTM_S() = default;
 
 private:
-    SERVICE_SERIALIZATION_SIMPLE
-
     void GetHeadtrackingInfo(Kernel::HLERequestContext& ctx);
 };
 
 } // namespace Service::QTM
-
-BOOST_CLASS_EXPORT_KEY(Service::QTM::QTM_S)

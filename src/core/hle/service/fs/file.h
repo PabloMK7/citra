@@ -5,9 +5,8 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/base_object.hpp>
 #include "core/file_sys/archive_backend.h"
-#include "core/global.h"
+
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -21,18 +20,6 @@ struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
     u64 offset;   ///< Offset that this session will start reading from.
     u64 size;     ///< Max size of the file that this session is allowed to access
     bool subfile; ///< Whether this file was opened via OpenSubFile or not.
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(
-            *this);
-        ar& priority;
-        ar& offset;
-        ar& size;
-        ar& subfile;
-    }
-    friend class boost::serialization::access;
 };
 
 // TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.
@@ -47,8 +34,8 @@ public:
         return "Path: " + path.DebugStr();
     }
 
-    FileSys::Path path;                            ///< Path of the file
-    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
+    FileSys::Path path = "";                         ///< Path of the file
+    std::unique_ptr<FileSys::FileBackend> backend{}; ///< File backend interface
 
     /// Creates a new session to this File and returns the ClientSession part of the connection.
     std::shared_ptr<Kernel::ClientSession> Connect();
@@ -73,17 +60,8 @@ private:
     void OpenLinkFile(Kernel::HLERequestContext& ctx);
     void OpenSubFile(Kernel::HLERequestContext& ctx);
 
+private:
     Kernel::KernelSystem& kernel;
-
-    File(Kernel::KernelSystem& kernel);
-    File();
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 } // namespace Service::FS
-
-BOOST_CLASS_EXPORT_KEY(Service::FS::FileSessionSlot)
-BOOST_CLASS_EXPORT_KEY(Service::FS::File)

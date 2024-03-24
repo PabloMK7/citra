@@ -5,11 +5,8 @@
 #include <memory>
 #include <vector>
 #include <boost/crc.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/unique_ptr.hpp>
 #include <fmt/format.h>
-#include "common/archives.h"
+
 #include "common/swap.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -18,22 +15,7 @@
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/hle/service/ir/ir_user.h"
 
-SERIALIZE_EXPORT_IMPL(Service::IR::IR_USER)
-SERVICE_CONSTRUCT_IMPL(Service::IR::IR_USER)
-
 namespace Service::IR {
-
-template <class Archive>
-void IR_USER::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar& conn_status_event;
-    ar& send_event;
-    ar& receive_event;
-    ar& shared_memory;
-    ar& connected_device;
-    ar& receive_buffer;
-    ar&* extra_hid.get();
-}
 
 // This is a header that will present in the ir:USER shared memory if it is initialized with
 // InitializeIrNopShared service function. Otherwise the shared memory doesn't have this header if
@@ -160,16 +142,6 @@ private:
         u32_le end_index;
         u32_le packet_count;
         u32_le unknown;
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& begin_index;
-            ar& end_index;
-            ar& packet_count;
-            ar& unknown;
-        }
-        friend class boost::serialization::access;
     };
     static_assert(sizeof(BufferInfo) == 16, "BufferInfo has wrong size!");
 
@@ -210,20 +182,6 @@ private:
     u32 buffer_offset;
     u32 max_packet_count;
     u32 max_data_size;
-
-private:
-    BufferManager() = default;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& info;
-        ar& shared_memory;
-        ar& info_offset;
-        ar& buffer_offset;
-        ar& max_packet_count;
-        ar& max_data_size;
-    }
-    friend class boost::serialization::access;
 };
 
 /// Wraps the payload into packet and puts it to the receive buffer

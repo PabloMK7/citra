@@ -11,12 +11,6 @@ namespace Service::NEWS {
 class NEWS_S final : public Module::Interface {
 public:
     explicit NEWS_S(std::shared_ptr<Module> news);
-
-private:
-    SERVICE_SERIALIZATION(NEWS_S, news, Module)
 };
 
 } // namespace Service::NEWS
-
-BOOST_CLASS_EXPORT_KEY(Service::NEWS::NEWS_S)
-BOOST_SERIALIZATION_CONSTRUCT(Service::NEWS::NEWS_S)

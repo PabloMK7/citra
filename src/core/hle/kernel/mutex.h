@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <string>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/resource_limit.h"
@@ -61,10 +60,6 @@ public:
 
 private:
     KernelSystem& kernel;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -74,6 +69,3 @@ private:
 void ReleaseThreadMutexes(Thread* thread);
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::Mutex)
-CONSTRUCT_KERNEL_OBJECT(Kernel::Mutex)

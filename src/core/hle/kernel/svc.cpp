@@ -6,7 +6,7 @@
 #include <array>
 #include <chrono>
 #include <fmt/format.h>
-#include "common/archives.h"
+
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -696,14 +696,6 @@ public:
 
 private:
     bool do_output;
-
-    SVC_SyncCallback() = default;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
-        ar& do_output;
-    }
-    friend class boost::serialization::access;
 };
 
 class SVC_IPCCallback : public Kernel::WakeupCallback {
@@ -729,14 +721,6 @@ public:
 
 private:
     Core::System& system;
-
-    SVC_IPCCallback() : system(Core::Global<Core::System>()) {}
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::WakeupCallback>(*this);
-    }
-    friend class boost::serialization::access;
 };
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
@@ -2306,6 +2290,3 @@ void SVCContext::CallSVC(u32 immediate) {
 }
 
 } // namespace Kernel
-
-SERIALIZE_EXPORT_IMPL(Kernel::SVC_SyncCallback)
-SERIALIZE_EXPORT_IMPL(Kernel::SVC_IPCCallback)

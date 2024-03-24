@@ -22,14 +22,6 @@ struct NewsDBHeader {
     bool IsValid() const {
         return valid == 1;
     }
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& valid;
-        ar& flags;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(NewsDBHeader) == 0x10, "News DB Header structure size is wrong");
 
@@ -53,39 +45,12 @@ struct NotificationHeader {
     bool IsValid() const {
         return flag_valid == 1;
     }
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& flag_valid;
-        ar& flag_read;
-        ar& flag_jpeg;
-        ar& flag_boss;
-        ar& flag_optout;
-        ar& flag_url;
-        ar& flag_unk0x6;
-        ar& program_id;
-        ar& ns_data_id;
-        ar& version;
-        ar& jump_param;
-        ar& date_time;
-        ar& title;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(NotificationHeader) == 0x70, "Notification Header structure size is wrong");
 
 struct NewsDB {
     NewsDBHeader header;
     std::array<NotificationHeader, MAX_NOTIFICATIONS> notifications;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& header;
-        ar& notifications;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(NewsDB) == 0x2BD0, "News DB structure size is wrong");
 
@@ -471,15 +436,8 @@ private:
     std::array<u32, MAX_NOTIFICATIONS> notification_ids; // Notifications ordered by date time
     u8 automatic_sync_flag;
     std::unique_ptr<FileSys::ArchiveBackend> news_system_save_data_archive;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NEWS
-
-SERVICE_CONSTRUCT(Service::NEWS::Module)
-BOOST_CLASS_EXPORT_KEY(Service::NEWS::Module)

@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -62,8 +62,6 @@
 #define closesocket(x) close(x)
 #endif
 #define MSGCUSTOM_HANDLE_DONTWAIT 0x80000000
-
-SERIALIZE_EXPORT_IMPL(Service::SOC::SOC_U)
 
 // Change according the debugging needs
 #define LOG_SEND_RECV LOG_TRACE

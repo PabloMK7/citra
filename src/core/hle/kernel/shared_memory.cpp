@@ -2,19 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/utility.hpp>
-#include <boost/serialization/weak_ptr.hpp>
-#include "common/archives.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/memory.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::SharedMemory)
 
 namespace Kernel {
 
@@ -220,21 +213,5 @@ const u8* SharedMemory::GetPointer(u32 offset) const {
     }
     return backing_blocks[0].first + offset;
 }
-
-template <class Archive>
-void SharedMemory::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Object>(*this);
-    ar& linear_heap_phys_offset;
-    ar& backing_blocks;
-    ar& size;
-    ar& memory_region;
-    ar& permissions;
-    ar& other_permissions;
-    ar& owner_process;
-    ar& base_address;
-    ar& name;
-    ar& holding_memory;
-}
-SERIALIZE_IMPL(SharedMemory)
 
 } // namespace Kernel

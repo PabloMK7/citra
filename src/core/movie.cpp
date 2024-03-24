@@ -10,7 +10,7 @@
 #include <boost/optional.hpp>
 #include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
-#include "common/archives.h"
+
 #include "common/bit_field.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -146,73 +146,6 @@ static u64 GetInputCount(std::span<const u8> input) {
 Movie::Movie(const Core::System& system_) : system{system_} {}
 
 Movie::~Movie() = default;
-
-template <class Archive>
-void Movie::serialize(Archive& ar, const unsigned int file_version) {
-    // Only serialize what's needed to make savestates useful for TAS:
-    u64 _current_byte = static_cast<u64>(current_byte);
-    ar& _current_byte;
-    current_byte = static_cast<std::size_t>(_current_byte);
-    ar& current_input;
-
-    std::vector<u8> recorded_input_ = recorded_input;
-    ar& recorded_input_;
-
-    ar& init_time;
-    ar& base_ticks;
-
-    if (Archive::is_loading::value) {
-        u64 savestate_movie_id;
-        ar& savestate_movie_id;
-        if (id != savestate_movie_id) {
-            if (savestate_movie_id == 0) {
-                throw std::runtime_error("You must close your movie to load this state");
-            } else {
-                throw std::runtime_error("You must load the same movie to load this state");
-            }
-        }
-    } else {
-        ar& id;
-    }
-
-    // Whether the state was made in MovieFinished state
-    bool post_movie = play_mode == PlayMode::MovieFinished;
-    ar& post_movie;
-
-    if (Archive::is_loading::value && id != 0) {
-        if (!read_only) {
-            recorded_input = std::move(recorded_input_);
-        }
-
-        if (post_movie) {
-            play_mode = PlayMode::MovieFinished;
-            return;
-        }
-
-        if (read_only) {
-            if (play_mode == PlayMode::Recording) {
-                SaveMovie();
-            }
-            if (recorded_input_.size() >= recorded_input.size()) {
-                throw std::runtime_error("Future event savestate not allowed in R/O mode");
-            }
-            // Ensure that the current movie and savestate movie are in the same timeline
-            if (std::mismatch(recorded_input_.begin(), recorded_input_.end(),
-                              recorded_input.begin())
-                    .first != recorded_input_.end()) {
-                throw std::runtime_error("Timeline mismatch not allowed in R/O mode");
-            }
-
-            play_mode = PlayMode::Playing;
-            total_input = GetInputCount(recorded_input);
-        } else {
-            play_mode = PlayMode::Recording;
-            rerecord_count++;
-        }
-    }
-}
-
-SERIALIZE_IMPL(Movie)
 
 Movie::PlayMode Movie::GetPlayMode() const {
     return play_mode;

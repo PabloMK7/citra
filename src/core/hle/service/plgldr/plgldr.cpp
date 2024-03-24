@@ -19,9 +19,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include <boost/serialization/weak_ptr.hpp>
 #include <fmt/format.h>
-#include "common/archives.h"
+
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -32,9 +31,6 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/loader/loader.h"
-
-SERIALIZE_EXPORT_IMPL(Service::PLGLDR::PLG_LDR)
-SERVICE_CONSTRUCT_IMPL(Service::PLGLDR::PLG_LDR)
 
 namespace Service::PLGLDR {
 
@@ -62,33 +58,6 @@ PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system
     plgldr_context.memory_changed_handle = 0;
     plgldr_context.plugin_loaded = false;
 }
-
-template <class Archive>
-void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
-    ar& is_enabled;
-    ar& allow_game_change;
-    ar& plugin_loaded;
-    ar& is_default_path;
-    ar& plugin_path;
-    ar& use_user_load_parameters;
-    ar& user_load_parameters;
-    ar& plg_event;
-    ar& plg_reply;
-    ar& memory_changed_handle;
-    ar& is_exe_load_function_set;
-    ar& exe_load_checksum;
-    ar& load_exe_func;
-    ar& load_exe_args;
-    ar& plugin_fb_addr;
-}
-SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
-
-template <class Archive>
-void PLG_LDR::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar& plgldr_context;
-}
-SERIALIZE_IMPL(PLG_LDR)
 
 void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel) {
     if (!plgldr_context.is_enabled || plgldr_context.plugin_loaded) {

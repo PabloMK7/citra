@@ -6,7 +6,6 @@
 
 #include <functional>
 #include <memory>
-#include <boost/serialization/access.hpp>
 
 #include "core/hle/service/gsp/gsp_interrupt.h"
 
@@ -100,10 +99,6 @@ private:
     void MemoryTransfer();
 
     void VBlankCallback(uintptr_t user_data, s64 cycles_late);
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version);
 
 private:
     struct Impl;

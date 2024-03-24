@@ -18,8 +18,6 @@ public:
     ~PS_PS() = default;
 
 private:
-    SERVICE_SERIALIZATION_SIMPLE
-
     /**
      * PS_PS::SignRsaSha256 service function
      *  Inputs:
@@ -233,5 +231,3 @@ private:
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::PS
-
-BOOST_CLASS_EXPORT_KEY(Service::PS::PS_PS)

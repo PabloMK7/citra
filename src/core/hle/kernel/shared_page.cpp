@@ -4,9 +4,7 @@
 
 #include <chrono>
 #include <cstring>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/binary_object.hpp>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -14,20 +12,6 @@
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/movie.h"
-
-SERIALIZE_EXPORT_IMPL(SharedPage::Handler)
-
-namespace boost::serialization {
-
-template <class Archive>
-void load_construct_data(Archive& ar, SharedPage::Handler* t, const unsigned int) {
-    ::new (t) SharedPage::Handler(Core::System::GetInstance().CoreTiming(),
-                                  Core::System::GetInstance().Movie().GetOverrideInitTime());
-}
-template void load_construct_data<iarchive>(iarchive& ar, SharedPage::Handler* t,
-                                            const unsigned int);
-
-} // namespace boost::serialization
 
 namespace SharedPage {
 
@@ -173,12 +157,5 @@ void Handler::Set3DSlider(float slidestate) {
 SharedPageDef& Handler::GetSharedPage() {
     return shared_page;
 }
-
-template <class Archive>
-void Handler::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<BackingMem>(*this);
-    ar& boost::serialization::make_binary_object(&shared_page, sizeof(shared_page));
-}
-SERIALIZE_IMPL(Handler)
 
 } // namespace SharedPage

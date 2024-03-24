@@ -86,11 +86,6 @@ public:
             this->length = size / sizeof(u32);
             current_index = 0;
         }
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, const u32 file_version);
     };
 
     struct ImmediateModeState {
@@ -103,16 +98,6 @@ public:
             current_attribute = 0;
             reset_geometry_pipeline = true;
             queue.Reset();
-        }
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, const u32 file_version) {
-            ar& input_vertex;
-            ar& current_attribute;
-            ar& reset_geometry_pipeline;
-            ar& queue;
         }
     };
 
@@ -167,13 +152,6 @@ public:
         std::array<ValueEntry, 128> alpha_map_table;
         std::array<ColorEntry, 256> color_table;
         std::array<ColorDifferenceEntry, 256> color_diff_table;
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, const u32 file_version) {
-            ar& boost::serialization::make_binary_object(this, sizeof(ProcTex));
-        }
     };
 
     struct Lighting {
@@ -196,21 +174,9 @@ public:
                 const f32 diff = static_cast<f32>(difference) / 2047.f;
                 return neg_difference ? -diff : diff;
             }
-
-            template <class Archive>
-            void serialize(Archive& ar, const u32 file_version) {
-                ar& raw;
-            }
         };
 
         std::array<std::array<LutEntry, 256>, 24> luts;
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, const u32 file_version) {
-            ar& boost::serialization::make_binary_object(this, sizeof(Lighting));
-        }
     };
 
     struct Fog {
@@ -231,13 +197,6 @@ public:
         };
 
         std::array<LutEntry, 128> lut;
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, const u32 file_version) {
-            ar& boost::serialization::make_binary_object(this, sizeof(Fog));
-        }
     };
 
     RegsLcd regs_lcd{};
@@ -251,25 +210,6 @@ public:
     Fog fog{};
     AttributeBuffer input_default_attributes{};
     ImmediateModeState immediate{};
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version) {
-        ar& regs_lcd;
-        ar& regs.reg_array;
-        ar& gs_unit;
-        ar& vs_setup;
-        ar& gs_setup;
-        ar& proctex;
-        ar& lighting;
-        ar& fog;
-        ar& input_default_attributes;
-        ar& immediate;
-        ar& geometry_pipeline;
-        ar& primitive_assembler;
-        ar& cmd_list;
-    }
 
 private:
     Memory::MemorySystem& memory;

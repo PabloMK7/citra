@@ -9,7 +9,7 @@
 #include <cryptopp/modes.h>
 #include <fmt/format.h>
 #include "common/alignment.h"
-#include "common/archives.h"
+
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -33,9 +33,6 @@
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
 #include "core/nus_download.h"
-
-SERIALIZE_EXPORT_IMPL(Service::AM::Module)
-SERVICE_CONSTRUCT_IMPL(Service::AM::Module)
 
 namespace Service::AM {
 
@@ -533,10 +530,10 @@ InstallStatus InstallCIA(const std::string& path,
     return InstallStatus::ErrorInvalid;
 }
 
-InstallStatus InstallFromNus(u64 title_id, int version) {
+InstallStatus InstallFromNus(Core::System& system, u64 title_id, int version) {
     LOG_DEBUG(Service_AM, "Downloading {:X}", title_id);
 
-    CIAFile install_file{Core::System::GetInstance(), GetTitleMediaType(title_id)};
+    CIAFile install_file{system, GetTitleMediaType(title_id)};
 
     std::string path = fmt::format("/ccs/download/{:016X}/tmd", title_id);
     if (version != -1) {
@@ -1837,14 +1834,6 @@ void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
 
     LOG_WARNING(Service_AM, "(STUBBED) called");
 }
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
-    ar& cia_installing;
-    ar& am_title_list;
-    ar& system_updater_mutex;
-}
-SERIALIZE_IMPL(Module)
 
 void Module::Interface::GetDeviceCert(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);

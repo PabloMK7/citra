@@ -4,10 +4,7 @@
 
 #include <span>
 #include <vector>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include "common/archives.h"
+
 #include "common/bit_field.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -19,10 +16,6 @@
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/pica/regs_lcd.h"
-
-SERIALIZE_EXPORT_IMPL(Service::GSP::SessionData)
-SERIALIZE_EXPORT_IMPL(Service::GSP::GSP_GPU)
-SERVICE_CONSTRUCT_IMPL(Service::GSP::GSP_GPU)
 
 namespace Service::GSP {
 
@@ -671,17 +664,6 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     return nullptr;
 }
 
-template <class Archive>
-void GSP_GPU::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar& shared_memory;
-    ar& active_thread_id;
-    ar& first_initialization;
-    ar& used_thread_ids;
-    ar& saved_vram;
-}
-SERIALIZE_IMPL(GSP_GPU)
-
 GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -733,16 +715,6 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
 std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> GSP_GPU::MakeSessionData() {
     return std::make_unique<SessionData>(this);
 }
-
-template <class Archive>
-void SessionData::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler::SessionDataBase>(*this);
-    ar& gsp;
-    ar& interrupt_event;
-    ar& thread_id;
-    ar& registered;
-}
-SERIALIZE_IMPL(SessionData)
 
 SessionData::SessionData(GSP_GPU* gsp) : gsp(gsp) {
     // Assign a new thread id to this session when it connects. Note: In the real GSP service this

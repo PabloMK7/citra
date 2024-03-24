@@ -168,14 +168,6 @@ private:
     bool connected_device;
     std::unique_ptr<BufferManager> receive_buffer;
     std::unique_ptr<ExtraHID> extra_hid;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 } // namespace Service::IR
-
-BOOST_CLASS_EXPORT_KEY(Service::IR::IR_USER)
-SERVICE_CONSTRUCT(Service::IR::IR_USER)

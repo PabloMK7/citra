@@ -9,12 +9,8 @@
 #include <memory>
 #include <optional>
 #include <vector>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 #include "core/frontend/input.h"
-#include "core/global.h"
+
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
@@ -125,17 +121,6 @@ struct MessageParameter {
     SignalType signal = SignalType::None;
     std::shared_ptr<Kernel::Object> object = nullptr;
     std::vector<u8> buffer;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& sender_id;
-        ar& destination_id;
-        ar& signal;
-        ar& object;
-        ar& buffer;
-    }
-    friend class boost::serialization::access;
 };
 
 enum class AppletPos : u32 {
@@ -169,15 +154,6 @@ struct DeliverArg {
     std::vector<u8> param;
     std::vector<u8> hmac;
     u64 source_program_id = std::numeric_limits<u64>::max();
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& param;
-        ar& hmac;
-        ar& source_program_id;
-    }
-    friend class boost::serialization::access;
 };
 
 struct ApplicationJumpParameters {
@@ -187,30 +163,11 @@ struct ApplicationJumpParameters {
 
     u64 current_title_id;
     FS::MediaType current_media_type;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& next_title_id;
-        ar& next_media_type;
-        ar& flags;
-        ar& current_title_id;
-        ar& current_media_type;
-    }
-    friend class boost::serialization::access;
 };
 
 struct ApplicationStartParameters {
     u64 next_title_id;
     FS::MediaType next_media_type;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& next_title_id;
-        ar& next_media_type;
-    }
-    friend class boost::serialization::access;
 };
 
 enum class DisplayBufferMode : u32_le {
@@ -233,20 +190,6 @@ struct CaptureBufferInfo {
     u32_le bottom_screen_left_offset;
     u32_le bottom_screen_right_offset;
     DisplayBufferMode bottom_screen_format;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& size;
-        ar& is_3d;
-        ar& top_screen_left_offset;
-        ar& top_screen_right_offset;
-        ar& top_screen_format;
-        ar& bottom_screen_left_offset;
-        ar& bottom_screen_right_offset;
-        ar& bottom_screen_format;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has incorrect size");
 
@@ -330,12 +273,12 @@ public:
                                       ApplicationJumpFlags flags);
     Result DoApplicationJump(const DeliverArg& arg);
 
-    boost::optional<DeliverArg> ReceiveDeliverArg() {
+    std::optional<DeliverArg> ReceiveDeliverArg() {
         auto arg = deliver_arg;
-        deliver_arg = boost::none;
+        deliver_arg = std::nullopt;
         return arg;
     }
-    void SetDeliverArg(boost::optional<DeliverArg> arg) {
+    void SetDeliverArg(std::optional<DeliverArg> arg) {
         deliver_arg = std::move(arg);
     }
 
@@ -343,7 +286,7 @@ public:
         std::vector<u8> buffer;
         if (capture_info) {
             buffer.resize(sizeof(CaptureBufferInfo));
-            std::memcpy(buffer.data(), &capture_info.get(), sizeof(CaptureBufferInfo));
+            std::memcpy(buffer.data(), &capture_info.value(), sizeof(CaptureBufferInfo));
         }
         return buffer;
     }
@@ -351,14 +294,14 @@ public:
         ASSERT_MSG(buffer.size() >= sizeof(CaptureBufferInfo), "CaptureBufferInfo is too small.");
 
         capture_info.emplace();
-        std::memcpy(&capture_info.get(), buffer.data(), sizeof(CaptureBufferInfo));
+        std::memcpy(&capture_info.value(), buffer.data(), sizeof(CaptureBufferInfo));
     }
 
     std::vector<u8> ReceiveCaptureBufferInfo() {
         std::vector<u8> buffer;
         if (capture_buffer_info) {
             buffer.resize(sizeof(CaptureBufferInfo));
-            std::memcpy(buffer.data(), &capture_buffer_info.get(), sizeof(CaptureBufferInfo));
+            std::memcpy(buffer.data(), &capture_buffer_info.value(), sizeof(CaptureBufferInfo));
             capture_buffer_info.reset();
         }
         return buffer;
@@ -367,7 +310,7 @@ public:
         ASSERT_MSG(buffer.size() >= sizeof(CaptureBufferInfo), "CaptureBufferInfo is too small.");
 
         capture_buffer_info.emplace();
-        std::memcpy(&capture_buffer_info.get(), buffer.data(), sizeof(CaptureBufferInfo));
+        std::memcpy(&capture_buffer_info.value(), buffer.data(), sizeof(CaptureBufferInfo));
     }
 
     Result PrepareToStartApplication(u64 title_id, FS::MediaType media_type);
@@ -407,19 +350,18 @@ private:
     std::shared_ptr<Kernel::Mutex> lock;
 
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
-    // NOTE: A bug in gcc prevents serializing std::optional
-    boost::optional<MessageParameter> next_parameter;
+    std::optional<MessageParameter> next_parameter;
 
     /// This parameter will be sent to the application/applet once they register themselves by using
     /// APT::Initialize.
-    boost::optional<MessageParameter> delayed_parameter;
+    std::optional<MessageParameter> delayed_parameter;
 
     ApplicationJumpParameters app_jump_parameters{};
-    boost::optional<ApplicationStartParameters> app_start_parameters{};
-    boost::optional<DeliverArg> deliver_arg{};
+    std::optional<ApplicationStartParameters> app_start_parameters{};
+    std::optional<DeliverArg> deliver_arg{};
 
-    boost::optional<CaptureBufferInfo> capture_info;
-    boost::optional<CaptureBufferInfo> capture_buffer_info;
+    std::optional<CaptureBufferInfo> capture_info;
+    std::optional<CaptureBufferInfo> capture_buffer_info;
 
     static constexpr std::size_t NumAppletSlot = 4;
 
@@ -450,21 +392,6 @@ private:
             title_id = 0;
             attributes.raw = 0;
         }
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& applet_id;
-            ar& slot;
-            ar& title_id;
-            ar& registered;
-            ar& loaded;
-            ar& attributes.raw;
-            ar& notification;
-            ar& notification_event;
-            ar& parameter_event;
-        }
-        friend class boost::serialization::access;
     };
 
     // Holds data about the concurrently running applets in the system.
@@ -524,41 +451,6 @@ private:
 
     void LoadInputDevices();
     void ButtonUpdateEvent(std::uintptr_t user_data, s64 cycles_late);
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& next_parameter;
-        ar& app_jump_parameters;
-        ar& delayed_parameter;
-        ar& app_start_parameters;
-        ar& deliver_arg;
-        ar& capture_info;
-        ar& capture_buffer_info;
-        ar& active_slot;
-        ar& last_library_launcher_slot;
-        ar& last_prepared_library_applet;
-        ar& last_system_launcher_slot;
-        ar& last_jump_to_home_slot;
-        ar& ordered_to_close_sys_applet;
-        ar& ordered_to_close_application;
-        ar& application_cancelled;
-        ar& application_close_target;
-        ar& new_3ds_mode_blocked;
-        ar& lock;
-        ar& capture_info;
-        ar& applet_slots;
-        ar& library_applet_closing_command;
-
-        if (Archive::is_loading::value) {
-            LoadInputDevices();
-        }
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace Service::APT
-
-BOOST_CLASS_VERSION(Service::APT::ApplicationJumpParameters, 1)
-BOOST_CLASS_VERSION(Service::APT::AppletManager, 1)
-
-SERVICE_CONSTRUCT(Service::APT::AppletManager)

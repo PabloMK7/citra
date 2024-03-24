@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 #include <boost/optional/optional.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/event.h"
@@ -80,11 +79,6 @@ public:
     u32 thread_id;
     /// Whether RegisterInterruptRelayQueue was called for this session
     bool registered = false;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 class GSP_GPU final : public ServiceFramework<GSP_GPU, SessionData> {
@@ -390,14 +384,6 @@ private:
     std::array<bool, MaxGSPThreads> used_thread_ids{};
 
     friend class SessionData;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 } // namespace Service::GSP
-
-BOOST_CLASS_EXPORT_KEY(Service::GSP::SessionData)
-BOOST_CLASS_EXPORT_KEY(Service::GSP::GSP_GPU)
-SERVICE_CONSTRUCT(Service::GSP::GSP_GPU)

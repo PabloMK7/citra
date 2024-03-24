@@ -267,10 +267,6 @@ void ARM_Dynarmic::ClearExclusiveState() {
     jit->ClearExclusiveState();
 }
 
-std::shared_ptr<Memory::PageTable> ARM_Dynarmic::GetPageTable() const {
-    return current_page_table;
-}
-
 void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) {
     current_page_table = page_table;
     ThreadContext ctx{};

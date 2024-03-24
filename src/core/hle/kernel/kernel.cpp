@@ -2,11 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/vector.hpp>
-#include "common/archives.h"
-#include "common/serialization/atomic.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
@@ -18,8 +13,6 @@
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::New3dsHwCapabilities)
 
 namespace Kernel {
 
@@ -162,49 +155,5 @@ u32 KernelSystem::NewThreadId() {
 void KernelSystem::ResetThreadIDs() {
     next_thread_id = 0;
 }
-
-template <class Archive>
-void KernelSystem::serialize(Archive& ar, const unsigned int) {
-    ar& memory_regions;
-    ar& named_ports;
-    // current_cpu set externally
-    // NB: subsystem references and prepare_reschedule_callback are constant
-    ar&* resource_limits.get();
-    ar& next_object_id;
-    ar&* timer_manager.get();
-    ar& next_process_id;
-    ar& process_list;
-    ar& current_process;
-    // NB: core count checked in 'core'
-    for (auto& thread_manager : thread_managers) {
-        ar&* thread_manager.get();
-    }
-    ar& config_mem_handler;
-    ar& shared_page_handler;
-    ar& stored_processes;
-    ar& next_thread_id;
-    ar& memory_mode;
-    ar& n3ds_hw_caps;
-    ar& main_thread_extended_sleep;
-    // Deliberately don't include debugger info to allow debugging through loads
-
-    if (Archive::is_loading::value) {
-        for (auto& memory_region : memory_regions) {
-            memory_region->Unlock();
-        }
-        for (auto& process : process_list) {
-            process->vm_manager.Unlock();
-        }
-    }
-}
-SERIALIZE_IMPL(KernelSystem)
-
-template <class Archive>
-void New3dsHwCapabilities::serialize(Archive& ar, const unsigned int) {
-    ar& enable_l2_cache;
-    ar& enable_804MHz_cpu;
-    ar& memory_mode;
-}
-SERIALIZE_IMPL(New3dsHwCapabilities)
 
 } // namespace Kernel

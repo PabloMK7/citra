@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <array>
 #include <deque>
-#include <boost/serialization/deque.hpp>
-#include <boost/serialization/split_member.hpp>
 #include "common/common_types.h"
 
 namespace Common {
@@ -180,32 +178,6 @@ private:
             return &queues[idx];
         }
     }
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive& ar, const unsigned int file_version) const {
-        const s64 idx = ToIndex(first);
-        ar << idx;
-        for (std::size_t i = 0; i < NUM_QUEUES; i++) {
-            const s64 idx1 = ToIndex(queues[i].next_nonempty);
-            ar << idx1;
-            ar << queues[i].data;
-        }
-    }
-
-    template <class Archive>
-    void load(Archive& ar, const unsigned int file_version) {
-        s64 idx;
-        ar >> idx;
-        first = ToPointer(idx);
-        for (std::size_t i = 0; i < NUM_QUEUES; i++) {
-            ar >> idx;
-            queues[i].next_nonempty = ToPointer(idx);
-            ar >> queues[i].data;
-        }
-    }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 } // namespace Common

@@ -51,9 +51,6 @@ public:
     void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
     void PrepareReschedule() override;
 
-protected:
-    std::shared_ptr<Memory::PageTable> GetPageTable() const override;
-
 private:
     void ExecuteInstructions(u64 num_instructions);
 

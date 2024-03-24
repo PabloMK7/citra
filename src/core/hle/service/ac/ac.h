@@ -173,15 +173,8 @@ protected:
 
 private:
     Core::System& system;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AC
-
-BOOST_CLASS_EXPORT_KEY(Service::AC::Module)
-SERVICE_CONSTRUCT(Service::AC::Module)

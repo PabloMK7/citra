@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "common/microprofile.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -417,12 +416,5 @@ void GPU::VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
     // Reschedule recurrent event
     impl->timing.ScheduleEvent(FRAME_TICKS - cycles_late, impl->vblank_event);
 }
-
-template <class Archive>
-void GPU::serialize(Archive& ar, const u32 file_version) {
-    ar & impl->pica;
-}
-
-SERIALIZE_IMPL(GPU)
 
 } // namespace VideoCore

@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <vector>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
@@ -75,14 +74,6 @@ private:
 
     void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                 std::shared_ptr<WaitObject> object) override;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::AddressArbiter)
-BOOST_CLASS_EXPORT_KEY(Kernel::AddressArbiter::Callback)
-CONSTRUCT_KERNEL_OBJECT(Kernel::AddressArbiter)

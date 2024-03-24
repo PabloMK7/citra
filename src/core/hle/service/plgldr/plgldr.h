@@ -22,7 +22,6 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/export.hpp>
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -46,16 +45,6 @@ public:
             u32_le low_title_Id = 0;
             char path[256] = {0};
             u32_le config[32] = {0};
-
-            template <class Archive>
-            void serialize(Archive& ar, const unsigned int) {
-                ar& no_flash;
-                ar& plugin_memory_strategy;
-                ar& low_title_Id;
-                ar& path;
-                ar& config;
-            }
-            friend class boost::serialization::access;
         };
         bool is_enabled = true;
         bool allow_game_change = true;
@@ -77,10 +66,6 @@ public:
         u32_le load_exe_args[4] = {0};
 
         PAddr plugin_fb_addr = 0;
-
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int);
-        friend class boost::serialization::access;
     };
 
     PLG_LDR(Core::System& system_);
@@ -128,10 +113,6 @@ private:
     void GetPLGLDRVersion(Kernel::HLERequestContext& ctx);
     void GetArbiter(Kernel::HLERequestContext& ctx);
     void GetPluginPath(Kernel::HLERequestContext& ctx);
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 std::shared_ptr<PLG_LDR> GetService(Core::System& system);
@@ -139,6 +120,3 @@ std::shared_ptr<PLG_LDR> GetService(Core::System& system);
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::PLGLDR
-
-BOOST_CLASS_EXPORT_KEY(Service::PLGLDR::PLG_LDR)
-SERVICE_CONSTRUCT(Service::PLGLDR::PLG_LDR)

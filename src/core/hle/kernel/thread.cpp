@@ -4,15 +4,10 @@
 
 #include <algorithm>
 #include <climits>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/weak_ptr.hpp>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/serialization/boost_flat_set.h"
 #include "common/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
@@ -26,46 +21,7 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
-SERIALIZE_EXPORT_IMPL(Kernel::Thread)
-SERIALIZE_EXPORT_IMPL(Kernel::WakeupCallback)
-
 namespace Kernel {
-
-template <class Archive>
-void ThreadManager::serialize(Archive& ar, const unsigned int) {
-    ar& current_thread;
-    ar& ready_queue;
-    ar& wakeup_callback_table;
-    ar& thread_list;
-}
-SERIALIZE_IMPL(ThreadManager)
-
-template <class Archive>
-void Thread::serialize(Archive& ar, const unsigned int file_version) {
-    ar& boost::serialization::base_object<WaitObject>(*this);
-    ar& context;
-    ar& thread_id;
-    ar& status;
-    ar& entry_point;
-    ar& stack_top;
-    ar& nominal_priority;
-    ar& current_priority;
-    ar& last_running_ticks;
-    ar& processor_id;
-    ar& tls_address;
-    ar& held_mutexes;
-    ar& pending_mutexes;
-    ar& owner_process;
-    ar& wait_objects;
-    ar& wait_address;
-    ar& name;
-    ar& wakeup_callback;
-}
-SERIALIZE_IMPL(Thread)
-
-template <class Archive>
-void WakeupCallback::serialize(Archive& ar, const unsigned int) {}
-SERIALIZE_IMPL(WakeupCallback)
 
 bool Thread::ShouldWait(const Thread* thread) const {
     return status != ThreadStatus::Dead;

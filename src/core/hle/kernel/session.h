@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/export.hpp>
 #include "core/hle/kernel/object.h"
 
 namespace Kernel {
@@ -25,12 +24,5 @@ public:
     ClientSession* client = nullptr;  ///< The client endpoint of the session.
     ServerSession* server = nullptr;  ///< The server endpoint of the session.
     std::shared_ptr<ClientPort> port; ///< The port that this session is associated with (optional).
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::Session)

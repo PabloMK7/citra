@@ -147,14 +147,6 @@ struct TagUuid {
     UniqueSerialNumber uid;
     u8 nintendo_id;
     LockBytes lock_bytes;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& uid;
-        ar& nintendo_id;
-        ar& lock_bytes;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(TagUuid) == 10, "TagUuid is an invalid size");
 
@@ -256,14 +248,6 @@ struct NTAG215Password {
     u32 PWD;  // Password to allow write access
     u16 PACK; // Password acknowledge reply
     u16 RFUI; // Reserved for future use
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& PWD;
-        ar& PACK;
-        ar& RFUI;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(NTAG215Password) == 0x8, "NTAG215Password is an invalid size");
 
@@ -342,11 +326,6 @@ struct SerializableAmiiboFile {
         std::array<u8, 0x21C> raw;
         NTAG215File file;
     };
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& raw;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(SerializableAmiiboFile) == 0x21C, "SerializableAmiiboFile is an invalid size");
 static_assert(std::is_trivially_copyable_v<SerializableAmiiboFile>,
@@ -357,11 +336,6 @@ struct SerializableEncryptedAmiiboFile {
         std::array<u8, 0x21C> raw;
         EncryptedNTAG215File file;
     };
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& raw;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(sizeof(SerializableEncryptedAmiiboFile) == 0x21C,
               "SerializableEncryptedAmiiboFile is an invalid size");

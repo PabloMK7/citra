@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include "core/file_sys/archive_source_sd_savedata.h"
 
 namespace FileSys {
@@ -28,14 +25,6 @@ public:
 
 private:
     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source;
-
-    ArchiveFactory_OtherSaveDataPermitted() = default;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        ar& sd_savedata_source;
-    }
-    friend class boost::serialization::access;
 };
 
 /// File system interface to the OtherSaveDataGeneral archive
@@ -55,17 +44,6 @@ public:
 
 private:
     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source;
-
-    ArchiveFactory_OtherSaveDataGeneral() = default;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<ArchiveFactory>(*this);
-        ar& sd_savedata_source;
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
-
-BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_OtherSaveDataPermitted)
-BOOST_CLASS_EXPORT_KEY(FileSys::ArchiveFactory_OtherSaveDataGeneral)

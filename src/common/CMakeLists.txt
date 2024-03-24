@@ -62,7 +62,6 @@ add_library(citra_common STATIC
     android_storage.cpp
     announce_multiplayer_room.h
     arch.h
-    archives.h
     assert.h
     atomic_ops.h
     detached_tasks.cpp
@@ -77,7 +76,6 @@ add_library(citra_common STATIC
     common_paths.h
     common_precompiled_headers.h
     common_types.h
-    construct.h
     dynamic_library/dynamic_library.cpp
     dynamic_library/dynamic_library.h
     dynamic_library/ffmpeg.cpp
@@ -119,12 +117,6 @@ add_library(citra_common STATIC
     settings.cpp
     settings.h
     slot_vector.h
-    serialization/atomic.h
-    serialization/boost_discrete_interval.hpp
-    serialization/boost_flat_set.h
-    serialization/boost_small_vector.hpp
-    serialization/boost_std_variant.hpp
-    serialization/boost_vector.hpp
     static_lru_cache.h
     string_literal.h
     string_util.cpp
@@ -184,7 +176,7 @@ endif()
 
 create_target_directory_groups(citra_common)
 
-target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::iostreams)
 target_link_libraries(citra_common PRIVATE zstd)
 
 if ("x86_64" IN_LIST ARCHITECTURE)
