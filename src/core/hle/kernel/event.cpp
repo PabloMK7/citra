@@ -2,16 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/string.hpp>
-#include "common/archives.h"
 #include "common/assert.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::Event)
 
 namespace Kernel {
 
@@ -59,15 +54,5 @@ void Event::WakeupAllWaitingThreads() {
         signaled = false;
     }
 }
-
-template <class Archive>
-void Event::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<WaitObject>(*this);
-    ar& reset_type;
-    ar& signaled;
-    ar& name;
-    ar& resource_limit;
-}
-SERIALIZE_IMPL(Event)
 
 } // namespace Kernel

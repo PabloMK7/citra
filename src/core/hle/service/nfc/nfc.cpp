@@ -2,24 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
 
-SERVICE_CONSTRUCT_IMPL(Service::NFC::Module)
-SERIALIZE_EXPORT_IMPL(Service::NFC::Module)
-
 namespace Service::NFC {
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
-    ar& nfc_mode;
-    ar& device;
-}
-SERIALIZE_IMPL(Module)
 
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);

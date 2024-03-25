@@ -4,18 +4,13 @@
 
 #include <algorithm>
 #include <iterator>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/split_member.hpp>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "core/core.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/memory.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::VirtualMemoryArea)
 
 namespace Kernel {
 
@@ -41,17 +36,6 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     return true;
 }
 
-template <class Archive>
-void VirtualMemoryArea::serialize(Archive& ar, const unsigned int) {
-    ar& base;
-    ar& size;
-    ar& type;
-    ar& permissions;
-    ar& meminfo_state;
-    ar& backing_memory;
-}
-SERIALIZE_IMPL(VirtualMemoryArea)
-
 VMManager::VMManager(Memory::MemorySystem& memory, Kernel::Process& proc)
     : page_table(std::make_shared<Memory::PageTable>()), memory(memory), process(proc) {
     Reset();
@@ -60,8 +44,6 @@ VMManager::VMManager(Memory::MemorySystem& memory, Kernel::Process& proc)
 VMManager::~VMManager() = default;
 
 void VMManager::Reset() {
-    ASSERT(!is_locked);
-
     vma_map.clear();
 
     // Initialize the map with a single free region covering the entire managed space.
@@ -84,8 +66,6 @@ VMManager::VMAHandle VMManager::FindVMA(VAddr target) const {
 
 ResultVal<VAddr> VMManager::MapBackingMemoryToBase(VAddr base, u32 region_size, MemoryRef memory,
                                                    u32 size, MemoryState state) {
-    ASSERT(!is_locked);
-
     // Find the first Free VMA.
     VMAHandle vma_handle = std::find_if(vma_map.begin(), vma_map.end(), [&](const auto& vma) {
         if (vma.second.type != VMAType::Free)
@@ -114,7 +94,6 @@ ResultVal<VAddr> VMManager::MapBackingMemoryToBase(VAddr base, u32 region_size, 
 
 ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, MemoryRef memory,
                                                             u32 size, MemoryState state) {
-    ASSERT(!is_locked);
     ASSERT(memory.GetPtr() != nullptr);
 
     // This is the appropriately sized VMA that will turn into our allocation.
@@ -134,10 +113,6 @@ ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, Memory
 Result VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
                                     VMAPermission expected_perms, MemoryState new_state,
                                     VMAPermission new_perms) {
-    if (is_locked) {
-        return ResultSuccess;
-    }
-
     VAddr target_end = target + size;
     VMAIter begin_vma = StripIterConstness(FindVMA(target));
     VMAIter i_end = vma_map.lower_bound(target_end);
@@ -172,8 +147,6 @@ Result VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expected
 }
 
 VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
-    ASSERT(!is_locked);
-
     VirtualMemoryArea& vma = vma_handle->second;
     vma.type = VMAType::Free;
     vma.permissions = VMAPermission::None;
@@ -186,8 +159,6 @@ VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
 }
 
 Result VMManager::UnmapRange(VAddr target, u32 size) {
-    ASSERT(!is_locked);
-
     CASCADE_RESULT(VMAIter vma, CarveVMARange(target, size));
     const VAddr target_end = target + size;
 
@@ -203,8 +174,6 @@ Result VMManager::UnmapRange(VAddr target, u32 size) {
 }
 
 VMManager::VMAHandle VMManager::Reprotect(VMAHandle vma_handle, VMAPermission new_perms) {
-    ASSERT(!is_locked);
-
     VMAIter iter = StripIterConstness(vma_handle);
 
     VirtualMemoryArea& vma = iter->second;
@@ -215,8 +184,6 @@ VMManager::VMAHandle VMManager::Reprotect(VMAHandle vma_handle, VMAPermission ne
 }
 
 Result VMManager::ReprotectRange(VAddr target, u32 size, VMAPermission new_perms) {
-    ASSERT(!is_locked);
-
     CASCADE_RESULT(VMAIter vma, CarveVMARange(target, size));
     const VAddr target_end = target + size;
 
@@ -240,10 +207,6 @@ void VMManager::LogLayout(Common::Log::Level log_level) const {
                     (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-',
                     GetMemoryStateName(vma.meminfo_state));
     }
-}
-
-void VMManager::Unlock() {
-    is_locked = false;
 }
 
 VMManager::VMAIter VMManager::StripIterConstness(const VMAHandle& iter) {
@@ -396,15 +359,5 @@ ResultVal<std::vector<std::pair<MemoryRef, u32>>> VMManager::GetBackingBlocksFor
     }
     return backing_blocks;
 }
-
-template <class Archive>
-void VMManager::serialize(Archive& ar, const unsigned int) {
-    ar& vma_map;
-    ar& page_table;
-    if (Archive::is_loading::value) {
-        is_locked = true;
-    }
-}
-SERIALIZE_IMPL(VMManager)
 
 } // namespace Kernel

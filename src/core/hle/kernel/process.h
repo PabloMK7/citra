@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 #include <boost/container/static_vector.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/handle_table.h"
@@ -26,11 +25,6 @@ struct AddressMapping {
     u32 size;
     bool read_only;
     bool unk_flag;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 union ProcessFlags {
@@ -65,11 +59,6 @@ public:
         std::size_t offset = 0;
         VAddr addr = 0;
         u32 size = 0;
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int);
     };
 
     std::string GetTypeName() const override {
@@ -117,11 +106,6 @@ public:
     std::string name;
     /// Title ID corresponding to the process
     u64 program_id;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 class Process final : public Object {
@@ -230,17 +214,6 @@ private:
     void FreeAllMemory();
 
     KernelSystem& kernel;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::AddressMapping)
-BOOST_CLASS_EXPORT_KEY(Kernel::CodeSet)
-BOOST_CLASS_EXPORT_KEY(Kernel::CodeSet::Segment)
-BOOST_CLASS_EXPORT_KEY(Kernel::Process)
-CONSTRUCT_KERNEL_OBJECT(Kernel::CodeSet)
-CONSTRUCT_KERNEL_OBJECT(Kernel::Process)

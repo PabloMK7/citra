@@ -12,11 +12,6 @@ class QTM_U final : public ServiceFramework<QTM_U> {
 public:
     QTM_U();
     ~QTM_U() = default;
-
-private:
-    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::QTM
-
-BOOST_CLASS_EXPORT_KEY(Service::QTM::QTM_U)

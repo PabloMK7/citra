@@ -33,15 +33,6 @@ struct Uniforms {
     static std::size_t GetIntUniformOffset(u32 index) {
         return offsetof(Uniforms, i) + index * sizeof(Common::Vec4<u8>);
     }
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version) {
-        ar& f;
-        ar& b;
-        ar& i;
-    }
 };
 
 struct ShaderRegs;
@@ -86,19 +77,6 @@ private:
     bool swizzle_data_hash_dirty{true};
     u64 program_code_hash{0xDEADC0DE};
     u64 swizzle_data_hash{0xDEADC0DE};
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version) {
-        ar& uniforms;
-        ar& uniform_queue;
-        ar& program_code;
-        ar& swizzle_data;
-        ar& program_code_hash_dirty;
-        ar& swizzle_data_hash_dirty;
-        ar& program_code_hash;
-        ar& swizzle_data_hash;
-    }
 };
 
 } // namespace Pica

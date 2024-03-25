@@ -3,10 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include "common/archives.h"
+
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -24,17 +21,7 @@
 #include "core/hle/service/sm/sm.h"
 #include "core/hle/service/sm/srv.h"
 
-SERVICE_CONSTRUCT_IMPL(Service::SM::SRV)
-SERIALIZE_EXPORT_IMPL(Service::SM::SRV)
-
 namespace Service::SM {
-
-template <class Archive>
-void SRV::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar& notification_semaphore;
-    ar& get_service_handle_delayed_map;
-}
 
 constexpr int MAX_PENDING_NOTIFICATIONS = 16;
 
@@ -117,15 +104,6 @@ public:
 private:
     Core::System& system;
     std::string name;
-
-    ThreadCallback() : system(Core::Global<Core::System>()) {}
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::HLERequestContext::WakeupCallback>(*this);
-        ar& name;
-    }
-    friend class boost::serialization::access;
 };
 
 /**
@@ -314,5 +292,3 @@ SRV::SRV(Core::System& system) : ServiceFramework("srv:", 64), system(system) {
 SRV::~SRV() = default;
 
 } // namespace Service::SM
-
-SERIALIZE_EXPORT_IMPL(Service::SM::SRV::ThreadCallback)

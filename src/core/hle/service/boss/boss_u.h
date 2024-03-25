@@ -11,12 +11,6 @@ namespace Service::BOSS {
 class BOSS_U final : public Module::Interface {
 public:
     explicit BOSS_U(std::shared_ptr<Module> boss);
-
-private:
-    SERVICE_SERIALIZATION(BOSS_U, boss, Module)
 };
 
 } // namespace Service::BOSS
-
-BOOST_CLASS_EXPORT_KEY(Service::BOSS::BOSS_U)
-BOOST_SERIALIZATION_CONSTRUCT(Service::BOSS::BOSS_U)

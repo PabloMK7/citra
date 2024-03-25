@@ -5,7 +5,7 @@
 #include <array>
 #include <cstring>
 #include <vector>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -18,8 +18,6 @@
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
-
-SERVICE_CONSTRUCT_IMPL(Service::FRD::Module)
 
 namespace Service::FRD {
 

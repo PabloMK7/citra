@@ -7,7 +7,6 @@
 #include <array>
 #include <atomic>
 #include <span>
-#include <boost/serialization/array.hpp>
 #include "common/bit_field.h"
 #include "common/swap.h"
 #include "core/frontend/input.h"
@@ -69,18 +68,6 @@ private:
     std::unique_ptr<Input::ButtonDevice> zr;
     std::unique_ptr<Input::AnalogDevice> c_stick;
     std::atomic<bool> is_device_reload_pending;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& hid_period;
-        ar& calibration_data; // This isn't writeable for now, but might be in future
-        if (Archive::is_loading::value) {
-            LoadInputDevices(); // zl, zr, c_stick are loaded here
-        }
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace Service::IR
-
-BOOST_CLASS_EXPORT_KEY(Service::IR::ExtraHID)

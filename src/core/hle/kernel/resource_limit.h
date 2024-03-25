@@ -6,7 +6,6 @@
 
 #include <array>
 #include <memory>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 
@@ -69,11 +68,6 @@ private:
     ResourceArray m_limit_values{};
     ResourceArray m_current_values{};
     std::string m_name;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 class ResourceLimitList {
@@ -90,15 +84,6 @@ public:
 
 private:
     std::array<std::shared_ptr<ResourceLimit>, 4> resource_limits;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::ResourceLimit)
-BOOST_CLASS_EXPORT_KEY(Kernel::ResourceLimitList)
-CONSTRUCT_KERNEL_OBJECT(Kernel::ResourceLimit)
-CONSTRUCT_KERNEL_OBJECT(Kernel::ResourceLimitList)

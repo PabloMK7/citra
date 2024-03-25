@@ -4,10 +4,8 @@
 
 #include <algorithm>
 #include <memory>
-#include <utility>
 #include <vector>
-#include <boost/serialization/set.hpp>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -20,8 +18,6 @@
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::MemoryRegionInfo)
 
 namespace Kernel {
 
@@ -166,8 +162,6 @@ void KernelSystem::MapSharedPages(VMManager& address_space) {
 }
 
 void MemoryRegionInfo::Reset(u32 base, u32 size) {
-    ASSERT(!is_locked);
-
     this->base = base;
     this->size = size;
     used = 0;
@@ -178,8 +172,6 @@ void MemoryRegionInfo::Reset(u32 base, u32 size) {
 }
 
 MemoryRegionInfo::IntervalSet MemoryRegionInfo::HeapAllocate(u32 size) {
-    ASSERT(!is_locked);
-
     IntervalSet result;
     u32 rest = size;
 
@@ -207,8 +199,6 @@ MemoryRegionInfo::IntervalSet MemoryRegionInfo::HeapAllocate(u32 size) {
 }
 
 bool MemoryRegionInfo::LinearAllocate(u32 offset, u32 size) {
-    ASSERT(!is_locked);
-
     Interval interval(offset, offset + size);
     if (!boost::icl::contains(free_blocks, interval)) {
         // The requested range is already allocated
@@ -220,8 +210,6 @@ bool MemoryRegionInfo::LinearAllocate(u32 offset, u32 size) {
 }
 
 std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
-    ASSERT(!is_locked);
-
     // Find the first sufficient continuous block from the lower address
     for (const auto& interval : free_blocks) {
         ASSERT(interval.bounds() == boost::icl::interval_bounds::right_open());
@@ -238,8 +226,6 @@ std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
 }
 
 std::optional<u32> MemoryRegionInfo::RLinearAllocate(u32 size) {
-    ASSERT(!is_locked);
-
     // Find the first sufficient continuous block from the upper address
     for (auto iter = free_blocks.rbegin(); iter != free_blocks.rend(); ++iter) {
         auto interval = *iter;
@@ -257,30 +243,10 @@ std::optional<u32> MemoryRegionInfo::RLinearAllocate(u32 size) {
 }
 
 void MemoryRegionInfo::Free(u32 offset, u32 size) {
-    if (is_locked) {
-        return;
-    }
-
     Interval interval(offset, offset + size);
     ASSERT(!boost::icl::intersects(free_blocks, interval)); // must be allocated blocks
     free_blocks += interval;
     used -= size;
 }
-
-void MemoryRegionInfo::Unlock() {
-    is_locked = false;
-}
-
-template <class Archive>
-void MemoryRegionInfo::serialize(Archive& ar, const unsigned int) {
-    ar& base;
-    ar& size;
-    ar& used;
-    ar& free_blocks;
-    if (Archive::is_loading::value) {
-        is_locked = true;
-    }
-}
-SERIALIZE_IMPL(MemoryRegionInfo)
 
 } // namespace Kernel

@@ -684,8 +684,8 @@ void ConfigureSystem::DownloadFromNUS() {
                      &QProgressDialog::setValue);
 
     auto failed = false;
-    const auto download_title = [&future_watcher, &failed](const u64& title_id) {
-        if (Service::AM::InstallFromNus(title_id) != Service::AM::InstallStatus::Success) {
+    const auto download_title = [&future_watcher, &failed, this](const u64& title_id) {
+        if (Service::AM::InstallFromNus(system, title_id) != Service::AM::InstallStatus::Success) {
             failed = true;
             future_watcher.cancel();
         }

@@ -11,11 +11,6 @@ namespace Service::MCU {
 class HWC final : public ServiceFramework<HWC> {
 public:
     explicit HWC();
-
-private:
-    SERVICE_SERIALIZATION_SIMPLE
 };
 
 } // namespace Service::MCU
-
-BOOST_CLASS_EXPORT_KEY(Service::MCU::HWC)

@@ -2,10 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/map.hpp>
-#include "common/archives.h"
 #include "common/file_util.h"
-#include "common/serialization/boost_std_variant.hpp"
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_backend.h"
@@ -29,22 +26,6 @@ enum {
 
 OnlineService::OnlineService(u64 program_id_, u64 extdata_id_)
     : program_id(program_id_), extdata_id(extdata_id_) {}
-
-template <class Archive>
-void OnlineService::serialize(Archive& ar, const unsigned int) {
-    ar& current_props;
-    ar& task_id_list;
-    ar& program_id;
-    ar& extdata_id;
-}
-SERIALIZE_IMPL(OnlineService)
-
-template <class Archive>
-void BossTaskProperties::serialize(Archive& ar, const unsigned int) {
-    ar& task_result;
-    ar& properties;
-}
-SERIALIZE_IMPL(BossTaskProperties)
 
 Result OnlineService::InitializeSession(u64 init_program_id) {
     // The BOSS service uses three databases:

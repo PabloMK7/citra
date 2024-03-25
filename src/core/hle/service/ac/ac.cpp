@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <vector>
-#include "common/archives.h"
+
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
@@ -19,9 +19,6 @@
 #include "core/hle/service/ac/ac_u.h"
 #include "core/hle/service/soc/soc_u.h"
 #include "core/memory.h"
-
-SERIALIZE_EXPORT_IMPL(Service::AC::Module)
-SERVICE_CONSTRUCT_IMPL(Service::AC::Module)
 
 namespace Service::AC {
 void Module::Interface::CreateDefaultConfig(Kernel::HLERequestContext& ctx) {
@@ -203,15 +200,5 @@ void InstallInterfaces(Core::System& system) {
 }
 
 Module::Module(Core::System& system_) : system(system_) {}
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
-    ar& ac_connected;
-    ar& close_event;
-    ar& connect_event;
-    ar& disconnect_event;
-    // default_config is never written to
-}
-SERIALIZE_IMPL(Module)
 
 } // namespace Service::AC

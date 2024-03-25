@@ -6,8 +6,6 @@
 
 #include <unordered_map>
 #include <utility>
-#include <boost/serialization/set.hpp>
-#include <boost/serialization/unordered_map.hpp>
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
@@ -35,16 +33,6 @@ struct SocketHolder {
     bool shutdown_rd = false;
 
     u32 ownerProcess = 0;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& socket_fd;
-        ar& blocking;
-        ar& isGlobal;
-        ar& ownerProcess;
-    }
-    friend class boost::serialization::access;
 };
 
 class SOC_U final : public ServiceFramework<SOC_U> {
@@ -166,14 +154,6 @@ private:
     /// obtain them again between play sessions.
     bool interface_info_cached = false;
     InterfaceInfo interface_info;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar& created_sockets;
-        ar& initialized_processes;
-    }
-    friend class boost::serialization::access;
 };
 
 std::shared_ptr<SOC_U> GetService(Core::System& system);
@@ -181,5 +161,3 @@ std::shared_ptr<SOC_U> GetService(Core::System& system);
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::SOC
-
-BOOST_CLASS_EXPORT_KEY(Service::SOC::SOC_U)

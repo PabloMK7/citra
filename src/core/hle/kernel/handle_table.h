@@ -7,7 +7,6 @@
 #include <array>
 #include <cstddef>
 #include <memory>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/result.h"
@@ -117,13 +116,6 @@ private:
     u16 next_free_slot;
 
     KernelSystem& kernel;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::HandleTable)
-CONSTRUCT_KERNEL_OBJECT(Kernel::HandleTable)

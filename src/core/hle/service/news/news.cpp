@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <fmt/format.h>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -23,8 +23,6 @@
 #include "core/hle/service/news/news_u.h"
 #include "core/hle/service/service.h"
 
-SERVICE_CONSTRUCT_IMPL(Service::NEWS::Module)
-
 namespace Service::NEWS {
 
 namespace ErrCodes {
@@ -42,15 +40,6 @@ constexpr Result ErrorInvalidHeader = // 0xC8A12805
 constexpr std::array<u8, 8> news_system_savedata_id{
     0x00, 0x00, 0x00, 0x00, 0x35, 0x00, 0x01, 0x00,
 };
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
-    ar& db;
-    ar& notification_ids;
-    ar& automatic_sync_flag;
-    ar& news_system_save_data_archive;
-}
-SERIALIZE_IMPL(Module)
 
 void Module::Interface::AddNotificationImpl(Kernel::HLERequestContext& ctx, bool news_s) {
     IPC::RequestParser rp(ctx);

@@ -2,10 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/string.hpp>
-#include "common/archives.h"
 #include "common/assert.h"
 #include "core/core.h"
 #include "core/hle/kernel/errors.h"
@@ -14,8 +10,6 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
-
-SERIALIZE_EXPORT_IMPL(Kernel::Mutex)
 
 namespace Kernel {
 
@@ -129,16 +123,5 @@ void Mutex::UpdatePriority() {
         holding_thread->UpdatePriority();
     }
 }
-
-template <class Archive>
-void Mutex::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<WaitObject>(*this);
-    ar& lock_count;
-    ar& priority;
-    ar& name;
-    ar& holding_thread;
-    ar& resource_limit;
-}
-SERIALIZE_IMPL(Mutex)
 
 } // namespace Kernel

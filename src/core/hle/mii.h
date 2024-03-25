@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
 
@@ -175,10 +174,6 @@ struct MiiData {
     } mole_details;
 
     Nickname author_name; ///< Name of Mii's author (Encoded using UTF16)
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 static_assert(sizeof(MiiData) == 0x5C, "MiiData structure has incorrect size");
@@ -224,11 +219,6 @@ public:
     void FixChecksum() {
         crc16 = CalculateChecksum();
     }
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 #pragma pack(pop)
 static_assert(sizeof(ChecksummedMiiData) == 0x60,
@@ -237,6 +227,3 @@ static_assert(std::is_trivial_v<ChecksummedMiiData>, "ChecksummedMiiData must be
 static_assert(std::is_trivially_copyable_v<ChecksummedMiiData>,
               "ChecksummedMiiData must be trivially copyable.");
 } // namespace Mii
-
-BOOST_CLASS_EXPORT_KEY(Mii::MiiData)
-BOOST_CLASS_EXPORT_KEY(Mii::ChecksummedMiiData)

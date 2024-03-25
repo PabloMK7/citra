@@ -28,20 +28,6 @@ struct OutputVertex {
     Common::Vec3<f24> view;
     INSERT_PADDING_WORDS(1);
     Common::Vec2<f24> tc2;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const u32) {
-        ar& pos;
-        ar& quat;
-        ar& color;
-        ar& tc0;
-        ar& tc1;
-        ar& tc0_w;
-        ar& view;
-        ar& tc2;
-    }
-    friend class boost::serialization::access;
 };
 static_assert(std::is_trivial_v<OutputVertex>, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 24 * sizeof(f32), "OutputVertex has invalid size");

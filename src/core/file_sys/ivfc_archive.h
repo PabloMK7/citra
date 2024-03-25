@@ -8,8 +8,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_backend.h"
@@ -37,8 +35,6 @@ class IVFCDelayGenerator : public DelayGenerator {
         static constexpr u64 IPCDelayNanoseconds(9438006);
         return IPCDelayNanoseconds;
     }
-
-    SERIALIZE_DELAY_GENERATOR
 };
 
 class RomFSDelayGenerator : public DelayGenerator {
@@ -61,8 +57,6 @@ public:
         static constexpr u64 IPCDelayNanoseconds(9438006);
         return IPCDelayNanoseconds;
     }
-
-    SERIALIZE_DELAY_GENERATOR
 };
 
 class ExeFSDelayGenerator : public DelayGenerator {
@@ -85,8 +79,6 @@ public:
         static constexpr u64 IPCDelayNanoseconds(9438006);
         return IPCDelayNanoseconds;
     }
-
-    SERIALIZE_DELAY_GENERATOR
 };
 
 /**
@@ -141,15 +133,6 @@ public:
 
 private:
     std::shared_ptr<RomFSReader> romfs_file;
-
-    IVFCFile() = default;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<FileBackend>(*this);
-        ar& romfs_file;
-    }
-    friend class boost::serialization::access;
 };
 
 class IVFCDirectory : public DirectoryBackend {
@@ -181,23 +164,6 @@ private:
     std::vector<u8> romfs_file;
     u64 data_offset;
     u64 data_size;
-
-    IVFCFileInMemory() = default;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<FileBackend>(*this);
-        ar& romfs_file;
-        ar& data_offset;
-        ar& data_size;
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
-
-BOOST_CLASS_EXPORT_KEY(FileSys::IVFCFile)
-BOOST_CLASS_EXPORT_KEY(FileSys::IVFCFileInMemory)
-BOOST_CLASS_EXPORT_KEY(FileSys::IVFCDelayGenerator)
-BOOST_CLASS_EXPORT_KEY(FileSys::RomFSDelayGenerator)
-BOOST_CLASS_EXPORT_KEY(FileSys::ExeFSDelayGenerator)

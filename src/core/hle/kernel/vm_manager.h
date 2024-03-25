@@ -6,7 +6,6 @@
 
 #include <map>
 #include <memory>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
 #include "core/hle/kernel/memory.h"
@@ -73,11 +72,6 @@ struct VirtualMemoryArea {
 
     /// Tests if this area can be merged to the right with `next`.
     bool CanBeMergedWith(const VirtualMemoryArea& next) const;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -223,15 +217,5 @@ private:
 
     Memory::MemorySystem& memory;
     Kernel::Process& process;
-
-    // When locked, ChangeMemoryState calls will be ignored, other modification calls will hit an
-    // assert. VMManager locks itself after deserialization.
-    bool is_locked{};
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::VirtualMemoryArea)

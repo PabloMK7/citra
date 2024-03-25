@@ -7,11 +7,11 @@
 #include <array>
 #include <memory>
 #include <vector>
-#include "common/archives.h"
+
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
-#include "core/global.h"
+
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
@@ -1051,13 +1051,6 @@ public:
     protected:
         bool application_reset_prepared{};
         std::shared_ptr<Module> apt;
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            ar& application_reset_prepared;
-        }
-        friend class boost::serialization::access;
     };
 
 private:
@@ -1081,10 +1074,6 @@ private:
     std::shared_ptr<AppletManager> applet_manager;
 
     std::vector<u8> wireless_reboot_info;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 std::shared_ptr<Module> GetModule(Core::System& system);
@@ -1092,6 +1081,3 @@ std::shared_ptr<Module> GetModule(Core::System& system);
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT
-
-SERVICE_CONSTRUCT(Service::APT::Module)
-BOOST_CLASS_VERSION(Service::APT::Module, 1)

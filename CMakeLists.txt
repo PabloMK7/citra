@@ -404,7 +404,6 @@ add_subdirectory(externals)
 if (NOT USE_SYSTEM_BOOST)
     add_definitions( -DBOOST_ALL_NO_LIB )
     add_library(Boost::boost ALIAS boost)
-    add_library(Boost::serialization ALIAS boost_serialization)
     add_library(Boost::iostreams ALIAS boost_iostreams)
 endif()
 

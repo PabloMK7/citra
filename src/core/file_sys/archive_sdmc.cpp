@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <memory>
-#include "common/archives.h"
+
 #include "common/error.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -13,9 +13,6 @@
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/path_parser.h"
-
-SERIALIZE_EXPORT_IMPL(FileSys::SDMCArchive)
-SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_SDMC)
 
 namespace FileSys {
 
@@ -39,8 +36,6 @@ public:
         static constexpr u64 IPCDelayNanoseconds(269082);
         return IPCDelayNanoseconds;
     }
-
-    SERIALIZE_DELAY_GENERATOR
 };
 
 ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path,
@@ -404,5 +399,3 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path
     return ResultUnknown;
 }
 } // namespace FileSys
-
-SERIALIZE_EXPORT_IMPL(FileSys::SDMCDelayGenerator)

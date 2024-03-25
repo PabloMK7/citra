@@ -8,8 +8,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <boost/optional.hpp>
-#include <boost/serialization/version.hpp>
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/cheats/cheats.h"
@@ -126,7 +124,7 @@ public:
     [[nodiscard]] ResultStatus SingleStep();
 
     /// Shutdown the emulated system.
-    void Shutdown(bool is_deserializing = false);
+    void Shutdown();
 
     /// Shutdown and then load again
     void Reset();
@@ -339,9 +337,9 @@ public:
                (mic_permission_granted = mic_permission_func());
     }
 
-    void SaveState(u32 slot) const;
+    void SaveState(u32 slot) const {}
 
-    void LoadState(u32 slot);
+    void LoadState(u32 slot) {}
 
     /// Self delete ncch
     bool SetSelfDelete(const std::string& file) {
@@ -447,12 +445,8 @@ private:
     std::function<bool()> mic_permission_func;
     bool mic_permission_granted = false;
 
-    boost::optional<Service::APT::DeliverArg> restore_deliver_arg;
-    boost::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
-
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
+    std::optional<Service::APT::DeliverArg> restore_deliver_arg;
+    std::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
 };
 
 [[nodiscard]] inline ARM_Interface& GetRunningCore() {
@@ -468,5 +462,3 @@ private:
 }
 
 } // namespace Core
-
-BOOST_CLASS_VERSION(Core::System, 1)

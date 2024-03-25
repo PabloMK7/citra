@@ -9,7 +9,6 @@
 // bootrom. Because we're not emulating this, and essentially just "stubbing" the functionality, I'm
 // putting this as a subset of HLE for now.
 
-#include <boost/serialization/export.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/memory_ref.h"
@@ -68,12 +67,6 @@ public:
 
 private:
     ConfigMemDef config_mem;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace ConfigMem
-
-BOOST_CLASS_EXPORT_KEY(ConfigMem::Handler)

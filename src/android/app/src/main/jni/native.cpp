@@ -37,7 +37,6 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
-#include "core/savestate.h"
 #include "core/telemetry_session.h"
 #include "jni/android_common/android_common.h"
 #include "jni/applets/mii_selector.h"
@@ -430,7 +429,8 @@ jobject Java_org_citra_citra_1emu_NativeLibrary_downloadTitleFromNus([[maybe_unu
                                                                      [[maybe_unused]] jobject obj,
                                                                      jlong title) {
     const auto title_id = static_cast<u64>(title);
-    Service::AM::InstallStatus status = Service::AM::InstallFromNus(title_id);
+    auto& system = Core::System::GetInstance();
+    Service::AM::InstallStatus status = Service::AM::InstallFromNus(system, title_id);
     if (status != Service::AM::InstallStatus::Success) {
         return IDCache::GetJavaCiaInstallStatus(status);
     }
@@ -690,12 +690,7 @@ JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_insta
 
 jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getSavestateInfo(
     JNIEnv* env, [[maybe_unused]] jobject obj) {
-    const jclass date_class = env->FindClass("java/util/Date");
-    const auto date_constructor = env->GetMethodID(date_class, "<init>", "(J)V");
-
     const jclass savestate_info_class = IDCache::GetSavestateInfoClass();
-    const auto slot_field = env->GetFieldID(savestate_info_class, "slot", "I");
-    const auto date_field = env->GetFieldID(savestate_info_class, "time", "Ljava/util/Date;");
 
     const Core::System& system{Core::System::GetInstance()};
     if (!system.IsPoweredOn()) {
@@ -707,18 +702,7 @@ jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getSavestateInfo(
         return nullptr;
     }
 
-    const auto savestates = Core::ListSaveStates(title_id, system.Movie().GetCurrentMovieID());
-    const jobjectArray array =
-        env->NewObjectArray(static_cast<jsize>(savestates.size()), savestate_info_class, nullptr);
-    for (std::size_t i = 0; i < savestates.size(); ++i) {
-        const jobject object = env->AllocObject(savestate_info_class);
-        env->SetIntField(object, slot_field, static_cast<jint>(savestates[i].slot));
-        env->SetObjectField(object, date_field,
-                            env->NewObject(date_class, date_constructor,
-                                           static_cast<jlong>(savestates[i].time * 1000)));
-
-        env->SetObjectArrayElement(array, i, object);
-    }
+    const jobjectArray array = env->NewObjectArray(jsize(0), savestate_info_class, nullptr);
     return array;
 }
 

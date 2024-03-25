@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <boost/serialization/export.hpp>
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
@@ -52,13 +51,6 @@ private:
     std::string name; ///< Name of event (optional)
 
     friend class KernelSystem;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::Event)
-CONSTRUCT_KERNEL_OBJECT(Kernel::Event)

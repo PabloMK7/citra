@@ -44,10 +44,6 @@ void ARM_DynCom::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_tab
     ClearInstructionCache();
 }
 
-std::shared_ptr<Memory::PageTable> ARM_DynCom::GetPageTable() const {
-    return nullptr;
-}
-
 void ARM_DynCom::SetPC(u32 pc) {
     state->Reg[15] = pc;
 }

@@ -4,29 +4,21 @@
 
 #include <array>
 #include <cstring>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/binary_object.hpp>
 #include "audio_core/dsp_interface.h"
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/atomic_ops.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/settings.h"
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
-#include "core/global.h"
+
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/memory.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
-
-SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::FCRAM>)
-SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::VRAM>)
-SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::DSP>)
-SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::N3DS>)
 
 namespace Memory {
 
@@ -72,22 +64,10 @@ private:
     std::array<bool, LINEAR_HEAP_SIZE / CITRA_PAGE_SIZE> linear_heap{};
     std::array<bool, NEW_LINEAR_HEAP_SIZE / CITRA_PAGE_SIZE> new_linear_heap{};
     std::array<bool, PLUGIN_3GX_FB_SIZE / CITRA_PAGE_SIZE> plugin_fb{};
-
-    static_assert(sizeof(bool) == 1);
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& vram;
-        ar& linear_heap;
-        ar& new_linear_heap;
-        ar& plugin_fb;
-    }
 };
 
 class MemorySystem::Impl {
 public:
-    // Visual Studio would try to allocate these on compile time
-    // if they are std::array which would exceed the memory limit.
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
@@ -312,27 +292,6 @@ public:
             CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END, plg_ldr->GetPluginFBAddr());
         }
     }
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        bool save_n3ds_ram = Settings::values.is_new_3ds.GetValue();
-        ar& save_n3ds_ram;
-        ar& boost::serialization::make_binary_object(vram.get(), Memory::VRAM_SIZE);
-        ar& boost::serialization::make_binary_object(
-            fcram.get(), save_n3ds_ram ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE);
-        ar& boost::serialization::make_binary_object(
-            n3ds_extra_ram.get(), save_n3ds_ram ? Memory::N3DS_EXTRA_RAM_SIZE : 0);
-        ar& cache_marker;
-        ar& page_table_list;
-        // dsp is set from Core::System at startup
-        ar& current_page_table;
-        ar& fcram_mem;
-        ar& vram_mem;
-        ar& n3ds_extra_ram_mem;
-        ar& dsp_mem;
-    }
 };
 
 // We use this rather than BufferMem because we don't want new objects to be allocated when
@@ -340,7 +299,6 @@ private:
 template <Region R>
 class MemorySystem::BackingMemImpl : public BackingMem {
 public:
-    BackingMemImpl() : impl(*Core::Global<Core::System>().Memory().impl) {}
     explicit BackingMemImpl(MemorySystem::Impl& impl_) : impl(impl_) {}
     u8* GetPtr() override {
         return impl.GetPtr(R);
@@ -354,12 +312,6 @@ public:
 
 private:
     MemorySystem::Impl& impl;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<BackingMem>(*this);
-    }
-    friend class boost::serialization::access;
 };
 
 MemorySystem::Impl::Impl(Core::System& system_)
@@ -370,13 +322,6 @@ MemorySystem::Impl::Impl(Core::System& system_)
 
 MemorySystem::MemorySystem(Core::System& system) : impl(std::make_unique<Impl>(system)) {}
 MemorySystem::~MemorySystem() = default;
-
-template <class Archive>
-void MemorySystem::serialize(Archive& ar, const unsigned int file_version) {
-    ar&* impl.get();
-}
-
-SERIALIZE_IMPL(MemorySystem)
 
 void MemorySystem::SetCurrentPageTable(std::shared_ptr<PageTable> page_table) {
     impl->current_page_table = page_table;

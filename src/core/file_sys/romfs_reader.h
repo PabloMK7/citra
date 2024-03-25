@@ -2,9 +2,6 @@
 
 #include <array>
 #include <shared_mutex>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/alignment.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -23,11 +20,6 @@ public:
     virtual std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) = 0;
     virtual bool AllowsCachedReads() const = 0;
     virtual bool CacheReady(std::size_t file_offset, std::size_t length) = 0;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {}
-    friend class boost::serialization::access;
 };
 
 /**
@@ -82,21 +74,6 @@ private:
 
     std::vector<std::pair<std::size_t, std::size_t>> BreakupRead(std::size_t offset,
                                                                  std::size_t length);
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& boost::serialization::base_object<RomFSReader>(*this);
-        ar& is_encrypted;
-        ar& file;
-        ar& key;
-        ar& ctr;
-        ar& file_offset;
-        ar& crypto_offset;
-        ar& data_size;
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace FileSys
-
-BOOST_CLASS_EXPORT_KEY(FileSys::DirectRomFSReader)

@@ -23,12 +23,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/threadsafe_queue.h"
-#include "core/global.h"
 
 // The timing we get from the assembly is 268,111,855.956 Hz
 // It is possible that this number isn't just an integer because the compiler could have
@@ -150,29 +147,6 @@ public:
 
         bool operator>(const Event& right) const;
         bool operator<(const Event& right) const;
-
-    private:
-        template <class Archive>
-        void save(Archive& ar, const unsigned int) const {
-            ar& time;
-            ar& fifo_order;
-            ar& user_data;
-            std::string name = *(type->name);
-            ar << name;
-        }
-
-        template <class Archive>
-        void load(Archive& ar, const unsigned int) {
-            ar& time;
-            ar& fifo_order;
-            ar& user_data;
-            std::string name;
-            ar >> name;
-            type = Global<Timing>().RegisterEvent(name, nullptr);
-        }
-        friend class boost::serialization::access;
-
-        BOOST_SERIALIZATION_SPLIT_MEMBER()
     };
 
     // currently Service::HID::pad_update_ticks is the smallest interval for an event that gets
@@ -235,18 +209,6 @@ public:
         // Stores a scaling for the internal clockspeed. Changing this number results in
         // under/overclocking the guest cpu
         double cpu_clock_scale = 1.0;
-
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            MoveEvents();
-            ar& event_queue;
-            ar& event_fifo_id;
-            ar& slice_length;
-            ar& downcount;
-            ar& executed_ticks;
-            ar& idled_cycles;
-        }
-        friend class boost::serialization::access;
     };
 
     explicit Timing(std::size_t num_cores, u32 cpu_clock_percentage, s64 override_base_ticks = -1);
@@ -285,11 +247,6 @@ public:
 
     std::shared_ptr<Timer> GetTimer(std::size_t cpu_id);
 
-    // Used after deserializing to unprotect the event queue.
-    void UnlockEventQueue() {
-        event_queue_locked = false;
-    }
-
     /// Generates a random tick count to seed the system tick timer with.
     static s64 GenerateBaseTicks();
 
@@ -300,23 +257,6 @@ private:
 
     std::vector<std::shared_ptr<Timer>> timers;
     Timer* current_timer = nullptr;
-
-    // When true, the event queue can't be modified. Used while deserializing to workaround
-    // destructor side effects.
-    bool event_queue_locked = false;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        // event_types set during initialization of other things
-        ar& timers;
-        ar& current_timer;
-        if (Archive::is_loading::value) {
-            event_queue_locked = true;
-        }
-    }
-    friend class boost::serialization::access;
 };
 
 } // namespace Core
-
-BOOST_CLASS_VERSION(Core::Timing, 1)

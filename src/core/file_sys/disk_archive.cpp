@@ -4,15 +4,12 @@
 
 #include <algorithm>
 #include <memory>
-#include "common/archives.h"
+
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"
-
-SERIALIZE_EXPORT_IMPL(FileSys::DiskFile)
-SERIALIZE_EXPORT_IMPL(FileSys::DiskDirectory)
 
 namespace FileSys {
 

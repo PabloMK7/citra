@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/arch.h"
-#include "common/archives.h"
+
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/settings.h"
@@ -610,18 +610,5 @@ void PicaCore::LoadVertices(bool is_indexed) {
         geometry_pipeline.SubmitVertex(vs_output);
     }
 }
-
-template <class Archive>
-void PicaCore::CommandList::serialize(Archive& ar, const u32 file_version) {
-    ar& addr;
-    ar& length;
-    ar& current_index;
-    if (Archive::is_loading::value) {
-        const u8* ptr = Core::System::GetInstance().Memory().GetPhysicalPointer(addr);
-        head = reinterpret_cast<const u32*>(ptr);
-    }
-}
-
-SERIALIZE_IMPL(PicaCore::CommandList)
 
 } // namespace Pica

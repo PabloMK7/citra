@@ -15,7 +15,6 @@
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/hotkeys.h"
 #include "core/core.h"
-#include "core/savestate.h"
 
 #ifdef __unix__
 #include <QDBusObjectPath>
@@ -367,8 +366,9 @@ private:
     bool defer_update_prompt = false;
 
     QAction* actions_recent_files[max_recent_files_item];
-    std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;
-    std::array<QAction*, Core::SaveStateSlotCount> actions_save_state;
+    static constexpr size_t SaveStateSlotCount = 8;
+    std::array<QAction*, SaveStateSlotCount> actions_load_state;
+    std::array<QAction*, SaveStateSlotCount> actions_save_state;
 
     u32 oldest_slot;
     u64 oldest_slot_time;

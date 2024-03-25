@@ -5,8 +5,7 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/export.hpp>
-#include "core/global.h"
+
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/boss/online_service.h"
@@ -29,11 +28,6 @@ public:
 
     struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
         std::shared_ptr<OnlineService> online_service{};
-
-    private:
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int);
-        friend class boost::serialization::access;
     };
 
     class Interface : public ServiceFramework<Interface, SessionData> {
@@ -984,16 +978,8 @@ private:
     u8 ns_data_new_flag;
     u8 ns_data_new_flag_privileged;
     u8 output_flag;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::BOSS
-
-SERVICE_CONSTRUCT(Service::BOSS::Module)
-BOOST_CLASS_EXPORT_KEY(Service::BOSS::Module)
-BOOST_CLASS_EXPORT_KEY(Service::BOSS::Module::SessionData)

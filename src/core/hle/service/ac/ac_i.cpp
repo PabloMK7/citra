@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "core/hle/service/ac/ac_i.h"
 
 namespace Service::AC {
@@ -37,5 +36,3 @@ AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i"
 }
 
 } // namespace Service::AC
-
-SERIALIZE_EXPORT_IMPL(Service::AC::AC_I)

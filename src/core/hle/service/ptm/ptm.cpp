@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -18,9 +17,6 @@
 #include "core/hle/service/ptm/ptm_sets.h"
 #include "core/hle/service/ptm/ptm_sysm.h"
 #include "core/hle/service/ptm/ptm_u.h"
-
-SERIALIZE_EXPORT_IMPL(Service::PTM::Module)
-SERVICE_CONSTRUCT_IMPL(Service::PTM::Module)
 
 namespace Service::PTM {
 
@@ -221,14 +217,6 @@ Module::Module(Core::System& system_) : system(system_) {
         WriteGameCoinData(default_game_coin);
     }
 }
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int) {
-    ar& shell_open;
-    ar& battery_is_charging;
-    ar& pedometer_is_counting;
-}
-SERIALIZE_IMPL(Module)
 
 u16 Module::GetPlayCoins() {
     return ReadGameCoinData().total_coins;

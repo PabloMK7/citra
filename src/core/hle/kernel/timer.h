@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
@@ -34,10 +33,6 @@ private:
 
     friend class Timer;
     friend class KernelSystem;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 class ResourceLimit;
@@ -112,13 +107,6 @@ private:
     TimerManager& timer_manager;
 
     friend class KernelSystem;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::Timer)
-CONSTRUCT_KERNEL_OBJECT(Kernel::Timer)

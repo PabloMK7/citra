@@ -2,9 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
-#include "common/archives.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -36,22 +33,7 @@
 #include "core/loader/loader.h"
 #include "core/telemetry_session.h"
 
-SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
-
 namespace Service::APT {
-
-template <class Archive>
-void Module::serialize(Archive& ar, const unsigned int file_version) {
-    ar& shared_font_mem;
-    ar& shared_font_loaded;
-    ar& shared_font_relocated;
-    ar& cpu_percent;
-    ar& screen_capture_post_permission;
-    ar& applet_manager;
-    ar& wireless_reboot_info;
-}
-
-SERIALIZE_IMPL(Module)
 
 Module::NSInterface::NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), apt(std::move(apt)) {}

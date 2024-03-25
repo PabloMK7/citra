@@ -2,11 +2,9 @@
 #include <vector>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
-#include "common/archives.h"
+
 #include "common/logging/log.h"
 #include "core/file_sys/romfs_reader.h"
-
-SERIALIZE_EXPORT_IMPL(FileSys::DirectRomFSReader)
 
 namespace FileSys {
 

@@ -10,7 +10,6 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/container/flat_set.hpp>
-#include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/thread_queue_list.h"
 #include "core/arm/arm_interface.h"
@@ -66,11 +65,6 @@ public:
     virtual ~WakeupCallback() = default;
     virtual void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                         std::shared_ptr<WaitObject> object) = 0;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 class ThreadManager {
@@ -158,10 +152,6 @@ private:
 
     friend class Thread;
     friend class KernelSystem;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 class Thread final : public WaitObject {
@@ -325,10 +315,6 @@ public:
 
 private:
     ThreadManager& thread_manager;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
 };
 
 /**
@@ -343,22 +329,3 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
                                         std::shared_ptr<Process> owner_process);
 
 } // namespace Kernel
-
-BOOST_CLASS_EXPORT_KEY(Kernel::Thread)
-BOOST_CLASS_EXPORT_KEY(Kernel::WakeupCallback)
-
-namespace boost::serialization {
-
-template <class Archive>
-void save_construct_data(Archive& ar, const Kernel::Thread* t, const unsigned int) {
-    ar << t->core_id;
-}
-
-template <class Archive>
-void load_construct_data(Archive& ar, Kernel::Thread* t, const unsigned int) {
-    u32 core_id;
-    ar >> core_id;
-    ::new (t) Kernel::Thread(Core::Global<Kernel::KernelSystem>(), core_id);
-}
-
-} // namespace boost::serialization

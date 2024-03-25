@@ -3,10 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <span>
-#include <boost/serialization/weak_ptr.hpp>
 #include "audio_core/input.h"
 #include "audio_core/input_details.h"
-#include "common/archives.h"
+
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -18,16 +17,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic/mic_u.h"
 
-SERVICE_CONSTRUCT_IMPL(Service::MIC::MIC_U)
-SERIALIZE_EXPORT_IMPL(Service::MIC::MIC_U)
-
 namespace Service::MIC {
-
-template <class Archive>
-void MIC_U::serialize(Archive& ar, const unsigned int) {
-    ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-    ar&* impl.get();
-}
 
 /// Microphone audio encodings.
 enum class Encoding : u8 {
@@ -113,25 +103,6 @@ struct State {
         std::memcpy(sharedmem_buffer + (sharedmem_size - sizeof(u32)), reinterpret_cast<u8*>(&off),
                     sizeof(u32));
     }
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        std::shared_ptr<Kernel::SharedMemory> _memory_ref = memory_ref.lock();
-        ar& _memory_ref;
-        memory_ref = _memory_ref;
-        ar& sharedmem_size;
-        ar& size;
-        ar& offset;
-        ar& initial_offset;
-        ar& looped_buffer;
-        ar& sample_size;
-        ar& gain;
-        ar& power;
-        ar& sample_rate;
-        sharedmem_buffer = _memory_ref ? _memory_ref->GetPointer() : nullptr;
-    }
-    friend class boost::serialization::access;
 };
 
 struct MIC_U::Impl {
@@ -396,33 +367,6 @@ struct MIC_U::Impl {
     Core::Timing& timing;
     State state{};
     Encoding encoding{};
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {
-        ar& change_mic_impl_requested;
-        ar& buffer_full_event;
-        // buffer_write_event set in constructor
-        ar& shared_memory;
-        ar& client_version;
-        ar& allow_shell_closed;
-        ar& clamp;
-        // mic interface set in constructor
-        ar& state;
-        // Maintain the internal mic state
-        ar& encoding;
-        bool is_sampling = mic && mic->IsSampling();
-        ar& is_sampling;
-        if (Archive::is_loading::value) {
-            if (is_sampling) {
-                CreateMic();
-                StartSampling();
-            } else if (mic) {
-                mic->StopSampling();
-            }
-        }
-    }
-    friend class boost::serialization::access;
 };
 
 void MIC_U::MapSharedMem(Kernel::HLERequestContext& ctx) {

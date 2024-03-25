@@ -4,7 +4,7 @@
 
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
-#include "common/archives.h"
+
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -12,8 +12,6 @@
 #include "core/hle/service/ssl/ssl_c.h"
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
-
-SERIALIZE_EXPORT_IMPL(Service::PS::PS_PS)
 
 namespace Service::PS {
 

@@ -679,10 +679,6 @@ private:
     LocalFriendCodeSeedB local_friend_code_seed_b;
     bool preferred_region_chosen = false;
     MCUData mcu_data{};
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 std::shared_ptr<Module> GetModule(Core::System& system);
@@ -693,6 +689,3 @@ void InstallInterfaces(Core::System& system);
 std::string GetConsoleIdHash(Core::System& system);
 
 } // namespace Service::CFG
-
-SERVICE_CONSTRUCT(Service::CFG::Module)
-BOOST_CLASS_EXPORT_KEY(Service::CFG::Module)

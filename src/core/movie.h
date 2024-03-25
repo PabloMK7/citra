@@ -6,7 +6,6 @@
 
 #include <functional>
 #include <span>
-#include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 
 namespace Service {
@@ -186,11 +185,5 @@ private:
     bool read_only = true;
 
     std::function<void()> playback_completion_callback = [] {};
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version);
-    friend class boost::serialization::access;
 };
 } // namespace Core
-
-BOOST_CLASS_VERSION(Core::Movie, 1)

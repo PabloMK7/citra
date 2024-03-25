@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "core/hle/service/am/am_sys.h"
 
 namespace Service::AM {
@@ -74,5 +73,3 @@ AM_SYS::AM_SYS(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
 }
 
 } // namespace Service::AM
-
-SERIALIZE_EXPORT_IMPL(Service::AM::AM_SYS)

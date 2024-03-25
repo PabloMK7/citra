@@ -6,7 +6,6 @@
 
 #include <functional>
 #include <span>
-#include <boost/serialization/base_object.hpp>
 
 #include "video_core/pica/output_vertex.h"
 
@@ -52,17 +51,6 @@ public:
     alignas(16) std::array<Common::Vec4<f24>, 16> temporary;
     alignas(16) std::array<Common::Vec4<f24>, 16> output;
     GeometryEmitter* emitter_ptr;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version) {
-        ar& input;
-        ar& temporary;
-        ar& output;
-        ar& conditional_code;
-        ar& address_registers;
-    }
 };
 
 struct Handlers {
@@ -81,17 +69,6 @@ public:
     bool winding;
     u32 output_mask;
     Handlers* handlers;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version) {
-        ar& buffer;
-        ar& vertex_id;
-        ar& prim_emit;
-        ar& winding;
-        ar& output_mask;
-    }
 };
 
 /**
@@ -107,14 +84,6 @@ struct GeometryShaderUnit : public ShaderUnit {
     void ConfigOutput(const ShaderRegs& config);
 
     GeometryEmitter emitter;
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, const u32 file_version) {
-        ar& boost::serialization::base_object<ShaderUnit>(*this);
-        ar& emitter;
-    }
 };
 
 } // namespace Pica

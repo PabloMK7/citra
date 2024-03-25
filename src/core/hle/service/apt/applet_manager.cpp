@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/archives.h"
 #include "common/file_util.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -19,8 +18,6 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
 #include "video_core/utils.h"
-
-SERVICE_CONSTRUCT_IMPL(Service::APT::AppletManager)
 
 namespace Service::APT {
 

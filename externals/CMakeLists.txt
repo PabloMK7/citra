@@ -20,11 +20,6 @@ if (NOT USE_SYSTEM_BOOST)
     add_library(boost INTERFACE)
     target_include_directories(boost SYSTEM INTERFACE ${Boost_INCLUDE_DIR})
 
-    # Boost::serialization
-    file(GLOB boost_serialization_SRC "${CMAKE_SOURCE_DIR}/externals/boost/libs/serialization/src/*.cpp")
-    add_library(boost_serialization STATIC ${boost_serialization_SRC})
-    target_link_libraries(boost_serialization PUBLIC boost)
-
     # Boost::iostreams
     add_library(
         boost_iostreams

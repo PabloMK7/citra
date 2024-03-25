@@ -9,7 +9,7 @@
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include <fmt/format.h>
-#include "common/archives.h"
+
 #include "common/assert.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
@@ -22,9 +22,6 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/http/http_c.h"
 #include "core/hw/aes/key.h"
-
-SERIALIZE_EXPORT_IMPL(Service::HTTP::HTTP_C)
-SERIALIZE_EXPORT_IMPL(Service::HTTP::SessionData)
 
 namespace Service::HTTP {
 

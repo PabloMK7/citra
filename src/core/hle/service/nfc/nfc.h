@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <boost/serialization/binary_object.hpp>
 #include "common/common_types.h"
 #include "core/hle/service/nfc/nfc_device.h"
 #include "core/hle/service/service.h"
@@ -373,15 +372,8 @@ private:
     CommunicationMode nfc_mode = CommunicationMode::NotInitialized;
 
     std::shared_ptr<NfcDevice> device = nullptr;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NFC
-
-SERVICE_CONSTRUCT(Service::NFC::Module)
-BOOST_CLASS_EXPORT_KEY(Service::NFC::Module)
