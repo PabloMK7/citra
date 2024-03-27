@@ -119,56 +119,6 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Telemetry</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QCheckBox" name="toggle_telemetry">
-          <property name="text">
-           <string>Share anonymous usage data with the Citra team</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="telemetry_learn_more">
-          <property name="text">
-           <string>Learn more</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QGridLayout" name="gridLayoutTelemetryId">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_telemetry_id">
-            <property name="text">
-             <string>Telemetry ID:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="button_regenerate_telemetry_id">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
-            </property>
-            <property name="text">
-             <string>Regenerate</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
     </layout>
    </item>
    <item>
