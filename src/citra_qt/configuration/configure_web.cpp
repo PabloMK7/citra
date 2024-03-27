@@ -7,7 +7,6 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/configuration/configure_web.h"
 #include "citra_qt/uisettings.h"
-#include "core/telemetry_session.h"
 #include "network/network_settings.h"
 #include "ui_configure_web.h"
 
@@ -39,8 +38,6 @@ static std::string TokenFromDisplayToken(const std::string& display_token) {
 ConfigureWeb::ConfigureWeb(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureWeb>()) {
     ui->setupUi(this);
-    connect(ui->button_regenerate_telemetry_id, &QPushButton::clicked, this,
-            &ConfigureWeb::RefreshTelemetryID);
     connect(ui->button_verify_login, &QPushButton::clicked, this, &ConfigureWeb::VerifyLogin);
     connect(&verify_watcher, &QFutureWatcher<bool>::finished, this, &ConfigureWeb::OnLoginVerified);
 
@@ -54,12 +51,6 @@ ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::SetConfiguration() {
     ui->web_credentials_disclaimer->setWordWrap(true);
-    ui->telemetry_learn_more->setOpenExternalLinks(true);
-    ui->telemetry_learn_more->setText(tr("<a "
-                                         "href='https://citra-emu.org/entry/"
-                                         "telemetry-and-why-thats-a-good-thing/'><span "
-                                         "style=\"text-decoration: underline; "
-                                         "color:#039be5;\">Learn more</span></a>"));
 
     ui->web_signup_link->setOpenExternalLinks(true);
     ui->web_signup_link->setText(
@@ -69,8 +60,6 @@ void ConfigureWeb::SetConfiguration() {
     ui->web_token_info_link->setText(
         tr("<a href='https://citra-emu.org/wiki/citra-web-service/'><span style=\"text-decoration: "
            "underline; color:#039be5;\">What is my token?</span></a>"));
-
-    ui->toggle_telemetry->setChecked(NetSettings::values.enable_telemetry);
 
     if (NetSettings::values.citra_username.empty()) {
         ui->username->setText(tr("Unspecified"));
@@ -83,15 +72,11 @@ void ConfigureWeb::SetConfiguration() {
 
     // Connect after setting the values, to avoid calling OnLoginChanged now
     connect(ui->edit_token, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
-    ui->label_telemetry_id->setText(
-        tr("Telemetry ID: 0x%1").arg(QString::number(Core::GetTelemetryId(), 16).toUpper()));
     user_verified = true;
-
     ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
 }
 
 void ConfigureWeb::ApplyConfiguration() {
-    NetSettings::values.enable_telemetry = ui->toggle_telemetry->isChecked();
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
     if (user_verified) {
         NetSettings::values.citra_username =
@@ -103,12 +88,6 @@ void ConfigureWeb::ApplyConfiguration() {
             this, tr("Token not verified"),
             tr("Token was not verified. The change to your token has not been saved."));
     }
-}
-
-void ConfigureWeb::RefreshTelemetryID() {
-    const u64 new_telemetry_id{Core::RegenerateTelemetryId()};
-    ui->label_telemetry_id->setText(
-        tr("Telemetry ID: 0x%1").arg(QString::number(new_telemetry_id, 16).toUpper()));
 }
 
 void ConfigureWeb::OnLoginChanged() {
@@ -131,7 +110,12 @@ void ConfigureWeb::VerifyLogin() {
     verify_watcher.setFuture(QtConcurrent::run(
         [username = UsernameFromDisplayToken(ui->edit_token->text().toStdString()),
          token = TokenFromDisplayToken(ui->edit_token->text().toStdString())] {
-            return Core::VerifyLogin(username, token);
+#ifdef ENABLE_WEB_SERVICE
+            return WebService::VerifyLogin(Settings::values.web_api_url.GetValue(), username,
+                                           token);
+#else
+            return false;
+#endif
         }));
 }
 

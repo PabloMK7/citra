@@ -25,7 +25,6 @@ public:
     void SetWebServiceConfigEnabled(bool enabled);
 
 private:
-    void RefreshTelemetryID();
     void OnLoginChanged();
     void VerifyLogin();
     void OnLoginVerified();

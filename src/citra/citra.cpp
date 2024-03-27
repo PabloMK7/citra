@@ -39,7 +39,6 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/movie.h"
-#include "core/telemetry_session.h"
 #include "input_common/main.h"
 #include "network/network.h"
 #include "video_core/gpu.h"
@@ -435,8 +434,6 @@ int main(int argc, char** argv) {
         LOG_ERROR(Frontend, "Error while loading ROM: {}", system.GetStatusDetails());
         break;
     }
-
-    system.TelemetrySession().AddField(Common::Telemetry::FieldType::App, "Frontend", "SDL");
 
     if (use_multiplayer) {
         if (auto member = Network::GetRoomMember().lock()) {
