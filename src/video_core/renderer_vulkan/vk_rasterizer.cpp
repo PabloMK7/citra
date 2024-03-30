@@ -61,8 +61,8 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore&
                                    Scheduler& scheduler, DescriptorPool& pool,
                                    RenderpassCache& renderpass_cache, u32 image_count)
     : RasterizerAccelerated{memory, pica}, instance{instance}, scheduler{scheduler},
-      renderpass_cache{renderpass_cache}, pipeline_cache{instance, scheduler, renderpass_cache,
-                                                         pool},
+      renderpass_cache{renderpass_cache},
+      pipeline_cache{instance, scheduler, renderpass_cache, pool},
       runtime{instance,   scheduler, renderpass_cache, pool, pipeline_cache.TextureProvider(),
               image_count},
       res_cache{memory, custom_tex_manager, runtime, regs, renderer},
