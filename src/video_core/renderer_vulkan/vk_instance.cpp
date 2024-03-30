@@ -161,6 +161,7 @@ Instance::Instance(Frontend::EmuWindow& window, u32 physical_device_index)
 
     CreateDevice();
     CreateFormatTable();
+    CollectToolingInfo();
     CreateCustomFormatTable();
     CreateAttribTable();
 }
@@ -638,6 +639,37 @@ void Instance::CreateAllocator() {
     const VkResult result = vmaCreateAllocator(&allocator_info, &allocator);
     if (result != VK_SUCCESS) {
         UNREACHABLE_MSG("Failed to initialize VMA with error {}", result);
+    }
+}
+
+void Instance::CollectToolingInfo() {
+    if (!tooling_info) {
+        return;
+    }
+    const vk::StructureChain property_chain =
+        physical_device
+            .getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDriverProperties>();
+    const vk::PhysicalDeviceDriverProperties driver =
+        property_chain.get<vk::PhysicalDeviceDriverProperties>();
+
+    driver_id = driver.driverID;
+    vendor_name = driver.driverName.data();
+
+    const std::string model_name{GetModelName()};
+    const std::string driver_version = GetDriverVersionName();
+    const std::string driver_name = fmt::format("{} {}", vendor_name, driver_version);
+    const std::string api_version = GetReadableVersion(properties.apiVersion);
+    const std::string extensions = fmt::format("{}", fmt::join(available_extensions, ", "));
+
+    LOG_INFO(Render_Vulkan, "VK_DRIVER: {}", driver_name);
+    LOG_INFO(Render_Vulkan, "VK_DEVICE: {}", model_name);
+    LOG_INFO(Render_Vulkan, "VK_VERSION: {}", api_version);
+    const auto tools = physical_device.getToolPropertiesEXT();
+    for (const vk::PhysicalDeviceToolProperties& tool : tools) {
+        const std::string_view name = tool.name;
+        LOG_INFO(Render_Vulkan, "Attached debugging tool: {}", name);
+        has_renderdoc = has_renderdoc || name == "RenderDoc";
+        has_nsight_graphics = has_nsight_graphics || name == "NVIDIA Nsight Graphics";
     }
 }
 

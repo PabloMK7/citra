@@ -284,6 +284,9 @@ private:
 
     /// Creates the VMA allocator handle
     void CreateAllocator();
+	
+	//Collects logging gpu info
+	void CollectToolingInfo();
 
 private:
     std::shared_ptr<Common::DynamicLibrary> library;
