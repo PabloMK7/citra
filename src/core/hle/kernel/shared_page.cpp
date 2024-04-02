@@ -11,7 +11,6 @@
 #include "core/core_timing.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/ptm/ptm.h"
-#include "core/movie.h"
 
 namespace SharedPage {
 

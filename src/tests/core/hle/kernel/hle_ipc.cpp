@@ -143,74 +143,70 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     }
 
     SECTION("translates StaticBuffer descriptors") {
-        auto mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-        MemoryRef buffer{mem};
-        std::fill(buffer.GetPtr(), buffer.GetPtr() + buffer.GetSize(), 0xAB);
+        auto mem = std::vector<u8>(Memory::CITRA_PAGE_SIZE);
+        std::fill(mem.begin(), mem.end(), 0xAB);
 
         VAddr target_address = 0x10000000;
         auto result = process->vm_manager.MapBackingMemory(
-            target_address, buffer, static_cast<u32>(buffer.GetSize()), MemoryState::Private);
+            target_address, mem.data(), static_cast<u32>(mem.size()), MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
-            IPC::StaticBufferDesc(buffer.GetSize(), 0),
+            IPC::StaticBufferDesc(mem.size(), 0),
             target_address,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, process);
 
-        CHECK(context.GetStaticBuffer(0) == mem->Vector());
+        CHECK(context.GetStaticBuffer(0) == mem);
 
-        REQUIRE(process->vm_manager.UnmapRange(
-                    target_address, static_cast<u32>(buffer.GetSize())) == ResultSuccess);
+        REQUIRE(process->vm_manager.UnmapRange(target_address, static_cast<u32>(mem.size())) ==
+                ResultSuccess);
     }
 
     SECTION("translates MappedBuffer descriptors") {
-        auto mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-        MemoryRef buffer{mem};
-        std::fill(buffer.GetPtr(), buffer.GetPtr() + buffer.GetSize(), 0xCD);
+        std::vector<u8> mem(Memory::CITRA_PAGE_SIZE);
+        std::fill(mem.begin(), mem.end(), 0xCD);
 
         VAddr target_address = 0x10000000;
         auto result = process->vm_manager.MapBackingMemory(
-            target_address, buffer, static_cast<u32>(buffer.GetSize()), MemoryState::Private);
+            target_address, mem.data(), static_cast<u32>(mem.size()), MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
-            IPC::MappedBufferDesc(buffer.GetSize(), IPC::R),
+            IPC::MappedBufferDesc(mem.size(), IPC::R),
             target_address,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, process);
 
-        std::vector<u8> other_buffer(buffer.GetSize());
-        context.GetMappedBuffer(0).Read(other_buffer.data(), 0, buffer.GetSize());
+        std::vector<u8> other_buffer(mem.size());
+        context.GetMappedBuffer(0).Read(other_buffer.data(), 0, mem.size());
 
-        CHECK(other_buffer == mem->Vector());
+        CHECK(other_buffer == mem);
 
-        REQUIRE(process->vm_manager.UnmapRange(
-                    target_address, static_cast<u32>(buffer.GetSize())) == ResultSuccess);
+        REQUIRE(process->vm_manager.UnmapRange(target_address, static_cast<u32>(mem.size())) ==
+                ResultSuccess);
     }
 
     SECTION("translates mixed params") {
-        auto mem_static = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-        MemoryRef buffer_static{mem_static};
-        std::fill(buffer_static.GetPtr(), buffer_static.GetPtr() + buffer_static.GetSize(), 0xCE);
+        std::vector<u8> buffer_static(Memory::CITRA_PAGE_SIZE);
+        std::fill(buffer_static.begin(), buffer_static.end(), 0xCE);
 
-        auto mem_mapped = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-        MemoryRef buffer_mapped{mem_mapped};
-        std::fill(buffer_mapped.GetPtr(), buffer_mapped.GetPtr() + buffer_mapped.GetSize(), 0xDF);
+        std::vector<u8> buffer_mapped(Memory::CITRA_PAGE_SIZE);
+        std::fill(buffer_mapped.begin(), buffer_mapped.end(), 0xDF);
 
         VAddr target_address_static = 0x10000000;
         auto result = process->vm_manager.MapBackingMemory(
-            target_address_static, buffer_static, static_cast<u32>(buffer_static.GetSize()),
+            target_address_static, buffer_static.data(), static_cast<u32>(buffer_static.size()),
             MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         VAddr target_address_mapped = 0x20000000;
-        result = process->vm_manager.MapBackingMemory(target_address_mapped, buffer_mapped,
-                                                      static_cast<u32>(buffer_mapped.GetSize()),
+        result = process->vm_manager.MapBackingMemory(target_address_mapped, buffer_mapped.data(),
+                                                      static_cast<u32>(buffer_mapped.size()),
                                                       MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
@@ -225,9 +221,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             a_handle,
             IPC::CallingPidDesc(),
             0,
-            IPC::StaticBufferDesc(buffer_static.GetSize(), 0),
+            IPC::StaticBufferDesc(buffer_static.size(), 0),
             target_address_static,
-            IPC::MappedBufferDesc(buffer_mapped.GetSize(), IPC::R),
+            IPC::MappedBufferDesc(buffer_mapped.size(), IPC::R),
             target_address_mapped,
         };
 
@@ -238,16 +234,16 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         CHECK(output[2] == 0xABCDEF00);
         CHECK(context.GetIncomingHandle(output[4]) == a);
         CHECK(output[6] == process->process_id);
-        CHECK(context.GetStaticBuffer(0) == mem_static->Vector());
-        std::vector<u8> other_buffer(buffer_mapped.GetSize());
-        context.GetMappedBuffer(0).Read(other_buffer.data(), 0, buffer_mapped.GetSize());
-        CHECK(other_buffer == mem_mapped->Vector());
+        CHECK(context.GetStaticBuffer(0) == buffer_static);
+        std::vector<u8> other_buffer(buffer_mapped.size());
+        context.GetMappedBuffer(0).Read(other_buffer.data(), 0, buffer_mapped.size());
+        CHECK(other_buffer == buffer_mapped);
 
         REQUIRE(process->vm_manager.UnmapRange(target_address_static,
-                                               static_cast<u32>(buffer_static.GetSize())) ==
+                                               static_cast<u32>(buffer_static.size())) ==
                 ResultSuccess);
         REQUIRE(process->vm_manager.UnmapRange(target_address_mapped,
-                                               static_cast<u32>(buffer_mapped.GetSize())) ==
+                                               static_cast<u32>(buffer_mapped.size())) ==
                 ResultSuccess);
     }
 }
@@ -337,13 +333,12 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
 
         context.AddStaticBuffer(0, input_buffer);
 
-        auto output_mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-        MemoryRef output_buffer{output_mem};
+        std::vector<u8> output_buffer(Memory::CITRA_PAGE_SIZE);
 
         VAddr target_address = 0x10000000;
-        auto result = process->vm_manager.MapBackingMemory(
-            target_address, output_buffer, static_cast<u32>(output_buffer.GetSize()),
-            MemoryState::Private);
+        auto result = process->vm_manager.MapBackingMemory(target_address, output_buffer.data(),
+                                                           static_cast<u32>(output_buffer.size()),
+                                                           MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         input[0] = IPC::MakeHeader(0, 0, 2);
@@ -354,33 +349,31 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         // target address
         std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2> output_cmdbuff;
         // Set up the output StaticBuffer
-        output_cmdbuff[IPC::COMMAND_BUFFER_LENGTH] =
-            IPC::StaticBufferDesc(output_buffer.GetSize(), 0);
+        output_cmdbuff[IPC::COMMAND_BUFFER_LENGTH] = IPC::StaticBufferDesc(output_buffer.size(), 0);
         output_cmdbuff[IPC::COMMAND_BUFFER_LENGTH + 1] = target_address;
 
         context.WriteToOutgoingCommandBuffer(output_cmdbuff.data(), *process);
 
-        CHECK(output_mem->Vector() == input_buffer);
+        CHECK(output_buffer == input_buffer);
         REQUIRE(process->vm_manager.UnmapRange(
-                    target_address, static_cast<u32>(output_buffer.GetSize())) == ResultSuccess);
+                    target_address, static_cast<u32>(output_buffer.size())) == ResultSuccess);
     }
 
     SECTION("translates StaticBuffer descriptors") {
         std::vector<u8> input_buffer(Memory::CITRA_PAGE_SIZE);
         std::fill(input_buffer.begin(), input_buffer.end(), 0xAB);
 
-        auto output_mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-        MemoryRef output_buffer{output_mem};
+        std::vector<u8> output_buffer(Memory::CITRA_PAGE_SIZE);
 
         VAddr target_address = 0x10000000;
-        auto result = process->vm_manager.MapBackingMemory(
-            target_address, output_buffer, static_cast<u32>(output_buffer.GetSize()),
-            MemoryState::Private);
+        auto result = process->vm_manager.MapBackingMemory(target_address, output_buffer.data(),
+                                                           static_cast<u32>(output_buffer.size()),
+                                                           MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         const u32_le input_cmdbuff[]{
             IPC::MakeHeader(0, 0, 2),
-            IPC::MappedBufferDesc(output_buffer.GetSize(), IPC::W),
+            IPC::MappedBufferDesc(output_buffer.size(), IPC::W),
             target_address,
         };
 
@@ -389,16 +382,16 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         context.GetMappedBuffer(0).Write(input_buffer.data(), 0, input_buffer.size());
 
         input[0] = IPC::MakeHeader(0, 0, 2);
-        input[1] = IPC::MappedBufferDesc(output_buffer.GetSize(), IPC::W);
+        input[1] = IPC::MappedBufferDesc(output_buffer.size(), IPC::W);
         input[2] = 0;
 
         context.WriteToOutgoingCommandBuffer(output, *process);
 
-        CHECK(output[1] == IPC::MappedBufferDesc(output_buffer.GetSize(), IPC::W));
+        CHECK(output[1] == IPC::MappedBufferDesc(output_buffer.size(), IPC::W));
         CHECK(output[2] == target_address);
-        CHECK(output_mem->Vector() == input_buffer);
+        CHECK(output_buffer == input_buffer);
         REQUIRE(process->vm_manager.UnmapRange(
-                    target_address, static_cast<u32>(output_buffer.GetSize())) == ResultSuccess);
+                    target_address, static_cast<u32>(output_buffer.size())) == ResultSuccess);
     }
 }
 

@@ -4,19 +4,11 @@
 
 #pragma once
 
-/**
- * The shared page stores various runtime configuration settings. This memory page is
- * read-only for user processes (there is a bit in the header that grants the process
- * write access, according to 3dbrew; this is not emulated)
- */
-
 #include <chrono>
 #include <ctime>
-#include <memory>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/memory_ref.h"
 #include "common/swap.h"
 #include "core/memory.h"
 
@@ -66,6 +58,11 @@ enum class WifiState : u8 {
     Disabled = 7,
 };
 
+/**
+ * The shared page stores various runtime configuration settings. This memory page is
+ * read-only for user processes (there is a bit in the header that grants the process
+ * write access, according to 3dbrew; this is not emulated)
+ */
 struct SharedPageDef {
     // Most of these names are taken from the 3dbrew page linked above.
     u32_le date_time_counter; // 0
@@ -91,7 +88,7 @@ struct SharedPageDef {
 static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
               "Shared page structure size is wrong");
 
-class Handler : public BackingMem {
+class Handler {
 public:
     Handler(Core::Timing& timing, u64 override_init_time);
 
@@ -111,15 +108,15 @@ public:
 
     SharedPageDef& GetSharedPage();
 
-    u8* GetPtr() override {
+    u8* GetPtr() {
         return reinterpret_cast<u8*>(&shared_page);
     }
 
-    const u8* GetPtr() const override {
+    const u8* GetPtr() const {
         return reinterpret_cast<const u8*>(&shared_page);
     }
 
-    std::size_t GetSize() const override {
+    std::size_t GetSize() const {
         return sizeof(shared_page);
     }
 

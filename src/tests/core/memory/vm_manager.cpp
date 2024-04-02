@@ -11,8 +11,7 @@
 #include "core/memory.h"
 
 TEST_CASE("Memory Basics", "[kernel][memory]") {
-    auto mem = std::make_shared<BufferMem>(Memory::CITRA_PAGE_SIZE);
-    MemoryRef block{mem};
+    auto mem = std::make_unique<u8[]>(Memory::CITRA_PAGE_SIZE);
     Core::Timing timing(1, 100);
     Core::System system;
     Memory::MemorySystem memory{system};
@@ -23,28 +22,26 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
     SECTION("mapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
         auto manager = std::make_unique<Kernel::VMManager>(memory, process);
-        auto result =
-            manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
-                                      Kernel::MemoryState::Private);
+        auto result = manager->MapBackingMemory(
+            Memory::HEAP_VADDR, mem.get(), Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         auto vma = manager->FindVMA(Memory::HEAP_VADDR);
         CHECK(vma != manager->vma_map.end());
-        CHECK(vma->second.size == static_cast<u32>(block.GetSize()));
+        CHECK(vma->second.size == Memory::CITRA_PAGE_SIZE);
         CHECK(vma->second.type == Kernel::VMAType::BackingMemory);
-        CHECK(vma->second.backing_memory == block.GetPtr());
+        CHECK(vma->second.backing_memory == mem.get());
         CHECK(vma->second.meminfo_state == Kernel::MemoryState::Private);
     }
 
     SECTION("unmapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
         auto manager = std::make_unique<Kernel::VMManager>(memory, process);
-        auto result =
-            manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
-                                      Kernel::MemoryState::Private);
+        auto result = manager->MapBackingMemory(
+            Memory::HEAP_VADDR, mem.get(), Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
-        Result code = manager->UnmapRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()));
+        Result code = manager->UnmapRange(Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE);
         REQUIRE(code == ResultSuccess);
 
         auto vma = manager->FindVMA(Memory::HEAP_VADDR);
@@ -56,12 +53,11 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
     SECTION("changing memory permissions") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
         auto manager = std::make_unique<Kernel::VMManager>(memory, process);
-        auto result =
-            manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
-                                      Kernel::MemoryState::Private);
+        auto result = manager->MapBackingMemory(
+            Memory::HEAP_VADDR, mem.get(), Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
-        Result code = manager->ReprotectRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()),
+        Result code = manager->ReprotectRange(Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE,
                                               Kernel::VMAPermission::Execute);
         CHECK(code == ResultSuccess);
 
@@ -69,28 +65,26 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
         CHECK(vma != manager->vma_map.end());
         CHECK(vma->second.permissions == Kernel::VMAPermission::Execute);
 
-        code = manager->UnmapRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()));
+        code = manager->UnmapRange(Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE);
         REQUIRE(code == ResultSuccess);
     }
 
     SECTION("changing memory state") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
         auto manager = std::make_unique<Kernel::VMManager>(memory, process);
-        auto result =
-            manager->MapBackingMemory(Memory::HEAP_VADDR, block, static_cast<u32>(block.GetSize()),
-                                      Kernel::MemoryState::Private);
+        auto result = manager->MapBackingMemory(
+            Memory::HEAP_VADDR, mem.get(), Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private);
         REQUIRE(result.Code() == ResultSuccess);
 
         SECTION("reprotect memory range") {
-            Result code =
-                manager->ReprotectRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()),
-                                        Kernel::VMAPermission::ReadWrite);
+            Result code = manager->ReprotectRange(Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE,
+                                                  Kernel::VMAPermission::ReadWrite);
             REQUIRE(code == ResultSuccess);
         }
 
         SECTION("with invalid address") {
             Result code = manager->ChangeMemoryState(
-                0xFFFFFFFF, static_cast<u32>(block.GetSize()), Kernel::MemoryState::Locked,
+                0xFFFFFFFF, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Locked,
                 Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Aliased,
                 Kernel::VMAPermission::Execute);
             CHECK(code == Kernel::ResultInvalidAddress);
@@ -98,7 +92,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
         SECTION("ignoring the original permissions") {
             Result code = manager->ChangeMemoryState(
-                Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()), Kernel::MemoryState::Private,
+                Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private,
                 Kernel::VMAPermission::None, Kernel::MemoryState::Locked,
                 Kernel::VMAPermission::Write);
             CHECK(code == ResultSuccess);
@@ -111,7 +105,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
         SECTION("enforcing the original permissions with correct expectations") {
             Result code = manager->ChangeMemoryState(
-                Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()), Kernel::MemoryState::Private,
+                Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private,
                 Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Aliased,
                 Kernel::VMAPermission::Execute);
             CHECK(code == ResultSuccess);
@@ -124,7 +118,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
         SECTION("with incorrect permission expectations") {
             Result code = manager->ChangeMemoryState(
-                Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()), Kernel::MemoryState::Private,
+                Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Private,
                 Kernel::VMAPermission::Execute, Kernel::MemoryState::Aliased,
                 Kernel::VMAPermission::Execute);
             CHECK(code == Kernel::ResultInvalidAddressState);
@@ -137,7 +131,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
         SECTION("with incorrect state expectations") {
             Result code = manager->ChangeMemoryState(
-                Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()), Kernel::MemoryState::Locked,
+                Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Locked,
                 Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Aliased,
                 Kernel::VMAPermission::Execute);
             CHECK(code == Kernel::ResultInvalidAddressState);
@@ -148,7 +142,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
             CHECK(vma->second.meminfo_state == Kernel::MemoryState::Private);
         }
 
-        Result code = manager->UnmapRange(Memory::HEAP_VADDR, static_cast<u32>(block.GetSize()));
+        Result code = manager->UnmapRange(Memory::HEAP_VADDR, Memory::CITRA_PAGE_SIZE);
         REQUIRE(code == ResultSuccess);
     }
 }

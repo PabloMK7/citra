@@ -100,8 +100,6 @@ add_library(citra_common STATIC
     math_util.h
     memory_detect.cpp
     memory_detect.h
-    memory_ref.h
-    memory_ref.cpp
     microprofile.cpp
     microprofile.h
     microprofileui.h

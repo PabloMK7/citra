@@ -4,19 +4,19 @@
 
 #pragma once
 
-// Configuration memory stores various hardware/kernel configuration settings. This memory page is
-// read-only for ARM11 processes. I'm guessing this would normally be written to by the firmware/
-// bootrom. Because we're not emulating this, and essentially just "stubbing" the functionality, I'm
-// putting this as a subset of HLE for now.
-
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/memory_ref.h"
 #include "common/swap.h"
 #include "core/memory.h"
 
 namespace ConfigMem {
 
+/**
+ * Configuration memory stores various hardware/kernel configuration settings. This memory page is
+ * read-only for ARM11 processes. I'm guessing this would normally be written to by the firmware/
+ * bootrom. Because we're not emulating this, and essentially just "stubbing" the functionality, I'm
+ * putting this as a subset of HLE for now.
+ */
 struct ConfigMemDef {
     u8 kernel_unk;                       // 0
     u8 kernel_version_rev;               // 1
@@ -48,20 +48,20 @@ struct ConfigMemDef {
 static_assert(sizeof(ConfigMemDef) == Memory::CONFIG_MEMORY_SIZE,
               "Config Memory structure size is wrong");
 
-class Handler : public BackingMem {
+class Handler {
 public:
     Handler();
     ConfigMemDef& GetConfigMem();
 
-    u8* GetPtr() override {
+    u8* GetPtr() {
         return reinterpret_cast<u8*>(&config_mem);
     }
 
-    const u8* GetPtr() const override {
+    const u8* GetPtr() const {
         return reinterpret_cast<const u8*>(&config_mem);
     }
 
-    std::size_t GetSize() const override {
+    std::size_t GetSize() const {
         return sizeof(config_mem);
     }
 
