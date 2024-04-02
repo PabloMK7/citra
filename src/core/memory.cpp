@@ -4,7 +4,6 @@
 
 #include <array>
 #include <cstring>
-#include "audio_core/dsp_interface.h"
 
 #include "common/assert.h"
 #include "common/atomic_ops.h"
@@ -21,12 +20,6 @@
 #include "video_core/renderer_base.h"
 
 namespace Memory {
-
-void PageTable::Clear() {
-    pointers.raw.fill(nullptr);
-    pointers.refs.fill(MemoryRef());
-    attributes.fill(PageType::Unmapped);
-}
 
 class RasterizerCacheMarker {
 public:
@@ -68,53 +61,17 @@ private:
 
 class MemorySystem::Impl {
 public:
+    Core::System& system;
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
+    std::unique_ptr<u8[]> dsp_mem = std::make_unique<u8[]>(Memory::DSP_RAM_SIZE);
 
-    Core::System& system;
     std::shared_ptr<PageTable> current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
     std::vector<std::shared_ptr<PageTable>> page_table_list;
 
-    AudioCore::DspInterface* dsp = nullptr;
-
-    std::shared_ptr<BackingMem> fcram_mem;
-    std::shared_ptr<BackingMem> vram_mem;
-    std::shared_ptr<BackingMem> n3ds_extra_ram_mem;
-    std::shared_ptr<BackingMem> dsp_mem;
-
-    Impl(Core::System& system_);
-
-    const u8* GetPtr(Region r) const {
-        switch (r) {
-        case Region::VRAM:
-            return vram.get();
-        case Region::DSP:
-            return dsp->GetDspMemory().data();
-        case Region::FCRAM:
-            return fcram.get();
-        case Region::N3DS:
-            return n3ds_extra_ram.get();
-        default:
-            UNREACHABLE();
-        }
-    }
-
-    u8* GetPtr(Region r) {
-        switch (r) {
-        case Region::VRAM:
-            return vram.get();
-        case Region::DSP:
-            return dsp->GetDspMemory().data();
-        case Region::FCRAM:
-            return fcram.get();
-        case Region::N3DS:
-            return n3ds_extra_ram.get();
-        default:
-            UNREACHABLE();
-        }
-    }
+    Impl(Core::System& system_) : system{system_} {}
 
     u32 GetSize(Region r) const {
         switch (r) {
@@ -233,26 +190,26 @@ public:
         }
     }
 
-    MemoryRef GetPointerForRasterizerCache(VAddr addr) const {
+    u8* GetPointerForRasterizerCache(VAddr addr) const {
         if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
-            return {fcram_mem, addr - LINEAR_HEAP_VADDR};
+            return fcram.get() + addr - LINEAR_HEAP_VADDR;
         }
         if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
-            return {fcram_mem, addr - NEW_LINEAR_HEAP_VADDR};
+            return fcram.get() + addr - NEW_LINEAR_HEAP_VADDR;
         }
         if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
-            return {vram_mem, addr - VRAM_VADDR};
+            return vram.get() + addr - VRAM_VADDR;
         }
         if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END) {
             auto plg_ldr = Service::PLGLDR::GetService(system);
             if (plg_ldr) {
-                return {fcram_mem,
-                        addr - PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr() - FCRAM_PADDR};
+                return fcram.get() + addr - PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr() -
+                       FCRAM_PADDR;
             }
         }
 
         UNREACHABLE();
-        return MemoryRef{};
+        return nullptr;
     }
 
     void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
@@ -294,33 +251,8 @@ public:
     }
 };
 
-// We use this rather than BufferMem because we don't want new objects to be allocated when
-// deserializing. This avoids unnecessary memory thrashing.
-template <Region R>
-class MemorySystem::BackingMemImpl : public BackingMem {
-public:
-    explicit BackingMemImpl(MemorySystem::Impl& impl_) : impl(impl_) {}
-    u8* GetPtr() override {
-        return impl.GetPtr(R);
-    }
-    const u8* GetPtr() const override {
-        return impl.GetPtr(R);
-    }
-    std::size_t GetSize() const override {
-        return impl.GetSize(R);
-    }
-
-private:
-    MemorySystem::Impl& impl;
-};
-
-MemorySystem::Impl::Impl(Core::System& system_)
-    : system{system_}, fcram_mem(std::make_shared<BackingMemImpl<Region::FCRAM>>(*this)),
-      vram_mem(std::make_shared<BackingMemImpl<Region::VRAM>>(*this)),
-      n3ds_extra_ram_mem(std::make_shared<BackingMemImpl<Region::N3DS>>(*this)),
-      dsp_mem(std::make_shared<BackingMemImpl<Region::DSP>>(*this)) {}
-
 MemorySystem::MemorySystem(Core::System& system) : impl(std::make_unique<Impl>(system)) {}
+
 MemorySystem::~MemorySystem() = default;
 
 void MemorySystem::SetCurrentPageTable(std::shared_ptr<PageTable> page_table) {
@@ -335,10 +267,9 @@ void MemorySystem::RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode
     impl->RasterizerFlushVirtualRegion(start, size, mode);
 }
 
-void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory,
-                            PageType type) {
-    LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory.GetPtr(),
-              base * CITRA_PAGE_SIZE, (base + size) * CITRA_PAGE_SIZE);
+void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
+    LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", fmt::ptr(memory), base * CITRA_PAGE_SIZE,
+              (base + size) * CITRA_PAGE_SIZE);
 
     if (impl->system.IsPoweredOn()) {
         RasterizerFlushVirtualRegion(base << CITRA_PAGE_BITS, size * CITRA_PAGE_SIZE,
@@ -347,7 +278,7 @@ void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef
 
     u32 end = base + size;
     while (base != end) {
-        ASSERT_MSG(base < PAGE_TABLE_NUM_ENTRIES, "out of range mapping at {:08X}", base);
+        ASSERT_MSG(base < PageTable::NUM_ENTRIES, "out of range mapping at {:08X}", base);
 
         page_table.attributes[base] = type;
         page_table.pointers[base] = memory;
@@ -359,12 +290,13 @@ void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef
         }
 
         base += 1;
-        if (memory != nullptr && memory.GetSize() > CITRA_PAGE_SIZE)
+        if (memory != nullptr /*&& memory.GetSize() > CITRA_PAGE_SIZE*/) {
             memory += CITRA_PAGE_SIZE;
+        }
     }
 }
 
-void MemorySystem::MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, MemoryRef target) {
+void MemorySystem::MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
     ASSERT_MSG((size & CITRA_PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & CITRA_PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / CITRA_PAGE_SIZE, size / CITRA_PAGE_SIZE, target, PageType::Memory);
@@ -377,7 +309,7 @@ void MemorySystem::UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
              PageType::Unmapped);
 }
 
-MemoryRef MemorySystem::GetPointerForRasterizerCache(VAddr addr) const {
+u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) const {
     return impl->GetPointerForRasterizerCache(addr);
 }
 
@@ -507,7 +439,7 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
     case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
         const auto volatile_pointer =
-            reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
+            reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr));
         return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
     }
     default:
@@ -532,7 +464,7 @@ bool MemorySystem::IsValidVirtualAddress(const Kernel::Process& process, const V
 }
 
 bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) const {
-    return GetPhysicalRef(paddr);
+    return !GetPhysicalSpan(paddr).empty();
 }
 
 u8* MemorySystem::GetPointer(const VAddr vaddr) {
@@ -583,10 +515,10 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
 }
 
 u8* MemorySystem::GetPhysicalPointer(PAddr address) const {
-    return GetPhysicalRef(address);
+    return GetPhysicalSpan(address).data();
 }
 
-MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
+std::span<u8> MemorySystem::GetPhysicalSpan(PAddr address) const {
     constexpr std::array memory_areas = {
         std::make_pair(VRAM_PADDR, VRAM_SIZE),
         std::make_pair(DSP_RAM_PADDR, DSP_RAM_SIZE),
@@ -603,33 +535,33 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) const {
     if (area == memory_areas.end()) {
         LOG_ERROR(HW_Memory, "Unknown GetPhysicalPointer @ {:#08X} at PC {:#08X}", address,
                   impl->GetPC());
-        return nullptr;
+        return {};
     }
 
-    u32 offset_into_region = address - area->first;
+    const u32 offset_into_region = address - area->first;
+    if (offset_into_region > area->second) {
+        return {};
+    }
 
-    std::shared_ptr<BackingMem> target_mem = nullptr;
+    u8* target_mem = nullptr;
     switch (area->first) {
     case VRAM_PADDR:
-        target_mem = impl->vram_mem;
+        target_mem = impl->vram.get();
         break;
     case DSP_RAM_PADDR:
-        target_mem = impl->dsp_mem;
+        target_mem = impl->dsp_mem.get();
         break;
     case FCRAM_PADDR:
-        target_mem = impl->fcram_mem;
+        target_mem = impl->fcram.get();
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_mem = impl->n3ds_extra_ram_mem;
+        target_mem = impl->n3ds_extra_ram.get();
         break;
     default:
         UNREACHABLE();
     }
-    if (offset_into_region > target_mem->GetSize()) {
-        return {nullptr};
-    }
 
-    return {target_mem, offset_into_region};
+    return std::span{target_mem + offset_into_region, area->second - offset_into_region};
 }
 
 std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr addr) {
@@ -889,13 +821,8 @@ const u8* MemorySystem::GetFCRAMPointer(std::size_t offset) const {
     return impl->fcram.get() + offset;
 }
 
-MemoryRef MemorySystem::GetFCRAMRef(std::size_t offset) const {
-    ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
-    return MemoryRef(impl->fcram_mem, offset);
-}
-
-void MemorySystem::SetDSP(AudioCore::DspInterface& dsp) {
-    impl->dsp = &dsp;
+std::span<u8, DSP_RAM_SIZE> MemorySystem::GetDspMemory() const {
+    return std::span<u8, DSP_RAM_SIZE>{impl->dsp_mem.get(), DSP_RAM_SIZE};
 }
 
 } // namespace Memory

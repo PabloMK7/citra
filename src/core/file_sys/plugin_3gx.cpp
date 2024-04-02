@@ -194,9 +194,9 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
                   plg_context.plugin_path);
         return Loader::ResultStatus::ErrorMemoryAllocationFailed;
     }
-    auto backing_memory_fb = kernel.memory.GetFCRAMRef(*offset_fb);
+    auto backing_memory_fb = kernel.memory.GetFCRAMPointer(*offset_fb);
     plg_ldr.SetPluginFBAddr(Memory::FCRAM_PADDR + *offset_fb);
-    std::fill(backing_memory_fb.GetPtr(), backing_memory_fb.GetPtr() + _3GX_fb_size, 0);
+    std::memset(backing_memory_fb, 0, _3GX_fb_size);
 
     auto vma_heap_fb = process.vm_manager.MapBackingMemory(
         _3GX_heap_load_addr, backing_memory_fb, _3GX_fb_size, Kernel::MemoryState::Continuous);
@@ -212,8 +212,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
                   plg_context.plugin_path);
         return Loader::ResultStatus::ErrorMemoryAllocationFailed;
     }
-    auto backing_memory = kernel.memory.GetFCRAMRef(*offset);
-    std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + block_size - _3GX_fb_size, 0);
+    auto backing_memory = kernel.memory.GetFCRAMPointer(*offset);
+    std::memset(backing_memory, 0, block_size - _3GX_fb_size);
 
     // Then we map part of the memory, which contains the executable
     auto vma = process.vm_manager.MapBackingMemory(_3GX_exe_load_addr, backing_memory, exe_size,
@@ -251,7 +251,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     kernel.memory.WriteBlock(process, _3GX_exe_load_addr, &plugin_header, sizeof(PluginHeader));
 
     // Map plugin heap
-    auto backing_memory_heap = kernel.memory.GetFCRAMRef(*offset + exe_size);
+    auto backing_memory_heap = kernel.memory.GetFCRAMPointer(*offset + exe_size);
 
     // Map the rest of the memory at the heap location
     auto vma_heap = process.vm_manager.MapBackingMemory(
@@ -346,8 +346,8 @@ void FileSys::Plugin3GXLoader::MapBootloader(Kernel::Process& process, Kernel::K
     }
 
     // Map bootloader to the offset provided
-    auto backing_memory = kernel.memory.GetFCRAMRef(memory_offset);
-    std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + bootloader_memory_size, 0);
+    auto backing_memory = kernel.memory.GetFCRAMPointer(memory_offset);
+    std::memset(backing_memory, 0, bootloader_memory_size);
     auto vma = process.vm_manager.MapBackingMemory(_3GX_exe_load_addr - bootloader_memory_size,
                                                    backing_memory, bootloader_memory_size,
                                                    Kernel::MemoryState::Continuous);

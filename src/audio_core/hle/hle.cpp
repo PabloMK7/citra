@@ -44,12 +44,9 @@ public:
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const;
     void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer);
 
-    std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory();
-
     void SetInterruptHandler(
         std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler);
 
-private:
     void ResetPipes();
     void WriteU16(DspPipe pipe_number, u16 value);
     void AudioPipeWriteStructAddresses();
@@ -65,7 +62,7 @@ private:
     DspState dsp_state = DspState::Off;
     std::array<std::vector<u8>, num_dsp_pipe> pipe_data{};
 
-    HLE::DspMemory dsp_memory;
+    HLE::DspMemory* dsp_memory;
     std::array<HLE::Source, HLE::num_sources> sources{{
         HLE::Source(0),  HLE::Source(1),  HLE::Source(2),  HLE::Source(3),  HLE::Source(4),
         HLE::Source(5),  HLE::Source(6),  HLE::Source(7),  HLE::Source(8),  HLE::Source(9),
@@ -86,7 +83,8 @@ private:
 
 DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& timing)
     : parent(parent_), core_timing(timing) {
-    dsp_memory.raw_memory.fill(0);
+    dsp_memory = reinterpret_cast<HLE::DspMemory*>(memory.GetDspMemory().data());
+    dsp_memory->raw_memory.fill(0);
 
     for (auto& source : sources) {
         source.SetMemory(memory);
@@ -257,10 +255,6 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     }
 }
 
-std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::Impl::GetDspMemory() {
-    return dsp_memory.raw_memory;
-}
-
 void DspHle::Impl::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
     interrupt_handler = handler;
@@ -316,8 +310,8 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
 size_t DspHle::Impl::CurrentRegionIndex() const {
     // The region with the higher frame counter is chosen unless there is wraparound.
     // This function only returns a 0 or 1.
-    const u16 frame_counter_0 = dsp_memory.region_0.frame_counter;
-    const u16 frame_counter_1 = dsp_memory.region_1.frame_counter;
+    const u16 frame_counter_0 = dsp_memory->region_0.frame_counter;
+    const u16 frame_counter_1 = dsp_memory->region_1.frame_counter;
 
     if (frame_counter_0 == 0xFFFFu && frame_counter_1 != 0xFFFEu) {
         // Wraparound has occurred.
@@ -333,11 +327,11 @@ size_t DspHle::Impl::CurrentRegionIndex() const {
 }
 
 HLE::SharedMemory& DspHle::Impl::ReadRegion() {
-    return CurrentRegionIndex() == 0 ? dsp_memory.region_0 : dsp_memory.region_1;
+    return CurrentRegionIndex() == 0 ? dsp_memory->region_0 : dsp_memory->region_1;
 }
 
 HLE::SharedMemory& DspHle::Impl::WriteRegion() {
-    return CurrentRegionIndex() != 0 ? dsp_memory.region_0 : dsp_memory.region_1;
+    return CurrentRegionIndex() != 0 ? dsp_memory->region_0 : dsp_memory->region_1;
 }
 
 StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
@@ -421,8 +415,8 @@ void DspHle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     impl->PipeWrite(pipe_number, buffer);
 }
 
-std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
-    return impl->GetDspMemory();
+std::span<u8, Memory::DSP_RAM_SIZE> DspHle::GetDspMemory() {
+    return impl->dsp_memory->raw_memory;
 }
 
 void DspHle::SetInterruptHandler(

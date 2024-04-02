@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <string>
 #include "common/common_types.h"
-#include "common/memory_ref.h"
 
 namespace Kernel {
 class Process;
@@ -30,7 +29,6 @@ namespace Memory {
 constexpr u32 CITRA_PAGE_SIZE = 0x1000;
 constexpr u32 CITRA_PAGE_MASK = CITRA_PAGE_SIZE - 1;
 constexpr int CITRA_PAGE_BITS = 12;
-constexpr std::size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - CITRA_PAGE_BITS);
 
 enum class PageType {
     /// Page is unmapped and should cause an access error.
@@ -49,54 +47,23 @@ enum class PageType {
  * requires an indexed fetch and a check for NULL.
  */
 struct PageTable {
+    PageTable() = default;
+    ~PageTable() noexcept = default;
+
+    PageTable(const PageTable&) = delete;
+    PageTable& operator=(const PageTable&) = delete;
+
+    PageTable(PageTable&&) noexcept = default;
+    PageTable& operator=(PageTable&&) noexcept = default;
+
+    static constexpr std::size_t NUM_ENTRIES = 1 << (32 - CITRA_PAGE_BITS);
+
     /**
      * Array of memory pointers backing each page. An entry can only be non-null if the
      * corresponding entry in the `attributes` array is of type `Memory`.
      */
-
-    // The reason for this rigmarole is to keep the 'raw' and 'refs' arrays in sync.
-    // We need 'raw' for dynarmic and 'refs' for serialization
-    struct Pointers {
-
-        struct Entry {
-            Entry(Pointers& pointers_, VAddr idx_) : pointers(pointers_), idx(idx_) {}
-
-            Entry& operator=(MemoryRef value) {
-                pointers.raw[idx] = value.GetPtr();
-                pointers.refs[idx] = std::move(value);
-                return *this;
-            }
-
-            operator u8*() {
-                return pointers.raw[idx];
-            }
-
-        private:
-            Pointers& pointers;
-            VAddr idx;
-        };
-
-        Entry operator[](std::size_t idx) {
-            return Entry(*this, static_cast<VAddr>(idx));
-        }
-
-    private:
-        std::array<u8*, PAGE_TABLE_NUM_ENTRIES> raw;
-        std::array<MemoryRef, PAGE_TABLE_NUM_ENTRIES> refs;
-        friend struct PageTable;
-    };
-
-    Pointers pointers;
-
-    /**
-     * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
-     * the corresponding entry in `pointers` MUST be set to null.
-     */
-    std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
-
-    std::array<u8*, PAGE_TABLE_NUM_ENTRIES>& GetPointerArray() {
-        return pointers.raw;
-    }
+    std::array<u8*, NUM_ENTRIES> pointers{};
+    std::array<PageType, NUM_ENTRIES> attributes{};
 
     void Clear();
 };
@@ -235,7 +202,7 @@ public:
      * @param size The amount of bytes to map. Must be page-aligned.
      * @param target Buffer with the memory backing the mapping. Must be of length at least `size`.
      */
-    void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, MemoryRef target);
+    void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target);
 
     void UnmapRegion(PageTable& page_table, VAddr base, u32 size);
 
@@ -510,7 +477,7 @@ public:
     u8* GetPhysicalPointer(PAddr address) const;
 
     /// Returns a reference to the memory region beginning at the specified physical address
-    MemoryRef GetPhysicalRef(PAddr address) const;
+    std::span<u8> GetPhysicalSpan(PAddr address) const;
 
     /// Determines if the given VAddr is valid for the specified process.
     bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
@@ -527,16 +494,13 @@ public:
     /// Gets pointer in FCRAM with given offset
     const u8* GetFCRAMPointer(std::size_t offset) const;
 
-    /// Gets a serializable ref to FCRAM with the given offset
-    MemoryRef GetFCRAMRef(std::size_t offset) const;
-
     /// Registers page table for rasterizer cache marking
     void RegisterPageTable(std::shared_ptr<PageTable> page_table);
 
     /// Unregisters page table for rasterizer cache marking
     void UnregisterPageTable(std::shared_ptr<PageTable> page_table);
 
-    void SetDSP(AudioCore::DspInterface& dsp);
+    std::span<u8, DSP_RAM_SIZE> GetDspMemory() const;
 
     void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
@@ -556,17 +520,13 @@ private:
      * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
      * pointer of such virtual address
      */
-    MemoryRef GetPointerForRasterizerCache(VAddr addr) const;
+    u8* GetPointerForRasterizerCache(VAddr addr) const;
 
-    void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
+    void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type);
 
 private:
     class Impl;
     std::unique_ptr<Impl> impl;
-
-public:
-    template <Region R>
-    class BackingMemImpl;
 };
 
 } // namespace Memory

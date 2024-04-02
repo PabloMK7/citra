@@ -68,7 +68,7 @@ struct VirtualMemoryArea {
 
     /// Settings for type = BackingMemory
     /// Pointer backing this VMA. It will not be destroyed or freed when the VMA is removed.
-    MemoryRef backing_memory{};
+    u8* backing_memory{};
 
     /// Tests if this area can be merged to the right with `next`.
     bool CanBeMergedWith(const VirtualMemoryArea& next) const;
@@ -108,13 +108,8 @@ public:
     explicit VMManager(Memory::MemorySystem& memory, Kernel::Process& proc);
     ~VMManager();
 
-    /// Clears the address space map, re-initializing with a single free area.
-    void Reset();
-
     /// Finds the VMA in which the given address is included in, or `vma_map.end()`.
     VMAHandle FindVMA(VAddr target) const;
-
-    // TODO(yuriks): Should these functions actually return the handle?
 
     /**
      * Maps part of a ref-counted block of memory at the first free address after the given base.
@@ -126,7 +121,7 @@ public:
      * @param state MemoryState tag to attach to the VMA.
      * @returns The address at which the memory was mapped.
      */
-    ResultVal<VAddr> MapBackingMemoryToBase(VAddr base, u32 region_size, MemoryRef memory, u32 size,
+    ResultVal<VAddr> MapBackingMemoryToBase(VAddr base, u32 region_size, u8* memory, u32 size,
                                             MemoryState state);
     /**
      * Maps an unmanaged host memory pointer at a given address.
@@ -136,8 +131,7 @@ public:
      * @param size Size of the mapping.
      * @param state MemoryState tag to attach to the VMA.
      */
-    ResultVal<VMAHandle> MapBackingMemory(VAddr target, MemoryRef memory, u32 size,
-                                          MemoryState state);
+    ResultVal<VMAHandle> MapBackingMemory(VAddr target, u8* memory, u32 size, MemoryState state);
 
     /**
      * Updates the memory state and permissions of the specified range. The range's original memory
@@ -167,8 +161,8 @@ public:
     void LogLayout(Common::Log::Level log_level) const;
 
     /// Gets a list of backing memory blocks for the specified range
-    ResultVal<std::vector<std::pair<MemoryRef, u32>>> GetBackingBlocksForRange(VAddr address,
-                                                                               u32 size);
+    using BackingBlocks = std::vector<std::pair<u8*, u32>>;
+    ResultVal<BackingBlocks> GetBackingBlocksForRange(VAddr address, u32 size);
 
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.

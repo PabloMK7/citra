@@ -4,14 +4,11 @@
 
 #pragma once
 
-#include <array>
 #include <memory>
 #include <vector>
 #include "audio_core/audio_types.h"
 #include "audio_core/dsp_interface.h"
-#include "common/common_types.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
-#include "core/memory.h"
 
 namespace Core {
 class Timing;
@@ -36,7 +33,7 @@ public:
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
     void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) override;
 
-    std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
+    std::span<u8, Memory::DSP_RAM_SIZE> GetDspMemory() override;
 
     void SetInterruptHandler(
         std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) override;

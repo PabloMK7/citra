@@ -5,7 +5,6 @@
 #include <algorithm>
 #include "common/alignment.h"
 
-#include "common/memory_ref.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/handle_table.h"
@@ -196,23 +195,22 @@ Result TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySystem
             // TODO(Subv): Perform permission checks.
 
             // Create a buffer which contains the mapped buffer and two additional guard pages.
-            std::shared_ptr<BackingMem> buffer =
-                std::make_shared<BufferMem>((num_pages + 2) * Memory::CITRA_PAGE_SIZE);
+            const u32 buffer_size = (num_pages + 2) * Memory::CITRA_PAGE_SIZE;
+            auto buffer = std::make_unique<u8[]>(buffer_size);
             memory.ReadBlock(*src_process, source_address,
-                             buffer->GetPtr() + Memory::CITRA_PAGE_SIZE + page_offset, size);
+                             buffer.get() + Memory::CITRA_PAGE_SIZE + page_offset, size);
 
             // Map the guard pages and mapped pages at once.
             target_address =
                 dst_process->vm_manager
                     .MapBackingMemoryToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
-                                            buffer, static_cast<u32>(buffer->GetSize()),
-                                            Kernel::MemoryState::Shared)
+                                            buffer.get(), buffer_size, Kernel::MemoryState::Shared)
                     .Unwrap();
 
             // Change the permissions and state of the guard pages.
             const VAddr low_guard_address = target_address;
             const VAddr high_guard_address =
-                low_guard_address + static_cast<VAddr>(buffer->GetSize()) - Memory::CITRA_PAGE_SIZE;
+                low_guard_address + buffer_size - Memory::CITRA_PAGE_SIZE;
             ASSERT(dst_process->vm_manager.ChangeMemoryState(
                        low_guard_address, Memory::CITRA_PAGE_SIZE, Kernel::MemoryState::Shared,
                        Kernel::VMAPermission::ReadWrite, Kernel::MemoryState::Reserved,
@@ -226,8 +224,8 @@ Result TranslateCommandBuffer(Kernel::KernelSystem& kernel, Memory::MemorySystem
             target_address += Memory::CITRA_PAGE_SIZE;
             cmd_buf[i++] = target_address + page_offset;
 
-            mapped_buffer_context.push_back({permissions, size, source_address,
-                                             target_address + page_offset, std::move(buffer)});
+            mapped_buffer_context.emplace_back(permissions, size, source_address,
+                                               target_address + page_offset, std::move(buffer));
 
             break;
         }

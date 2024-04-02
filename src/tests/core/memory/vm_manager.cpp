@@ -32,7 +32,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
         CHECK(vma != manager->vma_map.end());
         CHECK(vma->second.size == static_cast<u32>(block.GetSize()));
         CHECK(vma->second.type == Kernel::VMAType::BackingMemory);
-        CHECK(vma->second.backing_memory.GetPtr() == block.GetPtr());
+        CHECK(vma->second.backing_memory == block.GetPtr());
         CHECK(vma->second.meminfo_state == Kernel::MemoryState::Private);
     }
 
@@ -50,7 +50,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
         auto vma = manager->FindVMA(Memory::HEAP_VADDR);
         CHECK(vma != manager->vma_map.end());
         CHECK(vma->second.type == Kernel::VMAType::Free);
-        CHECK(vma->second.backing_memory.GetPtr() == nullptr);
+        CHECK(vma->second.backing_memory == nullptr);
     }
 
     SECTION("changing memory permissions") {

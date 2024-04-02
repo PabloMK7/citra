@@ -219,14 +219,14 @@ void RasterizerVulkan::SetupVertexArray() {
         u32 data_size = loader.byte_count * vertex_num;
         res_cache.FlushRegion(data_addr, data_size);
 
-        const MemoryRef src_ref = memory.GetPhysicalRef(data_addr);
-        if (src_ref.GetSize() < data_size) {
+        const auto src_span = memory.GetPhysicalSpan(data_addr);
+        if (src_span.size() < data_size) {
             LOG_ERROR(Render_Vulkan,
                       "Vertex buffer size {} exceeds available space {} at address {:#016X}",
-                      data_size, src_ref.GetSize(), data_addr);
+                      data_size, src_span.size(), data_addr);
         }
 
-        const u8* src_ptr = src_ref.GetPtr();
+        const u8* src_ptr = src_span.data();
         u8* dst_ptr = array_ptr + buffer_offset;
 
         // Align stride up if required by Vulkan implementation.

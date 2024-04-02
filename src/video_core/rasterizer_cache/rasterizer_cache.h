@@ -1000,12 +1000,12 @@ void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interva
     const auto staging = runtime.FindStaging(
         load_info.width * load_info.height * surface.GetInternalBytesPerPixel(), true);
 
-    MemoryRef source_ptr = memory.GetPhysicalRef(load_info.addr);
-    if (!source_ptr) [[unlikely]] {
+    auto source_span = memory.GetPhysicalSpan(load_info.addr);
+    if (source_span.empty()) [[unlikely]] {
         return;
     }
 
-    const auto upload_data = source_ptr.GetWriteBytes(load_info.end - load_info.addr);
+    const auto upload_data = source_span.subspan(0, load_info.end - load_info.addr);
     DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, staging.mapped,
                   runtime.NeedsConversion(surface.pixel_format));
 
@@ -1048,12 +1048,12 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
     const SurfaceParams load_info = surface.FromInterval(interval);
     ASSERT(load_info.addr >= surface.addr && load_info.end <= surface.end);
 
-    MemoryRef source_ptr = memory.GetPhysicalRef(load_info.addr);
-    if (!source_ptr) [[unlikely]] {
+    auto source_span = memory.GetPhysicalSpan(load_info.addr);
+    if (source_span.empty()) [[unlikely]] {
         return false;
     }
 
-    const auto upload_data = source_ptr.GetWriteBytes(load_info.end - load_info.addr);
+    const auto upload_data = source_span.subspan(0, load_info.end - load_info.addr);
     const u64 hash = ComputeHash(load_info, upload_data);
 
     const u32 level = surface.LevelOf(load_info.addr);
@@ -1108,12 +1108,12 @@ void RasterizerCache<T>::DownloadSurface(Surface& surface, SurfaceInterval inter
     };
     surface.Download(download, staging);
 
-    MemoryRef dest_ptr = memory.GetPhysicalRef(flush_start);
-    if (!dest_ptr) [[unlikely]] {
+    auto dest_span = memory.GetPhysicalSpan(flush_start);
+    if (dest_span.empty()) [[unlikely]] {
         return;
     }
 
-    const auto download_dest = dest_ptr.GetWriteBytes(flush_end - flush_start);
+    const auto download_dest = dest_span.subspan(0, flush_end - flush_start);
     EncodeTexture(flush_info, flush_start, flush_end, staging.mapped, download_dest,
                   runtime.NeedsConversion(surface.pixel_format));
 }
@@ -1124,29 +1124,29 @@ void RasterizerCache<T>::DownloadFillSurface(Surface& surface, SurfaceInterval i
     const u32 flush_end = boost::icl::last_next(interval);
     ASSERT(flush_start >= surface.addr && flush_end <= surface.end);
 
-    MemoryRef dest_ptr = memory.GetPhysicalRef(flush_start);
-    if (!dest_ptr) [[unlikely]] {
+    auto dest_span = memory.GetPhysicalSpan(flush_start);
+    if (dest_span.empty()) [[unlikely]] {
         return;
     }
 
     const u32 start_offset = flush_start - surface.addr;
     const u32 download_size =
-        std::clamp(flush_end - flush_start, 0u, static_cast<u32>(dest_ptr.GetSize()));
+        std::clamp(flush_end - flush_start, 0u, static_cast<u32>(dest_span.size()));
     const u32 coarse_start_offset = start_offset - (start_offset % surface.fill_size);
     const u32 backup_bytes = start_offset % surface.fill_size;
 
     std::array<u8, 4> backup_data;
     if (backup_bytes) {
-        std::memcpy(backup_data.data(), &dest_ptr[coarse_start_offset], backup_bytes);
+        std::memcpy(backup_data.data(), &dest_span[coarse_start_offset], backup_bytes);
     }
 
     for (u32 offset = coarse_start_offset; offset < download_size; offset += surface.fill_size) {
-        std::memcpy(&dest_ptr[offset], &surface.fill_data[0],
+        std::memcpy(&dest_span[offset], &surface.fill_data[0],
                     std::min(surface.fill_size, download_size - offset));
     }
 
     if (backup_bytes) {
-        std::memcpy(&dest_ptr[coarse_start_offset], &backup_data[0], backup_bytes);
+        std::memcpy(&dest_span[coarse_start_offset], &backup_data[0], backup_bytes);
     }
 }
 

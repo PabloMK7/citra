@@ -242,13 +242,13 @@ Result Process::HeapAllocate(VAddr* out_addr, VAddr target, u32 size, VMAPermiss
     // Maps heap block by block
     VAddr interval_target = target;
     for (const auto& interval : allocated_fcram) {
-        u32 interval_size = interval.upper() - interval.lower();
+        const u32 interval_size = interval.upper() - interval.lower();
         LOG_DEBUG(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
                   interval.upper());
         std::fill(kernel.memory.GetFCRAMPointer(interval.lower()),
                   kernel.memory.GetFCRAMPointer(interval.upper()), 0);
         auto vma = vm_manager.MapBackingMemory(interval_target,
-                                               kernel.memory.GetFCRAMRef(interval.lower()),
+                                               kernel.memory.GetFCRAMPointer(interval.lower()),
                                                interval_size, memory_state);
         ASSERT(vma.Succeeded());
         vm_manager.Reprotect(vma.Unwrap(), perms);
@@ -276,7 +276,7 @@ Result Process::HeapFree(VAddr target, u32 size) {
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
     for (const auto& [backing_memory, block_size] : backing_blocks) {
-        const auto backing_offset = kernel.memory.GetFCRAMOffset(backing_memory.GetPtr());
+        const auto backing_offset = kernel.memory.GetFCRAMOffset(backing_memory);
         memory_region->Free(backing_offset, block_size);
         holding_memory -= MemoryRegionInfo::Interval(backing_offset, backing_offset + block_size);
     }
@@ -322,9 +322,9 @@ Result Process::LinearAllocate(VAddr* out_addr, VAddr target, u32 size, VMAPermi
         }
     }
 
-    auto backing_memory = kernel.memory.GetFCRAMRef(physical_offset);
+    auto backing_memory = kernel.memory.GetFCRAMPointer(physical_offset);
 
-    std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + size, 0);
+    std::fill(backing_memory, backing_memory + size, 0);
     auto vma = vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous);
     ASSERT(vma.Succeeded());
     vm_manager.Reprotect(vma.Unwrap(), perms);
@@ -410,7 +410,7 @@ ResultVal<VAddr> Process::AllocateThreadLocalStorage() {
         // Map the page to the current process' address space.
         auto tls_page_addr =
             Memory::TLS_AREA_VADDR + static_cast<VAddr>(tls_page) * Memory::CITRA_PAGE_SIZE;
-        vm_manager.MapBackingMemory(tls_page_addr, kernel.memory.GetFCRAMRef(*offset),
+        vm_manager.MapBackingMemory(tls_page_addr, kernel.memory.GetFCRAMPointer(*offset),
                                     Memory::CITRA_PAGE_SIZE, MemoryState::Locked);
 
         LOG_DEBUG(Kernel, "Allocated TLS page at addr={:08X}", tls_page_addr);

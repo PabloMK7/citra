@@ -121,7 +121,9 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
-    Impl(Core::Timing& timing, bool multithread) : core_timing(timing), multithread(multithread) {
+    Impl(Memory::MemorySystem& memory, Core::Timing& timing, bool multithread_)
+        : dsp_memory{memory.GetDspMemory()}, config{dsp_memory.data()}, teakra{config},
+          core_timing{timing}, multithread{multithread_} {
         teakra_slice_event = core_timing.RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
     }
@@ -130,6 +132,8 @@ struct DspLle::Impl final {
         StopTeakraThread();
     }
 
+    std::span<u8, Memory::DSP_RAM_SIZE> dsp_memory;
+    Teakra::UserConfig config;
     Teakra::Teakra teakra;
     u16 pipe_base_waddr = 0;
 
@@ -189,13 +193,11 @@ struct DspLle::Impl final {
     }
 
     u8* GetDspDataPointer(u32 baddr) {
-        auto& memory = teakra.GetDspMemory();
-        return &memory[DspDataOffset + baddr];
+        return &dsp_memory[DspDataOffset + baddr];
     }
 
     const u8* GetDspDataPointer(u32 baddr) const {
-        auto& memory = teakra.GetDspMemory();
-        return &memory[DspDataOffset + baddr];
+        return &dsp_memory[DspDataOffset + baddr];
     }
 
     PipeStatus GetPipeStatus(u8 pipe_index, PipeDirection direction) const {
@@ -312,7 +314,6 @@ struct DspLle::Impl final {
         teakra.Reset();
 
         Dsp1 dsp(buffer);
-        auto& dsp_memory = teakra.GetDspMemory();
         u8* program = dsp_memory.data();
         u8* data = dsp_memory.data() + DspDataOffset;
         for (const auto& segment : dsp.segments) {
@@ -403,8 +404,8 @@ void DspLle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     impl->WritePipe(static_cast<u8>(pipe_number), buffer);
 }
 
-std::array<u8, Memory::DSP_RAM_SIZE>& DspLle::GetDspMemory() {
-    return impl->teakra.GetDspMemory();
+std::span<u8, Memory::DSP_RAM_SIZE> DspLle::GetDspMemory() {
+    return impl->dsp_memory;
 }
 
 void DspLle::SetInterruptHandler(
@@ -469,7 +470,7 @@ DspLle::DspLle(Core::System& system, bool multithread)
 
 DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
                bool multithread)
-    : DspInterface(system), impl(std::make_unique<Impl>(timing, multithread)) {
+    : DspInterface(system), impl(std::make_unique<Impl>(memory, timing, multithread)) {
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);

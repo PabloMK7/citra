@@ -7,7 +7,6 @@
 #include <string>
 #include <utility>
 #include "common/common_types.h"
-#include "common/memory_ref.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/result.h"
@@ -87,7 +86,7 @@ private:
     /// during creation.
     PAddr linear_heap_phys_offset = 0;
     /// Backing memory for this shared memory block.
-    std::vector<std::pair<MemoryRef, u32>> backing_blocks;
+    std::vector<std::pair<u8*, u32>> backing_blocks;
     /// Size of the memory block. Page-aligned.
     u32 size = 0;
     /// Region of memory this block exists in.

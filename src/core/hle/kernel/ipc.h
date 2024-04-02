@@ -23,8 +23,7 @@ struct MappedBufferContext {
     u32 size;
     VAddr source_address;
     VAddr target_address;
-
-    std::shared_ptr<BackingMem> buffer;
+    std::unique_ptr<u8[]> buffer;
 };
 
 /// Performs IPC command buffer translation from one process to another.

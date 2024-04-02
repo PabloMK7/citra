@@ -135,7 +135,7 @@ void KernelSystem::HandleSpecialMapping(VMManager& address_space, const AddressM
         return;
     }
 
-    auto target_pointer = memory.GetPhysicalRef(area->paddr_base + offset_into_region);
+    u8* target_pointer = memory.GetPhysicalPointer(area->paddr_base + offset_into_region);
 
     // TODO(yuriks): This flag seems to have some other effect, but it's unknown what
     MemoryState memory_state = mapping.unk_flag ? MemoryState::Static : MemoryState::IO;
@@ -148,16 +148,18 @@ void KernelSystem::HandleSpecialMapping(VMManager& address_space, const AddressM
 }
 
 void KernelSystem::MapSharedPages(VMManager& address_space) {
-    auto cfg_mem_vma = address_space
-                           .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR, {config_mem_handler},
-                                             Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
-                           .Unwrap();
+    auto cfg_mem_vma =
+        address_space
+            .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR, config_mem_handler->GetPtr(),
+                              Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
+            .Unwrap();
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
 
-    auto shared_page_vma = address_space
-                               .MapBackingMemory(Memory::SHARED_PAGE_VADDR, {shared_page_handler},
-                                                 Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
-                               .Unwrap();
+    auto shared_page_vma =
+        address_space
+            .MapBackingMemory(Memory::SHARED_PAGE_VADDR, shared_page_handler->GetPtr(),
+                              Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
+            .Unwrap();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
 }
 
