@@ -62,7 +62,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     if (file->subfile && length > file->size) {
-        LOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
+        LOG_DEBUG(Service_FS, "Trying to read beyond the subfile size, truncating");
         length = static_cast<u32>(file->size);
     }
 
@@ -70,7 +70,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     offset += file->offset;
 
     if (offset + length > backend->GetSize()) {
-        LOG_ERROR(Service_FS,
+        LOG_DEBUG(Service_FS,
                   "Reading from out of bounds offset=0x{:x} length=0x{:08X} file_size=0x{:x}",
                   offset, length, backend->GetSize());
     }

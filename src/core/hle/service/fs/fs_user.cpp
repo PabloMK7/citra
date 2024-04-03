@@ -121,7 +121,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
         rb.PushMoveObjects(file->Connect());
     } else {
         rb.PushMoveObjects<Kernel::Object>(nullptr);
-        LOG_ERROR(Service_FS, "failed to get a handle for file {} mode={} attributes={}",
+        LOG_DEBUG(Service_FS, "failed to get a handle for file {} mode={} attributes={}",
                   file_path.DebugStr(), mode.hex, attributes);
     }
 
@@ -301,7 +301,7 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
         directory->ClientConnected(server);
         rb.PushMoveObjects(client);
     } else {
-        LOG_ERROR(Service_FS, "failed to get a handle for directory type={} size={} data={}",
+        LOG_DEBUG(Service_FS, "failed to get a handle for directory type={} size={} data={}",
                   dirname_type, dirname_size, dir_path.DebugStr());
         rb.PushMoveObjects<Kernel::Object>(nullptr);
     }

@@ -396,6 +396,9 @@ private:
                                 s64 nano_seconds);
     Result ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
                            Handle reply_target);
+    Result InvalidateProcessDataCache(Handle process_handle, VAddr address, u32 size);
+    Result StoreProcessDataCache(Handle process_handle, VAddr address, u32 size);
+    Result FlushProcessDataCache(Handle process_handle, VAddr address, u32 size);
     Result CreateAddressArbiter(Handle* out_handle);
     Result ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value, s64 nanoseconds);
     void Break(u8 break_reason);
@@ -1016,6 +1019,39 @@ Result SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
     // signal in one of its wait objects, or to 0xC8A01836 if there was a translation error.
     // By default the index is set to -1.
     *index = -1;
+    return ResultSuccess;
+}
+
+/// Invalidates the specified cache range (stubbed as we do not emulate cache).
+Result SVC::InvalidateProcessDataCache(Handle process_handle, VAddr address, u32 size) {
+    const std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+    R_UNLESS(process, ResultInvalidHandle);
+
+    LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
+
+    return ResultSuccess;
+}
+
+/// Stores the specified cache range (stubbed as we do not emulate cache).
+Result SVC::StoreProcessDataCache(Handle process_handle, VAddr address, u32 size) {
+    const std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+    R_UNLESS(process, ResultInvalidHandle);
+
+    LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
+
+    return ResultSuccess;
+}
+
+/// Flushes the specified cache range (stubbed as we do not emulate cache).
+Result SVC::FlushProcessDataCache(Handle process_handle, VAddr address, u32 size) {
+    const std::shared_ptr<Process> process =
+        kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
+    R_UNLESS(process, ResultInvalidHandle);
+
+    LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
+
     return ResultSuccess;
 }
 
@@ -2157,9 +2193,9 @@ const std::array<SVC::FunctionDef, 180> SVC::SVC_Table{{
     {0x4F, &SVC::Wrap<&SVC::ReplyAndReceive>, "ReplyAndReceive"},
     {0x50, nullptr, "BindInterrupt"},
     {0x51, nullptr, "UnbindInterrupt"},
-    {0x52, nullptr, "InvalidateProcessDataCache"},
-    {0x53, nullptr, "StoreProcessDataCache"},
-    {0x54, nullptr, "FlushProcessDataCache"},
+    {0x52, &SVC::Wrap<&SVC::InvalidateProcessDataCache>, "InvalidateProcessDataCache"},
+    {0x53, &SVC::Wrap<&SVC::StoreProcessDataCache>, "StoreProcessDataCache"},
+    {0x54, &SVC::Wrap<&SVC::FlushProcessDataCache>, "FlushProcessDataCache"},
     {0x55, nullptr, "StartInterProcessDma"},
     {0x56, nullptr, "StopDma"},
     {0x57, nullptr, "GetDmaState"},
