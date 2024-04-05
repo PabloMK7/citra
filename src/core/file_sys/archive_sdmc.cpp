@@ -83,14 +83,14 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
         return ResultNotFound;
     case PathParser::PathNotFound:
     case PathParser::FileInPath:
-        LOG_ERROR(Service_FS, "Path not found {}", full_path);
+        LOG_DEBUG(Service_FS, "Path not found {}", full_path);
         return ResultNotFound;
     case PathParser::DirectoryFound:
-        LOG_ERROR(Service_FS, "{} is not a file", full_path);
+        LOG_DEBUG(Service_FS, "{} is not a file", full_path);
         return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::NotFound:
         if (!mode.create_flag) {
-            LOG_ERROR(Service_FS, "Non-existing file {} can't be open without mode create.",
+            LOG_DEBUG(Service_FS, "Non-existing file {} can't be open without mode create.",
                       full_path);
             return ResultNotFound;
         } else {
@@ -348,10 +348,10 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
     case PathParser::PathNotFound:
     case PathParser::NotFound:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "{} not found", full_path);
+        LOG_DEBUG(Service_FS, "{} not found", full_path);
         return ResultNotFound;
     case PathParser::FileInPath:
-        LOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
+        LOG_DEBUG(Service_FS, "Unexpected file in path {}", full_path);
         return ResultUnexpectedFileOrDirectorySdmc;
     case PathParser::DirectoryFound:
         break; // Expected 'success' case

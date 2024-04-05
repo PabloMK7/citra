@@ -128,14 +128,14 @@ public:
             LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
             return ResultFileNotFound;
         case PathParser::PathNotFound:
-            LOG_ERROR(Service_FS, "Path not found {}", full_path);
+            LOG_DEBUG(Service_FS, "Path not found {}", full_path);
             return ResultPathNotFound;
         case PathParser::FileInPath:
         case PathParser::DirectoryFound:
-            LOG_ERROR(Service_FS, "Unexpected file or directory in {}", full_path);
+            LOG_DEBUG(Service_FS, "Unexpected file or directory in {}", full_path);
             return ResultUnexpectedFileOrDirectory;
         case PathParser::NotFound:
-            LOG_ERROR(Service_FS, "{} not found", full_path);
+            LOG_DEBUG(Service_FS, "{} not found", full_path);
             return ResultFileNotFound;
         case PathParser::FileFound:
             break; // Expected 'success' case
