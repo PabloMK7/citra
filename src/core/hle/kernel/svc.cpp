@@ -10,6 +10,7 @@
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
+#include "common/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -74,6 +75,12 @@ enum class KernelState {
      * Reboots the console
      */
     KERNEL_STATE_REBOOT = 7,
+
+    // Special Citra only states.
+    /**
+     * Sets the emulation speed percentage. A value of 0 means unthrottled.
+     */
+    KERNEL_STATE_CITRA_EMULATION_SPEED = 0x20000 ///
 };
 
 struct PageInfo {
@@ -270,6 +277,7 @@ enum class SystemInfoMemUsageRegion {
 enum class SystemInfoCitraInformation {
     IS_CITRA = 0,          // Always set the output to 1, signaling the app is running on Citra.
     HOST_TICK = 1,         // Tick reference from the host in ns, unaffected by lag or cpu speed.
+    EMULATION_SPEED = 2,   // Gets the emulation speed set by the user or by KernelSetState.
     BUILD_NAME = 10,       // (ie: Nightly, Canary).
     BUILD_VERSION = 11,    // Build version.
     BUILD_PLATFORM = 12,   // Build platform, see SystemInfoCitraPlatform.
@@ -1420,6 +1428,12 @@ Result SVC::KernelSetState(u32 kernel_state, u32 varg1, u32 varg2) {
     case KernelState::KERNEL_STATE_REBOOT:
         system.RequestShutdown();
         break;
+
+    // Citra specific states.
+    case KernelState::KERNEL_STATE_CITRA_EMULATION_SPEED: {
+        u16 new_value = static_cast<u16>(varg1);
+        Settings::values.frame_limit.SetValue(new_value);
+    } break;
     default:
         LOG_ERROR(Kernel_SVC, "Unknown KernelSetState state={} varg1={} varg2={}", kernel_state,
                   varg1, varg2);
@@ -1794,6 +1808,9 @@ Result SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
             *out = static_cast<s64>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                         std::chrono::steady_clock::now().time_since_epoch())
                                         .count());
+            break;
+        case SystemInfoCitraInformation::EMULATION_SPEED:
+            *out = static_cast<s64>(Settings::values.frame_limit.GetValue());
             break;
         case SystemInfoCitraInformation::BUILD_NAME:
             CopyStringPart(reinterpret_cast<char*>(out), Common::g_build_name, 0, sizeof(s64));
