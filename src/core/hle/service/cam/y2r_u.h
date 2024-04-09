@@ -349,11 +349,13 @@ private:
     Core::System& system;
 
     std::shared_ptr<Kernel::Event> completion_event;
+    Core::TimingEventType* completion_signal_event;
     ConversionConfiguration conversion{};
     DitheringWeightParams dithering_weight_params{};
     bool temporal_dithering_enabled = false;
     bool transfer_end_interrupt_enabled = false;
     bool spacial_dithering_enabled = false;
+    bool is_busy_conversion = false;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
