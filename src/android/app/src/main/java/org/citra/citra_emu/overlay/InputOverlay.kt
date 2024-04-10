@@ -890,12 +890,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
             scale *= (preferences.getInt("controlScale", 50) + 50).toFloat()
             scale /= 100f
+            
+            val opacity: Int = preferences.getInt("controlOpacity", 100) * 255 / 100
 
             // Initialize the InputOverlayDrawableButton.
             val defaultStateBitmap = getBitmap(context, defaultResId, scale)
             val pressedStateBitmap = getBitmap(context, pressedResId, scale)
             val overlayDrawable =
-                InputOverlayDrawableButton(res, defaultStateBitmap, pressedStateBitmap, buttonId)
+                InputOverlayDrawableButton(res, defaultStateBitmap, pressedStateBitmap, buttonId, opacity)
 
             // The X and Y coordinates of the InputOverlayDrawableButton on the InputOverlay.
             // These were set in the input overlay configuration menu.
@@ -947,6 +949,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             scale *= (preferences.getInt("controlScale", 50) + 50).toFloat()
             scale /= 100f
 
+            val opacity: Int = preferences.getInt("controlOpacity", 100) * 255 / 100
+
             // Initialize the InputOverlayDrawableDpad.
             val defaultStateBitmap = getBitmap(context, defaultResId, scale)
             val pressedOneDirectionStateBitmap = getBitmap(context, pressedOneDirectionResId, scale)
@@ -959,7 +963,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 buttonUp,
                 buttonDown,
                 buttonLeft,
-                buttonRight
+                buttonRight,
+                opacity
             )
 
             // The X and Y coordinates of the InputOverlayDrawableDpad on the InputOverlay.
@@ -1004,6 +1009,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             scale *= (preferences.getInt("controlScale", 50) + 50).toFloat()
             scale /= 100f
 
+            val opacity: Int = preferences.getInt("controlOpacity", 100) * 255 / 100
+
             // Initialize the InputOverlayDrawableJoystick.
             val bitmapOuter = getBitmap(context, resOuter, scale)
             val bitmapInnerDefault = getBitmap(context, defaultResInner, scale)
@@ -1040,7 +1047,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 bitmapInnerPressed,
                 outerRect,
                 innerRect,
-                joystick
+                joystick,
+                opacity
             )
 
             // Need to set the image's position
