@@ -86,8 +86,8 @@ class EmulationActivity : AppCompatActivity() {
         )
 
         // Start a foreground service to prevent the app from getting killed in the background
-        foregroundService = Intent(this, ForegroundService::class.java)
-        startForegroundService(foregroundService)
+        //foregroundService = Intent(this, ForegroundService::class.java)
+        //startForegroundService(foregroundService)
 
         EmulationLifecycleUtil.addShutdownHook(hook = { this.finish() })
     }
@@ -112,7 +112,7 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         EmulationLifecycleUtil.clear()
-        stopForegroundService(this)
+        //stopForegroundService(this)
         super.onDestroy()
     }
 
