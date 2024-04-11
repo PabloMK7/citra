@@ -184,6 +184,7 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
+    externals/duckstation/gl/context.cpp
 )
 
 file(GLOB COMPAT_LIST
@@ -279,6 +280,7 @@ if (APPLE)
             XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
         )
     endif()
+    
 elseif(WIN32)
     # compile as a win32 gui application instead of a console application
     target_link_libraries(citra-qt PRIVATE Qt6::EntryPointImplementation)
@@ -287,6 +289,40 @@ elseif(WIN32)
     elseif(MINGW)
         set_target_properties(citra-qt PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
     endif()
+
+elseif(UNIX)
+    find_package(X11 REQUIRED)
+    find_package(EGL REQUIRED)
+
+    option(ENABLE_WAYLAND "Enable Wayland support" ON)
+
+    if (ENABLE_WAYLAND)
+        # we only need ECM for Wayland
+        # so we only require it from here
+        find_package(ECM REQUIRED NO_MODULE)
+        list(APPEND CMAKE_MODULE_PATH "${ECM_MODULE_PATH}")
+
+        find_package(Wayland REQUIRED Client)
+
+        target_compile_definitions(citra PRIVATE WAYLAND_ENABLED)
+
+        target_sources(citra PRIVATE
+            externals/duckstation/gl/context_egl_wayland.cpp
+        )
+    endif()
+
+    target_sources(citra PRIVATE
+        externals/duckstation/gl/context_egl.cpp
+        externals/duckstation/gl/context_egl_x11.cpp
+        externals/duckstation/gl/context_glx.cpp
+        externals/duckstation/gl/x11_window.cpp
+
+        ../../externals/glad/src/glad_egl.c
+        ../../externals/glad/src/glad_glx.c
+    )
+    target_link_libraries(citra PRIVATE "${X11_LIBRARIES}" "${EGL_LIBRARIES}")
+    target_include_directories(citra PRIVATE "${X11_INCLUDE_DIR}")
+    add_compile_definitions(QAPPLICATION_CLASS=QApplication)
 endif()
 
 if(ENABLE_SDL2)
