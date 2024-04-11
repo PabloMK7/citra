@@ -88,7 +88,7 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
-option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
+option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" OFF)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
 include(CitraHandleSystemLibs)
