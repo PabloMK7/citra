@@ -10,6 +10,7 @@
 #include <memory>
 #include <span>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
 #include <nihstro/inline_assembly.h>
@@ -73,18 +74,19 @@ static std::unique_ptr<Pica::ShaderSetup> CompileShaderSetup(
 class ShaderTest {
 public:
     explicit ShaderTest(std::initializer_list<nihstro::InlineAsm> code)
-        : shader_setup(CompileShaderSetup(code)) {
-        shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
-    }
+        : shader_setup(CompileShaderSetup(code)) {}
 
     explicit ShaderTest(std::unique_ptr<Pica::ShaderSetup> input_shader_setup)
-        : shader_setup(std::move(input_shader_setup)) {
-        shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
-    }
+        : shader_setup(std::move(input_shader_setup)) {}
+
+    virtual ~ShaderTest() = default;
+
+    virtual void RunShader(Pica::ShaderUnit& shader_unit,
+                           std::span<const Common::Vec4f> inputs) = 0;
 
     Common::Vec4f Run(std::span<const Common::Vec4f> inputs) {
         Pica::ShaderUnit shader_unit;
-        RunJit(shader_unit, inputs);
+        RunShader(shader_unit, inputs);
         return {shader_unit.output[0].x.ToFloat32(), shader_unit.output[0].y.ToFloat32(),
                 shader_unit.output[0].z.ToFloat32(), shader_unit.output[0].w.ToFloat32()};
     }
@@ -105,24 +107,23 @@ public:
         return Run(std::vector<Common::Vec4f>{inputs});
     }
 
-    void RunJit(Pica::ShaderUnit& shader_unit, std::span<const Common::Vec4f> inputs) {
-        for (std::size_t i = 0; i < inputs.size(); ++i) {
-            const Common::Vec4f& input = inputs[i];
-            shader_unit.input[i].x = Pica::f24::FromFloat32(input.x);
-            shader_unit.input[i].y = Pica::f24::FromFloat32(input.y);
-            shader_unit.input[i].z = Pica::f24::FromFloat32(input.z);
-            shader_unit.input[i].w = Pica::f24::FromFloat32(input.w);
-        }
-        shader_unit.temporary.fill(Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
-        shader_jit.Run(*shader_setup, shader_unit, 0);
-    }
-
-    void RunJit(Pica::ShaderUnit& shader_unit, float input) {
+    void Run(Pica::ShaderUnit& shader_unit, float input) {
         const Common::Vec4f input_vec(input, 0, 0, 0);
-        RunJit(shader_unit, {&input_vec, 1});
+        RunShader(shader_unit, {&input_vec, 1});
     }
 
-    void RunInterpreter(Pica::ShaderUnit& shader_unit, std::span<const Common::Vec4f> inputs) {
+    std::unique_ptr<Pica::ShaderSetup> shader_setup;
+};
+
+class ShaderInterpreterTest : public ShaderTest {
+public:
+    explicit ShaderInterpreterTest(std::initializer_list<nihstro::InlineAsm> code)
+        : ShaderTest(code) {}
+
+    explicit ShaderInterpreterTest(std::unique_ptr<Pica::ShaderSetup> input_shader_setup)
+        : ShaderTest(std::move(input_shader_setup)) {}
+
+    void RunShader(Pica::ShaderUnit& shader_unit, std::span<const Common::Vec4f> inputs) override {
         for (std::size_t i = 0; i < inputs.size(); ++i) {
             const Common::Vec4f& input = inputs[i];
             shader_unit.input[i].x = Pica::f24::FromFloat32(input.x);
@@ -134,23 +135,46 @@ public:
         shader_interpreter.Run(*shader_setup, shader_unit);
     }
 
-    void RunInterpreter(Pica::ShaderUnit& shader_unit, float input) {
-        const Common::Vec4f input_vec(input, 0, 0, 0);
-        RunInterpreter(shader_unit, {&input_vec, 1});
-    }
-
-public:
-    JitShader shader_jit;
+private:
     ShaderInterpreter shader_interpreter;
-    std::unique_ptr<Pica::ShaderSetup> shader_setup;
 };
 
-TEST_CASE("ADD", "[video_core][shader][shader_jit]") {
+class ShaderJitTest : public ShaderTest {
+public:
+    explicit ShaderJitTest(std::initializer_list<nihstro::InlineAsm> code) : ShaderTest(code) {
+        shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
+    }
+
+    explicit ShaderJitTest(std::unique_ptr<Pica::ShaderSetup> input_shader_setup)
+        : ShaderTest(std::move(input_shader_setup)) {
+        shader_jit.Compile(&shader_setup->program_code, &shader_setup->swizzle_data);
+    }
+
+    void RunShader(Pica::ShaderUnit& shader_unit, std::span<const Common::Vec4f> inputs) override {
+        for (std::size_t i = 0; i < inputs.size(); ++i) {
+            const Common::Vec4f& input = inputs[i];
+            shader_unit.input[i].x = Pica::f24::FromFloat32(input.x);
+            shader_unit.input[i].y = Pica::f24::FromFloat32(input.y);
+            shader_unit.input[i].z = Pica::f24::FromFloat32(input.z);
+            shader_unit.input[i].w = Pica::f24::FromFloat32(input.w);
+        }
+        shader_unit.temporary.fill(Common::Vec4<Pica::f24>::AssignToAll(Pica::f24::Zero()));
+        shader_jit.Run(*shader_setup, shader_unit, 0);
+    }
+
+private:
+    JitShader shader_jit;
+};
+
+#define SHADER_TEST_CASE(NAME, TAG)                                                                \
+    TEMPLATE_TEST_CASE(NAME, TAG, ShaderInterpreterTest, ShaderJitTest)
+
+SHADER_TEST_CASE("ADD", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::ADD, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -162,7 +186,7 @@ TEST_CASE("ADD", "[video_core][shader][shader_jit]") {
     REQUIRE(std::isinf(shader.Run({INFINITY, -1.0f}).x));
 }
 
-TEST_CASE("CALL", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("CALL", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
@@ -192,17 +216,17 @@ TEST_CASE("CALL", "[video_core][shader][shader_jit]") {
     CALL.flow_control.num_instructions = 1;
     shader_setup->program_code[2] = CALL.hex;
 
-    auto shader = ShaderTest(std::move(shader_setup));
+    auto shader = TestType(std::move(shader_setup));
 
     REQUIRE(shader.Run(0.f).x == Catch::Approx(1.f));
 }
 
-TEST_CASE("DP3", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("DP3", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::DP3, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -213,12 +237,12 @@ TEST_CASE("DP3", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({vec4_one, vec4_one}).x == 3.0f);
 }
 
-TEST_CASE("DP4", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("DP4", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::DP4, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -229,12 +253,12 @@ TEST_CASE("DP4", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({vec4_one, vec4_one}).x == 4.0f);
 }
 
-TEST_CASE("DPH", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("DPH", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::DPH, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -246,11 +270,11 @@ TEST_CASE("DPH", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({vec4_zero, vec4_one}).x == 1.0f);
 }
 
-TEST_CASE("LG2", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("LG2", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::LG2, sh_output, sh_input},
         {OpCode::Id::END},
     });
@@ -263,11 +287,11 @@ TEST_CASE("LG2", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run(1.e24f).x == Catch::Approx(79.7262742773f));
 }
 
-TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::EX2, sh_output, sh_input},
         {OpCode::Id::END},
     });
@@ -281,12 +305,12 @@ TEST_CASE("EX2", "[video_core][shader][shader_jit]") {
     REQUIRE(std::isinf(shader.Run(800.f).x));
 }
 
-TEST_CASE("MUL", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("MUL", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::MUL, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -300,12 +324,12 @@ TEST_CASE("MUL", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({+INFINITY, -INFINITY}).x == -INFINITY);
 }
 
-TEST_CASE("SGE", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("SGE", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::SGE, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -321,12 +345,12 @@ TEST_CASE("SGE", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({-1.0f, +1.0f}).x == 0.0f);
 }
 
-TEST_CASE("SLT", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("SLT", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::SLT, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -342,11 +366,11 @@ TEST_CASE("SLT", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({-1.0f, +1.0f}).x == 1.0f);
 }
 
-TEST_CASE("FLR", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("FLR", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::FLR, sh_output, sh_input1},
         {OpCode::Id::END},
     });
@@ -359,12 +383,12 @@ TEST_CASE("FLR", "[video_core][shader][shader_jit]") {
     REQUIRE(std::isinf(shader.Run({INFINITY}).x));
 }
 
-TEST_CASE("MAX", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("MAX", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::MAX, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -378,12 +402,12 @@ TEST_CASE("MAX", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({-INFINITY, +INFINITY}).x == +INFINITY);
 }
 
-TEST_CASE("MIN", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("MIN", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::MIN, sh_output, sh_input1, sh_input2},
         {OpCode::Id::END},
     });
@@ -397,11 +421,11 @@ TEST_CASE("MIN", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({-INFINITY, +INFINITY}).x == -INFINITY);
 }
 
-TEST_CASE("RCP", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("RCP", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::RCP, sh_output, sh_input},
         {OpCode::Id::END},
     });
@@ -422,11 +446,11 @@ TEST_CASE("RCP", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({0.0625f}).x == Catch::Approx(16.0f).margin(0.004f));
 }
 
-TEST_CASE("RSQ", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("RSQ", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         {OpCode::Id::RSQ, sh_output, sh_input},
         {OpCode::Id::END},
     });
@@ -448,12 +472,12 @@ TEST_CASE("RSQ", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({0.0625f}).x == Catch::Approx(4.0f).margin(0.004f));
 }
 
-TEST_CASE("Uniform Read", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("Uniform Read", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_c0 = SourceRegister::MakeFloat(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         // mova a0.x, sh_input.x
         {OpCode::Id::MOVA, DestRegister{}, "x", sh_input, "x", SourceRegister{}, "",
          nihstro::InlineAsm::RelativeAddress::A1},
@@ -481,12 +505,12 @@ TEST_CASE("Uniform Read", "[video_core][shader][shader_jit]") {
     }
 }
 
-TEST_CASE("Address Register Offset", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("Address Register Offset", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_c40 = SourceRegister::MakeFloat(40);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader = ShaderTest({
+    auto shader = TestType({
         // mova a0.x, sh_input.x
         {OpCode::Id::MOVA, DestRegister{}, "x", sh_input, "x", SourceRegister{}, "",
          nihstro::InlineAsm::RelativeAddress::A1},
@@ -531,12 +555,12 @@ TEST_CASE("Address Register Offset", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run(-129.f) == f_uniforms[40]);
 }
 
-TEST_CASE("Dest Mask", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("Dest Mask", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
     const auto shader = [&sh_input, &sh_output](const char* dest_mask) {
-        return std::unique_ptr<ShaderTest>(new ShaderTest{
+        return std::unique_ptr<TestType>(new TestType{
             {OpCode::Id::MOV, sh_output, dest_mask, sh_input, "xyzw", SourceRegister{}, ""},
             {OpCode::Id::END},
         });
@@ -561,7 +585,7 @@ TEST_CASE("Dest Mask", "[video_core][shader][shader_jit]") {
     REQUIRE(shader("xyzw")->Run({iota_vec}) == iota_vec);
 }
 
-TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
     const auto sh_input1 = SourceRegister::MakeInput(0);
     const auto sh_input2 = SourceRegister::MakeInput(1);
     const auto sh_input3 = SourceRegister::MakeInput(2);
@@ -601,7 +625,7 @@ TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
     swizzle.SetSelectorSrc3(3, SwizzlePattern::Selector::w);
     shader_setup->swizzle_data[0] = swizzle.hex;
 
-    auto shader = ShaderTest(std::move(shader_setup));
+    auto shader = TestType(std::move(shader_setup));
 
     REQUIRE(shader.Run({vec4_zero, vec4_zero, vec4_zero}) == vec4_zero);
     REQUIRE(shader.Run({vec4_one, vec4_one, vec4_one}) == (vec4_one * 2.0f));
@@ -609,12 +633,12 @@ TEST_CASE("MAD", "[video_core][shader][shader_jit]") {
     REQUIRE(shader.Run({vec4_nan, vec4_zero, vec4_zero}) == vec4_nan);
 }
 
-TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_temp = SourceRegister::MakeTemporary(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
-    auto shader_test = ShaderTest({
+    auto shader_test = TestType({
         // clang-format off
         {OpCode::Id::MOV, sh_temp, sh_input},
         {OpCode::Id::LOOP, 0},
@@ -639,11 +663,11 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
                                     input) +
                                    input;
 
-        Pica::ShaderUnit shader_unit_jit;
-        shader_test.RunJit(shader_unit_jit, input);
+        Pica::ShaderUnit shader_unit;
+        shader_test.Run(shader_unit, input);
 
-        REQUIRE(shader_unit_jit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit_jit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
+        REQUIRE(shader_unit.address_registers[2] == expected_aL);
+        REQUIRE(shader_unit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
     {
         shader_test.shader_setup->uniforms.i[0] = {9, 0, 2, 0};
@@ -656,20 +680,20 @@ TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
                                      (shader_test.shader_setup->uniforms.i[1][0] + 1)) *
                                     input) +
                                    input;
-        Pica::ShaderUnit shader_unit_jit;
-        shader_test.RunJit(shader_unit_jit, input);
+        Pica::ShaderUnit shader_unit;
+        shader_test.Run(shader_unit, input);
 
-        REQUIRE(shader_unit_jit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit_jit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
+        REQUIRE(shader_unit.address_registers[2] == expected_aL);
+        REQUIRE(shader_unit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
     }
 }
 
-TEST_CASE("Source Swizzle", "[video_core][shader][shader_jit]") {
+SHADER_TEST_CASE("Source Swizzle", "[video_core][shader][shader_jit]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
 
     const auto shader = [&sh_input, &sh_output](const char* swizzle) {
-        return std::unique_ptr<ShaderTest>(new ShaderTest{
+        return std::unique_ptr<TestType>(new TestType{
             {OpCode::Id::MOV, sh_output, "xyzw", sh_input, swizzle, SourceRegister{}, ""},
             {OpCode::Id::END},
         });
