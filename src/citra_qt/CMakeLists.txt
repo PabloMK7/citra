@@ -184,7 +184,6 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
-    externals/duckstation/gl/context.cpp
 )
 
 file(GLOB COMPAT_LIST
@@ -297,10 +296,6 @@ elseif(UNIX)
     option(ENABLE_WAYLAND "Enable Wayland support" ON)
 
     if (ENABLE_WAYLAND)
-        # we only need ECM for Wayland
-        # so we only require it from here
-        find_package(ECM REQUIRED NO_MODULE)
-        list(APPEND CMAKE_MODULE_PATH "${ECM_MODULE_PATH}")
 
         find_package(Wayland REQUIRED Client)
 
@@ -312,6 +307,7 @@ elseif(UNIX)
     endif()
 
     target_sources(citra PRIVATE
+        externals/duckstation/gl/context.cpp
         externals/duckstation/gl/context_egl.cpp
         externals/duckstation/gl/context_egl_x11.cpp
         externals/duckstation/gl/context_glx.cpp
