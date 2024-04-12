@@ -12,6 +12,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <fmt/format.h>
 #include <nihstro/inline_assembly.h>
 #include "video_core/pica/shader_setup.h"
@@ -652,8 +653,8 @@ SHADER_TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
     });
 
     {
-        shader_test.shader_setup->uniforms.i[0] = {4, 0, 1, 0};
-        shader_test.shader_setup->uniforms.i[1] = {4, 0, 1, 0};
+        shader_test.shader_setup->uniforms.i[0] = {GENERATE(4, 9), 0, GENERATE(1, 2), 0};
+        shader_test.shader_setup->uniforms.i[1] = {GENERATE(4, 7), 0, GENERATE(1, 1), 0};
         Common::Vec4<u8> loop_parms{shader_test.shader_setup->uniforms.i[0]};
 
         const int expected_aL = loop_parms[1] + ((loop_parms[0] + 1) * loop_parms[2]);
@@ -663,23 +664,6 @@ SHADER_TEST_CASE("Nested Loop", "[video_core][shader][shader_jit]") {
                                     input) +
                                    input;
 
-        Pica::ShaderUnit shader_unit;
-        shader_test.Run(shader_unit, input);
-
-        REQUIRE(shader_unit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
-    }
-    {
-        shader_test.shader_setup->uniforms.i[0] = {9, 0, 2, 0};
-        shader_test.shader_setup->uniforms.i[1] = {7, 0, 1, 0};
-
-        const Common::Vec4<u8> loop_parms{shader_test.shader_setup->uniforms.i[0]};
-        const int expected_aL = loop_parms[1] + ((loop_parms[0] + 1) * loop_parms[2]);
-        const float input = 1.0f;
-        const float expected_out = (((shader_test.shader_setup->uniforms.i[0][0] + 1) *
-                                     (shader_test.shader_setup->uniforms.i[1][0] + 1)) *
-                                    input) +
-                                   input;
         Pica::ShaderUnit shader_unit;
         shader_test.Run(shader_unit, input);
 
