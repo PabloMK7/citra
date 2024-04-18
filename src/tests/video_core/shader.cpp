@@ -655,8 +655,8 @@ TEMPLATE_TEST_CASE("Nested Loop", "[video_core][shader]", ShaderJitTest) {
     });
 
     {
-        shader_test.shader_setup->uniforms.i[0] = {GENERATE(4, 9), 0, GENERATE(1, 2), 0};
-        shader_test.shader_setup->uniforms.i[1] = {GENERATE(4, 7), 0, GENERATE(1, 1), 0};
+        shader_test.shader_setup->uniforms.i[0] = {(u8)GENERATE(4, 9), 0, (u8)GENERATE(1, 2), 0};
+        shader_test.shader_setup->uniforms.i[1] = {(u8)GENERATE(4, 7), 0, (u8)GENERATE(1, 1), 0};
         Common::Vec4<u8> loop_parms{shader_test.shader_setup->uniforms.i[0]};
 
         const int expected_aL = loop_parms[1] + ((loop_parms[0] + 1) * loop_parms[2]);
