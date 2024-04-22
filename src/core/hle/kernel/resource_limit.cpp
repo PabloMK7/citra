@@ -45,10 +45,10 @@ bool ResourceLimit::Reserve(ResourceLimitType type, s32 amount) {
     const auto index = static_cast<std::size_t>(type);
     const s32 limit = m_limit_values[index];
     const s32 new_value = m_current_values[index] + amount;
+    // TODO(PabloMK7): Fix all resource limit bugs and return an error, instead of ignoring it.
     if (new_value > limit) {
         LOG_ERROR(Kernel, "New value {} exceeds limit {} for resource type {}", new_value, limit,
                   type);
-        return false;
     }
     m_current_values[index] = new_value;
     return true;
@@ -57,10 +57,10 @@ bool ResourceLimit::Reserve(ResourceLimitType type, s32 amount) {
 bool ResourceLimit::Release(ResourceLimitType type, s32 amount) {
     const auto index = static_cast<std::size_t>(type);
     const s32 value = m_current_values[index];
+    // TODO(PabloMK7): Fix all resource limit bugs and return an error, instead of ignoring it.
     if (amount > value) {
         LOG_ERROR(Kernel, "Amount {} exceeds current value {} for resource type {}", amount, value,
                   type);
-        return false;
     }
     m_current_values[index] = value - amount;
     return true;
