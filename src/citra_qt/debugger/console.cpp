@@ -25,7 +25,14 @@ void ToggleConsole() {
 #ifdef _WIN32
     FILE* temp;
     if (UISettings::values.show_console) {
-        if (AllocConsole()) {
+        BOOL alloc_console_res = AllocConsole();
+        DWORD last_error = 0;
+        if (!alloc_console_res) {
+            last_error = GetLastError();
+        }
+        // If the windows debugger already opened a console, calling AllocConsole again
+        // will cause ERROR_ACCESS_DENIED. If that's the case assume a console is open.
+        if (alloc_console_res || last_error == ERROR_ACCESS_DENIED) {
             // The first parameter for freopen_s is a out parameter, so we can just ignore it
             freopen_s(&temp, "CONIN$", "r", stdin);
             freopen_s(&temp, "CONOUT$", "w", stdout);
