@@ -105,6 +105,7 @@ void RendererVulkan::PrepareRendertarget() {
 
         const auto color_fill = fb_id == 0 ? regs_lcd.color_fill_top : regs_lcd.color_fill_bottom;
         if (color_fill.is_enabled) {
+            screen_infos[i].image_view = texture.image_view;
             FillScreen(color_fill.AsVector(), texture);
             continue;
         }
