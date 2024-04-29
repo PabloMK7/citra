@@ -184,6 +184,7 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
                        includer)) [[unlikely]] {
         LOG_INFO(Render_Vulkan, "Shader Info Log:\n{}\n{}", shader->getInfoLog(),
                  shader->getInfoDebugLog());
+        LOG_INFO(Render_Vulkan, "Shader Source:\n{}", code);
         return {};
     }
 
