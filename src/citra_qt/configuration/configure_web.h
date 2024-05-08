@@ -22,16 +22,7 @@ public:
     void ApplyConfiguration();
     void RetranslateUI();
     void SetConfiguration();
-    void SetWebServiceConfigEnabled(bool enabled);
 
 private:
-    void RefreshTelemetryID();
-    void OnLoginChanged();
-    void VerifyLogin();
-    void OnLoginVerified();
-
-    bool user_verified = true;
-    QFutureWatcher<bool> verify_watcher;
-
     std::unique_ptr<Ui::ConfigureWeb> ui;
 };
