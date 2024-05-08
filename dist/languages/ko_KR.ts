@@ -3586,6 +3586,24 @@ Drag points to change position, or double-click table cells to edit values.</sou
     </message>
 </context>
 <context>
+    <name>ConfigureWeb</name>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <source>Form</source>
+        <translation>종류</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="177"/>
+        <source>Discord Presence</source>
+        <translation>디스코드 있음</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="183"/>
+        <source>Show Current Game in your Discord Status</source>
+        <translation>사용자의 디스코드 상태에 현재 게임 표시하기</translation>
+    </message>
+</context>
+<context>
     <name>DirectConnect</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="14"/>

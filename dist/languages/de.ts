@@ -3586,6 +3586,24 @@ Ziehe Punkte, um ihre Position zu verändern, oder doppelklicke auf Zellen in de
     </message>
 </context>
 <context>
+    <name>ConfigureWeb</name>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="177"/>
+        <source>Discord Presence</source>
+        <translation>Discord Presence</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="183"/>
+        <source>Show Current Game in your Discord Status</source>
+        <translation>Aktuelles Spiel in Ihrem Discordstatus anzeigen</translation>
+    </message>
+</context>
+<context>
     <name>DirectConnect</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="14"/>

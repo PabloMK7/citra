@@ -3583,6 +3583,72 @@ Drag points to change position, or double-click table cells to edit values.</sou
     </message>
 </context>
 <context>
+    <name>ConfigureWeb</name>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <source>Form</source>
+        <translation>Forma</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="177"/>
+        <source>Discord Presence</source>
+        <translation>Discord jelenlét</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="183"/>
+        <source>Show Current Game in your Discord Status</source>
+        <translation>Jelenlegi játék megjelenítése a Discord állapotodban</translation>
+    </message>
+</context>
+<context>
+    <name>DirectConnect</name>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="14"/>
+        <source>Direct Connect</source>
+        <translation>Közvetlen Kapcsolódás</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="47"/>
+        <source>Server Address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="54"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Server address of the host&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="64"/>
+        <source>Port</source>
+        <translation>Port</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="71"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Port number the host is listening on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Annak a portnak a száma, amire a gazda figyel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="77"/>
+        <source>24872</source>
+        <translation>24872</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="97"/>
+        <source>Nickname</source>
+        <translation>Becenév</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="111"/>
+        <source>Password</source>
+        <translation>Jelszó</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="153"/>
+        <source>Connect</source>
+        <translation>Kapcsolás</translation>
+    </message>
+</context>
+<context>
     <name>DirectConnectWindow</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="104"/>
