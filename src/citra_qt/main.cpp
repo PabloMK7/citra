@@ -1797,6 +1797,8 @@ void GMainWindow::OnMenuConnectArticBase() {
                                      tr("Enter Artic Base server address:"), QLineEdit::Normal,
                                      UISettings::values.last_artic_base_addr, &ok);
     if (ok) {
+        if (!res.contains(QString::fromStdString(":")))
+            res += QString::fromStdString(":5543");
         UISettings::values.last_artic_base_addr = res;
         BootGame(QString::fromStdString("articbase://").append(res));
     }

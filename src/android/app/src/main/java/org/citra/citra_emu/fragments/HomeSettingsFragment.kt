@@ -102,6 +102,8 @@ class HomeSettingsFragment : Fragment() {
                             .setTitle(getString(R.string.artic_base_enter_address))
                             .setPositiveButton(android.R.string.ok) { _, _ ->
                                 if (textInputValue.isNotEmpty()) {
+                                    if (!textInputValue.contains(":"))
+                                        textInputValue += ":5543"
                                     val menu = Game(
                                         title = getString(R.string.artic_base),
                                         path = "articbase://$textInputValue",
