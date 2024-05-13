@@ -970,7 +970,7 @@ void GMainWindow::UpdateMenuState() {
         action->setEnabled(emulation_running);
     }
 
-    ui->action_Capture_Screenshot->setEnabled(emulation_running && !is_paused);
+    ui->action_Capture_Screenshot->setEnabled(emulation_running);
 
     if (emulation_running && is_paused) {
         ui->action_Pause->setText(tr("&Continue"));
@@ -2408,11 +2408,18 @@ void GMainWindow::OnSaveMovie() {
 }
 
 void GMainWindow::OnCaptureScreenshot() {
-    if (!emu_thread || !emu_thread->IsRunning()) [[unlikely]] {
+    if (!emu_thread) [[unlikely]] {
         return;
     }
 
-    OnPauseGame();
+    if (!emu_thread->IsRunning()
+    && (QMessageBox::question(this, tr("Game will unpause"),
+                                 tr("The game will be unpaused, and the next frame will be captured. Is this okay?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No)) {
+        return;
+    } else {
+        OnPauseGame();
+    }
+
     std::string path = UISettings::values.screenshot_path.GetValue();
     if (!FileUtil::IsDirectory(path)) {
         if (!FileUtil::CreateFullPath(path)) {
