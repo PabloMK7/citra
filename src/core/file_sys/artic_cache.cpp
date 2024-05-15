@@ -25,13 +25,20 @@ ResultVal<std::size_t> ArticCache::Read(s32 file_handle, std::size_t offset, std
                 auto res =
                     ReadFromArtic(file_handle, reinterpret_cast<u8*>(big_cache_entry.second.data()),
                                   length, offset);
-                if (res.Failed())
+                if (res.Failed()) {
+                    big_cache.invalidate(std::make_pair(offset, length));
                     return res;
-                length = res.Unwrap();
+                }
+                read_progress = res.Unwrap();
             } else {
-                LOG_TRACE(Service_FS, "ArticCache BHIT: offset={}, length={}", offset, length);
+                LOG_TRACE(Service_FS, "ArticCache BHIT: offset={}, length={}", offset,
+                          read_progress);
             }
-            memcpy(buffer, big_cache_entry.second.data(), length);
+            memcpy(buffer, big_cache_entry.second.data(), read_progress);
+            if (read_progress < length) {
+                // Invalidate the entry as it is not fully read
+                big_cache.invalidate(std::make_pair(offset, length));
+            }
         } else {
             if (segments[0].second < very_big_cache_skip) {
                 std::unique_lock very_big_read_guard(very_big_cache_mutex);
@@ -44,28 +51,39 @@ ResultVal<std::size_t> ArticCache::Read(s32 file_handle, std::size_t offset, std
                     auto res = ReadFromArtic(
                         file_handle, reinterpret_cast<u8*>(very_big_cache_entry.second.data()),
                         length, offset);
-                    if (res.Failed())
+                    if (res.Failed()) {
+                        very_big_cache.invalidate(std::make_pair(offset, length));
                         return res;
-                    length = res.Unwrap();
+                    }
+                    read_progress = res.Unwrap();
                 } else {
-                    LOG_TRACE(Service_FS, "ArticCache VBHIT: offset={}, length={}", offset, length);
+                    LOG_TRACE(Service_FS, "ArticCache VBHIT: offset={}, length={}", offset,
+                              read_progress);
                 }
-                memcpy(buffer, very_big_cache_entry.second.data(), length);
+                memcpy(buffer, very_big_cache_entry.second.data(), read_progress);
+                if (read_progress < length) {
+                    // Invalidate the entry as it is not fully read
+                    very_big_cache.invalidate(std::make_pair(offset, length));
+                }
             } else {
                 LOG_TRACE(Service_FS, "ArticCache SKIP: offset={}, length={}", offset, length);
 
                 auto res = ReadFromArtic(file_handle, buffer, length, offset);
                 if (res.Failed())
                     return res;
-                length = res.Unwrap();
+                read_progress = res.Unwrap();
             }
         }
-        return length;
+        return read_progress;
     }
 
     // TODO(PabloMK7): Make cache thread safe, read the comment in CacheReady function.
     std::unique_lock read_guard(cache_mutex);
+    bool read_past_end = false;
     for (const auto& seg : segments) {
+        if (read_past_end) {
+            break;
+        }
         std::size_t read_size = cache_line_size;
         std::size_t page = OffsetToPage(seg.first);
         // Check if segment is in cache
@@ -73,9 +91,28 @@ ResultVal<std::size_t> ArticCache::Read(s32 file_handle, std::size_t offset, std
         if (!cache_entry.first) {
             // If not found, read from artic and cache the data
             auto res = ReadFromArtic(file_handle, cache_entry.second.data(), read_size, page);
-            if (res.Failed())
+            if (res.Failed()) {
+                // Invalidate the requested entry as it is not populated
+                cache.invalidate(page);
+
+                // In the very unlikely case the file size is a multiple of the cache size,
+                // and the game request more data than the file size, this will save us from
+                // returning an incorrect out of bounds error caused by reading at just the very end
+                // of the file.
+                constexpr u32 out_of_bounds_read = 714;
+                if (res.Code().description == out_of_bounds_read) {
+                    return read_progress;
+                }
                 return res;
+            }
+            size_t expected_read_size = read_size;
             read_size = res.Unwrap();
+            //
+            if (read_size < expected_read_size) {
+                // Invalidate the requested entry as it is not fully read
+                cache.invalidate(page);
+                read_past_end = true;
+            }
             LOG_TRACE(Service_FS, "ArticCache MISS: page={}, length={}, into={}", page, seg.second,
                       (seg.first - page));
         } else {
