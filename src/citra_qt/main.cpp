@@ -2415,7 +2415,7 @@ void GMainWindow::OnCaptureScreenshot() {
     const bool was_running = emu_thread->IsRunning();
 
     if (was_running ||
-       (QMessageBox::question(
+        (QMessageBox::question(
              this, tr("Game will unpause"),
              tr("The game will be unpaused, and the next frame will be captured. Is this okay?"),
              QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)) {
@@ -2425,9 +2425,10 @@ void GMainWindow::OnCaptureScreenshot() {
         std::string path = UISettings::values.screenshot_path.GetValue();
         if (!FileUtil::IsDirectory(path)) {
             if (!FileUtil::CreateFullPath(path)) {
-                QMessageBox::information(this, tr("Invalid Screenshot Directory"),
-                                         tr("Cannot create specified screenshot directory. Screenshot "
-                                            "path is set back to its default value."));
+                QMessageBox::information(
+                    this, tr("Invalid Screenshot Directory"),
+                    tr("Cannot create specified screenshot directory. Screenshot "
+                       "path is set back to its default value."));
                 path = FileUtil::GetUserPath(FileUtil::UserPath::UserDir);
                 path.append("screenshots/");
                 UISettings::values.screenshot_path = path;
