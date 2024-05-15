@@ -2412,10 +2412,14 @@ void GMainWindow::OnCaptureScreenshot() {
         return;
     }
 
-    if (emu_thread->IsRunning()
-    || (QMessageBox::question(this, tr("Game will unpause"),
-                                 tr("The game will be unpaused, and the next frame will be captured. Is this okay?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)) {
-        if (emu_thread->IsRunning()) {
+    const bool was_running = emu_thread->IsRunning();
+
+    if (was_running ||
+       (QMessageBox::question(
+             this, tr("Game will unpause"),
+             tr("The game will be unpaused, and the next frame will be captured. Is this okay?"),
+             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)) {
+        if (was_running) {
             OnPauseGame();
         }
         std::string path = UISettings::values.screenshot_path.GetValue();
@@ -2432,13 +2436,16 @@ void GMainWindow::OnCaptureScreenshot() {
 
         static QRegularExpression expr(QStringLiteral("[\\/:?\"<>|]"));
         const std::string filename = game_title.remove(expr).toStdString();
-        const std::string timestamp =
-            QDateTime::currentDateTime().toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z")).toStdString();
+        const std::string timestamp = QDateTime::currentDateTime()
+                                          .toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z"))
+                                          .toStdString();
         path.append(fmt::format("/{}_{}.png", filename, timestamp));
 
-        auto* const screenshot_window = secondary_window->HasFocus() ? secondary_window : render_window;
-        screenshot_window->CaptureScreenshot(UISettings::values.screenshot_resolution_factor.GetValue(),
-                                             QString::fromStdString(path));
+        auto* const screenshot_window =
+            secondary_window->HasFocus() ? secondary_window : render_window;
+        screenshot_window->CaptureScreenshot(
+            UISettings::values.screenshot_resolution_factor.GetValue(),
+            QString::fromStdString(path));
         OnStartGame();
     }
 }
