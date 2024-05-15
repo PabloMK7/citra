@@ -41,9 +41,11 @@ Result ArticArchive::RespResult(const std::optional<Network::ArticBase::Client::
 }
 
 ArticArchive::~ArticArchive() {
+    /*
     if (clear_cache_on_close) {
         cache_provider->ClearAllCache();
     }
+    */
     if (archive_handle != -1) {
         auto req = client->NewRequest("FSUSER_CloseArchive");
         req.AddParameterS64(archive_handle);
@@ -57,7 +59,7 @@ ArticArchive::~ArticArchive() {
 ResultVal<std::unique_ptr<ArchiveBackend>> ArticArchive::Open(
     std::shared_ptr<Network::ArticBase::Client>& client, Service::FS::ArchiveIdCode archive_id,
     const Path& path, Core::PerfStats::PerfArticEventBits report_artic_event,
-    ArticCacheProvider& cache_provider, bool clear_cache_on_close) {
+    ArticCacheProvider& cache_provider/*, bool clear_cache_on_close*/) {
 
     auto req = client->NewRequest("FSUSER_OpenArchive");
 
@@ -83,10 +85,11 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArticArchive::Open(
 }
 
 void ArticArchive::Close() {
+    /*
     if (clear_cache_on_close) {
         cache_provider->ClearAllCache();
     }
-
+    */
     auto req = client->NewRequest("FSUSER_CloseArchive");
     req.AddParameterS64(archive_handle);
     if (RespResult(client->Send(req)).IsSuccess()) {
