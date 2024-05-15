@@ -193,6 +193,8 @@
     <addaction name="separator"/>
     <addaction name="action_Capture_Screenshot"/>
     <addaction name="action_Dump_Video"/>
+    <addaction name="separator"/>
+    <addaction name="action_Manage_Skylanders"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -433,6 +435,11 @@
    </property>
    <property name="text">
     <string>Dump Video</string>
+   </property>
+  </action>
+  <action name="action_Manage_Skylanders">
+   <property name="text">
+    <string>Manage Skylanders</string>
    </property>
   </action>
   <action name="action_View_Lobby">
