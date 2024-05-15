@@ -88,16 +88,8 @@ public:
         }
     }
 
-    void invalidate(const key_type& key) {
-        auto i = find(key);
-        if (i != m_list.cend()) {
-            m_list.erase(i);
-        }
-    }
-
     void clear() {
         m_list.clear();
-        m_array.fill(value_type{});
     }
 
 private:
