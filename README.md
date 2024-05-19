@@ -1,1 +1,1 @@
-﻿ñ
+﻿Nintendo is trying to wipe Citra and Yuzu off the internet right now so fork this project to rebell against them.
