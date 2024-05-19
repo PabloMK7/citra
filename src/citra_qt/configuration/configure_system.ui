@@ -13,640 +13,671 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_scrollbar">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QGroupBox" name="group_system_settings">
-       <property name="title">
-        <string>System Settings</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="toggle_new_3ds">
-          <property name="text">
-           <string>Enable New 3DS mode</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="toggle_lle_applets">
-          <property name="text">
-           <string>Use LLE applets (if installed)</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLineEdit" name="edit_username">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maxLength">
-           <number>10</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_username">
-          <property name="text">
-           <string>Username</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_birthday">
-          <property name="text">
-           <string>Birthday</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_birthday2">
-          <item>
-           <widget class="QComboBox" name="combo_birthmonth">
-            <item>
-             <property name="text">
-              <string>January</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>February</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>March</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>April</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>May</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>June</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>July</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>August</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>September</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>October</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>November</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>December</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="combo_birthday"/>
-          </item>
-         </layout>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label_language">
-          <property name="text">
-           <string>Language</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QComboBox" name="combo_language">
-          <property name="toolTip">
-           <string>Note: this can be overridden when region setting is auto-select</string>
-          </property>
-          <item>
-           <property name="text">
-            <string>Japanese (日本語)</string>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>480</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>422</width>
+        <height>500</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="group_system_settings">
+           <property name="title">
+            <string>System Settings</string>
            </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>English</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>French (français)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>German (Deutsch)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Italian (italiano)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Spanish (español)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Simplified Chinese (简体中文)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Korean (한국어)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Dutch (Nederlands)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Portuguese (português)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Russian (Русский)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Traditional Chinese (正體中文)</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="label_sound">
-          <property name="text">
-           <string>Sound output mode</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QComboBox" name="combo_sound">
-          <item>
-           <property name="text">
-            <string>Mono</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Stereo</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Surround</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="label_country">
-          <property name="text">
-           <string>Country</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="1">
-         <widget class="QComboBox" name="combo_country"/>
-        </item>
-        <item row="8" column="0">
-         <widget class="QLabel" name="label_init_clock">
-          <property name="text">
-           <string>Clock</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QComboBox" name="combo_init_clock">
-          <item>
-           <property name="text">
-            <string>System Clock</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Fixed Time</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="label_init_time">
-          <property name="text">
-           <string>Startup time</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="1">
-         <widget class="QDateTimeEdit" name="edit_init_time">
-          <property name="displayFormat">
-           <string>yyyy-MM-ddTHH:mm:ss</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="label_init_time_offset">
-          <property name="text">
-           <string>Offset time</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="1">
-         <layout class="QGridLayout" name="edit_init_time_offset_grid">
-          <item row="0" column="0">
-           <widget class="QSpinBox" name="edit_init_time_offset_days">
-            <property name="suffix">
-             <string> days</string>
-            </property>
-            <property name="minimum">
-             <number>-2147483648</number>
-            </property>
-            <property name="maximum">
-             <number>2147483647</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QTimeEdit" name="edit_init_time_offset_time">
-            <property name="displayFormat">
-             <string>HH:mm:ss</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="10" column="0">
-         <widget class="QLabel" name="label_init_ticks_type">
-          <property name="text">
-           <string>Initial System Ticks</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="1">
-         <widget class="QComboBox" name="combo_init_ticks_type">
-          <item>
-           <property name="text">
-            <string>Random</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Fixed</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="11" column="0">
-         <widget class="QLabel" name="label_init_ticks_value">
-          <property name="text">
-           <string>Initial System Ticks Override</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="1">
-         <widget class="QLineEdit" name="edit_init_ticks_value">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maxLength">
-           <number>20</number>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="0">
-         <widget class="QLabel" name="label_play_coins">
-          <property name="text">
-           <string>Play Coins:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="1">
-         <widget class="QSpinBox" name="spinBox_play_coins">
-          <property name="maximum">
-           <number>300</number>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="1">
-         <widget class="QCheckBox" name="toggle_system_setup">
-          <property name="text">
-           <string>Run System Setup when Home Menu is launched</string>
-          </property>
-         </widget>
-        </item>
-        <item row="14" column="0">
-         <widget class="QLabel" name="label_console_id">
-          <property name="text">
-           <string>Console ID:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="14" column="1">
-         <widget class="QPushButton" name="button_regenerate_console_id">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="layoutDirection">
-           <enum>Qt::RightToLeft</enum>
-          </property>
-          <property name="text">
-           <string>Regenerate</string>
-          </property>
-         </widget>
-        </item>
-        <item row="15" column="0">
-         <widget class="QLabel" name="label_plugin_loader">
-          <property name="text">
-           <string>3GX Plugin Loader:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="15" column="1">
-         <widget class="QCheckBox" name="plugin_loader">
-          <property name="text">
-           <string>Enable 3GX plugin loader</string>
-          </property>
-         </widget>
-        </item>
-        <item row="16" column="1">
-         <widget class="QCheckBox" name="allow_plugin_loader">
-          <property name="text">
-           <string>Allow games to change plugin loader state</string>
-          </property>
-         </widget>
-        </item>
-        <item row="17" column="0">
-         <widget class="QLabel" name="label_nus_download">
-          <property name="text">
-           <string>Download System Files from Nitendo servers</string>
-          </property>
-         </widget>
-        </item>
-        <item row="17" column="1">
-         <widget class="QWidget" name="body_nus_download">
-          <layout class="QHBoxLayout" name="horizontalLayout_nus_download">
-           <item>
-            <widget class="QComboBox" name="combo_download_set">
-             <item>
-              <property name="text">
-               <string>Minimal</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Old 3DS</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>New 3DS</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="combo_download_region">
-             <item>
-              <property name="text">
-               <string>JPN</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>USA</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>EUR</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>AUS</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>CHN</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>KOR</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>TWN</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="button_start_download">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
-             <property name="text">
-              <string>Download</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-      <item>
-        <widget class="QGroupBox" name="group_real_console_unique_data">
-          <property name="title">
-            <string>Real Console Unique Data</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout1">
+           <layout class="QGridLayout" name="gridLayout">
             <item row="1" column="0">
-              <widget class="QLabel" name="label_secure_info">
-                <property name="text">
-                  <string>SecureInfo_A/B</string>
-                </property>
-              </widget>
-            </item>
-            <item row="1" column="1">
-              <widget class="QWidget" name="secure_info">
-                <layout class="QHBoxLayout" name="horizontalLayout_secure_info">
-                  <item>
-                    <widget class="QLabel" name="label_secure_info_status">
-                      <property name="text">
-                        <string></string>
-                      </property>
-                    </widget>
-                  </item>
-                  <item>
-                    <widget class="QPushButton" name="button_secure_info">
-                      <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                        </sizepolicy>
-                      </property>
-                      <property name="layoutDirection">
-                        <enum>Qt::RightToLeft</enum>
-                      </property>
-                      <property name="text">
-                        <string>Choose</string>
-                      </property>
-                    </widget>
-                  </item>
-                </layout>
-              </widget>
+             <widget class="QCheckBox" name="toggle_new_3ds">
+              <property name="text">
+               <string>Enable New 3DS mode</string>
+              </property>
+             </widget>
             </item>
             <item row="2" column="0">
-              <widget class="QLabel" name="label_friend_code_seed">
-                <property name="text">
-                  <string>LocalFriendCodeSeed_A/B</string>
-                </property>
-              </widget>
-            </item>
-            <item row="2" column="1">
-              <widget class="QWidget" name="friend_code_seed">
-                <layout class="QHBoxLayout" name="horizontalLayout_friend_code_seed">
-                  <item>
-                    <widget class="QLabel" name="label_friend_code_seed_status">
-                      <property name="text">
-                        <string></string>
-                      </property>
-                    </widget>
-                  </item>
-                  <item>
-                    <widget class="QPushButton" name="button_friend_code_seed">
-                      <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                        </sizepolicy>
-                      </property>
-                      <property name="layoutDirection">
-                        <enum>Qt::RightToLeft</enum>
-                      </property>
-                      <property name="text">
-                        <string>Choose</string>
-                      </property>
-                    </widget>
-                  </item>
-                </layout>
-              </widget>
-            </item>
-            <item row="3" column="0">
-              <widget class="QLabel" name="label_ct_cert">
-                <property name="text">
-                  <string>CTCert</string>
-                </property>
-              </widget>
+             <widget class="QCheckBox" name="toggle_lle_applets">
+              <property name="text">
+               <string>Use LLE applets (if installed)</string>
+              </property>
+             </widget>
             </item>
             <item row="3" column="1">
-              <widget class="QWidget" name="ct_cert">
-                <layout class="QHBoxLayout" name="horizontalLayout_ct_cert">
-                  <item>
-                    <widget class="QLabel" name="label_ct_cert_status">
-                      <property name="text">
-                        <string></string>
-                      </property>
-                    </widget>
-                  </item>
-                  <item>
-                    <widget class="QPushButton" name="button_ct_cert">
-                      <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                        </sizepolicy>
-                      </property>
-                      <property name="layoutDirection">
-                        <enum>Qt::RightToLeft</enum>
-                      </property>
-                      <property name="text">
-                        <string>Choose</string>
-                      </property>
-                    </widget>
-                  </item>
-                </layout>
-              </widget>
+             <widget class="QLineEdit" name="edit_username">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maxLength">
+               <number>10</number>
+              </property>
+             </widget>
             </item>
-          </layout>
-        </widget>
-      </item>
-     <item>
-      <widget class="QLabel" name="label_disable_info">
-       <property name="text">
-        <string>System settings are available only when game is not running.</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_username">
+              <property name="text">
+               <string>Username</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_birthday">
+              <property name="text">
+               <string>Birthday</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_birthday2">
+              <item>
+               <widget class="QComboBox" name="combo_birthmonth">
+                <item>
+                 <property name="text">
+                  <string>January</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>February</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>March</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>April</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>May</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>June</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>July</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>August</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>September</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>October</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>November</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>December</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="combo_birthday"/>
+              </item>
+             </layout>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_language">
+              <property name="text">
+               <string>Language</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QComboBox" name="combo_language">
+              <property name="toolTip">
+               <string>Note: this can be overridden when region setting is auto-select</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>Japanese (日本語)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>English</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>French (français)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>German (Deutsch)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Italian (italiano)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Spanish (español)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Simplified Chinese (简体中文)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Korean (한국어)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Dutch (Nederlands)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Portuguese (português)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Russian (Русский)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Traditional Chinese (正體中文)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_sound">
+              <property name="text">
+               <string>Sound output mode</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QComboBox" name="combo_sound">
+              <item>
+               <property name="text">
+                <string>Mono</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Stereo</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Surround</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="label_country">
+              <property name="text">
+               <string>Country</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QComboBox" name="combo_country"/>
+            </item>
+            <item row="8" column="0">
+             <widget class="QLabel" name="label_init_clock">
+              <property name="text">
+               <string>Clock</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <widget class="QComboBox" name="combo_init_clock">
+              <item>
+               <property name="text">
+                <string>System Clock</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Fixed Time</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="label_init_time">
+              <property name="text">
+               <string>Startup time</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <widget class="QDateTimeEdit" name="edit_init_time">
+              <property name="displayFormat">
+               <string>yyyy-MM-ddTHH:mm:ss</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="label_init_time_offset">
+              <property name="text">
+               <string>Offset time</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <layout class="QGridLayout" name="edit_init_time_offset_grid">
+              <item row="0" column="0">
+               <widget class="QSpinBox" name="edit_init_time_offset_days">
+                <property name="suffix">
+                 <string>days</string>
+                </property>
+                <property name="minimum">
+                 <number>-2147483648</number>
+                </property>
+                <property name="maximum">
+                 <number>2147483647</number>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QTimeEdit" name="edit_init_time_offset_time">
+                <property name="displayFormat">
+                 <string>HH:mm:ss</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="10" column="0">
+             <widget class="QLabel" name="label_init_ticks_type">
+              <property name="text">
+               <string>Initial System Ticks</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="1">
+             <widget class="QComboBox" name="combo_init_ticks_type">
+              <item>
+               <property name="text">
+                <string>Random</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Fixed</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <widget class="QLabel" name="label_init_ticks_value">
+              <property name="text">
+               <string>Initial System Ticks Override</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="1">
+             <widget class="QLineEdit" name="edit_init_ticks_value">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maxLength">
+               <number>20</number>
+              </property>
+             </widget>
+            </item>
+            <item row="12" column="0">
+             <widget class="QLabel" name="label_play_coins">
+              <property name="text">
+               <string>Play Coins:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="12" column="1">
+             <widget class="QSpinBox" name="spinBox_play_coins">
+              <property name="maximum">
+               <number>300</number>
+              </property>
+             </widget>
+            </item>
+            <item row="13" column="1">
+             <widget class="QCheckBox" name="toggle_system_setup">
+              <property name="text">
+               <string>Run System Setup when Home Menu is launched</string>
+              </property>
+             </widget>
+            </item>
+            <item row="14" column="0">
+             <widget class="QLabel" name="label_console_id">
+              <property name="text">
+               <string>Console ID:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="14" column="1">
+             <widget class="QPushButton" name="button_regenerate_console_id">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::RightToLeft</enum>
+              </property>
+              <property name="text">
+               <string>Regenerate</string>
+              </property>
+             </widget>
+            </item>
+            <item row="15" column="0">
+             <widget class="QLabel" name="label_plugin_loader">
+              <property name="text">
+               <string>3GX Plugin Loader:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="15" column="1">
+             <widget class="QCheckBox" name="plugin_loader">
+              <property name="text">
+               <string>Enable 3GX plugin loader</string>
+              </property>
+             </widget>
+            </item>
+            <item row="16" column="1">
+             <widget class="QCheckBox" name="allow_plugin_loader">
+              <property name="text">
+               <string>Allow games to change plugin loader state</string>
+              </property>
+             </widget>
+            </item>
+            <item row="17" column="0">
+             <widget class="QLabel" name="label_nus_download">
+              <property name="text">
+               <string>Download System Files from Nitendo servers</string>
+              </property>
+             </widget>
+            </item>
+            <item row="17" column="1">
+             <widget class="QWidget" name="body_nus_download">
+              <layout class="QHBoxLayout" name="horizontalLayout_nus_download">
+               <item>
+                <widget class="QComboBox" name="combo_download_set">
+                 <item>
+                  <property name="text">
+                   <string>Minimal</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Old 3DS</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>New 3DS</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="combo_download_region">
+                 <item>
+                  <property name="text">
+                   <string>JPN</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>USA</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>EUR</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>AUS</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>CHN</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>KOR</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>TWN</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="button_start_download">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string>Download</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="group_real_console_unique_data">
+           <property name="title">
+            <string>Real Console Unique Data</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout1">
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_secure_info">
+              <property name="text">
+               <string>SecureInfo_A/B</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QWidget" name="secure_info">
+              <layout class="QHBoxLayout" name="horizontalLayout_secure_info">
+               <item>
+                <widget class="QLabel" name="label_secure_info_status">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="button_secure_info">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string>Choose</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_friend_code_seed">
+              <property name="text">
+               <string>LocalFriendCodeSeed_A/B</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QWidget" name="friend_code_seed">
+              <layout class="QHBoxLayout" name="horizontalLayout_friend_code_seed">
+               <item>
+                <widget class="QLabel" name="label_friend_code_seed_status">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="button_friend_code_seed">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string>Choose</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_ct_cert">
+              <property name="text">
+               <string>CTCert</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QWidget" name="ct_cert">
+              <layout class="QHBoxLayout" name="horizontalLayout_ct_cert">
+               <item>
+                <widget class="QLabel" name="label_ct_cert_status">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="button_ct_cert">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string>Choose</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_disable_info">
+           <property name="text">
+            <string>System settings are available only when game is not running.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
   </layout>
  </widget>
