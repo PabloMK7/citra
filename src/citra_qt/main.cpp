@@ -974,7 +974,7 @@ void GMainWindow::UpdateMenuState() {
         action->setEnabled(emulation_running);
     }
 
-    ui->action_Capture_Screenshot->setEnabled(emulation_running && !is_paused);
+    ui->action_Capture_Screenshot->setEnabled(emulation_running);
 
     if (emulation_running && is_paused) {
         ui->action_Pause->setText(tr("&Continue"));
@@ -2412,33 +2412,47 @@ void GMainWindow::OnSaveMovie() {
 }
 
 void GMainWindow::OnCaptureScreenshot() {
-    if (!emu_thread || !emu_thread->IsRunning()) [[unlikely]] {
+    if (!emu_thread) [[unlikely]] {
         return;
     }
 
-    OnPauseGame();
-    std::string path = UISettings::values.screenshot_path.GetValue();
-    if (!FileUtil::IsDirectory(path)) {
-        if (!FileUtil::CreateFullPath(path)) {
-            QMessageBox::information(this, tr("Invalid Screenshot Directory"),
-                                     tr("Cannot create specified screenshot directory. Screenshot "
-                                        "path is set back to its default value."));
-            path = FileUtil::GetUserPath(FileUtil::UserPath::UserDir);
-            path.append("screenshots/");
-            UISettings::values.screenshot_path = path;
-        };
+    const bool was_running = emu_thread->IsRunning();
+
+    if (was_running ||
+        (QMessageBox::question(
+             this, tr("Game will unpause"),
+             tr("The game will be unpaused, and the next frame will be captured. Is this okay?"),
+             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)) {
+        if (was_running) {
+            OnPauseGame();
+        }
+        std::string path = UISettings::values.screenshot_path.GetValue();
+        if (!FileUtil::IsDirectory(path)) {
+            if (!FileUtil::CreateFullPath(path)) {
+                QMessageBox::information(
+                    this, tr("Invalid Screenshot Directory"),
+                    tr("Cannot create specified screenshot directory. Screenshot "
+                       "path is set back to its default value."));
+                path = FileUtil::GetUserPath(FileUtil::UserPath::UserDir);
+                path.append("screenshots/");
+                UISettings::values.screenshot_path = path;
+            };
+        }
+
+        static QRegularExpression expr(QStringLiteral("[\\/:?\"<>|]"));
+        const std::string filename = game_title.remove(expr).toStdString();
+        const std::string timestamp = QDateTime::currentDateTime()
+                                          .toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z"))
+                                          .toStdString();
+        path.append(fmt::format("/{}_{}.png", filename, timestamp));
+
+        auto* const screenshot_window =
+            secondary_window->HasFocus() ? secondary_window : render_window;
+        screenshot_window->CaptureScreenshot(
+            UISettings::values.screenshot_resolution_factor.GetValue(),
+            QString::fromStdString(path));
+        OnStartGame();
     }
-
-    static QRegularExpression expr(QStringLiteral("[\\/:?\"<>|]"));
-    const std::string filename = game_title.remove(expr).toStdString();
-    const std::string timestamp =
-        QDateTime::currentDateTime().toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z")).toStdString();
-    path.append(fmt::format("/{}_{}.png", filename, timestamp));
-
-    auto* const screenshot_window = secondary_window->HasFocus() ? secondary_window : render_window;
-    screenshot_window->CaptureScreenshot(UISettings::values.screenshot_resolution_factor.GetValue(),
-                                         QString::fromStdString(path));
-    OnStartGame();
 }
 
 void GMainWindow::OnDumpVideo() {
