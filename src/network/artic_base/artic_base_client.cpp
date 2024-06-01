@@ -163,7 +163,7 @@ bool Client::Connect() {
     }
 
     main_socket = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (main_socket == -1) {
+    if (main_socket == static_cast<SocketHolder>(-1)) {
         LOG_ERROR(Network, "Failed to create socket");
         SignalCommunicationError();
         return false;
@@ -249,7 +249,7 @@ bool Client::Connect() {
     std::stringstream ss_port(worker_ports.value());
     while (std::getline(ss_port, str_port, ',')) {
         int port = str_to_int(str_port);
-        if (port < 0 || port > USHRT_MAX) {
+        if (port < 0 || port > static_cast<int>(USHRT_MAX)) {
             shutdown(main_socket, SHUT_RDWR);
             closesocket(main_socket);
             LOG_ERROR(Network, "Couldn't parse server worker ports");
@@ -518,7 +518,7 @@ std::optional<ArticBaseCommon::DataPacket> Client::SendRequestPacket(
     const std::chrono::nanoseconds& read_timeout) {
     std::scoped_lock<std::mutex> l(send_mutex);
 
-    if (main_socket == -1) {
+    if (main_socket == static_cast<SocketHolder>(-1)) {
         return std::nullopt;
     }
 
@@ -586,7 +586,7 @@ Client::Handler::Handler(Client& _client, u32 _addr, u16 _port, int _id)
 
 void Client::Handler::RunLoop() {
     handler_socket = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (handler_socket == -1) {
+    if (handler_socket == static_cast<SocketHolder>(-1)) {
         LOG_ERROR(Network, "Failed to create socket");
         return;
     }
