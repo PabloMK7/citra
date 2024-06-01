@@ -48,12 +48,16 @@ enum class RequestMethod : u8 {
 constexpr u32 TotalRequestMethods = 8;
 
 enum class RequestState : u8 {
-    NotStarted = 0x1,             // Request has not started yet.
-    ConnectingToServer = 0x5,     // Request in progress, connecting to server.
-    SendingRequest = 0x6,         // Request in progress, sending HTTP request.
-    ReceivingResponse = 0x7,      // Request in progress, receiving HTTP response.
-    ReadyToDownloadContent = 0x8, // Ready to download the content.
-    TimedOut = 0xA,               // Request timed out?
+    NotStarted = 0x1,         // Request has not started yet.
+    ConnectingToServer = 0x5, // Request in progress, connecting to server.
+    SendingRequest = 0x6,     // Request in progress, sending HTTP request.
+    ReceivingResponse = 0x7,  // Request in progress, receiving HTTP response and headers.
+    ReceivingBody = 0x8,      // Request in progress, receiving HTTP body. The HTTP module may
+                              // get stuck in this state if the internal receive buffer gets full.
+                              // Once the user calls ReceiveData it will get unstuck.
+    Received = 0x9,  // Request is finished and all data has been received. HTTP transitions
+                     // to the Completed state shortly afterwards after some cleanup.
+    Completed = 0xA, // Request is completed.
 };
 
 enum class PostDataEncoding : u8 {
