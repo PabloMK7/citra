@@ -1,6 +1,6 @@
 #include <dlfcn.h>
-#include "../duckstation_compat.h"
-#include "../log.h"
+#include "citra_qt/wayland/duckstation_compat.h"
+#include "citra_qt/wayland/log.h"
 #include "context_glx.h"
 Log_SetChannel(GL::ContextGLX);
 

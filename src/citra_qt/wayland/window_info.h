@@ -1,5 +1,5 @@
 #pragma once
-#include "../types.h"
+#include "common/common_types.h"
 
 // Contains the information required to create a graphics context in a window.
 struct WindowInfo {

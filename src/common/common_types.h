@@ -54,6 +54,9 @@ typedef u32 PAddr; ///< Represents a pointer in the ARM11 physical address space
 using u128 = std::array<std::uint64_t, 2>;
 static_assert(sizeof(u128) == 16, "u128 must be 128 bits wide");
 
+template <class T, std::size_t A, std::size_t B>
+using array2d = std::array<std::array<T, B>, A>;
+
 // An inheritable class to disallow the copy constructor and operator= functions
 class NonCopyable {
 protected:

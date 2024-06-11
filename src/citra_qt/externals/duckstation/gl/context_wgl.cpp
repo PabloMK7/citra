@@ -1,6 +1,6 @@
-#include "../duckstation_compat.h"
-#include "../log.h"
-#include "../scoped_guard.h"
+#include "citra_qt/wayland/duckstation_compat.h"
+#include "citra_qt/wayland/log.h"
+#include "citra_qt/wayland/scoped_guard.h"
 #include "context_wgl.h"
 #include "loader.h"
 using namespace melonDS;

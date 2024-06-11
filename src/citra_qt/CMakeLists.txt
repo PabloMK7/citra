@@ -312,10 +312,8 @@ elseif(UNIX)
         externals/duckstation/gl/context_egl_x11.cpp
         externals/duckstation/gl/context_glx.cpp
         externals/duckstation/gl/x11_window.cpp
-
-        ../../externals/glad/src/glad_egl.c
-        ../../externals/glad/src/glad_glx.c
     )
+
     target_link_libraries(citra PRIVATE "${X11_LIBRARIES}" "${EGL_LIBRARIES}")
     target_include_directories(citra PRIVATE "${X11_INCLUDE_DIR}")
     add_compile_definitions(QAPPLICATION_CLASS=QApplication)

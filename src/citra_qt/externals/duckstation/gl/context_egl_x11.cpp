@@ -1,4 +1,4 @@
-#include "../log.h"
+#include "citra_qt/wayland/log.h"
 #include "context_egl_x11.h"
 Log_SetChannel(GL::ContextEGLX11);
 

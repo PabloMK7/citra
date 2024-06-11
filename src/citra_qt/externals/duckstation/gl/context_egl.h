@@ -1,6 +1,8 @@
 #pragma once
-#include "../../../../../externals/glad/src/glad_egl.h"
+
 #include "context.h"
+
+#include <glad/glad_egl.h>
 
 namespace GL {
 

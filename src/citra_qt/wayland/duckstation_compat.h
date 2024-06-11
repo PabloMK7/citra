@@ -1,7 +1,7 @@
 #ifndef DUCKSTATION_COMPAT_H
 #define DUCKSTATION_COMPAT_H
 
-#include "../types.h"
+#include "common/common_types.h"
 
 #include <assert.h>
 

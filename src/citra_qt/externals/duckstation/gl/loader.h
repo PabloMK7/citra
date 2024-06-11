@@ -2,7 +2,7 @@
 
 // Fix glad.h including windows.h
 #ifdef _WIN32
-#include "../windows_headers.h"
+#include "citra_qt/wayland/windows_headers.h"
 #endif
 
-#include "../../../../../externals/glad/src/glad.h"
+#include <glad/glad.h>

@@ -1,5 +1,5 @@
 #include <dlfcn.h>
-#include "../log.h"
+#include "citra_qt/wayland/log.h"
 #include "context_egl_wayland.h"
 Log_SetChannel(ContextEGLWayland);
 

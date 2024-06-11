@@ -1,8 +1,10 @@
 #pragma once
-#include "../windows_headers.h"
+
+#include "citra+qt/wayland/windows_headers.h"
 
 #include <optional>
-#include "../../../../../externals/glad/src/glad_wgl.h"
+#include <glad/glad_wgl.h>
+
 #include "context.h"
 #include "loader.h"
 

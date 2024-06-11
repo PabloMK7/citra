@@ -1,7 +1,7 @@
 #pragma once
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include "../duckstation_compat.h"
+#include "citra_qt/wayland/duckstation_compat.h"
 
 namespace GL {
 using namespace citra;

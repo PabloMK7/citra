@@ -86,7 +86,7 @@ bool WindowInfo::QueryRefreshRateForWindow(const WindowInfo& wi, float* refresh_
 
 #include <X11/extensions/Xrandr.h>
 #include "common/scoped_guard.h"
-#include "gl/x11_window.h"
+#include "x11_window.h"
 
 static bool GetRefreshRateFromXRandR(const WindowInfo& wi, float* refresh_rate) {
     Display* display = static_cast<Display*>(wi.display_connection);

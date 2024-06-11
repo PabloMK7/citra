@@ -1,8 +1,8 @@
 #include <cstring>
 #include <optional>
 #include <vector>
-#include "../duckstation_compat.h"
-#include "../log.h"
+#include "citra_qt/wayland/duckstation_compat.h"
+#include "citra_qt/wayland/log.h"
 #include "context_egl.h"
 Log_SetChannel(GL::ContextEGL);
 

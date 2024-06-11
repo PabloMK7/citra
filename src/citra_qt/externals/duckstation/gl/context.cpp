@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdlib.h>
-#include "../log.h"
+#include "citra_qt/wayland/log.h"
 #include "context.h"
 #include "loader.h"
 Log_SetChannel(GL::Context);
