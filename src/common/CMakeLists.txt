@@ -212,6 +212,9 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
     target_include_directories(citra_common PRIVATE "${X11_INCLUDE_DIR}")
     add_compile_definitions(QAPPLICATION_CLASS=QApplication)
 
+    if (ENABLE_OPENGL)
+        target_link_libraries(citra_common PRIVATE glad)
+    endif()
 endif()
 
 create_target_directory_groups(citra_common)

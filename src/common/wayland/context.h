@@ -7,7 +7,6 @@
 #include "window_info.h"
 
 namespace GL {
-using namespace citra;
 class Context {
 public:
     Context(const WindowInfo& wi);

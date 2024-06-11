@@ -69,7 +69,7 @@ bool ContextGLX::Initialize(const Version* versions_to_try, size_t num_versions_
 }
 
 void* ContextGLX::GetProcAddress(const char* name) {
-    return reinterpret_cast<void*>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(name)));
+    return reinterpret_cast<void*>(glXGetProcAddressARB(reinterpret_cast<const GLubyte*>(name)));
 }
 
 bool ContextGLX::ChangeSurface(const WindowInfo& new_wi) {

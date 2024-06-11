@@ -4,7 +4,6 @@
 #include "duckstation_compat.h"
 
 namespace GL {
-using namespace citra;
 class X11Window {
 public:
     X11Window();
