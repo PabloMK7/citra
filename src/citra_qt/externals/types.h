@@ -19,21 +19,20 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <stdint.h>
 #include <array>
+#include <stdint.h>
 
-namespace citra
-{
-typedef uint8_t     u8;
-typedef uint16_t    u16;
-typedef uint32_t    u32;
-typedef uint64_t    u64;
-typedef int8_t      s8;
-typedef int16_t     s16;
-typedef int32_t     s32;
-typedef int64_t     s64;
+namespace citra {
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 
-template<class T, std::size_t A, std::size_t B>
+template <class T, std::size_t A, std::size_t B>
 using array2d = std::array<std::array<T, B>, A>;
-}
+} // namespace citra
 #endif // TYPES_H

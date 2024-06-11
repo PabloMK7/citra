@@ -7,7 +7,7 @@
 
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
 
-#define AssertMsg(cond, msg) assert(cond && msg)
+#define AssertMsg(cond, msg) assert(cond&& msg)
 #define Assert(cond) assert(cond)
 
 #define Panic(msg) assert(false && msg)
