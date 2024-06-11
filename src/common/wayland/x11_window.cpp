@@ -1,6 +1,6 @@
 #include <cstdio>
-#include "citra_qt/wayland/duckstation_compat.h"
-#include "citra_qt/wayland/log.h"
+#include "duckstation_compat.h"
+#include "log.h"
 #include "x11_window.h"
 Log_SetChannel(X11Window);
 

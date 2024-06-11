@@ -1,6 +1,6 @@
 #include <dlfcn.h>
-#include "citra_qt/wayland/log.h"
 #include "context_egl_wayland.h"
+#include "log.h"
 Log_SetChannel(ContextEGLWayland);
 
 namespace GL {

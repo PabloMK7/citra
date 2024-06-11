@@ -1,5 +1,5 @@
-#include "citra_qt/wayland/log.h"
 #include "context_egl_x11.h"
+#include "log.h"
 Log_SetChannel(GL::ContextEGLX11);
 
 namespace GL {

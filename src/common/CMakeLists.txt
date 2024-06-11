@@ -180,6 +180,40 @@ else()
   )
 endif()
 
+# For Wayland support
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+    find_package(X11 REQUIRED)
+    find_package(EGL REQUIRED)
+
+    if(X11_FOUND AND EGL_FOUND)
+        option(ENABLE_WAYLAND "Enable Wayland support" ON)
+    endif()
+
+    if (ENABLE_WAYLAND)
+
+        find_package(Wayland REQUIRED Client)
+
+        target_compile_definitions(citra_common PRIVATE WAYLAND_ENABLED)
+
+        target_sources(citra_common PRIVATE
+            wayland/context_egl_wayland.cpp
+        )
+    endif()
+
+    target_sources(citra_common PRIVATE
+        wayland/context.cpp
+        wayland/context_egl.cpp
+        wayland/context_egl_x11.cpp
+        wayland/context_glx.cpp
+        wayland/x11_window.cpp
+    )
+
+    target_link_libraries(citra_common PRIVATE "${X11_LIBRARIES}" "${EGL_LIBRARIES}")
+    target_include_directories(citra_common PRIVATE "${X11_INCLUDE_DIR}")
+    add_compile_definitions(QAPPLICATION_CLASS=QApplication)
+
+endif()
+
 create_target_directory_groups(citra_common)
 
 target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)

@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "citra_qt/wayland/duckstation_compat.h"
-#include "citra_qt/wayland/window_info.h"
+#include "duckstation_compat.h"
+#include "window_info.h"
 
 namespace GL {
 using namespace citra;

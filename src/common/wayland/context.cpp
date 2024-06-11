@@ -1,9 +1,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdlib.h>
-#include "citra_qt/wayland/log.h"
 #include "context.h"
 #include "loader.h"
+#include "log.h"
 Log_SetChannel(GL::Context);
 
 #if defined(_WIN32)

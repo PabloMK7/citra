@@ -1,8 +1,8 @@
 #include <dlfcn.h>
-#include "citra_qt/wayland/duckstation_compat.h"
-#include "citra_qt/wayland/log.h"
 #include "context_agl.h"
+#include "duckstation_compat.h"
 #include "loader.h"
+#include "log.h"
 Log_SetChannel(GL::ContextAGL);
 
 namespace GL {
