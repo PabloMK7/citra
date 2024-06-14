@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <fmt/format.h>
+#include <fmt/ranges.h>
 #include "common/alignment.h"
 #include "common/settings.h"
 #include "core/core_timing.h"

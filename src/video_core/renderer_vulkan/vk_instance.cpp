@@ -4,7 +4,7 @@
 
 #include <span>
 #include <boost/container/static_vector.hpp>
-#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include "common/assert.h"
 #include "common/settings.h"
