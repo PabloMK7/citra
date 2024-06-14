@@ -647,7 +647,7 @@ typename T::Surface& RasterizerCache<T>::GetTextureCube(const TextureCubeConfig&
 
     Surface& cube_surface = slot_surfaces[cube.surface_id];
     for (u32 i = 0; i < addresses.size(); i++) {
-        SurfaceId& face_id = cube.face_ids[i];
+        const SurfaceId& face_id = cube.face_ids[i];
         if (!addresses[i] || !face_id) {
             continue;
         }
