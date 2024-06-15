@@ -279,8 +279,9 @@ if (APPLE)
             XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
         )
     endif()
-    
-elseif(WIN32)
+
+elseif (WIN32)
+
     # compile as a win32 gui application instead of a console application
     target_link_libraries(citra-qt PRIVATE Qt6::EntryPointImplementation)
     if(MSVC)
