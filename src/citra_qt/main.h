@@ -49,6 +49,7 @@ class QProgressBar;
 class QPushButton;
 class QSlider;
 class RegistersWidget;
+class SkylanderPortalWindow;
 #if ENABLE_QT_UPDATER
 class Updater;
 #endif
@@ -248,6 +249,7 @@ private slots:
     void OnSaveMovie();
     void OnCaptureScreenshot();
     void OnDumpVideo();
+    void ShowSkylanderPortal();
 #ifdef _WIN32
     void OnOpenFFmpeg();
 #endif
@@ -345,6 +347,8 @@ private:
     bool game_shutdown_delayed = false;
     // Whether game was paused due to stopping video dumping
     bool game_paused_for_dumping = false;
+
+    SkylanderPortalWindow* m_skylander_window = nullptr;
 
     QString gl_renderer;
     std::vector<QString> physical_devices;
