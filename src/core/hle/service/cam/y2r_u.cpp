@@ -544,6 +544,7 @@ void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     if (is_busy_conversion) {
+        is_busy_conversion = false;
         system.CoreTiming().RemoveEvent(completion_signal_event);
     }
 
