@@ -11,6 +11,7 @@
 #include <utility>
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
+#include "network/artic_base/artic_base_client.h"
 
 namespace FileSys {
 class ArchiveBackend;
@@ -209,6 +210,10 @@ public:
         ~Interface();
 
         std::shared_ptr<Module> GetModule() const;
+
+        void UseArticClient(std::shared_ptr<Network::ArticBase::Client>& client) {
+            GetModule()->artic_client = client;
+        }
 
         /**
          * CFG::GetCountryCodeString service function
@@ -679,6 +684,8 @@ private:
     LocalFriendCodeSeedB local_friend_code_seed_b;
     bool preferred_region_chosen = false;
     MCUData mcu_data{};
+
+    std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
