@@ -1046,7 +1046,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
                 }
                 IPC::RequestBuilder rb(ctx, 2, 0);
                 rb.Push(async_data->res);
-                rb.Push(async_data->out.size() / sizeof(ContentInfo));
+                rb.Push<u32>(static_cast<u32>(async_data->out.size() / sizeof(ContentInfo)));
             },
             true);
     } else {
@@ -1171,7 +1171,7 @@ void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
 
                     IPC::RequestBuilder rb(ctx, 2, 0);
                     rb.Push(async_data->res);
-                    rb.Push(async_data->out.size() / sizeof(u64));
+                    rb.Push<u32>(static_cast<u32>(async_data->out.size() / sizeof(u64)));
                 }
             },
             true);
@@ -1650,7 +1650,7 @@ void Module::Interface::ListDataTitleTicketInfos(Kernel::HLERequestContext& ctx)
                 }
                 IPC::RequestBuilder rb(ctx, 2, 0);
                 rb.Push(async_data->res);
-                rb.Push(async_data->out.size() / sizeof(TicketInfo));
+                rb.Push<u32>(static_cast<u32>(async_data->out.size() / sizeof(TicketInfo)));
             },
             true);
     } else {
