@@ -408,17 +408,31 @@ void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
 void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    // Iterate through each command.
     auto* command_buffer = GetCommandBuffer(active_thread_id);
     auto& gpu = system.GPU();
-    for (u32 i = 0; i < command_buffer->number_commands; i++) {
-        gpu.Debugger().GXCommandProcessed(command_buffer->commands[i]);
+    while (command_buffer->number_commands) {
+        if (command_buffer->should_stop) {
+            command_buffer->status.Assign(CommandBuffer::STATUS_STOPPED);
+            break;
+        }
+        if (command_buffer->status == CommandBuffer::STATUS_STOPPED) {
+            break;
+        }
+
+        Command command = command_buffer->commands[command_buffer->index];
+
+        // Decrease the number of commands remaining and increase the current index
+        command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
+        command_buffer->index.Assign((command_buffer->index + 1) % 0xF);
+
+        gpu.Debugger().GXCommandProcessed(command);
 
         // Decode and execute command
-        gpu.Execute(command_buffer->commands[i]);
+        gpu.Execute(command);
 
-        // Indicates that command has completed
-        command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
+        if (command.stop) {
+            command_buffer->should_stop.Assign(1);
+        }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

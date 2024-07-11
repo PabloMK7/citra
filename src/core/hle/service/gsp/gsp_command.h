@@ -71,7 +71,12 @@ struct CacheFlushCommand {
 
 /// GSP command
 struct Command {
-    BitField<0, 8, CommandId> id;
+    union {
+        BitField<0, 8, CommandId> id;
+        BitField<8, 8, u32> unknown1;
+        BitField<16, 8, u32> stop;
+        BitField<24, 8, u32> unknown2;
+    };
     union {
         DmaCommand dma_request;
         SubmitCmdListCommand submit_gpu_cmdlist;
@@ -86,6 +91,8 @@ static_assert(sizeof(Command) == 0x20, "Command struct has incorrect size");
 
 /// GSP shared memory GX command buffer header
 struct CommandBuffer {
+    static constexpr u32 STATUS_STOPPED = 0x1;
+    static constexpr u32 STATUS_CMD_FAILED = 0x80;
     union {
         u32 hex;
 
@@ -99,6 +106,11 @@ struct CommandBuffer {
         // application when writing a command to shared memory, after increasing this value
         // TriggerCmdReqQueue is only used if this field is value 1.
         BitField<8, 8, u32> number_commands;
+
+        // When any of the following flags are set to 1, the GSP module stops processing the
+        // commands in the command buffer.
+        BitField<16, 8, u32> status;
+        BitField<24, 8, u32> should_stop;
     };
 
     u32 unk[7];
