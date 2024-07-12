@@ -663,5 +663,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="artic_base_connect">Conectar con Artic Base</string>
     <string name="artic_base_connect_description">Conectar con una consola real que esté ejecutando un servidor Artic Base</string>
     <string name="artic_base_enter_address">Introduce la dirección del servidor Artic Base</string>
+    <string name="delay_render_thread">Retrasa el hilo de dibujado del juego</string>
+    <string name="delay_render_thread_description">Retrasa el hilo de dibujado del juego cuando envía datos a la GPU. Ayuda con problemas de rendimiento en los (muy pocos) juegos de fps dinámicos.</string>
 
 </resources>

@@ -667,6 +667,8 @@ void Config::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.texture_filter);
     ReadGlobalSetting(Settings::values.texture_sampling);
 
+    ReadGlobalSetting(Settings::values.delay_game_render_thread_us);
+
     if (global) {
         ReadBasicSetting(Settings::values.use_shader_jit);
     }
@@ -1167,6 +1169,8 @@ void Config::SaveRendererValues() {
 
     WriteGlobalSetting(Settings::values.texture_filter);
     WriteGlobalSetting(Settings::values.texture_sampling);
+
+    WriteGlobalSetting(Settings::values.delay_game_render_thread_us);
 
     if (global) {
         WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit.GetValue(),

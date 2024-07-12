@@ -479,6 +479,8 @@ struct Values {
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::None, "texture_filter"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};
+    SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
+                                                             "delay_game_render_thread_us"};
 
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};

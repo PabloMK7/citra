@@ -9,6 +9,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include "common/archives.h"
 #include "common/bit_field.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -410,6 +411,9 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
 
     auto* command_buffer = GetCommandBuffer(active_thread_id);
     auto& gpu = system.GPU();
+
+    bool requires_delay = false;
+
     while (command_buffer->number_commands) {
         if (command_buffer->should_stop) {
             command_buffer->status.Assign(CommandBuffer::STATUS_STOPPED);
@@ -420,6 +424,10 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
         }
 
         Command command = command_buffer->commands[command_buffer->index];
+        if (command.id == CommandId::SubmitCmdList && !requires_delay &&
+            Settings::values.delay_game_render_thread_us.GetValue() != 0) {
+            requires_delay = true;
+        }
 
         // Decrease the number of commands remaining and increase the current index
         command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
@@ -435,8 +443,20 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
+    if (requires_delay) {
+        ctx.RunAsync(
+            [](Kernel::HLERequestContext& ctx) {
+                return Settings::values.delay_game_render_thread_us.GetValue() * 1000;
+            },
+            [](Kernel::HLERequestContext& ctx) {
+                IPC::RequestBuilder rb(ctx, 1, 0);
+                rb.Push(ResultSuccess);
+            },
+            false);
+    } else {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultSuccess);
+    }
 }
 
 void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
