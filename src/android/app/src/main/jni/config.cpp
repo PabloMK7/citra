@@ -169,6 +169,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_red);
     ReadSetting("Renderer", Settings::values.bg_green);
     ReadSetting("Renderer", Settings::values.bg_blue);
+    ReadSetting("Renderer", Settings::values.delay_game_render_thread_us);
 
     // Layout
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(sdl2_config->GetInteger(

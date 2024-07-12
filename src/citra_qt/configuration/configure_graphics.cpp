@@ -26,6 +26,10 @@ ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QStrin
     // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
     ui->graphics_api_combo->setCurrentIndex(-1);
 
+    const auto width = static_cast<int>(QString::fromStdString("000000000").size() * 6);
+    ui->delay_render_display_label->setMinimumWidth(width);
+    ui->delay_render_combo->setVisible(!Settings::IsConfiguringGlobal());
+
     auto graphics_api_combo_model =
         qobject_cast<QStandardItemModel*>(ui->graphics_api_combo->model());
 #ifndef ENABLE_SOFTWARE_RENDERER
@@ -82,12 +86,25 @@ ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QStrin
     connect(ui->graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureGraphics::SetPhysicalDeviceComboVisibility);
 
+    connect(ui->delay_render_slider, &QSlider::valueChanged, this, [&](int value) {
+        ui->delay_render_display_label->setText(
+            QStringLiteral("%1 ms")
+                .arg(((double)value) / 1000.f, 0, 'f', 3)
+                .rightJustified(QString::fromStdString("000000000").size()));
+    });
+
     SetConfiguration();
 }
 
 ConfigureGraphics::~ConfigureGraphics() = default;
 
 void ConfigureGraphics::SetConfiguration() {
+    ui->delay_render_slider->setValue(Settings::values.delay_game_render_thread_us.GetValue());
+    ui->delay_render_display_label->setText(
+        QStringLiteral("%1 ms")
+            .arg(((double)ui->delay_render_slider->value()) / 1000, 0, 'f', 3)
+            .rightJustified(QString::fromStdString("000000000").size()));
+
     if (!Settings::IsConfiguringGlobal()) {
         ConfigurationShared::SetHighlight(ui->graphics_api_group,
                                           !Settings::values.graphics_api.UsingGlobal());
@@ -101,6 +118,16 @@ void ConfigureGraphics::SetConfiguration() {
                                                &Settings::values.texture_sampling);
         ConfigurationShared::SetHighlight(ui->widget_texture_sampling,
                                           !Settings::values.texture_sampling.UsingGlobal());
+        ConfigurationShared::SetHighlight(
+            ui->delay_render_layout, !Settings::values.delay_game_render_thread_us.UsingGlobal());
+
+        if (Settings::values.delay_game_render_thread_us.UsingGlobal()) {
+            ui->delay_render_combo->setCurrentIndex(0);
+            ui->delay_render_slider->setEnabled(false);
+        } else {
+            ui->delay_render_combo->setCurrentIndex(1);
+            ui->delay_render_slider->setEnabled(true);
+        }
     } else {
         ui->graphics_api_combo->setCurrentIndex(
             static_cast<int>(Settings::values.graphics_api.GetValue()));
@@ -144,6 +171,9 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->toggle_disk_shader_cache, use_disk_shader_cache);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync_new, ui->toggle_vsync_new,
                                              use_vsync_new);
+    ConfigurationShared::ApplyPerGameSetting(
+        &Settings::values.delay_game_render_thread_us, ui->delay_render_combo,
+        [this](s32) { return ui->delay_render_slider->value(); });
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
@@ -170,8 +200,15 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_async_present->setEnabled(Settings::values.async_presentation.UsingGlobal());
         ui->graphics_api_combo->setEnabled(Settings::values.graphics_api.UsingGlobal());
         ui->physical_device_combo->setEnabled(Settings::values.physical_device.UsingGlobal());
+        ui->delay_render_combo->setEnabled(
+            Settings::values.delay_game_render_thread_us.UsingGlobal());
         return;
     }
+
+    connect(ui->delay_render_combo, qOverload<int>(&QComboBox::activated), this, [this](int index) {
+        ui->delay_render_slider->setEnabled(index == 1);
+        ConfigurationShared::SetHighlight(ui->delay_render_layout, index == 1);
+    });
 
     ui->toggle_shader_jit->setVisible(false);
 

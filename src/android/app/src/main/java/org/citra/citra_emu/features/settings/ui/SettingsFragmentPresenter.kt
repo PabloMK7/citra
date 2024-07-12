@@ -729,6 +729,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TEXTURE_FILTER.defaultValue
                 )
             )
+            add(
+                SliderSetting(
+                    IntSetting.DELAY_RENDER_THREAD_US,
+                    R.string.delay_render_thread,
+                    R.string.delay_render_thread_description,
+                    0,
+                    16000,
+                    " μs",
+                    IntSetting.DELAY_RENDER_THREAD_US.key,
+                    IntSetting.DELAY_RENDER_THREAD_US.defaultValue.toFloat()
+                )
+            )
 
             add(HeaderSetting(R.string.stereoscopy))
             add(

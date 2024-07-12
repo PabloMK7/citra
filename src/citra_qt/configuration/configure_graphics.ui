@@ -307,6 +307,83 @@
         </property>
        </widget>
       </item>
+      <item>
+        <widget class="QWidget" name="delay_render_layout" native="true">
+          <layout class="QHBoxLayout" name="delay_render_layout_inner">
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <item>
+              <widget class="QComboBox" name="delay_render_combo">
+                <item>
+                  <property name="text">
+                    <string>Use global</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string>Use per-game</string>
+                  </property>
+                </item>
+              </widget>
+            </item>
+            <item>
+              <widget class="QLabel" name="label_delay_render">
+                <property name="text">
+                  <string>Delay game render thread:</string>
+                </property>
+                <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated game render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic-fps games to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QSlider" name="delay_render_slider">
+                <property name="minimum">
+                  <number>0</number>
+                </property>
+                <property name="maximum">
+                  <number>16000</number>
+                </property>
+                <property name="singleStep">
+                  <number>100</number>
+                </property>
+                <property name="pageStep">
+                  <number>250</number>
+                </property>
+                <property name="value">
+                  <number>0</number>
+                </property>
+                <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                  <enum>QSlider::TicksBelow</enum>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QLabel" name="delay_render_display_label">
+                <property name="text">
+                  <string/>
+                </property>
+                <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
      </layout>
     </widget>
    </item>
