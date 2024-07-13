@@ -173,6 +173,20 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun addGeneralSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_general))
         sl.apply {
+            add(HeaderSetting(R.string.graphics_ui))
+            add(
+                SingleChoiceSetting(
+                    IntSetting.DEVICE_ORIENTATION,
+                    R.string.device_orientation_title,
+                    R.string.device_orientation_description,
+                    R.array.deviceOrientationEntries,
+                    R.array.deviceOrientationValues,
+                    IntSetting.DEVICE_ORIENTATION.key,
+                    IntSetting.DEVICE_ORIENTATION.defaultValue,
+                )
+            )
+
+            add(HeaderSetting(R.string.emulator_speed))
             add(
                 SwitchSetting(
                     IntSetting.USE_FRAME_LIMIT,
