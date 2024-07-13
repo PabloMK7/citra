@@ -73,6 +73,7 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
 RendererVulkan::~RendererVulkan() {
     vk::Device device = instance.GetDevice();
     scheduler.Finish();
+    main_window.WaitPresent();
     device.waitIdle();
 
     device.destroyShaderModule(present_vertex_shader);
