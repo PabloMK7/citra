@@ -68,9 +68,9 @@ void MasterSemaphoreTimeline::SubmitWork(vk::CommandBuffer cmdbuf, vk::Semaphore
     const std::array signal_values{signal_value, u64(0)};
     const std::array signal_semaphores{Handle(), signal};
 
-    const u32 num_wait_semaphores = wait ? 2U : 1U;
-    const std::array wait_values{signal_value - 1, u64(1)};
-    const std::array wait_semaphores{Handle(), wait};
+    const u32 num_wait_semaphores = wait ? 1U : 0U;
+    const std::array wait_values{u64(1)};
+    const std::array wait_semaphores{wait};
 
     static constexpr std::array<vk::PipelineStageFlags, 2> wait_stage_masks = {
         vk::PipelineStageFlagBits::eAllCommands,
