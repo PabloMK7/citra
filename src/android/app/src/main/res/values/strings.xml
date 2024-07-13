@@ -205,6 +205,7 @@
 
     <!-- Graphics settings strings -->
     <string name="graphics_ui">UI</string>
+    <string name="emulator_speed">Speed</string>
     <string name="renderer">Renderer</string>
     <string name="graphics_api">Graphics API</string>
     <string name="spirv_shader_gen">Enable SPIR-V shader generation</string>
