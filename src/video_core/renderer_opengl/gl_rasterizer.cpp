@@ -63,12 +63,19 @@ GLenum MakeAttributeType(Pica::PipelineRegs::VertexAttributeFormat format) {
     return GL_UNSIGNED_BYTE;
 }
 
-[[nodiscard]] GLsizeiptr TextureBufferSize() {
+[[nodiscard]] GLsizeiptr TextureBufferSize(const Driver& driver, bool is_lf) {
     // Use the smallest texel size from the texel views
     // which corresponds to GL_RG32F
     GLint max_texel_buffer_size;
     glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &max_texel_buffer_size);
-    return std::min<GLsizeiptr>(max_texel_buffer_size * 8ULL, TEXTURE_BUFFER_SIZE);
+    GLsizeiptr candidate = std::min<GLsizeiptr>(max_texel_buffer_size * 8ULL, TEXTURE_BUFFER_SIZE);
+
+    if (driver.HasBug(DriverBug::SlowTextureBufferWithBigSize) && !is_lf) {
+        constexpr GLsizeiptr FIXUP_TEXTURE_BUFFER_SIZE = static_cast<GLsizeiptr>(1 << 14); // 16384
+        return FIXUP_TEXTURE_BUFFER_SIZE;
+    }
+
+    return candidate;
 }
 
 } // Anonymous namespace
@@ -79,13 +86,11 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
     : VideoCore::RasterizerAccelerated{memory, pica}, driver{driver_},
       shader_manager{renderer.GetRenderWindow(), driver, !driver.IsOpenGLES()},
       runtime{driver, renderer}, res_cache{memory, custom_tex_manager, runtime, regs, renderer},
-      texture_buffer_size{TextureBufferSize()}, vertex_buffer{driver, GL_ARRAY_BUFFER,
-                                                              VERTEX_BUFFER_SIZE},
+      vertex_buffer{driver, GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE},
       uniform_buffer{driver, GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE},
       index_buffer{driver, GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE},
-      texture_buffer{driver, GL_TEXTURE_BUFFER, texture_buffer_size}, texture_lf_buffer{
-                                                                          driver, GL_TEXTURE_BUFFER,
-                                                                          texture_buffer_size} {
+      texture_buffer{driver, GL_TEXTURE_BUFFER, TextureBufferSize(driver, false)},
+      texture_lf_buffer{driver, GL_TEXTURE_BUFFER, TextureBufferSize(driver, true)} {
 
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;

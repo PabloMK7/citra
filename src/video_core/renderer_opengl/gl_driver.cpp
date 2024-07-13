@@ -199,6 +199,15 @@ void Driver::FindBugs() {
     if (vendor == Vendor::Intel && !is_linux) {
         bugs |= DriverBug::BrokenClearTexture;
     }
+
+    if (vendor == Vendor::ARM && gpu_model.find("Mali") != gpu_model.npos) {
+        constexpr GLint MIN_TEXTURE_BUFFER_SIZE = static_cast<GLint>((1 << 16));
+        GLint max_texel_buffer_size;
+        glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &max_texel_buffer_size);
+        if (max_texel_buffer_size == MIN_TEXTURE_BUFFER_SIZE) {
+            bugs |= DriverBug::SlowTextureBufferWithBigSize;
+        }
+    }
 }
 
 } // namespace OpenGL
