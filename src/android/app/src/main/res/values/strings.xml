@@ -468,7 +468,7 @@
 
     <!-- Device Orientation -->
     <string name="device_orientation_title">Screen Orientation</string>
-    <string name="device_orientation_description">How should Lime3DS display your games?</string>
+    <string name="device_orientation_description">How should your games be displayed?</string>
     <string name="device_orientation_system">Follow System Setting</string>
     <string name="device_orientation_landscape">Landscape</string>
     <string name="device_orientation_portrait">Portrait</string>
