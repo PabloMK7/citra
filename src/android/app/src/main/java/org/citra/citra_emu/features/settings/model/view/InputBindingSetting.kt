@@ -224,8 +224,10 @@ class InputBindingSetting(
             Toast.makeText(context, R.string.input_message_analog_only, Toast.LENGTH_LONG).show()
             return
         }
-        writeButtonMapping(getInputButtonKey(keyEvent.keyCode))
-        val uiString = "${keyEvent.device.name}: Button ${keyEvent.keyCode}"
+
+        val code = translateEventToKeyId(keyEvent)
+        writeButtonMapping(getInputButtonKey(code))
+        val uiString = "${keyEvent.device.name}: Button $code"
         value = uiString
     }
 
@@ -285,8 +287,16 @@ class InputBindingSetting(
 
         /**
          * Helper function to get the settings key for an gamepad button.
+         *
          */
+        @Deprecated("Use the new getInputButtonKey(keyEvent) method to handle unknown keys")
         fun getInputButtonKey(keyCode: Int): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${keyCode}"
+
+        /**
+         * Helper function to get the settings key for an gamepad button.
+         *
+         */
+        fun getInputButtonKey(event: KeyEvent): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${translateEventToKeyId(event)}"
 
         /**
          * Helper function to get the settings key for an gamepad axis.
@@ -303,5 +313,23 @@ class InputBindingSetting(
          */
         fun getInputAxisOrientationKey(axis: Int): String =
             "${getInputAxisKey(axis)}_GuestOrientation"
+
+
+        /**
+         * This function translates a keyEvent into an "keyid"
+         * This key id is either the keyCode from the event, or
+         * the raw scanCode.
+         * Only when the keyCode itself is 0, (so it is an unknown key)
+         * we fall back to the raw scan code.
+         * This handles keys like the media-keys on google statia-controllers
+         * that don't have a conventional "mapping" and report as "unknown"
+         */
+        fun translateEventToKeyId(event: KeyEvent): Int {
+            return if (event.keyCode == 0) {
+                event.scanCode
+            } else {
+                event.keyCode
+            }
+        }
     }
 }
