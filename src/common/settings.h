@@ -499,6 +499,18 @@ struct Values {
     Setting<u16> custom_bottom_bottom{480, "custom_bottom_bottom"};
     Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
 
+#ifdef ANDROID
+        Setting<bool> custom_portrait_layout{false, "custom_portrait_layout"};
+        Setting<u16> custom_portrait_top_left{0, "custom_portrait_top_left"};
+        Setting<u16> custom_portrait_top_top{0, "custom_portrait_top_top"};
+        Setting<u16> custom_portrait_top_right{400, "custom_portrait_top_right"};
+        Setting<u16> custom_portrait_top_bottom{240, "custom_portrait_top_bottom"};
+        Setting<u16> custom_portrait_bottom_left{40, "custom_portrait_bottom_left"};
+        Setting<u16> custom_portrait_bottom_top{240, "custom_portrait_bottom_top"};
+        Setting<u16> custom_portrait_bottom_right{360, "custom_portrait_bottom_right"};
+        Setting<u16> custom_portrait_bottom_bottom{480, "custom_portrait_bottom_bottom"};
+#endif
+
     SwitchableSetting<float> bg_red{0.f, "bg_red"};
     SwitchableSetting<float> bg_green{0.f, "bg_green"};
     SwitchableSetting<float> bg_blue{0.f, "bg_blue"};

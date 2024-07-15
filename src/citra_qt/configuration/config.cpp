@@ -529,6 +529,15 @@ void Config::ReadLayoutValues() {
         ReadBasicSetting(Settings::values.custom_bottom_right);
         ReadBasicSetting(Settings::values.custom_bottom_bottom);
         ReadBasicSetting(Settings::values.custom_second_layer_opacity);
+        ReadBasicSetting(Settings::values.custom_portrait_layout);
+        ReadBasicSetting(Settings::values.custom_portrait_top_left);
+        ReadBasicSetting(Settings::values.custom_portrait_top_top);
+        ReadBasicSetting(Settings::values.custom_portrait_top_right);
+        ReadBasicSetting(Settings::values.custom_portrait_top_bottom);
+        ReadBasicSetting(Settings::values.custom_portrait_bottom_left);
+        ReadBasicSetting(Settings::values.custom_portrait_bottom_top);
+        ReadBasicSetting(Settings::values.custom_portrait_bottom_right);
+        ReadBasicSetting(Settings::values.custom_portrait_bottom_bottom);
     }
 
     qt_config->endGroup();
@@ -1066,6 +1075,15 @@ void Config::SaveLayoutValues() {
         WriteBasicSetting(Settings::values.custom_bottom_right);
         WriteBasicSetting(Settings::values.custom_bottom_bottom);
         WriteBasicSetting(Settings::values.custom_second_layer_opacity);
+        WriteBasicSetting(Settings::values.custom_portrait_layout);
+        WriteBasicSetting(Settings::values.custom_portrait_top_left);
+        WriteBasicSetting(Settings::values.custom_portrait_top_top);
+        WriteBasicSetting(Settings::values.custom_portrait_top_right);
+        WriteBasicSetting(Settings::values.custom_portrait_top_bottom);
+        WriteBasicSetting(Settings::values.custom_portrait_bottom_left);
+        WriteBasicSetting(Settings::values.custom_portrait_bottom_top);
+        WriteBasicSetting(Settings::values.custom_portrait_bottom_right);
+        WriteBasicSetting(Settings::values.custom_portrait_bottom_bottom);
     }
 
     qt_config->endGroup();
