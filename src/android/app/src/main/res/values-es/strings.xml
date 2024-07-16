@@ -665,5 +665,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="artic_base_enter_address">Introduce la dirección del servidor Artic Base</string>
     <string name="delay_render_thread">Retrasa el hilo de dibujado del juego</string>
     <string name="delay_render_thread_description">Retrasa el hilo de dibujado del juego cuando envía datos a la GPU. Ayuda con problemas de rendimiento en los (muy pocos) juegos de fps dinámicos.</string>
+    <string name="miscellaneous">Misceláneo</string>
+    <string name="use_artic_base_controller">Usar Artic Controller cuando se está conectado a Artic Base Server</string>
+    <string name="use_artic_base_controller_desc">Usa los controles proporcionados por Artic Base Server cuando esté conectado a él en lugar del dispositivo de entrada configurado.</string>
 
 </resources>
