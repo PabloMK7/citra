@@ -201,7 +201,6 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.custom_portrait_bottom_bottom);
 #endif
 
-
     // Utility
     ReadSetting("Utility", Settings::values.dump_textures);
     ReadSetting("Utility", Settings::values.custom_textures);

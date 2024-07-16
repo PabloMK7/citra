@@ -204,8 +204,8 @@ public:
     explicit Setting(const Type& default_val, const Type& min_val, const Type& max_val,
                      const std::string& name)
         requires(ranged)
-        : value{default_val},
-          default_value{default_val}, maximum{max_val}, minimum{min_val}, label{name} {}
+        : value{default_val}, default_value{default_val}, maximum{max_val}, minimum{min_val},
+          label{name} {}
 
     /**
      *  Returns a reference to the setting's value.
@@ -450,7 +450,7 @@ struct Values {
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
 
     // Renderer
-    SwitchableSetting<GraphicsAPI, true> graphics_api {
+    SwitchableSetting<GraphicsAPI, true> graphics_api{
 #if defined(ENABLE_OPENGL)
         GraphicsAPI::OpenGL,
 #elif defined(ENABLE_VULKAN)
@@ -461,8 +461,7 @@ struct Values {
 // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
 #endif
-            GraphicsAPI::Software, GraphicsAPI::Vulkan, "graphics_api"
-    };
+        GraphicsAPI::Software, GraphicsAPI::Vulkan, "graphics_api"};
     SwitchableSetting<u32> physical_device{0, "physical_device"};
     Setting<bool> use_gles{false, "use_gles"};
     Setting<bool> renderer_debug{false, "renderer_debug"};
@@ -499,17 +498,15 @@ struct Values {
     Setting<u16> custom_bottom_bottom{480, "custom_bottom_bottom"};
     Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
 
-#ifdef ANDROID
-        Setting<bool> custom_portrait_layout{false, "custom_portrait_layout"};
-        Setting<u16> custom_portrait_top_left{0, "custom_portrait_top_left"};
-        Setting<u16> custom_portrait_top_top{0, "custom_portrait_top_top"};
-        Setting<u16> custom_portrait_top_right{400, "custom_portrait_top_right"};
-        Setting<u16> custom_portrait_top_bottom{240, "custom_portrait_top_bottom"};
-        Setting<u16> custom_portrait_bottom_left{40, "custom_portrait_bottom_left"};
-        Setting<u16> custom_portrait_bottom_top{240, "custom_portrait_bottom_top"};
-        Setting<u16> custom_portrait_bottom_right{360, "custom_portrait_bottom_right"};
-        Setting<u16> custom_portrait_bottom_bottom{480, "custom_portrait_bottom_bottom"};
-#endif
+    Setting<bool> custom_portrait_layout{false, "custom_portrait_layout"};
+    Setting<u16> custom_portrait_top_left{0, "custom_portrait_top_left"};
+    Setting<u16> custom_portrait_top_top{0, "custom_portrait_top_top"};
+    Setting<u16> custom_portrait_top_right{400, "custom_portrait_top_right"};
+    Setting<u16> custom_portrait_top_bottom{240, "custom_portrait_top_bottom"};
+    Setting<u16> custom_portrait_bottom_left{40, "custom_portrait_bottom_left"};
+    Setting<u16> custom_portrait_bottom_top{240, "custom_portrait_bottom_top"};
+    Setting<u16> custom_portrait_bottom_right{360, "custom_portrait_bottom_right"};
+    Setting<u16> custom_portrait_bottom_bottom{480, "custom_portrait_bottom_bottom"};
 
     SwitchableSetting<float> bg_red{0.f, "bg_red"};
     SwitchableSetting<float> bg_green{0.f, "bg_green"};
