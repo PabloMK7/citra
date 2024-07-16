@@ -16,6 +16,7 @@
 #include "citra_qt/configuration/configure_input.h"
 #include "citra_qt/configuration/configure_motion_touch.h"
 #include "common/param_package.h"
+#include "core/core.h"
 #include "ui_configure_input.h"
 
 const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
@@ -145,8 +146,8 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
     return QObject::tr("[unknown]");
 }
 
-ConfigureInput::ConfigureInput(QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),
+ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
+    : QWidget(parent), system(_system), ui(std::make_unique<Ui::ConfigureInput>()),
       timeout_timer(std::make_unique<QTimer>()), poll_timer(std::make_unique<QTimer>()) {
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
@@ -400,6 +401,9 @@ ConfigureInput::ConfigureInput(QWidget* parent)
 ConfigureInput::~ConfigureInput() = default;
 
 void ConfigureInput::ApplyConfiguration() {
+
+    Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
+
     std::transform(buttons_param.begin(), buttons_param.end(),
                    Settings::values.current_input_profile.buttons.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
@@ -444,6 +448,10 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
 }
 
 void ConfigureInput::LoadConfiguration() {
+
+    ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
+    ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
+
     std::transform(Settings::values.current_input_profile.buttons.begin(),
                    Settings::values.current_input_profile.buttons.end(), buttons_param.begin(),
                    [](const std::string& str) { return Common::ParamPackage(str); });
