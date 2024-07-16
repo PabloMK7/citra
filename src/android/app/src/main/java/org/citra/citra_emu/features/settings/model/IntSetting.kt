@@ -4,8 +4,6 @@
 
 package org.citra.citra_emu.features.settings.model
 
-import android.content.pm.ActivityInfo
-
 enum class IntSetting(
     override val key: String,
     override val section: String,
@@ -43,8 +41,7 @@ enum class IntSetting(
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, 0),
     TEXTURE_FILTER("texture_filter", Settings.SECTION_RENDERER, 0),
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
-    DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0),
-    DEVICE_ORIENTATION("default_device_orientation", Settings.SECTION_RENDERER, ActivityInfo.SCREEN_ORIENTATION_USER);
+    DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0);
 
     override var int: Int = defaultValue
 
