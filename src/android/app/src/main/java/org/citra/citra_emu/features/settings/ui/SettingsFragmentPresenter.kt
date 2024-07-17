@@ -612,7 +612,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.controller_dpad))
             Settings.dPadKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
+                add(InputBindingSetting(button, Settings.dPadTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_triggers))
