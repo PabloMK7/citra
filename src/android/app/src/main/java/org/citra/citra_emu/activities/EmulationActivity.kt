@@ -38,7 +38,6 @@ import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.FileBrowserHelper
-import org.citra.citra_emu.utils.ForegroundService
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.ThemeUtil
@@ -47,7 +46,6 @@ import org.citra.citra_emu.viewmodel.EmulationViewModel
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-    private var foregroundService: Intent? = null
     var isActivityRecreated = false
 
     private val settingsViewModel: SettingsViewModel by viewModels()
@@ -66,7 +64,7 @@ class EmulationActivity : AppCompatActivity() {
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(windowManager, settingsViewModel.settings)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil)
+        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
         setContentView(binding.root)
 
         val navHostFragment =
@@ -84,10 +82,6 @@ class EmulationActivity : AppCompatActivity() {
             EmulationMenuSettings.swapScreens,
             windowManager.defaultDisplay.rotation
         )
-
-        // Start a foreground service to prevent the app from getting killed in the background
-        foregroundService = Intent(this, ForegroundService::class.java)
-        startForegroundService(foregroundService)
 
         EmulationLifecycleUtil.addShutdownHook(hook = { this.finish() })
     }
@@ -112,7 +106,6 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         EmulationLifecycleUtil.clear()
-        stopForegroundService(this)
         super.onDestroy()
     }
 
@@ -186,8 +179,7 @@ class EmulationActivity : AppCompatActivity() {
             return false
         }
 
-        val button =
-            preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
+        val button = preferences.getInt(InputBindingSetting.getInputButtonKey(event), event.scanCode)
         val action: Int = when (event.action) {
             KeyEvent.ACTION_DOWN -> {
                 // On some devices, the back gesture / button press is not intercepted by androidx
@@ -453,12 +445,4 @@ class EmulationActivity : AppCompatActivity() {
 
             OnFilePickerResult(result.toString())
         }
-
-    companion object {
-        fun stopForegroundService(activity: Activity) {
-            val startIntent = Intent(activity, ForegroundService::class.java)
-            startIntent.action = ForegroundService.ACTION_STOP
-            activity.startForegroundService(startIntent)
-        }
-    }
 }

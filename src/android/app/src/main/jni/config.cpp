@@ -128,6 +128,8 @@ void Config::ReadValues() {
         static_cast<u16>(sdl2_config->GetInteger("Controls", "udp_input_port",
                                                  InputCommon::CemuhookUDP::DEFAULT_PORT));
 
+    ReadSetting("Controls", Settings::values.use_artic_base_controller);
+
     // Core
     ReadSetting("Core", Settings::values.use_cpu_jit);
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
@@ -169,6 +171,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_red);
     ReadSetting("Renderer", Settings::values.bg_green);
     ReadSetting("Renderer", Settings::values.bg_blue);
+    ReadSetting("Renderer", Settings::values.delay_game_render_thread_us);
 
     // Layout
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(sdl2_config->GetInteger(

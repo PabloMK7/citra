@@ -3588,6 +3588,24 @@ Drag points to change position, or double-click table cells to edit values.</sou
     </message>
 </context>
 <context>
+    <name>ConfigureWeb</name>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <source>Form</source>
+        <translation>フォーム</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="177"/>
+        <source>Discord Presence</source>
+        <translation>Discord Presence</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="183"/>
+        <source>Show Current Game in your Discord Status</source>
+        <translation>プレイ中のゲームをDiscordに表示</translation>
+    </message>
+</context>
+<context>
     <name>DirectConnect</name>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="14"/>

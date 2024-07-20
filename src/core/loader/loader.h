@@ -31,6 +31,7 @@ enum class FileType {
     CIA,
     ELF,
     THREEDSX, // 3DSX
+    ARTIC,
 };
 
 /**
@@ -73,6 +74,7 @@ enum class ResultStatus {
     ErrorMemoryAllocationFailed,
     ErrorEncrypted,
     ErrorGbaTitle,
+    ErrorArtic,
 };
 
 constexpr u32 MakeMagic(char a, char b, char c, char d) {
@@ -262,6 +264,14 @@ public:
      */
     virtual ResultStatus ReadTitle([[maybe_unused]] std::string& title) {
         return ResultStatus::ErrorNotImplemented;
+    }
+
+    virtual bool SupportsSaveStates() {
+        return true;
+    }
+
+    virtual bool SupportsMultipleInstancesForSameFile() {
+        return true;
     }
 
 protected:

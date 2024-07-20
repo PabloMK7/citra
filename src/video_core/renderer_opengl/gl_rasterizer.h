@@ -145,7 +145,6 @@ private:
     OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
     std::array<bool, 16> hw_vao_enabled_attributes{};
 
-    GLsizeiptr texture_buffer_size;
     OGLStreamBuffer vertex_buffer;
     OGLStreamBuffer uniform_buffer;
     OGLStreamBuffer index_buffer;

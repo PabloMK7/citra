@@ -20,6 +20,7 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
+#include "network/artic_base/artic_base_client.h"
 
 namespace Core {
 class System;
@@ -111,11 +112,11 @@ public:
     Result WriteTicket();
     Result WriteTitleMetadata();
     ResultVal<std::size_t> WriteContentData(u64 offset, std::size_t length, const u8* buffer);
-    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
                                  const u8* buffer) override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
-    bool Close() const override;
+    bool Close() override;
     void Flush() const override;
 
 private:
@@ -146,11 +147,11 @@ public:
     ~TicketFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
-    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
                                  const u8* buffer) override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
-    bool Close() const override;
+    bool Close() override;
     void Flush() const override;
 
 private:
@@ -245,7 +246,13 @@ public:
             return am;
         }
 
+        void UseArticClient(std::shared_ptr<Network::ArticBase::Client>& client) {
+            artic_client = client;
+        }
+
     protected:
+        void GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool ignore_platform);
+
         /**
          * AM::GetNumPrograms service function
          * Gets the number of installed titles in the requested media type
@@ -753,6 +760,9 @@ public:
 
     protected:
         std::shared_ptr<Module> am;
+
+        // Placed on the interface level so that only am:net and am:app have it.
+        std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
     };
 
     /**

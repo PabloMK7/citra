@@ -36,6 +36,9 @@ enum class DriverBug {
     BrokenTextureView = 1 << 2,
     // On Haswell and Broadwell Intel drivers glClearTexSubImage produces a black screen
     BrokenClearTexture = 1 << 3,
+    // On some Mali GPUs, the texture buffer size is small and has reduced performance
+    // if the buffer is close to the maximum texture size
+    SlowTextureBufferWithBigSize = 1 << 4,
 };
 
 /**

@@ -626,6 +626,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
             }
+            add(HeaderSetting(R.string.miscellaneous))
+            add(
+                SwitchSetting(
+                    IntSetting.USE_ARTIC_BASE_CONTROLLER,
+                    R.string.use_artic_base_controller,
+                    R.string.use_artic_base_controller_desc,
+                    IntSetting.USE_ARTIC_BASE_CONTROLLER.key,
+                    IntSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
+                )
+            )
         }
     }
 
@@ -727,6 +737,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.textureFilterValues,
                     IntSetting.TEXTURE_FILTER.key,
                     IntSetting.TEXTURE_FILTER.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    IntSetting.DELAY_RENDER_THREAD_US,
+                    R.string.delay_render_thread,
+                    R.string.delay_render_thread_description,
+                    0,
+                    16000,
+                    " μs",
+                    IntSetting.DELAY_RENDER_THREAD_US.key,
+                    IntSetting.DELAY_RENDER_THREAD_US.defaultValue.toFloat()
                 )
             )
 

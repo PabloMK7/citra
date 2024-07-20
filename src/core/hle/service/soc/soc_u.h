@@ -25,11 +25,11 @@ namespace Service::SOC {
 struct SocketHolder {
 #ifdef _WIN32
     using SOCKET = unsigned long long;
-    SOCKET socket_fd; ///< The socket descriptor
 #else
-    int socket_fd; ///< The socket descriptor
+    using SOCKET = int;
 #endif // _WIN32
 
+    SOCKET socket_fd;     ///< The socket descriptor
     bool blocking = true; ///< Whether the socket is blocking or not.
     bool isGlobal = false;
     bool shutdown_rd = false;

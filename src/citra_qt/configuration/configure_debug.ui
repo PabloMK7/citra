@@ -86,7 +86,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="horizontalLayout1">
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
@@ -100,7 +100,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="horizontalLayout2">
         <item>
          <widget class="QCheckBox" name="toggle_console">
           <property name="text">
@@ -125,7 +125,7 @@
      <property name="title">
       <string>CPU</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
+     <layout class="QGridLayout" name="clock_speed_GLayout">
       <item row="1" column="0">
        <widget class="QWidget" name="clock_speed_widget" native="true">
         <layout class="QHBoxLayout" name="clock_speed_layout">

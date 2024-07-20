@@ -9,7 +9,7 @@
 #include <boost/serialization/unique_ptr.hpp>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
-#include <fmt/format.h>
+#include <fmt/ranges.h>
 #include "common/archives.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -278,7 +278,7 @@ void Module::Interface::GetTransferableId(Kernel::HLERequestContext& ctx) {
 
     std::array<u8, 12> buffer;
     const Result result =
-        cfg->GetConfigBlock(ConsoleUniqueID2BlockID, 8, AccessFlag::SystemRead, buffer.data());
+        cfg->GetConfigBlock(ConsoleUniqueID2BlockID, 8, AccessFlag::Global, buffer.data());
     rb.Push(result);
     if (result.IsSuccess()) {
         std::memcpy(&buffer[8], &app_id_salt, sizeof(u32));
@@ -502,11 +502,42 @@ ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFla
 }
 
 Result Module::GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output) {
-    void* pointer = nullptr;
-    CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
-    std::memcpy(output, pointer, size);
+    bool get_from_artic =
+        block_id == ConsoleUniqueID2BlockID &&
+        (static_cast<u16>(accesss_flag) & static_cast<u16>(AccessFlag::UserRead)) != 0;
 
-    return ResultSuccess;
+    if (get_from_artic && artic_client.get()) {
+        auto req = artic_client->NewRequest("CFGU_GetConfigInfoBlk2");
+
+        req.AddParameterS32(block_id);
+        req.AddParameterU32(size);
+
+        auto resp = artic_client->Send(req);
+
+        if (!resp.has_value() || !resp->Succeeded())
+            return Result(-1);
+
+        auto res = Result(static_cast<u32>(resp->GetMethodResult()));
+        if (res.IsError())
+            return res;
+
+        auto buff = resp->GetResponseBuffer(0);
+        if (!buff.has_value())
+            return Result(-1);
+        size_t actually_read = buff->second;
+        if (actually_read > size)
+            return Result(-1);
+
+        memcpy(output, buff->first, actually_read);
+        return ResultSuccess;
+
+    } else {
+        void* pointer = nullptr;
+        CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
+        std::memcpy(output, pointer, size);
+
+        return ResultSuccess;
+    }
 }
 
 Result Module::SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input) {
@@ -565,7 +596,7 @@ Result Module::UpdateConfigNANDSavegame() {
     ASSERT_MSG(config_result.Succeeded(), "could not open file");
 
     auto config = std::move(config_result).Unwrap();
-    config->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
+    config->Write(0, CONFIG_SAVEFILE_SIZE, true, false, cfg_config_file_buffer.data());
 
     return ResultSuccess;
 }
@@ -625,7 +656,7 @@ Result Module::LoadConfigNANDSaveFile() {
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() == FileSys::ResultNotFound) {
         // Format the archive to create the directories
-        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0, 0, 0);
 
         // Open it again to get a valid archive now that the folder exists
         cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path, 0).Unwrap();
