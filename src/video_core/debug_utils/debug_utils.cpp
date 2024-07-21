@@ -272,10 +272,10 @@ void StartPicaTracing() {
 }
 
 void OnPicaRegWrite(u16 cmd_id, u16 mask, u32 value) {
-    std::lock_guard lock(pica_trace_mutex);
-
     if (!g_is_pica_tracing)
         return;
+
+    std::lock_guard lock(pica_trace_mutex);
 
     pica_trace->writes.push_back(PicaTrace::Write{cmd_id, mask, value});
 }
