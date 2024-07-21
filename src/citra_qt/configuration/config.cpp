@@ -494,6 +494,7 @@ void Config::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.gdbstub_port);
     ReadBasicSetting(Settings::values.renderer_debug);
     ReadBasicSetting(Settings::values.dump_command_buffers);
+    ReadBasicSetting(Settings::values.instant_debug_log);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -1031,6 +1032,7 @@ void Config::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.use_gdbstub);
     WriteBasicSetting(Settings::values.gdbstub_port);
     WriteBasicSetting(Settings::values.renderer_debug);
+    WriteBasicSetting(Settings::values.instant_debug_log);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {
