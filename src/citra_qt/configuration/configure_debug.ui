@@ -117,6 +117,16 @@
         </item>
        </layout>
       </item>
+      <item>
+        <widget class="QCheckBox" name="instant_debug_log">
+          <property name="text">
+            <string>Flush log output on every message</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;body&gt;Immediately commits the debug log to file. Use this if citra crashes and the log output is being cut.&lt;br&gt;Enabling this feature will decrease performance, only use it for debugging purposes.&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
+      </item>
      </layout>
     </widget>
    </item>

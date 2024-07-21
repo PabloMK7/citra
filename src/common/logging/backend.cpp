@@ -68,7 +68,7 @@ public:
     }
 
     void Flush() override {
-        // stderr shouldn't be buffered
+        std::fflush(stderr);
     }
 
     void EnableForStacktrace() override {
@@ -263,7 +263,14 @@ public:
             !boost::regex_search(FormatLogMessage(new_entry), regex_filter)) {
             return;
         }
-        message_queue.EmplaceWait(new_entry);
+        if (Settings::values.instant_debug_log.GetValue()) {
+            ForEachBackend([&new_entry](Backend& backend) {
+                backend.Write(new_entry);
+                backend.Flush();
+            });
+        } else {
+            message_queue.EmplaceWait(new_entry);
+        }
     }
 
 private:
