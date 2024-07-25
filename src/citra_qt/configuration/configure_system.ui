@@ -395,7 +395,7 @@
             <item row="13" column="0">
               <widget class="QLabel" name="label_steps_per_hour">
                 <property name="text">
-                  <string>Steps per hour:</string>
+                  <string>Pedometer steps per hour:</string>
                 </property>
               </widget>
             </item>
