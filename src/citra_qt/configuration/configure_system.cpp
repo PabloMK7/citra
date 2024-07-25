@@ -328,6 +328,8 @@ void ConfigureSystem::SetConfiguration() {
     ui->edit_init_ticks_value->setText(
         QString::number(Settings::values.init_ticks_override.GetValue()));
 
+    ui->spinBox_steps_per_hour->setValue(Settings::values.steps_per_hour.GetValue());
+
     cfg = Service::CFG::GetModule(system);
     ReadSystemSettings();
 
@@ -459,6 +461,8 @@ void ConfigureSystem::ApplyConfiguration() {
             static_cast<Settings::InitTicks>(ui->combo_init_ticks_type->currentIndex());
         Settings::values.init_ticks_override =
             static_cast<s64>(ui->edit_init_ticks_value->text().toLongLong());
+
+        Settings::values.steps_per_hour = static_cast<u16>(ui->spinBox_steps_per_hour->value());
 
         s64 time_offset_time = ui->edit_init_time_offset_time->time().msecsSinceStartOfDay() / 1000;
         s64 time_offset_days = ui->edit_init_time_offset_days->value() * 86400;
@@ -631,8 +635,10 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_language->setVisible(false);
     ui->label_country->setVisible(false);
     ui->label_play_coins->setVisible(false);
+    ui->label_steps_per_hour->setVisible(false);
     ui->edit_username->setVisible(false);
     ui->spinBox_play_coins->setVisible(false);
+    ui->spinBox_steps_per_hour->setVisible(false);
     ui->combo_birthday->setVisible(false);
     ui->combo_birthmonth->setVisible(false);
     ui->combo_init_clock->setVisible(false);

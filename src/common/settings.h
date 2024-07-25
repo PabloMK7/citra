@@ -448,6 +448,7 @@ struct Values {
     Setting<s64> init_ticks_override{0, "init_ticks_override"};
     Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
+    Setting<u16> steps_per_hour{0, "steps_per_hour"};
 
     // Renderer
     SwitchableSetting<GraphicsAPI, true> graphics_api {

@@ -84,9 +84,8 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(sizeof(u16) * hours == buffer.GetSize(),
                "Buffer for steps count has incorrect size");
 
-    // Stub: set zero steps count for every hour
+    const u16_le steps_per_hour = Settings::values.steps_per_hour.GetValue();
     for (u32 i = 0; i < hours; ++i) {
-        const u16_le steps_per_hour = 0;
         buffer.Write(&steps_per_hour, i * sizeof(u16), sizeof(u16));
     }
 
