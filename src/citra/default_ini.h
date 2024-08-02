@@ -319,6 +319,10 @@ init_ticks_type =
 # Defaults to 0.
 init_ticks_override =
 
+# Number of steps per hour reported by the pedometer.
+# Defaults to 0.
+steps_per_hour =
+
 [Camera]
 # Which camera engine to use for the right outer camera
 # blank (default): a dummy camera that always returns black image
