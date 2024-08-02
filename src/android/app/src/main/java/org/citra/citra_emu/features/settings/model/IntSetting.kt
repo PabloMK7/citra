@@ -26,6 +26,7 @@ enum class IntSetting(
     AUDIO_INPUT_TYPE("output_type", Settings.SECTION_AUDIO, 0),
     NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, 1),
     LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, 0),
+    STEPS_PER_HOUR("steps_per_hour", Settings.SECTION_SYSTEM, 0),
     CPU_CLOCK_SPEED("cpu_clock_percentage", Settings.SECTION_CORE, 100),
     LINEAR_FILTERING("filter_mode", Settings.SECTION_RENDERER, 1),
     SHADERS_ACCURATE_MUL("shaders_accurate_mul", Settings.SECTION_RENDERER, 0),
