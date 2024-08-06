@@ -52,7 +52,7 @@
                 tools:text="The Legend of Zelda\nOcarina of Time 3D" />
 
             <TextView
-                android:id="@+id/text_company"
+                android:id="@+id/text_game_id"
                 style="@style/TextAppearance.Material3.BodySmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -61,7 +61,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:ellipsize="none"
                 android:requiresFadingEdge="horizontal"
-                tools:text="Nintendo" />
+                tools:text="0004000000033400" />
 
             <TextView
                 android:id="@+id/text_filename"
