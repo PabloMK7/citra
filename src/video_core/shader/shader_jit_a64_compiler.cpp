@@ -386,35 +386,33 @@ void JitShader::Compile_SanitizedMul(QReg src1, QReg src2, QReg scratch0) {
 }
 
 void JitShader::Compile_EvaluateCondition(Instruction instr) {
-    // Note: NXOR is used below to check for equality
+    const u8 refx = instr.flow_control.refx.Value();
+    const u8 refy = instr.flow_control.refy.Value();
+
     switch (instr.flow_control.op) {
+    // Note: NXOR is used below to check for equality
     case Instruction::FlowControlType::Or:
-        MOV(XSCRATCH0, (instr.flow_control.refx.Value() ^ 1));
-        MOV(XSCRATCH1, (instr.flow_control.refy.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND0);
-        EOR(XSCRATCH1, XSCRATCH1, COND1);
+        EOR(XSCRATCH0, COND0, refx ^ 1);
+        EOR(XSCRATCH1, COND1, refy ^ 1);
         ORR(XSCRATCH0, XSCRATCH0, XSCRATCH1);
+        CMP(XSCRATCH0, 0);
         break;
-
+    // Note: TST will AND two registers and set the EQ/NE flags on the result
     case Instruction::FlowControlType::And:
-        MOV(XSCRATCH0, (instr.flow_control.refx.Value() ^ 1));
-        MOV(XSCRATCH1, (instr.flow_control.refy.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND0);
-        EOR(XSCRATCH1, XSCRATCH1, COND1);
-        AND(XSCRATCH0, XSCRATCH0, XSCRATCH1);
+        EOR(XSCRATCH0, COND0, refx ^ 1);
+        EOR(XSCRATCH1, COND1, refy ^ 1);
+        TST(XSCRATCH0, XSCRATCH1);
         break;
-
     case Instruction::FlowControlType::JustX:
-        MOV(XSCRATCH0, (instr.flow_control.refx.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND0);
+        CMP(COND0, refx);
         break;
-
     case Instruction::FlowControlType::JustY:
-        MOV(XSCRATCH0, (instr.flow_control.refy.Value() ^ 1));
-        EOR(XSCRATCH0, XSCRATCH0, COND1);
+        CMP(COND1, refy);
+        break;
+    default:
+        UNREACHABLE();
         break;
     }
-    CMP(XSCRATCH0, 0);
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
