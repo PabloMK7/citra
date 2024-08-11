@@ -23,15 +23,8 @@ inline bool IsWithin128M(const oaknut::CodeGenerator& code, uintptr_t target) {
     return IsWithin128M(code.xptr<uintptr_t>(), target);
 }
 
-inline bool IsWithin128M(const oaknut::VectorCodeGenerator& code, uintptr_t target) {
-    // VectorCodeGenerator is not the final executable memory, so no assumption can be
-    // made about how far pointers are from each other.
-    // Always assume far-calls
-    return false;
-}
-
-template <typename T, typename Policy>
-inline void CallFarFunction(oaknut::BasicCodeGenerator<Policy>& code, const T f) {
+template <typename T>
+inline void CallFarFunction(oaknut::CodeGenerator& code, const T f) {
     static_assert(std::is_pointer_v<T>, "Argument must be a (function) pointer.");
     const std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(f);
     if (IsWithin128M(code, addr)) {
@@ -43,6 +36,16 @@ inline void CallFarFunction(oaknut::BasicCodeGenerator<Policy>& code, const T f)
         code.MOVP2R(oaknut::util::X16, reinterpret_cast<const void*>(f));
         code.BLR(oaknut::util::X16);
     }
+}
+
+template <typename T>
+inline void CallFarFunction(oaknut::VectorCodeGenerator& code, const T f) {
+    static_assert(std::is_pointer_v<T>, "Argument must be a (function) pointer.");
+    // X16(IP0) and X17(IP1) is the standard veneer register
+    // LR is also available as an intermediate register
+    // https://developer.arm.com/documentation/102374/0101/Procedure-Call-Standard
+    code.MOVP2R(oaknut::util::X16, reinterpret_cast<const void*>(f));
+    code.BLR(oaknut::util::X16);
 }
 
 } // namespace Common::A64
