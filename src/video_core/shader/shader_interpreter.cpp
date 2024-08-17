@@ -52,9 +52,6 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
     boost::circular_buffer<LoopStackElement> loop_stack(4);
     u32 program_counter = entry_point;
 
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
-
     const auto do_if = [&](Instruction instr, bool condition) {
         if (condition) {
             if_stack.push_back({

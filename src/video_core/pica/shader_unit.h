@@ -46,11 +46,11 @@ struct ShaderUnit {
     }
 
 public:
-    s32 address_registers[3];
-    bool conditional_code[2];
-    alignas(16) std::array<Common::Vec4<f24>, 16> input;
-    alignas(16) std::array<Common::Vec4<f24>, 16> temporary;
-    alignas(16) std::array<Common::Vec4<f24>, 16> output;
+    s32 address_registers[3] = {};
+    bool conditional_code[2] = {};
+    alignas(16) std::array<Common::Vec4<f24>, 16> input = {};
+    alignas(16) std::array<Common::Vec4<f24>, 16> temporary = {};
+    alignas(16) std::array<Common::Vec4<f24>, 16> output = {};
     GeometryEmitter* emitter_ptr;
 
 private:

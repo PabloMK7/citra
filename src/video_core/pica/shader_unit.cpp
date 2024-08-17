@@ -9,10 +9,7 @@
 
 namespace Pica {
 
-ShaderUnit::ShaderUnit(GeometryEmitter* emitter) : emitter_ptr{emitter} {
-    const Common::Vec4<f24> temp_vec{f24::Zero(), f24::Zero(), f24::Zero(), f24::One()};
-    temporary.fill(temp_vec);
-}
+ShaderUnit::ShaderUnit(GeometryEmitter* emitter) : emitter_ptr{emitter} {}
 
 ShaderUnit::~ShaderUnit() = default;
 
