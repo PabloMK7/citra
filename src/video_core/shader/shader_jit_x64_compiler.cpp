@@ -1002,8 +1002,8 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     mov(LOOPCOUNT_REG, dword[STATE + offsetof(ShaderUnit, address_registers[2])]);
 
     // Load conditional code
-    mov(COND0, byte[STATE + offsetof(ShaderUnit, conditional_code[0])]);
-    mov(COND1, byte[STATE + offsetof(ShaderUnit, conditional_code[1])]);
+    movzx(COND0, byte[STATE + offsetof(ShaderUnit, conditional_code[0])]);
+    movzx(COND1, byte[STATE + offsetof(ShaderUnit, conditional_code[1])]);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};
