@@ -307,6 +307,10 @@ init_ticks_type =
 # Defaults to 0.
 init_ticks_override =
 
+# Number of steps per hour reported by the pedometer.
+# Defaults to 0.
+steps_per_hour =
+
 # Plugin loader state, if enabled plugins will be loaded from the SD card.
 # You can also set if homebrew apps are allowed to enable the plugin loader
 plugin_loader =
