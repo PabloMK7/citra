@@ -22,8 +22,8 @@
 
         <ImageView
             android:id="@+id/image_game_screen"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -62,6 +62,18 @@
                 android:ellipsize="none"
                 android:requiresFadingEdge="horizontal"
                 tools:text="Nintendo" />
+
+            <TextView
+                android:id="@+id/text_game_id"
+                style="@style/TextAppearance.Material3.BodySmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewStart"
+                android:singleLine="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:ellipsize="none"
+                android:requiresFadingEdge="horizontal"
+                tools:text="0004000000033400" />
 
             <TextView
                 android:id="@+id/text_filename"
