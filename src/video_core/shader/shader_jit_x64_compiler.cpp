@@ -401,29 +401,29 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
     // Note: NXOR is used below to check for equality
     switch (instr.flow_control.op) {
     case Instruction::FlowControlType::Or:
-        mov(eax, COND0);
-        mov(ebx, COND1);
-        xor_(eax, (instr.flow_control.refx.Value() ^ 1));
-        xor_(ebx, (instr.flow_control.refy.Value() ^ 1));
-        or_(eax, ebx);
+        mov(al, COND0.cvt8());
+        mov(bl, COND1.cvt8());
+        xor_(al, (instr.flow_control.refx.Value() ^ 1));
+        xor_(bl, (instr.flow_control.refy.Value() ^ 1));
+        or_(al, bl);
         break;
 
     case Instruction::FlowControlType::And:
-        mov(eax, COND0);
-        mov(ebx, COND1);
-        xor_(eax, (instr.flow_control.refx.Value() ^ 1));
-        xor_(ebx, (instr.flow_control.refy.Value() ^ 1));
-        and_(eax, ebx);
+        mov(al, COND0);
+        mov(bl, COND1);
+        xor_(al, (instr.flow_control.refx.Value() ^ 1));
+        xor_(bl, (instr.flow_control.refy.Value() ^ 1));
+        and_(al, bl);
         break;
 
     case Instruction::FlowControlType::JustX:
-        mov(eax, COND0);
-        xor_(eax, (instr.flow_control.refx.Value() ^ 1));
+        mov(al, COND0);
+        xor_(al, (instr.flow_control.refx.Value() ^ 1));
         break;
 
     case Instruction::FlowControlType::JustY:
-        mov(eax, COND1);
-        xor_(eax, (instr.flow_control.refy.Value() ^ 1));
+        mov(al, COND1);
+        xor_(al, (instr.flow_control.refy.Value() ^ 1));
         break;
     }
 }
@@ -1002,8 +1002,8 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     mov(LOOPCOUNT_REG, dword[STATE + offsetof(ShaderUnit, address_registers[2])]);
 
     // Load conditional code
-    mov(COND0, byte[STATE + offsetof(ShaderUnit, conditional_code[0])]);
-    mov(COND1, byte[STATE + offsetof(ShaderUnit, conditional_code[1])]);
+    movzx(COND0, byte[STATE + offsetof(ShaderUnit, conditional_code[0])]);
+    movzx(COND1, byte[STATE + offsetof(ShaderUnit, conditional_code[1])]);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};

@@ -674,6 +674,94 @@ TEMPLATE_TEST_CASE("Nested Loop", "[video_core][shader]", ShaderJitTest) {
     }
 }
 
+SHADER_TEST_CASE("Conditional", "[video_core][shader]") {
+    const auto sh_input = SourceRegister::MakeInput(0);
+    const auto sh_temp = SourceRegister::MakeTemporary(0);
+    const auto sh_output = DestRegister::MakeOutput(0);
+
+    const std::initializer_list<nihstro::InlineAsm> assembly_template = {
+        // IFC configured later
+        {OpCode::Id::NOP},
+        // True
+        {OpCode::Id::MOV, sh_output, sh_input},
+        {OpCode::Id::END},
+        // False
+        {OpCode::Id::MOV, sh_output, sh_temp},
+        {OpCode::Id::END},
+    };
+
+    const bool ref_x = GENERATE(0, 1);
+    const bool cmp_x = GENERATE(0, 1);
+    const bool result_x = (cmp_x == ref_x);
+
+    const bool ref_y = GENERATE(0, 1);
+    const bool cmp_y = GENERATE(0, 1);
+    const bool result_y = (cmp_y == ref_y);
+
+    nihstro::Instruction IFC = {};
+    IFC.opcode = nihstro::OpCode::Id::IFC;
+    IFC.flow_control.num_instructions = 2;
+    IFC.flow_control.dest_offset = 3;
+    IFC.flow_control.refx = ref_x;
+    IFC.flow_control.refy = ref_y;
+
+    Pica::ShaderUnit shader_unit;
+    shader_unit.conditional_code[0] = cmp_x;
+    shader_unit.conditional_code[1] = cmp_y;
+
+    // JustX
+    {
+        auto shader_setup = CompileShaderSetup(assembly_template);
+        IFC.flow_control.op = nihstro::Instruction::FlowControlType::Op::JustX;
+        shader_setup->program_code[0] = IFC.hex;
+        const float result = result_x ? 1.0f : 0.0f;
+
+        auto shader_test = TestType(std::move(shader_setup));
+        shader_test.Run(shader_unit, 1.0f);
+
+        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+    }
+
+    // JustY
+    {
+        auto shader_setup = CompileShaderSetup(assembly_template);
+        IFC.flow_control.op = nihstro::Instruction::FlowControlType::Op::JustY;
+        shader_setup->program_code[0] = IFC.hex;
+        const float result = result_y ? 1.0f : 0.0f;
+
+        auto shader_test = TestType(std::move(shader_setup));
+        shader_test.Run(shader_unit, 1.0f);
+
+        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+    }
+
+    // OR
+    {
+        auto shader_setup = CompileShaderSetup(assembly_template);
+        IFC.flow_control.op = nihstro::Instruction::FlowControlType::Op::Or;
+        shader_setup->program_code[0] = IFC.hex;
+        const float result = (result_x || result_y) ? 1.0f : 0.0f;
+
+        auto shader_test = TestType(std::move(shader_setup));
+        shader_test.Run(shader_unit, 1.0f);
+
+        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+    }
+
+    // AND
+    {
+        auto shader_setup = CompileShaderSetup(assembly_template);
+        IFC.flow_control.op = nihstro::Instruction::FlowControlType::Op::And;
+        shader_setup->program_code[0] = IFC.hex;
+        const float result = (result_x && result_y) ? 1.0f : 0.0f;
+
+        auto shader_test = TestType(std::move(shader_setup));
+        shader_test.Run(shader_unit, 1.0f);
+
+        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+    }
+}
+
 SHADER_TEST_CASE("Source Swizzle", "[video_core][shader]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_output = DestRegister::MakeOutput(0);
