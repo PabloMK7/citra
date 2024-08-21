@@ -7,6 +7,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/act/act.h"
 #include "core/hle/service/act/act_a.h"
+#include "core/hle/service/act/act_errors.h"
 #include "core/hle/service/act/act_u.h"
 
 namespace Service::ACT {
@@ -31,15 +32,28 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
-void Module::Interface::GetAccountDataBlock(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetErrorCode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const auto unknown = rp.Pop<u8>();
+    const auto result = rp.Pop<Result>();
+
+    LOG_DEBUG(Service_ACT, "called result={:08X}", result.raw);
+
+    const u32 error_code = GetACTErrorCode(result);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(error_code);
+}
+
+void Module::Interface::GetAccountInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto account_slot = rp.Pop<u8>();
     const auto size = rp.Pop<u32>();
     const auto block_id = rp.Pop<u32>();
     [[maybe_unused]] auto output_buffer = rp.PopMappedBuffer();
 
-    LOG_DEBUG(Service_ACT, "(STUBBED) called unknown={:02X}, size={:08X}, block_id={:08X}", unknown,
-              size, block_id);
+    LOG_DEBUG(Service_ACT, "(STUBBED) called account_slot={:02X}, size={:08X}, block_id={:08X}",
+              account_slot, size, block_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);

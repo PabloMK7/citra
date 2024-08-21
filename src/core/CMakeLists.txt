@@ -203,6 +203,8 @@ add_library(citra_core STATIC
     hle/service/ac/ac_u.h
     hle/service/act/act.cpp
     hle/service/act/act.h
+    hle/service/act/act_errors.cpp
+    hle/service/act/act_errors.h
     hle/service/act/act_a.cpp
     hle/service/act/act_a.h
     hle/service/act/act_u.cpp

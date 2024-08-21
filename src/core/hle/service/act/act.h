@@ -38,9 +38,19 @@ public:
         void Initialize(Kernel::HLERequestContext& ctx);
 
         /**
-         * ACT::GetAccountDataBlock service function.
+         * ACT::GetErrorCode service function.
          * Inputs:
-         *     1 : u8 Unknown
+         *     1 : Result code
+         * Outputs:
+         *     1 : Result of function, 0 on success, otherwise error code
+         *     2 : Error code
+         */
+        void GetErrorCode(Kernel::HLERequestContext& ctx);
+
+        /**
+         * ACT::GetAccountInfo service function.
+         * Inputs:
+         *     1 : Account slot
          *     2 : Size
          *     3 : Block ID
          *     4 : Output Buffer Mapping Translation Header ((Size << 4) | 0xC)
@@ -48,7 +58,7 @@ public:
          * Outputs:
          *     1 : Result of function, 0 on success, otherwise error code
          */
-        void GetAccountDataBlock(Kernel::HLERequestContext& ctx);
+        void GetAccountInfo(Kernel::HLERequestContext& ctx);
     };
 
 private:
