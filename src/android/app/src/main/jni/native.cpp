@@ -309,10 +309,12 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
-    ANativeWindow_release(s_surf);
-    s_surf = nullptr;
-    if (window) {
-        window->OnSurfaceChanged(s_surf);
+    if (s_surf != nullptr) {
+        ANativeWindow_release(s_surf);
+        s_surf = nullptr;
+        if (window) {
+            window->OnSurfaceChanged(s_surf);
+        }
     }
 }
 
