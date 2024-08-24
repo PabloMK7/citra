@@ -381,7 +381,7 @@
             <item row="12" column="0">
              <widget class="QLabel" name="label_play_coins">
               <property name="text">
-               <string>Play Coins:</string>
+               <string>Play Coins</string>
               </property>
              </widget>
             </item>
@@ -394,8 +394,11 @@
             </item>
             <item row="13" column="0">
               <widget class="QLabel" name="label_steps_per_hour">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of steps per hour reported by the pedometer. Range from 0 to 65,535.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="text">
-                  <string>Pedometer steps per hour:</string>
+                  <string>Pedometer Steps per Hour</string>
                 </property>
               </widget>
             </item>

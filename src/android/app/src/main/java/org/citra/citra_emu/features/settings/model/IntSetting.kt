@@ -19,6 +19,7 @@ enum class IntSetting(
     RESOLUTION_FACTOR("resolution_factor", Settings.SECTION_RENDERER, 1),
     STEREOSCOPIC_3D_MODE("render_3d", Settings.SECTION_RENDERER, 0),
     STEREOSCOPIC_3D_DEPTH("factor_3d", Settings.SECTION_RENDERER, 0),
+    STEPS_PER_HOUR("steps_per_hour", Settings.SECTION_SYSTEM, 0),
     CARDBOARD_SCREEN_SIZE("cardboard_screen_size", Settings.SECTION_LAYOUT, 85),
     CARDBOARD_X_SHIFT("cardboard_x_shift", Settings.SECTION_LAYOUT, 0),
     CARDBOARD_Y_SHIFT("cardboard_y_shift", Settings.SECTION_LAYOUT, 0),
