@@ -186,6 +186,8 @@
     <string name="birthday_day">Day</string>
     <string name="country">Country</string>
     <string name="play_coins">Play Coins</string>
+    <string name="steps_per_hour">Pedometer Steps per Hour</string>
+    <string name="steps_per_hour_description">Number of steps per hour reported by the pedometer. Range from 0 to 65,535.</string>
     <string name="console_id">Console ID</string>
     <string name="regenerate_console_id">Regenerate Console ID</string>
     <string name="regenerate_console_id_description">This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects in games. This might fail if you use an outdated config savegame. Continue?</string>
