@@ -38,6 +38,16 @@ inline void CallFarFunction(oaknut::CodeGenerator& code, const T f) {
     }
 }
 
+template <typename T>
+inline void CallFarFunction(oaknut::VectorCodeGenerator& code, const T f) {
+    static_assert(std::is_pointer_v<T>, "Argument must be a (function) pointer.");
+    // X16(IP0) and X17(IP1) is the standard veneer register
+    // LR is also available as an intermediate register
+    // https://developer.arm.com/documentation/102374/0101/Procedure-Call-Standard
+    code.MOVP2R(oaknut::util::X16, reinterpret_cast<const void*>(f));
+    code.BLR(oaknut::util::X16);
+}
+
 } // namespace Common::A64
 
 #endif // CITRA_ARCH(arm64)
