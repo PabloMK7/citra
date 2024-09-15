@@ -1,4 +1,4 @@
-.Dd November 22 2016
+.Dd September 13 2024
 .Dt citra 6
 .Os
 .Sh NAME
@@ -12,6 +12,20 @@
 .Bl -tag -width Ds
 .It Fl g Ar port , Fl Fl gdbport Ar port
 Starts the GDB stub on the specified port
+.It Fl i , Fl Fl install Ar FILE
+Installs a specified CIA file
+.It Fl m , Fl Fl multiplayer Ar nick:password@address:port
+Nickname, password, address and port for multiplayer
+.It Fl r , Fl Fl movie-record Ar file
+Record a movie (game inputs) to the given file
+.It Fl a , Fl Fl movie-record-author Ar AUTHOR
+Sets the author of the movie to be recorded
+.It Fl p , Fl Fl movie-play Ar file
+Playback the movie (game inputs) from the given file
+.It Fl d , Fl Fl dump-video Ar file
+Dumps audio and video to the given video file
+.It Fl f , Fl Fl fullscreen
+Start in fullscreen mode
 .It Fl h , Fl Fl help
 Shows syntax help and exits
 .It Fl v , Fl Fl version
