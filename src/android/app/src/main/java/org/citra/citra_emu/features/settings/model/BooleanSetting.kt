@@ -34,7 +34,8 @@ enum class BooleanSetting(
     companion object {
         private val NOT_RUNTIME_EDITABLE = listOf(
             PLUGIN_LOADER,
-            ALLOW_PLUGIN_LOADER
+            ALLOW_PLUGIN_LOADER, 
+            ASYNC_SHADERS
         )
 
         fun from(key: String): BooleanSetting? =
