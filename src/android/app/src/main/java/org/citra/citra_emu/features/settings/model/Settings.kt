@@ -165,9 +165,11 @@ class Settings {
             KEY_CSTICK_AXIS_VERTICAL,
             KEY_CSTICK_AXIS_HORIZONTAL
         )
-        val dPadKeys = listOf(
-//            KEY_DPAD_AXIS_VERTICAL,
-//            KEY_DPAD_AXIS_HORIZONTAL,
+        val dPadAxisKeys = listOf(
+            KEY_DPAD_AXIS_VERTICAL,
+            KEY_DPAD_AXIS_HORIZONTAL
+        )
+        val dPadButtonKeys = listOf(
             KEY_BUTTON_UP,
             KEY_BUTTON_DOWN,
             KEY_BUTTON_LEFT,
