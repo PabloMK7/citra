@@ -4,6 +4,6 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
-class HeaderSetting(titleId: Int) : SettingsItem(null, titleId, 0) {
+class HeaderSetting(titleId: Int,descId: Int = 0) : SettingsItem(null, titleId, descId) {
     override val type = TYPE_HEADER
 }
