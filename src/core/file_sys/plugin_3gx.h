@@ -94,6 +94,9 @@ private:
             BitField<1, 1, u32_le> embedded_swap_func;
             BitField<2, 2, u32_le> memory_region_size;
             BitField<4, 2, u32_le> compatibility;
+            BitField<6, 1, u32_le> events_self_managed;
+            BitField<7, 1, u32_le> swap_not_needed;
+            BitField<8, 1, u32_le> use_private_memory;
         } flags;
         u32_le exe_load_checksum;
         u32_le builtin_load_exe_args[4];

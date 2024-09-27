@@ -179,6 +179,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
         4 * 1024 * 1024  // 4 MiB
     };
 
+    const bool is_mem_private = header.infos.flags.use_private_memory != 0;
+
     // Map memory block. This behaviour mimics how plugins are loaded on 3DS as much as possible.
     // Calculate the sizes of the different memory regions
     const u32 block_size = mem_region_sizes[header.infos.flags.memory_region_size.Value()];
@@ -199,7 +201,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     std::fill(backing_memory_fb.GetPtr(), backing_memory_fb.GetPtr() + _3GX_fb_size, 0);
 
     auto vma_heap_fb = process.vm_manager.MapBackingMemory(
-        _3GX_heap_load_addr, backing_memory_fb, _3GX_fb_size, Kernel::MemoryState::Continuous);
+        _3GX_heap_load_addr, backing_memory_fb, _3GX_fb_size,
+        is_mem_private ? Kernel::MemoryState::Private : Kernel::MemoryState::Shared);
     ASSERT(vma_heap_fb.Succeeded());
     process.vm_manager.Reprotect(vma_heap_fb.Unwrap(), Kernel::VMAPermission::ReadWrite);
 
@@ -217,7 +220,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
 
     // Then we map part of the memory, which contains the executable
     auto vma = process.vm_manager.MapBackingMemory(_3GX_exe_load_addr, backing_memory, exe_size,
-                                                   Kernel::MemoryState::Continuous);
+                                                   is_mem_private ? Kernel::MemoryState::Private
+                                                                  : Kernel::MemoryState::Shared);
     ASSERT(vma.Succeeded());
     process.vm_manager.Reprotect(vma.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
 
@@ -256,7 +260,8 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     // Map the rest of the memory at the heap location
     auto vma_heap = process.vm_manager.MapBackingMemory(
         _3GX_heap_load_addr + _3GX_fb_size, backing_memory_heap,
-        block_size - exe_size - _3GX_fb_size, Kernel::MemoryState::Continuous);
+        block_size - exe_size - _3GX_fb_size,
+        is_mem_private ? Kernel::MemoryState::Private : Kernel::MemoryState::Shared);
     ASSERT(vma_heap.Succeeded());
     process.vm_manager.Reprotect(vma_heap.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
 
