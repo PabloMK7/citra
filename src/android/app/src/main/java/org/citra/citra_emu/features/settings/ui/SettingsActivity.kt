@@ -191,7 +191,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
         presenter.onSettingsReset()
 
         val controllerKeys = Settings.buttonKeys + Settings.circlePadKeys + Settings.cStickKeys +
-                Settings.dPadKeys + Settings.triggerKeys
+                Settings.dPadButtonKeys + Settings.dPadAxisKeys + Settings.triggerKeys
         val editor =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
         controllerKeys.forEach { editor.remove(it) }

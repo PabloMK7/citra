@@ -78,15 +78,6 @@ class InputBindingSetting(
 
             else -> false
         }
-
-    fun isDpadButtons(): Boolean =
-        when (abstractSetting.key) {
-            Settings.KEY_BUTTON_DOWN,
-            Settings.KEY_BUTTON_LEFT,
-            Settings.KEY_BUTTON_UP,
-            Settings.KEY_BUTTON_RIGHT -> true
-            else -> false
-        }
     /**
      * Returns true if this key is for the 3DS L/R or ZL/ZR buttons. Note, these are not real
      * triggers on the 3DS, but we support them as such on a physical gamepad.
@@ -136,7 +127,6 @@ class InputBindingSetting(
                 Settings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
                 Settings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT
                 Settings.KEY_BUTTON_RIGHT -> NativeLibrary.ButtonType.DPAD_RIGHT
-
                 Settings.HOTKEY_SCREEN_SWAP -> Hotkey.SWAP_SCREEN.button
                 Settings.HOTKEY_CYCLE_LAYOUT -> Hotkey.CYCLE_LAYOUT.button
                 Settings.HOTKEY_CLOSE_GAME -> Hotkey.CLOSE_GAME.button
