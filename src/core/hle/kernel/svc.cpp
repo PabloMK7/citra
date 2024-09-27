@@ -369,6 +369,16 @@ enum class ControlProcessOP {
     PROCESSOP_DISABLE_CREATE_THREAD_RESTRICTIONS,
 };
 
+/**
+ * Accepted by the custom svcMapProcessMemoryEx.
+ */
+enum class MapMemoryExFlag {
+    /**
+     * Maps the memory region as PRIVATE instead of SHARED
+     */
+    MAPEXFLAGS_PRIVATE = (1 << 0),
+};
+
 class SVC : public SVCWrapper<SVC> {
 public:
     SVC(Core::System& system);
@@ -460,7 +470,8 @@ private:
     Result InvalidateEntireInstructionCache();
     u32 ConvertVaToPa(u32 addr);
     Result MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address, Handle src_process_handle,
-                              u32 src_address, u32 size);
+                              u32 src_address, u32 size, MapMemoryExFlag flags,
+                              Handle dst_process_handle_backup);
     Result UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size);
     Result ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32 varg3);
 
@@ -2012,7 +2023,22 @@ u32 SVC::ConvertVaToPa(u32 addr) {
 }
 
 Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
-                               Handle src_process_handle, u32 src_address, u32 size) {
+                               Handle src_process_handle, u32 src_address, u32 size,
+                               MapMemoryExFlag flags, Handle dst_process_handle_backup) {
+
+    // Determine if this is the second version of the svc by checking the value at R0.
+    constexpr u32 SVC_VERSION2_MAGIC = 0xFFFFFFF2;
+    if (static_cast<u32>(dst_process_handle) == SVC_VERSION2_MAGIC) {
+        // Version 2, actual handle is provided in 6th argument
+        dst_process_handle = dst_process_handle_backup;
+    } else {
+        // Version 1, the flags argument is not used
+        flags = static_cast<MapMemoryExFlag>(0);
+    }
+
+    const bool map_as_private =
+        (static_cast<u32>(flags) & static_cast<u32>(MapMemoryExFlag::MAPEXFLAGS_PRIVATE)) != 0;
+
     std::shared_ptr<Process> dst_process =
         kernel.GetCurrentProcess()->handle_table.Get<Process>(dst_process_handle);
     std::shared_ptr<Process> src_process =
@@ -2024,11 +2050,12 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
         size = (size & ~0xFFF) + Memory::CITRA_PAGE_SIZE;
     }
 
+    // TODO(PabloMK7) Fix-up this svc.
+
     // Only linear memory supported
     auto vma = src_process->vm_manager.FindVMA(src_address);
     R_UNLESS(vma != src_process->vm_manager.vma_map.end() &&
-                 vma->second.type == VMAType::BackingMemory &&
-                 vma->second.meminfo_state == MemoryState::Continuous,
+                 vma->second.type == VMAType::BackingMemory,
              ResultInvalidAddress);
 
     const u32 offset = src_address - vma->second.base;
@@ -2038,7 +2065,7 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
         dst_address,
         memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
                            kernel.memory.GetFCRAMPointer(0)),
-        size, Kernel::MemoryState::Continuous);
+        size, map_as_private ? MemoryState::Private : MemoryState::Shared);
 
     if (!vma_res.Succeeded()) {
         return ResultInvalidAddressState;
@@ -2060,8 +2087,7 @@ Result SVC::UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size) {
     // Only linear memory supported
     auto vma = dst_process->vm_manager.FindVMA(dst_address);
     R_UNLESS(vma != dst_process->vm_manager.vma_map.end() &&
-                 vma->second.type == VMAType::BackingMemory &&
-                 vma->second.meminfo_state == MemoryState::Continuous,
+                 vma->second.type == VMAType::BackingMemory,
              ResultInvalidAddress);
 
     dst_process->vm_manager.UnmapRange(dst_address, size);

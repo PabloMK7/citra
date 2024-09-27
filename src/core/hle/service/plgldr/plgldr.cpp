@@ -38,7 +38,7 @@ SERVICE_CONSTRUCT_IMPL(Service::PLGLDR::PLG_LDR)
 
 namespace Service::PLGLDR {
 
-static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 0);
+static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 2);
 
 PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
