@@ -188,6 +188,7 @@ delay_game_render_thread_us =
 layout_option =
 
 # Toggle custom layout (using the settings below) on or off.
+# Only applies to landscape on Android
 # 0 (default): Off, 1: On
 custom_layout =
 
@@ -201,6 +202,22 @@ custom_bottom_left =
 custom_bottom_top =
 custom_bottom_right =
 custom_bottom_bottom =
+
+# Custom Layout Options for Android Portrait Mode
+# Toggle custom layout (using the settings below) on or off.
+# 0 (default): Off, 1: On
+custom_portrait_layout =
+
+# Screen placement when using Custom layout option
+# 0x, 0y is the top left corner of the render window.
+custom_portrait_top_left =
+custom_portrait_top_top =
+custom_portrait_top_right =
+custom_portrait_top_bottom =
+custom_portrait_bottom_left =
+custom_portrait_bottom_top =
+custom_portrait_bottom_right =
+custom_portrait_bottom_bottom =
 
 # Swaps the prominent screen with the other screen.
 # For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
