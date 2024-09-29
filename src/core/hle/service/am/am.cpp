@@ -194,6 +194,8 @@ Result CIAFile::WriteTitleMetadata() {
             // TODO: Correct error code.
             return FileSys::ResultFileNotFound;
         }
+        if (content_count > 255)
+            file.Close();
     }
 
     if (container.GetTitleMetadata().HasEncryptedContent()) {
@@ -224,6 +226,8 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
     // has been written since we might get a written buffer which contains multiple .app
     // contents or only part of a larger .app's contents.
     const u64 offset_max = offset + length;
+    if (content_written.size() > 255)
+        content_files.clear();
     for (std::size_t i = 0; i < content_written.size(); i++) {
         if (content_written[i] < container.GetContentSize(i)) {
             // The size, minimum unwritten offset, and maximum unwritten offset of this content
@@ -243,7 +247,9 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             // Since the incoming TMD has already been written, we can use GetTitleContentPath
             // to get the content paths to write to.
             FileSys::TitleMetadata tmd = container.GetTitleMetadata();
-            auto& file = content_files[i];
+            auto path = GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update);
+            auto& file = content_written.size() > 255 ? content_files.emplace_back(path, "ab+")
+                                                      : content_files[i];
 
             std::vector<u8> temp(buffer + (range_min - offset),
                                  buffer + (range_min - offset) + available_to_write);
@@ -259,6 +265,8 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             content_written[i] += available_to_write;
             LOG_DEBUG(Service_AM, "Wrote {:x} to content {}, total {:x}", available_to_write, i,
                       content_written[i]);
+            if (content_written.size() > 255)
+                file.Close();
         }
     }
 
