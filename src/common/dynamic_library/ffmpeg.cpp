@@ -65,6 +65,9 @@ avcodec_find_encoder_by_name_func avcodec_find_encoder_by_name;
 avcodec_free_context_func avcodec_free_context;
 avcodec_get_class_func avcodec_get_class;
 avcodec_get_hw_config_func avcodec_get_hw_config;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100) // lavc 61.13.100
+avcodec_get_supported_config_func avcodec_get_supported_config;
+#endif
 avcodec_open2_func avcodec_open2;
 avcodec_parameters_from_context_func avcodec_parameters_from_context;
 avcodec_receive_frame_func avcodec_receive_frame;
@@ -232,6 +235,9 @@ static bool LoadAVCodec() {
     LOAD_SYMBOL(avcodec, avcodec_free_context);
     LOAD_SYMBOL(avcodec, avcodec_get_class);
     LOAD_SYMBOL(avcodec, avcodec_get_hw_config);
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100) // lavc 61.13.100
+    LOAD_SYMBOL(avcodec, avcodec_get_supported_config);
+#endif
     LOAD_SYMBOL(avcodec, avcodec_open2);
     LOAD_SYMBOL(avcodec, avcodec_parameters_from_context);
     LOAD_SYMBOL(avcodec, avcodec_receive_frame);
