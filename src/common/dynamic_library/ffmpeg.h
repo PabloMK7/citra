@@ -114,6 +114,10 @@ typedef const AVCodec* (*avcodec_find_encoder_by_name_func)(const char*);
 typedef void (*avcodec_free_context_func)(AVCodecContext**);
 typedef const AVClass* (*avcodec_get_class_func)();
 typedef const AVCodecHWConfig* (*avcodec_get_hw_config_func)(const AVCodec*, int);
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100) // lavc 61.13.100
+typedef int (*avcodec_get_supported_config_func)(const AVCodecContext*, const AVCodec*,
+                                                 enum AVCodecConfig, unsigned, const void**, int*);
+#endif
 typedef int (*avcodec_open2_func)(AVCodecContext*, const AVCodec*, AVDictionary**);
 typedef int (*avcodec_parameters_from_context_func)(AVCodecParameters* par, const AVCodecContext*);
 typedef int (*avcodec_receive_frame_func)(AVCodecContext*, AVFrame*);
@@ -138,6 +142,9 @@ extern avcodec_find_encoder_by_name_func avcodec_find_encoder_by_name;
 extern avcodec_free_context_func avcodec_free_context;
 extern avcodec_get_class_func avcodec_get_class;
 extern avcodec_get_hw_config_func avcodec_get_hw_config;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100) // lavc 61.13.100
+extern avcodec_get_supported_config_func avcodec_get_supported_config;
+#endif
 extern avcodec_open2_func avcodec_open2;
 extern avcodec_parameters_from_context_func avcodec_parameters_from_context;
 extern avcodec_receive_frame_func avcodec_receive_frame;
