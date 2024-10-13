@@ -8,6 +8,7 @@ COMPAT_LIST='dist/compatibility_list/compatibility_list.json'
 
 mkdir artifacts
 
+sudo rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
 pip3 install git-archive-all
 touch "${COMPAT_LIST}"
 git describe --abbrev=0 --always HEAD > GIT-COMMIT
