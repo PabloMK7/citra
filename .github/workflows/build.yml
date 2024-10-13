@@ -151,7 +151,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         if: ${{ matrix.target == 'msvc' }}
       - name: Install extra tools (MSVC)
-        run: choco install ccache ninja wget
+        run: choco install ccache ninja wget unzip
         if: ${{ matrix.target == 'msvc' }}
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
@@ -159,7 +159,7 @@ jobs:
         with:
           msystem: clang64
           update: true
-          install: git make p7zip
+          install: git make p7zip unzip
           pacboy: >-
             toolchain:p ccache:p cmake:p ninja:p
             qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p

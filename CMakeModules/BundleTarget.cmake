@@ -2,6 +2,49 @@
 if (BUNDLE_TARGET_EXECUTE)
     # --- Bundling method logic ---
 
+    function(download_ffmpeg target license)
+        if (WIN32)
+            set(FFMPEG_DIR "${CMAKE_BINARY_DIR}/externals/ffmpeg")
+            set(FFMPEG_PACK "${CMAKE_BINARY_DIR}/externals/ffmpeg.zip")
+            set(FFMPEG_PLATFORM "win64")
+            set(PACK_EXT "zip")
+        endif()
+        if (FFMPEG_PACK)
+            if (NOT EXISTS ${FFMPEG_DIR})
+                if (NOT EXISTS ${FFMPEG_PACK})
+                    message(STATUS "Downloading ffmpeg")
+                    file(DOWNLOAD https://github.com/kongfl888/FFmpeg-Builds/releases/download/latest/ffmpeg-n${target}-latest-${FFMPEG_PLATFORM}-${license}-shared-${target}.${PACK_EXT}
+                        ${FFMPEG_PACK} SHOW_PROGRESS)
+                    if (EXISTS ${FFMPEG_PACK})
+                        message(STATUS "package: ${FFMPEG_PACK}")
+                    endif()
+                endif()
+                set(FFSOURCE_DIR "${CMAKE_BINARY_DIR}/externals/ffmpeg-n${target}-latest-${FFMPEG_PLATFORM}-${license}-shared-${target}")
+                file(REMOVE_RECURSE ${FFSOURCE_DIR})
+                if (PACK_EXT STREQUAL "zip")
+                    find_program(UNZIP_PATH unzip)
+                    message(STATUS "${UNZIP_PATH}")
+                    execute_process(COMMAND ${UNZIP_PATH} -o -d ${CMAKE_BINARY_DIR}/externals ${FFMPEG_PACK}
+                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals"
+                    ERROR_VARIABLE error_un
+                    RESULT_VARIABLE UNP_RESULT)
+
+                    if (EXISTS ${FFSOURCE_DIR})
+                        file(REMOVE_RECURSE ${FFMPEG_DIR})
+                        file(RENAME ${FFSOURCE_DIR} ${FFMPEG_DIR})
+                        if (EXISTS "${FFMPEG_DIR}/bin/ffmpeg.exe")
+                            message(STATUS "Found ffmpeg: ${FFMPEG_DIR}/bin/ffmpeg.exe")
+                        endif()
+                    else()
+                        message(STATUS "Failed to extract ffmpeg: ${error_un}")
+                    endif()
+                endif()
+            endif()
+        else()
+            message(STATUS "Skip ffmpeg download.")
+        endif()
+    endfunction()
+
     function(symlink_safe_copy from to)
         if (WIN32)
             # Use cmake copy for maximum compatibility.
@@ -65,6 +108,18 @@ if (BUNDLE_TARGET_EXECUTE)
                 set(qtpaths_executable "${windeployqt_dir}/qtpaths.exe")
             endif()
 
+            set(QTPLUGINS_PATH "${QT_HOST_PATH}/plugins")
+            if (NOT EXISTS ${QTPLUGINS_PATH})
+                set(QTPLUGINS_PATH "${QT_TARGET_PATH}/share/qt6/plugins")
+            endif()
+
+            # Temporarily remove file ffmpegmediaplugin.dll
+            # Remove the FFmpeg multimedia plugin as we don't include FFmpeg.
+            # We want to use the Windows media plugin instead, which is also included.
+            if (EXISTS "${QTPLUGINS_PATH}/multimedia/ffmpegmediaplugin.dll")
+                file(RENAME "${QTPLUGINS_PATH}/multimedia/ffmpegmediaplugin.dll" "${QTPLUGINS_PATH}/ffmpegmediaplugin.dll")
+            endif()
+
             message(STATUS "Executing windeployqt for executable ${executable_path}")
             execute_process(COMMAND "${windeployqt_executable}" "${executable_path}"
                 --qtpaths "${qtpaths_executable}"
@@ -75,9 +130,17 @@ if (BUNDLE_TARGET_EXECUTE)
                 message(FATAL_ERROR "windeployqt failed: ${windeployqt_result}")
             endif()
 
-            # Remove the FFmpeg multimedia plugin as we don't include FFmpeg.
-            # We want to use the Windows media plugin instead, which is also included.
-            file(REMOVE "${executable_parent_dir}/plugins/multimedia/ffmpegmediaplugin.dll")
+            # Actively bundle ffmpeg to the target directory to avoid dependency loss
+            download_ffmpeg(7.1 gpl)
+            symlink_safe_copy("${CMAKE_BINARY_DIR}/externals/ffmpeg/bin/ffmpeg.exe" "${executable_parent_dir}")
+            set(FFMPEG_PATH "${executable_parent_dir}/ffmpeg.exe")
+            bundle_standalone("${FFMPEG_PATH}" "${FFMPEG_PATH}" "${CMAKE_BINARY_DIR}/externals/ffmpeg/bin")
+
+            # Restore file ffmpegmediaplugin.dll
+            if (EXISTS "${QTPLUGINS_PATH}/ffmpegmediaplugin.dll")
+                file(RENAME "${QTPLUGINS_PATH}/ffmpegmediaplugin.dll" "${QTPLUGINS_PATH}/multimedia/ffmpegmediaplugin.dll")
+            endif()
+            file(REMOVE "${executable_parent_dir}/ffmpeg.exe")
         elseif (APPLE)
             get_filename_component(executable_name "${executable_path}" NAME_WE)
             find_program(macdeployqt_executable macdeployqt6 PATHS "${QT_HOST_PATH}/bin")
