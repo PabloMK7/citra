@@ -45,6 +45,7 @@ constexpr u16 CATEGORY_DLP = 0x0001;
 constexpr u8 VARIATION_SYSTEM = 0x02;
 constexpr u32 TID_HIGH_UPDATE = 0x0004000E;
 constexpr u32 TID_HIGH_DLC = 0x0004008C;
+constexpr u16 MAX_CONTENT_COUNT = 255;
 
 struct TitleInfo {
     u64_le tid;
@@ -194,6 +195,8 @@ Result CIAFile::WriteTitleMetadata() {
             // TODO: Correct error code.
             return FileSys::ResultFileNotFound;
         }
+        if (content_count > MAX_CONTENT_COUNT)
+            file.Close();
     }
 
     if (container.GetTitleMetadata().HasEncryptedContent()) {
@@ -244,6 +247,11 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             // to get the content paths to write to.
             FileSys::TitleMetadata tmd = container.GetTitleMetadata();
             auto& file = content_files[i];
+            if (content_written.size() > MAX_CONTENT_COUNT) {
+                auto path = GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update);
+                FileUtil::IOFile fp(path, "ab+");
+                file = std::move(fp);
+            }
 
             std::vector<u8> temp(buffer + (range_min - offset),
                                  buffer + (range_min - offset) + available_to_write);
@@ -259,6 +267,9 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             content_written[i] += available_to_write;
             LOG_DEBUG(Service_AM, "Wrote {:x} to content {}, total {:x}", available_to_write, i,
                       content_written[i]);
+            if (content_written.size() > MAX_CONTENT_COUNT) {
+                file.Close();
+            }
         }
     }
 
